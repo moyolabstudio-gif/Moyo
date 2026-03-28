@@ -9,7 +9,7 @@
     </select>
 
     <insert id="insertUser" parameterType="com.springboot.project.dto.UsersDto">
-        INSERT INTO USERS (USER_ID, EMAIL, PWD_HASH, USER_NAME)
-        VALUES (SEQ_USER_ID.NEXTVAL, #{email}, #{pwdHash}, #{userName})
+        INSERT INTO USERS (USER_ID, EMAIL, PWD_HASH)
+        VALUES (SEQ_USER_ID.NEXTVAL, #{email}, #{pwdHash})
     </insert>
 </mapper>	

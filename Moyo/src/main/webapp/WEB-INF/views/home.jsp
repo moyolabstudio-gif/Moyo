@@ -5,13 +5,14 @@
 <head>
 <meta charset="UTF-8">
 <title>MOYO</title>
-<link rel="stylesheet" href="/css/home.css">
 </head>
 <body>
 <header>
 </header>
 <main>
-
+	<a href ="/users/joinForm">
+	<button> 회원가입 </button></a>
+집에 가고 싶다
 </main>
 <footer>
 </footer>
