@@ -11,6 +11,8 @@
 <header>
 </header>
 <main>
+	<a href ="/users/joinForm">
+	<button> 회원가입 </button></a>
  HI
 </main>
 <footer>
