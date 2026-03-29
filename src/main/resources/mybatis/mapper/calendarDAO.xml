@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.springboot.project.dao.IcalendarResponseDAO">
+
+    <select id="getMonthlyCalendar" resultType="com.springboot.project.dto.calendarResponseDTO">
+        -- 1. 일반 프로젝트 일정
+        SELECT 
+            EVENT_ID AS id,
+            TITLE AS title,
+            TO_CHAR(START_DT, 'YYYY-MM-DD') AS startDt,
+            TO_CHAR(END_DT, 'YYYY-MM-DD') AS endDt,
+            'EVENT' AS itemType
+        FROM EVENTS
+        WHERE PROJ_ID = #{projId}
+        <![CDATA[
+          AND START_DT >= TO_DATE(#{startDate}, 'YYYY-MM-DD')
+          AND END_DT <= TO_DATE(#{endDate}, 'YYYY-MM-DD')
+        ]]>
+
+        UNION ALL
+
+        -- 2. 국가 공휴일
+        SELECT 
+            HLD_ID AS id,
+            HLD_NAME AS title,
+            TO_CHAR(HLD_DATE, 'YYYY-MM-DD') AS startDt,
+            TO_CHAR(HLD_DATE, 'YYYY-MM-DD') AS endDt,
+            'HOLIDAY' AS itemType
+        FROM NATIONAL_HOLIDAYS
+        WHERE HLD_DATE BETWEEN TO_DATE(#{startDate}, 'YYYY-MM-DD') AND TO_DATE(#{endDate}, 'YYYY-MM-DD')
+    </select>
+    
+	<insert id="insertHoliday" parameterType="com.springboot.project.dto.calendarResponseDTO">
+	    INSERT INTO NATIONAL_HOLIDAYS (
+	        HLD_ID, HLD_DATE, HLD_NAME, IS_REST, COUNTRY
+	    ) VALUES (
+	        SEQ_HLD_ID.NEXTVAL, 
+	        TO_DATE(#{startDt}, 'YYYYMMDD'), 
+	        #{title}, 
+	        'Y', 
+	        'KR'
+	    )
+	</insert>
+	
+	<select id="checkHolidayExists" resultType="int">
+	    SELECT COUNT(*) FROM NATIONAL_HOLIDAYS 
+	    WHERE TO_CHAR(HLD_DATE, 'YYYYMMDD') = #{hldDate}
+	</select>
+</mapper>
