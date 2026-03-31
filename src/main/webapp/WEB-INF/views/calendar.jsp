@@ -5,6 +5,10 @@
 <head>
 <meta charset="UTF-8">
 <title>MOYO</title>
+<body>
+<header>
+	<%@ include file="common/header.jsp"%>
+</header>
 <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
@@ -77,8 +81,6 @@
 </style>
 </head>
 <body>
-<header>
-</header>
 <main>
  HI
 </main>

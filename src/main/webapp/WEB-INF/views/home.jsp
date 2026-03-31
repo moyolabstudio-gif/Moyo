@@ -5,15 +5,13 @@
 <head>
 <meta charset="UTF-8">
 <title>MOYO</title>
-<link rel="stylesheet" href="/css/home.css">
 </head>
 <body>
 <header>
+	<%@ include file="common/header.jsp"%>
 </header>
 <main>
-	<a href ="/users/joinForm">
-	<button> 회원가입 </button></a>
- HI
+ <h3>HI</h3>
 </main>
 <footer>
 </footer>

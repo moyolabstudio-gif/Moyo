@@ -3,7 +3,7 @@ package com.springboot.project.dto;
 import lombok.Data;
 
 @Data
-public class UsersDto {
+public class usersDto {
     private Long userId;
     private String email;
     private String pwdHash;

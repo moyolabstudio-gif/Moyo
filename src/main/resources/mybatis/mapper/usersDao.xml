@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper 
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.springboot.project.dao.IusersDao">
+
+    <select id="findAll" resultType="com.springboot.project.dto.usersDto">
+        SELECT USER_ID AS userId, EMAIL, USER_NAME AS userName, STATUS FROM USERS
+    </select>
+
+    <insert id="insertUser" parameterType="com.springboot.project.dto.usersDto">
+        INSERT INTO USERS (USER_ID, EMAIL, PWD_HASH)
+        VALUES (SEQ_USER_ID.NEXTVAL, #{email}, #{pwdHash})
+    </insert>
+    
+    <update id="updateUser" parameterType="com.springboot.project.dto.usersDto">
+        UPDATE USERS
+        SET USER_NAME = #{userName, jdbcType=VARCHAR}, 
+            STATUS = #{status, jdbcType=VARCHAR}
+           WHERE EMAIL = #{email, jdbcType=VARCHAR}
+    </update>
+    
+    <select id="login" parameterType="com.springboot.project.dto.usersDto" resultType="com.springboot.project.dto.usersDto">
+        SELECT USER_ID AS userId, EMAIL, USER_NAME AS userName, STATUS
+        FROM USERS
+        WHERE EMAIL = #{email} AND PWD_HASH = #{pwdHash}
+    </select>    
+</mapper>

@@ -3,11 +3,16 @@ package com.springboot.project.controller;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 
+import jakarta.servlet.http.HttpSession;
+
 @Controller
 public class calendarPageController {
 
     @GetMapping("/calendar")
-    public String goCalendarPage() {
+    public String goCalendarPage(HttpSession session) {
+    	if(session.getAttribute("user") == null) {
+    		return "redirect:/users/loginForm";
+    	}
         return "calendar"; 
     }
 }
