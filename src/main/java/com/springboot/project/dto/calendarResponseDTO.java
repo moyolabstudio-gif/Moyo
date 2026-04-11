@@ -10,5 +10,7 @@ public class calendarResponseDTO {
     private String startDt;
     private String endDt;
     private String itemType; // 'EVENT' (일반 일정) 또는 'HOLIDAY' (공휴일)
+    private Long userId; // 추가: 어떤 회원의 일정인지 구분
+    private Long projId;
 }
 

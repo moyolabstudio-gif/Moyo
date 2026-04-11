@@ -10,4 +10,6 @@ public interface IcalendarResponseService {
 
     // 공공데이터 API를 호출하여 DB에 공휴일 데이터 적재 (초기 세팅용)
     void fetchAndSaveHolidays(String year);
+    
+    void registerEvent(calendarResponseDTO dto);
 }

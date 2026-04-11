@@ -83,4 +83,9 @@ public class calendarResponseServiceImpl implements IcalendarResponseService {
             System.out.println("저장 완료: " + locdate + " - " + dateName);
         }
     }
+    @Override
+    public void registerEvent(calendarResponseDTO dto) {
+        // XML에 정의한 insert 쿼리를 호출합니다.
+        calendarDao.registerEvent(dto); 
+    }
 }

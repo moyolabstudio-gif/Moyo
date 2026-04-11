@@ -20,4 +20,6 @@ public interface IcalendarResponseDAO {
     
     // 중복 저장 방지를 위해 해당 날짜에 데이터가 있는지 확인
     int checkHolidayExists(String hldDate);
+    
+    void registerEvent(calendarResponseDTO dto);
 }
