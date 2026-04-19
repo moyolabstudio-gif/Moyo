@@ -85,7 +85,9 @@ public class calendarResponseServiceImpl implements IcalendarResponseService {
     }
     @Override
     public void registerEvent(calendarResponseDTO dto) {
-        // XML에 정의한 insert 쿼리를 호출합니다.
-        calendarDao.registerEvent(dto); 
+        // [보안 점검] 이 유저가 해당 프로젝트의 멤버인지 확인하는 로직 추가 가능
+        // SELECT COUNT(*) FROM PROJ_MEMBERS WHERE PROJ_ID = ? AND USER_ID = ?
+        
+        calendarDao.registerEvent(dto);
     }
 }

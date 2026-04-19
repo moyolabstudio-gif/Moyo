@@ -14,20 +14,22 @@
 	</div>
 	
 	<nav>
-		<c:choose>
-			<c:when test="${not empty sessionScope.user}">
-				<span>
-					<strong>${sessionScope.user.userName}</strong>님 환영합니다!
-					<span> (플랜 : 이후 구독 정보 추가)</span>
-				</span>
-				<a href="/calendar" >내 캘린더</a>
-				<a href="/users/logout">로그아웃 </a>
-			</c:when>
+	    <c:choose>
+	        <c:when test="${not empty sessionScope.user}">
+	            <div class="nav-item-group">
+	                <strong>워크스페이스</strong>
+	                <a href="/workspace/list">팀 목록</a>
+	                <a href="/workspace/create" style="color: blue;">[+] 새 팀 만들기</a>
+	            </div>
+	            
+	            <a href="/calendar">내 캘린더</a>
+	            <a href="/users/logout">로그아웃</a>
+	        </c:when>
 			<c:otherwise>
-				<a href="/users/loginForm">로그인 </a>
-				<a href="/users/joinForm">회원가입 </a>
-			</c:otherwise>	
-		</c:choose>
+			    <a href="/users/loginForm">로그인</a>
+			    <a href="/users/joinForm">회원가입</a>
+			</c:otherwise>   
+	    </c:choose>
 	</nav>
 </header>
 </body>
