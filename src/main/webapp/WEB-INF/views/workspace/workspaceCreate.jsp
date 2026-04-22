@@ -18,8 +18,15 @@
 
 <script>
 $('#btnWsSubmit').on('click', function() {
+    const wsName = $('#wsName').val();
+    
+    if(!wsName) {
+        alert("팀 이름을 입력해주세요!");
+        return;
+    }
+
     const wsData = {
-        wsName: $('#wsName').val()
+        wsName: wsName
     };
 
     $.ajax({
@@ -29,11 +36,13 @@ $('#btnWsSubmit').on('click', function() {
         data: JSON.stringify(wsData),
         success: function(res) {
             alert("팀이 생성되었습니다!");
-            // 생성된 워크스페이스 ID를 가지고 프로젝트 생성 페이지로 이동
-            location.href = "/project/create?wsId=" + res.wsId;
+            
+            // [수정 포인트] 프로젝트 생성(/project/create)이 아니라 워크스페이스 메인으로!
+            // 컨트롤러가 Map에 "wsId"라는 키로 값을 담아 보내주므로 res.wsId를 쓰면 됩니다.
+            location.href = "/workspace/main?wsId=" + res.wsId;
         },
         error: function(err) {
-            alert("생성 실패: " + err.responseText);
+            alert("생성 실패: 세션이 만료되었거나 서버 오류가 발생했습니다.");
         }
     });
 });

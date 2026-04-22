@@ -63,4 +63,16 @@
 	        'N'
 	    )
 	</insert>
+	
+	<select id="getSharedEvents" resultType="map">
+	    SELECT e.*, u.USER_NAME 
+	    FROM EVENTS e
+	    JOIN USERS u ON e.USER_ID = u.USER_ID
+	    WHERE e.PROJ_ID = #{projId}  AND (e.IS_PRIVATE = 'N' OR e.USER_ID = #{userId})
+	</select>
+	<delete id="leaveProject">
+	    DELETE FROM PROJ_MEMBERS 
+	    WHERE PROJ_ID = #{projId} 
+	      AND USER_ID = #{userId}
+	</delete>
 </mapper>

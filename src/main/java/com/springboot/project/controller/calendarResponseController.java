@@ -1,6 +1,8 @@
 package com.springboot.project.controller;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -62,5 +64,24 @@ public class calendarResponseController {
 
         calendarService.registerEvent(dto);
         return "일정이 등록되었습니다.";
+    }
+    
+ // 팀 공유 일정 조회 (로그인한 유저 기준)
+    @GetMapping("/shared-events")
+    public List<Map<String, Object>> getSharedEvents(HttpSession session) {
+        usersDto user = (usersDto) session.getAttribute("user");
+        if (user == null) return new ArrayList<>();
+
+        return calendarService.getSharedEvents(user.getUserId());
+    }
+
+    // 프로젝트 나가기
+    @PostMapping("/leave")
+    public String leaveProject(@RequestParam("projId") Long projId, HttpSession session) {
+        usersDto user = (usersDto) session.getAttribute("user");
+        if (user == null) return "로그인이 필요합니다.";
+
+        boolean isLeaved = calendarService.leaveProject(projId, user.getUserId());
+        return isLeaved ? "SUCCESS" : "FAIL";
     }
 }

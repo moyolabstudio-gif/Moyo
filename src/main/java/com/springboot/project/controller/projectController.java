@@ -1,6 +1,7 @@
 package com.springboot.project.controller;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.stereotype.Controller;
@@ -57,10 +58,45 @@ public class projectController {
         return response;
     }
 
+ // projectController.java 수정
     @GetMapping("/main")
-    public String projectMainPage(@RequestParam("projId") Long projId, HttpSession session, Model model) {
-        session.setAttribute("currentProjId", projId);
+    public String projectMainPage(@RequestParam("projId") Long projId, 
+                                 @RequestParam("wsId") Long wsId, 
+                                 Model model) {
+        
+        // 현재 프로젝트에 속한 멤버 리스트 조회 (Service 호출)
+        List<Map<String, Object>> projectMemberList = projectService.getProjectMembers(projId);
+        
         model.addAttribute("projId", projId);
+        model.addAttribute("wsId", wsId);
+        model.addAttribute("projectMemberList", projectMemberList); // 이 이름으로 JSP에서 사용
+        
         return "project/projectMain";
+    }
+ // 1. 초대 가능한 멤버 목록 조회 (GET)
+    @GetMapping("/api/assignable-members")
+    @ResponseBody
+    public List<Map<String, Object>> getAssignableMembers(
+            @RequestParam("wsId") Long wsId, 
+            @RequestParam("projId") Long projId) {
+        
+        // 조차 시에는 userIds가 필요 없으므로 wsId와 projId만 넘깁니다.
+        return projectService.getAssignableMembers(wsId, projId);
+    }
+
+    // 2. 선택한 멤버 프로젝트에 추가 (POST)
+    @PostMapping("/api/add-members")
+    @ResponseBody
+    public String addMembers(
+            @RequestParam("projId") Long projId, 
+            @RequestParam("userIds") List<Long> userIds) {
+        
+        boolean isAdded = projectService.addProjectMembers(projId, userIds);
+        
+        if (isAdded) {
+            return "SUCCESS";
+        } else {
+            return "ALREADY_EXISTS";
+        }
     }
 }

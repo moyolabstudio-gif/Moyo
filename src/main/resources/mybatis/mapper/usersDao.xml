@@ -25,4 +25,22 @@
         FROM USERS
         WHERE EMAIL = #{email} AND PWD_HASH = #{pwdHash}
     </select>    
+    
+	<select id="searchUsersByEmail" parameterType="string" resultType="com.springboot.project.dto.usersDto">
+	    SELECT 
+	        USER_ID, 
+	        USER_NAME, 
+	        EMAIL 
+	    FROM USERS 
+	    WHERE UPPER(EMAIL) LIKE UPPER('%' || #{email} || '%')
+	</select>
+	
+	<select id="findByEmail" parameterType="string" resultType="com.springboot.project.dto.usersDto">
+	    SELECT 
+	        USER_ID AS userId, 
+	        USER_NAME AS userName, 
+	        EMAIL 
+	    FROM USERS 
+	    WHERE EMAIL = #{email}
+	</select>
 </mapper>
