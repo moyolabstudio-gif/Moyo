@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
 import com.springboot.project.dao.IcalendarResponseDAO;
@@ -15,7 +16,7 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 public class calendarResponseServiceImpl implements IcalendarResponseService {
-
+	
     private final IcalendarResponseDAO calendarDao;
     
     // 공공데이터포털에서 발급받은 'Decoding' 인증키를 넣으세요.
@@ -85,7 +86,22 @@ public class calendarResponseServiceImpl implements IcalendarResponseService {
     }
     @Override
     public void registerEvent(calendarResponseDTO dto) {
-        // XML에 정의한 insert 쿼리를 호출합니다.
-        calendarDao.registerEvent(dto); 
+        // [보안 점검] 이 유저가 해당 프로젝트의 멤버인지 확인하는 로직 추가 가능
+        // SELECT COUNT(*) FROM PROJ_MEMBERS WHERE PROJ_ID = ? AND USER_ID = ?
+        
+        calendarDao.registerEvent(dto);
+    }
+    @Override
+    public List<Map<String, Object>> getSharedEvents(Long userId) {
+        // DAO를 호출하여 팀 공유 일정을 가져옵니다.
+        return calendarDao.getSharedEvents(userId);
+    }
+
+    @Override
+    @Transactional
+    public boolean leaveProject(Long projId, Long userId) {
+        // 프로젝트 멤버 테이블에서 삭제
+        int result = calendarDao.leaveProject(projId, userId);
+        return result > 0;
     }
 }

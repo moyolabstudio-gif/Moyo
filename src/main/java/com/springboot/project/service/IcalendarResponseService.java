@@ -1,6 +1,7 @@
 package com.springboot.project.service;
 
 import java.util.List;
+import java.util.Map;
 
 import com.springboot.project.dto.calendarResponseDTO;
 
@@ -12,4 +13,6 @@ public interface IcalendarResponseService {
     void fetchAndSaveHolidays(String year);
     
     void registerEvent(calendarResponseDTO dto);
+    List<Map<String, Object>> getSharedEvents(Long userId);
+    boolean leaveProject(Long projId, Long userId);
 }

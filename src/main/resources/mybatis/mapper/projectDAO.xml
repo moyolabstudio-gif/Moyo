@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.springboot.project.dao.IprojectDAO">
+
+    <insert id="insertProject" parameterType="com.springboot.project.dto.projectRequestDTO">
+	    <selectKey keyProperty="projId" resultType="long" order="BEFORE">
+	        SELECT SEQ_PROJ_ID.NEXTVAL FROM DUAL
+	    </selectKey>
+	    
+	    INSERT INTO PROJECTS (
+	        PROJ_ID, 
+	        PROJ_NAME, 
+	        PROJ_DESC,
+	        WS_ID
+	    ) VALUES (
+	        #{projId}, 
+	        #{projName}, 
+	        #{projDesc},
+	        #{wsId, jdbcType=NUMERIC}
+	    )
+	</insert>
+
+	<insert id="insertProjectMember">
+	    INSERT INTO PROJ_MEMBERS (PROJ_MEMBER_ID, PROJ_ID, USER_ID, PROJ_ROLE)
+	    VALUES (SEQ_PROJ_MEMBER_ID.NEXTVAL, #{projId}, #{userId}, #{role})
+	</insert>
+	<select id="checkMemberExists" resultType="int">
+	    SELECT COUNT(*) FROM PROJ_MEMBERS 
+	    WHERE PROJ_ID = #{projId} AND USER_ID = #{userId}
+	</select>
+	<select id="getAssignableMembers" resultType="map">
+	  SELECT * FROM USERS 
+		WHERE USER_ID IN (SELECT USER_ID FROM WS_MEMBERS WHERE WS_ID = #{wsId})
+		  AND USER_ID NOT IN (SELECT USER_ID FROM PROJ_MEMBERS WHERE PROJ_ID = #{projId})
+	</select>
+	
+	<select id="getProjectMembers" resultType="map">
+	    SELECT 
+	        m.USER_ID, 
+	        u.USER_NAME, 
+	        u.EMAIL, 
+	        m.PROJ_ROLE 
+	    FROM PROJ_MEMBERS m
+	    JOIN USERS u ON m.USER_ID = u.USER_ID
+	    WHERE m.PROJ_ID = #{projId}
+	</select>
+	
+	<select id="selectProjectsByWsId" parameterType="long" resultType="com.springboot.project.dto.projectRequestDTO">
+	    SELECT 
+	        PROJ_ID,
+	        PROJ_NAME,
+	        WS_ID
+	        FROM PROJECTS
+	    WHERE WS_ID = #{wsId}
+	    ORDER BY PROJ_ID DESC 
+	</select>
+
+</mapper>

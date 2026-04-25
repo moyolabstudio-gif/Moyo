@@ -87,7 +87,9 @@
 	    var eventData = {
 	        title: $('#eventTitle').val(),
 	        startDt: $('#eventStart').val(),
-	        endDt: $('#eventEnd').val()
+	        endDt: $('#eventEnd').val(),
+	        // 중요: 현재 이 달력이 속한 프로젝트 ID를 같이 보냅니다.
+	        projId: 2  // 일단 테스트용 2번, 나중에 ${projId}로 동적 처리
 	    };
 
 	    if (!eventData.title) {
@@ -99,11 +101,11 @@
 	        url: '/api/calendar/register',
 	        type: 'POST',
 	        contentType: 'application/json',
-	        data: JSON.stringify(eventData),
+	        data: JSON.stringify(eventData), // 여기서 projId가 같이 넘어갑니다.
 	        success: function(res) {
 	            alert(res);
 	            $('#eventModal').hide();
-	            calendar.refetchEvents(); // 달력 데이터 새로고침!
+	            calendar.refetchEvents(); 
 	        },
 	        error: function(err) {
 	            alert("저장 실패: " + err.responseText);

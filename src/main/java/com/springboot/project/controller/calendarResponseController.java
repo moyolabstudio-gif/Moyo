@@ -1,12 +1,16 @@
 package com.springboot.project.controller;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody; // 추가 필요
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.springboot.project.dto.calendarResponseDTO;
@@ -43,21 +47,41 @@ public class calendarResponseController {
     
     // 3. 일정 등록 API
     @PostMapping("/register")
-    public ResponseEntity<String> registerEvent(@RequestBody calendarResponseDTO dto, HttpSession session) {
+    @ResponseBody
+    public String registerEvent(@RequestBody calendarResponseDTO dto, HttpSession session) {
         // 1. 세션에서 로그인한 유저 정보 가져오기
-        usersDto loginUser = (usersDto) session.getAttribute("user");
-        
-        if (loginUser == null) {
-            return ResponseEntity.status(401).body("로그인이 필요합니다.");
-        }
+    	usersDto loginUser = (usersDto) session.getAttribute("user");
 
-        // 2. DTO에 사용자 ID와 프로젝트 ID 세팅
-        dto.setUserId(loginUser.getUserId());
-        dto.setProjId(2L); 
-        
-        // 3. 서비스 호출하여 저장
+    	if (loginUser != null) {
+    	    // 로그인한 사용자의 실제 ID를 세팅
+    	    dto.setUserId(loginUser.getUserId());
+    	    System.out.println("로그인 유저 ID 확인: " + loginUser.getUserId());
+    	} else {
+    	    // 로그인이 안 되어 있을 경우의 예외 처리 (인프라 보안 정책 같은 개념)
+    	    return "로그인이 필요합니다."; 
+    	}
+    	
+
         calendarService.registerEvent(dto);
-        
-        return ResponseEntity.ok("일정이 성공적으로 등록되었습니다.");
+        return "일정이 등록되었습니다.";
+    }
+    
+ // 팀 공유 일정 조회 (로그인한 유저 기준)
+    @GetMapping("/shared-events")
+    public List<Map<String, Object>> getSharedEvents(HttpSession session) {
+        usersDto user = (usersDto) session.getAttribute("user");
+        if (user == null) return new ArrayList<>();
+
+        return calendarService.getSharedEvents(user.getUserId());
+    }
+
+    // 프로젝트 나가기
+    @PostMapping("/leave")
+    public String leaveProject(@RequestParam("projId") Long projId, HttpSession session) {
+        usersDto user = (usersDto) session.getAttribute("user");
+        if (user == null) return "로그인이 필요합니다.";
+
+        boolean isLeaved = calendarService.leaveProject(projId, user.getUserId());
+        return isLeaved ? "SUCCESS" : "FAIL";
     }
 }

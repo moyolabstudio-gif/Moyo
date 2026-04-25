@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 
 import com.springboot.project.dao.IusersDao;
 import com.springboot.project.dto.usersDto;
+import com.springboot.project.dto.workspaceDTO;
 
 @Service
 public class UserService {
@@ -38,4 +39,9 @@ public class UserService {
 		usersDao.updateUser(user);
 		return usersDao.login(user);
 	}
+	
+	public List<workspaceDTO> getWorkspacesByUserId(Long userId) {
+        // usersDao에도 이 메서드를 만들어야 합니다.
+        return usersDao.findWorkspacesByUserId(userId);
+    }
 }

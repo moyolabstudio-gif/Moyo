@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.springboot.project.dao.IworkspaceDAO">
+
+	<insert id="insertWorkspace" parameterType="com.springboot.project.dto.workspaceDTO">
+	    <selectKey keyProperty="wsId" resultType="long" order="BEFORE">
+	        SELECT SEQ_WS_ID.NEXTVAL FROM DUAL
+	    </selectKey>
+	
+	    INSERT INTO WORKSPACES (
+	        WS_ID, 
+	        WS_NAME, 
+	        INVITE_CODE, 
+	        OWNER_ID
+	    ) VALUES (
+	        #{wsId}, 
+	        #{wsName}, 
+	        #{inviteCode, jdbcType=VARCHAR},  #{ownerId}
+	    )
+	</insert>
+	
+	<select id="selectWorkspaceList" parameterType="long" resultType="com.springboot.project.dto.workspaceDTO">
+	    SELECT 
+	        W.WS_ID, 
+	        W.WS_NAME, 
+	        W.INVITE_CODE, 
+	        W.OWNER_ID 
+	    FROM WORKSPACES W
+	    /* 내가 소속된 멤버 테이블을 조인합니다 */
+	    JOIN WS_MEMBERS M ON W.WS_ID = M.WS_ID
+	    /* 소유주 여부와 상관없이 내 유저 ID가 멤버 리스트에 있으면 가져옵니다 */
+	    WHERE M.USER_ID = #{userId}
+	    ORDER BY W.WS_ID DESC
+	</select>
+	
+	<select id="selectWorkspaceDetail" parameterType="long" resultType="com.springboot.project.dto.workspaceDTO">
+	    SELECT 
+	        WS_ID, 
+	        WS_NAME, 
+	        INVITE_CODE, 
+	        OWNER_ID 
+	    FROM WORKSPACES 
+	    WHERE WS_ID = #{wsId}
+	</select>
+	
+	<insert id="insertWorkspaceMember">
+	    INSERT INTO WS_MEMBERS (
+	        WS_MEM_ID, 
+	        WS_ID, 
+	        USER_ID, 
+	        WS_ROLE, 
+	        JOINED_AT
+	    ) VALUES (
+	        SEQ_WS_MEM_ID.NEXTVAL, 
+	        #{wsId}, 
+	        #{userId}, 
+	        #{role}, 
+	        SYSDATE
+	    )
+	</insert>
+	
+	<select id="selectWorkspaceMembers" parameterType="long" resultType="map">
+	    SELECT 
+	        m.WS_MEM_ID,
+	        m.WS_ROLE,
+	        u.USER_ID,
+	        u.USER_NAME,
+	        u.EMAIL
+	    FROM WS_MEMBERS m
+	    JOIN USERS u ON m.USER_ID = u.USER_ID
+	    WHERE m.WS_ID = #{wsId}
+	    ORDER BY CASE WHEN m.WS_ROLE = 'ADMIN' THEN 1 ELSE 2 END, u.USER_NAME ASC
+	</select>
+	
+	<delete id="deleteWorkspaceMember">
+	    DELETE FROM WS_MEMBERS 
+	    WHERE WS_ID = #{wsId} AND USER_ID = #{userId}
+	</delete>
+	
+	<update id="updateMemberRole">
+	    UPDATE WS_MEMBERS 
+	    SET WS_ROLE = #{role}
+	    WHERE WS_ID = #{wsId} AND USER_ID = #{userId}
+	</update>
+	
+	<update id="updateWorkspaceOwner">
+	    UPDATE WORKSPACES 
+	    SET OWNER_ID = #{ownerId} 
+	    WHERE WS_ID = #{wsId}
+	</update>
+	
+	<select id="checkInvitationExists" resultType="int">
+	    SELECT (
+	        (SELECT COUNT(*) FROM WS_MEMBERS WHERE WS_ID = #{wsId} AND USER_ID = #{inviteeId}) +
+	        (SELECT COUNT(*) FROM WS_INVITATIONS WHERE WS_ID = #{wsId} AND INVITEE_ID = #{inviteeId} AND STATUS = 'PENDING')
+	    ) FROM DUAL
+	</select>
+	
+	<insert id="insertInvitation">
+	    INSERT INTO WS_INVITATIONS (
+	        INVITE_ID, WS_ID, INVITER_ID, INVITEE_ID, STATUS, SENT_AT
+	    ) VALUES (
+	        SEQ_INVITE_ID.NEXTVAL, #{wsId}, #{inviterId}, #{inviteeId}, 'PENDING', SYSDATE
+	    )
+	</insert>
+	
+	<select id="selectPendingInvitations" resultType="map">
+	    SELECT 
+	        i.INVITE_ID, 
+	        w.WS_NAME, 
+	        u.USER_NAME as INVITER_NAME, 
+	        i.STATUS 
+	    FROM WS_INVITATIONS i  JOIN WORKSPACES w ON i.WS_ID = w.WS_ID 
+	    JOIN USERS u ON i.INVITER_ID = u.USER_ID 
+	    WHERE i.INVITEE_ID = #{userId} 
+	      AND i.STATUS = 'PENDING'
+	</select>
+	
+	<update id="updateInvitationStatus">
+	    UPDATE WS_INVITATIONS SET STATUS = #{status} WHERE INVITE_ID = #{inviteId}
+	</update>
+	
+	<select id="selectInvitationById" resultType="map">
+	    SELECT WS_ID, INVITEE_ID FROM WS_INVITATIONS WHERE INVITE_ID = #{inviteId}
+	</select>
+	
+	<select id="getWorkspaceMembers" resultType="map">
+	    SELECT 
+	        m.USER_ID, 
+	        u.USER_NAME, 
+	        u.EMAIL, 
+	        m.WS_ROLE,
+	        TO_CHAR(m.JOINED_AT, 'YYYY-MM-DD') as JOINED_AT
+	    FROM WS_MEMBERS m
+	    JOIN USERS u ON m.USER_ID = u.USER_ID
+	    WHERE m.WS_ID = #{wsId}
+	    ORDER BY CASE WHEN m.WS_ROLE = 'ADMIN' THEN 1 ELSE 2 END, u.USER_NAME
+	</select>
+</mapper>

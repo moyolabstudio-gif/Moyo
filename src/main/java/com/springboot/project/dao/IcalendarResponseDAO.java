@@ -1,6 +1,7 @@
 package com.springboot.project.dao;
 
 import java.util.List;
+import java.util.Map;
 
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -22,4 +23,7 @@ public interface IcalendarResponseDAO {
     int checkHolidayExists(String hldDate);
     
     void registerEvent(calendarResponseDTO dto);
+List<Map<String, Object>> getSharedEvents(@Param("userId") Long userId);
+    
+    int leaveProject(@Param("projId") Long projId, @Param("userId") Long userId);
 }
