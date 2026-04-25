@@ -21,6 +21,7 @@
 					<span> (플랜 : 이후 구독 정보 추가)</span>
 				</span>
 				<a href="/calendar" >내 캘린더</a>
+				<a href="/users/myPage">마이페이지</a>
 				<a href="/users/logout">로그아웃 </a>
 			</c:when>
 			<c:otherwise>

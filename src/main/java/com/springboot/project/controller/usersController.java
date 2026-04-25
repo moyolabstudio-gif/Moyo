@@ -76,4 +76,9 @@ public class usersController {
 		session.invalidate();
 		return "redirect:/";
 	}
+	
+	@GetMapping("/users/myPage")
+	public String myPage() {
+		return "users/myPage";
+	}
 }
