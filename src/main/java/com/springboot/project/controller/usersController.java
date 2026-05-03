@@ -1,13 +1,17 @@
 package com.springboot.project.controller;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.springboot.project.dto.usersDto;
 import com.springboot.project.dto.workspaceDTO;
@@ -91,5 +95,52 @@ public class usersController {
 	    
 	    model.addAttribute("wsList", wsList);
 	    return "users/myPage";
+	}
+	
+	@PostMapping("/users/updateProfile")
+	@ResponseBody
+	public Map<String, Object> updateProfile(@RequestBody usersDto updateDto, HttpSession session) {
+	    Map<String, Object> map = new HashMap<>();
+	    usersDto currentUser = (usersDto) session.getAttribute("user");
+
+	    if (currentUser != null) {
+	        // 1. 세션에 있는 ID를 DTO에 세팅 (보안상 중요)
+	        updateDto.setUserId(currentUser.getUserId());
+	        
+	        // 2. 서비스 호출 (DB 수정)
+	        userService.updateProfile(updateDto);
+	        
+	        // 3. 세션 갱신 (변경된 이름 반영)
+	        currentUser.setUserName(updateDto.getUserName());
+	        session.setAttribute("user", currentUser); 
+	        
+	        map.put("status", "success");
+	    } else {
+	        map.put("status", "fail");
+	    }
+	    return map;
+	}
+
+	@PostMapping("/users/withdraw")
+	@ResponseBody
+	public Map<String, Object> withdraw(HttpSession session) {
+	    Map<String, Object> map = new HashMap<>();
+	    usersDto currentUser = (usersDto) session.getAttribute("user");
+
+	    if (currentUser != null) {
+	        // 1. 상태값 변경 (Soft Delete)
+	        currentUser.setStatus("QUIT");
+	        
+	        // 2. 서비스 호출
+	        userService.updateProfile(currentUser);
+	        
+	        // 3. 세션 종료 (로그아웃 처리)
+	        session.invalidate();
+	        
+	        map.put("status", "success");
+	    } else {
+	        map.put("status", "fail");
+	    }
+	    return map;
 	}
 }

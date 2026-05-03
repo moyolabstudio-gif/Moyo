@@ -9,7 +9,7 @@ public class usersDto {
     private String pwdHash;
     private String userName;
     private String status;
-
+    private String userRole;
 
     public Long getUSER_ID() { return this.userId; }
     public String getUSER_NAME() { return this.userName; }
