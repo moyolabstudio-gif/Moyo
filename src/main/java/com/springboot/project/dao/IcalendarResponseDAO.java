@@ -10,11 +10,12 @@ import com.springboot.project.dto.calendarResponseDTO;
 
 @Mapper
 public interface IcalendarResponseDAO {
-    List<calendarResponseDTO> getMonthlyCalendar(
-        @Param("projId") Long projId,
-        @Param("startDate") String startDate,
-        @Param("endDate") String endDate
-    );
+	List<calendarResponseDTO> getMonthlyCalendar(
+		    @Param("projId") Long projId, 
+		    @Param("wsId") Long wsId, 
+		    @Param("startDate") String startDate, 
+		    @Param("endDate") String endDate
+		);
     
  // 공휴일 정보 저장
     int insertHoliday(calendarResponseDTO holiday);
@@ -23,7 +24,11 @@ public interface IcalendarResponseDAO {
     int checkHolidayExists(String hldDate);
     
     void registerEvent(calendarResponseDTO dto);
-List<Map<String, Object>> getSharedEvents(@Param("userId") Long userId);
+    int deleteEvent(int eventId);
+    int updateEventDate(Map<String, Object> params);
+    int updateEventAll(Map<String, Object> params);
+    
+    List<Map<String, Object>> getSharedEvents(@Param("userId") Long userId);
     
     int leaveProject(@Param("projId") Long projId, @Param("userId") Long userId);
 }

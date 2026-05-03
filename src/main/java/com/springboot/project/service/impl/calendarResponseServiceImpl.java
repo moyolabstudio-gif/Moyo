@@ -23,8 +23,9 @@ public class calendarResponseServiceImpl implements IcalendarResponseService {
     private final String SERVICE_KEY = "29022db18fa77c8865fb004f0087d36ea659013b96e1d9467b4faa4847ba6e94";
 
     @Override
-    public List<calendarResponseDTO> getMonthlyCalendar(Long projId, String startDate, String endDate) {
-        return calendarDao.getMonthlyCalendar(projId, startDate, endDate);
+    public List<calendarResponseDTO> getMonthlyCalendar(Long projId, Long wsId, String startDate, String endDate) {
+        // 인터페이스에서 정의한 4개의 파라미터를 그대로 DAO에 전달해야 합니다.
+        return calendarDao.getMonthlyCalendar(projId, wsId, startDate, endDate);
     }
 
     @Override
@@ -91,6 +92,25 @@ public class calendarResponseServiceImpl implements IcalendarResponseService {
         
         calendarDao.registerEvent(dto);
     }
+    
+    @Override
+    public boolean deleteEvent(int eventId) {
+        // 💡 서비스(this)가 아니라 DAO를 호출해야 합니다!
+        int result = calendarDao.deleteEvent(eventId); 
+        return result > 0; 
+    }
+    
+    @Override
+    public boolean updateEventDate(Map<String, Object> params) {
+        // DAO를 호출하여 업데이트 실행 (리턴 타입 int를 boolean으로 변환)
+        return calendarDao.updateEventDate(params) > 0;
+    }
+    @Override
+    public boolean updateEventAll(Map<String, Object> params) {
+        // 제목, 시작일, 종료일, ID가 포함된 맵을 DAO로 전달
+        return calendarDao.updateEventAll(params) > 0;
+    }
+    
     @Override
     public List<Map<String, Object>> getSharedEvents(Long userId) {
         // DAO를 호출하여 팀 공유 일정을 가져옵니다.

@@ -4,30 +4,54 @@
 
 <mapper namespace="com.springboot.project.dao.IcalendarResponseDAO">
 
-    <select id="getMonthlyCalendar" resultType="com.springboot.project.dto.calendarResponseDTO">
-	    SELECT 
-	        EVENT_ID as id,
-	        TITLE as title,
-	        TO_CHAR(START_DT, 'YYYY-MM-DD') as startDt,
-	        /* 종료일에 +1을 해서 달력에 이틀치로 보이게 만듭니다 */
-	        TO_CHAR(END_DT + 1, 'YYYY-MM-DD') as endDt, 
-	        'EVENT' as itemType
-	    FROM EVENTS
-	    WHERE PROJ_ID = #{projId}
-	      AND START_DT BETWEEN TO_DATE(#{startDate}, 'YYYY-MM-DD') AND TO_DATE(#{endDate}, 'YYYY-MM-DD')
-	    
-	    UNION ALL
-	    
-	    /* 공휴일은 하루짜리이므로 그대로 둡니다 */
-	    SELECT 
-	        HLD_ID as id,
-	        HLD_NAME as title,
-	        TO_CHAR(HLD_DATE, 'YYYY-MM-DD') as startDt,
-	        TO_CHAR(HLD_DATE + 1, 'YYYY-MM-DD') as endDt,
-	        'HOLIDAY' as itemType
-	    FROM NATIONAL_HOLIDAYS
-	    WHERE HLD_DATE BETWEEN TO_DATE(#{startDate}, 'YYYY-MM-DD') AND TO_DATE(#{endDate}, 'YYYY-MM-DD')
-	</select>
+<select id="getMonthlyCalendar" resultType="com.springboot.project.dto.calendarResponseDTO">
+    /* 1. 프로젝트 일정 */
+    SELECT 
+        EVENT_ID as id, TITLE as title,
+        TO_CHAR(START_DT, 'YYYY-MM-DD') as startDt,
+        TO_CHAR(END_DT + 1, 'YYYY-MM-DD') as endDt, 
+        'PROJ' as itemType, COLOR as color
+    FROM EVENTS
+    WHERE PROJ_ID = #{projId, jdbcType=NUMERIC}
+      AND START_DT BETWEEN TO_DATE(#{startDate}, 'YYYY-MM-DD') AND TO_DATE(#{endDate}, 'YYYY-MM-DD')
+    
+    <if test="wsId != null">
+    UNION ALL
+    /* 2. 워크스페이스 일정 */
+    SELECT 
+        EVENT_ID as id, TITLE as title,
+        TO_CHAR(START_DT, 'YYYY-MM-DD') as startDt,
+        TO_CHAR(END_DT + 1, 'YYYY-MM-DD') as endDt, 
+        'WS' as itemType, COLOR as color
+    FROM EVENTS
+    WHERE WS_ID = #{wsId, jdbcType=NUMERIC} AND EVENT_TYPE = 'WS'
+      AND START_DT BETWEEN TO_DATE(#{startDate}, 'YYYY-MM-DD') AND TO_DATE(#{endDate}, 'YYYY-MM-DD')
+    </if>
+
+    UNION ALL
+    /* 3. 공휴일 */
+    SELECT 
+        HLD_ID as id, HLD_NAME as title,
+        TO_CHAR(HLD_DATE, 'YYYY-MM-DD') as startDt,
+        TO_CHAR(HLD_DATE + 1, 'YYYY-MM-DD') as endDt,
+        'HOLIDAY' as itemType, '#ff0000' as color
+    FROM NATIONAL_HOLIDAYS
+    WHERE HLD_DATE BETWEEN TO_DATE(#{startDate}, 'YYYY-MM-DD') AND TO_DATE(#{endDate}, 'YYYY-MM-DD')
+</select>
+    
+<!-- 프로젝트 팀장 권한 확인 -->
+<select id="checkProjectManager" resultType="string">
+    SELECT PROJ_ROLE 
+    FROM PROJ_MEMBERS 
+    WHERE PROJ_ID = #{projId} AND USER_ID = #{userId}
+</select>
+
+<!-- 워크스페이스 관리자 권한 확인 -->
+<select id="checkWorkspaceAdmin" resultType="string">
+    SELECT WS_ROLE 
+    FROM WS_MEMBERS 
+    WHERE WS_ID = #{wsId, jdbcType=NUMERIC} AND EVENT_TYPE = 'WS'
+</select>
     
 	<insert id="insertHoliday" parameterType="com.springboot.project.dto.calendarResponseDTO">
 	    INSERT INTO NATIONAL_HOLIDAYS (
@@ -46,23 +70,29 @@
 	    WHERE TO_CHAR(HLD_DATE, 'YYYYMMDD') = #{hldDate}
 	</select>
 	
-	<insert id="registerEvent" parameterType="com.springboot.project.dto.calendarResponseDTO">
-	    INSERT INTO EVENTS (
-	        EVENT_ID, 
-	        PROJ_ID, 
-	        TITLE, 
-	        START_DT, 
-	        END_DT,
-	        IS_PRIVATE
-	    ) VALUES (
-	        SEQ_EVENT_ID.NEXTVAL, 
-	        #{projId}, 
-	        #{title}, 
-	        TO_DATE(#{startDt}, 'YYYY-MM-DD'), 
-	        TO_DATE(#{endDt}, 'YYYY-MM-DD'),
-	        'N'
-	    )
-	</insert>
+<insert id="registerEvent" parameterType="com.springboot.project.dto.calendarResponseDTO">
+    INSERT INTO EVENTS (
+        EVENT_ID, 
+        PROJ_ID, 
+        WS_ID,
+        TITLE, 
+        START_DT, 
+        END_DT,
+        EVENT_TYPE,
+        USER_ID,
+        COLOR
+    ) VALUES (
+        SEQ_EVENT_ID.NEXTVAL, 
+        #{projId, jdbcType=NUMERIC}, 
+        #{wsId, jdbcType=NUMERIC}, 
+        #{title}, 
+        TO_DATE(#{startDt}, 'YYYY-MM-DD'), 
+        TO_DATE(#{endDt}, 'YYYY-MM-DD'),
+        #{itemType}, 
+        #{userId, jdbcType=NUMERIC}, 
+        #{color, jdbcType=VARCHAR} /* 👈 이 부분에 VARCHAR 타입을 명시하세요! */
+    )
+</insert>
 	
 	<select id="getSharedEvents" resultType="map">
 	    SELECT e.*, u.USER_NAME 
@@ -75,4 +105,24 @@
 	    WHERE PROJ_ID = #{projId} 
 	      AND USER_ID = #{userId}
 	</delete>
+	
+	<delete id="deleteEvent" parameterType="int">
+	    DELETE FROM EVENTS 
+	    WHERE EVENT_ID = #{eventId}
+	</delete>
+	
+	<update id="updateEventDate">
+	    UPDATE EVENTS 
+	    SET START_DT = TO_DATE(#{startDt}, 'YYYY-MM-DD'),
+	        END_DT = TO_DATE(#{endDt}, 'YYYY-MM-DD')
+	    WHERE EVENT_ID = #{id}
+	</update>
+	
+	<update id="updateEventAll">
+	    UPDATE EVENTS 
+	    SET TITLE = #{title},
+	        START_DT = TO_DATE(#{startDt}, 'YYYY-MM-DD'),
+	        END_DT = TO_DATE(#{endDt}, 'YYYY-MM-DD')
+	    WHERE EVENT_ID = #{id}
+	</update>
 </mapper>

@@ -5,7 +5,9 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody; // 추가 필요
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -27,14 +29,16 @@ public class calendarResponseController {
 
     private final IcalendarResponseService calendarService;
 
-    // 1. 달력 데이터 조회 API
+    // 1. 달력 데이터 조회 API (파라미터 4개로 업데이트)
     @GetMapping("/monthly")
     public ResponseEntity<List<calendarResponseDTO>> getMonthlyEvents(
             @RequestParam("projId") Long projId,
+            @RequestParam(value = "wsId", required = false) Long wsId, // 👈 wsId 추가 (필수 아님 설정)
             @RequestParam("startDate") String startDate,
             @RequestParam("endDate") String endDate) {
         
-        List<calendarResponseDTO> list = calendarService.getMonthlyCalendar(projId, startDate, endDate);
+        // 💡 서비스 호출 시 wsId를 포함하여 4개의 인자를 전달합니다.
+        List<calendarResponseDTO> list = calendarService.getMonthlyCalendar(projId, wsId, startDate, endDate);
         return ResponseEntity.ok(list);
     }
 
@@ -74,7 +78,27 @@ public class calendarResponseController {
 
         return calendarService.getSharedEvents(user.getUserId());
     }
-
+    
+    @DeleteMapping("/delete/{eventId}")
+    public ResponseEntity<String> deleteEvent(@PathVariable("eventId") int eventId) { // 👈 ("eventId") 추가
+        if (calendarService.deleteEvent(eventId)) {
+            return ResponseEntity.ok("삭제 성공");
+        } else {
+            return ResponseEntity.status(500).body("삭제 실패");
+        }
+    }
+    @PostMapping("/update-date")
+    public ResponseEntity<String> updateEventDate(@RequestBody Map<String, Object> params) {
+        // 프론트에서 보낸 id, startDt, endDt를 받음
+        boolean isUpdated = calendarService.updateEventDate(params);
+        return isUpdated ? ResponseEntity.ok("Success") : ResponseEntity.status(500).body("Fail");
+    }
+    @PostMapping("/update-all")
+    public ResponseEntity<String> updateEventAll(@RequestBody Map<String, Object> params) {
+        boolean isUpdated = calendarService.updateEventAll(params); // 새로 만들어야 함
+        return isUpdated ? ResponseEntity.ok("Success") : ResponseEntity.status(500).body("Fail");
+    }
+    
     // 프로젝트 나가기
     @PostMapping("/leave")
     public String leaveProject(@RequestParam("projId") Long projId, HttpSession session) {
