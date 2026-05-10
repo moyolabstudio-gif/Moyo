@@ -42,6 +42,7 @@ dependencies {
 	implementation 'org.glassfish:jakarta.el:4.0.2'
 	implementation 'org.apache.tomcat.embed:tomcat-embed-jasper'
 	implementation 'org.bgee.log4jdbc-log4j2:log4jdbc-log4j2-jdbc4.1:1.16'
+	implementation 'com.ibm.icu:icu4j:74.2'
 }
 
 tasks.named('test') {

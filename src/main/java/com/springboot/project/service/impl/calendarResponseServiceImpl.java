@@ -1,5 +1,6 @@
 package com.springboot.project.service.impl;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
@@ -16,16 +17,17 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 public class calendarResponseServiceImpl implements IcalendarResponseService {
-	
+    
     private final IcalendarResponseDAO calendarDao;
     
-    // 공공데이터포털에서 발급받은 'Decoding' 인증키를 넣으세요.
+    // 공공데이터포털 인증키 (기존과 동일)
     private final String SERVICE_KEY = "29022db18fa77c8865fb004f0087d36ea659013b96e1d9467b4faa4847ba6e94";
 
+    // [수정된 메서드] 파라미터에 userId를 추가하고 고정값을 제거합니다.
     @Override
-    public List<calendarResponseDTO> getMonthlyCalendar(Long projId, Long wsId, String startDate, String endDate) {
-        // 인터페이스에서 정의한 4개의 파라미터를 그대로 DAO에 전달해야 합니다.
-        return calendarDao.getMonthlyCalendar(projId, wsId, startDate, endDate);
+    public List<calendarResponseDTO> getMonthlyCalendar(Long userId, Long projId, Long wsId, List<String> types, String startDate, String endDate) {
+        
+        return calendarDao.getMonthlyEvents(userId, wsId, projId, types, startDate, endDate);
     }
 
     @Override
@@ -86,18 +88,39 @@ public class calendarResponseServiceImpl implements IcalendarResponseService {
         }
     }
     @Override
+    @Transactional
     public void registerEvent(calendarResponseDTO dto) {
-        // [보안 점검] 이 유저가 해당 프로젝트의 멤버인지 확인하는 로직 추가 가능
-        // SELECT COUNT(*) FROM PROJ_MEMBERS WHERE PROJ_ID = ? AND USER_ID = ?
+        if ("Y".equals(dto.getIsRecurring())) {
+            String recurGroupId = java.util.UUID.randomUUID().toString();
+            dto.setRecurGroupId(recurGroupId);
+            
+            // 💡 여기서 dto.getAllDay() 값이 'Y'인지 체크해보세요.
+            // 만약 프론트에서 반복 설정 시 allDay 체크값을 안 보냈다면 여기서 N으로 바뀔 수 있습니다.
+            System.out.println("반복일정 등록 - allDay 여부: " + dto.getAllDay());
+        }
         
         calendarDao.registerEvent(dto);
     }
     
+ // 1. 인터페이스 규격에 맞춰 파라미터를 Map으로 변경 (@Override 에러 해결)
     @Override
-    public boolean deleteEvent(int eventId) {
-        // 💡 서비스(this)가 아니라 DAO를 호출해야 합니다!
-        int result = calendarDao.deleteEvent(eventId); 
-        return result > 0; 
+    @Transactional
+    public boolean deleteEvent(Map<String, Object> params) {
+        boolean isDeleted = false;
+        try {
+            // [체크] Map 안에 데이터가 정확한 키로 들어있는지 다시 확인
+            System.out.println("===> 서비스 실행 - Map 내부: " + params.toString());
+            
+            // 💡 DAO 호출
+            int result = calendarDao.deleteEvent(params); 
+
+            if (result > 0) isDeleted = true;
+        } catch (Exception e) {
+            // 🔥 여기서 터지는 에러 메시지를 확인해야 합니다!
+            System.err.println("===> 에러 상세: " + e.getMessage());
+            e.printStackTrace();
+        }
+        return isDeleted;
     }
     
     @Override
@@ -110,7 +133,14 @@ public class calendarResponseServiceImpl implements IcalendarResponseService {
         // 제목, 시작일, 종료일, ID가 포함된 맵을 DAO로 전달
         return calendarDao.updateEventAll(params) > 0;
     }
-    
+    @Override
+    @Transactional
+    public boolean updateRecurringEvents(Map<String, Object> params) {
+        // params에 recurGroupId가 반드시 포함되어야 함
+        return calendarDao.updateRecurringEvents(params) > 0;
+    }
+
+
     @Override
     public List<Map<String, Object>> getSharedEvents(Long userId) {
         // DAO를 호출하여 팀 공유 일정을 가져옵니다.
@@ -123,5 +153,15 @@ public class calendarResponseServiceImpl implements IcalendarResponseService {
         // 프로젝트 멤버 테이블에서 삭제
         int result = calendarDao.leaveProject(projId, userId);
         return result > 0;
+    }
+    
+    @Override
+    public List<Map<String, Object>> getWorkspacesByUserId(long userId) { // int -> long
+        return calendarDao.selectUserWorkspaces(userId);
+    }
+
+    @Override
+    public List<Map<String, Object>> getProjectsByUserId(long userId) { // int -> long
+        return calendarDao.selectUserProjects(userId);
     }
 }
