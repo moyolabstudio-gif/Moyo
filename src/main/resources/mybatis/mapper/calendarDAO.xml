@@ -5,9 +5,10 @@
 <mapper namespace="com.springboot.project.dao.IcalendarResponseDAO">
 
 <select id="getMonthlyEvents" resultType="com.springboot.project.dto.calendarResponseDTO">
-   SELECT 
-    id, title, startDt, endDt, itemType, color,
-    isRecurring, recurType, recurInterval, untilDt, recurGroupId /* 💡 반복 컬럼 추가 */
+    SELECT 
+        id, title, startDt, endDt, itemType, color,
+        isRecurring, recurType, recurInterval, untilDt, recurGroupId,
+        isLunar, lunarMonth, lunarDay /* 💡 Java에서 계산할 수 있게 음력 정보 추가 */
     FROM (
         SELECT 
             EVENT_ID as id, 
@@ -19,12 +20,14 @@
             USER_ID, WS_ID, PROJ_ID, 
             START_DT as RAW_START, 
             END_DT as RAW_END,
-            /* 💡 반복 관련 원본 데이터 추출 */
             IS_RECURRING as isRecurring,
             RECUR_TYPE as recurType,
             RECUR_INTERVAL as recurInterval,
             TO_CHAR(RECUR_END_DT, 'YYYY-MM-DD') as untilDt,
-            RECUR_GROUP_ID as recurGroupId
+            RECUR_GROUP_ID as recurGroupId,
+            IS_LUNAR as isLunar,
+            LUNAR_MONTH as lunarMonth,
+            LUNAR_DAY as lunarDay
         FROM EVENTS
         UNION ALL
         SELECT 
@@ -37,7 +40,8 @@
             NULL as USER_ID, NULL as WS_ID, NULL as PROJ_ID, 
             HLD_DATE as RAW_START, 
             HLD_DATE as RAW_END,
-            'N', NULL, 1, NULL, NULL /* 휴일은 반복 데이터 없음 */
+            'N', NULL, 1, NULL, NULL,
+            'N', NULL, NULL /* 💡 UNION ALL 컬럼 개수 맞춤 */
         FROM NATIONAL_HOLIDAYS
     )
     WHERE (
@@ -60,11 +64,16 @@
             <otherwise>1=0</otherwise>
         </choose>
     )
-    /* 💡 날짜 필터링 로직 수정 (반복 일정 대응) */
+    /* 💡 날짜 필터링 로직 수정 (음력 반복 일정 대응) */
     AND (
-        (isRecurring = 'N' AND RAW_START &lt;= TO_DATE(#{endDate}, 'YYYY-MM-DD') AND RAW_END &gt;= TO_DATE(#{startDate}, 'YYYY-MM-DD'))
+        -- 1. 일반 양력 일정: 현재 화면 범위 내에 있는 것
+        (isLunar = 'N' AND isRecurring = 'N' AND RAW_START &lt;= TO_DATE(#{endDate}, 'YYYY-MM-DD') AND RAW_END &gt;= TO_DATE(#{startDate}, 'YYYY-MM-DD'))
         OR 
-        (isRecurring = 'Y' AND (untilDt IS NULL OR TO_DATE(untilDt, 'YYYY-MM-DD') &gt;= TO_DATE(#{startDate}, 'YYYY-MM-DD')))
+        -- 2. 양력 반복 일정: 종료일이 현재 조회 시작일보다 이후면 일단 가져옴
+        (isLunar = 'N' AND isRecurring = 'Y' AND (untilDt IS NULL OR TO_DATE(untilDt, 'YYYY-MM-DD') &gt;= TO_DATE(#{startDate}, 'YYYY-MM-DD')))
+        OR
+        -- 3. 음력 반복 일정: 과거 연도 데이터도 가져와서 Java에서 계산해야 하므로 종료일만 체크
+        (isLunar = 'Y' AND (untilDt IS NULL OR TO_DATE(untilDt, 'YYYY-MM-DD') &gt;= TO_DATE(#{startDate}, 'YYYY-MM-DD')))
     )
 </select>
     
@@ -161,13 +170,13 @@
 	</update>
 	
 	<update id="updateEventAll">
-	    UPDATE EVENTS 
-	    SET TITLE = #{title},
-	        START_DT = TO_DATE(#{startDt}, 'YYYY-MM-DD"T"HH24:MI'),
-	        END_DT = TO_DATE(#{endDt}, 'YYYY-MM-DD"T"HH24:MI'),
-	        EVENT_COLOR = #{color} 
-	    WHERE EVENT_ID = #{id}
-	</update>
+    UPDATE EVENTS 
+    SET TITLE = #{title},
+        START_DT = TO_DATE(#{startDt}, 'YYYY-MM-DD"T"HH24:MI'),
+        END_DT = TO_DATE(#{endDt}, 'YYYY-MM-DD"T"HH24:MI'),
+        EVENT_COLOR = #{color},
+        IS_LUNAR = #{isLunar, jdbcType=CHAR},         LUNAR_MONTH = #{lunarMonth, jdbcType=NUMERIC}, LUNAR_DAY = #{lunarDay, jdbcType=NUMERIC}     WHERE EVENT_ID = #{id}
+</update>
 	<update id="updateRecurringEvents">
 	    UPDATE EVENTS 
 	    SET TITLE = #{title},

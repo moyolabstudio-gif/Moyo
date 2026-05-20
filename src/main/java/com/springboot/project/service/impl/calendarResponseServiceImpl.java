@@ -1,6 +1,5 @@
 package com.springboot.project.service.impl;
 
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
@@ -11,6 +10,7 @@ import org.springframework.web.client.RestTemplate;
 import com.springboot.project.dao.IcalendarResponseDAO;
 import com.springboot.project.dto.calendarResponseDTO;
 import com.springboot.project.service.IcalendarResponseService;
+import com.springboot.project.util.LunarUtil;
 
 import lombok.RequiredArgsConstructor;
 
@@ -23,13 +23,40 @@ public class calendarResponseServiceImpl implements IcalendarResponseService {
     // 공공데이터포털 인증키 (기존과 동일)
     private final String SERVICE_KEY = "29022db18fa77c8865fb004f0087d36ea659013b96e1d9467b4faa4847ba6e94";
 
-    // [수정된 메서드] 파라미터에 userId를 추가하고 고정값을 제거합니다.
+ // calendarResponseServiceImpl.java 수정
+
     @Override
     public List<calendarResponseDTO> getMonthlyCalendar(Long userId, Long projId, Long wsId, List<String> types, String startDate, String endDate) {
-        
-        return calendarDao.getMonthlyEvents(userId, wsId, projId, types, startDate, endDate);
-    }
+        // 1. DB에서 해당 기간의 일정 가져오기 (음력은 날짜 상관없이 가져오도록 XML에서 처리됨)
+        List<calendarResponseDTO> eventList = calendarDao.getMonthlyEvents(userId, wsId, projId, types, startDate, endDate);
 
+        // 2. 현재 화면에서 보고 있는 '연도' 추출 (예: "2027-06-01" -> 2027)
+        int viewYear = Integer.parseInt(startDate.substring(0, 4));
+
+        for (calendarResponseDTO event : eventList) {
+            // 음력 설정이 'Y'인 일정만 처리
+            if ("Y".equalsIgnoreCase(event.getIsLunar())) {
+                if (event.getLunarMonth() != null && event.getLunarDay() != null) {
+                    try {
+                        // ⭐ 수정된 LunarUtil을 사용하여 현재 연도(viewYear)의 양력 날짜 계산
+                        String solarDate = LunarUtil.convertLunarToSolar(viewYear, event.getLunarMonth(), event.getLunarDay());
+                        
+                        // FullCalendar 렌더링을 위해 DTO의 시작/종료 날짜를 계산된 양력 날짜로 업데이트
+                        event.setStartDt(solarDate + " 00:00:00"); 
+                        event.setEndDt(solarDate + " 23:59:59");
+                        event.setAllDay("Y"); // 음력 일정은 통상 하루 종일로 처리
+                        
+                        // 디버깅용 로그 (정상 범위인지 확인)
+                        System.out.println("음력 변환 완료: " + event.getTitle() + " -> " + solarDate);
+                    } catch (Exception e) {
+                        System.err.println("음력 변환 중 오류 발생 (ID: " + event.getId() + "): " + e.getMessage());
+                    }
+                }
+            }
+        }
+        
+        return eventList;
+    }
     @Override
     public void fetchAndSaveHolidays(String year) {
         RestTemplate restTemplate = new RestTemplate();
@@ -93,10 +120,24 @@ public class calendarResponseServiceImpl implements IcalendarResponseService {
         if ("Y".equals(dto.getIsRecurring())) {
             String recurGroupId = java.util.UUID.randomUUID().toString();
             dto.setRecurGroupId(recurGroupId);
-            
-            // 💡 여기서 dto.getAllDay() 값이 'Y'인지 체크해보세요.
-            // 만약 프론트에서 반복 설정 시 allDay 체크값을 안 보냈다면 여기서 N으로 바뀔 수 있습니다.
-            System.out.println("반복일정 등록 - allDay 여부: " + dto.getAllDay());
+        }
+
+        if ("Y".equals(dto.getIsLunar())) {
+            try {
+                // startDt: "2026-06-16T09:00" -> 2026, 06, 16 추출
+                String[] dateParts = dto.getStartDt().split("T")[0].split("-");
+                int m = Integer.parseInt(dateParts[1]); // 사용자가 선택한 월 (6)
+                int d = Integer.parseInt(dateParts[2]); // 사용자가 선택한 일 (16)
+
+                // ⭐ 중요: LunarUtil을 쓰지 않고 바로 세팅합니다.
+                // 화면에서 고른 숫자 그 자체가 음력 생일이니까요!
+                dto.setLunarMonth(m);
+                dto.setLunarDay(d);
+                
+                System.out.println("음력 일정 저장 (입력값 그대로): " + m + "월 " + d + "일");
+            } catch (Exception e) {
+                System.err.println("음력 정보 추출 중 오류: " + e.getMessage());
+            }
         }
         
         calendarDao.registerEvent(dto);
@@ -129,14 +170,31 @@ public class calendarResponseServiceImpl implements IcalendarResponseService {
         return calendarDao.updateEventDate(params) > 0;
     }
     @Override
+    @Transactional
     public boolean updateEventAll(Map<String, Object> params) {
-        // 제목, 시작일, 종료일, ID가 포함된 맵을 DAO로 전달
+        // 음력 체크 여부 확인
+        if ("Y".equals(params.get("isLunar"))) {
+            String startDt = (String) params.get("startDt"); // "2026-06-16T09:00"
+            String[] dateParts = startDt.split("T")[0].split("-");
+            
+            // 화면 숫자를 그대로 음력 월/일로 세팅
+            params.put("lunarMonth", Integer.parseInt(dateParts[1]));
+            params.put("lunarDay", Integer.parseInt(dateParts[2]));
+        }
         return calendarDao.updateEventAll(params) > 0;
     }
+
     @Override
     @Transactional
     public boolean updateRecurringEvents(Map<String, Object> params) {
-        // params에 recurGroupId가 반드시 포함되어야 함
+        // 반복 수정 시에도 동일하게 처리
+        if ("Y".equals(params.get("isLunar"))) {
+            String startDt = (String) params.get("startDt");
+            String[] dateParts = startDt.split("T")[0].split("-");
+            
+            params.put("lunarMonth", Integer.parseInt(dateParts[1]));
+            params.put("lunarDay", Integer.parseInt(dateParts[2]));
+        }
         return calendarDao.updateRecurringEvents(params) > 0;
     }
 
