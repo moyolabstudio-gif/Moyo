@@ -221,18 +221,23 @@
                     data: { types: types.join(','), startDate: info.startStr.split('T')[0], endDate: info.endStr.split('T')[0], userId: sessionUserId },
                     success: function(data) {
                         const events = data.map(item => {
-                            const startVal = item.startDt || item.startdt || item.STARTDT;
+                            // 오라클 대소문자 방어 코드
+                            let startVal = item.startDt || item.startdt || item.STARTDT;
                             let endVal = item.endDt || item.enddt || item.ENDDT;
+                            const isLunar = (item.isLunar === 'Y');
                             
-                            // 💡 막대(Bar)로 보이기 위한 핵심: 종일 여부 체크
-                            const isAllDay = item.allDay === 'Y' || item.isLunar === 'Y' || (startVal && startVal.includes('00:00:00'));
+                            // ISO 포맷 보정 (공백을 T로 치환하여 RRule 파싱 에러 사전 방지)
+                            if(startVal && startVal.includes(' ')) startVal = startVal.replace(' ', 'T');
+                            if(endVal && endVal.includes(' ')) endVal = endVal.replace(' ', 'T');
+
+                            const isAllDay = item.allDay === 'Y' || isLunar || (startVal && startVal.includes('00:00:00'));
 
                             let eventObj = {
                                 id: item.id,
                                 title: item.title || '제목 없음',
                                 backgroundColor: item.color || '#3788d8',
                                 borderColor: item.color || '#3788d8',
-                                allDay: isAllDay, // 이 값이 true여야 바 형태로 나옴
+                                allDay: isAllDay,
                                 extendedProps: { 
                                     type: item.itemType || item.itemtype,
                                     isRecurring: item.isRecurring || 'N',
@@ -243,15 +248,23 @@
                                 }
                             };
 
-                            if (item.isRecurring === 'Y' && item.recurType && item.isLunar !== 'Y') {
-                                // 반복 일정 (rrule 사용 시에도 Bar 형태 유지)
+                            // [핵심 변경] 양력 반복(rrule 사용) 처리 최적화
+                            if (item.isRecurring === 'Y' && item.recurType && !isLunar) {
+                                let rruleUntil = item.untilDt;
+                                // rrule 'until'은 시분초가 있어야 정확히 마감기한을 인식함
+                                if(rruleUntil && !rruleUntil.includes('T')) {
+                                    rruleUntil = rruleUntil + 'T23:59:59';
+                                }
+                                
                                 eventObj.rrule = {
                                     freq: item.recurType.toLowerCase(),
-                                    dtstart: startVal.includes('T') ? startVal : startVal + 'T00:00:00',
-                                    until: item.untilDt,
+                                    dtstart: startVal,
+                                    until: rruleUntil,
                                     interval: 1
                                 };
                             } else {
+                                // 단일 일정이거나 '음력 반복' 일정일 때
+                                // 음력 반복은 Java에서 현재 연도에 대응하는 단일 양력 날짜로 변경해서 던져주므로 start/end 바인딩을 해야 함
                                 eventObj.start = startVal;
                                 eventObj.end = endVal || startVal;
                             }
@@ -306,10 +319,13 @@
                     $('#lunarSetting').hide();
                 }
 
+                $('#isLunarCheck').prop('checked', props.isLunar === 'Y');
+
                 selectColor(info.event.backgroundColor || '#3788d8', false);
                 $('#allDayCheck').prop('checked', info.event.allDay); 
                 toggleDateTimeMode(info.event.allDay);
                 
+                // 음력 클릭 시에도 화면상의 양력 일자를 Input 창에 뿌려주는 보정 로직
                 const toISO = (d, all) => {
                     let off = d.getTimezoneOffset() * 60000;
                     let i = new Date(d.getTime() - off).toISOString();
