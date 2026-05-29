@@ -164,4 +164,17 @@
     INSERT INTO POLL_OPTIONS (OPTION_ID, POLL_ID, TEXT, COUNT)
     VALUES (OPTION_SEQ.NEXTVAL, #{pollId}, #{text}, #{count})
 </insert>
+<select id="selectPostsByProject" resultType="com.springboot.project.dto.postDTO">
+    SELECT 
+        p.POST_ID as postId,
+        p.TITLE as title,
+        u.USER_NAME as writerName,
+        TO_CHAR(p.REG_DT, 'YYYY-MM-DD') as regDt,
+        p.VIEW_COUNT as viewCount
+    FROM BOARD_POSTS p
+    JOIN USERS u ON p.USER_ID = u.USER_ID
+    WHERE p.PROJ_ID = #{projId}
+      AND p.BOARD_TYPE = #{boardType}
+    ORDER BY p.POST_ID DESC
+</select>
 </mapper>

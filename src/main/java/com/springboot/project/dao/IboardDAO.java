@@ -40,4 +40,5 @@ public interface IboardDAO {
     
     // 🗑️ 8. 게시글 삭제 (Long 규격 통일)
     int deletePost(Long postId); 
+    List<postDTO> selectPostsByProject(@Param("projId") Long projId, @Param("boardType") String boardType);
 }

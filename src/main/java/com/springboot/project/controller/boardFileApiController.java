@@ -29,7 +29,7 @@ public class boardFileApiController {
     @PostMapping("/{wsId}/write") 
     public ResponseEntity<?> writePostWithFiles(
             @PathVariable("wsId") Long wsId,
-            @RequestPart("post") postDTO post,
+            @RequestPart("post") postDTO post, // 💡 postDTO에 이미 projId 필드가 있다고 가정
             @RequestPart(value = "files", required = false) List<MultipartFile> files,
             HttpSession session) {
 

@@ -529,6 +529,85 @@
 				        countMap[newStatus].innerText = count + 1;
 				    }
 				}
+				// 기존의 loadBoard 함수를 지우고 아래 코드를 사용하세요
+				// 기존의 loadBoard 함수를 아래 코드로 수정하세요.
+				// [이 함수를 기존 loadBoard 함수 자리에 덮어쓰세요]
+				function loadBoard(boardType) {
+				    const projId = new URLSearchParams(window.location.search).get('projId');
+				    
+				    // 💡 핵심: 컨트롤러(@RequestMapping("/project") + @GetMapping("/api/board-list"))와 일치시킴!
+				    const url = '/project/api/board-list?projId=' + projId + '&boardType=' + boardType;
+				    
+				    const targetDiv = document.getElementById(boardType.toLowerCase() + 'Board');
+				    
+				    fetch(url)
+				        .then(res => {
+				            if (!res.ok) throw new Error("HTTP error " + res.status);
+				            return res.json();
+				        })
+				        .then(data => {
+				            let html = `<table class="table table-hover mt-3">
+				                            <thead><tr><th>번호</th><th>제목</th><th>작성자</th><th>날짜</th></tr></thead>
+				                            <tbody>`;
+				            
+				            // 데이터가 없거나 배열이 아닐 경우 예외처리
+				            if (!data || !Array.isArray(data) || data.length === 0) {
+				                html += '<tr><td colspan="4" class="text-center">등록된 프로젝트 게시글이 없습니다.</td></tr>';
+				            } else {
+				                data.forEach(post => {
+				                    html += `<tr>
+				                                <td>${post.postId}</td>
+				                                <td><a href="/project/board/detail?postId=${post.postId}&projId=${projId}">${post.title}</a></td>
+				                                <td>${post.writerName}</td>
+				                                <td>${post.regDt}</td>
+				                            </tr>`;
+				                });
+				            }
+				            html += `</tbody></table>`;
+				            
+				            // 더보기 버튼 추가
+				            html += `<div class="text-end">
+				                        <a href="/project/board/list?projId=${projId}&type=${boardType}" class="btn btn-sm btn-outline-primary">더보기 +</a>
+				                     </div>`;
+				            
+				            targetDiv.innerHTML = html;
+				        })
+				        .catch(err => {
+				            console.error("게시판 로딩 오류:", err);
+				            targetDiv.innerHTML = '<p class="text-danger p-3">데이터를 불러오는 중 오류가 발생했습니다. (관리자에게 문의하세요)</p>';
+				        });
+				}
+				function loadAllWidgets(projId) {
+				    fetch(`/api/workspace/project/${projId}/dashboard-widgets`)
+				        .then(res => res.json())
+				        .then(data => {
+				            // data.notice, data.free, data.file 각각에 대해 반복문 수행
+				            renderWidget('noticeBoard', data.notice, projId, 'NOTICE');
+				            renderWidget('freeBoard', data.free, projId, 'FREE');
+				            renderWidget('fileBoard', data.file, projId, 'FILE');
+				        });
+				}
+
+				// 위젯 렌더링 공통 함수
+				function renderWidget(elementId, list, projId, type) {
+				    const target = document.getElementById(elementId);
+				    if (!list || list.length === 0) {
+				        target.innerHTML = '<p class="p-3 text-muted">등록된 글이 없습니다.</p>';
+				        return;
+				    }
+				    
+				    let html = '<table class="table table-hover"><tbody>';
+				    list.slice(0, 5).forEach(post => {
+				        html += `<tr><td><a href="/group/board/detail?postId=${post.postId}&wsId=...">${post.title}</a></td></tr>`;
+				    });
+				    html += '</tbody></table>';
+				    
+				    // 더보기 버튼 (워크스페이스 방식)
+				    if (list.length >= 5) {
+				        html += `<div class="text-end p-2"><a href="/group/board/list?wsId=...&type=${type}" class="btn btn-sm btn-link">더보기 +</a></div>`;
+				    }
+				    target.innerHTML = html;
+				}
     </script>
 </head>
 <body>
@@ -561,9 +640,9 @@
 		
 		<ul class="nav nav-tabs mb-4" id="projectTabs">
 		    <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#taskBoard">업무 보드</a></li>
-		    <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#noticeBoard">공지사항</a></li>
-		    <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#freeBoard">자유게시판</a></li>
-		    <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#fileBoard">자료실</a></li>
+		    <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#noticeBoard" onclick="loadBoard('NOTICE')">공지사항</a></li>
+		    <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#freeBoard" onclick="loadBoard('FREE')">자유게시판</a></li>
+		    <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#fileBoard" onclick="loadBoard('FILE')">자료실</a></li>
 		</ul>
 
 		<div class="tab-content">

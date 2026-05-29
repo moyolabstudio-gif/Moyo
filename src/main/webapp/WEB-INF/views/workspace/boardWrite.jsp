@@ -34,6 +34,7 @@
        <form id="writeForm">
 		    <input type="hidden" id="wsId" value="${wsId}">
 		    <input type="hidden" id="boardType" value="${boardType}">
+			<input type="hidden" id="projId" value="${projId}">
 		    
 		    <label class="form-label">제목</label>
 		    <input type="text" id="title" class="title-input" placeholder="제목을 입력하세요" required>
@@ -123,12 +124,18 @@
 		function submitPost() {
 		        // 1. 데이터 준비
 		        const formData = new FormData();
-		        const postData = {
-		            wsId: document.getElementById('wsId').value,
-		            boardType: document.getElementById('boardType').value,
-		            title: document.getElementById('title').value,
-		            content: myEditor.getData() // 에디터 데이터 가져오기
-		        };
+				const projIdValue = document.getElementById('projId').value;
+				const postData = {
+				    wsId: document.getElementById('wsId').value,
+				    boardType: document.getElementById('boardType').value,
+				    title: document.getElementById('title').value,
+				    content: myEditor.getData()
+				};
+
+				// 💡 projId가 있을 때만 객체에 추가 (비어있으면 서버로 보내지 않음)
+				if (projIdValue && projIdValue !== "") {
+				    postData.projId = projIdValue;
+				}
 
 		        // 2. JSON 데이터를 Blob으로 변환하여 추가 (필수)
 		        formData.append("post", new Blob([JSON.stringify(postData)], { type: "application/json" }));
@@ -147,15 +154,18 @@
 				        data: formData,
 				        processData: false, 
 				        contentType: false, 
-				        success: function(res) {
-				            if(res.status === 'SUCCESS') {
-				                alert('등록 완료!');
-				                location.href = '/group/board/list?wsId=' + wsId + '&type=' + document.getElementById('boardType').value;
-				            }
-				        },
-				        error: function() {
-				            alert('등록 중 오류가 발생했습니다.');
-				        }
+						success: function(res) {
+						            if(res.status === 'SUCCESS') {
+						                alert('등록 완료!');
+						                const projId = document.getElementById('projId').value;
+						                // 프로젝트 ID가 있다면 프로젝트 메인으로, 없으면 게시판 목록으로
+						                if (projId) {
+						                    location.href = '/group/project/main?wsId=' + wsId + '&projId=' + projId;
+						                } else {
+						                    location.href = '/group/board/list?wsId=' + wsId + '&type=' + boardType;
+						                }
+						            }
+						        }
 				    });
 		    }
 	</script>

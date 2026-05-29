@@ -48,16 +48,19 @@ public class boardViewController {
      * ✏️ 2. [신규 추가] 게시글 작성 폼 페이지 이동
      * 주소: /group/board/write?wsId=45&type=FREE
      */
+ // boardViewController.java
     @GetMapping("/write")
     public String boardWriteForm(
             @RequestParam("wsId") Long wsId,
             @RequestParam("type") String type,
+            @RequestParam(value="projId", required=false) Long projId, // 💡 projId 추가
             Model model) {
         
         model.addAttribute("wsId", wsId);
         model.addAttribute("boardType", type);
+        model.addAttribute("projId", projId); // 뷰로 전달
         
-        return "workspace/boardWrite"; // views/workspace/boardWrite.jsp로 연결
+        return "workspace/boardWrite"; 
     }
 
     /**
@@ -81,37 +84,39 @@ public class boardViewController {
     public String boardRegister(
             @RequestParam("wsId") Long wsId,
             @RequestParam("boardType") String boardType,
+            @RequestParam(value="projId", required=false) Long projId, // 프로젝트에서 오면 값이 있음
             @RequestParam("title") String title,
             @RequestParam("content") String content,
             HttpSession session) {
         
-        // 1. 윤재 님의 정확한 DTO 클래스명(usersDto)으로 세션 유저 수집
-        com.springboot.project.dto.usersDto loginUser = 
-                (com.springboot.project.dto.usersDto) session.getAttribute("user"); 
-        
-        if (loginUser == null) {
-            return "redirect:/login"; // 세션 만료 시 로그인 페이지로 안전하게 튕김
-        }
+        com.springboot.project.dto.usersDto loginUser = (com.springboot.project.dto.usersDto) session.getAttribute("user");
+        if (loginUser == null) return "redirect:/login";
 
-        // 2. 서비스 레이어로 넘길 DTO 데이터 조립
         postDTO post = new postDTO();
         post.setWsId(wsId);
         post.setBoardType(boardType);
         post.setTitle(title);
         post.setContent(content);
-        
-        // 💡 usersDto에 정의된 getUSER_ID() 메서드를 활용해 작성자 시퀀스 바인딩
         post.setUserId(loginUser.getUSER_ID());
         
-        // 3. 윤재 님이 설계하신 boolean 타입 리턴 로직 적용
+        // 프로젝트용이면 projId 세팅
+        if (projId != null) {
+            post.setProjId(projId);
+        }
+        
         boolean isSuccess = iboardService.registerPost(post);
         
         if (isSuccess) {
-            // 등록 성공 시 원래 보던 게시판 목록으로 이동
-            return "redirect:/group/board/list?wsId=" + wsId + "&type=" + boardType;
+            // [분기 처리] 
+            if (projId != null) {
+                // 프로젝트 대시보드로 이동
+                return "redirect:/group/project/main?wsId=" + wsId + "&projId=" + projId;
+            } else {
+                // 기존 워크스페이스 게시판 목록으로 이동
+                return "redirect:/group/board/list?wsId=" + wsId + "&type=" + boardType;
+            }
         } else {
-            // 등록 실패 시 글쓰기 폼으로 튕기고 에러 메시지 처리를 하거나 예외 핸들링
-            return "redirect:/group/board/write?wsId=" + wsId + "&type=" + boardType + "&error=failed";
+            return "redirect:/group/board/write?wsId=" + wsId + "&type=" + boardType + (projId != null ? "&projId=" + projId : "") + "&error=failed";
         }
     }
     

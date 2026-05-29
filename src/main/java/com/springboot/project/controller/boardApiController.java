@@ -202,5 +202,29 @@ public class boardApiController {
         boolean isDeleted = iboardService.deleteFile(fileId);
         return ResponseEntity.ok(isDeleted ? "SUCCESS" : "FAIL");
     }
+    @GetMapping("/api/board-list")
+    public ResponseEntity<List<postDTO>> getBoardList(
+            @RequestParam("projId") Long projId, 
+            @RequestParam("boardType") String boardType) {
+        
+        // 워크스페이스 방식과 별개로 프로젝트 ID(projId) 기준 서비스 호출
+        List<postDTO> list = iboardService.getListByProject(projId, boardType);
+        return ResponseEntity.ok(list != null ? list : new ArrayList<>());
+    }
     
+    /**
+     * 🚀 대시보드용 프로젝트 게시판 위젯 데이터 통합 조회
+     * 호출 주소: /api/workspace/project/{projId}/dashboard-widgets
+     */
+    @GetMapping("/project/{projId}/dashboard-widgets")
+    public ResponseEntity<Map<String, List<postDTO>>> getProjectDashboardWidgets(@PathVariable("projId") Long projId) {
+        Map<String, List<postDTO>> response = new HashMap<>();
+        
+        // 각각의 최신글 5개씩 조회
+        response.put("notice", iboardService.getListByProject(projId, "NOTICE"));
+        response.put("free", iboardService.getListByProject(projId, "FREE"));
+        response.put("file", iboardService.getListByProject(projId, "FILE"));
+        
+        return ResponseEntity.ok(response);
+    }
 }

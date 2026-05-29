@@ -139,4 +139,9 @@ public class boardServiceImpl implements IboardService {
             throw new RuntimeException("파일 저장 실패: " + e.getMessage());
         }
     }
+    @Override
+    public List<postDTO> getListByProject(Long projId, String boardType) {
+        return iboardDAO.selectPostsByProject(projId, boardType);
+    }
+    
 }

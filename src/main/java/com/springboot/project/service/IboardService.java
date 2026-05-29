@@ -34,5 +34,6 @@ public interface IboardService {
     boolean deletePost(Long postId); // 👈 여기만 Long으로!
     String saveFile(MultipartFile file); // 추가
     void insertFile(Map<String, Object> fileMap); // DB 저장용 추가
+    List<postDTO> getListByProject(Long projId, String boardType);
     
 }
