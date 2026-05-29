@@ -3,33 +3,33 @@
 
 <mapper namespace="com.springboot.project.dao.IworkspaceDAO">
 
-	<insert id="insertWorkspace" parameterType="com.springboot.project.dto.workspaceDTO">
-	    <selectKey keyProperty="wsId" resultType="long" order="BEFORE">
-	        SELECT SEQ_WS_ID.NEXTVAL FROM DUAL
-	    </selectKey>
-	
-	    INSERT INTO WORKSPACES (
-	        WS_ID, 
-	        WS_NAME, 
-	        INVITE_CODE, 
-	        OWNER_ID
-	    ) VALUES (
-	        #{wsId}, 
-	        #{wsName}, 
-	        #{inviteCode, jdbcType=VARCHAR},  #{ownerId}
-	    )
-	</insert>
+<insert id="insertWorkspace" parameterType="com.springboot.project.dto.workspaceDTO">
+    <selectKey keyProperty="wsId" order="BEFORE" resultType="long">
+    SELECT SEQ_WS_ID.NEXTVAL FROM DUAL
+	</selectKey>
+    INSERT INTO WORKSPACES (
+        WS_ID, 
+        WS_NAME, 
+        INVITE_CODE, 
+        OWNER_ID, 
+        WS_IMAGE_PATH,    WS_DESCRIPTION    ) VALUES (
+        #{wsId}, 
+        #{wsName}, 
+        #{inviteCode}, 
+        #{ownerId}, 
+        #{wsImagePath},   #{wsDescription}  )
+</insert>
 	
 	<select id="selectWorkspaceList" parameterType="long" resultType="com.springboot.project.dto.workspaceDTO">
 	    SELECT 
 	        W.WS_ID, 
 	        W.WS_NAME, 
 	        W.INVITE_CODE, 
-	        W.OWNER_ID 
+	        W.OWNER_ID,
+	        W.WS_IMAGE_PATH,
+	        W.WS_DESCRIPTION
 	    FROM WORKSPACES W
-	    /* 내가 소속된 멤버 테이블을 조인합니다 */
 	    JOIN WS_MEMBERS M ON W.WS_ID = M.WS_ID
-	    /* 소유주 여부와 상관없이 내 유저 ID가 멤버 리스트에 있으면 가져옵니다 */
 	    WHERE M.USER_ID = #{userId}
 	    ORDER BY W.WS_ID DESC
 	</select>
@@ -39,10 +39,23 @@
 	        WS_ID, 
 	        WS_NAME, 
 	        INVITE_CODE, 
-	        OWNER_ID 
+	        OWNER_ID,
+	        WS_IMAGE_PATH,
+	        WS_DESCRIPTION
 	    FROM WORKSPACES 
 	    WHERE WS_ID = #{wsId}
 	</select>
+	
+	<update id="updateWorkspace" parameterType="com.springboot.project.dto.workspaceDTO">
+	    UPDATE WORKSPACES
+	    SET 
+	        WS_NAME = #{wsName},
+	        WS_DESCRIPTION = #{wsDescription}
+	        <if test="wsImagePath != null and wsImagePath != ''">
+	        , WS_IMAGE_PATH = #{wsImagePath}
+	        </if>
+	    WHERE WS_ID = #{wsId}
+	</update>
 	
 	<insert id="insertWorkspaceMember">
 	    INSERT INTO WS_MEMBERS (
@@ -137,4 +150,51 @@
 	    WHERE m.WS_ID = #{wsId}
 	    ORDER BY CASE WHEN m.WS_ROLE = 'ADMIN' THEN 1 ELSE 2 END, u.USER_NAME
 	</select>
+	<delete id="deleteWorkspaceAllMembers">
+	    DELETE FROM WS_MEMBERS 
+	    WHERE WS_ID = #{wsId}
+	</delete>
+	
+	<delete id="deleteWorkspace">
+	    DELETE FROM WORKSPACES 
+	    WHERE WS_ID = #{wsId}
+	</delete>
+	
+	<select id="selectEventsByWsId" resultType="map">
+	    SELECT 
+	        EVENT_ID as "eventId", 
+	        TITLE as "title", 
+	        TO_CHAR(START_DT, 'YYYY-MM-DD HH24:MI') as "startDt",
+	        EVENT_COLOR as "color"
+	    FROM EVENTS 
+	    WHERE WS_ID = #{wsId}
+	    ORDER BY START_DT ASC
+	</select>
+<select id="selectTodayEvents" parameterType="long" resultType="map">
+    SELECT title, TO_CHAR(START_DT, 'HH24:MI') as time
+    FROM events
+    WHERE ws_id = #{wsId}
+    AND TRUNC(START_DT) = TRUNC(SYSDATE)
+</select>
+
+<select id="selectActivePoll" parameterType="long" resultType="map">
+    SELECT poll_id, question
+    FROM polls
+    WHERE ws_id = #{wsId}
+    AND status = 'ACTIVE'
+    AND ROWNUM = 1
+</select>
+
+<select id="selectPollOptions" parameterType="string" resultType="map">
+    SELECT o.OPTION_ID, o.TEXT, COUNT(v.VOTE_ID) as COUNT
+    FROM POLL_OPTIONS o
+    LEFT JOIN VOTES v ON o.OPTION_ID = v.OPTION_ID
+    WHERE o.POLL_ID = #{pollId}
+    GROUP BY o.OPTION_ID, o.TEXT
+</select>
+
+<insert id="insertVote" parameterType="map">
+    INSERT INTO votes (vote_id, poll_id, option_id, user_id)
+    VALUES (SEQ_VOTE_ID.NEXTVAL, #{pollId}, #{optionId}, #{userId})
+</insert>
 </mapper>

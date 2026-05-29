@@ -4,20 +4,28 @@
 <mapper namespace="com.springboot.project.dao.IprojectDAO">
 
     <insert id="insertProject" parameterType="com.springboot.project.dto.projectRequestDTO">
-	    <selectKey keyProperty="projId" resultType="long" order="BEFORE">
-	        SELECT SEQ_PROJ_ID.NEXTVAL FROM DUAL
-	    </selectKey>
-	    
+    <selectKey keyProperty="projId" resultType="long" order="BEFORE">
+        SELECT SEQ_PROJ_ID.NEXTVAL FROM DUAL
+    </selectKey>
+    
 	    INSERT INTO PROJECTS (
-	        PROJ_ID, 
-	        PROJ_NAME, 
-	        PROJ_DESC,
-	        WS_ID
+	        PROJ_ID, WS_ID, PROJ_NAME, PROJ_DESC, LEADER_ID, PROJ_TYPE
 	    ) VALUES (
+	        #{projId}, #{wsId}, #{projName}, #{projDesc}, #{leaderId}, #{projType}
+	    )
+	</insert>
+	<insert id="insertProjectEvent" parameterType="com.springboot.project.dto.projectRequestDTO">
+	    INSERT INTO EVENTS (
+	        EVENT_ID, TITLE, START_DT, END_DT, PROJ_ID, ITEM_TYPE, USER_ID, EVENT_COLOR
+	    ) VALUES (
+	        SEQ_EVENT_ID.NEXTVAL, 
+	        #{projName} || ' 시작', 
+	        TO_DATE(#{startDate}, 'YYYY-MM-DD'), 
+	        TO_DATE(#{endDate}, 'YYYY-MM-DD'), 
 	        #{projId}, 
-	        #{projName}, 
-	        #{projDesc},
-	        #{wsId, jdbcType=NUMERIC}
+	        'PROJ', 
+	        #{leaderId}, 
+	        '#3788d8'
 	    )
 	</insert>
 
@@ -55,5 +63,102 @@
 	    WHERE WS_ID = #{wsId}
 	    ORDER BY PROJ_ID DESC 
 	</select>
+	
+	<select id="getProjectTaskSummary" resultType="map">
+	    SELECT 
+	        COUNT(*) as TOTAL,
+	        SUM(CASE WHEN STATUS = 'TODO' THEN 1 ELSE 0 END) as TODO_CNT,
+	        SUM(CASE WHEN STATUS = 'IN_PROGRESS' THEN 1 ELSE 0 END) as IN_PROGRESS_CNT,
+	        SUM(CASE WHEN STATUS = 'DONE' THEN 1 ELSE 0 END) as DONE_CNT
+	    FROM EVENTS 
+	    WHERE PROJ_ID = #{projId} AND ITEM_TYPE = 'TASK'
+	</select>
+	<select id="getProjectTasks" resultType="map">
+	    SELECT 
+	        EVENT_ID AS TASK_ID,
+	        TITLE,
+	        STATUS,
+	        TO_CHAR(START_DT, 'YYYY-MM-DD') AS START_DATE,
+	        TO_CHAR(END_DT, 'YYYY-MM-DD') AS END_DATE
+	    FROM EVENTS
+	    WHERE PROJ_ID = #{projId}
+	      AND ITEM_TYPE = 'TASK'
+	    ORDER BY STATUS, EVENT_ID DESC
+	</select>
+<insert id="insertTask" parameterType="map">
+    INSERT INTO EVENTS (
+        EVENT_ID, PROJ_ID, WS_ID, USER_ID, TITLE, STATUS, ITEM_TYPE, START_DT, END_DT
+    )
+    VALUES (
+        SEQ_EVENT_ID.NEXTVAL,
+        #{projId}, #{wsId}, #{userId}, #{title}, #{status}, 'TASK',
+        TO_DATE(#{startDate} || ' 00:00:00', 'YYYY-MM-DD HH24:MI:SS'), 
+        TO_DATE(#{endDate}   || ' 23:59:59', 'YYYY-MM-DD HH24:MI:SS')
+    )
+</insert>
+<select id="selectProjectById" resultType="com.springboot.project.dto.projectRequestDTO">
+   SELECT 
+    p.PROJ_ID,
+    p.PROJ_NAME,
+    p.PROJ_DESC,
+    p.LEADER_ID,
+    p.PROJ_TYPE,
+    TO_CHAR(e.START_DT, 'YYYY-MM-DD') AS START_DATE,
+    TO_CHAR(e.END_DT, 'YYYY-MM-DD') AS END_DATE
+FROM PROJECTS p
+LEFT JOIN EVENTS e 
+    ON p.PROJ_ID = e.PROJ_ID 
+   AND e.ITEM_TYPE = 'PROJ'
+WHERE p.PROJ_ID = #{projId}
+</select>
+	<select id="getTaskDetail" parameterType="long" resultType="map">
+	    SELECT 
+	        EVENT_ID AS "TASK_ID", 
+	        TITLE, 
+	        TO_CHAR(START_DT, 'YYYY-MM-DD') AS "START_DATE",
+	        TO_CHAR(END_DT, 'YYYY-MM-DD') AS "END_DATE", 
+	        STATUS 
+	    FROM EVENTS 
+	    WHERE EVENT_ID = #{taskId}
+	</select>
+	<update id="updateTask" parameterType="map">
+	    UPDATE EVENTS
+	    SET 
+	        TITLE = #{title},
+	        START_DT = TO_DATE(#{startDate} || ' 00:00:00', 'YYYY-MM-DD HH24:MI:SS'),
+	        END_DT = TO_DATE(#{endDate}     || ' 23:59:59', 'YYYY-MM-DD HH24:MI:SS'),
+	        STATUS = #{status}
+	    WHERE EVENT_ID = #{taskId}
+	</update>
+	<delete id="deleteTask" parameterType="long">
+	    DELETE FROM EVENTS WHERE EVENT_ID = #{taskId}
+	</delete>
+<update id="updateProject"
+        parameterType="com.springboot.project.dto.projectRequestDTO">
 
-</mapper>
+    UPDATE PROJECTS
+    SET
+        PROJ_NAME = #{projName},
+        PROJ_DESC = #{projDesc},
+        PROJ_TYPE = #{projType}
+    WHERE PROJ_ID = #{projId}
+
+</update>
+<update id="updateProjectEvent">
+    UPDATE EVENTS
+    SET
+        START_DT = TO_DATE(#{startDate}, 'YYYY-MM-DD'),
+        END_DT   = TO_DATE(#{endDate}, 'YYYY-MM-DD') + 1
+    WHERE PROJ_ID = #{projId}
+      AND ITEM_TYPE = 'PROJ'
+</update>
+<delete id="deleteProject" parameterType="long">
+    DELETE FROM PROJECTS WHERE PROJ_ID = #{projId}
+</delete>
+<update id="updateTaskStatus">
+    UPDATE EVENTS
+    SET STATUS = #{status}
+    WHERE EVENT_ID = #{taskId}
+      AND ITEM_TYPE = 'TASK'
+</update>
+	</mapper>

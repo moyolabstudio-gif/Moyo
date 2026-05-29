@@ -17,4 +17,18 @@ public interface IprojectService {
     
     // 현재 프로젝트 멤버 목록 가져오기
     List<Map<String, Object>> getProjectMembers(Long projId);
+    Map<String, Object> getProjectTaskSummary(Long projId);
+    List<Map<String, Object>> getProjectTasks(Long projId);
+    boolean addTask(
+    	    Long projId, Long wsId, Long userId, 
+    	    String title, String startDate, String endDate, String status // 추가
+    	);
+    projectRequestDTO getProjectById(Long projId);
+    Map<String, Object> getTaskDetail(Long taskId);
+ // IprojectService.java
+    boolean updateTask(Long taskId, String title, String startDate, String endDate, String status);
+    boolean deleteTask(Long taskId);
+    boolean updateProject(projectRequestDTO dto);
+    boolean deleteProject(Long projId, Long userId);
+    boolean updateTaskStatus(Long taskId, String status);
 }

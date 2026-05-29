@@ -222,4 +222,30 @@ public class calendarResponseServiceImpl implements IcalendarResponseService {
     public List<Map<String, Object>> getProjectsByUserId(long userId) { // int -> long
         return calendarDao.selectUserProjects(userId);
     }
+    
+    @Override
+    public String checkUserRole(Long wsId, Long userId) {
+        if (wsId == null || userId == null) return "NONE";
+
+        // 1. 기존 DAO 메서드를 사용해 유저가 소속된 워크스페이스 리스트를 가져옵니다.
+        List<Map<String, Object>> workspaces = calendarDao.selectUserWorkspaces(userId);
+
+        if (workspaces != null) {
+            for (Map<String, Object> ws : workspaces) {
+                // 2. DB에서 넘어온 wsId 값을 안전하게 추출 (오라클 등 DB 특성에 따른 타입 방어)
+                Object currentWsIdObj = ws.get("wsId") != null ? ws.get("wsId") : ws.get("WS_ID");
+                
+                if (currentWsIdObj != null) {
+                    Long currentWsId = ((Number) currentWsIdObj).longValue();
+                    
+                    // 3. 사용자가 요청한 wsId와 일치하는 공간을 찾았다면 해당 공간의 Role을 반환
+                    if (currentWsId.equals(wsId)) {
+                        String role = (String) (ws.get("wsRole") != null ? ws.get("wsRole") : ws.get("WS_ROLE"));
+                        return role != null ? role.toUpperCase() : "MEMBER"; 
+                    }
+                }
+            }
+        }
+        return "NONE"; // 소속되어 있지 않은 경우
+    }
 }

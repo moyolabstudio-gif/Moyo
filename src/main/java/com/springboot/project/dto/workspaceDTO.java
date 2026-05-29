@@ -8,4 +8,8 @@ public class workspaceDTO {
     private String wsName;     // 팀 이름
     private String inviteCode; // 초대 코드
     private Long ownerId;      // 생성자(유저) ID
+    
+    private String wsImagePath; 
+    private String wsDescription;
+    
 }

@@ -1,5 +1,6 @@
 package com.springboot.project.service.impl;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -126,6 +127,63 @@ public class workspaceServiceImpl implements IworkspaceService {
         } catch (Exception e) {
             e.printStackTrace();
             return false; 
+        }
+    }
+    @Override
+    public List<Map<String, Object>> getEventsByWsId(Long wsId) {
+        // 예시: workspaceDao에 해당 기능을 구현하거나 
+        // 이미 존재하는 calendarDao를 활용하여 워크스페이스 ID로 이벤트를 조회합니다.
+        return workspaceDao.selectEventsByWsId(wsId);
+    }
+ // 1. 오늘의 일정 가져오기
+    @Override
+    public List<Map<String, Object>> getTodayEvents(Long wsId) {
+        // DAO에서 날짜가 오늘인 일정만 가져오는 쿼리 실행
+        return workspaceDao.selectTodayEvents(wsId);
+    }
+
+    // 2. 진행 중인 투표 가져오기
+    @Override
+    public Map<String, Object> getActivePoll(Long wsId) {
+        Map<String, Object> poll = workspaceDao.selectActivePoll(wsId);
+        
+        // 데이터가 없으면 빈 맵을 반환 (JSON 응답이 {}가 됨)
+        if (poll == null) {
+            return new java.util.HashMap<>(); 
+        }
+        
+        Map<String, Object> result = new java.util.HashMap<>();
+        result.put("pollId", ((Number) poll.get("POLL_ID")).longValue());
+        result.put("question", poll.get("QUESTION"));
+        
+        // 옵션 조회
+        List<Map<String, Object>> options = workspaceDao.selectPollOptions((Long)result.get("pollId"));
+        // 옵션이 없을 경우를 대비해 빈 리스트라도 넣어줌
+        result.put("options", options != null ? options : new java.util.ArrayList<>());
+        
+        return result;
+    }
+    // 3. 투표 반영하기
+    @Override
+    @Transactional
+    public void processVote(Map<String, Object> params) {
+        // 투표 이력을 저장하기만 하면 됩니다.
+        // 데이터가 insert 될 때마다 위의 selectPollOptions 쿼리가 자동으로 최신 투표수를 계산합니다.
+        workspaceDao.insertVote(params);
+    }
+    @Override
+    @Transactional
+    public void createPoll(Map<String, Object> params) {
+        workspaceDao.insertPoll(params); // 이제 정상적으로 IworkspaceDAO를 탐색함
+        Long pollId = ((Number) params.get("pollId")).longValue();
+        
+        List<String> options = (List<String>) params.get("options");
+        for (String text : options) {
+            Map<String, Object> option = new HashMap<>();
+            option.put("pollId", pollId);
+            option.put("text", text);
+            option.put("count", 0);
+            workspaceDao.insertPollOption(option);
         }
     }
 }

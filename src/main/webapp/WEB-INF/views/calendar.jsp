@@ -45,7 +45,7 @@
     </style>
 </head>
 <body>
-<header><%@ include file="common/header.jsp"%></header>
+<%@ include file="common/header.jsp"%>
 
 <main class="moyo-wrapper">
     <aside class="sidebar">
@@ -145,20 +145,33 @@
                 <label id="endLabel">종료 일시</label>
                 <input type="datetime-local" id="eventEnd">
             </div>
-            <div class="modal-buttons">
-                <button type="button" id="deleteEvent" class="btn-save" style="background:#dc3545; display:none; margin-right:auto;">삭제</button>
-                <button type="button" id="saveEvent" class="btn-save">등록</button>
-                <button type="button" id="updateEvent" class="btn-save" style="background:#28a745; display:none;">수정 완료</button>
-                <button type="button" id="cancelModal" class="btn-close">취소</button>
-            </div>
+			<div class="modal-buttons">
+			    <button type="button" id="deleteEvent" class="btn-save" style="background:#dc3545; display:none; margin-right:auto;">삭제</button>
+			    <button type="button" id="saveEvent" class="btn-save">등록</button>
+			    <button type="button" id="editModeBtn" class="btn-save" style="background:#f39c12; display:none;">수정</button> <button type="button" id="updateEvent" class="btn-save" style="background:#28a745; display:none;">저장</button>
+			    <button type="button" id="cancelModal" class="btn-close">취소</button>
+			</div>
         </div>
     </div>
 </main>
 
 <script>
+	let paramWsId, paramMode, sessionUserId, calendar;
+	function toggleReadOnly(isRead) {
+			    // 필드 상태 변경
+			    $('#eventTitle, #itemType, #spaceId, #isRecurringCheck, #recurFreq, #untilDt, #allDayCheck, #isLunarCheck, #eventStart, #eventEnd').prop('disabled', isRead);
+			    
+			    // 색상 팔레트 클릭 이벤트 제어
+			    if (isRead) {
+			        $('.color-chip, .custom-color-trigger').css('pointer-events', 'none').css('opacity', '0.7');
+			    } else {
+			        $('.color-chip, .custom-color-trigger').css('pointer-events', 'auto').css('opacity', '1');
+			    }
+			}
     document.addEventListener('DOMContentLoaded', function() {
+		let holidayCache = {};
         let userSpaces = { workspaces: [], projects: [] }; 
-        const sessionUserId = "${sessionScope.user.userId}";
+        sessionUserId = "${sessionScope.user.userId}";
         const calendarEl = document.getElementById('calendar');
 
         // [컬러 로직]
@@ -205,7 +218,7 @@
         $('#eventColor').on('change', function() { selectColor($(this).val(), true); });
 
         // [FullCalendar 설정]
-        const calendar = new FullCalendar.Calendar(calendarEl, {
+        calendar = new FullCalendar.Calendar(calendarEl, {
             initialView: 'dayGridMonth',
             locale: 'ko',
             selectable: true,
@@ -213,133 +226,318 @@
             height: 800,
             dayMaxEvents: true,
             headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek,listWeek' },
-            events: function(info, successCallback, failureCallback) {
-                let types = $('.sidebar input[type="checkbox"]:checked').map(function() { return $(this).val(); }).get();
-                $.ajax({
-                    url: '${pageContext.request.contextPath}/api/calendar/monthly',
-                    type: 'GET',
-                    data: { types: types.join(','), startDate: info.startStr.split('T')[0], endDate: info.endStr.split('T')[0], userId: sessionUserId },
-                    success: function(data) {
-                        const events = data.map(item => {
-                            // 오라클 대소문자 방어 코드
-                            let startVal = item.startDt || item.startdt || item.STARTDT;
-                            let endVal = item.endDt || item.enddt || item.ENDDT;
-                            const isLunar = (item.isLunar === 'Y');
-                            
-                            // ISO 포맷 보정 (공백을 T로 치환하여 RRule 파싱 에러 사전 방지)
-                            if(startVal && startVal.includes(' ')) startVal = startVal.replace(' ', 'T');
-                            if(endVal && endVal.includes(' ')) endVal = endVal.replace(' ', 'T');
+			events: function(info, successCallback, failureCallback) {
+			    let types = $('.sidebar input[type="checkbox"]:checked')
+			        .map(function() { return $(this).val(); })
+			        .get();
 
-                            const isAllDay = item.allDay === 'Y' || isLunar || (startVal && startVal.includes('00:00:00'));
+			    $.ajax({
+			        url: '${pageContext.request.contextPath}/api/calendar/monthly',
+			        type: 'GET',
+			        data: {
+			            types: types.join(','),
+			            startDate: info.startStr.split('T')[0],
+			            endDate: info.endStr.split('T')[0],
+			            userId: sessionUserId
+			        },
+			        success: function(data) {
+						console.log("캘린더 원본 데이터", data);
+						
+			            const events = data.map(item => {
+							const itemType = item.itemType || item.itemtype;
 
-                            let eventObj = {
-                                id: item.id,
-                                title: item.title || '제목 없음',
-                                backgroundColor: item.color || '#3788d8',
-                                borderColor: item.color || '#3788d8',
-                                allDay: isAllDay,
-                                extendedProps: { 
-                                    type: item.itemType || item.itemtype,
-                                    isRecurring: item.isRecurring || 'N',
-                                    recurGroupId: item.recurGroupId,
-                                    isLunar: item.isLunar,
-                                    untilDt: item.untilDt,
-                                    recurType: item.recurType
-                                }
-                            };
+							        if(itemType === 'TASK'){
+							            console.log("TASK 원본 =", item);
+							        }
 
-                            // [핵심 변경] 양력 반복(rrule 사용) 처리 최적화
-                            if (item.isRecurring === 'Y' && item.recurType && !isLunar) {
-                                let rruleUntil = item.untilDt;
-                                // rrule 'until'은 시분초가 있어야 정확히 마감기한을 인식함
-                                if(rruleUntil && !rruleUntil.includes('T')) {
-                                    rruleUntil = rruleUntil + 'T23:59:59';
-                                }
-                                
-                                eventObj.rrule = {
-                                    freq: item.recurType.toLowerCase(),
-                                    dtstart: startVal,
-                                    until: rruleUntil,
-                                    interval: 1
-                                };
-                            } else {
-                                // 단일 일정이거나 '음력 반복' 일정일 때
-                                // 음력 반복은 Java에서 현재 연도에 대응하는 단일 양력 날짜로 변경해서 던져주므로 start/end 바인딩을 해야 함
-                                eventObj.start = startVal;
-                                eventObj.end = endVal || startVal;
-                            }
-                            return eventObj;
-                        });
-                        successCallback(events);
-                    }
-                });
-            },
-            select: function(info) {
-                $('#eventModal').show(); 
-                $('#modalTitle').text('새 일정 등록');
-                $('#eventTitle').val('');
-                $('#isRecurringCheck').prop('checked', false);
-                $('#recurringDetails').hide();
-                $('#lunarSetting').hide();
-                $('#isLunarCheck').prop('checked', false);
+							        const isHoliday = (item.itemType === 'HOLIDAY' || item.itemtype === 'HOLIDAY');
+			                const eventColor = isHoliday ? '#e74c3c' : (item.color || '#3788d8');
 
-                const lastUsed = JSON.parse(localStorage.getItem('moyo_recent_colors') || "[]")[0] || '#3788d8';
-                selectColor(lastUsed, false);
+			                let startVal = item.startDt || item.startdt || item.STARTDT;
+			                let endVal   = item.endDt   || item.enddt   || item.ENDDT;
+			                const isLunar = (item.isLunar === 'Y');
 
-                const isAllDay = info.allDay; 
-                $('#allDayCheck').prop('checked', isAllDay);
-                toggleDateTimeMode(isAllDay);
+			                if(startVal && startVal.includes(' ')) startVal = startVal.replace(' ', 'T');
+			                if(endVal && endVal.includes(' ')) endVal = endVal.replace(' ', 'T');
 
-                $('#eventStart').val(isAllDay ? info.startStr : info.startStr.substring(0, 16));
-                $('#eventEnd').val(isAllDay ? (info.endStr || info.startStr) : (info.endStr || info.startStr).substring(0, 16));
+			                const isAllDay = item.allDay === 'Y' || isLunar || isHoliday || (startVal && startVal.includes('00:00:00'));
 
-                $('#saveEvent').show(); 
-                $('#updateEvent, #deleteEvent').hide();
-                $('#itemType').trigger('change');
-            },
-            eventClick: function(info) {
-                if (info.event.extendedProps.type === 'HOLIDAY') return;
-                const props = info.event.extendedProps;
-                $('#eventModal').data('selectedId', info.event.id);
-                $('#eventModal').data('recurGroupId', props.recurGroupId);
-                $('#eventModal').data('isRecurring', props.isRecurring);
-                
-                $('#eventModal').show(); $('#modalTitle').text('일정 수정');
-                $('#eventTitle').val(info.event.title);
-                
-                const isRecur = props.isRecurring === 'Y';
-                $('#isRecurringCheck').prop('checked', isRecur);
-                if (isRecur) {
-                    $('#recurringDetails').show();
-                    $('#recurFreq').val(props.recurType || 'WEEKLY');
-                    if(props.recurType === 'YEARLY') $('#lunarSetting').show();
-                    $('#untilDt').val(props.untilDt || '');
-                } else {
-                    $('#recurringDetails').hide();
-                    $('#lunarSetting').hide();
-                }
+			                // 기본 이벤트 객체
+			                let eventObj = {
+			                    id: item.id,
+			                    title: item.title || '제목 없음',
+			                    backgroundColor: eventColor,
+			                    borderColor: eventColor,
+			                    allDay: isAllDay,
+			                    extendedProps: {
+			                        type: item.itemType || item.itemtype,
+			                        isRecurring: item.isRecurring || 'N',
+			                        recurGroupId: item.recurGroupId,
+			                        isLunar: item.isLunar,
+			                        untilDt: item.untilDt,
+			                        recurType: item.recurType,
+			                        wsId: item.wsId,
+			                        projId: item.projId
+			                    }
+			                };
 
-                $('#isLunarCheck').prop('checked', props.isLunar === 'Y');
+			                // 💡 분기 처리: 반복 일정이면서 RRule 처리가 필요한 경우에만 추가
+			                if (item.isRecurring === 'Y' && item.recurType && !isLunar) {
+			                    let rruleUntil = item.untilDt;
+			                    if (rruleUntil && !rruleUntil.includes('T')) rruleUntil += 'T23:59:59';
+			                    
+			                    eventObj.rrule = { 
+			                        freq: item.recurType.toLowerCase(), 
+			                        dtstart: startVal, 
+			                        until: rruleUntil, 
+			                        interval: 1 
+			                    };
+							} else {
 
-                selectColor(info.event.backgroundColor || '#3788d8', false);
-                $('#allDayCheck').prop('checked', info.event.allDay); 
-                toggleDateTimeMode(info.event.allDay);
-                
-                // 음력 클릭 시에도 화면상의 양력 일자를 Input 창에 뿌려주는 보정 로직
-                const toISO = (d, all) => {
-                    let off = d.getTimezoneOffset() * 60000;
-                    let i = new Date(d.getTime() - off).toISOString();
-                    return all ? i.substring(0, 10) : i.substring(0, 16);
-                };
-                $('#eventStart').val(toISO(info.event.start, info.event.allDay));
-                $('#eventEnd').val(info.event.end ? toISO(info.event.end, info.event.allDay) : toISO(info.event.start, info.event.allDay));
-                
-                $('#itemType').val(props.type).trigger('change');
-                $('#saveEvent').hide(); $('#updateEvent, #deleteEvent').show();
-            }
+							    const itemType = item.itemType || item.itemtype;
+
+							    eventObj.start = startVal;
+
+							    if (itemType === 'TASK' && endVal) {
+
+							        let endDate = new Date(endVal);
+							        endDate.setDate(endDate.getDate() + 1);
+
+							        eventObj.end = endDate;
+
+							    } else {
+
+							        eventObj.end = endVal || startVal;
+							    }
+							}
+			                return eventObj;
+			            });
+			            successCallback(events);
+			        },
+			        error: function(xhr, status, error) {
+			            console.error("일정 데이터를 가져오는데 실패:", error);
+			            failureCallback(error);
+			        }
+			    });
+			},
+
+			select: function(info) {
+			    $('#eventModal').show(); 
+			    $('#modalTitle').text('새 일정 등록');
+			    $('#eventTitle').val('');
+			    $('#isRecurringCheck').prop('checked', false);
+			    $('#recurringDetails').hide();
+			    $('#lunarSetting').hide();
+			    $('#isLunarCheck').prop('checked', false);
+
+			    const lastUsed = JSON.parse(localStorage.getItem('moyo_recent_colors') || "[]")[0] || '#3788d8';
+			    selectColor(lastUsed, false);
+
+			    const isAllDay = info.allDay; 
+			    $('#allDayCheck').prop('checked', isAllDay);
+			    toggleDateTimeMode(isAllDay);
+
+			    // 💡 시작일은 info.startStr 그대로 사용
+			    let startVal = isAllDay ? info.startStr : info.startStr.substring(0, 16);
+			    
+			    // 💡 종료일 계산:
+			    // FullCalendar는 드래그 시 endStr을 '선택한 마지막 날의 다음 날'로 반환합니다.
+			    // 종일 일정일 때만 하루를 빼서 보여줘야 사용자가 선택한 범위와 일치합니다.
+			    let endVal;
+			    if (isAllDay) {
+			        let endDate = new Date(info.endStr);
+			        endDate.setDate(endDate.getDate() - 1); // 하루 전으로 조정
+			        endVal = endDate.toISOString().split('T')[0];
+			    } else {
+			        endVal = info.endStr ? info.endStr.substring(0, 16) : startVal;
+			    }
+
+			    $('#eventStart').val(startVal);
+			    $('#eventEnd').val(endVal); 
+
+			    $('#saveEvent').show(); 
+			    $('#updateEvent, #deleteEvent').hide();
+			    $('#itemType').trigger('change');
+			},
+			eventClick: function(info) {
+
+			    if (info.event.extendedProps.type === 'HOLIDAY') return;
+
+			    const props = info.event.extendedProps;
+
+			    console.log("========== EVENT CLICK ==========");
+			    console.log("event.id =", info.event.id);
+			    console.log("event.title =", info.event.title);
+			    console.log("props =", props);
+			    console.log("props.type =", props.type);
+			    console.log("props.wsId =", props.wsId);
+			    console.log("props.projId =", props.projId);
+			    console.log("allDay =", info.event.allDay);
+			    console.log("start =", info.event.start);
+			    console.log("end =", info.event.end);
+
+			    // 날짜 변환 함수
+			    function toISO(d, all) {
+
+			        console.log("d =", d);
+			        console.log("isDate =", d instanceof Date);
+
+			        if (!d) return '';
+
+			        const year = d.getFullYear();
+			        const month = String(d.getMonth() + 1).padStart(2, '0');
+			        const day = String(d.getDate()).padStart(2, '0');
+
+			        if (all) {
+			            return year + '-' + month + '-' + day;
+			        }
+
+			        const hours = String(d.getHours()).padStart(2, '0');
+			        const mins = String(d.getMinutes()).padStart(2, '0');
+
+			        return year + '-' + month + '-' + day + 'T' + hours + ':' + mins;
+			    }
+
+			    $('#eventModal').data('selectedId', info.event.id);
+			    $('#eventModal').data('recurGroupId', props.recurGroupId);
+			    $('#eventModal').data('isRecurring', props.isRecurring);
+
+			    $('#eventModal').show();
+			    $('#modalTitle').text('일정 상세');
+			    $('#eventTitle').val(info.event.title).prop('disabled', true);
+
+			    toggleReadOnly(true);
+
+			    const isRecur = props.isRecurring === 'Y';
+
+			    $('#isRecurringCheck')
+			        .prop('checked', isRecur)
+			        .prop('disabled', true);
+
+			    if (isRecur) {
+
+			        $('#recurringDetails').show();
+
+			        $('#recurFreq')
+			            .val(props.recurType || 'WEEKLY')
+			            .prop('disabled', true);
+
+			        if (props.recurType === 'YEARLY') {
+			            $('#lunarSetting').show();
+			        }
+
+			        $('#untilDt')
+			            .val(props.untilDt || '')
+			            .prop('disabled', true);
+
+			    } else {
+
+			        $('#recurringDetails').hide();
+			        $('#lunarSetting').hide();
+			    }
+
+			    $('#isLunarCheck')
+			        .prop('checked', props.isLunar === 'Y')
+			        .prop('disabled', true);
+
+			    selectColor(info.event.backgroundColor || '#3788d8', false);
+
+			    $('#allDayCheck')
+			        .prop('checked', info.event.allDay)
+			        .prop('disabled', true);
+
+			    toggleDateTimeMode(info.event.allDay);
+
+			    let startValue = toISO(info.event.start, info.event.allDay);
+
+			    $('#eventStart')
+			        .val(startValue)
+			        .prop('disabled', true);
+
+			    if (info.event.end) {
+
+			        let endDate = new Date(info.event.end);
+
+			        if (info.event.allDay) {
+			            endDate.setDate(endDate.getDate() - 1);
+			        }
+
+			        let endValue = toISO(endDate, info.event.allDay);
+
+			        $('#eventEnd')
+			            .val(endValue)
+			            .prop('disabled', true);
+
+			    } else {
+
+			        $('#eventEnd')
+			            .val(toISO(info.event.start, info.event.allDay))
+			            .prop('disabled', true);
+			    }
+
+			    let displayType = props.type;
+
+			    if (props.type === 'TASK') {
+			        if (props.projId) {
+			            displayType = 'PROJ';
+			        } else if (props.wsId) {
+			            displayType = 'WS';
+			        }
+			    }
+
+			    $('#itemType')
+			        .val(displayType)
+			        .trigger('change')
+			        .prop('disabled', true);
+
+			    $('#saveEvent').hide();
+			    $('#updateEvent').hide();
+			    $('#editModeBtn').show();
+			    $('#deleteEvent').show();
+			},
         });
+		$('#editModeBtn').on('click', function() {
+		    $('#modalTitle').text('일정 수정');
+		    toggleReadOnly(false); // 💡 필드 잠금 해제
+		    $(this).hide();
+		    $('#updateEvent').show();
+		});
         calendar.render();
+		// URL 파라미터 파싱 유틸리티
+		const urlParams = new URLSearchParams(window.location.search);
+		paramWsId = urlParams.get('wsId');
+		paramMode = urlParams.get('mode');
 
+		// 대시보드에서 관리자가 "그룹 일정 등록"을 타고 넘어왔을 때의 분기 처리
+		if (paramMode === 'GROUP_REG' && paramWsId) {
+		    
+		    // 1. 강제로 모달 레이어 팝업 열기
+		    $('#eventModal').show(); 
+		    $('#modalTitle').text('🏢 새 그룹 일정 등록');
+		    $('#eventTitle').val('');
+		    
+		    // 2. 기본 날짜 세팅 (오늘 날짜 종일 기준 또는 현재 타임스탬프)
+		    const todayStr = new Date().toISOString().substring(0, 10);
+		    $('#allDayCheck').prop('checked', true);
+		    toggleDateTimeMode(true);
+		    $('#eventStart').val(todayStr);
+		    $('#eventEnd').val(todayStr);
+
+		    // 3. 일정 구분 고정 및 비활성화 (개인 일정으로 변조 방지)
+		    $('#itemType').val('WS').prop('disabled', true);
+		    $('#spaceSelectGroup').show();
+		    $('#spaceLabel').text("🏢 워크스페이스"); 
+
+		    // 4. 비동기로 가져온 공간 목록이 세팅되는 시점과 동기화하여 해당 wsId 강제 고정
+		    // $.get('/api/calendar/user-spaces') 완료 콜백 내부나 렌더링 이후 시점에 바인딩 보장
+		    setTimeout(function() {
+		        $('#spaceId').val(paramWsId).prop('disabled', true); // 다른 그룹 선택 금지 락
+		    }, 300);
+
+		    $('#saveEvent').show(); 
+		    $('#updateEvent, #deleteEvent').hide();
+		}
+		
         // [UI 헬퍼 로직]
         function toggleDateTimeMode(isAllDay) {
             const s = $('#eventStart'), e = $('#eventEnd');
@@ -359,71 +557,176 @@
         $('#isRecurringCheck').on('change', function() { $(this).is(':checked') ? $('#recurringDetails').slideDown(200) : $('#recurringDetails').slideUp(200); });
         $('#recurFreq').on('change', function() { $(this).val() === 'YEARLY' ? $('#lunarSetting').slideDown(200) : $('#lunarSetting').hide(); });
 
-        function getProcessData() {
-            let s = $('#eventStart').val();
-            let e = $('#eventEnd').val();
-            const isLunar = $('#isLunarCheck').is(':checked') ? 'Y' : 'N';
-            const isRecurring = $('#isRecurringCheck').is(':checked') ? 'Y' : 'N';
-            const allDayVal = (isLunar === 'Y' || $('#allDayCheck').is(':checked')) ? 'Y' : 'N';
-
-            return {
-                id: $('#eventModal').data('selectedId'),
-                title: $('#eventTitle').val().trim(),
-                isLunar: isLunar,
-                startDt: s,
-                endDt: e,
-                allDay: allDayVal,
-                itemType: $('#itemType').val(),
-                color: $('#eventColor').val(),
-                wsId: $('#itemType').val() === 'WS' ? $('#spaceId').val() : null,
-                projId: $('#itemType').val() === 'PROJ' ? $('#spaceId').val() : null,
-                userId: sessionUserId,
-                isRecurring: isRecurring,
-                recurType: isRecurring === 'Y' ? $('#recurFreq').val() : null,
-                untilDt: isRecurring === 'Y' ? $('#untilDt').val() : null,
-                recurInterval: 1
-            };
-        }
-
-        $('#saveEvent').on('click', function() { 
-            var d = getProcessData(); if (!d.title) return; 
-            $.ajax({ url: '${pageContext.request.contextPath}/api/calendar/register', type: 'POST', contentType: 'application/json', data: JSON.stringify(d), success: function() { $('#eventModal').hide(); calendar.refetchEvents(); } }); 
-        });
+		
         
         $('#updateEvent').on('click', function() { 
             var d = getProcessData(); 
             $.ajax({ url: '${pageContext.request.contextPath}/api/calendar/update-all', type: 'POST', contentType: 'application/json', data: JSON.stringify(d), success: function() { $('#eventModal').hide(); calendar.refetchEvents(); } }); 
         });
 
-        $('#deleteEvent').on('click', function() {
-            const eventId = $('#eventModal').data('selectedId');
-            const isRecurring = $('#eventModal').data('isRecurring');
-            if (!confirm(isRecurring === 'Y' ? "모든 반복 일정을 삭제하시겠습니까?" : "정말 삭제하시겠습니까?")) return;
-            $.ajax({
-                url: '${pageContext.request.contextPath}/api/calendar/delete?eventId=' + eventId + '&deleteSeries=' + (isRecurring === 'Y' ? 'Y' : 'N'),
-                type: 'DELETE',
-                success: function() { $('#eventModal').hide(); calendar.refetchEvents(); }
-            });
-        });
+		$('#deleteEvent').on('click', function() {
+		    const eventId = $('#eventModal').data('selectedId');
+		    const recurGroupId = $('#eventModal').data('recurGroupId'); // 💡 ID 가져오기
+		    const isRecurring = $('#eventModal').data('isRecurring');
+		    
+		    if (!confirm(isRecurring === 'Y' ? "모든 반복 일정을 삭제하시겠습니까?" : "정말 삭제하시겠습니까?")) return;
+
+		    // 💡 URL 파라미터에 recurGroupId 추가
+		    let deleteUrl = '${pageContext.request.contextPath}/api/calendar/delete?eventId=' + eventId + 
+		                    '&deleteSeries=' + (isRecurring === 'Y' ? 'Y' : 'N');
+		    
+		    if (isRecurring === 'Y' && recurGroupId) {
+		        deleteUrl += '&recurGroupId=' + recurGroupId;
+		    }
+
+		    $.ajax({
+		        url: deleteUrl,
+		        type: 'DELETE',
+		        success: function() { 
+		            $('#eventModal').hide(); 
+		            calendar.refetchEvents(); 
+		        },
+		        error: function(xhr) {
+		            alert("삭제 중 오류가 발생했습니다.");
+		            console.error(xhr);
+		        }
+		    });
+		});
 
         $('#cancelModal').on('click', () => $('#eventModal').hide());
-        $('#itemType').on('change', function() {
-            var type = $(this).val(), $g = $('#spaceSelectGroup'), $s = $('#spaceId'); $s.empty();
-            if (type === 'PRIVATE') $g.hide();
-            else { 
-                $g.show(); 
-                var list = (type === 'WS') ? userSpaces.workspaces : userSpaces.projects; 
-                $('#spaceLabel').text(type === 'WS' ? "🏢 워크스페이스" : "📁 프로젝트"); 
-                list.forEach(item => { 
-                    var id = (type === 'WS') ? item.wsId : item.projId; 
-                    var name = (type === 'WS') ? item.wsName : item.projName; 
-                    $s.append('<option value="' + id + '">' + name + '</option>'); 
-                }); 
-            }
-        });
+		$('#itemType').on('change', function() {
+		    var type = $(this).val(), $g = $('#spaceSelectGroup'), $s = $('#spaceId'); $s.empty();
+		    if (type === 'PRIVATE') {
+		        $g.hide();
+		    } else { 
+		        $g.show(); 
+		        var list = (type === 'WS') ? userSpaces.workspaces : userSpaces.projects; 
+		        $('#spaceLabel').text(type === 'WS' ? "🏢 워크스페이스" : "📁 프로젝트"); 
+		        
+		        var hasAdminSpace = false;
+		        
+				list.forEach(item => { 
+				            // 🚨 수정된 부분: 프로젝트(PROJ) 타입이면 role이 없어도 ADMIN으로 간주
+				            var role = item.wsRole || item.WS_ROLE || item.projRole || item.PROJ_ROLE;
+				            
+				            // 데이터에 role이 없는 경우 프로젝트면 ADMIN으로 강제 설정
+				            if (type === 'PROJ' && !role) {
+				                role = 'ADMIN';
+				            }
+				            
+				            if (role === 'ADMIN') {
+				                var id = (type === 'WS') ? item.wsId : item.projId; 
+				                var name = (type === 'WS') ? item.wsName : item.projName; 
+				                $s.append('<option value="' + id + '">' + name + '</option>'); 
+				                hasAdminSpace = true;
+				            }
+				        });
+		        if (!hasAdminSpace) {
+		            $s.append('<option value="">관리자 권한이 있는 공간이 없습니다.</option>');
+		            $('#saveEvent').prop('disabled', true);
+		        } else {
+		            $('#saveEvent').prop('disabled', false);
+		        }
+		    }
+		});
         $('.sidebar input[type="checkbox"]').on('change', function() { calendar.refetchEvents(); });
-        $.get('${pageContext.request.contextPath}/api/calendar/user-spaces', function(data) { userSpaces = data; $('#itemType').trigger('change'); });
+		function loadUserSpaces() {
+		    $.get('${pageContext.request.contextPath}/api/calendar/user-spaces', function(data) { 
+		        userSpaces = data; 
+		        $('#itemType').trigger('change'); 
+		    });
+		}
+		loadUserSpaces(); // 로딩 시 1번 호출
+
+		// 💡 캘린더 일정 등록 모달이 열릴 때마다 무조건 권한을 새로 긁어오도록 추가
+		// 이게 있으면 프로젝트를 새로 만들고 돌아와도 항상 최신 권한으로 업데이트됩니다.
+		$('.fc-daygrid-day').on('click', function() {
+		    loadUserSpaces();
+		});
     });
+	function getProcessData() {
+			    let s = $('#eventStart').val();
+			    let e = $('#eventEnd').val();
+			    const isLunar = $('#isLunarCheck').is(':checked') ? 'Y' : 'N';
+			    const isRecurring = $('#isRecurringCheck').is(':checked') ? 'Y' : 'N';
+			    const allDayVal = (isLunar === 'Y' || $('#allDayCheck').is(':checked')) ? 'Y' : 'N';
+
+			    // disabled 되어 있어도 쿼리 파라미터나 원래 목적값을 강제 바인딩하도록 보정
+			    const currentItemType = $('#itemType').val() || (paramMode === 'GROUP_REG' ? 'WS' : 'PRIVATE');
+			    const currentSpaceId = $('#spaceId').val() || paramWsId;
+
+			    return {
+			        id: $('#eventModal').data('selectedId'),
+			        title: $('#eventTitle').val().trim(),
+			        isLunar: isLunar,
+			        startDt: s,
+			        endDt: e,
+			        allDay: allDayVal,
+			        itemType: currentItemType,
+			        color: $('#eventColor').val(),
+			        wsId: currentItemType === 'WS' ? currentSpaceId : null,
+			        projId: currentItemType === 'PROJ' ? currentSpaceId : null,
+			        userId: sessionUserId,
+			        isRecurring: isRecurring,
+			        recurType: isRecurring === 'Y' ? $('#recurFreq').val() : null,
+			        untilDt: isRecurring === 'Y' ? $('#untilDt').val() : null,
+			        recurInterval: 1
+			    };
+			}
+			$(document).on('click', '#saveEvent', function() {
+			    console.log("버튼 클릭 감지됨!");
+			    
+			    // 💡 유효성 검사 로직 (제목 필수)
+			    var titleVal = $('#eventTitle').val();
+			    if (!titleVal || titleVal.trim() === "") {
+			        alert("일정 제목을 반드시 입력해주세요.");
+			        $('#eventTitle').focus(); // 제목창으로 커서 이동
+			        return; // 여기서 함수 종료 (등록 진행 안 함)
+			    }
+			    
+			    // 💡 시작일/종료일 검사 (선택 사항이지만 추가하면 좋습니다)
+			    if (!$('#eventStart').val() || !$('#eventEnd').val()) {
+			        alert("시작 일시와 종료 일시를 모두 선택해주세요.");
+			        return;
+			    }
+
+			    var d = getProcessData(); 
+			    
+			    $.ajax({ 
+			        url: '${pageContext.request.contextPath}/api/calendar/register', 
+			        type: 'POST', 
+			        contentType: 'application/json', 
+			        data: JSON.stringify(d), 
+			        success: function() { 
+			            $('#eventModal').hide(); 
+			            calendar.refetchEvents(); 
+			        },
+			        error: function(xhr) {
+			            alert("서버 오류로 등록에 실패했습니다.");
+			            console.error(xhr);
+			        }
+			    }); 
+			});
+			// 수정 버튼 클릭 시 편집 모드 전환
+			$('#editModeBtn').on('click', function() {
+			    $('#modalTitle').text('일정 수정');
+			    toggleReadOnly(false); // 잠금 해제
+			    $(this).hide();
+			    $('#updateEvent').show();
+			});
+
+			// 모달 닫을 때 다시 조회 모드로 초기화 (필수)
+			$('#cancelModal').on('click', function() {
+			    $('#eventModal').hide();
+			    
+			    // 모달을 닫을 때 반드시 조회 모드 해제(모든 필드 활성화)
+			    toggleReadOnly(false); 
+			    
+			    // 버튼 초기화
+			    $('#editModeBtn').hide();
+			    $('#updateEvent').hide();
+			    $('#saveEvent').show();
+			});
 </script>
 </body>
 </html>

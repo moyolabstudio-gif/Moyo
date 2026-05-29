@@ -37,4 +37,5 @@ public interface IcalendarResponseDAO {
     int leaveProject(@Param("projId") Long projId, @Param("userId") Long userId);
     List<Map<String, Object>> selectUserWorkspaces(long userId); // int -> long
     List<Map<String, Object>> selectUserProjects(long userId);
+    String checkUserRole(Long wsId, Long userId);
 }

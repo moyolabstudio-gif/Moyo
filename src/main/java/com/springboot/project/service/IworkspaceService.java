@@ -15,5 +15,9 @@ public interface IworkspaceService {
     String inviteUserByEmail(Long wsId, Long inviterId, String inviteeEmail);
     List<Map<String, Object>> getPendingInvitations(Long userId);
     boolean processInvitation(Long inviteId, String status, Long userId);
-    
+    List<Map<String, Object>> getEventsByWsId(Long wsId);
+    List<Map<String, Object>> getTodayEvents(Long wsId);
+    Map<String, Object> getActivePoll(Long wsId);
+    void processVote(Map<String, Object> params); 
+    void createPoll(Map<String, Object> params);
 }

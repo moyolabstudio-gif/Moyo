@@ -35,4 +35,5 @@ public interface IcalendarResponseService {
     List<Map<String, Object>> getWorkspacesByUserId(long userId); 
     
     List<Map<String, Object>> getProjectsByUserId(long userId);
+    String checkUserRole(Long wsId, Long userId);
 }

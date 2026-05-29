@@ -11,19 +11,37 @@ import com.springboot.project.dto.projectRequestDTO;
 @Mapper
 public interface IprojectDAO {
 
-    // 1. 프로젝트 기본 CRUD (기존 유지)
+    // 1. 프로젝트 기본 CRUD
     int insertProject(projectRequestDTO dto);
     List<projectRequestDTO> selectProjectsByWsId(Long wsId);
-
-    // 2. 프로젝트 멤버 할당 (기존 Map 방식보다 파라미터를 명시하는 게 XML 작성 시 편합니다)
+    projectRequestDTO selectProjectById(Long projId);
+    // 2. 프로젝트 멤버 할당
     int insertProjectMember(@Param("projId") Long projId, 
                             @Param("userId") Long userId, 
                             @Param("role") String role);
 
-    // 3. [핵심 추가] 워크스페이스 멤버 중 이 프로젝트에 아직 참여하지 않은 사람 목록
+    // 3. 워크스페이스 멤버 중 이 프로젝트에 아직 참여하지 않은 사람 목록
     List<Map<String, Object>> getAssignableMembers(@Param("wsId") Long wsId, @Param("projId") Long projId);
     
-    // 4. [추가 권장] 현재 프로젝트에 참여 중인 멤버 목록 조회
+    // 4. 현재 프로젝트에 참여 중인 멤버 목록 조회
     List<Map<String, Object>> getProjectMembers(Long projId);
     int checkMemberExists(@Param("projId") Long projId, @Param("userId") Long userId);
+
+    // 💡 [핵심 추가] 캘린더 로직을 건드리지 않고 프로젝트 생성 시 이벤트를 직접 등록
+    int insertProjectEvent(projectRequestDTO dto);
+    Map<String, Object> getProjectTaskSummary(@Param("projId") Long projId);
+    List<Map<String, Object>> getProjectTasks(@Param("projId") Long projId);
+    int insertTask(Map<String, Object> paramMap);
+    Map<String, Object> getTaskDetail(@Param("taskId") Long taskId);
+    int updateTask(Map<String, Object> params);
+    int updateTaskStatus(
+            @Param("taskId") Long taskId,
+            @Param("status") String status);
+    int deleteTask(long taskId);
+ // 프로젝트 수정
+    int updateProject(projectRequestDTO dto);
+    int updateProjectEvent(projectRequestDTO dto);
+    // 프로젝트 삭제
+    int deleteProject(Long projId);
+    
 }

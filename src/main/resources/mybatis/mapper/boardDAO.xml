@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.springboot.project.dao.IboardDAO">
+
+    <select id="selectDashboardLatestPosts" resultType="com.springboot.project.dto.postDTO">
+    SELECT 
+        p.POST_ID as postId,
+        p.WS_ID as wsId,
+        p.TITLE as title,
+        p.USER_ID as userId,
+        u.USER_NAME as writerName,
+        p.VIEW_COUNT as viewCount,
+        p.IS_PINNED as isPinned,
+        CASE 
+            WHEN TO_CHAR(p.REG_DT, 'YYYY-MM-DD') = TO_CHAR(SYSDATE, 'YYYY-MM-DD') 
+            THEN TO_CHAR(p.REG_DT, 'HH24:MI')
+            ELSE TO_CHAR(p.REG_DT, 'YYYY-MM-DD')
+        END as regDt,
+        (SELECT COUNT(*) FROM BOARD_REPLIES r WHERE r.POST_ID = p.POST_ID) as replyCount
+    FROM BOARD_POSTS p
+    JOIN USERS u ON p.USER_ID = u.USER_ID
+    WHERE p.WS_ID = #{wsId}
+      AND p.BOARD_TYPE = #{boardType}
+    ORDER BY p.IS_PINNED DESC, p.REG_DT DESC
+    FETCH FIRST 5 ROWS ONLY
+</select>
+
+    <insert id="insertPost" parameterType="com.springboot.project.dto.postDTO">
+    <selectKey keyProperty="postId" resultType="long" order="BEFORE">
+        SELECT SEQ_POST_ID.NEXTVAL FROM DUAL
+    </selectKey>
+    
+    INSERT INTO BOARD_POSTS (
+        POST_ID, WS_ID, PROJ_ID, USER_ID, BOARD_TYPE, TITLE, CONTENT, IS_PINNED
+    ) VALUES (
+        #{postId}, 
+        #{wsId}, 
+        #{projId, jdbcType=NUMERIC}, 
+        #{userId}, 
+        #{boardType}, 
+        #{title}, 
+        #{content}, 
+        #{isPinned, jdbcType=CHAR}
+    )
+</insert>
+
+<insert id="insertFile" parameterType="map">
+    INSERT INTO ATTACHMENTS (
+        FILE_ID, POST_ID, FILE_NAME, FILE_ORIGINAL_NAME, FILE_SIZE
+    ) VALUES (
+        SEQ_FILE_ID.NEXTVAL, 
+        #{postId}, 
+        #{fileName}, 
+        #{originalName}, 
+        #{fileSize}
+    )
+</insert>
+<select id="selectFileList" resultType="map" parameterType="int">
+    SELECT * FROM ATTACHMENTS WHERE POST_ID = #{postId}
+</select>
+<select id="selectFileById" resultType="map" parameterType="string">
+    SELECT FILE_ID, FILE_NAME, FILE_ORIGINAL_NAME, FILE_SIZE 
+    FROM ATTACHMENTS 
+    WHERE FILE_ID = #{fileId}
+</select>
+    <select id="selectPostDetail" resultType="com.springboot.project.dto.postDTO">
+        SELECT 
+            p.POST_ID as postId,
+            p.WS_ID as wsId,
+            p.TITLE as title,
+            p.CONTENT as content,
+            p.USER_ID as userId,
+            u.USER_NAME as writerName,
+            p.VIEW_COUNT as viewCount,
+            p.BOARD_TYPE as boardType,
+            p.IS_PINNED as isPinned,
+            TO_CHAR(p.REG_DT, 'YYYY-MM-DD HH24:MI') as regDt
+        FROM BOARD_POSTS p
+        JOIN USERS u ON p.USER_ID = u.USER_ID
+        WHERE p.POST_ID = #{postId}
+    </select>
+
+	<select id="selectReplyList" parameterType="int" resultType="map">
+	    SELECT 
+	        R.REPLY_ID, 
+	        R.CONTENT, 
+	        R.USER_ID,  TO_CHAR(R.REG_DT, 'YYYY-MM-DD HH24:MI') AS REG_DT,
+	        U.USER_NAME
+	    FROM BOARD_REPLIES R
+	    JOIN USERS U ON R.USER_ID = U.USER_ID
+	    WHERE R.POST_ID = #{postId}
+	    ORDER BY R.REG_DT ASC
+	</select>
+
+    <insert id="insertReply" parameterType="map">
+        INSERT INTO BOARD_REPLIES (
+            REPLY_ID, POST_ID, USER_ID, CONTENT, REG_DT
+        ) VALUES (
+            SEQ_REPLY_ID.NEXTVAL, 
+            #{postId, jdbcType=NUMERIC}, 
+            #{userId, jdbcType=VARCHAR}, 
+            #{content, jdbcType=VARCHAR}, 
+            SYSDATE
+        )
+    </insert>
+    
+    <update id="updateReply" parameterType="map">
+	    UPDATE BOARD_REPLIES
+	       SET CONTENT = #{content}
+	     WHERE REPLY_ID = #{replyId}
+	</update>
+	
+	<delete id="deleteReply" parameterType="int">
+	    DELETE FROM BOARD_REPLIES
+	     WHERE REPLY_ID = #{replyId}
+	</delete>
+<select id="selectWorkspaceCalendar" parameterType="long" resultType="map">
+    SELECT TITLE, EVENT_DATE, TYPE 
+    FROM (
+        -- 1. 프로젝트 관련 이벤트 (EVENTS 테이블 사용)
+        SELECT 
+            TITLE AS TITLE, 
+            TO_CHAR(START_DT, 'YYYY-MM-DD') AS EVENT_DATE, 
+            'EVENT' AS TYPE 
+        FROM EVENTS 
+        WHERE WS_ID = #{wsId} AND START_DT IS NOT NULL
+        
+        UNION ALL
+        
+        -- 2. 공지사항 (BOARD_POSTS 테이블 사용)
+        SELECT 
+            TITLE AS TITLE, 
+            TO_CHAR(REG_DT, 'YYYY-MM-DD') AS EVENT_DATE, 
+            'NOTICE' AS TYPE 
+        FROM BOARD_POSTS 
+        WHERE WS_ID = #{wsId} AND BOARD_TYPE = 'NOTICE' AND REG_DT IS NOT NULL
+    )
+    ORDER BY EVENT_DATE ASC
+</select>
+
+<update id="updatePost" parameterType="com.springboot.project.dto.postDTO">
+    UPDATE BOARD_POSTS
+    SET TITLE = #{title},
+        CONTENT = #{content}, -- 💡 에디터에서 보낸 HTML이 들어감
+        UPD_DT = SYSDATE      -- 💡 수정 시간도 함께 업데이트해주면 좋습니다.
+    WHERE POST_ID = #{postId}
+</update>
+
+    <delete id="deletePost" parameterType="long">
+        DELETE FROM BOARD_POSTS
+        WHERE POST_ID = #{postId}
+    </delete>
+    <delete id="deleteFile" parameterType="int">
+    DELETE FROM ATTACHMENTS WHERE FILE_ID = #{fileId}
+</delete>
+    <insert id="insertPoll" parameterType="map">
+    <selectKey keyProperty="pollId" resultType="long" order="BEFORE">
+        SELECT POLL_SEQ.NEXTVAL FROM DUAL
+    </selectKey>
+    INSERT INTO POLLS (POLL_ID, WS_ID, QUESTION, STATUS)
+    VALUES (#{pollId}, #{wsId}, #{question}, 'ACTIVE')
+</insert>
+<insert id="insertPollOption" parameterType="map">
+    INSERT INTO POLL_OPTIONS (OPTION_ID, POLL_ID, TEXT, COUNT)
+    VALUES (OPTION_SEQ.NEXTVAL, #{pollId}, #{text}, #{count})
+</insert>
+</mapper>

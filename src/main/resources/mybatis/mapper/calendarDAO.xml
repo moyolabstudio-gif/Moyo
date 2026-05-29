@@ -4,211 +4,211 @@
 
 <mapper namespace="com.springboot.project.dao.IcalendarResponseDAO">
 
-<select id="getMonthlyEvents" resultType="com.springboot.project.dto.calendarResponseDTO">
-    SELECT 
-        id, title, startDt, endDt, itemType, color,
-        isRecurring, recurType, recurInterval, untilDt, recurGroupId,
-        isLunar, lunarMonth, lunarDay /* 💡 Java에서 계산할 수 있게 음력 정보 추가 */
-    FROM (
+    <select id="getMonthlyEvents" resultType="com.springboot.project.dto.calendarResponseDTO">
         SELECT 
-            EVENT_ID as id, 
-            TITLE as title, 
-            TO_CHAR(START_DT, 'YYYY-MM-DD HH24:MI:SS') as startDt, 
-            TO_CHAR(END_DT, 'YYYY-MM-DD HH24:MI:SS') as endDt, 
-            ITEM_TYPE as itemType, 
-            EVENT_COLOR as color,
-            USER_ID, WS_ID, PROJ_ID, 
-            START_DT as RAW_START, 
-            END_DT as RAW_END,
-            IS_RECURRING as isRecurring,
-            RECUR_TYPE as recurType,
-            RECUR_INTERVAL as recurInterval,
-            TO_CHAR(RECUR_END_DT, 'YYYY-MM-DD') as untilDt,
-            RECUR_GROUP_ID as recurGroupId,
-            IS_LUNAR as isLunar,
-            LUNAR_MONTH as lunarMonth,
-            LUNAR_DAY as lunarDay
-        FROM EVENTS
-        UNION ALL
-        SELECT 
-            HLD_ID as id, 
-            HLD_NAME as title, 
-            TO_CHAR(HLD_DATE, 'YYYY-MM-DD" 00:00:00"') as startDt, 
-            TO_CHAR(HLD_DATE, 'YYYY-MM-DD" 23:59:59"') as endDt, 
-            'HOLIDAY' as itemType, 
-            NULL as color, 
-            NULL as USER_ID, NULL as WS_ID, NULL as PROJ_ID, 
-            HLD_DATE as RAW_START, 
-            HLD_DATE as RAW_END,
-            'N', NULL, 1, NULL, NULL,
-            'N', NULL, NULL /* 💡 UNION ALL 컬럼 개수 맞춤 */
-        FROM NATIONAL_HOLIDAYS
-    )
-    WHERE (
-        <choose>
-            <when test="types != null and types.size() > 0">
-                <foreach collection="types" item="type" open="(" close=")" separator=" OR ">
-                    <choose>
-                        <when test="type == 'PRIVATE'">(itemType = 'PRIVATE' AND USER_ID = #{userId, jdbcType=NUMERIC})</when>
-                        <when test="type == 'WS'">
-                            (itemType = 'WS' AND WS_ID IN (SELECT WS_ID FROM WS_MEMBERS WHERE USER_ID = #{userId, jdbcType=NUMERIC}))
-                        </when>
-                        <when test="type == 'PROJ'">
-                            (itemType = 'PROJ' AND PROJ_ID IN (SELECT PROJ_ID FROM PROJ_MEMBERS WHERE USER_ID = #{userId, jdbcType=NUMERIC}))
-                        </when>
-                        <when test="type == 'HOLIDAY'">(itemType = 'HOLIDAY')</when>
-                        <otherwise>1=0</otherwise> 
-                    </choose>
-                </foreach>
-            </when>
-            <otherwise>1=0</otherwise>
-        </choose>
-    )
-    /* 💡 날짜 필터링 로직 수정 (음력 반복 일정 대응) */
-    AND (
-        -- 1. 일반 양력 일정: 현재 화면 범위 내에 있는 것
-        (isLunar = 'N' AND isRecurring = 'N' AND RAW_START &lt;= TO_DATE(#{endDate}, 'YYYY-MM-DD') AND RAW_END &gt;= TO_DATE(#{startDate}, 'YYYY-MM-DD'))
-        OR 
-        -- 2. 양력 반복 일정: 종료일이 현재 조회 시작일보다 이후면 일단 가져옴
-        (isLunar = 'N' AND isRecurring = 'Y' AND (untilDt IS NULL OR TO_DATE(untilDt, 'YYYY-MM-DD') &gt;= TO_DATE(#{startDate}, 'YYYY-MM-DD')))
-        OR
-        -- 3. 음력 반복 일정: 과거 연도 데이터도 가져와서 Java에서 계산해야 하므로 종료일만 체크
-        (isLunar = 'Y' AND (untilDt IS NULL OR TO_DATE(untilDt, 'YYYY-MM-DD') &gt;= TO_DATE(#{startDate}, 'YYYY-MM-DD')))
-    )
-</select>
+            id, title, startDt, endDt, itemType, color, wsId, projId,
+            isRecurring, recurType, recurInterval, untilDt, recurGroupId,
+            isLunar, lunarMonth, lunarDay
+        FROM (
+            SELECT 
+                EVENT_ID as id, 
+                TITLE as title, 
+                TO_CHAR(START_DT, 'YYYY-MM-DD HH24:MI:SS') as startDt, 
+                /* DB에는 +1일 되어 저장되므로, 조회 시에는 원래 날짜로 복구하여 표시 */
+                TO_CHAR(END_DT, 'YYYY-MM-DD HH24:MI:SS') as endDt, 
+                ITEM_TYPE as itemType, 
+                EVENT_COLOR as color,
+				USER_ID,
+				WS_ID as wsId,
+				PROJ_ID as projId,
+				TRUNC(START_DT) as RAW_START,
+                /* FullCalendar 렌더링을 위해 +1일 된 상태 그대로 사용 (31일 -> 6/1) */
+                TRUNC(END_DT) as RAW_END,
+                IS_RECURRING as isRecurring,
+                RECUR_TYPE as recurType,
+                RECUR_INTERVAL as recurInterval,
+                TO_CHAR(RECUR_END_DT, 'YYYY-MM-DD') as untilDt,
+                RECUR_GROUP_ID as recurGroupId,
+                IS_LUNAR as isLunar,
+                LUNAR_MONTH as lunarMonth,
+                LUNAR_DAY as lunarDay
+            FROM EVENTS
+            UNION ALL
+            SELECT 
+                HLD_ID as id, 
+                HLD_NAME as title, 
+                TO_CHAR(HLD_DATE, 'YYYY-MM-DD" 00:00:00"') as startDt, 
+                TO_CHAR(HLD_DATE, 'YYYY-MM-DD" 23:59:59"') as endDt, 
+                'HOLIDAY' as itemType, 
+                NULL as color, 
+                NULL as USER_ID,
+				NULL as wsId,
+				NULL as projId,
+                HLD_DATE as RAW_START, 
+                HLD_DATE as RAW_END,
+                'N', NULL, 1, NULL, NULL,
+                'N', NULL, NULL
+            FROM NATIONAL_HOLIDAYS
+        )
+        WHERE (
+            <choose>
+                <when test="types != null and types.size() > 0">
+                    <foreach collection="types" item="type" open="(" close=")" separator=" OR ">
+                        <choose>
+                            <when test="type == 'PRIVATE'">(itemType = 'PRIVATE' AND USER_ID = #{userId, jdbcType=NUMERIC})</when>
+                           <when test="type == 'WS'">
+(itemType = 'WS'
+ AND wsId IN (
+    SELECT WS_ID
+    FROM WS_MEMBERS
+    WHERE USER_ID = #{userId}
+ ))
+</when>
+                          <when test="type == 'PROJ'">
+(
+ (itemType = 'PROJ'
+  AND projId IN (
+      SELECT PROJ_ID
+      FROM PROJ_MEMBERS
+      WHERE USER_ID = #{userId}
+  ))
+ OR
+ (itemType = 'TASK'
+  AND projId IN (
+      SELECT PROJ_ID
+      FROM PROJ_MEMBERS
+      WHERE USER_ID = #{userId}
+  ))
+)
+</when>
+                            <when test="type == 'TASK'">
+(itemType = 'TASK'
+ AND projId IN (
+    SELECT PROJ_ID
+    FROM PROJ_MEMBERS
+    WHERE USER_ID = #{userId}
+ ))
+</when>
+                            <when test="type == 'HOLIDAY'">(itemType = 'HOLIDAY')</when>
+                            <otherwise>1=0</otherwise> 
+                        </choose>
+                    </foreach>
+                </when>
+                <otherwise>1=0</otherwise>
+            </choose>
+        )
+        AND (
+            (isLunar = 'N' AND isRecurring = 'N' AND RAW_START &lt;= TO_DATE(#{endDate}, 'YYYY-MM-DD') AND RAW_END &gt;= TO_DATE(#{startDate}, 'YYYY-MM-DD'))
+            OR 
+            (isLunar = 'N' AND isRecurring = 'Y' AND (untilDt IS NULL OR TO_DATE(untilDt, 'YYYY-MM-DD') &gt;= TO_DATE(#{startDate}, 'YYYY-MM-DD')))
+            OR
+            (isLunar = 'Y' AND (untilDt IS NULL OR TO_DATE(untilDt, 'YYYY-MM-DD') &gt;= TO_DATE(#{startDate}, 'YYYY-MM-DD')))
+        )
+    </select>
     
-<!-- 프로젝트 팀장 권한 확인 -->
-<select id="checkProjectManager" resultType="string">
-    SELECT PROJ_ROLE 
-    FROM PROJ_MEMBERS 
-    WHERE PROJ_ID = #{projId, jdbcType=NUMERIC} AND USER_ID = #{userId, jdbcType=NUMERIC}
-</select>
+    <select id="checkProjectManager" resultType="string">
+        SELECT PROJ_ROLE FROM PROJ_MEMBERS WHERE PROJ_ID = #{projId, jdbcType=NUMERIC} AND USER_ID = #{userId, jdbcType=NUMERIC}
+    </select>
 
-<!-- 워크스페이스 관리자 권한 확인 -->
-<select id="checkWorkspaceAdmin" resultType="string">
-    SELECT WS_ROLE 
-    FROM WS_MEMBERS 
-    WHERE WS_ID = #{wsId, jdbcType=NUMERIC} AND EVENT_TYPE = 'WS'
-</select>
+    <select id="checkWorkspaceAdmin" resultType="string">
+        SELECT WS_ROLE FROM WS_MEMBERS WHERE WS_ID = #{wsId, jdbcType=NUMERIC} AND USER_ID = #{userId, jdbcType=NUMERIC}
+    </select>
     
-	<insert id="insertHoliday" parameterType="com.springboot.project.dto.calendarResponseDTO">
-	    INSERT INTO NATIONAL_HOLIDAYS (
-	        HLD_ID, HLD_DATE, HLD_NAME, IS_REST, COUNTRY
-	    ) VALUES (
-	        SEQ_HLD_ID.NEXTVAL, 
-	        TO_DATE(#{startDt}, 'YYYYMMDD'), 
-	        #{title}, 
-	        'Y', 
-	        'KR'
-	    )
-	</insert>
-	
-	<select id="checkHolidayExists" resultType="int">
-	    SELECT COUNT(*) FROM NATIONAL_HOLIDAYS 
-	    WHERE TO_CHAR(HLD_DATE, 'YYYYMMDD') = #{hldDate}
-	</select>
-	
-	<insert id="registerEvent">
-	    INSERT INTO EVENTS (
-	        EVENT_ID, TITLE, START_DT, END_DT, 
-	        PROJ_ID, WS_ID, USER_ID, ITEM_TYPE, EVENT_COLOR,
-	        IS_RECURRING, RECUR_TYPE, RECUR_INTERVAL, RECUR_END_DT, RECUR_GROUP_ID,
-	        IS_LUNAR, LUNAR_MONTH, LUNAR_DAY /* 💡 음력 컬럼 추가 */
-	    ) VALUES (
-	        SEQ_EVENT_ID.NEXTVAL, #{title}, 
-	        TO_DATE(#{startDt}, 'YYYY-MM-DD"T"HH24:MI'), 
-	        TO_DATE(#{endDt}, 'YYYY-MM-DD"T"HH24:MI'),
-	        #{projId, jdbcType=NUMERIC}, 
-	        #{wsId, jdbcType=NUMERIC},   
-	        #{userId, jdbcType=NUMERIC},
-	        #{itemType},
-	        #{color, jdbcType=VARCHAR},
-	        #{isRecurring, jdbcType=CHAR},
-	        #{recurType, jdbcType=VARCHAR},
-	        #{recurInterval, jdbcType=NUMERIC},
-	        <choose>
-	            <when test="untilDt != null">TO_DATE(#{untilDt}, 'YYYY-MM-DD')</when>
-	            <otherwise>NULL</otherwise>
-	        </choose>,
-	        #{recurGroupId, jdbcType=VARCHAR},
-	        #{isLunar, jdbcType=CHAR},       /* 💡 추가 */
-	        #{lunarMonth, jdbcType=NUMERIC}, /* 💡 추가 */
-	        #{lunarDay, jdbcType=NUMERIC}   /* 💡 추가 */
-	    )
-	</insert>
-	
-	<select id="getSharedEvents" resultType="map">
-	    SELECT e.*, u.USER_NAME 
-	    FROM EVENTS e
-	    JOIN USERS u ON e.USER_ID = u.USER_ID
-	    WHERE e.PROJ_ID = #{projId}  AND (e.IS_PRIVATE = 'N' OR e.USER_ID = #{userId})
-	</select>
-	<delete id="leaveProject">
-	    DELETE FROM PROJ_MEMBERS 
-	    WHERE PROJ_ID = #{projId} 
-	      AND USER_ID = #{userId}
-	</delete>
-	
-	<delete id="deleteEvent" parameterType="map">
-	    DELETE FROM EVENTS 
-	    WHERE USER_ID = #{userId}
-	    <choose>
-	        <when test='deleteSeries != null and deleteSeries.toString() == "Y"'>
-	            AND RECUR_GROUP_ID = #{recurGroupId}
-	        </when>
-	        <otherwise>
-	            AND EVENT_ID = #{eventId}
-	        </otherwise>
-	    </choose>
-	</delete>
-	
-	<update id="updateEventDate">
-	    UPDATE EVENTS 
-	    SET START_DT = TO_DATE(#{startDt}, 'YYYY-MM-DD"T"HH24:MI'), 
-	        END_DT = TO_DATE(#{endDt}, 'YYYY-MM-DD"T"HH24:MI')
-	    WHERE EVENT_ID = #{id}
-	</update>
-	
-	<update id="updateEventAll">
-    UPDATE EVENTS 
-    SET TITLE = #{title},
-        START_DT = TO_DATE(#{startDt}, 'YYYY-MM-DD"T"HH24:MI'),
-        END_DT = TO_DATE(#{endDt}, 'YYYY-MM-DD"T"HH24:MI'),
-        EVENT_COLOR = #{color},
-        IS_LUNAR = #{isLunar, jdbcType=CHAR},         LUNAR_MONTH = #{lunarMonth, jdbcType=NUMERIC}, LUNAR_DAY = #{lunarDay, jdbcType=NUMERIC}     WHERE EVENT_ID = #{id}
-</update>
-	<update id="updateRecurringEvents">
-	    UPDATE EVENTS 
-	    SET TITLE = #{title},
-	        START_DT = TO_DATE(#{startDt}, 'YYYY-MM-DD"T"HH24:MI'),
-	        END_DT = TO_DATE(#{endDt}, 'YYYY-MM-DD"T"HH24:MI'),
-	        EVENT_COLOR = #{color},
-	        RECUR_TYPE = #{recurType},
-	        RECUR_INTERVAL = #{recurInterval},
-	        RECUR_END_DT = TO_DATE(#{untilDt}, 'YYYY-MM-DD'),
-	        IS_LUNAR = #{isLunar, jdbcType=CHAR},
-	        LUNAR_MONTH = #{lunarMonth, jdbcType=NUMERIC},
-	        LUNAR_DAY = #{lunarDay, jdbcType=NUMERIC}
-	    WHERE RECUR_GROUP_ID = #{recurGroupId}
-	      AND USER_ID = #{userId}
-	</update>
-	<select id="selectUserWorkspaces" resultType="map">
-	    SELECT 
-	        w.WS_ID as "wsId", 
-	        w.WS_NAME as "wsName"
-	    FROM WORKSPACES w
-	    JOIN WS_MEMBERS wm ON w.WS_ID = wm.WS_ID
-	    WHERE wm.USER_ID = #{userId}
-	</select>
-	
-	<!-- 프로젝트 목록 조회 -->
-	<select id="selectUserProjects" resultType="map">
-	    SELECT 
-	        p.PROJ_ID as "projId", 
-	        p.PROJ_NAME as "projName"
-	    FROM PROJECTS p
-	    JOIN PROJ_MEMBERS pm ON p.PROJ_ID = pm.PROJ_ID
-	    WHERE pm.USER_ID = #{userId}
-	</select>
+    <insert id="insertHoliday" parameterType="com.springboot.project.dto.calendarResponseDTO">
+        INSERT INTO NATIONAL_HOLIDAYS (HLD_ID, HLD_DATE, HLD_NAME, IS_REST, COUNTRY) 
+        VALUES (SEQ_HLD_ID.NEXTVAL, TO_DATE(#{startDt}, 'YYYYMMDD'), #{title}, 'Y', 'KR')
+    </insert>
+    
+    <select id="checkHolidayExists" resultType="int">
+        SELECT COUNT(*) FROM NATIONAL_HOLIDAYS WHERE TO_CHAR(HLD_DATE, 'YYYYMMDD') = #{hldDate}
+    </select>
+    
+    <insert id="registerEvent">
+        INSERT INTO EVENTS (
+            EVENT_ID, TITLE, START_DT, END_DT, 
+            PROJ_ID, WS_ID, USER_ID, ITEM_TYPE, EVENT_COLOR,
+            IS_RECURRING, RECUR_TYPE, RECUR_INTERVAL, RECUR_END_DT, RECUR_GROUP_ID,
+            IS_LUNAR, LUNAR_MONTH, LUNAR_DAY
+        ) VALUES (
+            SEQ_EVENT_ID.NEXTVAL, #{title}, 
+            TO_DATE(#{startDt}, 'YYYY-MM-DD"T"HH24:MI'), 
+            TO_DATE(#{endDt}, 'YYYY-MM-DD"T"HH24:MI') + 1,
+            #{projId, jdbcType=NUMERIC}, 
+            #{wsId, jdbcType=NUMERIC},   
+            #{userId, jdbcType=NUMERIC},
+            #{itemType},
+            #{color, jdbcType=VARCHAR},
+            #{isRecurring, jdbcType=CHAR},
+            #{recurType, jdbcType=VARCHAR},
+            #{recurInterval, jdbcType=NUMERIC},
+            <choose>
+                <when test="untilDt != null">TO_DATE(#{untilDt}, 'YYYY-MM-DD')</when>
+                <otherwise>NULL</otherwise>
+            </choose>,
+            #{recurGroupId, jdbcType=VARCHAR},
+            #{isLunar, jdbcType=CHAR},
+            #{lunarMonth, jdbcType=NUMERIC},
+            #{lunarDay, jdbcType=NUMERIC}
+        )
+    </insert>
+    
+    <select id="getSharedEvents" resultType="map">
+        SELECT e.*, u.USER_NAME FROM EVENTS e JOIN USERS u ON e.USER_ID = u.USER_ID WHERE e.PROJ_ID = #{projId} AND (e.IS_PRIVATE = 'N' OR e.USER_ID = #{userId})
+    </select>
+    
+    <delete id="leaveProject">
+        DELETE FROM PROJ_MEMBERS WHERE PROJ_ID = #{projId} AND USER_ID = #{userId}
+    </delete>
+    
+    <delete id="deleteEvent" parameterType="map">
+        DELETE FROM EVENTS WHERE USER_ID = #{userId}
+        <choose>
+            <when test="deleteSeries == 'Y'.toString() and recurGroupId != null and recurGroupId != ''">
+                AND RECUR_GROUP_ID = #{recurGroupId}
+            </when>
+            <otherwise>
+                AND EVENT_ID = #{eventId}
+            </otherwise>
+        </choose>
+    </delete>
+    
+    <update id="updateEventDate">
+        UPDATE EVENTS SET START_DT = TO_DATE(#{startDt}, 'YYYY-MM-DD"T"HH24:MI'), END_DT = TO_DATE(#{endDt}, 'YYYY-MM-DD"T"HH24:MI') + 1
+        WHERE EVENT_ID = #{id}
+    </update>
+    
+    <update id="updateEventAll">
+        UPDATE EVENTS SET TITLE = #{title},
+            START_DT = TO_DATE(#{startDt}, 'YYYY-MM-DD"T"HH24:MI'),
+            END_DT = TO_DATE(#{endDt}, 'YYYY-MM-DD"T"HH24:MI') + 1,
+            EVENT_COLOR = #{color},
+            IS_LUNAR = #{isLunar, jdbcType=CHAR}, 
+            LUNAR_MONTH = #{lunarMonth, jdbcType=NUMERIC}, 
+            LUNAR_DAY = #{lunarDay, jdbcType=NUMERIC}     
+        WHERE EVENT_ID = #{id}
+    </update>
+
+    <update id="updateRecurringEvents">
+        UPDATE EVENTS 
+        SET TITLE = #{title},
+            START_DT = TO_DATE(#{startDt}, 'YYYY-MM-DD"T"HH24:MI'),
+            END_DT = TO_DATE(#{endDt}, 'YYYY-MM-DD"T"HH24:MI') + 1,
+            EVENT_COLOR = #{color},
+            RECUR_TYPE = #{recurType},
+            RECUR_INTERVAL = #{recurInterval},
+            RECUR_END_DT = TO_DATE(#{untilDt}, 'YYYY-MM-DD'),
+            IS_LUNAR = #{isLunar, jdbcType=CHAR},
+            LUNAR_MONTH = #{lunarMonth, jdbcType=NUMERIC},
+            LUNAR_DAY = #{lunarDay, jdbcType=NUMERIC}
+        WHERE RECUR_GROUP_ID = #{recurGroupId} AND USER_ID = #{userId}
+    </update>
+
+    <select id="selectUserWorkspaces" resultType="map">
+        SELECT w.WS_ID as "wsId", w.WS_NAME as "wsName", wm.WS_ROLE as "wsRole" FROM WORKSPACES w JOIN WS_MEMBERS wm ON w.WS_ID = wm.WS_ID WHERE wm.USER_ID = #{userId}
+    </select>
+    
+    <select id="selectUserProjects" resultType="map">
+        SELECT p.PROJ_ID as "projId", p.PROJ_NAME as "projName" FROM PROJECTS p JOIN PROJ_MEMBERS pm ON p.PROJ_ID = pm.PROJ_ID WHERE pm.USER_ID = #{userId}
+    </select>
 
 </mapper>

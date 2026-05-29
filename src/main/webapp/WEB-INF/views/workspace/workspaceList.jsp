@@ -4,61 +4,42 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>내 워크스페이스 목록 - MOYO</title>
+    <title>내 그룹 목록 - MOYO</title>
     <style>
-        .container { width: 80%; margin: 50px auto; }
-        .ws-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        .ws-table th, .ws-table td { border: 1px solid #ddd; padding: 12px; text-align: left; }
-        .ws-table th { background-color: #f4f4f4; }
-        .btn-enter { background-color: #007bff; color: white; padding: 5px 10px; text-decoration: none; border-radius: 4px; }
-        .header-area { display: flex; justify-content: space-between; align-items: center; }
+        .container { width: 90%; max-width: 1100px; margin: 40px auto; }
+        .header-area { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; }
+        .btn-create { background: #4A90E2; color: white; padding: 12px 24px; border-radius: 12px; text-decoration: none; font-weight: 600; }
+        
+        .ws-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 30px; }
+        .ws-card { border: 1px solid #edf0f2; border-radius: 24px; padding: 30px; background: #fff; box-shadow: 0 8px 20px rgba(0,0,0,0.03); display: flex; flex-direction: column; align-items: center; text-align: center; }
+        
+        /* 핵심: 원형 이미지 스타일 */
+        .ws-img { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; margin-bottom: 20px; background-color: #eee; border: 1px solid #ddd; }
+        
+        .ws-name { font-size: 1.25em; font-weight: 700; margin-bottom: 8px; }
+        .ws-desc { font-size: 0.9em; color: #888; margin-bottom: 25px; height: 3.6em; overflow: hidden; }
+        .btn-enter { width: 100%; background: #f0f7ff; color: #4A90E2; padding: 14px; border-radius: 14px; text-decoration: none; font-weight: 700; }
     </style>
 </head>
 <body>
     <jsp:include page="/WEB-INF/views/common/header.jsp" />
-
     <div class="container">
         <div class="header-area">
-            <h2>내 워크스페이스 목록</h2>
-            <a href="/workspace/create" style="text-decoration: none; font-weight: bold; color: blue;">[+] 새 팀 만들기</a>
+            <h2>나의 워크스페이스</h2>
+            <a href="/workspace/create" class="btn-create">+ 새 팀 만들기</a>
         </div>
-
-        <table class="ws-table">
-            <thead>
-                <tr>
-                    <th>팀 ID</th>
-                    <th>팀 이름</th>
-                    <th>초대 코드</th>
-                    <th>관리</th>
-                </tr>
-            </thead>
-            <tbody>
-                <c:choose>
-                    <c:when test="${not empty wsList}">
-                        <c:forEach var="ws" items="${wsList}">
-                            <tr>
-                                <td>${ws.wsId}</td>
-                                <td>
-                                    <strong>${ws.wsName}</strong>
-                                </td>
-                                <td><code>${ws.inviteCode}</code></td>
-                                <td>
-                                    <a href="/workspace/main?wsId=${ws.wsId}" class="btn-enter">입장하기</a>
-                                </td>
-                            </tr>
-                        </c:forEach>
-                    </c:when>
-                    <c:otherwise>
-                        <tr>
-                            <td colspan="4" style="text-align: center; padding: 50px;">
-                                참여 중인 워크스페이스가 없습니다. <br>
-                                <a href="/workspace/create">첫 번째 팀을 만들어보세요!</a>
-                            </td>
-                        </tr>
-                    </c:otherwise>
-                </c:choose>
-            </tbody>
-        </table>
+        <div class="ws-grid">
+            <c:forEach var="ws" items="${wsList}">
+                <div class="ws-card">
+                    <img src="${ws.wsImagePath}" 
+                         onerror="this.onerror=null; this.src='/images/default-ws.png';" 
+                         class="ws-img">
+                    <div class="ws-name">${ws.wsName}</div>
+                    <div class="ws-desc">${ws.wsDescription}</div>
+                    <a href="/workspace/main?wsId=${ws.wsId}" class="btn-enter">입장하기</a>
+                </div>
+            </c:forEach>
+        </div>
     </div>
 </body>
 </html>

@@ -20,6 +20,9 @@ public interface IworkspaceDAO {
         @Param("userId") Long userId, 
         @Param("role") String role
     );
+    int updateWorkspace(workspaceDTO dto);
+    int deleteWorkspaceAllMembers(long wsId);
+    int deleteWorkspace(long wsId);
     List<Map<String, Object>> selectWorkspaceMembers(Long wsId);
  // IworkspaceDAO.java
     int deleteWorkspaceMember(@Param("wsId") Long wsId, @Param("userId") Long userId);
@@ -39,7 +42,13 @@ public interface IworkspaceDAO {
     
     int updateInvitationStatus(@Param("inviteId") Long inviteId, @Param("status") String status);
     Map<String, Object> selectInvitationById(Long inviteId);
-    
+    List<Map<String, Object>> selectEventsByWsId(@Param("wsId") Long wsId);
+    List<Map<String, Object>> selectTodayEvents(Long wsId);
+    Map<String, Object> selectActivePoll(Long wsId);
+    List<Map<String, Object>> selectPollOptions(Long pollId); // String에서 Long으로 변경 권장
+    void insertVote(Map<String, Object> params);
+    void insertPoll(Map<String, Object> params);
+    void insertPollOption(Map<String, Object> optionMap);
     
     
 }
