@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper 
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.springboot.project.dao.IchatDAO"> <select id="getMyChatRooms" parameterType="int" resultType="com.springboot.project.dto.chatRoomDTO">
+        SELECT r.ROOM_ID, r.ROOM_NAME, r.CREATE_DATE
+        FROM CHAT_ROOMS r
+        JOIN CHAT_MEMBERS m ON r.ROOM_ID = m.ROOM_ID
+        WHERE m.USER_ID = #{userId}
+        ORDER BY r.CREATE_DATE DESC
+    </select>
+
+    <insert id="createChatRoom" parameterType="com.springboot.project.dto.chatRoomDTO">
+        <selectKey keyProperty="roomId" resultType="int" order="BEFORE">
+            SELECT SEQ_ROOM_ID.NEXTVAL FROM DUAL
+        </selectKey>
+        INSERT INTO CHAT_ROOMS (ROOM_ID, ROOM_NAME, CREATE_DATE)
+        VALUES (#{roomId}, #{roomName}, SYSDATE)
+    </insert>
+
+    <insert id="insertChatMember">
+        INSERT INTO CHAT_MEMBERS (MEMBER_ID, ROOM_ID, USER_ID)
+        VALUES (SEQ_MEMBER_ID.NEXTVAL, #{roomId}, #{userId})
+    </insert>
+
+    <select id="getMessageList" parameterType="int" resultType="com.springboot.project.dto.chatMsgDTO">
+        SELECT m.CR_MSG_ID, m.ROOM_ID, m.SENDER_ID, u.USER_NAME as senderName, m.CONTENT, m.SEND_DATE
+        FROM CHAT_MSGS m
+        JOIN USERS u ON m.SENDER_ID = u.USER_ID
+        WHERE m.ROOM_ID = #{roomId}
+        ORDER BY m.SEND_DATE ASC
+    </select>
+
+    <insert id="insertMessage" parameterType="com.springboot.project.dto.chatMsgDTO">
+        INSERT INTO CHAT_MSGS (CR_MSG_ID, ROOM_ID, SENDER_ID, CONTENT, SEND_DATE)
+        VALUES (SEQ_MSG_ID.NEXTVAL, #{roomId}, #{senderId}, #{content}, SYSDATE)
+    </insert>
+
+</mapper>

@@ -143,4 +143,13 @@ public class usersController {
 	    }
 	    return map;
 	}
+	
+	
+	// 예시: UserController에 추가할 가짜/진짜 유저 API 리스트업
+	@GetMapping("/users/api/list")
+	@ResponseBody
+	public List<usersDto> getUserApiList() {
+	    // DB 매퍼를 이용해 내 정보를 제외한(또는 전체) 유저 리스트를 가져와 JSON 배열로 반환합니다.
+	    return userService.getAllUsers(); 
+	}
 }

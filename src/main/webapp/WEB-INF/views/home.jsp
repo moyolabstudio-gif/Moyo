@@ -69,6 +69,10 @@
     
     <footer style="text-align: center; padding: 40px; color: #aaa; font-size: 12px; border-top: 1px solid #eee;">
         &copy; 2026 MOYO. All rights reserved.
+        
+    
+        <%@ include file="common/footer.jsp"%>
+    
     </footer>
 
     <script>
