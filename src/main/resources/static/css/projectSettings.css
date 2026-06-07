@@ -1,0 +1,1242 @@
+/* ===== projectMain 기준 프로젝트 설정 페이지 ===== */
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    background: #ffffff;
+    color: #333;
+    font-family: 'Pretendard', sans-serif;
+}
+
+.settings-page,
+.settings-page input,
+.settings-page select,
+.settings-page textarea,
+.settings-page button {
+    font-family: 'Pretendard', sans-serif !important;
+}
+
+.settings-page {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 30px 20px 46px;
+}
+
+/* ===== Hero: projectMain과 같은 규격 ===== */
+.settings-hero {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 30px;
+    width: 100%;
+    min-height: 118px;
+    margin-bottom: 30px;
+    padding: 30px 40px;
+    border-radius: 20px;
+    border: 1px solid #eef0f2;
+    background: #fff;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, .01);
+    overflow: hidden;
+}
+
+.settings-hero::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 25px;
+    width: 4px;
+    height: 62px;
+    border-radius: 0 999px 999px 0;
+    background: linear-gradient(180deg, #4A90E2, #55DDBF);
+}
+
+.settings-hero::after {
+    content: '';
+    position: absolute;
+    right: -44px;
+    top: -62px;
+    width: 220px;
+    height: 220px;
+    border-radius: 50%;
+    background: rgba(74, 144, 226, .06);
+    pointer-events: none;
+}
+
+.settings-breadcrumb {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+    color: #98a2b3;
+    font-size: 13px;
+    font-weight: 800;
+}
+
+.settings-breadcrumb a {
+    color: #4A90E2;
+    text-decoration: none;
+}
+
+.settings-breadcrumb a:hover {
+    text-decoration: underline;
+}
+
+.settings-hero h1 {
+    position: relative;
+    z-index: 1;
+    margin: 0 0 8px 0;
+    color: #111827;
+    font-size: 26px;
+    font-weight: 900;
+    letter-spacing: -0.045em;
+}
+
+.settings-hero p {
+    position: relative;
+    z-index: 1;
+    margin: 0;
+    color: #777;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.settings-hero-actions {
+    position: relative;
+    z-index: 2;
+    flex-shrink: 0;
+}
+
+/* ===== Layout ===== */
+.settings-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 20px;
+}
+
+.settings-card {
+    padding: 22px 24px 20px;
+    border: 1px solid #eef0f2;
+    border-radius: 20px;
+    background: #fff;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, .015);
+}
+
+.settings-card-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 14px;
+    margin-bottom: 18px;
+}
+
+.settings-card-head h2 {
+    margin: 0;
+    color: #111827;
+    font-size: 20px;
+    font-weight: 900;
+    letter-spacing: -0.04em;
+}
+
+.settings-card-head p {
+    margin: 6px 0 0;
+    color: #777;
+    font-size: 13px;
+    line-height: 1.45;
+}
+
+.member-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 34px;
+    height: 26px;
+    padding: 0 10px;
+    border-radius: 999px;
+    background: #eef7ff;
+    color: #2f7dd1;
+    font-size: 12px;
+    font-weight: 900;
+}
+
+/* ===== Compact basic info form ===== */
+.settings-form-grid {
+    display: grid;
+    grid-template-columns: 220px 1fr 1fr;
+    gap: 12px 14px;
+}
+
+.field {
+    min-width: 0;
+}
+
+.field.full {
+    grid-column: 1 / -1;
+}
+
+.date-fields {
+    display: contents;
+}
+
+.field label,
+.member-position-field label {
+    display: block;
+    margin-bottom: 7px;
+    color: #374151;
+    font-size: 12px;
+    font-weight: 900;
+}
+
+.field input,
+.field select,
+.field textarea,
+.member-position-field input {
+    width: 100%;
+    min-height: 40px;
+    padding: 9px 12px;
+    border: 1px solid #dbe3ea;
+    border-radius: 12px;
+    background: #fff;
+    color: #222;
+    font-size: 14px;
+    font-family: inherit;
+    outline: none;
+    transition: border-color .14s ease, box-shadow .14s ease, background .14s ease;
+}
+
+.field textarea {
+    height: 78px;
+    min-height: 78px;
+    max-height: 78px;
+    resize: none;
+    line-height: 1.45;
+    overflow-y: auto;
+}
+
+.field input:focus,
+.field select:focus,
+.field textarea:focus,
+.member-position-field input:focus {
+    border-color: #4A90E2;
+    box-shadow: 0 0 0 4px rgba(74, 144, 226, .10);
+}
+
+.field input:disabled,
+.field select:disabled,
+.field textarea:disabled,
+.member-position-field input:disabled {
+    background: #f8fafc;
+    color: #98a2b3;
+}
+
+/* ===== Compact member role list ===== */
+.member-role-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.member-role-row {
+    display: grid;
+    grid-template-columns: 330px minmax(0, 1fr);
+    gap: 14px;
+    align-items: center;
+    padding: 11px 12px;
+    border: 1px solid #eef2f6;
+    border-radius: 16px;
+    background: #fbfdff;
+    transition: border-color .14s ease, box-shadow .14s ease, transform .14s ease;
+}
+
+.member-role-row:hover {
+    transform: translateY(-1px);
+    border-color: #dcebf8;
+    box-shadow: 0 8px 18px rgba(74, 144, 226, .07);
+}
+
+.member-profile {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    min-width: 0;
+}
+
+.member-avatar {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 999px;
+    background: linear-gradient(135deg, #4A90E2 0%, #39CDB5 100%);
+    color: #fff;
+    font-size: 14px;
+    font-weight: 900;
+    box-shadow: 0 7px 16px rgba(57, 205, 181, .14);
+}
+
+.member-meta {
+    min-width: 0;
+}
+
+.member-name-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+}
+
+.member-name-row strong {
+    min-width: 0;
+    color: #111827;
+    font-size: 14px;
+    font-weight: 900;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.member-meta > span {
+    display: block;
+    margin-top: 3px;
+    color: #98a2b3;
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.role-badge {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    height: 21px;
+    padding: 0 8px;
+    border-radius: 999px;
+    border: 1px solid #edf1f5;
+    background: #f8fafc;
+    color: #667085;
+    font-size: 10px;
+    font-weight: 900;
+}
+
+.role-badge.leader {
+    background: #fff8eb;
+    border-color: #ffe8b8;
+    color: #d98600;
+}
+
+.role-badge.admin {
+    background: #eef7ff;
+    border-color: #dcebf8;
+    color: #2f7dd1;
+}
+
+.member-position-field {
+    min-width: 0;
+}
+
+.member-position-field input {
+    min-height: 38px;
+}
+
+.member-position-field input::placeholder {
+    color: #b0bac5;
+}
+
+/* ===== Actions ===== */
+.settings-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid #eef0f2;
+}
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 36px;
+    padding: 0 16px;
+    border-radius: 999px;
+    border: 1px solid transparent;
+    font-size: 13px;
+    font-weight: 900;
+    font-family: inherit;
+    cursor: pointer;
+    transition: transform .14s ease, box-shadow .14s ease, border-color .14s ease;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+}
+
+.btn.ghost {
+    background: #fff;
+    color: #555;
+    border-color: #dde3ea;
+}
+
+.btn.primary {
+    background: linear-gradient(135deg, #4A90E2 0%, #39CDB5 100%);
+    color: #fff;
+    box-shadow: 0 8px 18px rgba(57, 205, 181, .20);
+}
+
+@media(max-width: 900px) {
+    .settings-form-grid,
+    .member-role-row {
+        grid-template-columns: 1fr;
+    }
+
+    .date-fields {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+}
+
+@media(max-width: 720px) {
+    .settings-hero {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 26px 28px;
+    }
+
+    .settings-card {
+        padding: 20px;
+    }
+}
+
+
+/* ===== 설정 페이지 2컬럼 압축 레이아웃 ===== */
+.settings-breadcrumb {
+    display: none !important;
+}
+
+.settings-hero {
+    min-height: 108px;
+    margin-bottom: 24px;
+}
+
+.settings-hero h1 {
+    margin-top: 0;
+}
+
+/* 기본 정보와 멤버 역할 관리를 나란히 배치 */
+.settings-layout {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1.05fr) minmax(380px, .95fr);
+    gap: 20px;
+    align-items: start;
+}
+
+/* 2컬럼에서는 카드가 과하게 넓어 보이지 않도록 내부를 더 압축 */
+.settings-card {
+    min-width: 0;
+    padding: 22px 24px 20px;
+}
+
+/* 기본 정보는 카드 내부에서 1열에 가깝게 정리 */
+.settings-card:first-child .settings-form-grid {
+    display: grid;
+    grid-template-columns: 180px minmax(0, 1fr);
+    gap: 12px 14px;
+}
+
+.settings-card:first-child .field.full {
+    grid-column: 1 / -1;
+}
+
+.settings-card:first-child .date-fields {
+    display: contents;
+}
+
+.settings-card:first-child .field textarea {
+    height: 86px;
+    min-height: 86px;
+    max-height: 86px;
+}
+
+/* 멤버 역할 관리는 세로 리스트로 더 컴팩트하게 */
+.settings-card:nth-child(2) .member-role-list {
+    max-height: 520px;
+    overflow-y: auto;
+    padding-right: 4px;
+}
+
+.settings-card:nth-child(2) .member-role-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.settings-card:nth-child(2) .member-role-list::-webkit-scrollbar-thumb {
+    border-radius: 999px;
+    background: #d8e2ec;
+}
+
+.member-role-row {
+    grid-template-columns: 1fr;
+    gap: 10px;
+    padding: 12px;
+}
+
+.member-position-field label {
+    margin-bottom: 6px;
+}
+
+.member-position-field input {
+    min-height: 38px;
+}
+
+/* 2컬럼에서 버튼 위치 자연스럽게 */
+.settings-actions {
+    margin-top: 14px;
+    padding-top: 14px;
+}
+
+@media(max-width: 1100px) {
+    .settings-layout {
+        grid-template-columns: 1fr !important;
+    }
+
+    .settings-card:first-child .settings-form-grid {
+        grid-template-columns: 220px minmax(0, 1fr);
+    }
+
+    .settings-card:nth-child(2) .member-role-list {
+        max-height: none;
+        overflow-y: visible;
+        padding-right: 0;
+    }
+
+    .member-role-row {
+        grid-template-columns: 330px minmax(0, 1fr);
+    }
+}
+
+@media(max-width: 720px) {
+    .settings-card:first-child .settings-form-grid,
+    .member-role-row {
+        grid-template-columns: 1fr;
+    }
+
+    .settings-card:first-child .date-fields {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+}
+/* ===== End 설정 페이지 2컬럼 압축 레이아웃 ===== */
+
+
+/* ===== 설정 페이지 좌우 비율/폼 정렬 재조정 ===== */
+
+/* 왼쪽 기본 정보 넓게, 오른쪽 멤버 역할 관리는 좁게 */
+.settings-layout {
+    grid-template-columns: minmax(680px, 1.35fr) minmax(360px, .65fr) !important;
+    gap: 18px !important;
+}
+
+/* 기본 정보 카드 안에서 프로젝트 유형 밑에 시작일/마감일이 나란히 오도록 구성 */
+.settings-card:first-child .settings-form-grid {
+    display: grid !important;
+    grid-template-columns: 180px minmax(0, 1fr) minmax(0, 1fr) !important;
+    gap: 12px 14px !important;
+}
+
+.settings-card:first-child .field.full {
+    grid-column: 1 / -1 !important;
+}
+
+/* date-fields는 grid item으로 유지하고 내부에서 시작/마감 2열 */
+.settings-card:first-child .date-fields {
+    display: grid !important;
+    grid-column: 2 / 4 !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 14px !important;
+    align-items: start;
+}
+
+/* 프로젝트 유형은 첫 칸, 날짜 두 개는 같은 줄 오른쪽 */
+.settings-card:first-child .settings-form-grid > .field:not(.full):first-of-type {
+    grid-column: 1 / 2 !important;
+}
+
+/* 설명 textarea는 낮게 고정 */
+.settings-card:first-child .field textarea {
+    height: 78px !important;
+    min-height: 78px !important;
+    max-height: 78px !important;
+    resize: none !important;
+}
+
+/* 멤버 역할 관리 설명을 더 짧고 덜 눈에 띄게 */
+.settings-card:nth-child(2) .settings-card-head {
+    margin-bottom: 14px !important;
+}
+
+.settings-card:nth-child(2) .settings-card-head p {
+    max-width: 330px;
+    font-size: 12px !important;
+    line-height: 1.35 !important;
+    color: #8a96a3 !important;
+}
+
+/* 멤버 역할 관리 영역은 좁은 컬럼에 맞춰 조금 더 촘촘하게 */
+.settings-card:nth-child(2) {
+    padding: 20px 20px 18px !important;
+}
+
+.settings-card:nth-child(2) .member-role-list {
+    max-height: 485px !important;
+}
+
+.settings-card:nth-child(2) .member-role-row {
+    padding: 10px 11px !important;
+    gap: 8px !important;
+}
+
+.settings-card:nth-child(2) .member-avatar {
+    width: 36px !important;
+    height: 36px !important;
+}
+
+.settings-card:nth-child(2) .member-position-field input {
+    min-height: 36px !important;
+    padding-top: 8px !important;
+    padding-bottom: 8px !important;
+}
+
+.settings-card:nth-child(2) .member-position-field label {
+    font-size: 11px !important;
+    margin-bottom: 5px !important;
+}
+
+/* 저장 버튼 영역도 과하지 않게 */
+.settings-card:nth-child(2) .settings-actions {
+    margin-top: 12px !important;
+    padding-top: 12px !important;
+}
+
+/* 중간 폭에서는 1컬럼으로 전환 */
+@media(max-width: 1180px) {
+    .settings-layout {
+        grid-template-columns: 1fr !important;
+    }
+
+    .settings-card:first-child .settings-form-grid {
+        grid-template-columns: 180px minmax(0, 1fr) minmax(0, 1fr) !important;
+    }
+
+    .settings-card:nth-child(2) .member-role-list {
+        max-height: none !important;
+        overflow-y: visible !important;
+        padding-right: 0 !important;
+    }
+
+    .settings-card:nth-child(2) .member-role-row {
+        grid-template-columns: 330px minmax(0, 1fr) !important;
+    }
+}
+
+@media(max-width: 760px) {
+    .settings-card:first-child .settings-form-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    .settings-card:first-child .date-fields {
+        grid-column: 1 / -1 !important;
+        grid-template-columns: 1fr !important;
+    }
+
+    .settings-card:nth-child(2) .member-role-row {
+        grid-template-columns: 1fr !important;
+    }
+}
+/* ===== End 설정 페이지 좌우 비율/폼 정렬 재조정 ===== */
+
+
+/* ===== 멤버 역할 관리 설명/인원 배지 정리 ===== */
+.settings-card:nth-child(2) .settings-card-head p {
+    max-width: 260px !important;
+    font-size: 12px !important;
+    line-height: 1.35 !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.member-count {
+    min-width: 42px !important;
+    height: 26px !important;
+    padding: 0 10px !important;
+    white-space: nowrap !important;
+    word-break: keep-all !important;
+    flex-shrink: 0 !important;
+    line-height: 26px !important;
+}
+
+.settings-card-head {
+    align-items: flex-start !important;
+}
+
+@media(max-width: 760px) {
+    .settings-card:nth-child(2) .settings-card-head p {
+        white-space: normal;
+    }
+}
+/* ===== End 멤버 역할 관리 설명/인원 배지 정리 ===== */
+
+
+/* ===== 멤버 권한 변경 UI ===== */
+.member-permission-field,
+.member-position-field {
+    min-width: 0;
+}
+
+.member-permission-field label,
+.member-position-field label {
+    display: block;
+    margin-bottom: 5px;
+    color: #374151;
+    font-size: 11px;
+    font-weight: 900;
+}
+
+.member-permission-field select,
+.member-position-field input {
+    width: 100%;
+    min-height: 36px;
+    padding: 8px 10px;
+    border: 1px solid #dbe3ea;
+    border-radius: 12px;
+    background: #fff;
+    color: #222;
+    font-size: 13px;
+    font-family: 'Pretendard', sans-serif;
+    outline: none;
+}
+
+.member-permission-field select:focus,
+.member-position-field input:focus {
+    border-color: #4A90E2;
+    box-shadow: 0 0 0 4px rgba(74, 144, 226, .10);
+}
+
+.member-permission-field select:disabled,
+.member-position-field input:disabled {
+    background: #f8fafc;
+    color: #98a2b3;
+}
+
+/* 오른쪽 멤버 카드 내부에서 권한 select + 역할 input을 한 줄로 */
+.settings-card:nth-child(2) .member-role-row {
+    grid-template-columns: 1fr !important;
+}
+
+.settings-card:nth-child(2) .member-permission-field {
+    display: inline-block;
+    width: 112px;
+    margin-right: 8px;
+    vertical-align: top;
+}
+
+.settings-card:nth-child(2) .member-position-field {
+    display: inline-block;
+    width: calc(100% - 124px);
+    vertical-align: top;
+}
+
+@media(max-width: 760px) {
+    .settings-card:nth-child(2) .member-permission-field,
+    .settings-card:nth-child(2) .member-position-field {
+        display: block;
+        width: 100%;
+        margin-right: 0;
+    }
+
+    .settings-card:nth-child(2) .member-position-field {
+        margin-top: 8px;
+    }
+}
+/* ===== End 멤버 권한 변경 UI ===== */
+
+
+/* ===== 설정 페이지 권한/역할 한 줄 정리 ===== */
+.settings-card:nth-child(2) .member-role-row {
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+}
+
+.settings-card:nth-child(2) .member-permission-field,
+.settings-card:nth-child(2) .member-position-field {
+    display: inline-block !important;
+    vertical-align: top !important;
+}
+
+.settings-card:nth-child(2) .member-permission-field {
+    width: 96px !important;
+    margin-right: 8px !important;
+}
+
+.settings-card:nth-child(2) .member-position-field {
+    width: calc(100% - 108px) !important;
+}
+
+.member-permission-field label,
+.member-position-field label {
+    font-size: 11px !important;
+    margin-bottom: 5px !important;
+}
+
+.member-permission-field select,
+.member-position-field input {
+    min-height: 36px !important;
+    height: 36px !important;
+    padding: 7px 10px !important;
+    font-size: 13px !important;
+}
+
+/* 라벨이 길어지지 않게 한 줄 유지 */
+.member-permission-field label,
+.member-position-field label {
+    white-space: nowrap !important;
+}
+
+@media(max-width: 760px) {
+    .settings-card:nth-child(2) .member-permission-field,
+    .settings-card:nth-child(2) .member-position-field {
+        display: block !important;
+        width: 100% !important;
+        margin-right: 0 !important;
+    }
+
+    .settings-card:nth-child(2) .member-position-field {
+        margin-top: 8px !important;
+    }
+}
+/* ===== End 설정 페이지 권한/역할 한 줄 정리 ===== */
+
+
+/* ===== 멤버 카드 권한/역할 실제 한 줄 배치 수정 ===== */
+/* 기존 inline-block 방식은 카드 폭/상위 grid 영향으로 두 줄로 떨어질 수 있어
+   멤버 카드 자체를 grid로 잡고 권한/역할을 같은 row에 고정합니다. */
+.settings-card:nth-child(2) .member-role-row {
+    display: grid !important;
+    grid-template-columns: 96px minmax(0, 1fr) !important;
+    grid-template-areas:
+        "profile profile"
+        "permission position" !important;
+    gap: 8px 8px !important;
+    align-items: start !important;
+}
+
+.settings-card:nth-child(2) .member-profile {
+    grid-area: profile !important;
+}
+
+.settings-card:nth-child(2) .member-permission-field {
+    grid-area: permission !important;
+    display: block !important;
+    width: auto !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+}
+
+.settings-card:nth-child(2) .member-position-field {
+    grid-area: position !important;
+    display: block !important;
+    width: auto !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+}
+
+.settings-card:nth-child(2) .member-permission-field select,
+.settings-card:nth-child(2) .member-position-field input {
+    width: 100% !important;
+    height: 36px !important;
+    min-height: 36px !important;
+}
+
+.settings-card:nth-child(2) .member-permission-field label,
+.settings-card:nth-child(2) .member-position-field label {
+    font-size: 11px !important;
+    line-height: 1 !important;
+    margin-bottom: 5px !important;
+    white-space: nowrap !important;
+}
+
+/* 이전 media query가 다시 세로 배치로 덮는 것을 방지 */
+@media(max-width: 760px) {
+    .settings-card:nth-child(2) .member-role-row {
+        grid-template-columns: 96px minmax(0, 1fr) !important;
+        grid-template-areas:
+            "profile profile"
+            "permission position" !important;
+    }
+
+    .settings-card:nth-child(2) .member-permission-field,
+    .settings-card:nth-child(2) .member-position-field {
+        display: block !important;
+        width: auto !important;
+        margin: 0 !important;
+    }
+}
+/* ===== End 멤버 카드 권한/역할 실제 한 줄 배치 수정 ===== */
+
+
+/* ===== 멤버 역할 관리 초압축 + 라벨 제거 ===== */
+/* 권한/역할 텍스트 라벨 제거 */
+.settings-card:nth-child(2) .member-permission-field label,
+.settings-card:nth-child(2) .member-position-field label {
+    display: none !important;
+}
+
+/* 멤버 한 명을 한 줄에 가깝게 압축 */
+.settings-card:nth-child(2) .member-role-row {
+    display: grid !important;
+    grid-template-columns: minmax(170px, 230px) 92px minmax(0, 1fr) !important;
+    grid-template-areas: "profile permission position" !important;
+    align-items: center !important;
+    gap: 10px !important;
+    min-height: 58px !important;
+    padding: 9px 10px !important;
+}
+
+.settings-card:nth-child(2) .member-profile {
+    grid-area: profile !important;
+    min-width: 0 !important;
+}
+
+.settings-card:nth-child(2) .member-permission-field {
+    grid-area: permission !important;
+    display: block !important;
+    width: auto !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+}
+
+.settings-card:nth-child(2) .member-position-field {
+    grid-area: position !important;
+    display: block !important;
+    width: auto !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+}
+
+.settings-card:nth-child(2) .member-avatar {
+    width: 34px !important;
+    height: 34px !important;
+    font-size: 13px !important;
+}
+
+.settings-card:nth-child(2) .member-name-row strong {
+    font-size: 13px !important;
+}
+
+.settings-card:nth-child(2) .member-meta > span {
+    margin-top: 2px !important;
+    font-size: 11px !important;
+}
+
+.settings-card:nth-child(2) .role-badge {
+    height: 20px !important;
+    padding: 0 7px !important;
+    font-size: 10px !important;
+}
+
+.settings-card:nth-child(2) .member-permission-field select,
+.settings-card:nth-child(2) .member-position-field input {
+    width: 100% !important;
+    height: 34px !important;
+    min-height: 34px !important;
+    padding: 6px 9px !important;
+    font-size: 13px !important;
+    border-radius: 11px !important;
+}
+
+/* 리스트 내부 스크롤 영역도 더 촘촘히 */
+.settings-card:nth-child(2) .member-role-list {
+    gap: 7px !important;
+    max-height: 430px !important;
+}
+
+/* 설명도 한 줄로 짧게 */
+.settings-card:nth-child(2) .settings-card-head p {
+    white-space: nowrap !important;
+    max-width: 260px !important;
+}
+
+/* footer가 있을 때 하단 여백 */
+.settings-page {
+    padding-bottom: 38px !important;
+}
+
+@media(max-width: 1180px) {
+    .settings-card:nth-child(2) .member-role-row {
+        grid-template-columns: minmax(180px, 260px) 92px minmax(0, 1fr) !important;
+        grid-template-areas: "profile permission position" !important;
+    }
+}
+
+@media(max-width: 720px) {
+    .settings-card:nth-child(2) .member-role-row {
+        grid-template-columns: 1fr 92px minmax(0, 1fr) !important;
+        grid-template-areas:
+            "profile profile profile"
+            "permission position position" !important;
+        align-items: start !important;
+    }
+}
+/* ===== End 멤버 역할 관리 초압축 + 라벨 제거 ===== */
+
+
+/* ===== 멤버 역할 관리 overflow 복구 ===== */
+/* 이전 초압축 1줄 배치 때문에 좁은 우측 컬럼에서 역할 input이 잘리고 가로 스크롤이 생겼음.
+   멤버 카드 안에서는 프로필 1줄 + 권한/역할 1줄 구조로 복구한다. */
+
+.settings-layout {
+    grid-template-columns: minmax(620px, 1.25fr) minmax(460px, .75fr) !important;
+    gap: 20px !important;
+}
+
+.settings-card:nth-child(2) {
+    min-width: 0 !important;
+}
+
+.settings-card:nth-child(2) .member-role-list {
+    overflow-x: hidden !important;
+    max-height: 500px !important;
+    padding-right: 4px !important;
+}
+
+/* 카드 자체는 절대 컨테이너 밖으로 넘치지 않게 */
+.settings-card:nth-child(2) .member-role-row {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    display: grid !important;
+    grid-template-columns: 108px minmax(0, 1fr) !important;
+    grid-template-areas:
+        "profile profile"
+        "permission position" !important;
+    align-items: center !important;
+    gap: 8px 8px !important;
+    min-height: unset !important;
+    padding: 10px 11px !important;
+}
+
+/* 프로필은 위 한 줄 전체 */
+.settings-card:nth-child(2) .member-profile {
+    grid-area: profile !important;
+    min-width: 0 !important;
+    width: 100% !important;
+}
+
+/* 권한/역할 라벨은 제거 유지 */
+.settings-card:nth-child(2) .member-permission-field label,
+.settings-card:nth-child(2) .member-position-field label {
+    display: none !important;
+}
+
+/* 권한/역할은 아래 한 줄 */
+.settings-card:nth-child(2) .member-permission-field {
+    grid-area: permission !important;
+    display: block !important;
+    width: auto !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+}
+
+.settings-card:nth-child(2) .member-position-field {
+    grid-area: position !important;
+    display: block !important;
+    width: auto !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+}
+
+.settings-card:nth-child(2) .member-permission-field select,
+.settings-card:nth-child(2) .member-position-field input {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    height: 36px !important;
+    min-height: 36px !important;
+    padding: 7px 10px !important;
+    border-radius: 11px !important;
+    box-sizing: border-box !important;
+}
+
+/* 멤버 정보는 너무 줄이지 않음 */
+.settings-card:nth-child(2) .member-avatar {
+    width: 38px !important;
+    height: 38px !important;
+    font-size: 14px !important;
+}
+
+.settings-card:nth-child(2) .member-name-row strong {
+    font-size: 14px !important;
+}
+
+.settings-card:nth-child(2) .member-meta > span {
+    font-size: 12px !important;
+}
+
+/* 가로 스크롤 바 제거 */
+.settings-card:nth-child(2) .member-role-list::-webkit-scrollbar:horizontal {
+    height: 0 !important;
+}
+
+@media(max-width: 1180px) {
+    .settings-layout {
+        grid-template-columns: 1fr !important;
+    }
+
+    .settings-card:nth-child(2) .member-role-list {
+        max-height: none !important;
+        overflow-y: visible !important;
+        overflow-x: hidden !important;
+    }
+}
+
+@media(max-width: 720px) {
+    .settings-card:nth-child(2) .member-role-row {
+        grid-template-columns: 96px minmax(0, 1fr) !important;
+    }
+}
+/* ===== End 멤버 역할 관리 overflow 복구 ===== */
+
+
+/* ===== 프로젝트 설정 멤버 추가/삭제 ===== */
+.member-manage-head {
+    align-items: flex-start !important;
+}
+
+.member-head-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.btn.mini {
+    min-height: 28px;
+    height: 28px;
+    padding: 0 11px;
+    font-size: 12px;
+}
+
+.member-add-panel {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin: -4px 0 10px;
+    padding: 10px;
+    border: 1px solid #e8eef5;
+    border-radius: 14px;
+    background: #fbfdff;
+}
+
+.member-add-panel select {
+    flex: 1;
+    min-width: 0;
+    height: 34px;
+    padding: 6px 10px;
+    border: 1px solid #dbe3ea;
+    border-radius: 11px;
+    background: #fff;
+    color: #222;
+    font-size: 13px;
+    font-family: 'Pretendard', sans-serif;
+    outline: none;
+}
+
+.member-remove-btn {
+    position: absolute;
+    right: 10px;
+    top: 10px;
+    height: 24px;
+    padding: 0 8px;
+    border-radius: 999px;
+    border: 1px solid #ffd5d5;
+    background: #fff7f7;
+    color: #f04444;
+    font-size: 11px;
+    font-weight: 900;
+    font-family: 'Pretendard', sans-serif;
+    cursor: pointer;
+}
+
+.settings-card:nth-child(2) .member-role-row {
+    position: relative !important;
+    padding-right: 48px !important;
+}
+
+.settings-card:nth-child(2) .member-role-row .role-badge {
+    margin-right: 32px;
+}
+
+@media(max-width: 720px) {
+    .member-add-panel {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .member-head-actions {
+        flex-direction: column;
+        align-items: flex-end;
+    }
+}
+/* ===== End 프로젝트 설정 멤버 추가/삭제 ===== */
+
+
+/* ===== 프로젝트 삭제 영역 ===== */
+.danger-card {
+    margin-top: 20px;
+    border-color: #ffd5d5 !important;
+    background: #fffafa !important;
+}
+
+.danger-card .settings-card-head {
+    margin-bottom: 10px !important;
+}
+
+.danger-card h2 {
+    color: #b42318 !important;
+}
+
+.danger-card p {
+    color: #9f6b6b !important;
+}
+
+.danger-actions {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.btn.danger {
+    background: #fff;
+    color: #f04444;
+    border-color: #ffcaca;
+}
+
+.btn.danger:hover {
+    background: #fff1f1;
+    box-shadow: 0 8px 18px rgba(240, 68, 68, .12);
+}
+/* ===== End 프로젝트 삭제 영역 ===== */
+
+/* 참여 방식 / 카테고리 분리 후 기본 정보 필드 간격 */
+#settingProjCategory {
+    width: 100%;
+}

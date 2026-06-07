@@ -1,0 +1,324 @@
+:root {
+    --moyo-primary: #4A90E2;
+    --moyo-primary-hover: #397fca;
+    --moyo-mint: #39CDB5;
+    --moyo-danger: #ef5b67;
+    --moyo-danger-hover: #dc4554;
+    --moyo-text: #1f2937;
+    --moyo-text-soft: #667085;
+    --moyo-text-muted: #98a2b3;
+    --moyo-line: #e5ebf1;
+    --moyo-line-strong: #d8e1ea;
+    --moyo-surface: #ffffff;
+    --moyo-surface-soft: #f8fafc;
+    --moyo-radius-sm: 9px;
+    --moyo-radius-md: 12px;
+    --moyo-radius-lg: 18px;
+    --moyo-shadow: 0 8px 24px rgba(15, 23, 42, .07);
+    --moyo-focus: 0 0 0 4px rgba(74, 144, 226, .12);
+}
+
+body,
+button,
+input,
+select,
+textarea {
+    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+body { color: var(--moyo-text); }
+
+/* 페이지별 제목과 안내 문구의 밀도 통일 */
+body.moyo-app-sidebar-enabled h1,
+body.moyo-app-sidebar-enabled h2,
+body.moyo-app-sidebar-enabled h3,
+body.moyo-app-sidebar-enabled h4 {
+    color: var(--moyo-text);
+    letter-spacing: -.035em;
+}
+
+body.moyo-app-sidebar-enabled .section-header h3,
+body.moyo-app-sidebar-enabled .board-title h3,
+body.moyo-app-sidebar-enabled .create-card-head h2,
+body.moyo-app-sidebar-enabled .settings-card-head h2,
+body.moyo-app-sidebar-enabled .note-hero-title h2,
+body.moyo-app-sidebar-enabled .work-hero-title h2 {
+    font-weight: 900;
+}
+
+body.moyo-app-sidebar-enabled .section-header p,
+body.moyo-app-sidebar-enabled .create-card-head p,
+body.moyo-app-sidebar-enabled .settings-card-head p,
+body.moyo-app-sidebar-enabled .note-hero-title p,
+body.moyo-app-sidebar-enabled .work-board-help,
+body.moyo-app-sidebar-enabled .schedule-help,
+body.moyo-app-sidebar-enabled .template-help {
+    color: var(--moyo-text-soft) !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    line-height: 1.55 !important;
+}
+
+/* 입력 요소 */
+body.moyo-app-sidebar-enabled input:not([type='checkbox']):not([type='radio']):not([type='file']),
+body.moyo-app-sidebar-enabled select,
+body.moyo-app-sidebar-enabled textarea,
+body.moyo-app-sidebar-enabled .modal-input,
+body.moyo-app-sidebar-enabled .modal-select {
+    border: 1px solid var(--moyo-line-strong);
+    border-radius: var(--moyo-radius-md);
+    background: #fff;
+    color: var(--moyo-text);
+    outline: none;
+    transition: border-color .16s ease, box-shadow .16s ease, background .16s ease;
+}
+
+body.moyo-app-sidebar-enabled input:not([type='checkbox']):not([type='radio']):not([type='file']):focus,
+body.moyo-app-sidebar-enabled select:focus,
+body.moyo-app-sidebar-enabled textarea:focus,
+body.moyo-app-sidebar-enabled .modal-input:focus,
+body.moyo-app-sidebar-enabled .modal-select:focus {
+    border-color: var(--moyo-primary) !important;
+    box-shadow: var(--moyo-focus) !important;
+}
+
+/* 공통 버튼 높이, 모서리, 글자 굵기 통일 */
+body.moyo-app-sidebar-enabled :is(
+    .btn, .btn-save, .btn-submit, .submit-btn, .write-btn, .back-btn, .list-btn,
+    .top-list-btn, .cancel-btn, .btn-cancel, .add-work-btn, .work-add-bottom-btn,
+    .project-member-invite-btn, .poll-create-btn, .poll-open-create-btn,
+    .project-setting-btn, .modal-btn, .task-ui-btn, .action-btn, .post-action-btn
+) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 40px;
+    padding: 0 16px;
+    border-radius: var(--moyo-radius-md);
+    font-size: 13px;
+    font-weight: 800;
+    line-height: 1;
+    text-decoration: none;
+    cursor: pointer;
+    transition: transform .16s ease, background .16s ease, border-color .16s ease, color .16s ease, box-shadow .16s ease;
+}
+
+body.moyo-app-sidebar-enabled :is(
+    .btn.primary, .btn-primary, .btn-save, .btn-submit, .submit-btn,
+    .write-btn, .add-work-btn, .work-add-bottom-btn, .project-member-invite-btn,
+    .poll-create-btn, .poll-open-create-btn, .modal-btn.primary, .task-ui-btn.primary
+) {
+    border: 1px solid var(--moyo-primary) !important;
+    background: var(--moyo-primary) !important;
+    color: #fff !important;
+    box-shadow: 0 6px 14px rgba(74, 144, 226, .18);
+}
+
+body.moyo-app-sidebar-enabled :is(
+    .btn.primary, .btn-primary, .btn-save, .btn-submit, .submit-btn,
+    .write-btn, .add-work-btn, .work-add-bottom-btn, .project-member-invite-btn,
+    .poll-create-btn, .poll-open-create-btn, .modal-btn.primary, .task-ui-btn.primary
+):hover {
+    background: var(--moyo-primary-hover) !important;
+    border-color: var(--moyo-primary-hover) !important;
+    transform: translateY(-1px);
+}
+
+body.moyo-app-sidebar-enabled :is(
+    .btn.ghost, .btn-cancel, .cancel-btn, .back-btn, .list-btn, .top-list-btn,
+    .modal-btn.cancel, .task-ui-btn.ghost, .task-ui-btn.secondary,
+    .action-btn.edit-btn, .post-action-btn:not(.danger)
+) {
+    border: 1px solid var(--moyo-line-strong) !important;
+    background: #fff !important;
+    color: #596579 !important;
+    box-shadow: none !important;
+}
+
+body.moyo-app-sidebar-enabled :is(
+    .btn.ghost, .btn-cancel, .cancel-btn, .back-btn, .list-btn, .top-list-btn,
+    .modal-btn.cancel, .task-ui-btn.ghost, .task-ui-btn.secondary,
+    .action-btn.edit-btn, .post-action-btn:not(.danger)
+):hover {
+    border-color: #bfd3e7 !important;
+    background: #f7fbff !important;
+    color: var(--moyo-primary) !important;
+}
+
+body.moyo-app-sidebar-enabled :is(
+    .btn.danger, .modal-btn.danger, .task-ui-btn.danger, .action-btn.delete-btn,
+    .post-action-btn.danger, .modal-danger-btn, .btn-delete-text,
+    .existing-file-delete-btn, .file-delete-btn, .file-remove-btn
+) {
+    border: 1px solid #ffd5d9 !important;
+    background: #fff7f8 !important;
+    color: var(--moyo-danger) !important;
+}
+
+body.moyo-app-sidebar-enabled :is(
+    .btn.danger, .modal-btn.danger, .task-ui-btn.danger, .action-btn.delete-btn,
+    .post-action-btn.danger, .modal-danger-btn, .btn-delete-text,
+    .existing-file-delete-btn, .file-delete-btn, .file-remove-btn
+):hover {
+    border-color: var(--moyo-danger) !important;
+    background: var(--moyo-danger) !important;
+    color: #fff !important;
+}
+
+body.moyo-app-sidebar-enabled button:disabled,
+body.moyo-app-sidebar-enabled .btn:disabled {
+    opacity: .5;
+    cursor: not-allowed;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+/* 작은 텍스트 링크는 버튼처럼 과장하지 않음 */
+body.moyo-app-sidebar-enabled :is(.section-more-link, .detail-link-text, .project-setting-text-btn) {
+    color: var(--moyo-text-soft) !important;
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    text-decoration: none !important;
+}
+body.moyo-app-sidebar-enabled :is(.section-more-link, .detail-link-text, .project-setting-text-btn):hover {
+    color: var(--moyo-primary) !important;
+}
+
+/* 모달 공통 외형 */
+body.moyo-app-sidebar-enabled :is(.my-modal-overlay, .modal-backdrop-custom, .poll-modal) {
+    backdrop-filter: blur(3px);
+}
+
+body.moyo-app-sidebar-enabled .my-modal-overlay,
+body.moyo-app-sidebar-enabled .modal-backdrop-custom {
+    background: rgba(15, 23, 42, .48) !important;
+}
+
+body.moyo-app-sidebar-enabled :is(.my-modal-content, .poll-modal-dialog, .work-modal) {
+    border: 1px solid var(--moyo-line) !important;
+    border-radius: 20px !important;
+    background: var(--moyo-surface) !important;
+    box-shadow: 0 24px 70px rgba(15, 23, 42, .22) !important;
+}
+
+body.moyo-app-sidebar-enabled :is(.modal-title-row, .poll-modal-header, .work-modal-header) {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+}
+
+body.moyo-app-sidebar-enabled :is(.modal-title-row h2, .modal-title-row h3, .poll-modal-header h3, .work-modal-header h3) {
+    margin: 0;
+    color: var(--moyo-text);
+    font-size: 20px !important;
+    font-weight: 900 !important;
+    letter-spacing: -.035em;
+}
+
+body.moyo-app-sidebar-enabled :is(.modal-close-btn, .poll-modal-close) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: #f2f5f8;
+    color: #667085;
+    font-size: 20px;
+    cursor: pointer;
+}
+
+body.moyo-app-sidebar-enabled :is(.modal-close-btn, .poll-modal-close):hover {
+    background: #eaf2fa;
+    color: var(--moyo-primary);
+}
+
+body.moyo-app-sidebar-enabled :is(.modal-actions, .modal-footer, .modal-footer-actions, .button-row, .btn-area) {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+/* 카드 외형의 공통 최소 기준 */
+body.moyo-app-sidebar-enabled :is(
+    .section-card, .create-card, .settings-card, .note-card,
+    .board-card, .poll-card, .work-card
+) {
+    border-color: var(--moyo-line) !important;
+}
+
+@media (max-width: 760px) {
+    body.moyo-app-sidebar-enabled :is(.modal-actions, .modal-footer-actions, .button-row, .btn-area) {
+        flex-wrap: wrap;
+    }
+    body.moyo-app-sidebar-enabled :is(
+        .btn, .btn-save, .btn-submit, .submit-btn, .write-btn,
+        .cancel-btn, .btn-cancel, .modal-btn, .task-ui-btn
+    ) {
+        min-height: 42px;
+    }
+}
+
+/* ===== MOYO visual consistency: solid primary buttons and avatars ===== */
+:root {
+    --moyo-primary-soft: #eef6ff;
+    --moyo-primary-border: #cfe2f7;
+}
+
+/* Primary actions use one solid blue. Gradients are reserved for branding only. */
+body.moyo-app-sidebar-enabled :is(
+    .note-write-link, .empty-note-write-link, .empty-write-link,
+    .write-btn, .project-member-invite-btn, .poll-create-btn,
+    .poll-open-create-btn, .add-work-btn, .work-add-bottom-btn,
+    .submit-btn, .btn-submit, .btn-save, .btn-primary,
+    .modal-btn.primary, .task-ui-btn.primary
+) {
+    background: var(--moyo-primary) !important;
+    background-image: none !important;
+    border-color: var(--moyo-primary) !important;
+    color: #fff !important;
+    box-shadow: 0 6px 14px rgba(74, 144, 226, .18) !important;
+}
+
+body.moyo-app-sidebar-enabled :is(
+    .note-write-link, .empty-note-write-link, .empty-write-link,
+    .write-btn, .project-member-invite-btn, .poll-create-btn,
+    .poll-open-create-btn, .add-work-btn, .work-add-bottom-btn,
+    .submit-btn, .btn-submit, .btn-save, .btn-primary,
+    .modal-btn.primary, .task-ui-btn.primary
+):hover {
+    background: var(--moyo-primary-hover) !important;
+    border-color: var(--moyo-primary-hover) !important;
+}
+
+/* All text-based user/member avatars share the same solid blue. */
+body.moyo-app-sidebar-enabled :is(
+    .member-avatar, .project-member-avatar, .moyo-member-avatar,
+    .author-avatar, .user-avatar, .avatar-circle,
+    .member-profile-avatar, .project-member-profile-avatar
+) {
+    background: var(--moyo-primary) !important;
+    background-image: none !important;
+    color: #fff !important;
+    border-color: transparent !important;
+    box-shadow: none !important;
+}
+
+/* Decorative pseudo-elements from the old gradient avatar are disabled. */
+body.moyo-app-sidebar-enabled .moyo-member-avatar::before,
+body.moyo-app-sidebar-enabled .moyo-member-avatar::after {
+    display: none !important;
+}
+
+/* Small count badges keep the same blue family. */
+body.moyo-app-sidebar-enabled :is(
+    .project-member-count, .project-poll-title-count
+) {
+    background: var(--moyo-primary-soft) !important;
+    color: var(--moyo-primary) !important;
+    border: 1px solid var(--moyo-primary-border) !important;
+}

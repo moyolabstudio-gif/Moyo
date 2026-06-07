@@ -3,162 +3,591 @@
 
 <mapper namespace="com.springboot.project.dao.IprojectDAO">
 
+    <!--
+        이 파일은 업무 1개 = 담당자 1명 구조를 유지합니다.
+        EVENTS.USER_ID = 담당자
+        EVENTS.TASK_TIME_SLOT = 오전/오후/종일 구분
+    -->
+
     <insert id="insertProject" parameterType="com.springboot.project.dto.projectRequestDTO">
-    <selectKey keyProperty="projId" resultType="long" order="BEFORE">
-        SELECT SEQ_PROJ_ID.NEXTVAL FROM DUAL
-    </selectKey>
+        <selectKey keyProperty="projId" resultType="long" order="BEFORE">
+            SELECT SEQ_PROJ_ID.NEXTVAL FROM DUAL
+        </selectKey>
+
+        INSERT INTO PROJECTS (
+            PROJ_ID, WS_ID, PROJ_NAME, PROJ_DESC, LEADER_ID,
+            PROJ_TYPE, PROJ_SCOPE, PROJ_CATEGORY, PROJ_CATEGORY_DETAIL
+        ) VALUES (
+            #{projId, jdbcType=NUMERIC},
+            #{wsId, jdbcType=NUMERIC},
+            #{projName, jdbcType=VARCHAR},
+            #{projDesc, jdbcType=VARCHAR},
+            #{leaderId, jdbcType=NUMERIC},
+            #{projType, jdbcType=VARCHAR},
+            #{projScope, jdbcType=VARCHAR},
+            #{projCategory, jdbcType=VARCHAR},
+            #{projCategoryDetail, jdbcType=VARCHAR}
+        )
+    </insert>
+
+    <insert id="insertProjectEvent" parameterType="com.springboot.project.dto.projectRequestDTO">
+        INSERT INTO EVENTS (
+            EVENT_ID, TITLE, START_DT, END_DT, PROJ_ID, ITEM_TYPE, USER_ID, EVENT_COLOR
+        ) VALUES (
+            SEQ_EVENT_ID.NEXTVAL,
+            #{projName} || ' 시작',
+            TO_DATE(#{startDate}, 'YYYY-MM-DD'),
+            TO_DATE(#{endDate}, 'YYYY-MM-DD'),
+            #{projId},
+            'PROJ',
+            #{leaderId},
+            '#3788d8'
+        )
+    </insert>
+
+    <insert id="insertProjectMember">
+        INSERT INTO PROJ_MEMBERS (PROJ_MEMBER_ID, PROJ_ID, USER_ID, PROJ_ROLE)
+        VALUES (SEQ_PROJ_MEMBER_ID.NEXTVAL, #{projId}, #{userId}, #{role})
+    </insert>
+
+    <select id="checkMemberExists" resultType="int">
+        SELECT COUNT(*)
+        FROM PROJ_MEMBERS
+        WHERE PROJ_ID = #{projId}
+          AND USER_ID = #{userId}
+    </select>
+
     
-	    INSERT INTO PROJECTS (
-	        PROJ_ID, WS_ID, PROJ_NAME, PROJ_DESC, LEADER_ID, PROJ_TYPE
-	    ) VALUES (
-	        #{projId}, #{wsId}, #{projName}, #{projDesc}, #{leaderId}, #{projType}
-	    )
-	</insert>
-	<insert id="insertProjectEvent" parameterType="com.springboot.project.dto.projectRequestDTO">
-	    INSERT INTO EVENTS (
-	        EVENT_ID, TITLE, START_DT, END_DT, PROJ_ID, ITEM_TYPE, USER_ID, EVENT_COLOR
-	    ) VALUES (
-	        SEQ_EVENT_ID.NEXTVAL, 
-	        #{projName} || ' 시작', 
-	        TO_DATE(#{startDate}, 'YYYY-MM-DD'), 
-	        TO_DATE(#{endDate}, 'YYYY-MM-DD'), 
-	        #{projId}, 
-	        'PROJ', 
-	        #{leaderId}, 
-	        '#3788d8'
-	    )
-	</insert>
+    <update id="reassignMemberTasksToLeader">
+        UPDATE EVENTS
+           SET USER_ID = #{leaderId, jdbcType=NUMERIC}
+         WHERE PROJ_ID = #{projId, jdbcType=NUMERIC}
+           AND USER_ID = #{userId, jdbcType=NUMERIC}
+           AND ITEM_TYPE = 'TASK'
+    </update>
 
-	<insert id="insertProjectMember">
-	    INSERT INTO PROJ_MEMBERS (PROJ_MEMBER_ID, PROJ_ID, USER_ID, PROJ_ROLE)
-	    VALUES (SEQ_PROJ_MEMBER_ID.NEXTVAL, #{projId}, #{userId}, #{role})
-	</insert>
-	<select id="checkMemberExists" resultType="int">
-	    SELECT COUNT(*) FROM PROJ_MEMBERS 
-	    WHERE PROJ_ID = #{projId} AND USER_ID = #{userId}
-	</select>
-	<select id="getAssignableMembers" resultType="map">
-	  SELECT * FROM USERS 
-		WHERE USER_ID IN (SELECT USER_ID FROM WS_MEMBERS WHERE WS_ID = #{wsId})
-		  AND USER_ID NOT IN (SELECT USER_ID FROM PROJ_MEMBERS WHERE PROJ_ID = #{projId})
-	</select>
-	
-	<select id="getProjectMembers" resultType="map">
-	    SELECT 
-	        m.USER_ID, 
-	        u.USER_NAME, 
-	        u.EMAIL, 
-	        m.PROJ_ROLE 
-	    FROM PROJ_MEMBERS m
-	    JOIN USERS u ON m.USER_ID = u.USER_ID
-	    WHERE m.PROJ_ID = #{projId}
-	</select>
-	
-	<select id="selectProjectsByWsId" parameterType="long" resultType="com.springboot.project.dto.projectRequestDTO">
-	    SELECT 
-	        PROJ_ID,
-	        PROJ_NAME,
-	        WS_ID
-	        FROM PROJECTS
-	    WHERE WS_ID = #{wsId}
-	    ORDER BY PROJ_ID DESC 
-	</select>
-	
-	<select id="getProjectTaskSummary" resultType="map">
-	    SELECT 
-	        COUNT(*) as TOTAL,
-	        SUM(CASE WHEN STATUS = 'TODO' THEN 1 ELSE 0 END) as TODO_CNT,
-	        SUM(CASE WHEN STATUS = 'IN_PROGRESS' THEN 1 ELSE 0 END) as IN_PROGRESS_CNT,
-	        SUM(CASE WHEN STATUS = 'DONE' THEN 1 ELSE 0 END) as DONE_CNT
-	    FROM EVENTS 
-	    WHERE PROJ_ID = #{projId} AND ITEM_TYPE = 'TASK'
-	</select>
-	<select id="getProjectTasks" resultType="map">
-	    SELECT 
-	        EVENT_ID AS TASK_ID,
-	        TITLE,
-	        STATUS,
-	        TO_CHAR(START_DT, 'YYYY-MM-DD') AS START_DATE,
-	        TO_CHAR(END_DT, 'YYYY-MM-DD') AS END_DATE
-	    FROM EVENTS
-	    WHERE PROJ_ID = #{projId}
-	      AND ITEM_TYPE = 'TASK'
-	    ORDER BY STATUS, EVENT_ID DESC
-	</select>
-<insert id="insertTask" parameterType="map">
-    INSERT INTO EVENTS (
-        EVENT_ID, PROJ_ID, WS_ID, USER_ID, TITLE, STATUS, ITEM_TYPE, START_DT, END_DT
-    )
-    VALUES (
-        SEQ_EVENT_ID.NEXTVAL,
-        #{projId}, #{wsId}, #{userId}, #{title}, #{status}, 'TASK',
-        TO_DATE(#{startDate} || ' 00:00:00', 'YYYY-MM-DD HH24:MI:SS'), 
-        TO_DATE(#{endDate}   || ' 23:59:59', 'YYYY-MM-DD HH24:MI:SS')
-    )
-</insert>
-<select id="selectProjectById" resultType="com.springboot.project.dto.projectRequestDTO">
-   SELECT 
-    p.PROJ_ID,
-    p.PROJ_NAME,
-    p.PROJ_DESC,
-    p.LEADER_ID,
-    p.PROJ_TYPE,
-    TO_CHAR(e.START_DT, 'YYYY-MM-DD') AS START_DATE,
-    TO_CHAR(e.END_DT, 'YYYY-MM-DD') AS END_DATE
-FROM PROJECTS p
-LEFT JOIN EVENTS e 
-    ON p.PROJ_ID = e.PROJ_ID 
-   AND e.ITEM_TYPE = 'PROJ'
-WHERE p.PROJ_ID = #{projId}
-</select>
-	<select id="getTaskDetail" parameterType="long" resultType="map">
-	    SELECT 
-	        EVENT_ID AS "TASK_ID", 
-	        TITLE, 
-	        TO_CHAR(START_DT, 'YYYY-MM-DD') AS "START_DATE",
-	        TO_CHAR(END_DT, 'YYYY-MM-DD') AS "END_DATE", 
-	        STATUS 
-	    FROM EVENTS 
-	    WHERE EVENT_ID = #{taskId}
-	</select>
-	<update id="updateTask" parameterType="map">
-	    UPDATE EVENTS
-	    SET 
-	        TITLE = #{title},
-	        START_DT = TO_DATE(#{startDate} || ' 00:00:00', 'YYYY-MM-DD HH24:MI:SS'),
-	        END_DT = TO_DATE(#{endDate}     || ' 23:59:59', 'YYYY-MM-DD HH24:MI:SS'),
-	        STATUS = #{status}
-	    WHERE EVENT_ID = #{taskId}
-	</update>
-	<delete id="deleteTask" parameterType="long">
-	    DELETE FROM EVENTS WHERE EVENT_ID = #{taskId}
-	</delete>
-<update id="updateProject"
-        parameterType="com.springboot.project.dto.projectRequestDTO">
+    <delete id="deleteProjectMember">
+        DELETE FROM PROJ_MEMBERS
+         WHERE PROJ_ID = #{projId, jdbcType=NUMERIC}
+           AND USER_ID = #{userId, jdbcType=NUMERIC}
+    </delete>
 
-    UPDATE PROJECTS
-    SET
-        PROJ_NAME = #{projName},
-        PROJ_DESC = #{projDesc},
-        PROJ_TYPE = #{projType}
-    WHERE PROJ_ID = #{projId}
+<select id="getAssignableMembers" resultType="map">
+        SELECT *
+        FROM USERS
+        WHERE USER_ID IN (
+            SELECT USER_ID
+            FROM WS_MEMBERS
+            WHERE WS_ID = #{wsId}
+        )
+          AND USER_ID NOT IN (
+            SELECT USER_ID
+            FROM PROJ_MEMBERS
+            WHERE PROJ_ID = #{projId}
+        )
+    </select>
 
-</update>
-<update id="updateProjectEvent">
-    UPDATE EVENTS
-    SET
-        START_DT = TO_DATE(#{startDate}, 'YYYY-MM-DD'),
-        END_DT   = TO_DATE(#{endDate}, 'YYYY-MM-DD') + 1
-    WHERE PROJ_ID = #{projId}
-      AND ITEM_TYPE = 'PROJ'
-</update>
-<delete id="deleteProject" parameterType="long">
-    DELETE FROM PROJECTS WHERE PROJ_ID = #{projId}
-</delete>
-<update id="updateTaskStatus">
-    UPDATE EVENTS
-    SET STATUS = #{status}
-    WHERE EVENT_ID = #{taskId}
-      AND ITEM_TYPE = 'TASK'
-</update>
-	</mapper>
+    <select id="getProjectMembers" resultType="map">
+        SELECT
+            m.USER_ID,
+            u.USER_NAME AS "USER_NAME",
+            u.EMAIL,
+            m.PROJ_ROLE,
+            m.PROJ_POSITION AS "PROJ_POSITION" 
+        FROM PROJ_MEMBERS m
+        JOIN USERS u
+          ON m.USER_ID = u.USER_ID
+        WHERE m.PROJ_ID = #{projId}
+    </select>
+
+    
+    <update id="updateProjectMemberPosition">
+        UPDATE PROJ_MEMBERS
+           SET PROJ_POSITION = #{projPosition, jdbcType=VARCHAR}
+         WHERE PROJ_ID = #{projId, jdbcType=NUMERIC}
+           AND USER_ID = #{userId, jdbcType=NUMERIC}
+    </update>
+
+
+    <update id="updateProjectMemberRole">
+        UPDATE PROJ_MEMBERS
+           SET PROJ_ROLE = #{projRole, jdbcType=VARCHAR}
+         WHERE PROJ_ID = #{projId, jdbcType=NUMERIC}
+           AND USER_ID = #{userId, jdbcType=NUMERIC}
+    </update>
+
+    <update id="updateProjectLeader">
+        UPDATE PROJECTS
+           SET LEADER_ID = #{userId, jdbcType=NUMERIC}
+         WHERE PROJ_ID = #{projId, jdbcType=NUMERIC}
+    </update>
+
+<select id="selectProjectsByWsId" parameterType="long" resultType="com.springboot.project.dto.projectRequestDTO">
+        SELECT
+            PROJ_ID,
+            PROJ_NAME,
+            WS_ID
+        FROM PROJECTS
+        WHERE WS_ID = #{wsId}
+        ORDER BY PROJ_ID DESC
+    </select>
+
+    <select id="getProjectTaskSummary" resultType="map">
+        SELECT
+            COUNT(*) AS TOTAL,
+            SUM(CASE WHEN STATUS = 'TODO' THEN 1 ELSE 0 END) AS TODO_CNT,
+            SUM(CASE WHEN STATUS = 'IN_PROGRESS' THEN 1 ELSE 0 END) AS IN_PROGRESS_CNT,
+            SUM(CASE WHEN STATUS = 'DONE' THEN 1 ELSE 0 END) AS DONE_CNT,
+            SUM(
+                CASE
+                    WHEN STATUS != 'DONE'
+                     AND END_DT IS NOT NULL
+                     AND END_DT &lt; SYSDATE
+                    THEN 1
+                    ELSE 0
+                END
+            ) AS DELAYED_CNT
+        FROM EVENTS
+        WHERE PROJ_ID = #{projId, jdbcType=NUMERIC}
+          AND ITEM_TYPE = 'TASK'
+    </select>
+
+    <select id="getProjectTasks" resultType="map">
+        SELECT
+            e.EVENT_ID AS TASK_ID,
+            e.TITLE,
+            e.STATUS,
+            e.USER_ID AS "USER_ID",
+            u.USER_NAME AS "USER_NAME",
+            NVL(e.START_TIME_SLOT, 'NONE') AS START_TIME_SLOT,
+            NVL(e.END_TIME_SLOT, 'NONE') AS END_TIME_SLOT,
+            CASE WHEN e.START_TIME_SLOT = 'TIME' AND e.END_TIME_SLOT = 'TIME' THEN 'Y' ELSE 'N' END AS USE_TIME,
+            CASE WHEN e.START_TIME_SLOT = 'TIME' THEN TO_CHAR(e.START_DT, 'HH24:MI') ELSE NULL END AS START_TIME,
+            CASE WHEN e.END_TIME_SLOT = 'TIME' THEN TO_CHAR(e.END_DT, 'HH24:MI') ELSE NULL END AS END_TIME,
+            TO_CHAR(e.START_DT, 'YYYY-MM-DD') AS START_DATE,
+            TO_CHAR(e.END_DT, 'YYYY-MM-DD') AS END_DATE,
+            TO_CHAR(e.ACTUAL_START_DT, 'YYYY-MM-DD HH24:MI') AS ACTUAL_START_DATE,
+            TO_CHAR(e.ACTUAL_DONE_DT, 'YYYY-MM-DD HH24:MI') AS ACTUAL_DONE_DATE,
+            CASE
+                WHEN e.STATUS != 'DONE'
+                 AND e.END_DT IS NOT NULL
+                 AND e.END_DT &lt; SYSDATE
+                THEN 'Y'
+                ELSE 'N'
+            END AS DELAYED_YN
+        FROM EVENTS e
+        LEFT JOIN USERS u
+          ON e.USER_ID = u.USER_ID
+        WHERE e.PROJ_ID = #{projId}
+          AND e.ITEM_TYPE = 'TASK'
+        ORDER BY
+            CASE
+                WHEN e.STATUS != 'DONE'
+                 AND e.END_DT IS NOT NULL
+                 AND e.END_DT &lt; SYSDATE
+                THEN 0
+                WHEN e.STATUS = 'IN_PROGRESS' THEN 1
+                WHEN e.STATUS = 'TODO' THEN 2
+                WHEN e.STATUS = 'DONE' THEN 3
+                ELSE 4
+            END,
+            e.END_DT ASC NULLS LAST,
+            CASE NVL(e.END_TIME_SLOT, 'PM')
+                WHEN 'AM' THEN 1
+                WHEN 'PM' THEN 2
+                ELSE 3
+            END,
+            e.EVENT_ID DESC
+    </select>
+
+    <insert id="insertTask" parameterType="map">
+        INSERT INTO EVENTS (
+            EVENT_ID,
+            PROJ_ID,
+            WS_ID,
+            USER_ID,
+            TITLE,
+            STATUS,
+            ITEM_TYPE,
+            START_DT,
+            END_DT,
+            ACTUAL_START_DT,
+            ACTUAL_DONE_DT,
+            START_TIME_SLOT,
+            END_TIME_SLOT
+        )
+        VALUES (
+            SEQ_EVENT_ID.NEXTVAL,
+            #{projId},
+            #{wsId},
+            #{userId, jdbcType=NUMERIC},
+            #{title},
+            #{status},
+            'TASK',
+            CASE
+                WHEN #{startDate, jdbcType=VARCHAR} IS NULL
+                  OR TRIM(#{startDate, jdbcType=VARCHAR}) IS NULL
+                THEN NULL
+                ELSE TO_DATE(#{startDate, jdbcType=VARCHAR} ||
+                    CASE
+                        WHEN #{startTimeSlot, jdbcType=VARCHAR} = 'TIME'
+                         AND #{startTime, jdbcType=VARCHAR} IS NOT NULL
+                         AND TRIM(#{startTime, jdbcType=VARCHAR}) IS NOT NULL
+                        THEN ' ' || #{startTime, jdbcType=VARCHAR} || ':00'
+                        WHEN #{startTimeSlot, jdbcType=VARCHAR} = 'PM' THEN ' 13:00:00'
+                        WHEN #{startTimeSlot, jdbcType=VARCHAR} = 'NONE' THEN ' 00:00:00'
+                        ELSE ' 09:00:00'
+                    END,
+                    'YYYY-MM-DD HH24:MI:SS'
+                )
+            END,
+            CASE
+                WHEN #{endDate, jdbcType=VARCHAR} IS NULL
+                  OR TRIM(#{endDate, jdbcType=VARCHAR}) IS NULL
+                THEN NULL
+                ELSE TO_DATE(#{endDate, jdbcType=VARCHAR} ||
+                    CASE
+                        WHEN #{endTimeSlot, jdbcType=VARCHAR} = 'TIME'
+                         AND #{endTime, jdbcType=VARCHAR} IS NOT NULL
+                         AND TRIM(#{endTime, jdbcType=VARCHAR}) IS NOT NULL
+                        THEN ' ' || #{endTime, jdbcType=VARCHAR} || ':59'
+                        WHEN #{endTimeSlot, jdbcType=VARCHAR} = 'AM' THEN ' 12:00:00'
+                        WHEN #{endTimeSlot, jdbcType=VARCHAR} = 'NONE' THEN ' 23:59:59'
+                        ELSE ' 18:00:00'
+                    END,
+                    'YYYY-MM-DD HH24:MI:SS'
+                )
+            END,
+            CASE
+                WHEN #{status} IN ('IN_PROGRESS', 'DONE') THEN SYSDATE
+                ELSE NULL
+            END,
+            CASE
+                WHEN #{status} = 'DONE' THEN SYSDATE
+                ELSE NULL
+            END,
+            NVL(#{startTimeSlot, jdbcType=VARCHAR}, 'NONE'),
+            NVL(#{endTimeSlot, jdbcType=VARCHAR}, 'NONE')
+        )
+    </insert>
+
+    <select id="selectProjectById" resultType="com.springboot.project.dto.projectRequestDTO">
+        SELECT
+            p.PROJ_ID,
+            p.PROJ_NAME,
+            p.PROJ_DESC,
+            p.LEADER_ID,
+            p.PROJ_TYPE,
+            p.PROJ_SCOPE,
+            p.PROJ_CATEGORY,
+            p.PROJ_CATEGORY_DETAIL,
+            TO_CHAR(e.START_DT, 'YYYY-MM-DD') AS START_DATE,
+            TO_CHAR(e.END_DT, 'YYYY-MM-DD') AS END_DATE
+        FROM PROJECTS p
+        LEFT JOIN EVENTS e
+          ON p.PROJ_ID = e.PROJ_ID
+         AND e.ITEM_TYPE = 'PROJ'
+        WHERE p.PROJ_ID = #{projId}
+    </select>
+
+    <select id="getTaskDetail" parameterType="long" resultType="map">
+        SELECT
+            e.EVENT_ID AS "TASK_ID",
+            e.PROJ_ID AS "PROJ_ID",
+            e.TITLE,
+            e.STATUS,
+            e.USER_ID AS "USER_ID",
+            u.USER_NAME AS "USER_NAME",
+            NVL(e.START_TIME_SLOT, 'NONE') AS "START_TIME_SLOT",
+            NVL(e.END_TIME_SLOT, 'NONE') AS "END_TIME_SLOT",
+            CASE WHEN e.START_TIME_SLOT = 'TIME' AND e.END_TIME_SLOT = 'TIME' THEN 'Y' ELSE 'N' END AS "USE_TIME",
+            CASE WHEN e.START_TIME_SLOT = 'TIME' THEN TO_CHAR(e.START_DT, 'HH24:MI') ELSE NULL END AS "START_TIME",
+            CASE WHEN e.END_TIME_SLOT = 'TIME' THEN TO_CHAR(e.END_DT, 'HH24:MI') ELSE NULL END AS "END_TIME",
+            TO_CHAR(e.START_DT, 'YYYY-MM-DD') AS "START_DATE",
+            TO_CHAR(e.END_DT, 'YYYY-MM-DD') AS "END_DATE",
+            TO_CHAR(e.ACTUAL_START_DT, 'YYYY-MM-DD HH24:MI') AS "ACTUAL_START_DATE",
+            TO_CHAR(e.ACTUAL_DONE_DT, 'YYYY-MM-DD HH24:MI') AS "ACTUAL_DONE_DATE",
+            CASE
+                WHEN e.STATUS != 'DONE'
+                 AND e.END_DT IS NOT NULL
+                 AND e.END_DT &lt; SYSDATE
+                THEN 'Y'
+                ELSE 'N'
+            END AS "DELAYED_YN"
+        FROM EVENTS e
+        LEFT JOIN USERS u
+          ON e.USER_ID = u.USER_ID
+        WHERE e.EVENT_ID = #{taskId}
+          AND e.ITEM_TYPE = 'TASK'
+    </select>
+
+    <update id="updateTask" parameterType="map">
+        UPDATE EVENTS
+        SET
+            TITLE = #{title},
+            USER_ID = NVL(#{userId, jdbcType=NUMERIC}, USER_ID),
+            START_DT =
+                CASE
+                    WHEN #{startDate, jdbcType=VARCHAR} IS NULL
+                      OR TRIM(#{startDate, jdbcType=VARCHAR}) IS NULL
+                    THEN NULL
+                    ELSE TO_DATE(#{startDate, jdbcType=VARCHAR} ||
+                        CASE
+                            WHEN #{startTimeSlot, jdbcType=VARCHAR} = 'TIME'
+                         AND #{startTime, jdbcType=VARCHAR} IS NOT NULL
+                         AND TRIM(#{startTime, jdbcType=VARCHAR}) IS NOT NULL
+                        THEN ' ' || #{startTime, jdbcType=VARCHAR} || ':00'
+                        WHEN #{startTimeSlot, jdbcType=VARCHAR} = 'PM' THEN ' 13:00:00'
+                        WHEN #{startTimeSlot, jdbcType=VARCHAR} = 'NONE' THEN ' 00:00:00'
+                        ELSE ' 09:00:00'
+                        END,
+                        'YYYY-MM-DD HH24:MI:SS'
+                    )
+                END,
+            END_DT =
+                CASE
+                    WHEN #{endDate, jdbcType=VARCHAR} IS NULL
+                      OR TRIM(#{endDate, jdbcType=VARCHAR}) IS NULL
+                    THEN NULL
+                    ELSE TO_DATE(#{endDate, jdbcType=VARCHAR} ||
+                        CASE
+                            WHEN #{endTimeSlot, jdbcType=VARCHAR} = 'TIME'
+                         AND #{endTime, jdbcType=VARCHAR} IS NOT NULL
+                         AND TRIM(#{endTime, jdbcType=VARCHAR}) IS NOT NULL
+                        THEN ' ' || #{endTime, jdbcType=VARCHAR} || ':59'
+                        WHEN #{endTimeSlot, jdbcType=VARCHAR} = 'AM' THEN ' 12:00:00'
+                        WHEN #{endTimeSlot, jdbcType=VARCHAR} = 'NONE' THEN ' 23:59:59'
+                        ELSE ' 18:00:00'
+                        END,
+                        'YYYY-MM-DD HH24:MI:SS'
+                    )
+                END,
+            STATUS = #{status},
+            START_TIME_SLOT = NVL(#{startTimeSlot, jdbcType=VARCHAR}, 'NONE'),
+            END_TIME_SLOT = NVL(#{endTimeSlot, jdbcType=VARCHAR}, 'NONE'),
+            ACTUAL_START_DT =
+                CASE
+                    WHEN #{status} = 'TODO' THEN NULL
+                    WHEN #{status} IN ('IN_PROGRESS', 'DONE') AND ACTUAL_START_DT IS NULL THEN SYSDATE
+                    ELSE ACTUAL_START_DT
+                END,
+            ACTUAL_DONE_DT =
+                CASE
+                    WHEN #{status} = 'DONE' AND ACTUAL_DONE_DT IS NULL THEN SYSDATE
+                    WHEN #{status} != 'DONE' THEN NULL
+                    ELSE ACTUAL_DONE_DT
+                END
+        WHERE EVENT_ID = #{taskId, jdbcType=NUMERIC}
+          AND ITEM_TYPE = 'TASK'
+    </update>
+
+    <delete id="deleteTask" parameterType="long">
+        DELETE FROM EVENTS
+        WHERE EVENT_ID = #{taskId, jdbcType=NUMERIC}
+          AND ITEM_TYPE = 'TASK'
+    </delete>
+
+    <update id="updateProject" parameterType="com.springboot.project.dto.projectRequestDTO">
+        UPDATE PROJECTS
+        SET
+            PROJ_NAME = #{projName},
+            PROJ_DESC = #{projDesc},
+            PROJ_TYPE = #{projCategory},
+            PROJ_SCOPE = NVL(#{projScope}, PROJ_SCOPE),
+            PROJ_CATEGORY = #{projCategory},
+            PROJ_CATEGORY_DETAIL = #{projCategoryDetail}
+        WHERE PROJ_ID = #{projId}
+    </update>
+
+    <update id="updateProjectEvent">
+        UPDATE EVENTS
+        SET
+            START_DT = TO_DATE(#{startDate}, 'YYYY-MM-DD'),
+            END_DT   = TO_DATE(#{endDate}, 'YYYY-MM-DD') + 1
+        WHERE PROJ_ID = #{projId}
+          AND ITEM_TYPE = 'PROJ'
+    </update>
+
+    <delete id="deleteProject" parameterType="long">
+        DELETE FROM PROJECTS
+        WHERE PROJ_ID = #{projId}
+    </delete>
+
+    <update id="updateTaskStatus">
+        UPDATE EVENTS
+        SET
+            STATUS = #{status},
+            ACTUAL_START_DT =
+                CASE
+                    WHEN #{status} = 'TODO' THEN NULL
+                    WHEN #{status} IN ('IN_PROGRESS', 'DONE') AND ACTUAL_START_DT IS NULL THEN SYSDATE
+                    ELSE ACTUAL_START_DT
+                END,
+            ACTUAL_DONE_DT =
+                CASE
+                    WHEN #{status} = 'DONE' AND ACTUAL_DONE_DT IS NULL THEN SYSDATE
+                    WHEN #{status} != 'DONE' THEN NULL
+                    ELSE ACTUAL_DONE_DT
+                END
+        WHERE EVENT_ID = #{taskId, jdbcType=NUMERIC}
+          AND ITEM_TYPE = 'TASK'
+    </update>
+
+    <select id="selectProjectSchedules" resultType="map">
+        SELECT
+            EVENT_ID,
+            PROJ_ID,
+            WS_ID,
+            USER_ID,
+            TITLE,
+            NVL(START_TIME_SLOT, 'NONE') AS START_TIME_SLOT,
+            NVL(END_TIME_SLOT, 'NONE') AS END_TIME_SLOT,
+            CASE WHEN START_TIME_SLOT = 'TIME' AND END_TIME_SLOT = 'TIME' THEN 'Y' ELSE 'N' END AS USE_TIME,
+            CASE WHEN START_TIME_SLOT = 'TIME' THEN TO_CHAR(START_DT, 'HH24:MI') ELSE NULL END AS START_TIME,
+            CASE WHEN END_TIME_SLOT = 'TIME' THEN TO_CHAR(END_DT, 'HH24:MI') ELSE NULL END AS END_TIME,
+            TO_CHAR(START_DT, 'YYYY-MM-DD') AS START_DATE,
+            TO_CHAR(END_DT, 'YYYY-MM-DD') AS END_DATE,
+            ITEM_TYPE,
+            STATUS,
+            COLOR
+        FROM EVENTS
+        WHERE PROJ_ID = #{projId}
+          AND ITEM_TYPE = 'SCHEDULE'
+        ORDER BY START_DT ASC, EVENT_ID ASC
+    </select>
+
+    <insert id="insertProjectSchedule" parameterType="map">
+        INSERT INTO EVENTS (
+            EVENT_ID,
+            PROJ_ID,
+            WS_ID,
+            USER_ID,
+            TITLE,
+            STATUS,
+            ITEM_TYPE,
+            START_DT,
+            END_DT,
+            START_TIME_SLOT,
+            END_TIME_SLOT,
+            COLOR
+        )
+        VALUES (
+            SEQ_EVENT_ID.NEXTVAL,
+            #{projId, jdbcType=NUMERIC},
+            #{wsId, jdbcType=NUMERIC},
+            #{userId, jdbcType=NUMERIC},
+            #{title, jdbcType=VARCHAR},
+            #{status, jdbcType=VARCHAR},
+            'SCHEDULE',
+            CASE
+                WHEN #{startDate, jdbcType=VARCHAR} IS NULL
+                  OR TRIM(#{startDate, jdbcType=VARCHAR}) IS NULL
+                THEN NULL
+                ELSE TO_DATE(#{startDate, jdbcType=VARCHAR} ||
+                    CASE
+                        WHEN #{startTimeSlot, jdbcType=VARCHAR} = 'TIME'
+                         AND #{startTime, jdbcType=VARCHAR} IS NOT NULL
+                         AND TRIM(#{startTime, jdbcType=VARCHAR}) IS NOT NULL
+                        THEN ' ' || #{startTime, jdbcType=VARCHAR} || ':00'
+                        ELSE ' 00:00:00'
+                    END,
+                    'YYYY-MM-DD HH24:MI:SS'
+                )
+            END,
+            CASE
+                WHEN #{endDate, jdbcType=VARCHAR} IS NULL
+                  OR TRIM(#{endDate, jdbcType=VARCHAR}) IS NULL
+                THEN NULL
+                ELSE TO_DATE(#{endDate, jdbcType=VARCHAR} ||
+                    CASE
+                        WHEN #{endTimeSlot, jdbcType=VARCHAR} = 'TIME'
+                         AND #{endTime, jdbcType=VARCHAR} IS NOT NULL
+                         AND TRIM(#{endTime, jdbcType=VARCHAR}) IS NOT NULL
+                        THEN ' ' || #{endTime, jdbcType=VARCHAR} || ':59'
+                        ELSE ' 23:59:59'
+                    END,
+                    'YYYY-MM-DD HH24:MI:SS'
+                )
+            END,
+            NVL(#{startTimeSlot, jdbcType=VARCHAR}, 'NONE'),
+            NVL(#{endTimeSlot, jdbcType=VARCHAR}, 'NONE'),
+            #{color, jdbcType=VARCHAR}
+        )
+    </insert>
+
+    <select id="getProjectScheduleDetail" resultType="map">
+        SELECT
+            EVENT_ID AS "SCHEDULE_ID",
+            EVENT_ID,
+            PROJ_ID,
+            WS_ID,
+            USER_ID,
+            TITLE,
+            NVL(START_TIME_SLOT, 'NONE') AS "START_TIME_SLOT",
+            NVL(END_TIME_SLOT, 'NONE') AS "END_TIME_SLOT",
+            CASE WHEN START_TIME_SLOT = 'TIME' AND END_TIME_SLOT = 'TIME' THEN 'Y' ELSE 'N' END AS "USE_TIME",
+            CASE WHEN START_TIME_SLOT = 'TIME' THEN TO_CHAR(START_DT, 'HH24:MI') ELSE NULL END AS "START_TIME",
+            CASE WHEN END_TIME_SLOT = 'TIME' THEN TO_CHAR(END_DT, 'HH24:MI') ELSE NULL END AS "END_TIME",
+            TO_CHAR(START_DT, 'YYYY-MM-DD') AS "START_DATE",
+            TO_CHAR(END_DT, 'YYYY-MM-DD') AS "END_DATE",
+            ITEM_TYPE,
+            STATUS,
+            COLOR
+        FROM EVENTS
+        WHERE EVENT_ID = #{scheduleId, jdbcType=NUMERIC}
+          AND ITEM_TYPE = 'SCHEDULE'
+    </select>
+
+    <update id="updateProjectSchedule" parameterType="map">
+        UPDATE EVENTS
+        SET
+            TITLE = #{title, jdbcType=VARCHAR},
+            START_DT =
+                CASE
+                    WHEN #{startDate, jdbcType=VARCHAR} IS NULL
+                      OR TRIM(#{startDate, jdbcType=VARCHAR}) IS NULL
+                    THEN NULL
+                    ELSE TO_DATE(#{startDate, jdbcType=VARCHAR} ||
+                        CASE
+                            WHEN #{startTimeSlot, jdbcType=VARCHAR} = 'TIME'
+                             AND #{startTime, jdbcType=VARCHAR} IS NOT NULL
+                             AND TRIM(#{startTime, jdbcType=VARCHAR}) IS NOT NULL
+                            THEN ' ' || #{startTime, jdbcType=VARCHAR} || ':00'
+                            ELSE ' 00:00:00'
+                        END,
+                        'YYYY-MM-DD HH24:MI:SS'
+                    )
+                END,
+            END_DT =
+                CASE
+                    WHEN #{endDate, jdbcType=VARCHAR} IS NULL
+                      OR TRIM(#{endDate, jdbcType=VARCHAR}) IS NULL
+                    THEN NULL
+                    ELSE TO_DATE(#{endDate, jdbcType=VARCHAR} ||
+                        CASE
+                            WHEN #{endTimeSlot, jdbcType=VARCHAR} = 'TIME'
+                             AND #{endTime, jdbcType=VARCHAR} IS NOT NULL
+                             AND TRIM(#{endTime, jdbcType=VARCHAR}) IS NOT NULL
+                            THEN ' ' || #{endTime, jdbcType=VARCHAR} || ':59'
+                            ELSE ' 23:59:59'
+                        END,
+                        'YYYY-MM-DD HH24:MI:SS'
+                    )
+                END,
+            START_TIME_SLOT = NVL(#{startTimeSlot, jdbcType=VARCHAR}, 'NONE'),
+            END_TIME_SLOT = NVL(#{endTimeSlot, jdbcType=VARCHAR}, 'NONE'),
+            STATUS = #{status, jdbcType=VARCHAR},
+            COLOR = #{color, jdbcType=VARCHAR}
+        WHERE EVENT_ID = #{scheduleId, jdbcType=NUMERIC}
+          AND ITEM_TYPE = 'SCHEDULE'
+    </update>
+
+    <delete id="deleteProjectSchedule">
+        DELETE FROM EVENTS
+        WHERE EVENT_ID = #{scheduleId, jdbcType=NUMERIC}
+          AND ITEM_TYPE = 'SCHEDULE'
+    </delete>
+
+
+
+</mapper>

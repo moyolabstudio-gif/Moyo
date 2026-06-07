@@ -21,6 +21,7 @@
     JOIN USERS u ON p.USER_ID = u.USER_ID
     WHERE p.WS_ID = #{wsId}
       AND p.BOARD_TYPE = #{boardType}
+      AND p.PROJ_ID IS NULL
     ORDER BY p.IS_PINNED DESC, p.REG_DT DESC
     FETCH FIRST 5 ROWS ONLY
 </select>
@@ -133,7 +134,7 @@
             TO_CHAR(REG_DT, 'YYYY-MM-DD') AS EVENT_DATE, 
             'NOTICE' AS TYPE 
         FROM BOARD_POSTS 
-        WHERE WS_ID = #{wsId} AND BOARD_TYPE = 'NOTICE' AND REG_DT IS NOT NULL
+        WHERE WS_ID = #{wsId} AND BOARD_TYPE = 'NOTICE' AND PROJ_ID IS NULL AND REG_DT IS NOT NULL
     )
     ORDER BY EVENT_DATE ASC
 </select>

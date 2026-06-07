@@ -26,10 +26,10 @@ public class boardFileApiController {
     @Autowired
     private IboardService iboardService;
 
-    @PostMapping("/{wsId}/write") 
+    @PostMapping("/write") 
     public ResponseEntity<?> writePostWithFiles(
-            @PathVariable("wsId") Long wsId,
-            @RequestPart("post") postDTO post, // 💡 postDTO에 이미 projId 필드가 있다고 가정
+            @RequestParam("wsId") Long wsId, // @PathVariable 대신 @RequestParam 사용
+            @RequestPart("post") postDTO post,
             @RequestPart(value = "files", required = false) List<MultipartFile> files,
             HttpSession session) {
 

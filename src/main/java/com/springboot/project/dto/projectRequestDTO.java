@@ -8,10 +8,14 @@ public class projectRequestDTO {
     private Long projId;   
     private String projName;
     private String projDesc;
-    private String projType;    
+    private String projType;
+    private String projScope;
+    private String projCategory;
+    private String projCategoryDetail;
     private Long wsId;
     private Long leaderId;      
     private List<Long> memberIds;
+    private List<Long> adminIds;
     private String startDate; 
     private String endDate;
 

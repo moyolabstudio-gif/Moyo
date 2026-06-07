@@ -15,6 +15,45 @@ import com.springboot.project.service.IprojectService;
 @Service
 public class projectServiceImpl implements IprojectService {
 
+    private String normalizeTaskTime(String time, String slot, String fallback) {
+        String value = time == null ? "" : time.trim();
+
+        if (value.matches("^\\d{2}:\\d{2}$")) {
+            return value;
+        }
+
+        if (value.matches("^\\d{2}:\\d{2}:\\d{2}$")) {
+            return value.substring(0, 5);
+        }
+
+        String normalizedSlot = slot == null ? "" : slot.trim().toUpperCase();
+        if ("AM".equals(normalizedSlot)) return "09:00";
+        if ("PM".equals(normalizedSlot)) return "18:00";
+
+        return fallback;
+    }
+
+    private String toTaskTimeSlot(String time, String fallbackSlot) {
+        String normalized = normalizeTaskTime(time, fallbackSlot, "09:00");
+        try {
+            int hour = Integer.parseInt(normalized.substring(0, 2));
+            return hour < 12 ? "AM" : "PM";
+        } catch (Exception e) {
+            return fallbackSlot;
+        }
+    }
+
+    private String normalizeTaskSlotFlag(String slot, String fallbackSlot) {
+        String value = slot == null ? "" : slot.trim().toUpperCase();
+
+        if ("TIME".equals(value)) return "TIME";
+        if ("NONE".equals(value)) return "NONE";
+        if ("AM".equals(value)) return "AM";
+        if ("PM".equals(value)) return "PM";
+
+        return fallbackSlot;
+    }
+
     @Autowired
     private IprojectDAO projectDao;
 
@@ -25,21 +64,72 @@ public class projectServiceImpl implements IprojectService {
     @Override
     @Transactional
     public void insertProject(projectRequestDTO dto, Long userId) {
-        // 1. 프로젝트 생성
-        projectDao.insertProject(dto); 
-        
-        // 2. 프로젝트 멤버 추가
-        projectDao.insertProjectMember(dto.getProjId(), dto.getLeaderId(), "ADMIN");
-        if(dto.getMemberIds() != null) { 
-            for(Long memberId : dto.getMemberIds()) {  
-                if(!memberId.equals(dto.getLeaderId())) { 
-                    projectDao.insertProjectMember(dto.getProjId(), memberId, "MEMBER"); 
-                } 
-            } 
+        String scope = dto.getProjScope() == null ? "GROUP" : dto.getProjScope().trim().toUpperCase();
+        if (!"PERSONAL".equals(scope) && !"GROUP".equals(scope)) {
+            scope = "GROUP";
         }
 
-        // 3. 💡 핵심 수정: 캘린더 변환 로직 제거하고 직접 호출
-        // 이렇게 하면 날짜 값이 dto에 있는 그대로 전달됩니다.
+        String category = dto.getProjCategory();
+        if (category == null || category.isBlank()) {
+            category = dto.getProjType();
+        }
+        if (category == null || category.isBlank()) {
+            category = "ETC";
+        }
+        category = category.trim().toUpperCase();
+
+        String categoryDetail = dto.getProjCategoryDetail();
+        if ("ETC".equals(category)) {
+            categoryDetail = categoryDetail == null ? "" : categoryDetail.trim();
+            if (categoryDetail.isEmpty()) {
+                throw new IllegalArgumentException("기타 카테고리명을 입력해주세요.");
+            }
+            if (categoryDetail.length() > 30) {
+                throw new IllegalArgumentException("기타 카테고리명은 30자 이내로 입력해주세요.");
+            }
+            dto.setProjCategoryDetail(categoryDetail);
+        } else {
+            dto.setProjCategoryDetail(null);
+        }
+
+        if (dto.getWsId() == null) {
+            throw new IllegalArgumentException("워크스페이스 정보가 없습니다.");
+        }
+
+        if ("PERSONAL".equals(scope)) {
+            dto.setLeaderId(userId);
+            dto.setMemberIds(List.of(userId));
+            dto.setAdminIds(List.of());
+        } else if (dto.getLeaderId() == null) {
+            dto.setLeaderId(userId);
+        }
+
+        dto.setProjScope(scope);
+        dto.setProjCategory(category);
+        dto.setProjType(category); // 기존 PROJ_TYPE 사용 코드와의 호환
+
+        projectDao.insertProject(dto);
+
+        projectDao.insertProjectMember(dto.getProjId(), dto.getLeaderId(), "ADMIN");
+
+        if (dto.getAdminIds() != null) {
+            for (Long adminId : dto.getAdminIds()) {
+                if (adminId != null && !adminId.equals(dto.getLeaderId())
+                        && projectDao.checkMemberExists(dto.getProjId(), adminId) == 0) {
+                    projectDao.insertProjectMember(dto.getProjId(), adminId, "ADMIN");
+                }
+            }
+        }
+
+        if (dto.getMemberIds() != null) {
+            for (Long memberId : dto.getMemberIds()) {
+                if (memberId != null && !memberId.equals(dto.getLeaderId())
+                        && projectDao.checkMemberExists(dto.getProjId(), memberId) == 0) {
+                    projectDao.insertProjectMember(dto.getProjId(), memberId, "MEMBER");
+                }
+            }
+        }
+
         projectDao.insertProjectEvent(dto);
     }
 
@@ -78,7 +168,58 @@ public class projectServiceImpl implements IprojectService {
         return projectDao.getProjectMembers(projId);
     }
 
-    // 5. [기존 유지] 워크스페이스별 프로젝트 목록
+    
+    @Override
+    public boolean updateProjectMemberPosition(Long projId, Long userId, String projPosition) {
+        return projectDao.updateProjectMemberPosition(projId, userId, projPosition) > 0;
+    }
+
+
+    @Override
+    @Transactional
+    public boolean updateProjectMemberSetting(Long projId, Long userId, String projPosition, String projRole) {
+        String safeRole = projRole == null ? "MEMBER" : projRole.trim().toUpperCase();
+
+        if (!"MEMBER".equals(safeRole) && !"ADMIN".equals(safeRole) && !"LEADER".equals(safeRole)) {
+            return false;
+        }
+
+        int positionResult = projectDao.updateProjectMemberPosition(projId, userId, projPosition);
+
+        String dbRole = "LEADER".equals(safeRole) ? "ADMIN" : safeRole;
+        int roleResult = projectDao.updateProjectMemberRole(projId, userId, dbRole);
+
+        int leaderResult = 1;
+        if ("LEADER".equals(safeRole)) {
+            leaderResult = projectDao.updateProjectLeader(projId, userId);
+        }
+
+        return positionResult > 0 && roleResult > 0 && leaderResult > 0;
+    }
+
+
+
+    @Override
+    @Transactional
+    public boolean removeProjectMember(Long projId, Long userId) {
+        projectRequestDTO project = projectDao.selectProjectById(projId);
+
+        if (project == null || project.getLeaderId() == null) {
+            return false;
+        }
+
+        if (project.getLeaderId().equals(userId)) {
+            return false;
+        }
+
+        // 삭제 대상이 맡고 있던 업무는 현재 팀장에게 이관합니다.
+        projectDao.reassignMemberTasksToLeader(projId, userId, project.getLeaderId());
+
+        return projectDao.deleteProjectMember(projId, userId) > 0;
+    }
+
+
+// 5. [기존 유지] 워크스페이스별 프로젝트 목록
     @Override
     public List<projectRequestDTO> getProjectsByWsId(Long wsId) {
         return projectDao.selectProjectsByWsId(wsId);
@@ -95,6 +236,7 @@ public class projectServiceImpl implements IprojectService {
             summary.put("TODO_CNT", 0);
             summary.put("IN_PROGRESS_CNT", 0);
             summary.put("DONE_CNT", 0);
+            summary.put("DELAYED_CNT", 0);
         }
         return summary;
     }
@@ -104,29 +246,27 @@ public class projectServiceImpl implements IprojectService {
         return projectDao.getProjectTasks(projId);
     }
     @Override
-    public boolean addTask(
-    Long projId,
-    Long wsId,
-    Long userId,
-    String title,
-    String startDate,
-    String endDate,
-    String status) {
+    @Transactional
+    public boolean addTask(Long projId, Long wsId, Long userId, String title, String startDate, String endDate, String status, String startTime, String endTime, String startTimeSlot, String endTimeSlot) {
+        Map<String, Object> paramMap = new HashMap<>();
+        paramMap.put("projId", projId);
+        paramMap.put("wsId", wsId);
+        paramMap.put("userId", userId);
+        paramMap.put("title", title);
+        paramMap.put("startDate", startDate);
+        paramMap.put("endDate", endDate);
+        paramMap.put("status", status);
+        String normalizedStartTimeSlot = normalizeTaskSlotFlag(startTimeSlot, "NONE");
+        String normalizedEndTimeSlot = normalizeTaskSlotFlag(endTimeSlot, "NONE");
+        String normalizedStartTime = normalizeTaskTime(startTime, normalizedStartTimeSlot, "09:00");
+        String normalizedEndTime = normalizeTaskTime(endTime, normalizedEndTimeSlot, "18:00");
 
-    Map<String, Object> paramMap = new HashMap<>();
+        paramMap.put("startTime", normalizedStartTime);
+        paramMap.put("endTime", normalizedEndTime);
+        paramMap.put("startTimeSlot", normalizedStartTimeSlot);
+        paramMap.put("endTimeSlot", normalizedEndTimeSlot);
 
-    paramMap.put("projId", projId);
-    paramMap.put("wsId", wsId);
-    paramMap.put("userId", userId);
-
-    paramMap.put("title", title);
-    paramMap.put("startDate", startDate); // 추가
-    paramMap.put("endDate", endDate);
-    paramMap.put("status", status);
-
-    return projectDao.insertTask(paramMap) > 0;
-
-
+        return projectDao.insertTask(paramMap) > 0;
     }
     @Override
     public projectRequestDTO getProjectById(Long projId) {
@@ -135,20 +275,114 @@ public class projectServiceImpl implements IprojectService {
         return projectDao.selectProjectById(projId); 
     }
     @Override
+    public boolean addProjectSchedule(
+            Long projId,
+            Long wsId,
+            Long userId,
+            String title,
+            String startDate,
+            String endDate,
+            String status,
+            String color,
+            String startTime,
+            String endTime,
+            String startTimeSlot,
+            String endTimeSlot) {
+
+        Map<String, Object> paramMap = new HashMap<>();
+
+        paramMap.put("projId", projId);
+        paramMap.put("wsId", wsId);
+        paramMap.put("userId", userId);
+        paramMap.put("title", title);
+        paramMap.put("startDate", startDate);
+        paramMap.put("endDate", endDate);
+        paramMap.put("status", status == null || status.isEmpty() ? "TODO" : status);
+        paramMap.put("color", color == null || color.isEmpty() ? "#4A90E2" : color);
+
+        String normalizedStartTimeSlot = normalizeTaskSlotFlag(startTimeSlot, "NONE");
+        String normalizedEndTimeSlot = normalizeTaskSlotFlag(endTimeSlot, "NONE");
+        String normalizedStartTime = normalizeTaskTime(startTime, normalizedStartTimeSlot, "09:00");
+        String normalizedEndTime = normalizeTaskTime(endTime, normalizedEndTimeSlot, "18:00");
+
+        paramMap.put("startTime", normalizedStartTime);
+        paramMap.put("endTime", normalizedEndTime);
+        paramMap.put("startTimeSlot", normalizedStartTimeSlot);
+        paramMap.put("endTimeSlot", normalizedEndTimeSlot);
+
+        return projectDao.insertProjectSchedule(paramMap) > 0;
+    }
+    @Override
+    public Map<String, Object> getProjectScheduleDetail(Long scheduleId) {
+        return projectDao.getProjectScheduleDetail(scheduleId);
+    }
+
+    @Override
+    @Transactional
+    public boolean updateProjectSchedule(
+            Long scheduleId,
+            String title,
+            String startDate,
+            String endDate,
+            String status,
+            String color,
+            String startTime,
+            String endTime,
+            String startTimeSlot,
+            String endTimeSlot) {
+
+        Map<String, Object> paramMap = new HashMap<>();
+
+        paramMap.put("scheduleId", scheduleId);
+        paramMap.put("title", title);
+        paramMap.put("startDate", startDate);
+        paramMap.put("endDate", endDate);
+        paramMap.put("status", status == null || status.isEmpty() ? "TODO" : status);
+        paramMap.put("color", color == null || color.isEmpty() ? "#4A90E2" : color);
+
+        String normalizedStartTimeSlot = normalizeTaskSlotFlag(startTimeSlot, "NONE");
+        String normalizedEndTimeSlot = normalizeTaskSlotFlag(endTimeSlot, "NONE");
+        String normalizedStartTime = normalizeTaskTime(startTime, normalizedStartTimeSlot, "09:00");
+        String normalizedEndTime = normalizeTaskTime(endTime, normalizedEndTimeSlot, "18:00");
+
+        paramMap.put("startTime", normalizedStartTime);
+        paramMap.put("endTime", normalizedEndTime);
+        paramMap.put("startTimeSlot", normalizedStartTimeSlot);
+        paramMap.put("endTimeSlot", normalizedEndTimeSlot);
+
+        return projectDao.updateProjectSchedule(paramMap) > 0;
+    }
+
+    @Override
+    @Transactional
+    public boolean deleteProjectSchedule(Long scheduleId) {
+        return projectDao.deleteProjectSchedule(scheduleId) > 0;
+    }
+    @Override
     public Map<String, Object> getTaskDetail(Long taskId) {
         return projectDao.getTaskDetail(taskId);
     }
  // projectServiceImpl.java
     @Override
     @Transactional
-    public boolean updateTask(Long taskId, String title, String startDate, String endDate, String status) {
+    public boolean updateTask(Long taskId, String title, String startDate, String endDate, String status, Long userId, String startTime, String endTime, String startTimeSlot, String endTimeSlot) {
         Map<String, Object> paramMap = new HashMap<>();
         paramMap.put("taskId", taskId);
         paramMap.put("title", title);
-        paramMap.put("startDate", startDate); // 추가
+        paramMap.put("startDate", startDate);
         paramMap.put("endDate", endDate);
         paramMap.put("status", status);
-        
+        paramMap.put("userId", userId);
+        String normalizedStartTimeSlot = normalizeTaskSlotFlag(startTimeSlot, "NONE");
+        String normalizedEndTimeSlot = normalizeTaskSlotFlag(endTimeSlot, "NONE");
+        String normalizedStartTime = normalizeTaskTime(startTime, normalizedStartTimeSlot, "09:00");
+        String normalizedEndTime = normalizeTaskTime(endTime, normalizedEndTimeSlot, "18:00");
+
+        paramMap.put("startTime", normalizedStartTime);
+        paramMap.put("endTime", normalizedEndTime);
+        paramMap.put("startTimeSlot", normalizedStartTimeSlot);
+        paramMap.put("endTimeSlot", normalizedEndTimeSlot);
+
         return projectDao.updateTask(paramMap) > 0;
     }
     @Override
@@ -196,4 +430,9 @@ public class projectServiceImpl implements IprojectService {
 
         return result > 0;
     }
+    @Override
+    public List<Map<String, Object>> getProjectSchedules(Long projId) {
+        return projectDao.selectProjectSchedules(projId);
+    }
+    
 }

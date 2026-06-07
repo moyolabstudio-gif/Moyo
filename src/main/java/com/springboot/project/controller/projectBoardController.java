@@ -17,18 +17,29 @@ public class projectBoardController {
     private IboardService iboardService;
 
     // 1. [페이지 이동] 더보기 버튼 누르면 여기로 옴
-    // 요청 URL: /project/board/list
+    // 해결책: wsId가 필수가 아니도록 (required = false) 설정
     @GetMapping("/board/list")
     public String getBoardListPage(@RequestParam("projId") Long projId, 
-                                   @RequestParam("type") String type, 
+                                   @RequestParam(value = "type", required = false) String type, // 필수 제거
+                                   @RequestParam(value = "wsId", required = false) Long wsId,
                                    Model model) {
+
+        if (type == null || type.isEmpty()) {
+            type = "FREE";
+        }
+
+        List<postDTO> boardList = iboardService.getListByProject(projId, type);
+
+        model.addAttribute("boardList", boardList);
         model.addAttribute("projId", projId);
         model.addAttribute("boardType", type);
-        return "workspace/boardList"; 
+        model.addAttribute("wsId", wsId);
+
+        
+        return "board/boardList";
     }
 
-    // 2. [데이터 API] 자바스크립트 fetch가 여기로 데이터를 가져옴
-    // 요청 URL: /project/api/board-list
+    // 2. [데이터 API]
     @GetMapping("/api/board-list")
     @ResponseBody
     public List<postDTO> getBoardListApi(@RequestParam("projId") Long projId, 

@@ -1,0 +1,1078 @@
+/* MOYO 공통 모달 UI
+   프로젝트 전용이 아니라 모든 화면에서 재사용할 수 있는 컴팩트 모달 기준입니다. */
+:root {
+    --moyo-modal-width: 430px;
+    --moyo-modal-radius: 18px;
+    --moyo-modal-border: #dfe6ee;
+    --moyo-modal-text: #172033;
+    --moyo-modal-muted: #7b8794;
+    --moyo-modal-blue: #4a90e2;
+}
+
+/* 신규 화면에서 사용할 공통 클래스 */
+.moyo-modal-overlay,
+.my-modal-overlay {
+    align-items: center;
+    justify-content: center;
+    padding: 18px;
+    box-sizing: border-box;
+}
+
+.moyo-modal,
+#addTaskModal .task-polish-modal,
+#addScheduleModal .schedule-polish-modal,
+#editScheduleModal .schedule-polish-modal {
+    width: min(var(--moyo-modal-width), calc(100vw - 32px)) !important;
+    max-height: calc(100vh - 32px) !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    border: 1px solid var(--moyo-modal-border) !important;
+    border-radius: var(--moyo-modal-radius) !important;
+    background: #fff !important;
+    box-shadow: 0 18px 46px rgba(15, 23, 42, .20) !important;
+}
+
+.moyo-modal__header,
+#addTaskModal .task-polish-head,
+#addScheduleModal .task-polish-head,
+#editScheduleModal .task-polish-head {
+    padding: 18px 20px 14px !important;
+    border-bottom: 1px solid #edf1f5 !important;
+    background: #fff !important;
+}
+
+.moyo-modal__header h3,
+#addTaskModal .task-polish-head h3,
+#addScheduleModal .task-polish-head h3,
+#editScheduleModal .task-polish-head h3 {
+    margin: 0 !important;
+    color: var(--moyo-modal-text) !important;
+    font-size: 19px !important;
+    font-weight: 900 !important;
+    line-height: 1.3 !important;
+    letter-spacing: -.035em !important;
+}
+
+.moyo-modal__header p,
+#addTaskModal .task-polish-head p,
+#addScheduleModal .task-polish-head p,
+#editScheduleModal .task-polish-head p {
+    margin: 6px 0 0 !important;
+    color: var(--moyo-modal-muted) !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    line-height: 1.5 !important;
+}
+
+.moyo-modal__body,
+#addTaskModal .task-polish-body,
+#addScheduleModal .task-polish-body,
+#editScheduleModal .task-polish-body {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 12px !important;
+    padding: 14px 20px 16px !important;
+    overflow-y: auto !important;
+}
+
+.moyo-modal__field,
+.task-polish-field {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 7px !important;
+    min-width: 0 !important;
+}
+
+.moyo-modal__field > label,
+.task-polish-field > label {
+    margin: 0 !important;
+    color: #344054 !important;
+    font-size: 12px !important;
+    font-weight: 900 !important;
+}
+
+.moyo-modal input:not([type="checkbox"]):not([type="radio"]),
+.moyo-modal select,
+.moyo-modal textarea,
+#addTaskModal .modal-input,
+#addTaskModal .modal-select,
+#addScheduleModal .modal-input,
+#addScheduleModal .modal-select,
+#editScheduleModal .modal-input,
+#editScheduleModal .modal-select {
+    width: 100% !important;
+    min-height: 38px !important;
+    padding: 0 12px !important;
+    border: 1px solid #d7e1ec !important;
+    border-radius: 10px !important;
+    background: #fff !important;
+    color: #1f2937 !important;
+    font: inherit !important;
+    box-sizing: border-box !important;
+    outline: none !important;
+}
+
+.moyo-modal input:focus,
+.moyo-modal select:focus,
+.moyo-modal textarea:focus,
+#addTaskModal .modal-input:focus,
+#addTaskModal .modal-select:focus,
+#addScheduleModal .modal-input:focus,
+#addScheduleModal .modal-select:focus,
+#editScheduleModal .modal-input:focus,
+#editScheduleModal .modal-select:focus {
+    border-color: var(--moyo-modal-blue) !important;
+    box-shadow: 0 0 0 3px rgba(74, 144, 226, .11) !important;
+}
+
+.moyo-modal__section,
+.task-period-card,
+.schedule-period-card {
+    padding: 10px 12px 12px !important;
+    border: 1px solid #e4eaf1 !important;
+    border-radius: 13px !important;
+    background: #f9fbfd !important;
+}
+
+.task-period-row,
+.schedule-polish-grid {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) 132px !important;
+    gap: 8px !important;
+}
+
+.task-period-row + .task-period-row,
+.schedule-polish-grid > :nth-child(n+3) {
+    margin-top: 9px !important;
+}
+
+.task-time-toggle,
+.schedule-time-toggle {
+    display: flex !important;
+    align-items: center !important;
+    gap: 7px !important;
+    min-height: 34px !important;
+    margin: 0 0 9px !important;
+    padding: 0 10px !important;
+    border: 1px solid #e4eaf1 !important;
+    border-radius: 9px !important;
+    background: #fff !important;
+    color: #344054 !important;
+    font-size: 11px !important;
+    font-weight: 900 !important;
+}
+
+.task-time-toggle small,
+.schedule-time-toggle small {
+    margin-left: auto !important;
+    color: #98a2b3 !important;
+    font-size: 10px !important;
+    font-weight: 700 !important;
+}
+
+.schedule-time-split-wrap {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto !important;
+    align-items: center !important;
+    gap: 5px !important;
+}
+
+.schedule-time-unit {
+    color: #667085 !important;
+    font-size: 11px !important;
+    font-weight: 800 !important;
+}
+
+/* 업무 상태: 한 행에 정확히 3등분 */
+#addTaskModal .task-status-pills {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+    width: 100% !important;
+}
+
+#addTaskModal .task-status-pill {
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 38px !important;
+    margin: 0 !important;
+    padding: 0 8px !important;
+    border: 1px solid #d9e2ec !important;
+    border-radius: 10px !important;
+    background: #fff !important;
+    color: #667085 !important;
+    font-size: 12px !important;
+    font-weight: 900 !important;
+    box-sizing: border-box !important;
+}
+
+#addTaskModal .task-status-pill[data-status="TODO"].active {
+    border-color: #f5a623 !important;
+    background: #fff8ec !important;
+    color: #c77800 !important;
+}
+#addTaskModal .task-status-pill[data-status="IN_PROGRESS"].active {
+    border-color: #4a90e2 !important;
+    background: #eef6ff !important;
+    color: #1873d1 !important;
+}
+#addTaskModal .task-status-pill[data-status="DONE"].active {
+    border-color: #24b47e !important;
+    background: #effcf6 !important;
+    color: #07965f !important;
+}
+
+.task-status-hidden { display: none !important; }
+.schedule-modal-color-row { display: flex !important; flex-wrap: wrap !important; gap: 9px !important; }
+
+.moyo-modal__footer,
+#addTaskModal .task-polish-footer,
+#addScheduleModal .task-polish-footer,
+#editScheduleModal .task-polish-footer {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    gap: 8px !important;
+    padding: 11px 20px 13px !important;
+    border-top: 1px solid #edf1f5 !important;
+    background: #fff !important;
+}
+
+.moyo-modal__button,
+.task-ui-btn {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-width: 66px !important;
+    min-height: 36px !important;
+    padding: 0 14px !important;
+    border-radius: 9px !important;
+    border: 1px solid transparent !important;
+    font-family: inherit !important;
+    font-size: 12px !important;
+    font-weight: 900 !important;
+    cursor: pointer !important;
+}
+
+.task-ui-btn.ghost { border-color: #d7e1ec !important; background: #fff !important; color: #667085 !important; }
+.task-ui-btn.primary { background: #4a90e2 !important; color: #fff !important; box-shadow: none !important; }
+.task-ui-btn.secondary { background: #eef6ff !important; color: #2878d0 !important; }
+.task-ui-btn.danger { border-color: #ffc0c5 !important; background: #fff5f6 !important; color: #e63946 !important; }
+
+.schedule-edit-footer { justify-content: space-between !important; }
+.schedule-edit-actions { display: flex !important; align-items: center !important; gap: 8px !important; }
+
+/* 기존 display:none 인 액션 버튼은 강제로 노출하지 않음 */
+.task-polish-footer [style*="display:none"],
+.task-polish-footer [style*="display: none"] { display: none !important; }
+
+@media (max-width: 560px) {
+    .moyo-modal,
+    #addTaskModal .task-polish-modal,
+    #addScheduleModal .schedule-polish-modal,
+    #editScheduleModal .schedule-polish-modal {
+        width: calc(100vw - 20px) !important;
+    }
+    .task-period-row,
+    .schedule-polish-grid { grid-template-columns: 1fr !important; }
+    .task-time-toggle small,
+    .schedule-time-toggle small { display: none !important; }
+}
+
+/* ===== Compact modal refinement: 일정 모달 텍스트 잘림/세로 길이 보정 ===== */
+:root {
+    --moyo-modal-width: 400px;
+}
+
+.moyo-modal__header,
+#addTaskModal .task-polish-head,
+#addScheduleModal .task-polish-head,
+#editScheduleModal .task-polish-head {
+    padding: 18px 20px 13px !important;
+}
+
+.moyo-modal__header h3,
+#addTaskModal .task-polish-head h3,
+#addScheduleModal .task-polish-head h3,
+#editScheduleModal .task-polish-head h3 {
+    font-size: 19px !important;
+}
+
+.moyo-modal__header p,
+#addTaskModal .task-polish-head p,
+#addScheduleModal .task-polish-head p,
+#editScheduleModal .task-polish-head p {
+    margin-top: 4px !important;
+    font-size: 11px !important;
+}
+
+.moyo-modal__body,
+#addTaskModal .task-polish-body,
+#addScheduleModal .task-polish-body,
+#editScheduleModal .task-polish-body {
+    gap: 12px !important;
+    padding: 15px 20px 16px !important;
+}
+
+.moyo-modal__field,
+.task-polish-field {
+    gap: 5px !important;
+}
+
+.moyo-modal input:not([type="checkbox"]):not([type="radio"]),
+.moyo-modal select,
+.moyo-modal textarea,
+#addTaskModal .modal-input,
+#addTaskModal .modal-select,
+#addScheduleModal .modal-input,
+#addScheduleModal .modal-select,
+#editScheduleModal .modal-input,
+#editScheduleModal .modal-select {
+    min-height: 38px !important;
+    padding-left: 11px !important;
+    padding-right: 11px !important;
+}
+
+.moyo-modal__section,
+.task-period-card,
+.schedule-period-card {
+    padding: 10px 12px 12px !important;
+    border-radius: 12px !important;
+}
+
+.task-time-toggle,
+.schedule-time-toggle {
+    min-height: 32px !important;
+    margin-bottom: 10px !important;
+    padding: 0 9px !important;
+}
+
+.task-time-toggle small,
+.schedule-time-toggle small {
+    max-width: 210px !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+}
+
+/* 날짜는 넉넉하게, 시간은 필요한 만큼만 사용 */
+.task-period-row,
+.schedule-polish-grid {
+    grid-template-columns: minmax(0, 1.3fr) minmax(118px, .85fr) !important;
+    gap: 8px !important;
+}
+
+.task-period-row + .task-period-row,
+.schedule-polish-grid > :nth-child(n+3) {
+    margin-top: 8px !important;
+}
+
+/* 시간 셀렉트는 시/분 두 칸만 사용해 글자 잘림 방지 */
+.schedule-time-split-wrap {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(52px, 1fr)) !important;
+    gap: 6px !important;
+    width: 100% !important;
+}
+
+.schedule-time-unit {
+    display: none !important;
+}
+
+.schedule-time-hour,
+.schedule-time-minute {
+    min-width: 0 !important;
+    width: 100% !important;
+    padding: 0 6px !important;
+    text-align: center !important;
+    font-size: 12px !important;
+}
+
+.schedule-modal-color-row {
+    gap: 7px !important;
+}
+
+.schedule-modal-color-row > * {
+    transform: scale(.92);
+    transform-origin: center;
+}
+
+.moyo-modal__footer,
+#addTaskModal .task-polish-footer,
+#addScheduleModal .task-polish-footer,
+#editScheduleModal .task-polish-footer {
+    padding: 11px 20px 13px !important;
+}
+
+.moyo-modal__button,
+.task-ui-btn {
+    min-width: 62px !important;
+    min-height: 34px !important;
+    padding: 0 13px !important;
+}
+
+@media (max-width: 480px) {
+    :root { --moyo-modal-width: 380px; }
+
+    .task-period-row,
+    .schedule-polish-grid {
+        grid-template-columns: minmax(0, 1.2fr) minmax(110px, .8fr) !important;
+    }
+
+    .task-time-toggle small,
+    .schedule-time-toggle small {
+        max-width: 170px !important;
+    }
+}
+
+
+/* 2026-06 modal final compact alignment */
+#addTaskModal .task-polish-modal,
+#addScheduleModal .schedule-polish-modal,
+#editScheduleModal .schedule-polish-modal {
+    width: min(430px, calc(100vw - 24px)) !important;
+}
+
+#addTaskModal .task-polish-body {
+    gap: 12px !important;
+}
+
+#addTaskModal .task-period-card,
+#addScheduleModal .schedule-period-card,
+#editScheduleModal .schedule-period-card {
+    padding: 10px 12px 12px !important;
+}
+
+#addTaskModal .task-period-row {
+    grid-template-columns: minmax(0, 1fr) 132px !important;
+    align-items: end !important;
+}
+
+#addTaskModal input[type="time"] {
+    min-width: 0 !important;
+    width: 132px !important;
+    padding: 0 9px !important;
+    font-size: 13px !important;
+}
+
+#addTaskModal .task-status-pills {
+    gap: 7px !important;
+}
+
+#addTaskModal .task-status-pill {
+    min-height: 36px !important;
+    border-radius: 9px !important;
+}
+
+#addScheduleModal .task-polish-body,
+#editScheduleModal .task-polish-body {
+    gap: 12px !important;
+}
+
+#addScheduleModal .schedule-color-field,
+#editScheduleModal .schedule-color-field {
+    margin-top: 0 !important;
+}
+
+#addScheduleModal .schedule-polish-grid,
+#editScheduleModal .schedule-polish-grid {
+    grid-template-columns: minmax(0, 1fr) 132px !important;
+    align-items: end !important;
+}
+
+#addScheduleModal .schedule-time-split-wrap,
+#editScheduleModal .schedule-time-split-wrap {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 7px !important;
+}
+
+#addScheduleModal .schedule-time-unit,
+#editScheduleModal .schedule-time-unit {
+    display: none !important;
+}
+
+#addScheduleModal .schedule-time-hour,
+#addScheduleModal .schedule-time-minute,
+#editScheduleModal .schedule-time-hour,
+#editScheduleModal .schedule-time-minute {
+    min-width: 0 !important;
+    padding: 0 7px !important;
+    text-align: center !important;
+}
+
+@media (max-width: 480px) {
+    #addTaskModal .task-period-row,
+    #addScheduleModal .schedule-polish-grid,
+    #editScheduleModal .schedule-polish-grid {
+        grid-template-columns: minmax(0, 1fr) 128px !important;
+    }
+
+    #addTaskModal input[type="time"] {
+        width: 128px !important;
+    }
+}
+
+/* ===== 2026-06-07 공통 모달 최종 보정 =====
+   - 업무 현황 모달의 컴팩트한 구성을 기준으로 통일
+   - 모달 제목은 MOYO 히어로 섹션처럼 은은한 브랜드 배경 적용
+   - 일정 색상 팔레트와 직접 선택(+)을 한 행에 자연스럽게 정렬
+*/
+.moyo-modal__header,
+#addTaskModal .task-polish-head,
+#addScheduleModal .task-polish-head,
+#editScheduleModal .task-polish-head {
+    position: relative !important;
+    overflow: hidden !important;
+    padding: 18px 20px 15px 24px !important;
+    background:
+        radial-gradient(circle at 92% 14%, rgba(85, 221, 191, .20), transparent 38%),
+        linear-gradient(105deg, rgba(74, 144, 226, .08), rgba(255,255,255,.98) 48%, rgba(85, 221, 191, .10)) !important;
+    border-bottom: 1px solid #e8eef5 !important;
+}
+
+.moyo-modal__header::before,
+#addTaskModal .task-polish-head::before,
+#addScheduleModal .task-polish-head::before,
+#editScheduleModal .task-polish-head::before {
+    content: '' !important;
+    position: absolute !important;
+    left: 0 !important;
+    top: 15px !important;
+    bottom: 15px !important;
+    width: 4px !important;
+    border-radius: 0 999px 999px 0 !important;
+    background: linear-gradient(180deg, #4A90E2 0%, #39CDB5 100%) !important;
+}
+
+#addTaskModal .task-polish-head h3,
+#addScheduleModal .task-polish-head h3,
+#editScheduleModal .task-polish-head h3 {
+    font-size: 20px !important;
+}
+
+#addTaskModal .task-polish-head p,
+#addScheduleModal .task-polish-head p,
+#editScheduleModal .task-polish-head p {
+    margin-top: 5px !important;
+}
+
+/* 업무/일정 모달의 본문 밀도를 동일하게 유지 */
+#addTaskModal .task-polish-body,
+#addScheduleModal .task-polish-body,
+#editScheduleModal .task-polish-body {
+    gap: 13px !important;
+    padding: 15px 20px 16px !important;
+}
+
+/* 상태는 업무에만 사용하며 한 행 3등분 */
+#addTaskModal .task-status-pills {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    align-items: stretch !important;
+    gap: 8px !important;
+}
+
+#addTaskModal .task-status-pill {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    height: 38px !important;
+    min-height: 38px !important;
+    line-height: 1 !important;
+}
+
+/* 색상 선택 영역: 원형 팔레트와 + 버튼을 같은 기준으로 정렬 */
+#addScheduleModal .schedule-color-field,
+#editScheduleModal .schedule-color-field {
+    gap: 9px !important;
+}
+
+#scheduleColorRow,
+#editScheduleColorRow,
+.schedule-modal-color-row {
+    display: flex !important;
+    align-items: center !important;
+    flex-wrap: wrap !important;
+    gap: 9px !important;
+    min-height: 32px !important;
+    padding: 2px 0 !important;
+}
+
+.schedule-modal-color-row .schedule-color-chip,
+.schedule-modal-color-row .edit-schedule-color-chip {
+    position: relative !important;
+    width: 26px !important;
+    height: 26px !important;
+    min-width: 26px !important;
+    padding: 0 !important;
+    border: 2px solid transparent !important;
+    border-radius: 50% !important;
+    box-shadow: 0 0 0 1px rgba(15, 23, 42, .04) !important;
+    cursor: pointer !important;
+    transition: transform .15s ease, box-shadow .15s ease !important;
+}
+
+.schedule-modal-color-row .schedule-color-chip:hover,
+.schedule-modal-color-row .edit-schedule-color-chip:hover {
+    transform: translateY(-1px) scale(1.04) !important;
+}
+
+.schedule-modal-color-row .schedule-color-chip.active,
+.schedule-modal-color-row .edit-schedule-color-chip.active {
+    border-color: #ffffff !important;
+    box-shadow: 0 0 0 2px #172033, 0 4px 10px rgba(15,23,42,.12) !important;
+}
+
+.schedule-modal-color-row .schedule-color-custom {
+    position: relative !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 28px !important;
+    height: 28px !important;
+    min-width: 28px !important;
+    margin-left: 3px !important;
+    padding: 0 !important;
+    border: 1px dashed #b9c7d7 !important;
+    border-radius: 50% !important;
+    background: #fff !important;
+    color: #526174 !important;
+    font-size: 16px !important;
+    font-weight: 500 !important;
+    line-height: 1 !important;
+    cursor: pointer !important;
+    box-sizing: border-box !important;
+    transition: border-color .15s ease, color .15s ease, background .15s ease !important;
+}
+
+.schedule-modal-color-row .schedule-color-custom::before {
+    content: '' !important;
+    position: absolute !important;
+    left: -7px !important;
+    top: 5px !important;
+    bottom: 5px !important;
+    width: 1px !important;
+    background: #e7edf3 !important;
+}
+
+.schedule-modal-color-row .schedule-color-custom:hover {
+    border-color: #4A90E2 !important;
+    color: #2563eb !important;
+    background: #f5f9ff !important;
+}
+
+.schedule-modal-color-row .schedule-color-custom input[type="color"] {
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    opacity: 0 !important;
+    cursor: pointer !important;
+}
+
+@media (max-width: 480px) {
+    #scheduleColorRow,
+    #editScheduleColorRow,
+    .schedule-modal-color-row {
+        gap: 8px !important;
+    }
+
+    .schedule-modal-color-row .schedule-color-chip,
+    .schedule-modal-color-row .edit-schedule-color-chip {
+        width: 25px !important;
+        height: 25px !important;
+        min-width: 25px !important;
+    }
+}
+
+/* ===== 2026-06-07 모달 히어로 구분선/간격/버튼 최종 보정 ===== */
+.moyo-modal__header,
+#addTaskModal .task-polish-head,
+#addScheduleModal .task-polish-head,
+#editScheduleModal .task-polish-head {
+    padding: 15px 18px 13px !important;
+    background:
+        radial-gradient(circle at 92% 10%, rgba(85, 221, 191, .18), transparent 38%),
+        linear-gradient(105deg, rgba(74, 144, 226, .07), rgba(255,255,255,.98) 50%, rgba(85, 221, 191, .09)) !important;
+    border-bottom: 0 !important;
+}
+
+/* 왼쪽 세로선을 없애고 제목 영역 아래에 브랜드 그라데이션 구분선 적용 */
+.moyo-modal__header::before,
+#addTaskModal .task-polish-head::before,
+#addScheduleModal .task-polish-head::before,
+#editScheduleModal .task-polish-head::before {
+    content: '' !important;
+    position: absolute !important;
+    left: 0 !important;
+    right: 0 !important;
+    top: auto !important;
+    bottom: 0 !important;
+    width: auto !important;
+    height: 2px !important;
+    border-radius: 0 !important;
+    background: linear-gradient(90deg, #4A90E2 0%, #55DDBF 100%) !important;
+}
+
+.moyo-modal__header p,
+#addTaskModal .task-polish-head p,
+#addScheduleModal .task-polish-head p,
+#editScheduleModal .task-polish-head p {
+    margin-top: 3px !important;
+}
+
+/* 본문 사이 간격을 줄여 모달 높이 압축 */
+.moyo-modal__body,
+#addTaskModal .task-polish-body,
+#addScheduleModal .task-polish-body,
+#editScheduleModal .task-polish-body {
+    gap: 10px !important;
+    padding: 12px 18px 13px !important;
+}
+
+.moyo-modal__section,
+.task-period-card,
+.schedule-period-card {
+    padding: 9px 10px 10px !important;
+}
+
+.task-time-toggle,
+.schedule-time-toggle {
+    min-height: 31px !important;
+    margin-bottom: 8px !important;
+}
+
+.task-period-row + .task-period-row,
+.schedule-polish-grid > :nth-child(n+3) {
+    margin-top: 7px !important;
+}
+
+#addScheduleModal .schedule-color-field,
+#editScheduleModal .schedule-color-field {
+    gap: 6px !important;
+}
+
+#scheduleColorRow,
+#editScheduleColorRow,
+.schedule-modal-color-row {
+    gap: 8px !important;
+    min-height: 28px !important;
+    padding: 0 !important;
+}
+
+/* 하단 버튼 영역과 버튼 크기 축소 */
+.moyo-modal__footer,
+#addTaskModal .task-polish-footer,
+#addScheduleModal .task-polish-footer,
+#editScheduleModal .task-polish-footer {
+    gap: 7px !important;
+    padding: 9px 18px 11px !important;
+}
+
+/* 주요 동작 버튼은 MOYO 파랑-민트 그라데이션으로 통일 */
+.moyo-modal__button.primary,
+.task-ui-btn.primary,
+#addTaskModal .task-polish-footer .primary,
+#addScheduleModal .task-polish-footer .primary,
+#editScheduleModal .task-polish-footer .primary {
+    border-color: transparent !important;
+    background: linear-gradient(135deg, #4A90E2 0%, #39CDB5 100%) !important;
+    color: #fff !important;
+    box-shadow: 0 6px 14px rgba(57, 205, 181, .18) !important;
+}
+
+.moyo-modal__button.primary:hover,
+.task-ui-btn.primary:hover,
+#addTaskModal .task-polish-footer .primary:hover,
+#addScheduleModal .task-polish-footer .primary:hover,
+#editScheduleModal .task-polish-footer .primary:hover {
+    transform: translateY(-1px) !important;
+    filter: brightness(.98) !important;
+    box-shadow: 0 8px 18px rgba(57, 205, 181, .23) !important;
+}
+
+@media (max-width: 480px) {
+    .moyo-modal__header,
+    #addTaskModal .task-polish-head,
+    #addScheduleModal .task-polish-head,
+    #editScheduleModal .task-polish-head {
+        padding: 14px 16px 12px !important;
+    }
+
+    .moyo-modal__body,
+    #addTaskModal .task-polish-body,
+    #addScheduleModal .task-polish-body,
+    #editScheduleModal .task-polish-body {
+        padding: 11px 16px 12px !important;
+    }
+}
+
+/* ===== 프로젝트 관련 모달 공통 적용 ===== */
+.moyo-project-modal,
+#assignMemberModal .my-modal-content,
+#editProjectModal .my-modal-content,
+.work-modal.moyo-project-modal {
+    width: min(430px, calc(100vw - 28px)) !important;
+    max-height: calc(100vh - 30px) !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    border: 1px solid #dfe6ee !important;
+    border-radius: 18px !important;
+    background: #fff !important;
+    box-shadow: 0 20px 50px rgba(15,23,42,.22) !important;
+}
+
+.moyo-project-modal-head,
+#assignMemberModal .moyo-project-modal-head,
+#editProjectModal .moyo-project-modal-head,
+.work-modal .moyo-project-modal-head {
+    position: relative !important;
+    display: flex !important;
+    align-items: flex-start !important;
+    justify-content: space-between !important;
+    gap: 12px !important;
+    padding: 15px 18px 13px !important;
+    background: radial-gradient(circle at 92% 10%, rgba(85,221,191,.18), transparent 38%), linear-gradient(105deg, rgba(74,144,226,.07), #fff 50%, rgba(85,221,191,.09)) !important;
+    border: 0 !important;
+}
+.moyo-project-modal-head::after {
+    content: '' !important;
+    position: absolute !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    height: 2px !important;
+    background: linear-gradient(90deg,#4A90E2 0%,#55DDBF 100%) !important;
+}
+.moyo-project-modal-head h3 { margin:0 !important; color:#172033 !important; font-size:19px !important; font-weight:900 !important; letter-spacing:-.035em !important; }
+.moyo-project-modal-head p { margin:3px 0 0 !important; color:#7b8794 !important; font-size:11px !important; font-weight:600 !important; line-height:1.45 !important; }
+
+.moyo-project-modal-body,
+#assignMemberModal .moyo-project-modal-body,
+#editProjectModal .moyo-project-modal-body,
+.work-modal .moyo-project-modal-body {
+    display:flex !important;
+    flex-direction:column !important;
+    gap:10px !important;
+    padding:12px 18px 13px !important;
+    overflow-y:auto !important;
+    max-height:calc(100vh - 150px) !important;
+}
+
+.moyo-project-modal-body .form-field,
+.moyo-project-modal-body .work-field { margin:0 !important; display:flex !important; flex-direction:column !important; gap:5px !important; }
+.moyo-project-modal-body label,
+.moyo-project-modal-body .field-sub-label { color:#344054 !important; font-size:12px !important; font-weight:900 !important; }
+.moyo-project-modal-body input:not([type=checkbox]):not([type=radio]),
+.moyo-project-modal-body select,
+.moyo-project-modal-body textarea,
+#assignMemberModal input,
+#assignMemberModal select {
+    width:100% !important; min-height:38px !important; padding:0 11px !important; border:1px solid #d7e1ec !important; border-radius:10px !important; background:#fff !important; box-sizing:border-box !important;
+}
+.moyo-project-modal-body textarea { min-height:84px !important; padding-top:10px !important; resize:vertical !important; }
+.moyo-project-modal-body input:focus,
+.moyo-project-modal-body select:focus,
+.moyo-project-modal-body textarea:focus { outline:none !important; border-color:#4A90E2 !important; box-shadow:0 0 0 3px rgba(74,144,226,.11) !important; }
+
+.moyo-project-modal-footer,
+#assignMemberModal .moyo-project-modal-footer,
+#editProjectModal .moyo-project-modal-footer,
+.work-modal .moyo-project-modal-footer {
+    display:flex !important; align-items:center !important; justify-content:flex-end !important; gap:7px !important; padding:9px 18px 11px !important; border-top:1px solid #edf1f5 !important; background:#fff !important;
+}
+.moyo-modal-btn,
+.moyo-project-modal-footer button {
+    display:inline-flex !important; align-items:center !important; justify-content:center !important; min-width:62px !important; min-height:34px !important; padding:0 13px !important; border-radius:9px !important; border:1px solid transparent !important; font:inherit !important; font-size:12px !important; font-weight:900 !important; cursor:pointer !important;
+}
+.moyo-modal-btn.primary,
+.moyo-project-modal-footer .primary,
+#assignMemberModal .moyo-project-modal-footer button:last-child,
+.work-modal .modal-btn.primary {
+    background:linear-gradient(135deg,#4A90E2 0%,#39CDB5 100%) !important; color:#fff !important; box-shadow:0 6px 14px rgba(57,205,181,.18) !important;
+}
+.moyo-modal-btn.ghost,
+.moyo-project-modal-footer .ghost,
+#assignMemberModal .moyo-project-modal-footer button:first-child,
+.work-modal .modal-btn.cancel { background:#fff !important; border-color:#d7e1ec !important; color:#667085 !important; }
+.moyo-project-modal-footer .danger,
+.work-modal .modal-btn.danger,
+#editProjectModal .btn-delete-text { background:#fff5f6 !important; border:1px solid #ffc0c5 !important; color:#e63946 !important; border-radius:9px !important; min-height:34px !important; padding:0 13px !important; }
+
+#assignMemberModal .assignable-member-list { max-height:300px; overflow-y:auto; display:flex; flex-direction:column; gap:8px; }
+#editProjectModal .date-row { display:grid !important; grid-template-columns:1fr 1fr !important; gap:8px !important; }
+#editProjectModal .modal-close-btn { width:30px !important; height:30px !important; border:0 !important; border-radius:50% !important; background:rgba(255,255,255,.75) !important; color:#667085 !important; font-size:20px !important; cursor:pointer !important; }
+#editProjectModal .modal-footer-between { justify-content:space-between !important; }
+#editProjectModal .modal-footer-actions { display:flex !important; gap:7px !important; }
+
+.work-modal.moyo-project-modal { position:fixed !important; top:50% !important; left:50% !important; transform:translate(-50%,-50%) !important; }
+.work-modal .work-date-card { padding:9px 10px 10px !important; border:1px solid #e4eaf1 !important; border-radius:12px !important; background:#f9fbfd !important; }
+.work-modal .work-date-row { display:grid !important; grid-template-columns:minmax(0,1fr) 132px !important; gap:8px !important; align-items:end !important; }
+.work-modal .work-date-row + .work-date-row { margin-top:7px !important; }
+.work-modal .work-time-toggle { min-height:31px !important; margin:0 0 8px !important; padding:0 9px !important; border:1px solid #e4eaf1 !important; border-radius:9px !important; background:#fff !important; }
+
+@media (max-width:520px) {
+  .moyo-project-modal, #assignMemberModal .my-modal-content, #editProjectModal .my-modal-content, .work-modal.moyo-project-modal { width:calc(100vw - 20px) !important; }
+  #editProjectModal .date-row, .work-modal .work-date-row { grid-template-columns:1fr !important; }
+}
+
+
+/* ===== FINAL: 업무 모달 생성/수정 화면 동일 배열 ===== */
+.work-modal.moyo-project-modal {
+    width:min(430px, calc(100vw - 24px)) !important;
+    max-height:calc(100vh - 24px) !important;
+    overflow:hidden !important;
+    border-radius:18px !important;
+}
+.work-modal .moyo-project-modal-head {
+    padding:16px 18px 13px !important;
+}
+.work-modal .moyo-project-modal-body {
+    padding:14px 18px 13px !important;
+    overflow-y:auto !important;
+}
+.work-modal .work-stable-body {
+    display:flex !important;
+    flex-direction:column !important;
+    gap:12px !important;
+}
+.work-modal .work-field {
+    gap:6px !important;
+}
+.work-modal .work-date-card {
+    padding:10px 11px 11px !important;
+}
+.work-modal .work-date-row {
+    grid-template-columns:minmax(0, 1.45fr) minmax(116px, .85fr) !important;
+    gap:9px !important;
+}
+.work-modal .work-date-row + .work-date-row {
+    margin-top:9px !important;
+}
+.work-modal .work-time-toggle {
+    display:flex !important;
+    align-items:center !important;
+    gap:7px !important;
+}
+.work-modal .work-time-toggle small {
+    margin-left:auto !important;
+    white-space:nowrap !important;
+}
+.work-modal .work-status-pills {
+    display:grid !important;
+    grid-template-columns:repeat(3, minmax(0,1fr)) !important;
+    gap:8px !important;
+    width:100% !important;
+}
+.work-modal .work-status-pill {
+    display:flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    width:100% !important;
+    min-width:0 !important;
+    height:38px !important;
+    padding:0 8px !important;
+    border:1px solid #d9e2ec !important;
+    border-radius:11px !important;
+    background:#fff !important;
+    color:#667085 !important;
+    font-size:12px !important;
+    font-weight:900 !important;
+    cursor:pointer !important;
+    box-sizing:border-box !important;
+}
+.work-modal .work-status-pill[data-status="TODO"].active {
+    border-color:#f59e0b !important;
+    background:#fff8eb !important;
+    color:#c97b00 !important;
+}
+.work-modal .work-status-pill[data-status="IN_PROGRESS"].active {
+    border-color:#4a90e2 !important;
+    background:#eef6ff !important;
+    color:#2272cf !important;
+}
+.work-modal .work-status-pill[data-status="DONE"].active {
+    border-color:#34c994 !important;
+    background:#edfbf6 !important;
+    color:#09966b !important;
+}
+.work-modal .work-status-hidden {
+    display:none !important;
+}
+.work-modal .moyo-project-modal-footer {
+    min-height:54px !important;
+    padding:9px 18px 11px !important;
+}
+.work-modal .moyo-project-modal-footer .danger {
+    margin-right:auto !important;
+}
+.work-modal .moyo-project-modal-footer button {
+    min-width:62px !important;
+}
+@media (max-width:520px) {
+    .work-modal .work-date-row {
+        grid-template-columns:minmax(0,1.35fr) minmax(104px,.65fr) !important;
+    }
+    .work-modal .work-time-toggle small {
+        font-size:10px !important;
+    }
+}
+/* ===== End FINAL ===== */
+
+/* ===== 색상 팔레트 최종 정렬 보정 ===== */
+#scheduleColorRow,
+#editScheduleColorRow,
+.schedule-modal-color-row {
+    display: grid !important;
+    grid-template-columns: repeat(9, 26px) !important;
+    grid-auto-rows: 26px !important;
+    align-items: center !important;
+    justify-content: start !important;
+    column-gap: 9px !important;
+    row-gap: 8px !important;
+    width: max-content !important;
+    min-height: 26px !important;
+    padding: 0 !important;
+}
+
+.schedule-modal-color-row .schedule-color-chip,
+.schedule-modal-color-row .edit-schedule-color-chip,
+.schedule-modal-color-row .schedule-color-custom {
+    width: 26px !important;
+    height: 26px !important;
+    min-width: 26px !important;
+    min-height: 26px !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
+    align-self: center !important;
+    justify-self: center !important;
+}
+
+.schedule-modal-color-row .schedule-color-custom {
+    border: 1px dashed #aebed0 !important;
+    font-size: 15px !important;
+    line-height: 24px !important;
+}
+
+.schedule-modal-color-row .schedule-color-custom::before {
+    display: none !important;
+}
+
+@media (max-width: 480px) {
+    #scheduleColorRow,
+    #editScheduleColorRow,
+    .schedule-modal-color-row {
+        grid-template-columns: repeat(9, 24px) !important;
+        grid-auto-rows: 24px !important;
+        column-gap: 7px !important;
+    }
+
+    .schedule-modal-color-row .schedule-color-chip,
+    .schedule-modal-color-row .edit-schedule-color-chip,
+    .schedule-modal-color-row .schedule-color-custom {
+        width: 24px !important;
+        height: 24px !important;
+        min-width: 24px !important;
+        min-height: 24px !important;
+    }
+}

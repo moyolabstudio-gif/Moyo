@@ -7,7 +7,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-
+import jakarta.servlet.http.HttpSession;
+import com.springboot.project.dto.usersDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -169,26 +170,46 @@ public class boardApiController {
     public ResponseEntity<?> writePost(
             @PathVariable("wsId") Long wsId,
             @RequestPart("post") postDTO post,
-            @RequestPart(value = "files", required = false) List<MultipartFile> files) {
+            @RequestPart(value = "files", required = false) List<MultipartFile> files,
+            HttpSession session) {
+
+        usersDto loginUser = (usersDto) session.getAttribute("user");
+
+        if (loginUser == null) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("status", "FAIL");
+            response.put("message", "로그인이 필요합니다.");
+            return ResponseEntity.status(401).body(response);
+        }
 
         post.setWsId(wsId);
-        List<Map<String, Object>> fileList = new ArrayList<>(); // 💡 리스트 생성 누락 보완
-        
+        post.setUserId(loginUser.getUserId());
+
+        if (post.getIsPinned() == null) {
+            post.setIsPinned("N");
+        }
+
+        System.out.println("글 등록 wsId = " + wsId);
+        System.out.println("글 등록 projId = " + post.getProjId());
+        System.out.println("글 등록 userId = " + post.getUserId());
+        System.out.println("글 등록 boardType = " + post.getBoardType());
+
+        List<Map<String, Object>> fileList = new ArrayList<>();
+
         if (files != null) {
             for (MultipartFile file : files) {
-                String savedName = iboardService.saveFile(file); // 서비스 공통 메서드 호출
-                
+                String savedName = iboardService.saveFile(file);
+
                 Map<String, Object> fileMap = new HashMap<>();
                 fileMap.put("fileName", savedName);
                 fileMap.put("originalName", file.getOriginalFilename());
                 fileMap.put("fileSize", file.getSize());
-                fileList.add(fileMap); // 💡 리스트에 담기
+                fileList.add(fileMap);
             }
         }
-        
-        // 서비스 호출
+
         iboardService.registerPostWithFiles(post, fileList);
-        
+
         return ResponseEntity.ok(Map.of("status", "SUCCESS"));
     }
    

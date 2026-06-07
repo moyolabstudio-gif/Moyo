@@ -1,29 +1,59 @@
 package com.springboot.project.controller;
 
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ModelAttribute;
-import com.springboot.project.dao.IworkspaceDAO; // 본인의 DAO 인터페이스 임포트
-import com.springboot.project.dto.workspaceDTO;  // 본인의 DTO 임포트
-import com.springboot.project.dto.usersDto;      // 세션 유저 DTO 임포트
+
+import com.springboot.project.dao.IprojectDAO;
+import com.springboot.project.dao.IworkspaceDAO;
+import com.springboot.project.dto.projectRequestDTO;
+import com.springboot.project.dto.usersDto;
+import com.springboot.project.dto.workspaceDTO;
+
 import jakarta.servlet.http.HttpSession;
 
 @ControllerAdvice
 public class globalControllerAdvice {
 
     @Autowired
-    private IworkspaceDAO workspaceDAO; // 여기에 IworkspaceDAO를 주입받습니다.
+    private IworkspaceDAO workspaceDAO;
+
+    @Autowired
+    private IprojectDAO projectDAO;
 
     @ModelAttribute("userWorkspaces")
     public List<workspaceDTO> getUserWorkspaces(HttpSession session) {
         usersDto user = (usersDto) session.getAttribute("user");
-        
-        // 로그인한 유저가 있을 때만 목록을 조회합니다.
-        if (user != null) {
-            // IworkspaceDAO에 정의된 메서드 호출
-            return workspaceDAO.selectWorkspaceList(user.getUserId()); 
+        if (user == null) {
+            return Collections.emptyList();
         }
-        return null;
+
+        List<workspaceDTO> workspaces = workspaceDAO.selectWorkspaceList(user.getUserId());
+        return workspaces == null ? Collections.emptyList() : workspaces;
+    }
+
+    @ModelAttribute("sidebarProjects")
+    public Map<Long, List<projectRequestDTO>> getSidebarProjects(HttpSession session) {
+        usersDto user = (usersDto) session.getAttribute("user");
+        if (user == null) {
+            return Collections.emptyMap();
+        }
+
+        List<workspaceDTO> workspaces = workspaceDAO.selectWorkspaceList(user.getUserId());
+        if (workspaces == null || workspaces.isEmpty()) {
+            return Collections.emptyMap();
+        }
+
+        Map<Long, List<projectRequestDTO>> result = new LinkedHashMap<>();
+        for (workspaceDTO workspace : workspaces) {
+            List<projectRequestDTO> projects = projectDAO.selectProjectsByWsId(workspace.getWsId());
+            result.put(workspace.getWsId(), projects == null ? Collections.emptyList() : projects);
+        }
+        return result;
     }
 }

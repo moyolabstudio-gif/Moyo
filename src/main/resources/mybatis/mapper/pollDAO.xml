@@ -1,0 +1,274 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.springboot.project.dao.IpollDAO">
+
+    <select id="selectActiveWorkspacePoll" resultType="map">
+        SELECT *
+        FROM (
+            SELECT
+                p.POLL_ID,
+                p.WS_ID,
+                p.PROJ_ID,
+                p.SCOPE,
+                p.USER_ID,
+                u.USER_NAME AS CREATOR_NAME,
+                p.QUESTION,
+                p.STATUS,
+                p.REG_DT,
+                p.END_DT
+            FROM POLLS p
+            JOIN USERS u ON p.USER_ID = u.USER_ID
+            WHERE p.WS_ID = #{wsId}
+              AND p.SCOPE = 'WORKSPACE'
+              AND p.STATUS = 'ACTIVE'
+              AND (p.END_DT IS NULL OR p.END_DT >= SYSDATE)
+            ORDER BY p.REG_DT DESC
+        )
+        WHERE ROWNUM = 1
+    </select>
+
+    <select id="selectActiveProjectPoll" resultType="map">
+        SELECT *
+        FROM (
+            SELECT
+                p.POLL_ID,
+                p.WS_ID,
+                p.PROJ_ID,
+                p.SCOPE,
+                p.USER_ID,
+                u.USER_NAME AS CREATOR_NAME,
+                p.QUESTION,
+                p.STATUS,
+                p.REG_DT,
+                p.END_DT
+            FROM POLLS p
+            JOIN USERS u ON p.USER_ID = u.USER_ID
+            WHERE p.WS_ID = #{wsId}
+              AND p.PROJ_ID = #{projId}
+              AND p.SCOPE = 'PROJECT'
+              AND p.STATUS = 'ACTIVE'
+              AND (p.END_DT IS NULL OR p.END_DT >= SYSDATE)
+            ORDER BY p.REG_DT DESC
+        )
+        WHERE ROWNUM = 1
+    </select>
+
+    <select id="selectPollOptions" resultType="map">
+        SELECT
+            o.OPTION_ID,
+            o.TEXT,
+            o.OPTION_TYPE,
+            o.IMAGE_PATH,
+            COUNT(v.VOTE_ID) AS COUNT
+        FROM POLL_OPTIONS o
+        LEFT JOIN VOTES v
+          ON o.OPTION_ID = v.OPTION_ID
+        WHERE o.POLL_ID = #{pollId}
+        GROUP BY
+            o.OPTION_ID,
+            o.TEXT,
+            o.OPTION_TYPE,
+            o.IMAGE_PATH
+        ORDER BY o.OPTION_ID
+    </select>
+
+    <select id="selectPollById" resultType="map">
+        SELECT
+            p.POLL_ID,
+            p.WS_ID,
+            p.PROJ_ID,
+            p.SCOPE,
+            p.USER_ID,
+            u.USER_NAME AS CREATOR_NAME,
+            p.QUESTION,
+            p.STATUS,
+            p.REG_DT,
+            p.END_DT
+        FROM POLLS p
+        JOIN USERS u ON p.USER_ID = u.USER_ID
+        WHERE p.POLL_ID = #{pollId}
+    </select>
+
+    <select id="selectUserVoteOption" resultType="long">
+        SELECT OPTION_ID
+        FROM VOTES
+        WHERE POLL_ID = #{pollId}
+          AND USER_ID = #{userId}
+          AND ROWNUM = 1
+    </select>
+
+    <select id="countUserVote" resultType="int">
+        SELECT COUNT(*)
+        FROM VOTES
+        WHERE POLL_ID = #{pollId}
+          AND USER_ID = #{userId}
+    </select>
+
+    <select id="countPollVotes" resultType="int">
+        SELECT COUNT(*)
+        FROM VOTES
+        WHERE POLL_ID = #{pollId}
+    </select>
+
+<insert id="insertVote" parameterType="map">
+        INSERT INTO VOTES (
+            VOTE_ID,
+            POLL_ID,
+            OPTION_ID,
+            USER_ID
+        ) VALUES (
+            SEQ_VOTE_ID.NEXTVAL,
+            #{pollId},
+            #{optionId},
+            #{userId}
+        )
+    </insert>
+
+    <insert id="insertPoll" parameterType="map">
+        <selectKey keyProperty="pollId" order="BEFORE" resultType="long">
+            SELECT SEQ_POLL_ID.NEXTVAL FROM DUAL
+        </selectKey>
+
+        INSERT INTO POLLS (
+            POLL_ID,
+            WS_ID,
+            <if test="projId != null">PROJ_ID,</if>
+            SCOPE,
+            USER_ID,
+            QUESTION,
+            STATUS,
+            REG_DT
+            <if test="endDt != null and endDt != ''">, END_DT</if>
+        ) VALUES (
+            #{pollId, jdbcType=NUMERIC},
+            #{wsId, jdbcType=NUMERIC},
+            <if test="projId != null">#{projId, jdbcType=NUMERIC},</if>
+            #{scope, jdbcType=VARCHAR},
+            #{userId, jdbcType=NUMERIC},
+            #{question, jdbcType=VARCHAR},
+            'ACTIVE',
+            SYSDATE
+            <if test="endDt != null and endDt != ''">
+                , TO_DATE(#{endDt, jdbcType=VARCHAR}, 'YYYY-MM-DD HH24:MI')
+            </if>
+        )
+    </insert>
+
+    <update id="updatePoll" parameterType="map">
+        UPDATE POLLS
+        SET QUESTION = #{question, jdbcType=VARCHAR},
+            END_DT = TO_DATE(#{endDt, jdbcType=VARCHAR}, 'YYYY-MM-DD HH24:MI')
+        WHERE POLL_ID = #{pollId, jdbcType=NUMERIC}
+          AND USER_ID = #{userId, jdbcType=NUMERIC}
+    </update>
+
+    <update id="updatePollOption" parameterType="map">
+        UPDATE POLL_OPTIONS
+        SET TEXT = #{text, jdbcType=VARCHAR},
+            OPTION_TYPE = #{optionType, jdbcType=VARCHAR},
+            IMAGE_PATH = #{imagePath, jdbcType=VARCHAR}
+        WHERE OPTION_ID = #{optionId, jdbcType=NUMERIC}
+          AND POLL_ID = #{pollId, jdbcType=NUMERIC}
+    </update>
+
+    <delete id="deleteVotesByOptionId">
+        DELETE FROM VOTES
+        WHERE OPTION_ID = #{optionId}
+    </delete>
+
+    <delete id="deletePollOption">
+        DELETE FROM POLL_OPTIONS
+        WHERE OPTION_ID = #{optionId}
+    </delete>
+
+    <delete id="deletePollVotes">
+        DELETE FROM VOTES
+        WHERE POLL_ID = #{pollId}
+    </delete>
+
+    <delete id="deletePollOptions">
+        DELETE FROM POLL_OPTIONS
+        WHERE POLL_ID = #{pollId}
+    </delete>
+
+    <delete id="deletePoll">
+        DELETE FROM POLLS
+        WHERE POLL_ID = #{pollId}
+    </delete>
+
+    <insert id="insertPollOption" parameterType="map">
+        INSERT INTO POLL_OPTIONS (
+            OPTION_ID,
+            POLL_ID,
+            TEXT,
+            OPTION_TYPE,
+            IMAGE_PATH
+        ) VALUES (
+            SEQ_POLL_OPT_ID.NEXTVAL,
+            #{pollId, jdbcType=NUMERIC},
+            #{text, jdbcType=VARCHAR},
+            #{optionType, jdbcType=VARCHAR},
+            #{imagePath, jdbcType=VARCHAR}
+        )
+    </insert>
+
+
+    <select id="selectWorkspacePollList" resultType="map">
+        SELECT
+            p.POLL_ID,
+            p.WS_ID,
+            p.PROJ_ID,
+            p.SCOPE,
+            p.USER_ID,
+            u.USER_NAME AS CREATOR_NAME,
+            p.QUESTION,
+            p.STATUS,
+            p.REG_DT,
+            p.END_DT,
+            COUNT(DISTINCT o.OPTION_ID) AS OPTION_COUNT,
+            COUNT(v.VOTE_ID) AS VOTE_COUNT
+        FROM POLLS p
+        JOIN USERS u ON p.USER_ID = u.USER_ID
+        LEFT JOIN POLL_OPTIONS o ON p.POLL_ID = o.POLL_ID
+        LEFT JOIN VOTES v ON o.OPTION_ID = v.OPTION_ID
+        WHERE p.WS_ID = #{wsId}
+          AND p.SCOPE = 'WORKSPACE'
+        GROUP BY
+            p.POLL_ID, p.WS_ID, p.PROJ_ID, p.SCOPE, p.USER_ID, u.USER_NAME,
+            p.QUESTION, p.STATUS, p.REG_DT, p.END_DT
+        ORDER BY
+            CASE WHEN p.STATUS = 'ACTIVE' THEN 0 ELSE 1 END,
+            p.REG_DT DESC
+    </select>
+
+    <select id="selectProjectPollList" resultType="map">
+        SELECT
+            p.POLL_ID,
+            p.WS_ID,
+            p.PROJ_ID,
+            p.SCOPE,
+            p.USER_ID,
+            u.USER_NAME AS CREATOR_NAME,
+            p.QUESTION,
+            p.STATUS,
+            p.REG_DT,
+            p.END_DT,
+            COUNT(DISTINCT o.OPTION_ID) AS OPTION_COUNT,
+            COUNT(v.VOTE_ID) AS VOTE_COUNT
+        FROM POLLS p
+        JOIN USERS u ON p.USER_ID = u.USER_ID
+        LEFT JOIN POLL_OPTIONS o ON p.POLL_ID = o.POLL_ID
+        LEFT JOIN VOTES v ON o.OPTION_ID = v.OPTION_ID
+        WHERE p.WS_ID = #{wsId}
+          AND p.PROJ_ID = #{projId}
+          AND p.SCOPE = 'PROJECT'
+        GROUP BY
+            p.POLL_ID, p.WS_ID, p.PROJ_ID, p.SCOPE, p.USER_ID, u.USER_NAME,
+            p.QUESTION, p.STATUS, p.REG_DT, p.END_DT
+        ORDER BY
+            CASE WHEN p.STATUS = 'ACTIVE' THEN 0 ELSE 1 END,
+            p.REG_DT DESC
+    </select>
+
+</mapper>

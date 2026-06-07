@@ -210,23 +210,6 @@
 		    // 3. 투표 로딩 함수 호출 (추가된 부분)
 		    loadActivePoll(); 
 		}
-		// 투표 데이터를 화면에 그리는 함수
-		function renderPoll(data) {
-		    const pollArea = document.getElementById('activePollArea');
-		    if (!data) {
-		        pollArea.innerHTML = '<p>진행 중인 투표가 없습니다.</p>';
-		        return;
-		    }
-
-		    let html = `<div style="font-weight:bold; margin-bottom:10px;">${data.QUESTION}</div>`;
-		    data.options.forEach(opt => {
-		        html += `
-		            <button onclick="submitVote(${opt.OPTION_ID})" style="display:block; width:100%; margin:5px 0; padding:8px;">
-		                ${opt.TEXT} (${opt.COUNT}표)
-		            </button>`;
-		    });
-		    pollArea.innerHTML = html;
-		}
 
 		function renderWidget(targetId, list, type) {
 
@@ -539,48 +522,131 @@
 		        alert("일정 저장 중 오류가 발생했습니다.");
 		    });
 		}
+		let workspaceActivePollId = null;
+
 		function loadActivePoll() {
 		    const wsId = "${workspace.wsId}";
-		    
-		    fetch('/workspace/api/workspace/' + wsId + '/active-poll')
-		        .then(res => res.json())
-		        .then(data => {
-		            const area = document.getElementById('activePollArea');
-		            
-		            // 데이터가 없거나 question 키값이 없으면 "투표 없음" 출력
+            const area = document.getElementById('activePollArea');
+
+            if (!area) return;
+
+		    fetch('/api/polls/active?scope=WORKSPACE&wsId=' + encodeURIComponent(wsId))
+		        .then(function(res) {
+                    if (!res.ok) throw new Error('투표 API 응답 오류: ' + res.status);
+                    return res.json();
+                })
+		        .then(function(data) {
 		            if (!data || !data.question) {
-		                area.innerHTML = '<p style="color:#aaa; text-align:center; font-size:13px; margin-top:20px;">진행 중인 투표가 없습니다.</p>';
+                        workspaceActivePollId = null;
+		                area.innerHTML =
+                            '<p style="color:#aaa; text-align:center; font-size:13px; margin:20px 0 8px;">진행 중인 투표가 없습니다.</p>' +
+                            '<div style="text-align:center;"><a href="/poll/list?scope=WORKSPACE&wsId=' + encodeURIComponent(wsId) + '" style="color:#4A90E2; font-size:12px; font-weight:900; text-decoration:none;">투표 만들기 / 더보기</a></div>';
 		                return;
 		            }
-		            
-		            // 데이터가 있을 때만 정상 렌더링
-		            document.getElementById('pollQuestion').innerText = data.question;
-		            document.getElementById('pollOptions').innerHTML = data.options.map(opt => `
-		                <button onclick="vote('${opt.OPTION_ID}')" ...>
-		                    ${opt.TEXT} <span ...>${opt.COUNT}표</span>
-		                </button>
-		            `).join('');
+
+                    workspaceActivePollId = data.pollId;
+
+                    const options = Array.isArray(data.options) ? data.options : [];
+                    const showResults = !!data.showResults;
+                    const isClosed = !!data.isClosed;
+                    const myOptionId = data.myOptionId;
+                    const total = showResults ? options.reduce(function(sum, option) {
+                        return sum + Number(option.COUNT || option.count || 0);
+                    }, 0) : 0;
+
+                    let html = '';
+                    html += '<div style="font-weight:900; margin-bottom:7px; color:#111827;">' + escapeWorkspacePollHtml(data.question) + '</div>';
+                    html += '<div style="color:#94a3b8; font-size:11px; font-weight:800; margin-bottom:8px;">' + formatWorkspacePollDeadline(data.endDt, isClosed);
+                    if (showResults) {
+                        html += ' · 총 ' + total + '표';
+                    } else {
+                        html += ' · 투표 전 결과 비공개';
+                    }
+                    html += '</div>';
+
+                    options.forEach(function(option) {
+                        const optionId = option.OPTION_ID || option.optionId;
+                        const text = option.TEXT || option.text || '';
+                        const imagePath = option.IMAGE_PATH || option.imagePath || '';
+                        const count = option.COUNT || option.count || 0;
+                        const selected = String(myOptionId || '') === String(optionId || '');
+
+                        html += '<button type="button" onclick="voteWorkspacePoll(' + optionId + ')" ' + (isClosed ? 'disabled' : '') + ' style="display:grid; grid-template-columns:minmax(0,1fr) auto; gap:8px; align-items:center; width:100%; margin:6px 0; padding:8px 10px; border:1px solid ' + (selected ? '#4A90E2' : '#e4ebf2') + '; border-radius:11px; background:#fff; cursor:' + (isClosed ? 'not-allowed' : 'pointer') + '; text-align:left; font-family:inherit;">';
+                        html += '   <span style="min-width:0; display:flex; align-items:center; gap:8px;">';
+                        if (imagePath) {
+                            html += '       <img src="' + escapeWorkspacePollHtml(imagePath) + '" alt="" style="width:44px; height:34px; object-fit:cover; border-radius:8px; background:#f8fafc;">';
+                        }
+                        html += '       <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:12px; font-weight:900; color:#334155;">' + escapeWorkspacePollHtml(text || '이미지 선택지') + '</span>';
+                        html += '   </span>';
+                        if (showResults) {
+                            html += '   <span style="padding:2px 7px; border-radius:999px; background:#eef6ff; color:#2563eb; font-size:11px; font-weight:900;">' + count + '표</span>';
+                        }
+                        html += '</button>';
+                    });
+
+                    area.innerHTML = html;
 		        })
-		        .catch(err => {
-		            // 에러가 나도 화면을 멈추지 않음
-		            console.error("투표 로딩 실패:", err);
-		            document.getElementById('activePollArea').innerHTML = '<p style="color:#aaa; text-align:center; font-size:13px;">데이터를 불러오는 중 문제가 발생했습니다.</p>';
+		        .catch(function(err) {
+		            console.error('워크스페이스 투표 로딩 실패:', err);
+		            area.innerHTML = '<p style="color:#ef4444; text-align:center; font-size:13px;">투표를 불러오지 못했습니다.</p>';
 		        });
 		}
 
-		function vote(optionId) {
-		    fetch('/workspace/api/workspace/vote', { // 컨트롤러에 맞게 주소 확인 필요
+        function formatWorkspacePollDeadline(value, isClosed) {
+            if (isClosed) return '투표 종료';
+            if (!value) return '마감 없음';
+
+            const date = new Date(value);
+            if (Number.isNaN(date.getTime())) return String(value).substring(0, 16) + ' 마감';
+
+            const y = date.getFullYear();
+            const m = String(date.getMonth() + 1).padStart(2, '0');
+            const d = String(date.getDate()).padStart(2, '0');
+            const hh = String(date.getHours()).padStart(2, '0');
+            const mm = String(date.getMinutes()).padStart(2, '0');
+
+            return y + '-' + m + '-' + d + ' ' + hh + ':' + mm + ' 마감';
+        }
+
+		function voteWorkspacePoll(optionId) {
+            if (!workspaceActivePollId || !optionId) {
+                alert('투표 정보를 찾을 수 없습니다.');
+                return;
+            }
+
+		    fetch('/api/polls/vote', {
 		        method: 'POST',
 		        headers: { 'Content-Type': 'application/json' },
-		        body: JSON.stringify({ 
-		            pollId: currentPollId, // 👈 저장해둔 ID 전송
-		            optionId: optionId 
+		        body: JSON.stringify({
+		            pollId: workspaceActivePollId,
+		            optionId: optionId
 		        })
-		    }).then(() => {
-		        alert('투표가 반영되었습니다.');
-		        loadActivePoll(); 
-		    });
+		    })
+            .then(function(res) {
+                if (!res.ok) throw new Error('투표 저장 실패: ' + res.status);
+                return res.json();
+            })
+            .then(function(result) {
+                if (!result || result.success === false) {
+                    alert(result && result.message === 'LOGIN_REQUIRED' ? '로그인이 필요합니다.' : '투표 반영에 실패했습니다.');
+                    return;
+                }
+                loadActivePoll();
+            })
+            .catch(function(err) {
+                console.error('워크스페이스 투표 반영 실패:', err);
+                alert('투표 반영 중 오류가 발생했습니다.');
+            });
 		}
+
+        function escapeWorkspacePollHtml(value) {
+            return String(value || '')
+                .replaceAll('&', '&amp;')
+                .replaceAll('<', '&lt;')
+                .replaceAll('>', '&gt;')
+                .replaceAll('"', '&quot;')
+                .replaceAll("'", '&#039;');
+        }
     </script>
 </head>
 <body>
@@ -624,7 +690,10 @@
                         <ul id="todayScheduleList" style="list-style: none; padding: 0; margin: 0;"></ul>
                     </div>
 					<div class="section-card" style="flex: 1; min-height: 140px;">
-					    <h3 style="margin: 0 0 10px 0; font-size: 16px; color: #ff9f43;">🗳 진행 중인 투표</h3>
+                        <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:10px;">
+                            <h3 style="margin:0; font-size:16px; color:#ff9f43;">🗳 진행 중인 투표</h3>
+                            <a href="/poll/list?scope=WORKSPACE&wsId=${workspace.wsId}" style="color:#94a3b8; text-decoration:none; font-size:12px; font-weight:800;">더보기</a>
+                        </div>
 					    <div id="activePollArea">
 					        <p style="color:#999; font-size:13px; text-align:center; margin-top:20px;">불러오는 중...</p>
 					    </div>

@@ -1,0 +1,386 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.springboot.project.dao.InoteDAO">
+
+    <!-- =========================
+         ResultMap
+    ========================== -->
+
+    <resultMap id="noteResultMap" type="com.springboot.project.dto.noteDTO">
+        <id property="noteId" column="NOTE_ID"/>
+        <result property="wsId" column="WS_ID"/>
+        <result property="projId" column="PROJ_ID"/>
+        <result property="userId" column="USER_ID"/>
+        <result property="noteTitle" column="NOTE_TITLE"/>
+        <result property="doneContent" column="DONE_CONTENT"/>
+        <result property="nextContent" column="NEXT_CONTENT"/>
+        <result property="issueContent" column="ISSUE_CONTENT"/>
+        <result property="changeLog" column="CHANGE_LOG"/>
+        <result property="memo" column="MEMO"/>
+        <result property="regDt" column="REG_DT"/>
+        <result property="updDt" column="UPD_DT"/>
+        <result property="userName" column="USER_NAME"/>
+        <result property="pinned" column="PINNED" javaType="boolean"/>
+        <result property="pinOrder" column="PIN_ORDER"/>
+    </resultMap>
+
+    <resultMap id="noteFileResultMap" type="com.springboot.project.dto.noteFileDTO">
+        <id property="fileId" column="FILE_ID"/>
+        <result property="noteId" column="NOTE_ID"/>
+        <result property="originFileName" column="ORIGIN_FILE_NAME"/>
+        <result property="storedFileName" column="STORED_FILE_NAME"/>
+        <result property="filePath" column="FILE_PATH"/>
+        <result property="fileSize" column="FILE_SIZE"/>
+        <result property="fileExt" column="FILE_EXT"/>
+        <result property="regDt" column="REG_DT"/>
+    </resultMap>
+
+    <resultMap id="noteReplyResultMap" type="com.springboot.project.dto.noteReplyDTO">
+        <id property="replyId" column="REPLY_ID"/>
+        <result property="noteId" column="NOTE_ID"/>
+        <result property="userId" column="USER_ID"/>
+        <result property="replyContent" column="REPLY_CONTENT"/>
+        <result property="regDt" column="REG_DT"/>
+        <result property="updDt" column="UPD_DT"/>
+        <result property="userName" column="USER_NAME"/>
+    </resultMap>
+
+
+    <!-- =========================
+         Note
+    ========================== -->
+
+    <!-- 프로젝트 노트 목록: 로그인 사용자 기준 고정 여부 포함 -->
+    <select id="selectNoteList" parameterType="map" resultMap="noteResultMap">
+        SELECT
+            n.NOTE_ID, n.WS_ID, n.PROJ_ID, n.USER_ID, n.NOTE_TITLE,
+            n.DONE_CONTENT, n.NEXT_CONTENT, n.ISSUE_CONTENT, n.CHANGE_LOG, n.MEMO,
+            n.REG_DT, n.UPD_DT, u.USER_NAME,
+            CASE WHEN p.NOTE_ID IS NULL THEN 0 ELSE 1 END AS PINNED,
+            p.PIN_ORDER
+        FROM NOTES n
+        JOIN USERS u ON n.USER_ID = u.USER_ID
+        LEFT JOIN NOTE_PINS p
+          ON p.NOTE_ID = n.NOTE_ID
+         AND p.PROJ_ID = n.PROJ_ID
+         AND p.USER_ID = #{userId, jdbcType=NUMERIC}
+        WHERE n.WS_ID = #{wsId, jdbcType=NUMERIC}
+          AND n.PROJ_ID = #{projId, jdbcType=NUMERIC}
+        ORDER BY
+            CASE WHEN n.USER_ID = #{userId, jdbcType=NUMERIC} THEN 0 ELSE 1 END,
+            u.USER_NAME ASC,
+            CASE WHEN p.NOTE_ID IS NULL THEN 1 ELSE 0 END,
+            p.PIN_ORDER ASC,
+            n.REG_DT DESC,
+            n.NOTE_ID DESC
+    </select>
+
+    <!--
+      메인 위젯 규칙
+      1) 로그인 사용자가 고정한 노트가 하나라도 있으면 고정 노트만 최대 3개
+      2) 고정한 노트가 없으면 최신 노트 최대 3개
+    -->
+    <select id="selectMainNoteList" parameterType="map" resultMap="noteResultMap">
+        SELECT *
+        FROM (
+            SELECT
+                n.NOTE_ID, n.WS_ID, n.PROJ_ID, n.USER_ID, n.NOTE_TITLE,
+                n.DONE_CONTENT, n.NEXT_CONTENT, n.ISSUE_CONTENT, n.CHANGE_LOG, n.MEMO,
+                n.REG_DT, n.UPD_DT, u.USER_NAME,
+                CASE WHEN p.NOTE_ID IS NULL THEN 0 ELSE 1 END AS PINNED,
+                p.PIN_ORDER
+            FROM NOTES n
+            JOIN USERS u ON n.USER_ID = u.USER_ID
+            LEFT JOIN NOTE_PINS p
+              ON p.NOTE_ID = n.NOTE_ID
+             AND p.PROJ_ID = n.PROJ_ID
+             AND p.USER_ID = #{userId, jdbcType=NUMERIC}
+            WHERE n.WS_ID = #{wsId, jdbcType=NUMERIC}
+              AND n.PROJ_ID = #{projId, jdbcType=NUMERIC}
+              AND (
+                    p.NOTE_ID IS NOT NULL
+                    OR NOT EXISTS (
+                        SELECT 1
+                        FROM NOTE_PINS px
+                        WHERE px.USER_ID = #{userId, jdbcType=NUMERIC}
+                          AND px.PROJ_ID = #{projId, jdbcType=NUMERIC}
+                    )
+              )
+            ORDER BY
+                CASE WHEN p.NOTE_ID IS NULL THEN 1 ELSE 0 END,
+                p.PIN_ORDER ASC,
+                n.REG_DT DESC,
+                n.NOTE_ID DESC
+        )
+        WHERE ROWNUM <![CDATA[<=]]> #{limit, jdbcType=NUMERIC}
+    </select>
+
+    <select id="countPinnedNotes" resultType="int">
+        SELECT COUNT(*)
+        FROM NOTE_PINS
+        WHERE USER_ID = #{userId, jdbcType=NUMERIC}
+          AND PROJ_ID = #{projId, jdbcType=NUMERIC}
+    </select>
+
+    <select id="selectNextPinOrder" resultType="int">
+        SELECT NVL(MIN(candidate), 1)
+        FROM (
+            SELECT LEVEL AS candidate
+            FROM DUAL
+            CONNECT BY LEVEL <![CDATA[<=]]> 3
+            MINUS
+            SELECT PIN_ORDER
+            FROM NOTE_PINS
+            WHERE USER_ID = #{userId, jdbcType=NUMERIC}
+              AND PROJ_ID = #{projId, jdbcType=NUMERIC}
+        )
+    </select>
+
+    <insert id="insertNotePin">
+        INSERT INTO NOTE_PINS (USER_ID, PROJ_ID, NOTE_ID, PIN_ORDER, PINNED_AT)
+        VALUES (
+            #{userId, jdbcType=NUMERIC},
+            #{projId, jdbcType=NUMERIC},
+            #{noteId, jdbcType=NUMERIC},
+            #{pinOrder, jdbcType=NUMERIC},
+            SYSDATE
+        )
+    </insert>
+
+    <delete id="deleteNotePin">
+        DELETE FROM NOTE_PINS
+        WHERE USER_ID = #{userId, jdbcType=NUMERIC}
+          AND PROJ_ID = #{projId, jdbcType=NUMERIC}
+          AND NOTE_ID = #{noteId, jdbcType=NUMERIC}
+    </delete>
+
+    <delete id="deleteNotePinsByNoteId">
+        DELETE FROM NOTE_PINS
+        WHERE NOTE_ID = #{noteId, jdbcType=NUMERIC}
+    </delete>
+
+    <!-- 작성자 또는 프로젝트 팀장/관리자만 노트 삭제 가능 -->
+    <select id="countNoteDeletePermission" resultType="int">
+        SELECT COUNT(*)
+        FROM NOTES n
+        LEFT JOIN PROJ_MEMBERS pm
+          ON pm.PROJ_ID = n.PROJ_ID
+         AND pm.USER_ID = #{userId, jdbcType=NUMERIC}
+        LEFT JOIN PROJECTS p
+          ON p.PROJ_ID = n.PROJ_ID
+        WHERE n.NOTE_ID = #{noteId, jdbcType=NUMERIC}
+          AND (
+                n.USER_ID = #{userId, jdbcType=NUMERIC}
+                OR p.LEADER_ID = #{userId, jdbcType=NUMERIC}
+                OR UPPER(NVL(pm.PROJ_ROLE, 'MEMBER')) = 'ADMIN'
+              )
+    </select>
+
+    <!-- 노트 상세 -->
+    <select id="selectNoteDetail" parameterType="long" resultMap="noteResultMap">
+        SELECT
+            r.NOTE_ID,
+            r.WS_ID,
+            r.PROJ_ID,
+            r.USER_ID,
+            r.NOTE_TITLE,
+            r.DONE_CONTENT,
+            r.NEXT_CONTENT,
+            r.ISSUE_CONTENT,
+            r.CHANGE_LOG,
+            r.MEMO,
+            r.REG_DT,
+            r.UPD_DT,
+            u.USER_NAME
+        FROM NOTES r
+        JOIN USERS u
+          ON r.USER_ID = u.USER_ID
+        WHERE r.NOTE_ID = #{noteId, jdbcType=NUMERIC}
+    </select>
+
+    <!-- 노트 등록 -->
+    <insert id="insertNote" parameterType="com.springboot.project.dto.noteDTO">
+        <selectKey keyProperty="noteId" resultType="long" order="BEFORE">
+            SELECT SEQ_NOTE_ID.NEXTVAL FROM DUAL
+        </selectKey>
+
+        INSERT INTO NOTES (
+            NOTE_ID,
+            WS_ID,
+            PROJ_ID,
+            USER_ID,
+            NOTE_TITLE,
+            DONE_CONTENT,
+            NEXT_CONTENT,
+            ISSUE_CONTENT,
+            CHANGE_LOG,
+            MEMO,
+            REG_DT
+        ) VALUES (
+            #{noteId, jdbcType=NUMERIC},
+            #{wsId, jdbcType=NUMERIC},
+            #{projId, jdbcType=NUMERIC},
+            #{userId, jdbcType=NUMERIC},
+            #{noteTitle, jdbcType=VARCHAR},
+            #{doneContent, jdbcType=CLOB},
+            #{nextContent, jdbcType=CLOB},
+            #{issueContent, jdbcType=CLOB},
+            #{changeLog, jdbcType=CLOB},
+            #{memo, jdbcType=CLOB},
+            SYSDATE
+        )
+    </insert>
+
+    <!-- 노트 수정 -->
+    <update id="updateNote" parameterType="com.springboot.project.dto.noteDTO">
+        UPDATE NOTES
+        SET
+            NOTE_TITLE = #{noteTitle, jdbcType=VARCHAR},
+            DONE_CONTENT = #{doneContent, jdbcType=CLOB},
+            NEXT_CONTENT = #{nextContent, jdbcType=CLOB},
+            ISSUE_CONTENT = #{issueContent, jdbcType=CLOB},
+            CHANGE_LOG = #{changeLog, jdbcType=CLOB},
+            MEMO = #{memo, jdbcType=CLOB},
+            UPD_DT = SYSDATE
+        WHERE NOTE_ID = #{noteId, jdbcType=NUMERIC}
+          AND WS_ID = #{wsId, jdbcType=NUMERIC}
+          AND PROJ_ID = #{projId, jdbcType=NUMERIC}
+    </update>
+
+    <!-- 노트 삭제 -->
+    <delete id="deleteNote" parameterType="long">
+        DELETE FROM NOTES
+        WHERE NOTE_ID = #{noteId, jdbcType=NUMERIC}
+    </delete>
+
+
+    <!-- =========================
+         Note File
+    ========================== -->
+
+    <!-- 노트 첨부파일 등록 -->
+    <insert id="insertNoteFile" parameterType="com.springboot.project.dto.noteFileDTO">
+        <selectKey keyProperty="fileId" resultType="long" order="BEFORE">
+            SELECT SEQ_NOTE_FILE_ID.NEXTVAL FROM DUAL
+        </selectKey>
+
+        INSERT INTO NOTE_FILES (
+            FILE_ID,
+            NOTE_ID,
+            ORIGIN_FILE_NAME,
+            STORED_FILE_NAME,
+            FILE_PATH,
+            FILE_SIZE,
+            FILE_EXT,
+            REG_DT
+        ) VALUES (
+            #{fileId, jdbcType=NUMERIC},
+            #{noteId, jdbcType=NUMERIC},
+            #{originFileName, jdbcType=VARCHAR},
+            #{storedFileName, jdbcType=VARCHAR},
+            #{filePath, jdbcType=VARCHAR},
+            #{fileSize, jdbcType=NUMERIC},
+            #{fileExt, jdbcType=VARCHAR},
+            SYSDATE
+        )
+    </insert>
+
+    <!-- 노트 첨부파일 목록 -->
+    <select id="selectNoteFileList" parameterType="long" resultMap="noteFileResultMap">
+        SELECT
+            FILE_ID,
+            NOTE_ID,
+            ORIGIN_FILE_NAME,
+            STORED_FILE_NAME,
+            FILE_PATH,
+            FILE_SIZE,
+            FILE_EXT,
+            REG_DT
+        FROM NOTE_FILES
+        WHERE NOTE_ID = #{noteId, jdbcType=NUMERIC}
+        ORDER BY FILE_ID ASC
+    </select>
+
+    <!-- 첨부파일 단건 조회: 다운로드용 -->
+    <select id="selectNoteFile" parameterType="long" resultMap="noteFileResultMap">
+        SELECT
+            FILE_ID,
+            NOTE_ID,
+            ORIGIN_FILE_NAME,
+            STORED_FILE_NAME,
+            FILE_PATH,
+            FILE_SIZE,
+            FILE_EXT,
+            REG_DT
+        FROM NOTE_FILES
+        WHERE FILE_ID = #{fileId, jdbcType=NUMERIC}
+    </select>
+
+    <!-- 첨부파일 단건 삭제 -->
+    <delete id="deleteNoteFile" parameterType="long">
+        DELETE FROM NOTE_FILES
+        WHERE FILE_ID = #{fileId, jdbcType=NUMERIC}
+    </delete>
+
+    <!-- 노트 기준 첨부파일 삭제 -->
+    <delete id="deleteNoteFilesByNoteId" parameterType="long">
+        DELETE FROM NOTE_FILES
+        WHERE NOTE_ID = #{noteId, jdbcType=NUMERIC}
+    </delete>
+
+
+    <!-- =========================
+         Note Reply
+    ========================== -->
+
+    <select id="selectNoteReplyList" parameterType="long" resultMap="noteReplyResultMap">
+        SELECT
+            rr.REPLY_ID,
+            rr.NOTE_ID,
+            rr.USER_ID,
+            rr.REPLY_CONTENT,
+            rr.REG_DT,
+            rr.UPD_DT,
+            u.USER_NAME
+        FROM NOTE_REPLIES rr
+        JOIN USERS u
+          ON rr.USER_ID = u.USER_ID
+        WHERE rr.NOTE_ID = #{noteId, jdbcType=NUMERIC}
+        ORDER BY rr.REG_DT ASC, rr.REPLY_ID ASC
+    </select>
+
+    <insert id="insertNoteReply" parameterType="com.springboot.project.dto.noteReplyDTO">
+        <selectKey keyProperty="replyId" resultType="long" order="BEFORE">
+            SELECT SEQ_NOTE_REPLY_ID.NEXTVAL FROM DUAL
+        </selectKey>
+
+        INSERT INTO NOTE_REPLIES (
+            REPLY_ID,
+            NOTE_ID,
+            USER_ID,
+            REPLY_CONTENT,
+            REG_DT
+        ) VALUES (
+            #{replyId, jdbcType=NUMERIC},
+            #{noteId, jdbcType=NUMERIC},
+            #{userId, jdbcType=NUMERIC},
+            #{replyContent, jdbcType=CLOB},
+            SYSDATE
+        )
+    </insert>
+
+    <delete id="deleteNoteReply">
+        DELETE FROM NOTE_REPLIES
+        WHERE REPLY_ID = #{replyId, jdbcType=NUMERIC}
+          AND USER_ID = #{userId, jdbcType=NUMERIC}
+    </delete>
+
+    <delete id="deleteNoteRepliesByNoteId" parameterType="long">
+        DELETE FROM NOTE_REPLIES
+        WHERE NOTE_ID = #{noteId, jdbcType=NUMERIC}
+    </delete>
+
+</mapper>
