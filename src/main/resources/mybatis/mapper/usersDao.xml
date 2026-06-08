@@ -46,14 +46,16 @@
 	    FROM USERS 
 	    WHERE EMAIL = #{email}
 	</select>
-	<select id="findWorkspacesByUserId" resultType="com.springboot.project.dto.workspaceDTO">
+	
+<select id="findWorkspacesByUserId" parameterType="long" resultType="com.springboot.project.dto.workspaceDTO">
     SELECT 
         WS_ID, 
         WS_NAME, 
         INVITE_CODE, 
         OWNER_ID 
     FROM WORKSPACES
-    WHERE OWNER_ID = #{userId} 
-    </select>
+    WHERE OWNER_ID = #{userId, jdbcType=NUMERIC} 
+</select>
+
 	
 </mapper>
