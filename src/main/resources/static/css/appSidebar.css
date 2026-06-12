@@ -657,3 +657,95 @@ body.moyo-app-sidebar-enabled > header:not(.moyo-header) {
         padding-right: var(--moyo-content-gutter) !important;
     }
 }
+
+
+/* ===== Poll page bounded shell + sticky footer (2026-06-10) =====
+   The generic wide-layout rule above intentionally expands most pages.
+   Poll list is an exception: keep its content readable when the sidebar closes. */
+body.moyo-app-sidebar-enabled.poll-page-body {
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+}
+
+body.moyo-app-sidebar-enabled.poll-page-body > .poll-page {
+    flex: 1 0 auto;
+    width: calc(100% - 48px) !important;
+    max-width: 1280px !important;
+    margin: 34px auto 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    padding-bottom: 56px !important;
+    box-sizing: border-box !important;
+}
+
+/* Override the common footer's fixed top margin only on the poll page. */
+body.moyo-app-sidebar-enabled.poll-page-body > .poll-page + .moyo-footer {
+    flex: 0 0 auto;
+    margin-top: auto !important;
+}
+
+body.moyo-app-sidebar-enabled.poll-page-body > .poll-page + .moyo-footer .moyo-footer-inner {
+    width: min(1280px, calc(100% - 48px)) !important;
+    max-width: 1280px !important;
+    margin: 0 auto !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+
+@media (max-width: 700px) {
+    body.moyo-app-sidebar-enabled.poll-page-body > .poll-page {
+        width: calc(100% - 24px) !important;
+        margin-top: 20px !important;
+        padding-bottom: 36px !important;
+    }
+
+    body.moyo-app-sidebar-enabled.poll-page-body > .poll-page + .moyo-footer .moyo-footer-inner {
+        width: calc(100% - 24px) !important;
+    }
+}
+
+
+/* ===== Poll page bounded layout + footer at viewport bottom (2026-06-10 v3) ===== */
+/* 사이드바 접힘 여부와 관계없이 투표 화면의 읽기 폭을 동일하게 유지한다. */
+body.moyo-app-sidebar-enabled.poll-page-body{
+    min-height:100dvh !important;
+    display:flex !important;
+    flex-direction:column !important;
+}
+
+body.moyo-app-sidebar-enabled.poll-page-body > .poll-page{
+    flex:1 0 auto !important;
+    width:min(1280px, calc(100% - 48px)) !important;
+    max-width:1280px !important;
+    margin:34px auto 0 !important;
+    padding-left:0 !important;
+    padding-right:0 !important;
+    padding-bottom:44px !important;
+    box-sizing:border-box !important;
+}
+
+/* 푸터는 내용이 짧으면 화면 하단, 길면 본문 다음에 배치한다. */
+body.moyo-app-sidebar-enabled.poll-page-body > .moyo-footer{
+    flex:0 0 auto !important;
+    width:100% !important;
+    margin-top:auto !important;
+}
+body.moyo-app-sidebar-enabled.poll-page-body > .moyo-footer .moyo-footer-inner{
+    width:min(1280px, calc(100% - 48px)) !important;
+    max-width:1280px !important;
+    margin:0 auto !important;
+    padding-left:0 !important;
+    padding-right:0 !important;
+}
+
+@media (max-width:700px){
+    body.moyo-app-sidebar-enabled.poll-page-body > .poll-page,
+    body.moyo-app-sidebar-enabled.poll-page-body > .moyo-footer .moyo-footer-inner{
+        width:calc(100% - 24px) !important;
+    }
+    body.moyo-app-sidebar-enabled.poll-page-body > .poll-page{
+        margin-top:20px !important;
+        padding-bottom:32px !important;
+    }
+}

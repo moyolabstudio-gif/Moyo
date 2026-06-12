@@ -15,6 +15,21 @@ import com.springboot.project.service.IprojectService;
 @Service
 public class projectServiceImpl implements IprojectService {
 
+    private String normalizeProjectPosition(String position) {
+        String safePosition = position == null ? null : position.trim();
+        if (safePosition != null && safePosition.length() > 100) {
+            safePosition = safePosition.substring(0, 100);
+        }
+        return (safePosition == null || safePosition.isEmpty()) ? null : safePosition;
+    }
+
+    private String memberPosition(projectRequestDTO dto, Long userId) {
+        if (dto == null || dto.getMemberPositions() == null || userId == null) {
+            return null;
+        }
+        return normalizeProjectPosition(dto.getMemberPositions().get(String.valueOf(userId)));
+    }
+
     private String normalizeTaskTime(String time, String slot, String fallback) {
         String value = time == null ? "" : time.trim();
 
@@ -110,13 +125,13 @@ public class projectServiceImpl implements IprojectService {
 
         projectDao.insertProject(dto);
 
-        projectDao.insertProjectMember(dto.getProjId(), dto.getLeaderId(), "ADMIN");
+        projectDao.insertProjectMember(dto.getProjId(), dto.getLeaderId(), "ADMIN", memberPosition(dto, dto.getLeaderId()));
 
         if (dto.getAdminIds() != null) {
             for (Long adminId : dto.getAdminIds()) {
                 if (adminId != null && !adminId.equals(dto.getLeaderId())
                         && projectDao.checkMemberExists(dto.getProjId(), adminId) == 0) {
-                    projectDao.insertProjectMember(dto.getProjId(), adminId, "ADMIN");
+                    projectDao.insertProjectMember(dto.getProjId(), adminId, "ADMIN", memberPosition(dto, adminId));
                 }
             }
         }
@@ -125,12 +140,13 @@ public class projectServiceImpl implements IprojectService {
             for (Long memberId : dto.getMemberIds()) {
                 if (memberId != null && !memberId.equals(dto.getLeaderId())
                         && projectDao.checkMemberExists(dto.getProjId(), memberId) == 0) {
-                    projectDao.insertProjectMember(dto.getProjId(), memberId, "MEMBER");
+                    projectDao.insertProjectMember(dto.getProjId(), memberId, "MEMBER", memberPosition(dto, memberId));
                 }
             }
         }
 
         projectDao.insertProjectEvent(dto);
+        replaceProjectLinks(dto.getProjId(), dto.getLinks());
     }
 
 
@@ -153,7 +169,7 @@ public class projectServiceImpl implements IprojectService {
             
             // 2. 없을 때만 추가
             if (exists == 0) {
-                projectDao.insertProjectMember(projId, userId, "MEMBER");
+                projectDao.insertProjectMember(projId, userId, "MEMBER", null);
                 insertCount++;
             }
         }
@@ -166,6 +182,14 @@ public class projectServiceImpl implements IprojectService {
     @Override
     public List<Map<String, Object>> getProjectMembers(Long projId) {
         return projectDao.getProjectMembers(projId);
+    }
+
+    @Override
+    public Map<String, Object> getProjectMemberProfile(
+            Long projId,
+            Long targetUserId,
+            Long viewerUserId) {
+        return projectDao.getProjectMemberProfile(projId, targetUserId, viewerUserId);
     }
 
     
@@ -224,6 +248,11 @@ public class projectServiceImpl implements IprojectService {
     public List<projectRequestDTO> getProjectsByWsId(Long wsId) {
         return projectDao.selectProjectsByWsId(wsId);
     }
+
+    @Override
+    public List<Map<String, Object>> getProjectListByWorkspaceId(Long wsId) {
+        return projectDao.selectProjectListByWorkspaceId(wsId);
+    }
     
     @Override
     public Map<String, Object> getProjectTaskSummary(Long projId) {
@@ -273,6 +302,11 @@ public class projectServiceImpl implements IprojectService {
         // DAO에 해당 쿼리가 없다면 selectProjectsByWsId 처럼 
         // projId로 단일 건을 조회하는 쿼리를 추가하거나 기존 것을 활용하세요.
         return projectDao.selectProjectById(projId); 
+    }
+
+    @Override
+    public List<Map<String, Object>> getProjectLinks(Long projId) {
+        return projectDao.selectProjectLinks(projId);
     }
     @Override
     public boolean addProjectSchedule(
@@ -402,8 +436,53 @@ public class projectServiceImpl implements IprojectService {
             result2 = projectDao.updateProjectEvent(dto);
         }
 
+        replaceProjectLinks(dto.getProjId(), dto.getLinks());
         return result1 > 0;
     }
+
+    private void replaceProjectLinks(Long projId, List<Map<String, Object>> links) {
+        projectDao.deleteProjectLinks(projId);
+        if (links == null || links.isEmpty()) return;
+
+        int sortOrder = 0;
+        for (Map<String, Object> link : links) {
+            String linkName = trimProjectLinkValue(link.get("linkName"), 50);
+            String linkUrl = normalizeProjectLinkUrl(
+                    trimProjectLinkValue(link.get("linkUrl"), 500));
+
+            if (linkName == null && linkUrl == null) continue;
+            if (linkName == null || linkUrl == null) {
+                throw new IllegalArgumentException("링크 이름과 주소를 모두 입력해주세요.");
+            }
+
+            Map<String, Object> params = new HashMap<>();
+            params.put("projId", projId);
+            params.put("linkName", linkName);
+            params.put("linkUrl", linkUrl);
+            params.put("sortOrder", sortOrder++);
+            projectDao.insertProjectLink(params);
+        }
+    }
+
+    private String trimProjectLinkValue(Object value, int maxLength) {
+        if (value == null) return null;
+        String text = String.valueOf(value).trim();
+        if (text.isEmpty()) return null;
+        return text.length() > maxLength ? text.substring(0, maxLength) : text;
+    }
+
+    private String normalizeProjectLinkUrl(String url) {
+        if (url == null) return null;
+        String value = url;
+        if (!value.matches("(?i)^https?://.*")) {
+            value = "https://" + value;
+        }
+        if (!value.matches("(?i)^https?://[^\\s]+$")) {
+            throw new IllegalArgumentException("올바른 외부 링크 주소가 아닙니다.");
+        }
+        return value;
+    }
+
     @Override
     public boolean deleteProject(Long projId, Long userId) {
         // 1. 프로젝트 정보 조회 (리더 ID 확인용)

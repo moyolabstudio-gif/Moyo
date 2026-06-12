@@ -5,8 +5,9 @@
 <head>
     <meta charset="UTF-8">
     <title>글쓰기</title>
-    <script src="https://cdn.ckeditor.com/ckeditor5/41.1.0/classic/ckeditor.js"></script>
-    <script src="https://cdn.ckeditor.com/ckeditor5/41.1.0/decoupled-document/translations/ko.js"></script>
+    <script src="https://cdn.ckeditor.com/ckeditor5/41.1.0/super-build/ckeditor.js"></script>
+    <script src="https://cdn.ckeditor.com/ckeditor5/41.1.0/super-build/translations/ko.js"></script>
+    
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
     <style>
@@ -421,12 +422,13 @@
         /* ===== End MOYO Board Point Theme - subtle ===== */
 
 </style>
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/boardUi.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/boardUi.css?v=board-editor-picker-v10">
 </head>
 <body class="moyo-board-body">
     <jsp:include page="/WEB-INF/views/common/header.jsp" />
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/boardUi.css?v=board-editor-picker-v10">
 
-    <div class="write-page">
+    <div class="write-page ${boardType eq 'FILE' ? 'board-file-form-page' : ''}">
         <div class="write-card">
             <div class="write-header">
                 <div>
@@ -448,29 +450,57 @@
                 <a id="backLink" href="javascript:history.back();" class="back-link">← 돌아가기</a>
             </div>
 
-            <form id="writeForm">
+            <form id="writeForm" autocomplete="off">
                 <input type="hidden" id="wsId" value="${wsId}">
                 <input type="hidden" id="boardType" value="${boardType}">
                 <input type="hidden" id="projId" value="${projId}">
 
                 <div class="form-group">
-                    <label class="form-label" for="title">제목</label>
-                    <input type="text" id="title" class="title-input" placeholder="제목을 입력하세요" required>
+                    <label class="form-label" for="title"><c:choose><c:when test="${boardType eq 'FILE'}">자료명</c:when><c:otherwise>제목</c:otherwise></c:choose></label>
+                    <input type="text" id="title" class="title-input" placeholder="<c:choose><c:when test='${boardType eq "FILE"}'>자료명을 입력하세요</c:when><c:otherwise>제목을 입력하세요</c:otherwise></c:choose>" required>
+                </div>
+
+
+
+                <c:if test="${canManageBoard}">
+                    <div class="form-group board-pin-panel is-inactive">
+                        <div class="board-pin-head">
+                            <label class="board-pin-toggle">
+                                <input type="checkbox" id="isPinned" value="Y">
+                                <span>상단 고정</span>
+                            </label>
+                            <p>그룹장/팀장 또는 관리자만 사용할 수 있습니다. 기간을 비우면 계속 고정됩니다.</p>
+                        </div>
+                        <div class="board-pin-dates">
+                            <label>시작일
+                                <input type="date" id="pinStartDt" class="pin-date-input" disabled>
+                            </label>
+                            <label>종료일
+                                <input type="date" id="pinEndDt" class="pin-date-input" disabled>
+                            </label>
+                        </div>
+                    </div>
+                </c:if>
+
+                <div class="form-group">
+                    <label class="form-label" for="editor"><c:choose><c:when test="${boardType eq 'FILE'}">자료 설명</c:when><c:otherwise>내용</c:otherwise></c:choose></label>
+                    <textarea id="editor" name="content" autocomplete="off" spellcheck="false"></textarea>
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label" for="fileInput">파일 첨부</label>
-                    <input type="file" id="fileInput" name="files" multiple class="file-input">
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label" for="editor">내용</label>
-                    <textarea id="editor" name="content"></textarea>
+                    <label class="form-label" for="fileInput"><c:choose><c:when test="${boardType eq 'FILE'}">자료 파일</c:when><c:otherwise>파일 첨부</c:otherwise></c:choose></label>
+                    <div id="fileDropZone" class="board-file-dropzone ${boardType eq 'FILE' ? 'is-file-board' : ''}">
+                        <input type="file" id="fileInput" name="files" multiple class="file-input board-file-hidden">
+                        <div class="dropzone-icon">📎</div>
+                        <div class="dropzone-main"><c:choose><c:when test="${boardType eq 'FILE'}">자료 파일을 끌어다 놓거나 클릭해서 선택하세요</c:when><c:otherwise>파일을 끌어다 놓거나 클릭해서 선택하세요</c:otherwise></c:choose></div>
+                        <div class="dropzone-sub"><c:choose><c:when test="${boardType eq 'FILE'}">자료실 글은 파일 첨부를 권장합니다.</c:when><c:otherwise>여러 파일을 한 번에 추가할 수 있습니다.</c:otherwise></c:choose></div>
+                    </div>
+                    <ul id="selectedFileList" class="selected-file-list"></ul>
                 </div>
 
                 <div class="action-row">
                     <a id="cancelLink" href="javascript:history.back();" class="btn-cancel">취소</a>
-                    <button type="button" class="btn-submit" onclick="submitPost()">등록하기</button>
+                    <button type="button" class="btn-submit" onclick="submitPost()"><c:choose><c:when test="${boardType eq 'FILE'}">자료 등록</c:when><c:otherwise>등록하기</c:otherwise></c:choose></button>
                 </div>
             </form>
         </div>
@@ -480,6 +510,157 @@
 
     <script>
         let myEditor;
+
+        let selectedBoardFiles = [];
+
+        function initializeBoardFileDropZone() {
+            const dropZone = document.getElementById('fileDropZone');
+            const fileInput = document.getElementById('fileInput');
+            const selectedFileList = document.getElementById('selectedFileList');
+            if (!dropZone || !fileInput || !selectedFileList) return;
+
+            dropZone.addEventListener('click', () => fileInput.click());
+            fileInput.addEventListener('change', () => addSelectedFiles(fileInput.files));
+
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropZone.addEventListener(eventName, function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    dropZone.classList.add('is-dragover');
+                });
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    dropZone.classList.remove('is-dragover');
+                });
+            });
+
+            dropZone.addEventListener('drop', function(e) {
+                addSelectedFiles(e.dataTransfer.files);
+            });
+        }
+
+        function addSelectedFiles(files) {
+            Array.from(files || []).forEach(file => {
+                const exists = selectedBoardFiles.some(item =>
+                    item.name === file.name && item.size === file.size && item.lastModified === file.lastModified
+                );
+                if (!exists) selectedBoardFiles.push(file);
+            });
+            syncBoardFileInput();
+            renderSelectedFiles();
+        }
+
+        function removeSelectedFile(index) {
+            selectedBoardFiles.splice(index, 1);
+            syncBoardFileInput();
+            renderSelectedFiles();
+        }
+
+        function syncBoardFileInput() {
+            const fileInput = document.getElementById('fileInput');
+            if (!fileInput) return;
+            const dataTransfer = new DataTransfer();
+            selectedBoardFiles.forEach(file => dataTransfer.items.add(file));
+            fileInput.files = dataTransfer.files;
+        }
+
+        function renderSelectedFiles() {
+            const selectedFileList = document.getElementById('selectedFileList');
+            if (!selectedFileList) return;
+            selectedFileList.innerHTML = '';
+            selectedBoardFiles.forEach((file, index) => {
+                const li = document.createElement('li');
+                li.innerHTML = '<span>📄 ' + escapeHtml(file.name) + ' <em>' + formatFileSize(file.size) + '</em></span>' +
+                               '<button type="button" onclick="removeSelectedFile(' + index + ')">삭제</button>';
+                selectedFileList.appendChild(li);
+            });
+        }
+
+        function formatFileSize(size) {
+            if (size < 1024) return size + 'B';
+            if (size < 1024 * 1024) return Math.round(size / 1024) + 'KB';
+            return (size / 1024 / 1024).toFixed(1) + 'MB';
+        }
+
+        function escapeHtml(value) {
+            return String(value || '').replace(/[&<>'"]/g, function(char) {
+                return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[char];
+            });
+        }
+
+
+        const BOARD_EDITOR_MAX_IMAGE_SIZE = 5 * 1024 * 1024;
+        const BOARD_EDITOR_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+
+        function sanitizeInlineStyle(styleValue) {
+            if (!styleValue) return '';
+            const allowed = new Set([
+                'color', 'background-color', 'text-align', 'font-size',
+                'width', 'height', 'border', 'border-color', 'border-style', 'border-width',
+                'vertical-align', 'padding', 'margin-left', 'margin-right'
+            ]);
+            return styleValue.split(';')
+                .map(rule => rule.trim())
+                .filter(rule => {
+                    const idx = rule.indexOf(':');
+                    if (idx < 1) return false;
+                    const prop = rule.slice(0, idx).trim().toLowerCase();
+                    const value = rule.slice(idx + 1).trim().toLowerCase();
+                    if (!allowed.has(prop)) return false;
+                    if (value.includes('javascript:') || value.includes('expression(') || value.includes('url(')) return false;
+                    return true;
+                })
+                .join('; ');
+        }
+
+        function sanitizeEditorHtml(html) {
+            if (!html) return '';
+
+            const wrapper = document.createElement('div');
+            wrapper.innerHTML = html;
+
+            wrapper.querySelectorAll('script, style, iframe, object, embed, form, input, button, meta, link').forEach(el => el.remove());
+
+            wrapper.querySelectorAll('*').forEach(el => {
+                Array.from(el.attributes).forEach(attr => {
+                    const name = attr.name.toLowerCase();
+                    const value = (attr.value || '').trim().toLowerCase();
+
+                    if (name.startsWith('on')) {
+                        el.removeAttribute(attr.name);
+                        return;
+                    }
+
+                    if (name === 'style') {
+                        const safeStyle = sanitizeInlineStyle(attr.value);
+                        if (safeStyle) el.setAttribute('style', safeStyle);
+                        else el.removeAttribute('style');
+                        return;
+                    }
+
+                    if ((name === 'href' || name === 'src') && value.startsWith('javascript:')) {
+                        el.removeAttribute(attr.name);
+                        return;
+                    }
+
+                    if (name === 'src' && value.startsWith('data:image/')) {
+                        el.removeAttribute(attr.name);
+                    }
+                });
+            });
+
+            wrapper.querySelectorAll('a[href]').forEach(link => {
+                link.setAttribute('target', '_blank');
+                link.setAttribute('rel', 'noopener noreferrer');
+            });
+
+            return wrapper.innerHTML.trim();
+        }
+
 
         document.addEventListener("DOMContentLoaded", function() {
             const urlParams = new URLSearchParams(window.location.search);
@@ -511,57 +692,149 @@
             document.getElementById('backLink').href = backUrl;
             document.getElementById('cancelLink').href = backUrl;
 
+            initializeBoardFileDropZone();
+            initializeBoardPinToggle();
+
             console.log("글쓰기 wsId =", wsId);
             console.log("글쓰기 projId =", projId);
             console.log("글쓰기 boardType =", boardType);
         });
 
+
+        function initializeBoardPinToggle() {
+            const isPinnedEl = document.getElementById('isPinned');
+            const pinStartEl = document.getElementById('pinStartDt');
+            const pinEndEl = document.getElementById('pinEndDt');
+            if (!isPinnedEl || !pinStartEl || !pinEndEl) return;
+
+            const panel = isPinnedEl.closest('.board-pin-panel');
+            const syncPinState = () => {
+                const enabled = isPinnedEl.checked;
+                [pinStartEl, pinEndEl].forEach(input => {
+                    input.disabled = !enabled;
+                    if (!enabled) input.value = '';
+                });
+                if (panel) {
+                    panel.classList.toggle('is-active', enabled);
+                    panel.classList.toggle('is-inactive', !enabled);
+                }
+            };
+
+            isPinnedEl.addEventListener('change', syncPinState);
+            syncPinState();
+        }
+
         function MyCustomUploadAdapterPlugin(editor) {
             editor.plugins.get('FileRepository').createUploadAdapter = (loader) => {
                 return {
                     upload() {
-                        return loader.file
-                            .then(file => new Promise((resolve, reject) => {
-                                const formData = new FormData();
-                                formData.append('upload', file);
+                        return loader.file.then(file => new Promise((resolve, reject) => {
+                            if (!BOARD_EDITOR_IMAGE_TYPES.includes(file.type)) {
+                                reject('본문 이미지는 jpg, png, gif, webp 형식만 업로드할 수 있습니다.');
+                                return;
+                            }
 
-                                $.ajax({
-                                    url: '/api/workspace/board/image-upload',
-                                    type: 'POST',
-                                    data: formData,
-                                    processData: false,
-                                    contentType: false,
-                                    success: function(res) {
-                                        if (res.uploaded) {
-                                            resolve({ default: res.url });
-                                        } else {
-                                            reject(res.error ? res.error.message : '업로드 실패');
-                                        }
-                                    },
-                                    error: function(err) {
-                                        reject('서버 통신 오류');
+                            if (file.size > BOARD_EDITOR_MAX_IMAGE_SIZE) {
+                                reject('본문 이미지는 5MB 이하만 업로드할 수 있습니다.');
+                                return;
+                            }
+
+                            const formData = new FormData();
+                            formData.append('upload', file);
+
+                            $.ajax({
+                                url: '/api/workspace/board/image-upload',
+                                type: 'POST',
+                                data: formData,
+                                processData: false,
+                                contentType: false,
+                                success: function(res) {
+                                    if (res.uploaded && res.url) {
+                                        resolve({ default: res.url });
+                                    } else {
+                                        reject(res.error ? res.error.message : '이미지 업로드에 실패했습니다.');
                                     }
-                                });
-                            }));
+                                },
+                                error: function(xhr) {
+                                    const message = xhr.responseJSON && xhr.responseJSON.error
+                                        ? xhr.responseJSON.error.message
+                                        : '이미지 업로드 중 서버 통신 오류가 발생했습니다.';
+                                    reject(message);
+                                }
+                            });
+                        }));
                     },
                     abort() {}
                 };
             };
         }
 
-        ClassicEditor
-            .create(document.querySelector('#editor'), {
-                language: 'ko',
-                toolbar: [
+        const BoardClassicEditor = window.CKEDITOR && window.CKEDITOR.ClassicEditor ? window.CKEDITOR.ClassicEditor : window.ClassicEditor;
+
+        const boardEditorConfig = {
+            language: 'ko',
+            placeholder: '내용을 입력하세요.',
+            toolbar: {
+                items: [
                     'heading', '|',
-                    'bold', 'italic', '|',
+                    'bold', 'italic', 'underline', '|',
+                    'fontColor', 'fontBackgroundColor', '|',
+                    'alignment', '|',
                     'numberedList', 'bulletedList', '|',
-                    'link', 'uploadImage', 'insertTable', 'blockQuote', 'undo', 'redo'
+                    'link', 'uploadImage', 'insertTable', 'blockQuote', '|',
+                    'removeFormat', 'undo', 'redo'
                 ],
-                extraPlugins: [MyCustomUploadAdapterPlugin]
-            })
+                shouldNotGroupWhenFull: false
+            },
+            fontColor: {
+                columns: 6,
+                documentColors: 12
+            },
+            fontBackgroundColor: {
+                columns: 6,
+                documentColors: 12
+            },
+            image: {
+                upload: { types: ['jpeg', 'jpg', 'png', 'gif', 'webp'] },
+                resizeUnit: '%',
+                styles: [ 'inline', 'alignLeft', 'alignCenter', 'alignRight', 'side' ],
+                toolbar: [
+                    'imageTextAlternative', 'toggleImageCaption', '|',
+                    'imageStyle:inline', 'imageStyle:alignLeft', 'imageStyle:alignCenter', 'imageStyle:alignRight', 'imageStyle:side', '|',
+                    'resizeImage'
+                ]
+            },
+            table: {
+                contentToolbar: [
+                    'tableColumn', 'tableRow', 'mergeTableCells'
+                ],
+                defaultHeadings: { rows: 0, columns: 0 }
+            },
+            link: {
+                addTargetToExternalLinks: true,
+                defaultProtocol: 'https://'
+            },
+            extraPlugins: [MyCustomUploadAdapterPlugin],
+            removePlugins: [
+                'CKBox', 'CKFinder', 'EasyImage', 'RealTimeCollaborativeComments',
+                'RealTimeCollaborativeTrackChanges', 'RealTimeCollaborativeRevisionHistory',
+                'PresenceList', 'Comments', 'TrackChanges', 'TrackChangesData',
+                'RevisionHistory', 'Pagination', 'WProofreader', 'MathType',
+                'SlashCommand', 'Template', 'DocumentOutline', 'FormatPainter',
+                'TableOfContents', 'PasteFromOfficeEnhanced',
+                'AIAssistant', 'AIAdapter', 'OpenAITextAdapter', 'AzureOpenAITextAdapter',
+                'CKBoxImageEdit', 'ExportPdf', 'ExportWord', 'ImportWord', 'ImportFromWord',
+                'MultiLevelList', 'CaseChange',
+                'ListProperties', 'TodoList',
+                'TableProperties', 'TableCellProperties', 'TableColumnResize', 'TableCaption'
+            ]
+        };
+
+        BoardClassicEditor
+            .create(document.querySelector('#editor'), boardEditorConfig)
             .then(editor => {
                 myEditor = editor;
+                myEditor.setData('');
             })
             .catch(error => {
                 console.error("에디터 초기화 실패:", error);
@@ -569,7 +842,7 @@
 
         document.querySelector('form').addEventListener('submit', function(e) {
             if (myEditor) {
-                const editorData = myEditor.getData();
+                const editorData = sanitizeEditorHtml(myEditor.getData());
 
                 if (!editorData.trim() || editorData === '<p>&nbsp;</p>') {
                     alert('내용을 입력해 주세요.');
@@ -587,7 +860,7 @@
             let boardType = document.getElementById('boardType').value;
 
             const title = document.getElementById('title').value.trim();
-            const content = myEditor ? myEditor.getData() : '';
+            const content = sanitizeEditorHtml(myEditor ? myEditor.getData() : '');
 
             if (!title) {
                 alert("제목을 입력해 주세요.");
@@ -606,11 +879,26 @@
 
             const formData = new FormData();
 
+            const isPinnedEl = document.getElementById('isPinned');
+            const pinStartEl = document.getElementById('pinStartDt');
+            const pinEndEl = document.getElementById('pinEndDt');
+            const isPinned = isPinnedEl && isPinnedEl.checked ? 'Y' : 'N';
+            const pinStartDt = pinStartEl ? pinStartEl.value : '';
+            const pinEndDt = pinEndEl ? pinEndEl.value : '';
+
+            if (isPinned === 'Y' && pinStartDt && pinEndDt && pinStartDt > pinEndDt) {
+                alert('상단 고정 종료일은 시작일보다 빠를 수 없습니다.');
+                return;
+            }
+
             const postData = {
                 wsId: wsId,
                 boardType: boardType,
                 title: title,
-                content: content
+                content: content,
+                isPinned: isPinned,
+                pinStartDt: pinStartDt,
+                pinEndDt: pinEndDt
             };
 
             if (projId && projId !== "") {
@@ -622,11 +910,7 @@
                 new Blob([JSON.stringify(postData)], { type: "application/json" })
             );
 
-            const fileInput = document.getElementById('fileInput');
-
-            for (let i = 0; i < fileInput.files.length; i++) {
-                formData.append("files", fileInput.files[i]);
-            }
+            selectedBoardFiles.forEach(file => formData.append("files", file));
 
             $.ajax({
                 url: '/api/workspace/' + wsId + '/board/write',

@@ -6,16 +6,23 @@ import java.util.Map;
 import com.springboot.project.dto.workspaceDTO;
 
 public interface IworkspaceService {
-    Long createWorkspace(workspaceDTO dto, Long userId);
+    Long createWorkspace(workspaceDTO dto, Long userId, Map<String, Object> profile,
+                         List<Map<String, Object>> links);
     List<workspaceDTO> getWorkspaceList(Long userId);
     workspaceDTO getWorkspaceDetail(Long wsId);
+    List<Map<String, Object>> getWorkspaceLinks(Long wsId);
+    boolean updateWorkspace(workspaceDTO dto, List<Map<String, Object>> links);
     List<Map<String, Object>> getWorkspaceMembers(Long wsId);
+    Map<String, Object> getWorkspaceMemberProfile(Long wsId, Long targetUserId, Long viewerUserId);
+    boolean saveMyWorkspaceProfile(Long wsId, Long userId, Map<String, Object> profile);
     boolean removeMember(Long wsId, Long userId); 
     boolean transferAdmin(Long wsId, Long oldAdminId, Long newAdminId);
     String inviteUserByEmail(Long wsId, Long inviterId, String inviteeEmail);
     List<Map<String, Object>> getPendingInvitations(Long userId);
-    boolean processInvitation(Long inviteId, String status, Long userId);
+    boolean processInvitation(Long inviteId, String status, Long userId, Map<String, Object> profile);
     List<Map<String, Object>> getEventsByWsId(Long wsId);
+    Map<String, Object> getCommunitySummary(Long wsId);
+    List<Map<String, Object>> getRecentCommunityActivities(Long wsId);
     List<Map<String, Object>> getTodayEvents(Long wsId);
     Map<String, Object> getActivePoll(Long wsId);
     void processVote(Map<String, Object> params); 

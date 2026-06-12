@@ -20,6 +20,7 @@
         .ws-desc { font-size: 0.9em; color: #888; margin-bottom: 25px; height: 3.6em; overflow: hidden; }
         .btn-enter { width: 100%; background: #f0f7ff; color: #4A90E2; padding: 14px; border-radius: 14px; text-decoration: none; font-weight: 700; }
     </style>
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/workspaceCommunity.css?v=community-v2">
 </head>
 <body>
     <jsp:include page="/WEB-INF/views/common/header.jsp" />
@@ -41,5 +42,6 @@
             </c:forEach>
         </div>
     </div>
+    <jsp:include page="/WEB-INF/views/common/footer.jsp" />
 </body>
 </html>

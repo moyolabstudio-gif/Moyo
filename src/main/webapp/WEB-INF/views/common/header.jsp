@@ -3,7 +3,7 @@
 
 <link rel="stylesheet" href="${pageContext.request.contextPath}/css/moyoModal.css">
 
-<link rel="stylesheet" href="${pageContext.request.contextPath}/css/appSidebar.css">
+<link rel="stylesheet" href="${pageContext.request.contextPath}/css/appSidebar.css?v=poll-layout-shell-v3">
 
 <style>
     .moyo-header {
@@ -58,11 +58,26 @@
         margin-left:4px; color:#8a94a3; font-size:12px; font-weight:800; text-decoration:none; white-space:nowrap;
     }
     .logout-link:hover { color:#e5484d; }
-    .guest-menu { display:flex; align-items:center; gap:8px; }
-    .guest-menu a { display:inline-flex; align-items:center; min-height:38px; padding:0 14px; border-radius:10px; color:#344054; text-decoration:none; font-weight:800; }
+    .guest-menu { display:flex; align-items:center; gap:10px; }
+    .guest-menu a {
+        display:inline-flex; align-items:center; justify-content:center;
+        min-height:40px; padding:0 16px; border-radius:12px;
+        color:#344054; text-decoration:none; font-weight:800;
+        transition:all .18s ease;
+    }
     .guest-menu a:hover { background:#f5f9ff; color:#2878d0; }
-    .guest-menu .join-link { background:#4A90E2; color:#fff; }
-    .guest-menu .join-link:hover { background:#357dcc; color:#fff; }
+    .guest-menu .join-link {
+        border:0;
+        color:#fff;
+        background:linear-gradient(135deg,#24c0c8,#4b67e4);
+        box-shadow:0 10px 20px rgba(67,104,222,.22);
+    }
+    .guest-menu .join-link:hover {
+        color:#fff;
+        background:linear-gradient(135deg,#24c0c8,#4b67e4);
+        transform:translateY(-1px);
+        box-shadow:0 12px 24px rgba(67,104,222,.26);
+    }
     #inviteCountBadge {
         display:none; position:absolute; top:-10px; right:-13px; min-width:16px; height:16px;
         padding:0 4px; border-radius:999px; background:#FF4D4F; color:#fff;

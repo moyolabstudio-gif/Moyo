@@ -6,20 +6,21 @@
 <head>
 <meta charset="UTF-8">
 	    <title>🎈 프로젝트 대시보드</title>
-		<link rel="stylesheet" href="${pageContext.request.contextPath}/css/projectMain.css">
+		<link rel="stylesheet" href="${pageContext.request.contextPath}/css/projectMain.css?v=project-main-config-fix-v4">
     <script>
         window.PROJECT_MAIN_CONFIG = {
-            projectLeaderId: '${projectDetail.leaderId}',
-            loginUserId: '${sessionScope.user.userId}',
-            projectStartDate: '${projectDetail.startDate}',
-            projectEndDate: '${projectDetail.endDate}',
-            projectId: '${projectDetail.projId}',
-            paramProjId: '${param.projId}',
-            wsId: '${wsId}',
-            paramWsId: '${param.wsId}'
+            projectLeaderId: '<c:out value="${projectDetail.leaderId}"/>',
+            loginUserId: '<c:out value="${sessionScope.user.userId}"/>',
+            projectStartDate: '<c:out value="${projectDetail.startDate}"/>',
+            projectEndDate: '<c:out value="${projectDetail.endDate}"/>',
+            projectId: '<c:out value="${projectDetail.projId}"/>',
+            paramProjId: '<c:out value="${param.projId}"/>',
+            wsId: '<c:out value="${wsId}"/>',
+            paramWsId: '<c:out value="${param.wsId}"/>',
+            canManageProject: <c:choose><c:when test="${canManageProject eq true}">true</c:when><c:otherwise>false</c:otherwise></c:choose>
         };
     </script>
-    <script src="${pageContext.request.contextPath}/js/projectMain.js?v=project-active-poll-widget-v1"></script>
+    <script src="${pageContext.request.contextPath}/js/projectMain.js?v=project-main-config-fix-v4"></script>
 
 </head>
 <body data-user-id="${sessionScope.user.userId}">
@@ -29,8 +30,25 @@
 
         <div class="project-hero">
 			<div class="project-hero-info">
+                <span class="project-type-label">프로젝트</span>
                 <h1>${projectDetail.projName}</h1>
-                <p>${projectDetail.projDesc}</p>
+                <div class="project-hero-meta-line">
+                    <p class="project-hero-description">${projectDetail.projDesc}</p>
+                    <c:if test="${not empty projectLinks}">
+                        <div class="project-external-links" aria-label="프로젝트 외부 링크">
+                            <c:forEach var="link" items="${projectLinks}">
+                                <a href="<c:out value='${link.LINK_URL}'/>"
+                                   target="_blank"
+                                   rel="noopener noreferrer"
+                                   class="project-external-link"
+                                   title="<c:out value='${link.LINK_NAME}'/>">
+                                    <c:out value="${link.LINK_NAME}"/>
+                                    <span aria-hidden="true">↗</span>
+                                </a>
+                            </c:forEach>
+                        </div>
+                    </c:if>
+                </div>
             </div>
 
 			<div class="hero-actions project-hero-right">
@@ -235,26 +253,26 @@
 </div>
 
             <div class="side-content">
-                <div class="mini-calendar">
-                    <div class="calendar-header">
-                        <div class="calendar-month-control">
-                            <span class="calendar-arrow" onclick="changeProjectMonth(-1)">◀</span>
-                            <span id="projectCalendarTitle"></span>
-                            <span class="calendar-arrow" onclick="changeProjectMonth(1)">▶</span>
+                <div class="mini-calendar project-calendar-panel moyo-calendar-widget">
+                    <div class="calendar-header moyo-calendar-head">
+                        <div class="calendar-month-control moyo-calendar-title-row">
+                            <button type="button" class="calendar-arrow moyo-calendar-nav-btn" onclick="changeProjectMonth(-1)" aria-label="이전 달">‹</button>
+                            <span id="projectCalendarTitle" class="moyo-calendar-month-title"></span>
+                            <button type="button" class="calendar-arrow moyo-calendar-nav-btn" onclick="changeProjectMonth(1)" aria-label="다음 달">›</button>
                         </div>
-                        <a href="${pageContext.request.contextPath}/calendar?projId=${projectDetail.projId}&wsId=${param.wsId}">전체보기 ></a>
+                        <a class="moyo-calendar-more" href="${pageContext.request.contextPath}/calendar?projId=${projectDetail.projId}&wsId=${param.wsId}">전체보기</a>
                     </div>
 
-                    <div class="calendar-grid" id="projectCalendarGrid">
-                        <div class="day-name" style="color:#ff4d4d;">일</div>
+                    <div class="calendar-grid moyo-calendar-grid" id="projectCalendarGrid">
+                        <div class="day-name sun">일</div>
                         <div class="day-name">월</div>
                         <div class="day-name">화</div>
                         <div class="day-name">수</div>
                         <div class="day-name">목</div>
                         <div class="day-name">금</div>
-                        <div class="day-name" style="color:#4A90E2;">토</div>
+                        <div class="day-name sat">토</div>
                     </div>
-                    <div class="calendar-legend">
+                    <div class="calendar-legend moyo-calendar-legend">
                         <span class="calendar-legend-item period-legend"><span class="legend-box"></span>기간</span>
                         <span class="calendar-legend-item schedule-legend"><span class="legend-box schedule"></span>일정</span>
                         <span class="calendar-legend-item task-legend"><span class="legend-dot task"></span>마감</span>
@@ -292,24 +310,46 @@
             </div>
         </div>
     </div>
-
-	<div id="assignMemberModal" class="my-modal-overlay">
-	        <div class="my-modal-content moyo-project-modal assign-member-modal">
-                <div class="moyo-project-modal-head">
-                    <h3>멤버 초대</h3>
-                    <p>프로젝트에 함께할 멤버를 선택합니다.</p>
+    <div id="assignMemberModal" class="project-member-add-overlay"
+         onclick="if(event.target === this) closeModal('assignMemberModal')">
+        <section class="project-member-add-modal"
+                 role="dialog"
+                 aria-modal="true"
+                 aria-labelledby="assignMemberModalTitle"
+                 onclick="event.stopPropagation()">
+            <div class="project-member-add-head">
+                <div>
+                    <span>프로젝트 멤버</span>
+                    <h3 id="assignMemberModalTitle">멤버 추가</h3>
                 </div>
-                <div class="moyo-project-modal-body">
-	            <div id="assignableList" class="assignable-member-list"></div>
-                </div>
-	            <div class="modal-footer moyo-project-modal-footer">
-	                <button type="button" class="moyo-modal-btn ghost" onclick="closeModal('assignMemberModal')">취소</button>
-	                <button type="button" class="moyo-modal-btn primary" onclick="submitAssign()">추가</button>
-	            </div>
-	        </div>
-	    </div>
+                <button type="button"
+                        onclick="closeModal('assignMemberModal')"
+                        aria-label="닫기">×</button>
+            </div>
 
-	    <div id="addTaskModal" class="my-modal-overlay">
+            <div class="project-member-add-body">
+                <div class="project-member-add-summary">
+                    <span>워크스페이스 멤버 중 프로젝트에 추가할 멤버를 선택하세요.</span>
+                    <strong id="assignSelectedCount">0명 선택</strong>
+                </div>
+
+                <div id="assignableList" class="project-member-candidate-list">
+                    <div class="project-member-candidate-empty">멤버를 불러오는 중입니다.</div>
+                </div>
+            </div>
+
+            <div class="project-member-add-actions">
+                <button type="button"
+                        class="project-member-add-btn ghost"
+                        onclick="closeModal('assignMemberModal')">취소</button>
+                <button type="button"
+                        class="project-member-add-btn primary"
+                        onclick="submitAssign()">선택 멤버 추가</button>
+            </div>
+        </section>
+    </div>
+
+<div id="addTaskModal" class="my-modal-overlay">
 	        <div class="my-modal-content task-polish-modal">
                 <div class="task-polish-head">
 	                <h3 id="taskModalTitle">업무 추가</h3>
@@ -578,6 +618,31 @@
 		        </div>
 		    </div>
 		</div>
+
+    <div id="projectMemberProfileOverlay"
+         class="project-member-profile-overlay"
+         onclick="closeProjectMemberProfile()"></div>
+
+    <section id="projectMemberProfileModal"
+             class="project-member-profile-modal"
+             role="dialog"
+             aria-modal="true"
+             aria-labelledby="projectMemberProfileTitle">
+        <div class="project-member-profile-head">
+            <div>
+                <span>프로젝트 멤버 프로필</span>
+                <h3 id="projectMemberProfileTitle">멤버 프로필</h3>
+            </div>
+            <button type="button"
+                    onclick="closeProjectMemberProfile()"
+                    aria-label="닫기">×</button>
+        </div>
+
+        <div id="projectMemberProfileBody" class="project-member-profile-body">
+            <div class="project-member-profile-loading">프로필을 불러오는 중입니다.</div>
+        </div>
+    </section>
+
     <jsp:include page="/WEB-INF/views/common/footer.jsp" />
 </body>
 </html>

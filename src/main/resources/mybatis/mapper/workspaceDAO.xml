@@ -12,12 +12,14 @@
         WS_NAME, 
         INVITE_CODE, 
         OWNER_ID, 
-        WS_IMAGE_PATH,    WS_DESCRIPTION    ) VALUES (
+        WS_IMAGE_PATH, WS_DESCRIPTION, WS_TYPE
+    ) VALUES (
         #{wsId}, 
         #{wsName}, 
         #{inviteCode}, 
         #{ownerId}, 
-        #{wsImagePath},   #{wsDescription}  )
+        #{wsImagePath}, #{wsDescription}, #{wsType}
+    )
 </insert>
 	
 	<select id="selectWorkspaceList" parameterType="long" resultType="com.springboot.project.dto.workspaceDTO">
@@ -27,7 +29,8 @@
 	        W.INVITE_CODE, 
 	        W.OWNER_ID,
 	        W.WS_IMAGE_PATH,
-	        W.WS_DESCRIPTION
+	        W.WS_DESCRIPTION,
+        W.WS_TYPE
 	    FROM WORKSPACES W
 	    JOIN WS_MEMBERS M ON W.WS_ID = M.WS_ID
 	    WHERE M.USER_ID = #{userId}
@@ -41,7 +44,8 @@
 	        INVITE_CODE, 
 	        OWNER_ID,
 	        WS_IMAGE_PATH,
-	        WS_DESCRIPTION
+	        WS_DESCRIPTION,
+        WS_TYPE
 	    FROM WORKSPACES 
 	    WHERE WS_ID = #{wsId}
 	</select>
@@ -74,17 +78,34 @@
 	</insert>
 	
 	<select id="selectWorkspaceMembers" parameterType="long" resultType="map">
-	    SELECT 
-	        m.WS_MEM_ID,
-	        m.WS_ROLE,
-	        u.USER_ID,
-	        u.USER_NAME,
-	        u.EMAIL
-	    FROM WS_MEMBERS m
-	    JOIN USERS u ON m.USER_ID = u.USER_ID
-	    WHERE m.WS_ID = #{wsId}
-	    ORDER BY CASE WHEN m.WS_ROLE = 'ADMIN' THEN 1 ELSE 2 END, u.USER_NAME ASC
-	</select>
+        SELECT
+            m.WS_MEM_ID,
+            m.WS_ROLE,
+            u.USER_ID,
+            NVL(p.CONTACT_EMAIL, u.EMAIL) AS EMAIL,
+            CASE
+                WHEN NVL(p.USE_ACCOUNT_PROFILE, 'Y') = 'N'
+                    THEN NVL(p.DISPLAY_NAME, u.USER_NAME)
+                ELSE u.USER_NAME
+            END AS DISPLAY_NAME,
+            p.PROFILE_IMAGE_PATH AS PROFILE_IMAGE_PATH,
+            p.POSITION_NAME,
+            TO_CHAR(m.JOINED_AT, 'YYYY-MM-DD') AS JOINED_AT
+        FROM WS_MEMBERS m
+        JOIN WORKSPACES w ON w.WS_ID = m.WS_ID
+        JOIN USERS u ON m.USER_ID = u.USER_ID
+        LEFT JOIN WS_MEMBER_PROFILES p
+          ON p.WS_ID = m.WS_ID
+         AND p.USER_ID = m.USER_ID
+        WHERE m.WS_ID = #{wsId}
+        ORDER BY
+            CASE
+                WHEN m.USER_ID = w.OWNER_ID THEN 1
+                WHEN m.WS_ROLE = 'ADMIN' THEN 2
+                ELSE 3
+            END,
+            DISPLAY_NAME ASC
+    </select>
 	
 	<delete id="deleteWorkspaceMember">
 	    DELETE FROM WS_MEMBERS 
@@ -113,9 +134,17 @@
 	<insert id="insertInvitation">
 	    INSERT INTO WS_INVITATIONS (
 	        INVITE_ID, WS_ID, INVITER_ID, INVITEE_ID, STATUS, SENT_AT
-	    ) VALUES (
-	        SEQ_INVITE_ID.NEXTVAL, #{wsId}, #{inviterId}, #{inviteeId}, 'PENDING', SYSDATE
 	    )
+	    SELECT GREATEST(
+	               SEQ_INVITE_ID.NEXTVAL,
+	               NVL((SELECT MAX(INVITE_ID) + 1 FROM WS_INVITATIONS), 1)
+	           ),
+	           #{wsId},
+	           #{inviterId},
+	           #{inviteeId},
+	           'PENDING',
+	           SYSDATE
+	      FROM DUAL
 	</insert>
 	
 	<select id="selectPendingInvitations" resultType="map">
@@ -140,11 +169,16 @@
 	
 	<select id="getWorkspaceMembers" resultType="map">
 	    SELECT 
-	        m.USER_ID, 
-	        u.USER_NAME, 
-	        u.EMAIL, 
-	        m.WS_ROLE,
-	        TO_CHAR(m.JOINED_AT, 'YYYY-MM-DD') as JOINED_AT
+	        m.USER_ID AS "USER_ID",
+	        m.USER_ID AS "userId",
+	        u.USER_NAME AS "USER_NAME",
+	        u.USER_NAME AS "userName",
+	        u.EMAIL AS "EMAIL",
+	        u.EMAIL AS "email",
+	        m.WS_ROLE AS "WS_ROLE",
+	        m.WS_ROLE AS "wsRole",
+	        TO_CHAR(m.JOINED_AT, 'YYYY-MM-DD') AS "JOINED_AT",
+	        TO_CHAR(m.JOINED_AT, 'YYYY-MM-DD') AS "joinedAt"
 	    FROM WS_MEMBERS m
 	    JOIN USERS u ON m.USER_ID = u.USER_ID
 	    WHERE m.WS_ID = #{wsId}
@@ -170,11 +204,77 @@
 	    WHERE WS_ID = #{wsId}
 	    ORDER BY START_DT ASC
 	</select>
+
+<select id="selectCommunitySummary" parameterType="long" resultType="map">
+    SELECT
+        (SELECT COUNT(*) FROM BOARD_POSTS WHERE WS_ID = #{wsId} AND PROJ_ID IS NULL AND BOARD_TYPE = 'NOTICE') AS "noticeCount",
+        (SELECT COUNT(*) FROM BOARD_POSTS WHERE WS_ID = #{wsId} AND PROJ_ID IS NULL AND BOARD_TYPE = 'FREE') AS "freeCount",
+        (SELECT COUNT(*) FROM BOARD_POSTS WHERE WS_ID = #{wsId} AND PROJ_ID IS NULL AND BOARD_TYPE = 'FILE') AS "fileCount",
+        (SELECT COUNT(*) FROM POLLS WHERE WS_ID = #{wsId} AND SCOPE = 'WORKSPACE' AND STATUS = 'ACTIVE' AND (END_DT IS NULL OR END_DT >= SYSDATE)) AS "activePollCount",
+        (SELECT COUNT(*) FROM EVENTS WHERE WS_ID = #{wsId} AND TRUNC(START_DT) = TRUNC(SYSDATE)) AS "todayEventCount",
+        (SELECT COUNT(*) FROM PROJECTS WHERE WS_ID = #{wsId}) AS "projectCount",
+        (SELECT COUNT(*) FROM WS_MEMBERS WHERE WS_ID = #{wsId}) AS "memberCount"
+    FROM DUAL
+</select>
+
+<select id="selectRecentCommunityActivities" parameterType="long" resultType="map">
+    SELECT ACT_TYPE, TITLE, USER_NAME, REG_DT_TEXT
+    FROM (
+        SELECT
+            p.BOARD_TYPE AS ACT_TYPE,
+            p.TITLE AS TITLE,
+            u.USER_NAME AS USER_NAME,
+            CASE
+                WHEN TO_CHAR(p.REG_DT, 'YYYY-MM-DD') = TO_CHAR(SYSDATE, 'YYYY-MM-DD') THEN TO_CHAR(p.REG_DT, 'HH24:MI')
+                ELSE TO_CHAR(p.REG_DT, 'YYYY-MM-DD')
+            END AS REG_DT_TEXT,
+            p.REG_DT AS SORT_DT
+        FROM BOARD_POSTS p
+        JOIN USERS u ON p.USER_ID = u.USER_ID
+        WHERE p.WS_ID = #{wsId}
+          AND p.PROJ_ID IS NULL
+          AND p.BOARD_TYPE IN ('NOTICE', 'FREE', 'FILE')
+
+        UNION ALL
+
+        SELECT
+            'POLL' AS ACT_TYPE,
+            p.QUESTION AS TITLE,
+            u.USER_NAME AS USER_NAME,
+            CASE
+                WHEN TO_CHAR(p.REG_DT, 'YYYY-MM-DD') = TO_CHAR(SYSDATE, 'YYYY-MM-DD') THEN TO_CHAR(p.REG_DT, 'HH24:MI')
+                ELSE TO_CHAR(p.REG_DT, 'YYYY-MM-DD')
+            END AS REG_DT_TEXT,
+            p.REG_DT AS SORT_DT
+        FROM POLLS p
+        JOIN USERS u ON p.USER_ID = u.USER_ID
+        WHERE p.WS_ID = #{wsId}
+          AND p.SCOPE = 'WORKSPACE'
+    )
+    ORDER BY SORT_DT DESC
+    FETCH FIRST 10 ROWS ONLY
+</select>
+
 <select id="selectTodayEvents" parameterType="long" resultType="map">
-    SELECT title, TO_CHAR(START_DT, 'HH24:MI') as time
-    FROM events
-    WHERE ws_id = #{wsId}
-    AND TRUNC(START_DT) = TRUNC(SYSDATE)
+    SELECT
+        e.TITLE AS "title",
+        CASE
+            WHEN TO_CHAR(e.START_DT, 'HH24:MI') = '00:00' THEN '종일'
+            ELSE TO_CHAR(e.START_DT, 'HH24:MI')
+        END AS "time",
+        e.ITEM_TYPE AS "itemType",
+        CASE
+            WHEN e.ITEM_TYPE = 'PRIVATE' THEN '개인'
+            WHEN e.ITEM_TYPE = 'PROJ' THEN '프로젝트'
+            WHEN e.ITEM_TYPE = 'TASK' THEN '프로젝트'
+            WHEN e.ITEM_TYPE = 'WS' THEN '그룹'
+            WHEN e.ITEM_TYPE = 'HOLIDAY' THEN '공휴일'
+            ELSE '일정'
+        END AS "typeLabel"
+    FROM EVENTS e
+    WHERE e.WS_ID = #{wsId}
+      AND TRUNC(e.START_DT) = TRUNC(SYSDATE)
+    ORDER BY e.START_DT ASC
 </select>
 
 <select id="selectActivePoll" parameterType="long" resultType="map">
@@ -197,4 +297,189 @@
     INSERT INTO votes (vote_id, poll_id, option_id, user_id)
     VALUES (SEQ_VOTE_ID.NEXTVAL, #{pollId}, #{optionId}, #{userId})
 </insert>
+
+    <select id="isWorkspaceMember" resultType="int">
+        SELECT COUNT(*)
+        FROM WS_MEMBERS
+        WHERE WS_ID = #{wsId}
+          AND USER_ID = #{userId}
+    </select>
+
+    <select id="isWorkspaceAdmin" resultType="int">
+        SELECT COUNT(*)
+        FROM WS_MEMBERS
+        WHERE WS_ID = #{wsId}
+          AND USER_ID = #{userId}
+          AND WS_ROLE = 'ADMIN'
+    </select>
+
+    <insert id="insertDefaultWorkspaceMemberProfile">
+        MERGE INTO WS_MEMBER_PROFILES p
+        USING (SELECT #{wsId} AS WS_ID, #{userId} AS USER_ID FROM DUAL) src
+           ON (p.WS_ID = src.WS_ID AND p.USER_ID = src.USER_ID)
+        WHEN NOT MATCHED THEN
+            INSERT (
+                WS_ID, USER_ID, USE_ACCOUNT_PROFILE, SHOW_PHONE,
+                CREATED_AT, UPDATED_AT
+            )
+            VALUES (
+                src.WS_ID, src.USER_ID, 'Y', 'N',
+                SYSDATE, SYSDATE
+            )
+    </insert>
+
+    <select id="selectWorkspaceMemberProfile" resultType="map">
+        SELECT
+            m.USER_ID,
+            m.WS_ROLE,
+            CASE
+                WHEN w.OWNER_ID = m.USER_ID THEN 'Y'
+                ELSE 'N'
+            END AS IS_OWNER,
+            u.EMAIL AS ACCOUNT_EMAIL,
+            NVL(p.CONTACT_EMAIL, u.EMAIL) AS EMAIL,
+            u.USER_NAME AS ACCOUNT_NAME,
+            CASE
+                WHEN NVL(p.USE_ACCOUNT_PROFILE, 'Y') = 'N'
+                    THEN NVL(p.DISPLAY_NAME, u.USER_NAME)
+                ELSE u.USER_NAME
+            END AS DISPLAY_NAME,
+            p.DISPLAY_NAME AS CUSTOM_DISPLAY_NAME,
+            CASE
+                WHEN NVL(p.USE_ACCOUNT_PROFILE, 'Y') = 'N'
+                    THEN p.PROFILE_IMAGE_PATH
+                ELSE NULL
+            END AS PROFILE_IMAGE_PATH,
+            p.POSITION_NAME,
+            CASE
+                WHEN m.USER_ID = #{viewerUserId} OR NVL(p.SHOW_PHONE, 'N') = 'Y'
+                    THEN p.PHONE_NUMBER
+                ELSE NULL
+            END AS PHONE_NUMBER,
+            NVL(p.SHOW_PHONE, 'N') AS SHOW_PHONE,
+            NVL(p.USE_ACCOUNT_PROFILE, 'Y') AS USE_ACCOUNT_PROFILE,
+            TO_CHAR(m.JOINED_AT, 'YYYY-MM-DD') AS JOINED_AT
+        FROM WS_MEMBERS m
+        JOIN WORKSPACES w ON w.WS_ID = m.WS_ID
+        JOIN USERS u ON u.USER_ID = m.USER_ID
+        LEFT JOIN WS_MEMBER_PROFILES p
+          ON p.WS_ID = m.WS_ID
+         AND p.USER_ID = m.USER_ID
+        WHERE m.WS_ID = #{wsId}
+          AND m.USER_ID = #{targetUserId}
+          AND EXISTS (
+              SELECT 1
+              FROM WS_MEMBERS viewer
+              WHERE viewer.WS_ID = m.WS_ID
+                AND viewer.USER_ID = #{viewerUserId}
+          )
+    </select>
+
+    <update id="updateWorkspaceMemberProfile" parameterType="map">
+        UPDATE WS_MEMBER_PROFILES
+           SET USE_ACCOUNT_PROFILE = #{useAccountProfile},
+               DISPLAY_NAME = #{displayName, jdbcType=VARCHAR},
+               PROFILE_IMAGE_PATH =
+                   COALESCE(#{profileImagePath, jdbcType=VARCHAR}, PROFILE_IMAGE_PATH),
+               CONTACT_EMAIL = #{contactEmail, jdbcType=VARCHAR},
+               POSITION_NAME = #{positionName, jdbcType=VARCHAR},
+               PHONE_NUMBER = #{phoneNumber, jdbcType=VARCHAR},
+               SHOW_PHONE = #{showPhone},
+               UPDATED_AT = SYSDATE
+         WHERE WS_ID = #{wsId}
+           AND USER_ID = #{userId}
+    </update>
+
+    <insert id="insertWorkspaceMemberProfile" parameterType="map">
+        INSERT INTO WS_MEMBER_PROFILES (
+            WS_ID,
+            USER_ID,
+            USE_ACCOUNT_PROFILE,
+            DISPLAY_NAME,
+            PROFILE_IMAGE_PATH,
+            CONTACT_EMAIL,
+            POSITION_NAME,
+            PHONE_NUMBER,
+            SHOW_PHONE,
+            CREATED_AT,
+            UPDATED_AT
+        ) VALUES (
+            #{wsId},
+            #{userId},
+            #{useAccountProfile},
+            #{displayName, jdbcType=VARCHAR},
+            #{profileImagePath, jdbcType=VARCHAR},
+            #{contactEmail, jdbcType=VARCHAR},
+            #{positionName, jdbcType=VARCHAR},
+            #{phoneNumber, jdbcType=VARCHAR},
+            #{showPhone},
+            SYSDATE,
+            SYSDATE
+        )
+    </insert>
+
+
+    <select id="selectWorkspaceLinks" resultType="map">
+        SELECT LINK_ID, WS_ID, LINK_NAME, LINK_URL, SORT_ORDER
+        FROM WORKSPACE_LINKS
+        WHERE WS_ID = #{wsId}
+        ORDER BY SORT_ORDER ASC, LINK_ID ASC
+    </select>
+
+    <delete id="deleteWorkspaceLinks">
+        DELETE FROM WORKSPACE_LINKS
+        WHERE WS_ID = #{wsId}
+    </delete>
+
+    <insert id="insertWorkspaceLink" parameterType="map">
+        INSERT INTO WORKSPACE_LINKS (
+            LINK_ID, WS_ID, LINK_NAME, LINK_URL, SORT_ORDER, CREATED_AT
+        ) VALUES (
+            SEQ_WS_LINK_ID.NEXTVAL,
+            #{wsId},
+            #{linkName},
+            #{linkUrl},
+            #{sortOrder},
+            SYSDATE
+        )
+    </insert>
+
+
+    <insert id="updateMemberPosition">
+        MERGE INTO WS_MEMBER_PROFILES p
+        USING (
+            SELECT #{wsId} AS WS_ID,
+                   #{userId} AS USER_ID,
+                   #{positionName, jdbcType=VARCHAR} AS POSITION_NAME
+            FROM DUAL
+        ) src
+        ON (
+            p.WS_ID = src.WS_ID
+            AND p.USER_ID = src.USER_ID
+        )
+        WHEN MATCHED THEN
+            UPDATE SET
+                p.POSITION_NAME = src.POSITION_NAME,
+                p.UPDATED_AT = SYSDATE
+        WHEN NOT MATCHED THEN
+            INSERT (
+                WS_ID,
+                USER_ID,
+                USE_ACCOUNT_PROFILE,
+                POSITION_NAME,
+                SHOW_PHONE,
+                CREATED_AT,
+                UPDATED_AT
+            )
+            VALUES (
+                src.WS_ID,
+                src.USER_ID,
+                'Y',
+                src.POSITION_NAME,
+                'N',
+                SYSDATE,
+                SYSDATE
+            )
+    </insert>
+
 </mapper>

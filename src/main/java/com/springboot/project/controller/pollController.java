@@ -134,6 +134,74 @@ public class pollController {
     }
 
 
+    @PostMapping(value = "/api/polls/option-media", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public Map<String, Object> uploadPollOptionMedia(
+            @RequestPart("media") MultipartFile media,
+            HttpSession session) throws IOException {
+
+        usersDto loginUser = (usersDto) session.getAttribute("user");
+        Map<String, Object> result = new HashMap<>();
+
+        if (loginUser == null) {
+            result.put("success", false);
+            result.put("message", "LOGIN_REQUIRED");
+            return result;
+        }
+        if (media == null || media.isEmpty()) {
+            result.put("success", false);
+            result.put("message", "EMPTY_FILE");
+            return result;
+        }
+
+        String contentType = media.getContentType() == null ? "" : media.getContentType().toLowerCase();
+        String originalName = media.getOriginalFilename() == null ? "" : media.getOriginalFilename();
+        String lowerName = originalName.toLowerCase();
+
+        boolean audio = contentType.startsWith("audio/")
+                || lowerName.matches(".*\\.(mp3|wav|m4a|aac|ogg|flac)$");
+        boolean video = contentType.startsWith("video/")
+                || lowerName.matches(".*\\.(mp4|webm|ogg|mov|m4v)$");
+
+        if (!audio && !video) {
+            result.put("success", false);
+            result.put("message", "AUDIO_OR_VIDEO_ONLY");
+            return result;
+        }
+
+        // 현재는 기능 제공을 위한 안전 상한입니다. 요금제별 한도는 이후 정책에서 분리할 수 있습니다.
+        long maxBytes = video ? 500L * 1024L * 1024L : 100L * 1024L * 1024L;
+        if (media.getSize() > maxBytes) {
+            result.put("success", false);
+            result.put("message", video ? "영상 파일은 500MB 이하만 업로드할 수 있습니다." : "음악 파일은 100MB 이하만 업로드할 수 있습니다.");
+            return result;
+        }
+
+        String extension = "";
+        int dotIndex = originalName.lastIndexOf('.');
+        if (dotIndex >= 0) {
+            extension = originalName.substring(dotIndex).toLowerCase();
+        }
+        if (extension.isBlank()) {
+            extension = video ? ".mp4" : ".mp3";
+        }
+
+        String mediaFolder = video ? "video" : "audio";
+        String savedName = UUID.randomUUID().toString().replace("-", "") + extension;
+        String uploadDir = "C:/MoyoLab.Studio/upload/polls/" + mediaFolder + "/";
+        File directory = new File(uploadDir);
+
+        if (!directory.exists() && !directory.mkdirs()) {
+            throw new IOException("투표 미디어 저장 폴더를 만들 수 없습니다.");
+        }
+
+        media.transferTo(new File(directory, savedName));
+
+        result.put("success", true);
+        result.put("mediaType", video ? "VIDEO" : "AUDIO");
+        result.put("mediaPath", "/upload/polls/" + mediaFolder + "/" + savedName);
+        return result;
+    }
+
     @PostMapping("/api/polls/update")
     public Map<String, Object> updatePoll(@RequestBody Map<String, Object> params,
                                           HttpSession session) {
@@ -155,6 +223,21 @@ public class pollController {
             result.put("message", e.getMessage());
         }
 
+        return result;
+    }
+
+    @PostMapping("/api/polls/extend")
+    public Map<String, Object> extendPoll(@RequestBody Map<String, Object> params, HttpSession session) {
+        usersDto loginUser = (usersDto) session.getAttribute("user");
+        Map<String, Object> result = new HashMap<>();
+        if (loginUser == null) { result.put("success", false); result.put("message", "LOGIN_REQUIRED"); return result; }
+        try {
+            params.put("userId", loginUser.getUserId());
+            pollService.extendPoll(params);
+            result.put("success", true);
+        } catch (IllegalStateException | IllegalArgumentException e) {
+            result.put("success", false); result.put("message", e.getMessage());
+        }
         return result;
     }
 
@@ -201,10 +284,17 @@ public class pollController {
 
         params.put("userId", loginUser.getUserId());
 
-        Long pollId = pollService.createPoll(params);
-
-        result.put("success", true);
-        result.put("pollId", pollId);
+        try {
+            Long pollId = pollService.createPoll(params);
+            result.put("success", true);
+            result.put("pollId", pollId);
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            result.put("success", false);
+            result.put("message", e.getMessage());
+        } catch (RuntimeException e) {
+            result.put("success", false);
+            result.put("message", "투표 생성 중 오류가 발생했습니다. 서버 로그를 확인해주세요.");
+        }
         return result;
     }
 }

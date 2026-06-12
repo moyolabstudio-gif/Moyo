@@ -32,9 +32,13 @@ public interface IpollDAO {
 
     void insertVote(Map<String, Object> params);
 
+    void updateVote(Map<String, Object> params);
+
     void insertPoll(Map<String, Object> params);
 
     void updatePoll(Map<String, Object> params);
+
+    void extendPoll(Map<String, Object> params);
 
     void updatePollOption(Map<String, Object> params);
 

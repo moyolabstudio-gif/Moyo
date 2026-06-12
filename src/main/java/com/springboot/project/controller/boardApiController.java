@@ -7,6 +7,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.Locale;
+import java.util.Set;
 import jakarta.servlet.http.HttpSession;
 import com.springboot.project.dto.usersDto;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -111,51 +113,106 @@ public class boardApiController {
     }
     @PostMapping("/board/image-upload")
     public ResponseEntity<Map<String, Object>> uploadEditorImage(
-            @RequestParam("upload") MultipartFile uploadFile) {
-        
+            @RequestParam("upload") MultipartFile uploadFile,
+            HttpSession session) {
+
         Map<String, Object> response = new HashMap<>();
-        
-        if (uploadFile.isEmpty()) {
+        usersDto loginUser = (usersDto) session.getAttribute("user");
+
+        if (loginUser == null) {
             response.put("uploaded", false);
-            Map<String, String> error = new HashMap<>();
-            error.put("message", "파일이 비어있습니다.");
-            response.put("error", error);
+            response.put("error", Map.of("message", "로그인이 필요합니다."));
+            return ResponseEntity.status(401).body(response);
+        }
+
+        if (uploadFile == null || uploadFile.isEmpty()) {
+            response.put("uploaded", false);
+            response.put("error", Map.of("message", "업로드할 이미지가 없습니다."));
+            return ResponseEntity.badRequest().body(response);
+        }
+
+        final long maxSize = 5L * 1024L * 1024L;
+        if (uploadFile.getSize() > maxSize) {
+            response.put("uploaded", false);
+            response.put("error", Map.of("message", "이미지는 5MB 이하만 업로드할 수 있습니다."));
+            return ResponseEntity.badRequest().body(response);
+        }
+
+        String originalFileName = uploadFile.getOriginalFilename();
+        String extension = getSafeImageExtension(originalFileName);
+        String contentType = uploadFile.getContentType();
+
+        if (extension == null || contentType == null || !contentType.toLowerCase(Locale.ROOT).startsWith("image/")) {
+            response.put("uploaded", false);
+            response.put("error", Map.of("message", "jpg, jpeg, png, gif, webp 이미지만 업로드할 수 있습니다."));
             return ResponseEntity.badRequest().body(response);
         }
 
         try {
-            // 1. 파일이 저장될 물리적인 서버 디렉토리 설정 (예: C:/MoyoLab.Studio/upload/)
-            String uploadPath = "C:/MoyoLab.Studio/upload/";
+            String uploadPath = "C:/MoyoLab.Studio/upload/editor/";
             File folder = new File(uploadPath);
-            if (!folder.exists()) {
-                folder.mkdirs(); // 폴더가 없으면 자동 생성하여 안정성 확보
+            if (!folder.exists() && !folder.mkdirs()) {
+                throw new IOException("업로드 폴더를 생성할 수 없습니다.");
             }
 
-            // 2. 파일명 중복 방지를 위해 UUID 결합
-            String originalFileName = uploadFile.getOriginalFilename();
-            String extension = originalFileName.substring(originalFileName.lastIndexOf("."));
-            String savedFileName = UUID.randomUUID().toString() + extension;
-
-            // 3. 파일 물리 저장 실행
-            File targetFile = new File(uploadPath + savedFileName);
+            String savedFileName = UUID.randomUUID().toString().replace("-", "") + extension;
+            File targetFile = new File(folder, savedFileName);
             uploadFile.transferTo(targetFile);
 
-            // 4. CKEditor 5 스펙에 맞춤 응답 JSON 포맷 구성
-            // 💡 주의: 이 저장된 이미지를 외부 브라우저가 정적 리소스로 다운로드하려면 
-            // WebMvcConfigurer 설정에서 "/upload/**" 경로를 ResourceHandler에 등록해 주어야 로드가 완벽해집니다!
             response.put("uploaded", true);
-            response.put("url", "/upload/" + savedFileName); // 브라우저가 접근할 이미지 가상 경로
-
+            response.put("url", "/upload/editor/" + savedFileName);
+            return ResponseEntity.ok(response);
         } catch (IOException e) {
             response.put("uploaded", false);
-            Map<String, String> error = new HashMap<>();
-            error.put("message", "서버 저장 중 오류 발생");
-            response.put("error", error);
+            response.put("error", Map.of("message", "이미지 저장 중 오류가 발생했습니다."));
             return ResponseEntity.status(500).body(response);
         }
-
-        return ResponseEntity.ok(response);
     }
+
+    private String getSafeImageExtension(String originalFileName) {
+        if (originalFileName == null || !originalFileName.contains(".")) {
+            return null;
+        }
+        String extension = originalFileName.substring(originalFileName.lastIndexOf('.')).toLowerCase(Locale.ROOT);
+        Set<String> allowed = Set.of(".jpg", ".jpeg", ".png", ".gif", ".webp");
+        return allowed.contains(extension) ? extension : null;
+    }
+
+    @PostMapping("/{wsId}/board/report")
+    public ResponseEntity<Map<String, Object>> reportBoardContent(
+            @PathVariable("wsId") Long wsId,
+            @RequestBody Map<String, Object> reportData,
+            HttpSession session) {
+
+        usersDto loginUser = (usersDto) session.getAttribute("user");
+        if (loginUser == null) {
+            return ResponseEntity.status(401).body(Map.of("status", "LOGIN_REQUIRED", "message", "로그인이 필요합니다."));
+        }
+
+        String contentType = String.valueOf(reportData.getOrDefault("contentType", "BOARD"));
+        Long contentId = null;
+        Object rawContentId = reportData.get("contentId");
+        if (rawContentId instanceof Number) {
+            contentId = ((Number) rawContentId).longValue();
+        } else if (rawContentId != null && !String.valueOf(rawContentId).isBlank()) {
+            contentId = Long.parseLong(String.valueOf(rawContentId));
+        }
+
+        String reason = String.valueOf(reportData.getOrDefault("reason", "ETC"));
+        String detail = String.valueOf(reportData.getOrDefault("detail", ""));
+
+        Map<String, Object> result = iboardService.reportContent(contentType, contentId, loginUser.getUserId(), reason, detail);
+        String status = String.valueOf(result.get("status"));
+
+        if ("LOGIN_REQUIRED".equals(status)) {
+            return ResponseEntity.status(401).body(result);
+        }
+        if ("FAIL".equals(status)) {
+            return ResponseEntity.badRequest().body(result);
+        }
+        return ResponseEntity.ok(result);
+    }
+
     @GetMapping("/{wsId}/calendar-events")
     public ResponseEntity<List<Map<String, Object>>> getCalendarEvents(@PathVariable("wsId") Long wsId) {
         try {
@@ -185,8 +242,13 @@ public class boardApiController {
         post.setWsId(wsId);
         post.setUserId(loginUser.getUserId());
 
-        if (post.getIsPinned() == null) {
+        boolean canManage = iboardService.canManageBoardPin(wsId, post.getProjId(), loginUser.getUserId());
+        if (!canManage || !"Y".equalsIgnoreCase(post.getIsPinned())) {
             post.setIsPinned("N");
+            post.setPinStartDt(null);
+            post.setPinEndDt(null);
+        } else {
+            post.setIsPinned("Y");
         }
 
         System.out.println("글 등록 wsId = " + wsId);
@@ -248,4 +310,64 @@ public class boardApiController {
         
         return ResponseEntity.ok(response);
     }
+
+    private Long toLongValue(Object value) {
+        if (value == null) return null;
+        if (value instanceof Number) return ((Number) value).longValue();
+        try {
+            return Long.parseLong(String.valueOf(value));
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
+    private boolean canManageReport(Map<String, Object> report, Long userId) {
+        if (report == null || userId == null) return false;
+        Long wsId = toLongValue(report.get("WS_ID"));
+        Long projId = toLongValue(report.get("PROJ_ID"));
+        return iboardService.canManageBoardPin(wsId, projId, userId);
+    }
+
+    @PutMapping("/{wsId}/board/reports/{reportId}/status")
+    public ResponseEntity<Map<String, Object>> updateReportStatusApi(
+            @PathVariable("wsId") Long wsId,
+            @PathVariable("reportId") Long reportId,
+            @RequestBody Map<String, Object> body,
+            HttpSession session) {
+
+        usersDto loginUser = (usersDto) session.getAttribute("user");
+        if (loginUser == null) {
+            return ResponseEntity.status(401).body(Map.of("status", "LOGIN_REQUIRED", "message", "로그인이 필요합니다."));
+        }
+
+        Map<String, Object> report = iboardService.getReportById(reportId);
+        if (!canManageReport(report, loginUser.getUserId())) {
+            return ResponseEntity.status(403).body(Map.of("status", "FORBIDDEN", "message", "신고를 처리할 권한이 없습니다."));
+        }
+
+        String newStatus = String.valueOf(body.getOrDefault("status", "WAITING"));
+        boolean success = iboardService.updateReportStatus(reportId, newStatus, loginUser.getUserId());
+        return ResponseEntity.ok(Map.of("status", success ? "SUCCESS" : "FAIL"));
+    }
+
+    @DeleteMapping("/{wsId}/board/reports/{reportId}/content")
+    public ResponseEntity<Map<String, Object>> deleteReportedContentApi(
+            @PathVariable("wsId") Long wsId,
+            @PathVariable("reportId") Long reportId,
+            HttpSession session) {
+
+        usersDto loginUser = (usersDto) session.getAttribute("user");
+        if (loginUser == null) {
+            return ResponseEntity.status(401).body(Map.of("status", "LOGIN_REQUIRED", "message", "로그인이 필요합니다."));
+        }
+
+        Map<String, Object> report = iboardService.getReportById(reportId);
+        if (!canManageReport(report, loginUser.getUserId())) {
+            return ResponseEntity.status(403).body(Map.of("status", "FORBIDDEN", "message", "신고를 처리할 권한이 없습니다."));
+        }
+
+        boolean success = iboardService.deleteReportedContent(reportId, loginUser.getUserId());
+        return ResponseEntity.ok(Map.of("status", success ? "SUCCESS" : "FAIL"));
+    }
+
 }

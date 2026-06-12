@@ -11,5 +11,6 @@ public class workspaceDTO {
     
     private String wsImagePath; 
     private String wsDescription;
+    private String wsType;       // ORGANIZATION/TEAM/STUDY/COMMUNITY/CLUB/LIFE/ETC
     
 }

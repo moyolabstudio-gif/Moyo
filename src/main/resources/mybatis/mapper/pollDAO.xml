@@ -16,7 +16,9 @@
                 p.QUESTION,
                 p.STATUS,
                 p.REG_DT,
-                p.END_DT
+                p.END_DT,
+                NVL(p.EXTEND_COUNT, 0) AS EXTEND_COUNT,
+                p.PREV_END_DT
             FROM POLLS p
             JOIN USERS u ON p.USER_ID = u.USER_ID
             WHERE p.WS_ID = #{wsId}
@@ -41,7 +43,9 @@
                 p.QUESTION,
                 p.STATUS,
                 p.REG_DT,
-                p.END_DT
+                p.END_DT,
+                NVL(p.EXTEND_COUNT, 0) AS EXTEND_COUNT,
+                p.PREV_END_DT
             FROM POLLS p
             JOIN USERS u ON p.USER_ID = u.USER_ID
             WHERE p.WS_ID = #{wsId}
@@ -58,8 +62,29 @@
         SELECT
             o.OPTION_ID,
             o.TEXT,
-            o.OPTION_TYPE,
+            CASE
+                WHEN o.IMAGE_PATH IS NOT NULL AND REGEXP_LIKE(LOWER(o.IMAGE_PATH), '\.(mp3|wav|m4a|aac|ogg|flac)(\?.*)?$') THEN 'AUDIO'
+                WHEN (
+                    o.IMAGE_PATH IS NOT NULL AND (
+                        LOWER(o.IMAGE_PATH) LIKE '%youtube.com/%'
+                        OR LOWER(o.IMAGE_PATH) LIKE '%youtu.be/%'
+                        OR LOWER(o.IMAGE_PATH) LIKE '%vimeo.com/%'
+                        OR REGEXP_LIKE(LOWER(o.IMAGE_PATH), '\.(mp4|webm|mov|m4v)(\?.*)?$')
+                    )
+                ) OR (
+                    o.IMAGE_PATH IS NULL AND o.TEXT IS NOT NULL AND (
+                        LOWER(o.TEXT) LIKE '%youtube.com/%'
+                        OR LOWER(o.TEXT) LIKE '%youtu.be/%'
+                        OR LOWER(o.TEXT) LIKE '%vimeo.com/%'
+                        OR REGEXP_LIKE(LOWER(o.TEXT), '\.(mp4|webm|mov|m4v)(\?.*)?$')
+                    )
+                ) THEN 'VIDEO'
+                ELSE o.OPTION_TYPE
+            END AS OPTION_TYPE,
             o.IMAGE_PATH,
+            COALESCE(o.IMAGE_PATH,
+                CASE WHEN LOWER(o.TEXT) LIKE 'http://%' OR LOWER(o.TEXT) LIKE 'https://%' THEN o.TEXT END
+            ) AS MEDIA_URL,
             COUNT(v.VOTE_ID) AS COUNT
         FROM POLL_OPTIONS o
         LEFT JOIN VOTES v
@@ -69,7 +94,10 @@
             o.OPTION_ID,
             o.TEXT,
             o.OPTION_TYPE,
-            o.IMAGE_PATH
+            o.IMAGE_PATH,
+            COALESCE(o.IMAGE_PATH,
+                CASE WHEN LOWER(o.TEXT) LIKE 'http://%' OR LOWER(o.TEXT) LIKE 'https://%' THEN o.TEXT END
+            )
         ORDER BY o.OPTION_ID
     </select>
 
@@ -84,7 +112,9 @@
             p.QUESTION,
             p.STATUS,
             p.REG_DT,
-            p.END_DT
+            p.END_DT,
+            NVL(p.EXTEND_COUNT, 0) AS EXTEND_COUNT,
+            p.PREV_END_DT
         FROM POLLS p
         JOIN USERS u ON p.USER_ID = u.USER_ID
         WHERE p.POLL_ID = #{pollId}
@@ -125,6 +155,13 @@
         )
     </insert>
 
+    <update id="updateVote" parameterType="map">
+        UPDATE VOTES
+        SET OPTION_ID = #{optionId}
+        WHERE POLL_ID = #{pollId}
+          AND USER_ID = #{userId}
+    </update>
+
     <insert id="insertPoll" parameterType="map">
         <selectKey keyProperty="pollId" order="BEFORE" resultType="long">
             SELECT SEQ_POLL_ID.NEXTVAL FROM DUAL
@@ -159,6 +196,16 @@
         UPDATE POLLS
         SET QUESTION = #{question, jdbcType=VARCHAR},
             END_DT = TO_DATE(#{endDt, jdbcType=VARCHAR}, 'YYYY-MM-DD HH24:MI')
+        WHERE POLL_ID = #{pollId, jdbcType=NUMERIC}
+          AND USER_ID = #{userId, jdbcType=NUMERIC}
+    </update>
+
+    <update id="extendPoll" parameterType="map">
+        UPDATE POLLS
+        SET PREV_END_DT = END_DT,
+            END_DT = TO_DATE(#{endDt, jdbcType=VARCHAR}, 'YYYY-MM-DD HH24:MI'),
+            STATUS = 'ACTIVE',
+            EXTEND_COUNT = NVL(EXTEND_COUNT, 0) + 1
         WHERE POLL_ID = #{pollId, jdbcType=NUMERIC}
           AND USER_ID = #{userId, jdbcType=NUMERIC}
     </update>
@@ -236,7 +283,7 @@
           AND p.SCOPE = 'WORKSPACE'
         GROUP BY
             p.POLL_ID, p.WS_ID, p.PROJ_ID, p.SCOPE, p.USER_ID, u.USER_NAME,
-            p.QUESTION, p.STATUS, p.REG_DT, p.END_DT
+            p.QUESTION, p.STATUS, p.REG_DT, p.END_DT, p.EXTEND_COUNT, p.PREV_END_DT
         ORDER BY
             CASE WHEN p.STATUS = 'ACTIVE' THEN 0 ELSE 1 END,
             p.REG_DT DESC
@@ -265,7 +312,7 @@
           AND p.SCOPE = 'PROJECT'
         GROUP BY
             p.POLL_ID, p.WS_ID, p.PROJ_ID, p.SCOPE, p.USER_ID, u.USER_NAME,
-            p.QUESTION, p.STATUS, p.REG_DT, p.END_DT
+            p.QUESTION, p.STATUS, p.REG_DT, p.END_DT, p.EXTEND_COUNT, p.PREV_END_DT
         ORDER BY
             CASE WHEN p.STATUS = 'ACTIVE' THEN 0 ELSE 1 END,
             p.REG_DT DESC

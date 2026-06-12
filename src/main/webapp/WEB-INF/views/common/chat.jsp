@@ -1,11 +1,11 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 
-<div id="chat-floating-btn" onclick="toggleChatWindow()" style="position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px; background: #4A90E2; border-radius: 50%; box-shadow: 0 4px 15px rgba(74,144,226,0.3); cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 9999; transition: transform 0.2s;">
+<div id="chat-floating-btn" onclick="toggleChatWindow()" style="position: fixed; bottom: 96px; right: 30px; width: 60px; height: 60px; background: #4A90E2; border-radius: 50%; box-shadow: 0 4px 15px rgba(74,144,226,0.3); cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 9999; transition: transform 0.2s;">
     <span style="font-size: 26px; color: white;">💬</span>
 </div>
 
-<div id="chat-main-modal" style="position: fixed; bottom: 105px; right: 30px; width: 350px; height: 480px; background: #ffffff; border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.12); display: none; flex-direction: column; z-index: 9999; overflow: hidden; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; border: 1px solid #e1e8ed;">
+<div id="chat-main-modal" style="position: fixed; bottom: 171px; right: 30px; width: 350px; height: 480px; background: #ffffff; border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.12); display: none; flex-direction: column; z-index: 9999; overflow: hidden; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; border: 1px solid #e1e8ed;">
     
     <div style="background: linear-gradient(135deg, #4A90E2 0%, #357ABD 100%); padding: 12px 15px; display: flex; justify-content: space-between; align-items: center;">
         <strong style="color: #ffffff; font-size: 15px; font-weight: 600; letter-spacing: -0.5px;">💬 MOYO 톡</strong>
@@ -32,7 +32,7 @@
     </div>
 </div>
 
-<div id="mini-chat-window" style="position: fixed; bottom: 105px; right: 30px; width: 350px; height: 480px; background: #ffffff; border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.12); display: none; flex-direction: column; z-index: 9999; overflow: hidden; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; border: 1px solid #e1e8ed;">
+<div id="mini-chat-window" style="position: fixed; bottom: 171px; right: 30px; width: 350px; height: 480px; background: #ffffff; border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.12); display: none; flex-direction: column; z-index: 9999; overflow: hidden; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; border: 1px solid #e1e8ed;">
     
     <div style="background: linear-gradient(135deg, #4A90E2 0%, #357ABD 100%); padding: 15px; display: flex; justify-content: space-between; align-items: center;">
         <button onclick="backToMainModal()" style="background: none; border: none; color: white; font-size: 18px; cursor: pointer; font-weight: bold;">◀</button>

@@ -21,12 +21,31 @@ public interface IworkspaceDAO {
         @Param("role") String role
     );
     int updateWorkspace(workspaceDTO dto);
+
+    List<Map<String, Object>> selectWorkspaceLinks(@Param("wsId") Long wsId);
+    int deleteWorkspaceLinks(@Param("wsId") Long wsId);
+    int insertWorkspaceLink(Map<String, Object> params);
     int deleteWorkspaceAllMembers(long wsId);
     int deleteWorkspace(long wsId);
     List<Map<String, Object>> selectWorkspaceMembers(Long wsId);
+
+    Map<String, Object> selectWorkspaceMemberProfile(
+        @Param("wsId") Long wsId,
+        @Param("targetUserId") Long targetUserId,
+        @Param("viewerUserId") Long viewerUserId
+    );
+    int updateWorkspaceMemberProfile(Map<String, Object> params);
+    int insertWorkspaceMemberProfile(Map<String, Object> params);
+    int insertDefaultWorkspaceMemberProfile(@Param("wsId") Long wsId, @Param("userId") Long userId);
+    int isWorkspaceMember(@Param("wsId") Long wsId, @Param("userId") Long userId);
+    int isWorkspaceAdmin(@Param("wsId") Long wsId, @Param("userId") Long userId);
+
  // IworkspaceDAO.java
     int deleteWorkspaceMember(@Param("wsId") Long wsId, @Param("userId") Long userId);
     int updateMemberRole(@Param("wsId") Long wsId, @Param("userId") Long userId, @Param("role") String role);
+    int updateMemberPosition(@Param("wsId") Long wsId,
+                             @Param("userId") Long userId,
+                             @Param("positionName") String positionName);
     int updateWorkspaceOwner(@Param("wsId") Long wsId, @Param("ownerId") Long ownerId);
     
  // 중복 초대 및 멤버 확인
@@ -43,6 +62,8 @@ public interface IworkspaceDAO {
     int updateInvitationStatus(@Param("inviteId") Long inviteId, @Param("status") String status);
     Map<String, Object> selectInvitationById(Long inviteId);
     List<Map<String, Object>> selectEventsByWsId(@Param("wsId") Long wsId);
+    Map<String, Object> selectCommunitySummary(@Param("wsId") Long wsId);
+    List<Map<String, Object>> selectRecentCommunityActivities(@Param("wsId") Long wsId);
     List<Map<String, Object>> selectTodayEvents(Long wsId);
     Map<String, Object> selectActivePoll(Long wsId);
     List<Map<String, Object>> selectPollOptions(Long pollId); // String에서 Long으로 변경 권장

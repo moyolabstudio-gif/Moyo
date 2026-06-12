@@ -25,20 +25,23 @@ public class workspaceServiceImpl implements IworkspaceService {
     
     @Override
     @Transactional
-    public Long createWorkspace(workspaceDTO dto, Long userId) {
-        // 1. 초대 코드 자동 생성 (예: UUID 앞 8자리)
+    public Long createWorkspace(workspaceDTO dto, Long userId, Map<String, Object> profile,
+                                List<Map<String, Object>> links) {
         String inviteCode = java.util.UUID.randomUUID().toString().substring(0, 8);
         dto.setInviteCode(inviteCode);
         dto.setOwnerId(userId);
 
-        // 2. 워크스페이스 생성
         workspaceDao.insertWorkspace(dto);
-        
-        // 3. [아까 목록 안 뜨던 문제 해결] 생성한 사람을 바로 멤버로 등록
         workspaceDao.insertWorkspaceMember(dto.getWsId(), userId, "ADMIN");
+
+        Map<String, Object> profileParams =
+                buildWorkspaceProfileParams(dto.getWsId(), userId, profile);
+        workspaceDao.insertWorkspaceMemberProfile(profileParams);
+        replaceWorkspaceLinks(dto.getWsId(), links);
 
         return dto.getWsId();
     }
+
     public List<workspaceDTO> getWorkspaceList(Long userId) {
         return workspaceDao.selectWorkspaceList(userId);
     }
@@ -46,10 +49,140 @@ public class workspaceServiceImpl implements IworkspaceService {
     public workspaceDTO getWorkspaceDetail(Long wsId) {
         return workspaceDao.selectWorkspaceDetail(wsId);
     }
+
+    @Override
+    public List<Map<String, Object>> getWorkspaceLinks(Long wsId) {
+        return workspaceDao.selectWorkspaceLinks(wsId);
+    }
+
+    @Override
+    @Transactional
+    public boolean updateWorkspace(workspaceDTO dto, List<Map<String, Object>> links) {
+        int updated = workspaceDao.updateWorkspace(dto);
+        if (updated < 1) return false;
+        replaceWorkspaceLinks(dto.getWsId(), links);
+        return true;
+    }
+
+    private void replaceWorkspaceLinks(Long wsId, List<Map<String, Object>> links) {
+        workspaceDao.deleteWorkspaceLinks(wsId);
+        if (links == null || links.isEmpty()) return;
+
+        int order = 0;
+        for (Map<String, Object> link : links) {
+            String name = trimToNull(link.get("linkName"), 50);
+            String url = normalizeExternalUrl(trimToNull(link.get("linkUrl"), 500));
+            if (name == null || url == null) continue;
+
+            Map<String, Object> params = new HashMap<>();
+            params.put("wsId", wsId);
+            params.put("linkName", name);
+            params.put("linkUrl", url);
+            params.put("sortOrder", order++);
+            workspaceDao.insertWorkspaceLink(params);
+        }
+    }
+
+    private String normalizeExternalUrl(String url) {
+        if (url == null) return null;
+        String value = url.trim();
+        if (value.isEmpty()) return null;
+        if (!value.matches("(?i)^https?://.*")) {
+            value = "https://" + value;
+        }
+        if (!value.matches("(?i)^https?://[^\\s]+$")) {
+            throw new IllegalArgumentException("올바른 외부 링크 주소가 아닙니다.");
+        }
+        return value;
+    }
     
     @Override
     public List<Map<String, Object>> getWorkspaceMembers(Long wsId) {
         return workspaceDao.selectWorkspaceMembers(wsId);
+    }
+
+    @Override
+    public Map<String, Object> getWorkspaceMemberProfile(Long wsId, Long targetUserId, Long viewerUserId) {
+        if (workspaceDao.isWorkspaceMember(wsId, viewerUserId) < 1) {
+            return null;
+        }
+        return workspaceDao.selectWorkspaceMemberProfile(wsId, targetUserId, viewerUserId);
+    }
+
+    @Override
+    @Transactional
+    public boolean saveMyWorkspaceProfile(Long wsId, Long userId, Map<String, Object> profile) {
+        if (workspaceDao.isWorkspaceMember(wsId, userId) < 1) return false;
+
+        String useAccount = String.valueOf(profile.getOrDefault("useAccountProfile", "Y"));
+        String showPhone = String.valueOf(profile.getOrDefault("showPhone", "N"));
+        if (!"Y".equals(useAccount) && !"N".equals(useAccount)) useAccount = "Y";
+        if (!"Y".equals(showPhone) && !"N".equals(showPhone)) showPhone = "N";
+
+        Map<String, Object> params = new HashMap<>();
+        params.put("wsId", wsId);
+        params.put("userId", userId);
+        params.put("useAccountProfile", useAccount);
+        params.put("displayName", trimToNull(profile.get("displayName"), 50));
+        params.put("profileImagePath", trimToNull(profile.get("profileImagePath"), 500));
+        params.put("contactEmail", trimToNull(profile.get("contactEmail"), 100));
+        params.put("positionName", trimToNull(profile.get("positionName"), 50));
+        params.put("phoneNumber", trimToNull(profile.get("phoneNumber"), 30));
+        params.put("showPhone", showPhone);
+        int updated = workspaceDao.updateWorkspaceMemberProfile(params);
+        if (updated > 0) return true;
+
+        try {
+            return workspaceDao.insertWorkspaceMemberProfile(params) > 0;
+        } catch (org.springframework.dao.DuplicateKeyException duplicate) {
+            // 동시 요청으로 다른 트랜잭션이 먼저 생성한 경우 한 번 더 UPDATE
+            return workspaceDao.updateWorkspaceMemberProfile(params) > 0;
+        }
+    }
+
+    private Map<String, Object> buildWorkspaceProfileParams(
+            Long wsId,
+            Long userId,
+            Map<String, Object> profile) {
+
+        Map<String, Object> source =
+                profile != null ? profile : java.util.Collections.emptyMap();
+
+        String useAccount =
+                String.valueOf(source.getOrDefault("useAccountProfile", "Y"));
+        String showPhone =
+                String.valueOf(source.getOrDefault("showPhone", "N"));
+
+        if (!"Y".equals(useAccount) && !"N".equals(useAccount)) {
+            useAccount = "Y";
+        }
+        if (!"Y".equals(showPhone) && !"N".equals(showPhone)) {
+            showPhone = "N";
+        }
+
+        String displayName = trimToNull(source.get("displayName"), 50);
+        if ("N".equals(useAccount) && displayName == null) {
+            throw new IllegalArgumentException("워크스페이스 표시 이름이 필요합니다.");
+        }
+
+        Map<String, Object> params = new HashMap<>();
+        params.put("wsId", wsId);
+        params.put("userId", userId);
+        params.put("useAccountProfile", useAccount);
+        params.put("displayName", displayName);
+        params.put("profileImagePath", trimToNull(source.get("profileImagePath"), 500));
+        params.put("contactEmail", trimToNull(source.get("contactEmail"), 100));
+        params.put("positionName", trimToNull(source.get("positionName"), 50));
+        params.put("phoneNumber", trimToNull(source.get("phoneNumber"), 30));
+        params.put("showPhone", showPhone);
+        return params;
+    }
+
+    private String trimToNull(Object value, int maxLength) {
+        if (value == null) return null;
+        String text = String.valueOf(value).trim();
+        if (text.isEmpty()) return null;
+        return text.length() > maxLength ? text.substring(0, maxLength) : text;
     }
     
 
@@ -57,21 +190,37 @@ public class workspaceServiceImpl implements IworkspaceService {
     @Override
     @Transactional
     public String inviteUserByEmail(Long wsId, Long inviterId, String inviteeEmail) {
-        usersDto invitee = usersDao.findByEmail(inviteeEmail); 
-        
-        // 1. 여기서 터졌을 겁니다. null 체크 추가!
-        if (invitee == null) {
-            return "NOT_FOUND"; 
+        if (wsId == null || inviterId == null || inviteeEmail == null) {
+            return "INVALID_REQUEST";
         }
 
-        // 2. 이제 안전하게 getUserId() 호출 가능
+        String normalizedEmail = inviteeEmail.trim().toLowerCase();
+        if (normalizedEmail.isEmpty()) {
+            return "INVALID_REQUEST";
+        }
+
+        usersDto invitee = usersDao.findByEmail(normalizedEmail);
+        if (invitee == null) {
+            return "NOT_FOUND";
+        }
+
+        if (inviterId.equals(invitee.getUserId())) {
+            return "SELF_INVITE";
+        }
+
+        if (workspaceDao.isWorkspaceMember(wsId, invitee.getUserId()) > 0) {
+            return "ALREADY_MEMBER";
+        }
+
         int exists = workspaceDao.checkInvitationExists(wsId, invitee.getUserId());
         if (exists > 0) {
             return "ALREADY_EXISTS";
         }
 
-        workspaceDao.insertInvitation(wsId, inviterId, invitee.getUserId());
-        return "SUCCESS";
+        int inserted = workspaceDao.insertInvitation(
+                wsId, inviterId, invitee.getUserId());
+
+        return inserted > 0 ? "SUCCESS" : "ERROR";
     }
     
     @Override
@@ -81,28 +230,37 @@ public class workspaceServiceImpl implements IworkspaceService {
     
     @Override
     @Transactional
-    public boolean processInvitation(Long inviteId, String status, Long userId) {
-        try {
-            // 1. 초대장 상태 업데이트 (ACCEPTED 또는 REJECTED)
-            // workspaceDao.updateInvitationStatus 메서드가 필요합니다.
-            int res = workspaceDao.updateInvitationStatus(inviteId, status);
-            
-            if (res > 0 && "ACCEPTED".equals(status)) {
-                // 2. 수락인 경우, 해당 워크스페이스 ID를 가져와서 멤버로 추가
-                // 초대장 정보에서 wsId를 먼저 알아내야 합니다.
-                Map<String, Object> inviteInfo = workspaceDao.selectInvitationById(inviteId);
-                Long wsId = Long.parseLong(inviteInfo.get("WS_ID").toString());
-                
-                // 3. 워크스페이스 멤버로 정식 등록 (기존에 만든 insertWorkspaceMember 활용)
-                workspaceDao.insertWorkspaceMember(wsId, userId, "MEMBER");
-            }
-            return true;
-        } catch (Exception e) {
-            e.printStackTrace();
+    public boolean processInvitation(Long inviteId,
+                                     String status,
+                                     Long userId,
+                                     Map<String, Object> profile) {
+        Map<String, Object> inviteInfo = workspaceDao.selectInvitationById(inviteId);
+        if (inviteInfo == null) return false;
+
+        Object inviteeValue = inviteInfo.get("INVITEE_ID");
+        if (inviteeValue == null || !userId.equals(Long.valueOf(inviteeValue.toString()))) {
             return false;
         }
+
+        if (!"ACCEPTED".equals(status) && !"REJECTED".equals(status)) {
+            return false;
+        }
+
+        int updated = workspaceDao.updateInvitationStatus(inviteId, status);
+        if (updated < 1) return false;
+
+        if ("ACCEPTED".equals(status)) {
+            Long wsId = Long.valueOf(inviteInfo.get("WS_ID").toString());
+            workspaceDao.insertWorkspaceMember(wsId, userId, "MEMBER");
+
+            Map<String, Object> profileParams =
+                    buildWorkspaceProfileParams(wsId, userId, profile);
+            workspaceDao.insertWorkspaceMemberProfile(profileParams);
+        }
+
+        return true;
     }
-    
+
     @Override
     @Transactional // 중요: 하나라도 실패하면 전체 롤백
     public boolean removeMember(Long wsId, Long userId) {
@@ -114,13 +272,13 @@ public class workspaceServiceImpl implements IworkspaceService {
     @Transactional
     public boolean transferAdmin(Long wsId, Long currentAdminId, Long newAdminId) {
         try {
-            // 1. 기존 관리자(나)의 역할을 'MEMBER'로 변경
-            workspaceDao.updateMemberRole(wsId, currentAdminId, "MEMBER");
+            // 1. 기존 그룹장은 관리자 권한을 유지
+            workspaceDao.updateMemberRole(wsId, currentAdminId, "ADMIN");
             
-            // 2. 새로운 관리자의 역할을 'ADMIN'으로 변경
+            // 2. 새로운 그룹장의 역할을 'ADMIN'으로 변경
             workspaceDao.updateMemberRole(wsId, newAdminId, "ADMIN");
             
-            // 3. WORKSPACES 테이블의 OWNER_ID도 새로운 관리자로 변경
+            // 3. WORKSPACES 테이블의 OWNER_ID도 새로운 그룹장로 변경
             workspaceDao.updateWorkspaceOwner(wsId, newAdminId);
             
             return true;
@@ -129,6 +287,19 @@ public class workspaceServiceImpl implements IworkspaceService {
             return false; 
         }
     }
+
+    @Override
+    public Map<String, Object> getCommunitySummary(Long wsId) {
+        Map<String, Object> summary = workspaceDao.selectCommunitySummary(wsId);
+        return summary != null ? summary : new java.util.HashMap<>();
+    }
+
+    @Override
+    public List<Map<String, Object>> getRecentCommunityActivities(Long wsId) {
+        List<Map<String, Object>> activities = workspaceDao.selectRecentCommunityActivities(wsId);
+        return activities != null ? activities : new java.util.ArrayList<>();
+    }
+
     @Override
     public List<Map<String, Object>> getEventsByWsId(Long wsId) {
         // 예시: workspaceDao에 해당 기능을 구현하거나 

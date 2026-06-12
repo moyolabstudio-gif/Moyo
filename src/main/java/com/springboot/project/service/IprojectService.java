@@ -9,6 +9,7 @@ public interface IprojectService {
     // 프로젝트를 생성하고, 생성한 유저를 팀장으로 등록하는 표준 메서드
     void insertProject(projectRequestDTO dto, Long userId);
     List<projectRequestDTO> getProjectsByWsId(Long wsId);
+    List<Map<String, Object>> getProjectListByWorkspaceId(Long wsId);
  // 프로젝트에 할당 가능한 멤버 목록 가져오기
     List<Map<String, Object>> getAssignableMembers(Long wsId, Long projId);
     
@@ -18,6 +19,7 @@ public interface IprojectService {
     
     // 현재 프로젝트 멤버 목록 가져오기
     List<Map<String, Object>> getProjectMembers(Long projId);
+    Map<String, Object> getProjectMemberProfile(Long projId, Long targetUserId, Long viewerUserId);
     boolean updateProjectMemberPosition(Long projId, Long userId, String projPosition);
     boolean updateProjectMemberSetting(Long projId, Long userId, String projPosition, String projRole);
     Map<String, Object> getProjectTaskSummary(Long projId);
@@ -36,6 +38,7 @@ public interface IprojectService {
             String endTimeSlot
     );
     projectRequestDTO getProjectById(Long projId);
+    List<Map<String, Object>> getProjectLinks(Long projId);
     Map<String, Object> getTaskDetail(Long taskId);
  // IprojectService.java
     boolean updateTask(Long taskId, String title, String startDate, String endDate, String status, Long userId, String startTime, String endTime, String startTimeSlot, String endTimeSlot);

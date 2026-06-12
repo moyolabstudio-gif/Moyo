@@ -46,8 +46,8 @@
     </insert>
 
     <insert id="insertProjectMember">
-        INSERT INTO PROJ_MEMBERS (PROJ_MEMBER_ID, PROJ_ID, USER_ID, PROJ_ROLE)
-        VALUES (SEQ_PROJ_MEMBER_ID.NEXTVAL, #{projId}, #{userId}, #{role})
+        INSERT INTO PROJ_MEMBERS (PROJ_MEMBER_ID, PROJ_ID, USER_ID, PROJ_ROLE, PROJ_POSITION)
+        VALUES (SEQ_PROJ_MEMBER_ID.NEXTVAL, #{projId}, #{userId}, #{role}, #{projPosition, jdbcType=VARCHAR})
     </insert>
 
     <select id="checkMemberExists" resultType="int">
@@ -89,15 +89,39 @@
 
     <select id="getProjectMembers" resultType="map">
         SELECT
-            m.USER_ID,
-            u.USER_NAME AS "USER_NAME",
-            u.EMAIL,
-            m.PROJ_ROLE,
-            m.PROJ_POSITION AS "PROJ_POSITION" 
-        FROM PROJ_MEMBERS m
-        JOIN USERS u
-          ON m.USER_ID = u.USER_ID
-        WHERE m.PROJ_ID = #{projId}
+            pm.USER_ID,
+            CASE
+                WHEN NVL(wp.USE_ACCOUNT_PROFILE, 'Y') = 'N'
+                    THEN NVL(wp.DISPLAY_NAME, u.USER_NAME)
+                ELSE u.USER_NAME
+            END AS "USER_NAME",
+            NVL(wp.CONTACT_EMAIL, u.EMAIL) AS "EMAIL",
+            CASE
+                WHEN NVL(wp.USE_ACCOUNT_PROFILE, 'Y') = 'N'
+                    THEN wp.PROFILE_IMAGE_PATH
+                ELSE NULL
+            END AS "PROFILE_IMAGE_PATH",
+            wp.POSITION_NAME AS "WS_POSITION",
+            pm.PROJ_ROLE,
+            pm.PROJ_POSITION AS "PROJ_POSITION",
+            TO_CHAR(wm.JOINED_AT, 'YYYY-MM-DD') AS "WS_JOINED_AT"
+        FROM PROJ_MEMBERS pm
+        JOIN PROJECTS pr ON pr.PROJ_ID = pm.PROJ_ID
+        JOIN USERS u ON u.USER_ID = pm.USER_ID
+        LEFT JOIN WS_MEMBERS wm
+          ON wm.WS_ID = pr.WS_ID
+         AND wm.USER_ID = pm.USER_ID
+        LEFT JOIN WS_MEMBER_PROFILES wp
+          ON wp.WS_ID = pr.WS_ID
+         AND wp.USER_ID = pm.USER_ID
+        WHERE pm.PROJ_ID = #{projId}
+        ORDER BY
+            CASE
+                WHEN pm.USER_ID = pr.LEADER_ID THEN 1
+                WHEN pm.PROJ_ROLE = 'ADMIN' THEN 2
+                ELSE 3
+            END,
+            "USER_NAME" ASC
     </select>
 
     
@@ -130,6 +154,63 @@
         FROM PROJECTS
         WHERE WS_ID = #{wsId}
         ORDER BY PROJ_ID DESC
+    </select>
+
+    <select id="selectProjectListByWorkspaceId" parameterType="long" resultType="map">
+        SELECT
+            p.PROJ_ID AS "PROJ_ID",
+            p.WS_ID AS "WS_ID",
+            p.PROJ_NAME AS "PROJ_NAME",
+            p.PROJ_DESC AS "PROJ_DESC",
+            p.PROJ_TYPE AS "PROJ_TYPE",
+            p.PROJ_CATEGORY AS "PROJ_CATEGORY",
+            p.LEADER_ID AS "LEADER_ID",
+            u.USER_NAME AS "LEADER_NAME",
+            TO_CHAR(pd.START_DT, 'YYYY-MM-DD') AS "START_DATE",
+            TO_CHAR(pd.END_DT - 1, 'YYYY-MM-DD') AS "END_DATE",
+            CASE
+                WHEN pd.START_DT IS NOT NULL AND TRUNC(pd.START_DT) &gt; TRUNC(SYSDATE) THEN 'SCHEDULED'
+                WHEN pd.END_DT IS NOT NULL AND TRUNC(pd.END_DT) &lt;= TRUNC(SYSDATE) THEN 'COMPLETED'
+                ELSE 'IN_PROGRESS'
+            END AS "PROJECT_STATUS",
+            (SELECT COUNT(*) FROM PROJ_MEMBERS pm WHERE pm.PROJ_ID = p.PROJ_ID) AS "MEMBER_COUNT",
+            (
+                SELECT LISTAGG(u2.USER_NAME, ', ') WITHIN GROUP (
+                    ORDER BY
+                        CASE pm2.PROJ_ROLE
+                            WHEN 'ADMIN' THEN 1
+                            WHEN 'MANAGER' THEN 2
+                            ELSE 3
+                        END,
+                        u2.USER_NAME
+                )
+                FROM PROJ_MEMBERS pm2
+                JOIN USERS u2 ON u2.USER_ID = pm2.USER_ID
+                WHERE pm2.PROJ_ID = p.PROJ_ID
+            ) AS "MEMBER_NAMES"
+        FROM PROJECTS p
+        LEFT JOIN USERS u ON u.USER_ID = p.LEADER_ID
+        LEFT JOIN (
+            SELECT
+                PROJ_ID,
+                MIN(START_DT) AS START_DT,
+                MAX(END_DT) AS END_DT
+            FROM EVENTS
+            WHERE ITEM_TYPE = 'PROJ'
+            GROUP BY PROJ_ID
+        ) pd ON pd.PROJ_ID = p.PROJ_ID
+        WHERE p.WS_ID = #{wsId}
+        ORDER BY
+            CASE
+                WHEN pd.START_DT IS NOT NULL AND TRUNC(pd.START_DT) &gt; TRUNC(SYSDATE) THEN 2
+                WHEN pd.END_DT IS NOT NULL AND TRUNC(pd.END_DT) &lt;= TRUNC(SYSDATE) THEN 3
+                ELSE 1
+            END,
+            CASE
+                WHEN pd.END_DT IS NOT NULL AND TRUNC(pd.END_DT) &lt;= TRUNC(SYSDATE) THEN pd.END_DT
+                ELSE pd.START_DT
+            END DESC NULLS LAST,
+            p.PROJ_ID DESC
     </select>
 
     <select id="getProjectTaskSummary" resultType="map">
@@ -390,13 +471,13 @@
     <update id="updateProject" parameterType="com.springboot.project.dto.projectRequestDTO">
         UPDATE PROJECTS
         SET
-            PROJ_NAME = #{projName},
-            PROJ_DESC = #{projDesc},
-            PROJ_TYPE = #{projCategory},
-            PROJ_SCOPE = NVL(#{projScope}, PROJ_SCOPE),
-            PROJ_CATEGORY = #{projCategory},
-            PROJ_CATEGORY_DETAIL = #{projCategoryDetail}
-        WHERE PROJ_ID = #{projId}
+            PROJ_NAME = #{projName, jdbcType=VARCHAR},
+            PROJ_DESC = #{projDesc, jdbcType=VARCHAR},
+            PROJ_TYPE = NVL(#{projType, jdbcType=VARCHAR}, PROJ_TYPE),
+            PROJ_SCOPE = NVL(#{projScope, jdbcType=VARCHAR}, PROJ_SCOPE),
+            PROJ_CATEGORY = NVL(#{projCategory, jdbcType=VARCHAR}, PROJ_CATEGORY),
+            PROJ_CATEGORY_DETAIL = NVL(#{projCategoryDetail, jdbcType=VARCHAR}, PROJ_CATEGORY_DETAIL)
+        WHERE PROJ_ID = #{projId, jdbcType=NUMERIC}
     </update>
 
     <update id="updateProjectEvent">
@@ -589,5 +670,77 @@
     </delete>
 
 
+
+
+    <select id="selectProjectLinks" resultType="map">
+        SELECT LINK_ID, PROJ_ID, LINK_NAME, LINK_URL, SORT_ORDER
+        FROM PROJECT_LINKS
+        WHERE PROJ_ID = #{projId}
+        ORDER BY SORT_ORDER ASC, LINK_ID ASC
+    </select>
+
+    <delete id="deleteProjectLinks">
+        DELETE FROM PROJECT_LINKS
+        WHERE PROJ_ID = #{projId}
+    </delete>
+
+    <insert id="insertProjectLink" parameterType="map">
+        INSERT INTO PROJECT_LINKS (
+            LINK_ID, PROJ_ID, LINK_NAME, LINK_URL, SORT_ORDER, CREATED_AT
+        ) VALUES (
+            SEQ_PROJECT_LINK_ID.NEXTVAL,
+            #{projId},
+            #{linkName},
+            #{linkUrl},
+            #{sortOrder},
+            SYSDATE
+        )
+    </insert>
+
+
+    <select id="getProjectMemberProfile" resultType="map">
+        SELECT
+            pm.USER_ID,
+            CASE
+                WHEN NVL(wp.USE_ACCOUNT_PROFILE, 'Y') = 'N'
+                    THEN NVL(wp.DISPLAY_NAME, u.USER_NAME)
+                ELSE u.USER_NAME
+            END AS DISPLAY_NAME,
+            CASE
+                WHEN NVL(wp.USE_ACCOUNT_PROFILE, 'Y') = 'N'
+                    THEN wp.PROFILE_IMAGE_PATH
+                ELSE NULL
+            END AS PROFILE_IMAGE_PATH,
+            NVL(wp.CONTACT_EMAIL, u.EMAIL) AS EMAIL,
+            CASE
+                WHEN pm.USER_ID = #{viewerUserId}
+                     OR NVL(wp.SHOW_PHONE, 'N') = 'Y'
+                    THEN wp.PHONE_NUMBER
+                ELSE NULL
+            END AS PHONE_NUMBER,
+            NVL(wp.SHOW_PHONE, 'N') AS SHOW_PHONE,
+            wp.POSITION_NAME AS WS_POSITION,
+            pm.PROJ_POSITION,
+            pm.PROJ_ROLE,
+            CASE WHEN pr.LEADER_ID = pm.USER_ID THEN 'Y' ELSE 'N' END AS IS_LEADER,
+            TO_CHAR(wm.JOINED_AT, 'YYYY-MM-DD') AS WS_JOINED_AT
+        FROM PROJ_MEMBERS pm
+        JOIN PROJECTS pr ON pr.PROJ_ID = pm.PROJ_ID
+        JOIN USERS u ON u.USER_ID = pm.USER_ID
+        LEFT JOIN WS_MEMBERS wm
+          ON wm.WS_ID = pr.WS_ID
+         AND wm.USER_ID = pm.USER_ID
+        LEFT JOIN WS_MEMBER_PROFILES wp
+          ON wp.WS_ID = pr.WS_ID
+         AND wp.USER_ID = pm.USER_ID
+        WHERE pm.PROJ_ID = #{projId}
+          AND pm.USER_ID = #{targetUserId}
+          AND EXISTS (
+              SELECT 1
+              FROM PROJ_MEMBERS viewer_pm
+              WHERE viewer_pm.PROJ_ID = pm.PROJ_ID
+                AND viewer_pm.USER_ID = #{viewerUserId}
+          )
+    </select>
 
 </mapper>

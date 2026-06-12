@@ -14,17 +14,23 @@ public interface IprojectDAO {
     // 1. 프로젝트 기본 CRUD
     int insertProject(projectRequestDTO dto);
     List<projectRequestDTO> selectProjectsByWsId(Long wsId);
+    List<Map<String, Object>> selectProjectListByWorkspaceId(@Param("wsId") Long wsId);
     projectRequestDTO selectProjectById(Long projId);
     // 2. 프로젝트 멤버 할당
     int insertProjectMember(@Param("projId") Long projId, 
                             @Param("userId") Long userId, 
-                            @Param("role") String role);
+                            @Param("role") String role,
+                            @Param("projPosition") String projPosition);
 
     // 3. 워크스페이스 멤버 중 이 프로젝트에 아직 참여하지 않은 사람 목록
     List<Map<String, Object>> getAssignableMembers(@Param("wsId") Long wsId, @Param("projId") Long projId);
     
     // 4. 현재 프로젝트에 참여 중인 멤버 목록 조회
     List<Map<String, Object>> getProjectMembers(Long projId);
+    Map<String, Object> getProjectMemberProfile(
+            @Param("projId") Long projId,
+            @Param("targetUserId") Long targetUserId,
+            @Param("viewerUserId") Long viewerUserId);
     int updateProjectMemberPosition(@Param("projId") Long projId,
                                     @Param("userId") Long userId,
                                     @Param("projPosition") String projPosition);
@@ -53,6 +59,10 @@ public interface IprojectDAO {
  // 프로젝트 수정
     int updateProject(projectRequestDTO dto);
     int updateProjectEvent(projectRequestDTO dto);
+
+    List<Map<String, Object>> selectProjectLinks(@Param("projId") Long projId);
+    int deleteProjectLinks(@Param("projId") Long projId);
+    int insertProjectLink(Map<String, Object> params);
     // 프로젝트 삭제
     int deleteProject(Long projId);
     List<Map<String, Object>> selectProjectSchedules(Long projId);

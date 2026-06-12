@@ -1,87 +1,85 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <!DOCTYPE html>
-<html>
+<html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>로그인 - MOYO</title>
-    <style>
-        body { 
-            background-color: #f4f7f9; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            min-height: 100vh; 
-            margin: 0; 
-            font-family: 'Pretendard', sans-serif; 
-        }
-        .login-card { 
-            background: white; 
-            padding: 40px; 
-            border-radius: 20px; 
-            box-shadow: 0 10px 25px rgba(0,0,0,0.05); 
-            width: 100%; 
-            max-width: 360px;
-        }
-        .login-card h2 { 
-            text-align: center; 
-            color: #4A90E2; 
-            margin-bottom: 30px; 
-            cursor: pointer;
-            font-weight: 800;
-            letter-spacing: -1px;
-        }
-        .input-group { margin-bottom: 20px; }
-        .input-group label { display: block; font-size: 13px; color: #666; margin-bottom: 8px; }
-        .input-group input { 
-            width: 100%; 
-            padding: 12px; 
-            border: 1px solid #ddd; 
-            border-radius: 10px; 
-            font-size: 14px; 
-            box-sizing: border-box; 
-            transition: 0.3s;
-        }
-        .input-group input:focus { border-color: #4A90E2; outline: none; }
-        .btn-login { 
-            width: 100%; 
-            padding: 14px; 
-            background: #4A90E2; 
-            color: white; 
-            border: none; 
-            border-radius: 10px; 
-            font-size: 16px; 
-            font-weight: bold; 
-            cursor: pointer;
-        }
-        .btn-login:hover { background: #357ABD; }
-        .footer-links { text-align: center; margin-top: 20px; font-size: 13px; color: #888; }
-        .footer-links a { color: #4A90E2; text-decoration: none; font-weight: bold; margin: 0 5px; }
-        .footer-links .divider { color: #ddd; }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MOYO 로그인</title>
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/signup.css?v=20260609-login1">
 </head>
-<body>
+<body class="signup-body">
+    <main class="signup-shell">
+        <section class="signup-brand-panel" aria-label="MOYO 소개">
+            <div class="signup-brand-copy">
+                <span class="signup-eyebrow">함께 모여 완성하는 협업</span>
+                <h1>다시 만나서<br>반가워요</h1>
+                <p>MOYO에 로그인하고,<br>팀원과 함께하던 업무를 이어가세요.</p>
+            </div>
 
-<div class="login-card">
-    <h2 onclick="location.href='/'">MOYO</h2>
-    
-    <form action="/users/login" method="post">
-        <div class="input-group">
-            <label>이메일</label>
-            <input type="email" name="email" required placeholder="이메일을 입력하세요">
-        </div>
-        <div class="input-group">
-            <label>비밀번호</label>
-            <input type="password" name="pwdHash" required placeholder="비밀번호를 입력하세요">
-        </div>
-        <button type="submit" class="btn-login">로그인</button>
-    </form>
-    
-    <div class="footer-links">
-        <a href="/">홈으로</a>
-        <span class="divider">|</span>
-        <a href="/users/joinForm">회원가입</a>
-    </div>
-</div>
+            <div class="signup-feature-row" aria-hidden="true">
+                <span>워크스페이스</span>
+                <span>프로젝트</span>
+                <span>캘린더</span>
+            </div>
+        </section>
 
+        <section class="signup-card login-card-panel">
+            <a class="signup-card-logo-link" href="${pageContext.request.contextPath}/">
+                <img class="signup-card-logo"
+                     src="${pageContext.request.contextPath}/brand/moyo_logo.png"
+                     alt="MOYO">
+            </a>
+
+            <div class="login-heading">
+                <span class="signup-section-label">WELCOME BACK</span>
+                <h2>MOYO에 로그인하세요</h2>
+                <p>등록한 이메일과 비밀번호를 입력해주세요.</p>
+            </div>
+
+            <c:if test="${not empty param.error}">
+                <div class="signup-alert is-error login-error">
+                    이메일 또는 비밀번호를 확인해주세요.
+                </div>
+            </c:if>
+
+            <form class="login-form"
+                  action="${pageContext.request.contextPath}/users/login"
+                  method="post">
+                <div class="signup-field">
+                    <label for="email">이메일</label>
+                    <input id="email"
+                           type="email"
+                           name="email"
+                           autocomplete="email"
+                           placeholder="name@example.com"
+                           required>
+                </div>
+
+                <div class="signup-field">
+                    <label for="pwdHash">비밀번호</label>
+                    <input id="pwdHash"
+                           type="password"
+                           name="pwdHash"
+                           autocomplete="current-password"
+                           placeholder="비밀번호를 입력해주세요"
+                           required>
+                </div>
+
+                <button type="submit" class="signup-primary-button">
+                    로그인
+                </button>
+            </form>
+
+            <p class="login-footer">
+                아직 계정이 없나요?
+                <a href="${pageContext.request.contextPath}/users/joinForm">회원가입</a>
+            </p>
+
+            <a class="login-home-link" href="${pageContext.request.contextPath}/">
+                ← 홈으로 돌아가기
+            </a>
+        </section>
+    </main>
 </body>
 </html>

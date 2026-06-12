@@ -6,7 +6,8 @@
     <meta charset="UTF-8">
     <title>게시글 수정</title>
 
-    <script src="https://cdn.ckeditor.com/ckeditor5/41.1.0/classic/ckeditor.js"></script>
+    <script src="https://cdn.ckeditor.com/ckeditor5/41.1.0/super-build/ckeditor.js"></script>
+    <script src="https://cdn.ckeditor.com/ckeditor5/41.1.0/super-build/translations/ko.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
     <style>
@@ -458,13 +459,14 @@
         /* ===== End MOYO Board Point Theme - subtle ===== */
 
 </style>
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/boardUi.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/boardUi.css?v=board-editor-picker-v10">
 </head>
 <body class="moyo-board-body">
 
     <jsp:include page="/WEB-INF/views/common/header.jsp" />
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/boardUi.css?v=board-editor-picker-v10">
 
-    <div class="modify-page">
+    <div class="modify-page ${boardType eq 'FILE' ? 'board-file-form-page' : ''}">
         <div class="form-card">
             <div class="modify-header">
                 <div>
@@ -475,7 +477,7 @@
                             <c:otherwise>게시글 수정</c:otherwise>
                         </c:choose>
                     </h1>
-                    <p class="modify-desc">제목, 내용, 첨부파일을 수정합니다.</p>
+                    <p class="modify-desc"><c:choose><c:when test="${boardType eq 'FILE'}">자료명, 설명, 첨부파일을 수정합니다.</c:when><c:otherwise>제목, 내용, 첨부파일을 수정합니다.</c:otherwise></c:choose></p>
                 </div>
                 <a id="backLink" href="/group/board/detail?postId=${post.postId}&wsId=${wsId}" class="back-link">← 상세로 돌아가기</a>
             </div>
@@ -487,18 +489,39 @@
                 <input type="hidden" name="projId" value="${projId}">
 
                 <div class="form-group">
-                    <label for="title">제목</label>
+                    <label for="title"><c:choose><c:when test="${boardType eq 'FILE'}">자료명</c:when><c:otherwise>제목</c:otherwise></c:choose></label>
                     <input type="text" id="title" name="title" class="form-control" value="${post.title}" required>
                 </div>
 
+
+                <c:if test="${canManageBoard}">
+                    <div class="form-group board-pin-panel ${post.isPinned eq 'Y' ? 'is-active' : 'is-inactive'}">
+                        <div class="board-pin-head">
+                            <label class="board-pin-toggle">
+                                <input type="checkbox" name="isPinned" id="isPinned" value="Y" ${post.isPinned eq 'Y' ? 'checked' : ''}>
+                                <span>상단 고정</span>
+                            </label>
+                            <p>그룹장/팀장 또는 관리자만 사용할 수 있습니다. 기간을 비우면 계속 고정됩니다.</p>
+                        </div>
+                        <div class="board-pin-dates">
+                            <label>시작일
+                                <input type="date" name="pinStartDt" id="pinStartDt" class="pin-date-input" value="${post.pinStartDt}" ${post.isPinned eq 'Y' ? '' : 'disabled'}>
+                            </label>
+                            <label>종료일
+                                <input type="date" name="pinEndDt" id="pinEndDt" class="pin-date-input" value="${post.pinEndDt}" ${post.isPinned eq 'Y' ? '' : 'disabled'}>
+                            </label>
+                        </div>
+                    </div>
+                </c:if>
+
                 <div class="form-group">
-                    <label for="editor">내용</label>
-                    <textarea id="editor" name="content">${post.content}</textarea>
+                    <label for="editor"><c:choose><c:when test="${boardType eq 'FILE'}">자료 설명</c:when><c:otherwise>내용</c:otherwise></c:choose></label>
+                    <textarea id="editor" name="content" autocomplete="off" spellcheck="false">${post.content}</textarea>
                 </div>
 
                 <c:if test="${not empty fileList}">
                     <div class="form-group">
-                        <label>기존 첨부 파일</label>
+                        <label><c:choose><c:when test="${boardType eq 'FILE'}">기존 자료 파일</c:when><c:otherwise>기존 첨부 파일</c:otherwise></c:choose></label>
                         <div id="existingFiles" class="file-panel">
                             <c:forEach var="file" items="${fileList}">
                                 <div class="file-item" id="file-${file.FILE_ID}">
@@ -511,13 +534,19 @@
                 </c:if>
 
                 <div class="form-group">
-                    <label>새 파일 추가</label>
-                    <input type="file" name="files" multiple class="file-input">
+                    <label class="form-label" for="fileInput"><c:choose><c:when test="${boardType eq 'FILE'}">새 자료 파일 추가</c:when><c:otherwise>새 파일 추가</c:otherwise></c:choose></label>
+                    <div id="fileDropZone" class="board-file-dropzone ${boardType eq 'FILE' ? 'is-file-board' : ''}">
+                        <input type="file" id="fileInput" name="files" multiple class="file-input board-file-hidden">
+                        <div class="dropzone-icon">📎</div>
+                        <div class="dropzone-main"><c:choose><c:when test="${boardType eq 'FILE'}">자료 파일을 끌어다 놓거나 클릭해서 선택하세요</c:when><c:otherwise>파일을 끌어다 놓거나 클릭해서 선택하세요</c:otherwise></c:choose></div>
+                        <div class="dropzone-sub"><c:choose><c:when test="${boardType eq 'FILE'}">기존 자료 파일은 유지하면서 새 파일을 추가할 수 있습니다.</c:when><c:otherwise>여러 파일을 한 번에 추가할 수 있습니다.</c:otherwise></c:choose></div>
+                    </div>
+                    <ul id="selectedFileList" class="selected-file-list"></ul>
                 </div>
 
                 <div class="btn-area">
                     <a id="cancelLink" href="/group/board/detail?postId=${post.postId}&wsId=${wsId}" class="btn-cancel">취소</a>
-                    <button type="submit" class="btn-save">수정 완료</button>
+                    <button type="submit" class="btn-save"><c:choose><c:when test="${boardType eq 'FILE'}">자료 수정</c:when><c:otherwise>수정 완료</c:otherwise></c:choose></button>
                 </div>
             </form>
         </div>
@@ -527,6 +556,157 @@
 
     <script>
         let myEditor;
+
+        let selectedBoardFiles = [];
+
+        function initializeBoardFileDropZone() {
+            const dropZone = document.getElementById('fileDropZone');
+            const fileInput = document.getElementById('fileInput');
+            const selectedFileList = document.getElementById('selectedFileList');
+            if (!dropZone || !fileInput || !selectedFileList) return;
+
+            dropZone.addEventListener('click', () => fileInput.click());
+            fileInput.addEventListener('change', () => addSelectedFiles(fileInput.files));
+
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropZone.addEventListener(eventName, function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    dropZone.classList.add('is-dragover');
+                });
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    dropZone.classList.remove('is-dragover');
+                });
+            });
+
+            dropZone.addEventListener('drop', function(e) {
+                addSelectedFiles(e.dataTransfer.files);
+            });
+        }
+
+        function addSelectedFiles(files) {
+            Array.from(files || []).forEach(file => {
+                const exists = selectedBoardFiles.some(item =>
+                    item.name === file.name && item.size === file.size && item.lastModified === file.lastModified
+                );
+                if (!exists) selectedBoardFiles.push(file);
+            });
+            syncBoardFileInput();
+            renderSelectedFiles();
+        }
+
+        function removeSelectedFile(index) {
+            selectedBoardFiles.splice(index, 1);
+            syncBoardFileInput();
+            renderSelectedFiles();
+        }
+
+        function syncBoardFileInput() {
+            const fileInput = document.getElementById('fileInput');
+            if (!fileInput) return;
+            const dataTransfer = new DataTransfer();
+            selectedBoardFiles.forEach(file => dataTransfer.items.add(file));
+            fileInput.files = dataTransfer.files;
+        }
+
+        function renderSelectedFiles() {
+            const selectedFileList = document.getElementById('selectedFileList');
+            if (!selectedFileList) return;
+            selectedFileList.innerHTML = '';
+            selectedBoardFiles.forEach((file, index) => {
+                const li = document.createElement('li');
+                li.innerHTML = '<span>📄 ' + escapeHtml(file.name) + ' <em>' + formatFileSize(file.size) + '</em></span>' +
+                               '<button type="button" onclick="removeSelectedFile(' + index + ')">삭제</button>';
+                selectedFileList.appendChild(li);
+            });
+        }
+
+        function formatFileSize(size) {
+            if (size < 1024) return size + 'B';
+            if (size < 1024 * 1024) return Math.round(size / 1024) + 'KB';
+            return (size / 1024 / 1024).toFixed(1) + 'MB';
+        }
+
+        function escapeHtml(value) {
+            return String(value || '').replace(/[&<>'"]/g, function(char) {
+                return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[char];
+            });
+        }
+
+
+        const BOARD_EDITOR_MAX_IMAGE_SIZE = 5 * 1024 * 1024;
+        const BOARD_EDITOR_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+
+        function sanitizeInlineStyle(styleValue) {
+            if (!styleValue) return '';
+            const allowed = new Set([
+                'color', 'background-color', 'text-align', 'font-size',
+                'width', 'height', 'border', 'border-color', 'border-style', 'border-width',
+                'vertical-align', 'padding', 'margin-left', 'margin-right'
+            ]);
+            return styleValue.split(';')
+                .map(rule => rule.trim())
+                .filter(rule => {
+                    const idx = rule.indexOf(':');
+                    if (idx < 1) return false;
+                    const prop = rule.slice(0, idx).trim().toLowerCase();
+                    const value = rule.slice(idx + 1).trim().toLowerCase();
+                    if (!allowed.has(prop)) return false;
+                    if (value.includes('javascript:') || value.includes('expression(') || value.includes('url(')) return false;
+                    return true;
+                })
+                .join('; ');
+        }
+
+        function sanitizeEditorHtml(html) {
+            if (!html) return '';
+
+            const wrapper = document.createElement('div');
+            wrapper.innerHTML = html;
+
+            wrapper.querySelectorAll('script, style, iframe, object, embed, form, input, button, meta, link').forEach(el => el.remove());
+
+            wrapper.querySelectorAll('*').forEach(el => {
+                Array.from(el.attributes).forEach(attr => {
+                    const name = attr.name.toLowerCase();
+                    const value = (attr.value || '').trim().toLowerCase();
+
+                    if (name.startsWith('on')) {
+                        el.removeAttribute(attr.name);
+                        return;
+                    }
+
+                    if (name === 'style') {
+                        const safeStyle = sanitizeInlineStyle(attr.value);
+                        if (safeStyle) el.setAttribute('style', safeStyle);
+                        else el.removeAttribute('style');
+                        return;
+                    }
+
+                    if ((name === 'href' || name === 'src') && value.startsWith('javascript:')) {
+                        el.removeAttribute(attr.name);
+                        return;
+                    }
+
+                    if (name === 'src' && value.startsWith('data:image/')) {
+                        el.removeAttribute(attr.name);
+                    }
+                });
+            });
+
+            wrapper.querySelectorAll('a[href]').forEach(link => {
+                link.setAttribute('target', '_blank');
+                link.setAttribute('rel', 'noopener noreferrer');
+            });
+
+            return wrapper.innerHTML.trim();
+        }
+
         const wsId = ${wsId};
 
         document.addEventListener("DOMContentLoaded", function() {
@@ -537,52 +717,142 @@
 
             document.getElementById("backLink").href = detailUrl;
             document.getElementById("cancelLink").href = detailUrl;
+            initializeBoardFileDropZone();
+            initializeBoardPinToggle();
         });
+
+
+        function initializeBoardPinToggle() {
+            const isPinnedEl = document.getElementById('isPinned');
+            const pinStartEl = document.getElementById('pinStartDt');
+            const pinEndEl = document.getElementById('pinEndDt');
+            if (!isPinnedEl || !pinStartEl || !pinEndEl) return;
+
+            const panel = isPinnedEl.closest('.board-pin-panel');
+            const syncPinState = () => {
+                const enabled = isPinnedEl.checked;
+                [pinStartEl, pinEndEl].forEach(input => {
+                    input.disabled = !enabled;
+                    if (!enabled) input.value = '';
+                });
+                if (panel) {
+                    panel.classList.toggle('is-active', enabled);
+                    panel.classList.toggle('is-inactive', !enabled);
+                }
+            };
+
+            isPinnedEl.addEventListener('change', syncPinState);
+            syncPinState();
+        }
 
         function MyCustomUploadAdapterPlugin(editor) {
             editor.plugins.get('FileRepository').createUploadAdapter = (loader) => {
                 return {
                     upload() {
-                        return loader.file
-                            .then(file => new Promise((resolve, reject) => {
-                                const formData = new FormData();
-                                formData.append('upload', file);
+                        return loader.file.then(file => new Promise((resolve, reject) => {
+                            if (!BOARD_EDITOR_IMAGE_TYPES.includes(file.type)) {
+                                reject('본문 이미지는 jpg, png, gif, webp 형식만 업로드할 수 있습니다.');
+                                return;
+                            }
 
-                                $.ajax({
-                                    url: '/api/workspace/board/image-upload',
-                                    type: 'POST',
-                                    data: formData,
-                                    processData: false,
-                                    contentType: false,
-                                    success: function(res) {
-                                        if (res.uploaded) {
-                                            resolve({ default: res.url });
-                                        } else {
-                                            reject(res.error ? res.error.message : '업로드 실패');
-                                        }
-                                    },
-                                    error: function(err) {
-                                        reject('서버 통신 오류');
+                            if (file.size > BOARD_EDITOR_MAX_IMAGE_SIZE) {
+                                reject('본문 이미지는 5MB 이하만 업로드할 수 있습니다.');
+                                return;
+                            }
+
+                            const formData = new FormData();
+                            formData.append('upload', file);
+
+                            $.ajax({
+                                url: '/api/workspace/board/image-upload',
+                                type: 'POST',
+                                data: formData,
+                                processData: false,
+                                contentType: false,
+                                success: function(res) {
+                                    if (res.uploaded && res.url) {
+                                        resolve({ default: res.url });
+                                    } else {
+                                        reject(res.error ? res.error.message : '이미지 업로드에 실패했습니다.');
                                     }
-                                });
-                            }));
+                                },
+                                error: function(xhr) {
+                                    const message = xhr.responseJSON && xhr.responseJSON.error
+                                        ? xhr.responseJSON.error.message
+                                        : '이미지 업로드 중 서버 통신 오류가 발생했습니다.';
+                                    reject(message);
+                                }
+                            });
+                        }));
                     },
                     abort() {}
                 };
             };
         }
 
-        ClassicEditor
-            .create(document.querySelector('#editor'), {
-                language: 'ko',
-                toolbar: [
+        const BoardClassicEditor = window.CKEDITOR && window.CKEDITOR.ClassicEditor ? window.CKEDITOR.ClassicEditor : window.ClassicEditor;
+
+        const boardEditorConfig = {
+            language: 'ko',
+            placeholder: '내용을 입력하세요.',
+            toolbar: {
+                items: [
                     'heading', '|',
-                    'bold', 'italic', '|',
+                    'bold', 'italic', 'underline', '|',
+                    'fontColor', 'fontBackgroundColor', '|',
+                    'alignment', '|',
                     'numberedList', 'bulletedList', '|',
-                    'link', 'uploadImage', 'insertTable', 'blockQuote', 'undo', 'redo'
+                    'link', 'uploadImage', 'insertTable', 'blockQuote', '|',
+                    'removeFormat', 'undo', 'redo'
                 ],
-                extraPlugins: [MyCustomUploadAdapterPlugin]
-            })
+                shouldNotGroupWhenFull: false
+            },
+            fontColor: {
+                columns: 6,
+                documentColors: 12
+            },
+            fontBackgroundColor: {
+                columns: 6,
+                documentColors: 12
+            },
+            image: {
+                upload: { types: ['jpeg', 'jpg', 'png', 'gif', 'webp'] },
+                resizeUnit: '%',
+                styles: [ 'inline', 'alignLeft', 'alignCenter', 'alignRight', 'side' ],
+                toolbar: [
+                    'imageTextAlternative', 'toggleImageCaption', '|',
+                    'imageStyle:inline', 'imageStyle:alignLeft', 'imageStyle:alignCenter', 'imageStyle:alignRight', 'imageStyle:side', '|',
+                    'resizeImage'
+                ]
+            },
+            table: {
+                contentToolbar: [
+                    'tableColumn', 'tableRow', 'mergeTableCells'
+                ],
+                defaultHeadings: { rows: 0, columns: 0 }
+            },
+            link: {
+                addTargetToExternalLinks: true,
+                defaultProtocol: 'https://'
+            },
+            extraPlugins: [MyCustomUploadAdapterPlugin],
+            removePlugins: [
+                'CKBox', 'CKFinder', 'EasyImage', 'RealTimeCollaborativeComments',
+                'RealTimeCollaborativeTrackChanges', 'RealTimeCollaborativeRevisionHistory',
+                'PresenceList', 'Comments', 'TrackChanges', 'TrackChangesData',
+                'RevisionHistory', 'Pagination', 'WProofreader', 'MathType',
+                'SlashCommand', 'Template', 'DocumentOutline', 'FormatPainter',
+                'TableOfContents', 'PasteFromOfficeEnhanced',
+                'AIAssistant', 'AIAdapter', 'OpenAITextAdapter', 'AzureOpenAITextAdapter',
+                'CKBoxImageEdit', 'ExportPdf', 'ExportWord', 'ImportWord', 'ImportFromWord',
+                'MultiLevelList', 'CaseChange',
+                'ListProperties', 'TodoList',
+                'TableProperties', 'TableCellProperties', 'TableColumnResize', 'TableCaption'
+            ]
+        };
+
+        BoardClassicEditor
+            .create(document.querySelector('#editor'), boardEditorConfig)
             .then(editor => {
                 myEditor = editor;
             })
@@ -591,13 +861,22 @@
             });
 
         document.querySelector('form').addEventListener('submit', function(e) {
+            const isPinnedEl = document.getElementById('isPinned');
+            const pinStartEl = document.getElementById('pinStartDt');
+            const pinEndEl = document.getElementById('pinEndDt');
+            if (isPinnedEl && isPinnedEl.checked && pinStartEl && pinEndEl && pinStartEl.value && pinEndEl.value && pinStartEl.value > pinEndEl.value) {
+                alert('상단 고정 종료일은 시작일보다 빠를 수 없습니다.');
+                e.preventDefault();
+                return false;
+            }
+
             if (myEditor) {
-                const editorData = myEditor.getData();
+                const editorData = sanitizeEditorHtml(myEditor.getData());
 
                 document.querySelector('#editor').value = editorData;
 
                 if (editorData.trim().length === 0) {
-                    alert('내용을 입력해 주세요.');
+                    alert(boardType === 'FILE' ? '자료 설명을 입력해 주세요.' : '내용을 입력해 주세요.');
                     e.preventDefault();
                     return false;
                 }

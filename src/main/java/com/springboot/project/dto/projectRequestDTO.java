@@ -1,6 +1,7 @@
 package com.springboot.project.dto;
 
 import java.util.List;
+import java.util.Map;
 import lombok.Data;
 
 @Data
@@ -16,6 +17,8 @@ public class projectRequestDTO {
     private Long leaderId;      
     private List<Long> memberIds;
     private List<Long> adminIds;
+    private List<Map<String, Object>> links;
+    private Map<String, String> memberPositions;
     private String startDate; 
     private String endDate;
 

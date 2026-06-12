@@ -11,11 +11,13 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.springboot.project.dto.usersDto;
 import com.springboot.project.dto.workspaceDTO;
 import com.springboot.project.service.UserService;
+import com.springboot.project.service.AccountProfileImageService;
 
 import jakarta.servlet.http.HttpSession;
 
@@ -23,6 +25,9 @@ import jakarta.servlet.http.HttpSession;
 public class usersController {	
 	@Autowired
 	private UserService userService;
+
+	@Autowired
+	private AccountProfileImageService accountProfileImageService;
 
 	@RequestMapping("/")
 	public String root() {
@@ -34,39 +39,85 @@ public class usersController {
 		return "users/joinForm";
 	}
 	
+
+	@GetMapping("/users/check-email")
+	@ResponseBody
+	public Map<String, Object> checkEmail(@RequestParam("email") String email) {
+		Map<String, Object> result = new HashMap<>();
+
+		String normalizedEmail = email == null ? "" : email.trim().toLowerCase();
+		boolean duplicated = !normalizedEmail.isEmpty()
+				&& userService.isEmailDuplicated(normalizedEmail);
+
+		result.put("duplicated", duplicated);
+		result.put("available", !normalizedEmail.isEmpty() && !duplicated);
+		return result;
+	}
+
 	@PostMapping("/users/join")
 	public String join(usersDto user, HttpSession session) {
-		userService.registerUser(user);
-		session.setAttribute("user", user);
-		return "redirect:/users/step2";
-	}
-	
-	@GetMapping("/users/step2")
-		public String step2() {		
-			return "users/joinForm2";
+		String email = user.getEmail() == null ? "" : user.getEmail().trim();
+		String password = user.getPwdHash() == null ? "" : user.getPwdHash().trim();
+
+		if (email.isEmpty() || password.isEmpty()) {
+			return "redirect:/users/joinForm?error=required";
+		}
+		if (userService.isEmailDuplicated(email)) {
+			return "redirect:/users/joinForm?error=duplicate";
 		}
 
-	
+		user.setEmail(email);
+		user.setPwdHash(password);
+		session.setAttribute("pendingJoinUser", user);
+		return "redirect:/users/step2";
+	}
+
+	@GetMapping("/users/step2")
+	public String step2(HttpSession session) {
+		if (session.getAttribute("pendingJoinUser") == null) {
+			return "redirect:/users/joinForm";
+		}
+		return "users/joinForm2";
+	}
+
+	@PostMapping("/users/completeJoin")
+	public String completeJoin(
+			@org.springframework.web.bind.annotation.RequestParam("userName") String userName,
+			@org.springframework.web.bind.annotation.RequestParam(value = "profileImageData", required = false) String profileImageData,
+			HttpSession session) {
+		usersDto pendingUser = (usersDto) session.getAttribute("pendingJoinUser");
+		if (pendingUser == null) {
+			return "redirect:/users/joinForm";
+		}
+
+		String trimmedName = userName == null ? "" : userName.trim();
+		if (trimmedName.isEmpty()) {
+			return "redirect:/users/step2?error=name";
+		}
+
+		try {
+			pendingUser.setUserName(trimmedName);
+			pendingUser.setStatus("ACTIVE");
+			pendingUser.setUserRole("USER");
+			pendingUser.setProfileImagePath(accountProfileImageService.saveCroppedImage(profileImageData));
+			userService.registerUser(pendingUser);
+
+			usersDto fullUserInfo = userService.login(pendingUser);
+			session.removeAttribute("pendingJoinUser");
+			session.setAttribute("user", fullUserInfo);
+			return "redirect:/calendar";
+		} catch (IllegalArgumentException e) {
+			return "redirect:/users/step2?error=image";
+		} catch (java.io.IOException e) {
+			return "redirect:/users/step2?error=save";
+		}
+	}
+
 	@GetMapping("/users/loginForm")
 	public String loginForm() {
 		return "users/loginForm";
 	}
 	
-	@PostMapping("/users/completeJoin")
-	public String completeJoin(usersDto user, HttpSession session) {
-		usersDto currentUser = (usersDto) session.getAttribute("user");
-		
-		if (currentUser != null) {
-			currentUser.setUserName(user.getUserName());
-			currentUser.setStatus(user.getStatus());
-			
-			usersDto fullUserInfo = userService.completeJoinProcess(currentUser);
-			
-			session.setAttribute("user", fullUserInfo);
-			return "redirect:/calendar";
-		}
-		return "redirect:/";
-	}
 	
 	@PostMapping("/users/login")
 	public String login(usersDto user, HttpSession session) {

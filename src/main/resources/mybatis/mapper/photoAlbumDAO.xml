@@ -1,0 +1,214 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.springboot.project.dao.IphotoAlbumDAO">
+
+    <select id="selectAlbums" resultType="map">
+        SELECT A.ALBUM_ID, A.SCOPE_TYPE, A.SCOPE_ID, A.ALBUM_NAME, A.ALBUM_DESCRIPTION,
+               A.COVER_PHOTO_ID, A.CREATED_BY, U.USER_NAME AS CREATOR_NAME,
+               TO_CHAR(A.CREATED_AT, 'YYYY-MM-DD') AS CREATED_AT,
+               TO_CHAR(A.UPDATED_AT, 'YYYY-MM-DD HH24:MI') AS UPDATED_AT,
+               (SELECT COUNT(*) FROM PHOTO_POSTS PP WHERE PP.ALBUM_ID = A.ALBUM_ID) AS POST_COUNT,
+               (SELECT COUNT(*) FROM PHOTOS P JOIN PHOTO_POSTS PP ON PP.POST_ID = P.POST_ID
+                 WHERE PP.ALBUM_ID = A.ALBUM_ID) AS PHOTO_COUNT,
+               CP.FILE_PATH AS COVER_PATH
+          FROM PHOTO_ALBUMS A
+          JOIN USERS U ON U.USER_ID = A.CREATED_BY
+          LEFT JOIN PHOTOS CP ON CP.PHOTO_ID = A.COVER_PHOTO_ID
+         WHERE A.SCOPE_TYPE = #{scopeType}
+           AND A.SCOPE_ID = #{scopeId}
+         ORDER BY A.UPDATED_AT DESC, A.ALBUM_ID DESC
+    </select>
+
+    <select id="selectAlbum" resultType="map">
+        SELECT A.ALBUM_ID, A.SCOPE_TYPE, A.SCOPE_ID, A.ALBUM_NAME, A.ALBUM_DESCRIPTION,
+               A.COVER_PHOTO_ID, A.CREATED_BY, U.USER_NAME AS CREATOR_NAME,
+               TO_CHAR(A.CREATED_AT, 'YYYY-MM-DD HH24:MI') AS CREATED_AT,
+               TO_CHAR(A.UPDATED_AT, 'YYYY-MM-DD HH24:MI') AS UPDATED_AT,
+               (SELECT COUNT(*) FROM PHOTO_POSTS PP WHERE PP.ALBUM_ID = A.ALBUM_ID) AS POST_COUNT,
+               (SELECT COUNT(*) FROM PHOTOS P JOIN PHOTO_POSTS PP ON PP.POST_ID = P.POST_ID
+                 WHERE PP.ALBUM_ID = A.ALBUM_ID) AS PHOTO_COUNT
+          FROM PHOTO_ALBUMS A
+          JOIN USERS U ON U.USER_ID = A.CREATED_BY
+         WHERE A.ALBUM_ID = #{albumId}
+    </select>
+
+    <insert id="insertAlbum" parameterType="map">
+        <selectKey keyProperty="albumId" order="BEFORE" resultType="long">
+            SELECT SEQ_PHOTO_ALBUM_ID.NEXTVAL FROM DUAL
+        </selectKey>
+        INSERT INTO PHOTO_ALBUMS (
+            ALBUM_ID, SCOPE_TYPE, SCOPE_ID, ALBUM_NAME, ALBUM_DESCRIPTION,
+            CREATED_BY, CREATED_AT, UPDATED_AT
+        ) VALUES (
+            #{albumId}, #{scopeType}, #{scopeId}, #{albumName}, #{albumDescription,jdbcType=VARCHAR},
+            #{createdBy}, SYSDATE, SYSDATE
+        )
+    </insert>
+
+    <update id="updateAlbum" parameterType="map">
+        UPDATE PHOTO_ALBUMS
+           SET ALBUM_NAME = #{albumName},
+               ALBUM_DESCRIPTION = #{albumDescription,jdbcType=VARCHAR},
+               UPDATED_AT = SYSDATE
+         WHERE ALBUM_ID = #{albumId}
+    </update>
+
+    <delete id="deleteAlbum">
+        DELETE FROM PHOTO_ALBUMS WHERE ALBUM_ID = #{albumId}
+    </delete>
+
+    <sql id="postColumns">
+        PP.POST_ID, PP.SCOPE_TYPE, PP.SCOPE_ID, PP.ALBUM_ID,
+        A.ALBUM_NAME, PP.TITLE, PP.DESCRIPTION, PP.CREATED_BY,
+        U.USER_NAME AS CREATOR_NAME,
+        TO_CHAR(PP.CREATED_AT, 'YYYY-MM-DD HH24:MI') AS CREATED_AT,
+        TO_CHAR(PP.UPDATED_AT, 'YYYY-MM-DD HH24:MI') AS UPDATED_AT,
+        (SELECT COUNT(*) FROM PHOTOS PX WHERE PX.POST_ID = PP.POST_ID) AS PHOTO_COUNT,
+        (SELECT COUNT(*) FROM CONTENT_REACTIONS CR
+          WHERE CR.CONTENT_TYPE = 'PHOTO_POST'
+            AND CR.CONTENT_ID = PP.POST_ID
+            AND CR.REACTION_TYPE = 'LIKE') AS LIKE_COUNT,
+        CASE WHEN #{userId,jdbcType=NUMERIC} IS NOT NULL AND EXISTS (
+            SELECT 1 FROM CONTENT_REACTIONS CR
+             WHERE CR.CONTENT_TYPE = 'PHOTO_POST'
+               AND CR.CONTENT_ID = PP.POST_ID
+               AND CR.USER_ID = #{userId,jdbcType=NUMERIC}
+               AND CR.REACTION_TYPE = 'LIKE'
+        ) THEN 1 ELSE 0 END AS LIKED_BY_ME,
+        (SELECT FILE_PATH FROM (
+            SELECT PX.FILE_PATH FROM PHOTOS PX
+             WHERE PX.POST_ID = PP.POST_ID
+             ORDER BY PX.SORT_ORDER ASC, PX.PHOTO_ID ASC
+        ) WHERE ROWNUM = 1) AS COVER_PATH
+    </sql>
+
+    <select id="selectPosts" resultType="map">
+        SELECT <include refid="postColumns"/>
+          FROM PHOTO_POSTS PP
+          JOIN USERS U ON U.USER_ID = PP.CREATED_BY
+          LEFT JOIN PHOTO_ALBUMS A ON A.ALBUM_ID = PP.ALBUM_ID
+         WHERE PP.SCOPE_TYPE = #{scopeType}
+           AND PP.SCOPE_ID = #{scopeId}
+        <if test="albumId != null">
+           AND PP.ALBUM_ID = #{albumId}
+        </if>
+         ORDER BY PP.CREATED_AT DESC, PP.POST_ID DESC
+    </select>
+
+    <select id="selectRecentPosts" resultType="map">
+        SELECT * FROM (
+            SELECT <include refid="postColumns"/>
+              FROM PHOTO_POSTS PP
+              JOIN USERS U ON U.USER_ID = PP.CREATED_BY
+              LEFT JOIN PHOTO_ALBUMS A ON A.ALBUM_ID = PP.ALBUM_ID
+             WHERE PP.SCOPE_TYPE = #{scopeType}
+               AND PP.SCOPE_ID = #{scopeId}
+             ORDER BY PP.CREATED_AT DESC, PP.POST_ID DESC
+        ) WHERE ROWNUM &lt;= #{limit}
+    </select>
+
+    <select id="selectPost" resultType="map">
+        SELECT <include refid="postColumns"/>
+          FROM PHOTO_POSTS PP
+          JOIN USERS U ON U.USER_ID = PP.CREATED_BY
+          LEFT JOIN PHOTO_ALBUMS A ON A.ALBUM_ID = PP.ALBUM_ID
+         WHERE PP.POST_ID = #{postId}
+    </select>
+
+    <select id="selectPostPhotos" resultType="map">
+        SELECT P.PHOTO_ID, P.POST_ID, P.ALBUM_ID, P.FILE_PATH, P.ORIGINAL_NAME,
+               P.FILE_SIZE, P.MIME_TYPE, P.UPLOADED_BY,
+               U.USER_NAME AS UPLOADER_NAME,
+               TO_CHAR(P.CREATED_AT, 'YYYY-MM-DD HH24:MI') AS CREATED_AT
+          FROM PHOTOS P
+          JOIN USERS U ON U.USER_ID = P.UPLOADED_BY
+         WHERE P.POST_ID = #{postId}
+         ORDER BY P.SORT_ORDER ASC, P.PHOTO_ID ASC
+    </select>
+
+    <insert id="insertPost" parameterType="map">
+        <selectKey keyProperty="postId" order="BEFORE" resultType="long">
+            SELECT SEQ_PHOTO_POST_ID.NEXTVAL FROM DUAL
+        </selectKey>
+        INSERT INTO PHOTO_POSTS (
+            POST_ID, SCOPE_TYPE, SCOPE_ID, ALBUM_ID, TITLE, DESCRIPTION,
+            CREATED_BY, CREATED_AT, UPDATED_AT
+        ) VALUES (
+            #{postId}, #{scopeType}, #{scopeId}, #{albumId,jdbcType=NUMERIC},
+            #{title,jdbcType=VARCHAR}, #{description,jdbcType=VARCHAR},
+            #{createdBy}, SYSDATE, SYSDATE
+        )
+    </insert>
+
+    <update id="updatePost" parameterType="map">
+        UPDATE PHOTO_POSTS
+           SET ALBUM_ID = #{albumId,jdbcType=NUMERIC},
+               TITLE = #{title,jdbcType=VARCHAR},
+               DESCRIPTION = #{description,jdbcType=VARCHAR},
+               UPDATED_AT = SYSDATE
+         WHERE POST_ID = #{postId}
+    </update>
+
+    <update id="updatePostAlbum">
+        UPDATE PHOTO_POSTS
+           SET ALBUM_ID = #{albumId,jdbcType=NUMERIC},
+               UPDATED_AT = SYSDATE
+         WHERE POST_ID = #{postId}
+    </update>
+
+    <update id="updatePhotoAlbumByPost">
+        UPDATE PHOTOS
+           SET ALBUM_ID = #{albumId,jdbcType=NUMERIC}
+         WHERE POST_ID = #{postId}
+    </update>
+
+    <delete id="deletePost">
+        DELETE FROM PHOTO_POSTS WHERE POST_ID = #{postId}
+    </delete>
+
+    <insert id="insertPhoto" parameterType="map">
+        <selectKey keyProperty="photoId" order="BEFORE" resultType="long">
+            SELECT SEQ_PHOTO_ID.NEXTVAL FROM DUAL
+        </selectKey>
+        INSERT INTO PHOTOS (
+            PHOTO_ID, POST_ID, ALBUM_ID, FILE_PATH, ORIGINAL_NAME, FILE_SIZE,
+            MIME_TYPE, UPLOADED_BY, SORT_ORDER, CREATED_AT
+        ) VALUES (
+            #{photoId}, #{postId}, #{albumId,jdbcType=NUMERIC}, #{filePath}, #{originalName}, #{fileSize},
+            #{mimeType}, #{uploadedBy}, #{sortOrder}, SYSDATE
+        )
+    </insert>
+
+    <select id="selectPhoto" resultType="map">
+        SELECT P.PHOTO_ID, P.POST_ID, P.ALBUM_ID, P.FILE_PATH, P.ORIGINAL_NAME,
+               P.UPLOADED_BY, PP.SCOPE_TYPE, PP.SCOPE_ID, PP.CREATED_BY
+          FROM PHOTOS P
+          JOIN PHOTO_POSTS PP ON PP.POST_ID = P.POST_ID
+         WHERE P.PHOTO_ID = #{photoId}
+    </select>
+
+    <delete id="deletePhoto">
+        DELETE FROM PHOTOS WHERE PHOTO_ID = #{photoId}
+    </delete>
+
+    <update id="updateAlbumCover">
+        UPDATE PHOTO_ALBUMS
+           SET COVER_PHOTO_ID = #{coverPhotoId,jdbcType=NUMERIC},
+               UPDATED_AT = SYSDATE
+         WHERE ALBUM_ID = #{albumId}
+    </update>
+
+    <update id="clearAlbumCover">
+        UPDATE PHOTO_ALBUMS SET COVER_PHOTO_ID = NULL WHERE COVER_PHOTO_ID = #{photoId}
+    </update>
+
+    <select id="selectFirstAlbumPhotoId" resultType="long">
+        SELECT PHOTO_ID FROM (
+            SELECT P.PHOTO_ID
+              FROM PHOTOS P
+              JOIN PHOTO_POSTS PP ON PP.POST_ID = P.POST_ID
+             WHERE PP.ALBUM_ID = #{albumId}
+             ORDER BY PP.CREATED_AT DESC, P.SORT_ORDER ASC, P.PHOTO_ID ASC
+        ) WHERE ROWNUM = 1
+    </select>
+</mapper>

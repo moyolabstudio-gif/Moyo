@@ -1,0 +1,1440 @@
+:root{--moyo-mint:#63dbc7;--moyo-cyan:#71d7e6;--moyo-blue:#4778f2;--moyo-violet:#7b73f5;--moyo-ink:#172033;--moyo-muted:#758197;--moyo-line:#e4eaf3;--moyo-soft:#f7faff;--moyo-shadow:0 18px 45px rgba(54,83,145,.11)}
+*{box-sizing:border-box}.photo-page{min-height:calc(100vh - 140px);padding:34px 22px 72px;background:linear-gradient(180deg,#fbfdff 0,#f6f9fd 100%);font-family:Pretendard,sans-serif;color:var(--moyo-ink)}.photo-shell{max-width:1180px;margin:0 auto}.photo-breadcrumb{display:flex;gap:9px;align-items:center;margin-bottom:20px;font-size:14px;color:#8c98aa}.photo-breadcrumb a{display:inline-flex;align-items:center;gap:7px;color:#5f6d82;text-decoration:none}.photo-page-header{position:relative;display:flex;justify-content:space-between;gap:28px;align-items:center;margin-bottom:24px;padding:26px 28px;border:1px solid rgba(222,230,242,.9);border-radius:22px;background:rgba(255,255,255,.92);box-shadow:0 10px 30px rgba(43,73,130,.06);overflow:hidden}.photo-page-header:after{content:"";position:absolute;right:-75px;bottom:-95px;width:230px;height:230px;border-radius:50%;background:linear-gradient(135deg,rgba(99,219,199,.16),rgba(71,120,242,.12),rgba(123,115,245,.11))}.photo-heading-group{display:flex;align-items:center;gap:18px;position:relative;z-index:1}.photo-page-header h1{margin:4px 0 7px;font-size:31px;letter-spacing:-1px}.photo-page-header p{margin:0;color:var(--moyo-muted);font-size:15px}.photo-eyebrow{font-size:12px;font-weight:800;letter-spacing:.08em;color:var(--moyo-blue)}.photo-header-actions{display:flex;gap:10px;position:relative;z-index:1}.photo-primary-button,.photo-secondary-button,.photo-back-button{display:inline-flex;align-items:center;justify-content:center;gap:7px;border-radius:11px;padding:11px 16px;font-weight:750;cursor:pointer;transition:.18s}.photo-primary-button{border:0;background:linear-gradient(135deg,var(--moyo-mint),var(--moyo-blue) 72%,var(--moyo-violet));color:#fff;box-shadow:0 8px 18px rgba(71,120,242,.22)}.photo-primary-button:hover{transform:translateY(-1px);box-shadow:0 11px 23px rgba(71,120,242,.28)}.photo-primary-button:disabled{opacity:.55;cursor:not-allowed;transform:none}.photo-secondary-button,.photo-back-button{background:#fff;color:#3e4b60;border:1px solid #dbe4f0}.photo-secondary-button:hover,.photo-back-button:hover{border-color:#bfcde0;background:#f9fbfe}.photo-view-tabs{display:flex;gap:9px;margin-bottom:20px;padding:5px;width:max-content;border:1px solid var(--moyo-line);border-radius:13px;background:#fff}.photo-view-tabs button{border:0;border-radius:9px;background:none;padding:10px 18px;color:#7b8799;font-weight:750;cursor:pointer}.photo-view-tabs button.active{color:#315fd0;background:linear-gradient(135deg,rgba(99,219,199,.14),rgba(71,120,242,.11));box-shadow:inset 0 0 0 1px rgba(71,120,242,.09)}.photo-content-view{padding:24px;border:1px solid var(--moyo-line);border-radius:20px;background:#fff;box-shadow:0 10px 30px rgba(45,71,120,.05)}.photo-toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}.photo-search{width:min(380px,100%);display:flex;align-items:center;gap:10px;border:1px solid #dce4ef;border-radius:11px;padding:0 13px;background:#fbfcfe;transition:.18s}.photo-search:focus-within{border-color:#8faef8;box-shadow:0 0 0 4px rgba(71,120,242,.09);background:#fff}.photo-search input{width:100%;border:0;outline:0;padding:11px 0;background:transparent}.photo-count-text{font-size:14px;color:#8490a3}.post-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}.post-card{overflow:hidden;border:1px solid var(--moyo-line);border-radius:17px;background:#fff;cursor:pointer;transition:.2s}.post-card:hover{transform:translateY(-4px);border-color:#cad7ea;box-shadow:var(--moyo-shadow)}.post-cover{position:relative;aspect-ratio:4/3;background:linear-gradient(135deg,#eef5fa,#eef1fb)}.post-cover img{width:100%;height:100%;object-fit:cover;display:block}.post-count{position:absolute;right:11px;top:11px;display:inline-flex;align-items:center;gap:5px;padding:6px 9px;border-radius:999px;background:rgba(22,31,48,.72);backdrop-filter:blur(6px);color:#fff;font-size:12px}.post-card-body{padding:15px 16px 16px}.post-album{display:inline-flex;align-items:center;gap:5px;margin-bottom:9px;padding:4px 8px;border-radius:999px;background:#eef5ff;color:#4774e7;font-size:11px;font-weight:700}.post-album.unfiled{background:#f2f4f7;color:#8b96a6}.post-card h3{margin:0 0 7px;font-size:17px;letter-spacing:-.3px}.post-card p{margin:0 0 11px;color:#68758a;line-height:1.55;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.post-meta{font-size:12px;color:#9aa4b4}.album-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px}.album-card{overflow:hidden;border:1px solid var(--moyo-line);border-radius:16px;background:#fff;cursor:pointer;transition:.18s}.album-card:hover{transform:translateY(-3px);box-shadow:0 12px 26px rgba(44,68,117,.09)}.album-cover{aspect-ratio:4/3;background:linear-gradient(135deg,rgba(99,219,199,.13),rgba(71,120,242,.11));display:grid;place-items:center;font-size:36px;color:#7c9edb}.album-cover img{width:100%;height:100%;object-fit:cover}.album-card>div:last-child{padding:14px}.album-card h3{margin:0 0 5px;font-size:16px}.album-card p{margin:0;color:#8b96a7;font-size:13px}.photo-empty{grid-column:1/-1;min-height:260px;display:grid;place-items:center;text-align:center;border:1px dashed #cbd8e9;border-radius:17px;padding:35px;background:linear-gradient(180deg,#fbfdff,#f8fbff)}.photo-empty i{font-size:35px;background:linear-gradient(135deg,var(--moyo-mint),var(--moyo-blue),var(--moyo-violet));-webkit-background-clip:text;color:transparent}.photo-empty h3{margin:14px 0 7px}.photo-empty p{margin:0 0 18px;color:#7b8798}.album-detail-title-row{display:flex;justify-content:space-between;gap:20px;align-items:flex-end;margin:18px 0 24px;padding:20px;border-radius:16px;background:linear-gradient(135deg,rgba(99,219,199,.08),rgba(71,120,242,.06))}.album-detail-title-row h2{margin:0 0 7px}.album-detail-title-row p{margin:0 0 7px;color:#728096}.photo-modal-backdrop{position:fixed;inset:0;z-index:1000;display:grid;place-items:center;padding:20px;background:rgba(19,29,48,.54);backdrop-filter:blur(5px)}.photo-modal-backdrop[hidden],.photo-lightbox[hidden]{display:none}.photo-modal{width:min(560px,100%);max-height:calc(100vh - 40px);overflow:auto;border-radius:20px;background:#fff;box-shadow:0 26px 70px rgba(15,23,42,.25)}.photo-post-modal{width:min(680px,100%)}.photo-modal-header,.photo-modal-footer{display:flex;align-items:center;justify-content:space-between;padding:18px 22px}.photo-modal-header{border-bottom:1px solid #edf0f5}.photo-modal-header h2{margin:0;font-size:20px}.photo-modal-body{display:grid;gap:17px;padding:21px 22px}.photo-modal-footer{border-top:1px solid #edf0f5}.photo-icon-button{width:36px;height:36px;border:0;border-radius:10px;background:#f4f6f9;color:#667085;cursor:pointer}.photo-field{display:grid;gap:8px}.photo-field>span{font-size:14px;font-weight:750;color:#344054}.photo-field em{color:#4774e7;font-style:normal}.photo-field input,.photo-field textarea,.photo-field select{width:100%;border:1px solid #dbe3ee;border-radius:10px;padding:11px 12px;outline:none;font:inherit;color:#273246;background:#fff}.photo-field input:focus,.photo-field textarea:focus,.photo-field select:focus{border-color:#82a5fb;box-shadow:0 0 0 4px rgba(71,120,242,.09)}.photo-field textarea{resize:vertical}.photo-field small{color:#8a95a7}.photo-file-input{position:absolute!important;width:1px!important;height:1px!important;opacity:0!important;pointer-events:none!important}.photo-drop-zone{min-height:190px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;border:2px dashed #cbd8ea;border-radius:16px;padding:24px;background:linear-gradient(145deg,#fbfffe,#f7faff);cursor:pointer;transition:.2s;outline:none}.photo-drop-zone:hover,.photo-drop-zone:focus-visible,.photo-drop-zone.is-dragover{border-color:#67cfc5;background:linear-gradient(145deg,rgba(99,219,199,.1),rgba(71,120,242,.07));box-shadow:0 0 0 5px rgba(99,219,199,.08)}.photo-drop-icon{width:54px;height:54px;display:grid;place-items:center;margin-bottom:12px;border-radius:16px;background:linear-gradient(135deg,var(--moyo-mint),var(--moyo-blue));color:#fff;font-size:22px;box-shadow:0 10px 20px rgba(71,120,242,.2)}.photo-drop-zone strong{font-size:16px}.photo-drop-zone p{margin:6px 0;color:#728096}.photo-drop-zone small{color:#9aa4b3}.photo-file-summary{display:flex;align-items:center;justify-content:space-between;min-height:24px;color:#7a8699;font-size:13px}.photo-file-summary button{border:0;background:none;color:#5476d6;font-weight:700;cursor:pointer}.post-preview{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.post-preview:empty{display:none}.preview-item{position:relative;overflow:hidden;aspect-ratio:1;border-radius:12px;background:#eef2f7}.preview-item img{width:100%;height:100%;object-fit:cover}.preview-remove{position:absolute;right:6px;top:6px;width:26px;height:26px;border:0;border-radius:50%;background:rgba(17,24,39,.72);color:#fff;cursor:pointer}.photo-danger-link{border:0;background:none;color:#e24b4b;font-weight:700;cursor:pointer}.photo-lightbox{position:fixed;inset:0;z-index:1200;display:grid;place-items:center;background:rgba(7,12,22,.92);padding:28px}.photo-lightbox figure{width:min(1000px,calc(100vw - 170px));max-height:calc(100vh - 70px);margin:0;display:flex;flex-direction:column;align-items:center}.photo-lightbox img{max-width:100%;max-height:calc(100vh - 185px);object-fit:contain}.photo-lightbox figcaption{width:min(820px,100%);padding:15px 4px 0;color:#fff;text-align:center}.photo-lightbox figcaption strong,.photo-lightbox figcaption span,.photo-lightbox figcaption small{display:block}.photo-lightbox figcaption span{margin-top:5px;color:#d7deea}.photo-lightbox figcaption small{margin-top:7px;color:#96a2b5}.lightbox-close,.lightbox-nav{position:absolute;border:0;color:#fff;background:rgba(255,255,255,.12);cursor:pointer}.lightbox-close{right:25px;top:22px;width:42px;height:42px;border-radius:50%}.lightbox-nav{top:50%;width:48px;height:64px;border-radius:12px;transform:translateY(-50%)}.lightbox-prev{left:24px}.lightbox-next{right:24px}.lightbox-actions{position:absolute;right:24px;bottom:22px;display:flex;align-items:center;gap:9px}.lightbox-actions button{border:0;border-radius:10px;padding:10px 14px;color:#fff;cursor:pointer;backdrop-filter:blur(8px)}.lightbox-move{background:rgba(71,120,242,.78)}.lightbox-delete{background:rgba(255,255,255,.12)}.photo-toast{position:fixed;left:50%;bottom:28px;z-index:1500;transform:translate(-50%,20px);padding:11px 17px;border-radius:10px;background:#22304a;color:#fff;opacity:0;pointer-events:none;transition:.2s}.photo-toast.show{opacity:1;transform:translate(-50%,0)}.photo-toast.error{background:#d84d4d}
+@media(max-width:900px){.post-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.album-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.photo-page-header{align-items:flex-start}.photo-header-actions{flex-shrink:0}}
+@media(max-width:700px){.photo-page{padding:20px 12px 50px}.photo-page-header{padding:20px;flex-direction:column}.photo-heading-group{align-items:flex-start}.photo-header-actions{width:100%}.photo-header-actions button{flex:1}.photo-content-view{padding:16px}.photo-toolbar{gap:12px;align-items:flex-start;flex-direction:column}.photo-search{width:100%}.post-grid{grid-template-columns:1fr}.album-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.album-detail-title-row{align-items:flex-start;flex-direction:column}.post-preview{grid-template-columns:repeat(3,minmax(0,1fr))}.photo-lightbox figure{width:calc(100vw - 30px)}.lightbox-nav{width:40px;height:52px}.lightbox-prev{left:8px}.lightbox-next{right:8px}}
+@media(max-width:430px){.photo-heading-group{gap:12px}.photo-page-header h1{font-size:27px}.album-grid{grid-template-columns:1fr}.post-preview{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* v7 modal layout refinements */
+.photo-modal-footer{
+    justify-content:flex-end;
+    gap:10px;
+    min-height:72px;
+}
+.photo-modal-footer>div{
+    display:flex;
+    align-items:center;
+    justify-content:flex-end;
+    gap:10px;
+    margin-left:auto;
+}
+.photo-modal-footer .photo-danger-link{
+    margin-right:auto;
+}
+.photo-modal-footer .photo-primary-button,
+.photo-modal-footer .photo-secondary-button{
+    min-width:72px;
+    padding:10px 17px;
+}
+.photo-field textarea{
+    height:108px;
+    min-height:108px;
+    max-height:108px;
+    resize:none;
+    overflow-y:auto;
+}
+
+
+/* v8 album move */
+.move-album-guide{margin:0;color:#6f7d91;font-size:14px;line-height:1.6}.move-album-list{display:grid;gap:9px;max-height:360px;overflow-y:auto;padding-right:3px}.move-album-option{display:grid;grid-template-columns:42px minmax(0,1fr) 28px;align-items:center;gap:12px;padding:12px 13px;border:1px solid #e0e7f0;border-radius:13px;background:#fff;cursor:pointer;transition:.18s}.move-album-option:hover{border-color:#b9c9ea;background:#fbfdff}.move-album-option.selected{border-color:#7fa3fa;background:linear-gradient(135deg,rgba(99,219,199,.08),rgba(71,120,242,.08));box-shadow:0 0 0 3px rgba(71,120,242,.07)}.move-album-option input{position:absolute;opacity:0;pointer-events:none}.move-album-icon{width:42px;height:42px;display:grid;place-items:center;border-radius:11px;background:linear-gradient(135deg,rgba(99,219,199,.16),rgba(71,120,242,.14));color:#4778ee}.move-album-text{min-width:0;display:grid;gap:3px}.move-album-text strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#283449;font-size:14px}.move-album-text small{color:#8a96a8;font-size:12px}.move-album-check{width:24px;height:24px;display:grid;place-items:center;border-radius:50%;background:#e9eef6;color:transparent;font-size:11px}.move-album-option.selected .move-album-check{background:linear-gradient(135deg,var(--moyo-mint),var(--moyo-blue));color:#fff}.photo-move-modal{width:min(500px,100%)}
+@media(max-width:700px){.lightbox-actions{right:12px;bottom:14px}.lightbox-actions button{padding:9px 11px;font-size:12px}}
+
+/* v9: album move modal must stay above the photo lightbox */
+#moveAlbumModal{
+    z-index:1400;
+    background:rgba(7,12,22,.78);
+    backdrop-filter:blur(8px);
+}
+#moveAlbumModal .photo-modal{
+    position:relative;
+    z-index:1;
+}
+
+/* v10: 앨범 이동 모달 내 새 앨범 생성 */
+.move-album-toolbar{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:12px}.move-album-toolbar .move-album-guide{margin:0;min-width:0}.move-new-album-button{flex:0 0 auto;display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 12px;border:1px solid #d5e0ef;border-radius:10px;background:#fff;color:#3e5f9e;font-weight:700;cursor:pointer;transition:.18s}.move-new-album-button:hover{border-color:#83a5f5;background:#f6f9ff;color:#386ce0}.move-album-create{margin:0 0 12px;padding:13px;border:1px solid #cbdaf6;border-radius:13px;background:linear-gradient(135deg,rgba(99,219,199,.07),rgba(71,120,242,.06))}.move-album-create[hidden]{display:none}.move-album-create>label{display:block;margin-bottom:8px;color:#34425a;font-size:13px;font-weight:700}.move-album-create-row{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:8px}.move-album-create-row input{min-width:0;height:40px;padding:0 12px;border:1px solid #d2ddeb;border-radius:10px;background:#fff;color:#253047;font:inherit;outline:none}.move-album-create-row input:focus{border-color:#5f8ef6;box-shadow:0 0 0 3px rgba(71,120,242,.11)}.move-album-create-row .photo-secondary-button,.move-album-create-row .photo-primary-button{height:40px;padding:0 14px}@media(max-width:560px){.move-album-toolbar{align-items:flex-start}.move-album-create-row{grid-template-columns:1fr 1fr}.move-album-create-row input{grid-column:1/-1}.move-album-create-row button{width:100%}}
+
+/* v12: 앨범 목록이 많을 때 모달 내부에서만 스크롤 */
+#moveAlbumModal .move-album-list{
+    max-height:min(360px, 42vh);
+    overflow-y:auto;
+    overscroll-behavior:contain;
+    scrollbar-gutter:stable;
+    padding-right:6px;
+}
+#moveAlbumModal .move-album-list::-webkit-scrollbar{width:8px}
+#moveAlbumModal .move-album-list::-webkit-scrollbar-track{background:transparent}
+#moveAlbumModal .move-album-list::-webkit-scrollbar-thumb{background:#cbd6e6;border-radius:999px}
+#moveAlbumModal .move-album-list::-webkit-scrollbar-thumb:hover{background:#aebdd2}
+
+/* v13: keep every album card at the same height regardless of cover image ratio */
+.album-grid{
+    align-items:start;
+}
+
+.album-card{
+    display:flex;
+    flex-direction:column;
+    height:360px;
+    min-height:360px;
+    max-height:360px;
+}
+
+.album-cover{
+    flex:0 0 260px;
+    width:100%;
+    height:260px;
+    min-height:260px;
+    max-height:260px;
+    aspect-ratio:auto;
+    overflow:hidden;
+}
+
+.album-cover img{
+    display:block;
+    width:100%;
+    height:100%;
+    min-width:100%;
+    min-height:100%;
+    object-fit:cover;
+    object-position:center;
+}
+
+.album-card>div:last-child{
+    flex:1 1 auto;
+    min-height:0;
+    padding:14px;
+    overflow:hidden;
+}
+
+.album-card h3{
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+}
+
+.album-card p{
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+}
+
+@media(max-width:700px){
+    .album-card{
+        height:330px;
+        min-height:330px;
+        max-height:330px;
+    }
+
+    .album-cover{
+        flex-basis:230px;
+        height:230px;
+        min-height:230px;
+        max-height:230px;
+    }
+}
+
+/* v14: stable search layout + month grouping */
+.photo-toolbar{
+    min-height:46px;
+    margin-bottom:18px;
+}
+
+.photo-search{
+    width:min(390px,100%);
+    padding:0 2px 0 0;
+    gap:10px;
+    border:0;
+    border-bottom:0;
+    border-radius:0;
+    background:transparent;
+    box-shadow:none;
+}
+
+.photo-search:focus-within{
+    border-color:transparent;
+    background:transparent;
+    box-shadow:none;
+}
+
+.photo-search i{
+    margin-left:2px;
+    color:#718096;
+}
+
+.photo-search input{
+    min-width:0;
+    padding:10px 2px;
+    border:0;
+    border-radius:0;
+    outline:0;
+    appearance:none;
+    -webkit-appearance:none;
+    box-shadow:none;
+}
+
+.photo-search input:focus{
+    outline:0;
+    box-shadow:none;
+}
+
+.photo-search input::-webkit-search-decoration,
+.photo-search input::-webkit-search-cancel-button,
+.photo-search input::-webkit-search-results-button,
+.photo-search input::-webkit-search-results-decoration{
+    -webkit-appearance:none;
+}
+
+#postGrid,
+#albumGrid{
+    min-height:430px;
+    align-content:start;
+}
+
+.post-grid{
+    display:block;
+}
+
+.photo-month-group + .photo-month-group{
+    margin-top:34px;
+}
+
+.photo-month-heading{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:16px;
+    margin-bottom:14px;
+    padding-bottom:10px;
+    border-bottom:1px solid #edf1f6;
+}
+
+.photo-month-heading h3{
+    margin:0;
+    font-size:17px;
+    letter-spacing:-.3px;
+    color:#273246;
+}
+
+.photo-month-heading span{
+    flex:0 0 auto;
+    color:#8b96a7;
+    font-size:12px;
+}
+
+.photo-month-grid{
+    display:grid;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:20px;
+}
+
+.photo-empty{
+    min-height:430px;
+}
+
+.photo-search-empty{
+    border-color:transparent;
+    background:transparent;
+}
+
+.album-grid{
+    min-height:430px;
+}
+
+@media(max-width:900px){
+    .photo-month-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+
+@media(max-width:700px){
+    #postGrid,#albumGrid,.album-grid,.photo-empty{min-height:360px}
+    .photo-toolbar{min-height:auto}
+    .photo-month-grid{grid-template-columns:1fr}
+    .photo-month-group + .photo-month-group{margin-top:28px}
+}
+
+/* v16 post text edit */
+.lightbox-edit{
+    min-height:42px;
+    padding:0 15px;
+    border:1px solid rgba(255,255,255,.45);
+    border-radius:12px;
+    background:rgba(255,255,255,.10);
+    color:#fff;
+    font:inherit;
+    font-weight:700;
+    cursor:pointer;
+    backdrop-filter:blur(8px);
+    transition:background .18s,border-color .18s,transform .18s;
+}
+.lightbox-edit:hover{
+    background:rgba(255,255,255,.18);
+    border-color:rgba(255,255,255,.75);
+    transform:translateY(-1px);
+}
+.photo-edit-post-modal{width:min(560px,calc(100vw - 32px))}
+.photo-edit-post-modal textarea{
+    height:132px;
+    min-height:132px;
+    max-height:132px;
+    resize:none;
+    overflow-y:auto;
+}
+.photo-edit-post-modal .photo-field>small{
+    justify-self:end;
+    margin-top:6px;
+    color:#8a96a8;
+    font-size:12px;
+}
+#editPostModal{z-index:1320}
+
+
+/* v17: unified lightbox action text/button sizing + keep chat above footer actions */
+.lightbox-actions button{
+    min-width:92px;
+    min-height:42px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:7px;
+    padding:0 15px;
+    border:1px solid rgba(255,255,255,.34);
+    border-radius:12px;
+    color:#fff;
+    font:inherit;
+    font-size:14px;
+    line-height:1;
+    font-weight:700;
+    white-space:nowrap;
+    cursor:pointer;
+    backdrop-filter:blur(8px);
+    transition:background .18s,border-color .18s,transform .18s;
+}
+.lightbox-edit{background:rgba(255,255,255,.12)}
+.lightbox-move{background:rgba(71,120,242,.82)}
+.lightbox-delete{background:rgba(255,255,255,.12)}
+.lightbox-actions button:hover{
+    transform:translateY(-1px);
+    border-color:rgba(255,255,255,.72);
+}
+
+/* chat.jsp uses inline positioning; !important is required for this page override */
+body:has(.photo-page) #chat-floating-btn{
+    bottom:96px !important;
+}
+body:has(.photo-page) #chat-main-modal,
+body:has(.photo-page) #mini-chat-window{
+    bottom:171px !important;
+}
+
+@media(max-width:700px){
+    .lightbox-actions{
+        left:12px;
+        right:12px;
+        bottom:18px;
+        justify-content:center;
+        flex-wrap:wrap;
+    }
+    .lightbox-actions button{
+        min-width:84px;
+        min-height:40px;
+        padding:0 12px;
+        font-size:12px;
+    }
+    body:has(.photo-page) #chat-floating-btn{
+        bottom:84px !important;
+        right:18px !important;
+    }
+    body:has(.photo-page) #chat-main-modal,
+    body:has(.photo-page) #mini-chat-window{
+        bottom:154px !important;
+        right:18px !important;
+    }
+}
+
+/* v19: 앨범명 옆 수정 버튼 + 선택 체크 열 정렬 */
+.move-album-option {
+    position: relative;
+    grid-template-columns: 42px minmax(0, 1fr) 28px;
+    padding-right: 13px;
+}
+
+.move-album-option.has-edit-button {
+    padding-right: 13px;
+}
+
+.move-album-title-row {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.move-album-title-row strong {
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.move-album-edit-button {
+    position: static;
+    flex: 0 0 auto;
+    width: 26px;
+    height: 26px;
+    padding: 0;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: #74839a;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background .18s ease, color .18s ease;
+    z-index: 2;
+}
+
+.move-album-edit-button:hover,
+.move-album-edit-button:focus-visible {
+    background: #eaf2ff;
+    color: #3978f6;
+    outline: none;
+}
+
+.move-album-check {
+    justify-self: end;
+    align-self: center;
+}
+
+.move-album-edit[hidden] {
+    display: none !important;
+}
+
+
+/* v20: 이동 모달 정렬 강제 + 앨범 상세 버튼 정리 */
+#moveAlbumModal .move-album-option {
+    grid-template-columns: 42px minmax(0, 1fr) 28px !important;
+}
+
+#moveAlbumModal .move-album-text {
+    min-width: 0;
+    justify-self: stretch;
+}
+
+#moveAlbumModal .move-album-title-row {
+    display: inline-flex !important;
+    width: fit-content !important;
+    max-width: 100%;
+    align-items: center;
+    justify-content: flex-start !important;
+    gap: 5px;
+}
+
+#moveAlbumModal .move-album-title-row strong {
+    flex: 0 1 auto !important;
+    width: auto !important;
+    max-width: calc(100% - 31px);
+}
+
+#moveAlbumModal .move-album-edit-button {
+    position: static !important;
+    inset: auto !important;
+    margin: 0 !important;
+    flex: 0 0 26px;
+}
+
+#moveAlbumModal .move-album-check {
+    grid-column: 3;
+    justify-self: center !important;
+    margin: 0 !important;
+}
+
+.album-detail-title-row {
+    align-items: center;
+}
+
+.album-detail-info {
+    min-width: 0;
+}
+
+.album-detail-actions {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.album-detail-actions .photo-secondary-button,
+.album-detail-actions .photo-primary-button {
+    min-width: 92px;
+    height: 42px;
+    padding: 0 16px;
+    white-space: nowrap;
+}
+
+@media (max-width: 700px) {
+    .album-detail-actions {
+        width: 100%;
+        justify-content: flex-end;
+    }
+
+    .album-detail-actions .photo-secondary-button,
+    .album-detail-actions .photo-primary-button {
+        flex: 1;
+    }
+}
+
+
+/* v21: 이동 모달 행 정렬 재구성 + 사진 공유 모달 폭 축소 */
+#moveAlbumModal .move-album-option {
+    display: grid !important;
+    grid-template-columns: 42px minmax(0, 1fr) 24px !important;
+    align-items: center !important;
+    column-gap: 12px !important;
+    min-height: 68px;
+    padding: 11px 13px !important;
+}
+
+#moveAlbumModal .move-album-text {
+    display: block !important;
+    min-width: 0;
+}
+
+#moveAlbumModal .move-album-title-row {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    gap: 4px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0;
+    white-space: nowrap;
+}
+
+#moveAlbumModal .move-album-title-row strong {
+    display: inline-block !important;
+    flex: 0 1 auto !important;
+    width: auto !important;
+    max-width: calc(100% - 30px) !important;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+#moveAlbumModal .move-album-edit-button {
+    position: static !important;
+    display: inline-flex !important;
+    flex: 0 0 24px !important;
+    width: 24px !important;
+    height: 24px !important;
+    margin: 0 !important;
+    transform: none !important;
+}
+
+#moveAlbumModal .move-album-text small {
+    display: block;
+    margin-top: 3px;
+}
+
+#moveAlbumModal .move-album-check {
+    grid-column: 3 !important;
+    justify-self: end !important;
+    align-self: center !important;
+    margin: 0 !important;
+}
+
+.photo-post-modal {
+    width: min(560px, calc(100vw - 32px)) !important;
+}
+
+.photo-post-modal .photo-modal-body {
+    gap: 14px;
+    padding: 18px 20px;
+}
+
+.photo-post-modal .photo-drop-zone {
+    min-height: 160px;
+    padding: 20px;
+}
+
+.photo-post-modal .photo-field textarea {
+    min-height: 92px;
+    resize: none;
+}
+
+@media (max-width: 640px) {
+    .photo-post-modal {
+        width: min(520px, calc(100vw - 20px)) !important;
+    }
+}
+
+/* v22: 앨범명 바로 옆 수정 버튼 + 선택 체크 우측 고정 */
+#moveAlbumModal .move-album-option {
+    position: relative !important;
+    display: grid !important;
+    grid-template-columns: 42px minmax(0, 1fr) !important;
+    align-items: center !important;
+    column-gap: 12px !important;
+    min-height: 68px;
+    padding: 11px 52px 11px 13px !important;
+}
+
+#moveAlbumModal .move-album-text {
+    min-width: 0;
+    display: block !important;
+}
+
+#moveAlbumModal .move-album-title-row {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    gap: 5px !important;
+    width: auto !important;
+    max-width: 100% !important;
+    min-width: 0;
+    vertical-align: top;
+}
+
+#moveAlbumModal .move-album-title-row strong {
+    display: inline-block !important;
+    flex: 0 1 auto !important;
+    width: auto !important;
+    max-width: calc(100% - 29px) !important;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+#moveAlbumModal .move-album-edit-button {
+    position: static !important;
+    inset: auto !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex: 0 0 24px !important;
+    width: 24px !important;
+    height: 24px !important;
+    margin: 0 !important;
+    transform: none !important;
+}
+
+#moveAlbumModal .move-album-check {
+    position: absolute !important;
+    right: 14px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    margin: 0 !important;
+    grid-column: auto !important;
+    align-self: auto !important;
+    justify-self: auto !important;
+}
+
+/* v23: 이동 모달 앨범명 인라인 수정 */
+#moveAlbumModal .move-album-option {
+    display: grid !important;
+    grid-template-columns: 42px minmax(0, 1fr) 24px !important;
+    align-items: center !important;
+    column-gap: 12px !important;
+    min-height: 68px;
+    padding: 11px 13px !important;
+}
+#moveAlbumModal .move-album-text {
+    min-width: 0;
+    display: grid !important;
+    gap: 3px;
+}
+#moveAlbumModal .move-album-title-row {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0;
+    gap: 5px !important;
+}
+#moveAlbumModal .move-album-title-row strong {
+    flex: 0 1 auto !important;
+    width: auto !important;
+    max-width: calc(100% - 30px) !important;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+#moveAlbumModal .move-album-option:not(.has-edit-button) .move-album-title-row strong {
+    max-width: 100% !important;
+}
+#moveAlbumModal .move-album-edit-button {
+    position: static !important;
+    flex: 0 0 24px !important;
+    width: 24px !important;
+    height: 24px !important;
+    margin: 0 !important;
+}
+#moveAlbumModal .move-album-check {
+    position: static !important;
+    grid-column: 3 !important;
+    justify-self: center !important;
+    align-self: center !important;
+    transform: none !important;
+    margin: 0 !important;
+}
+#moveAlbumModal .move-album-option.is-editing {
+    cursor: default;
+}
+#moveAlbumModal .move-album-inline-edit {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+    min-width: 0;
+}
+#moveAlbumModal .move-album-inline-input {
+    width: 100%;
+    min-width: 0;
+    height: 34px;
+    padding: 0 10px;
+    border: 1px solid #6f98f7;
+    border-radius: 9px;
+    background: #fff;
+    color: #253047;
+    font: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(71,120,242,.10);
+}
+#moveAlbumModal .move-album-inline-save,
+#moveAlbumModal .move-album-inline-cancel {
+    height: 34px;
+    padding: 0 10px;
+    border-radius: 9px;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+}
+#moveAlbumModal .move-album-inline-save {
+    border: 0;
+    background: linear-gradient(135deg,var(--moyo-mint),var(--moyo-blue));
+    color: #fff;
+}
+#moveAlbumModal .move-album-inline-cancel {
+    border: 1px solid #d7e0ec;
+    background: #fff;
+    color: #536178;
+}
+#moveAlbumModal .move-album-option.is-editing .move-album-text small {
+    display: none;
+}
+@media (max-width: 520px) {
+    #moveAlbumModal .move-album-inline-edit {
+        grid-template-columns: minmax(0, 1fr) auto;
+    }
+    #moveAlbumModal .move-album-inline-cancel {
+        display: none;
+    }
+}
+
+
+/* v24: 앨범명 인라인 수정 입력창 복원 및 가로 넘침 방지 */
+#moveAlbumModal .move-album-option.is-editing {
+    grid-template-columns: 42px minmax(0, 1fr) 24px !important;
+    overflow: hidden;
+}
+#moveAlbumModal .move-album-inline-edit {
+    display: flex !important;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+    min-width: 0;
+    overflow: hidden;
+}
+#moveAlbumModal .move-album-inline-input {
+    position: static !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    flex: 1 1 auto;
+    width: auto !important;
+    min-width: 0 !important;
+    height: 34px;
+    padding: 0 10px;
+    border: 1px solid #6f98f7;
+    border-radius: 9px;
+    background: #fff;
+    color: #253047;
+    font: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(71,120,242,.10);
+}
+#moveAlbumModal .move-album-inline-save,
+#moveAlbumModal .move-album-inline-cancel {
+    position: static !important;
+    flex: 0 0 auto;
+    width: auto !important;
+    min-width: 48px;
+    white-space: nowrap;
+}
+#moveAlbumModal .move-album-list {
+    overflow-x: hidden !important;
+}
+
+/* photo post like */
+.post-card-footer{display:flex;align-items:center;justify-content:space-between;gap:12px}.post-like-button{display:inline-flex;align-items:center;gap:6px;flex:0 0 auto;border:0;border-radius:999px;padding:6px 9px;background:#f4f6fa;color:#7c8799;font:inherit;font-size:12px;font-weight:750;cursor:pointer;transition:.18s}.post-like-button:hover{background:#fff0f3;color:#ef5570}.post-like-button.liked{background:#fff0f3;color:#ec4968}.post-like-button i{font-size:13px}.lightbox-like{display:inline-flex!important;align-items:center;gap:6px;background:rgba(255,255,255,.13)}.lightbox-like.liked{background:rgba(236,73,104,.88)}.lightbox-like strong{font-size:12px;font-weight:800}.lightbox-like i{font-size:14px}
+
+/* v23: 사진 공유 모달이 헤더/화면 밖으로 잘리지 않도록 수정 */
+.photo-modal-backdrop {
+    position: fixed !important;
+    inset: 0 !important;
+    z-index: 20000 !important;
+    display: flex !important;
+    align-items: flex-start !important;
+    justify-content: center !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    padding: 24px 18px !important;
+    background: rgba(19, 29, 48, .54) !important;
+    backdrop-filter: blur(5px);
+}
+
+.photo-modal-backdrop[hidden],
+.photo-lightbox[hidden] {
+    display: none !important;
+}
+
+.photo-modal {
+    max-height: none !important;
+    overflow: visible !important;
+    margin: 0 auto 28px !important;
+}
+
+.photo-post-modal {
+    width: min(560px, calc(100vw - 36px)) !important;
+}
+
+.photo-post-modal .photo-modal-header {
+    padding: 15px 20px !important;
+}
+
+.photo-post-modal .photo-modal-body {
+    gap: 12px !important;
+    padding: 16px 20px !important;
+}
+
+.photo-post-modal .photo-drop-zone {
+    min-height: 132px !important;
+    padding: 17px !important;
+}
+
+.photo-post-modal .photo-drop-icon {
+    width: 48px !important;
+    height: 48px !important;
+    margin-bottom: 10px !important;
+}
+
+.photo-post-modal .post-preview {
+    max-height: 146px;
+    overflow-y: auto;
+    padding-right: 2px;
+}
+
+.photo-post-modal .photo-field textarea {
+    min-height: 82px !important;
+    max-height: 110px;
+    resize: none !important;
+}
+
+.photo-post-modal .photo-modal-footer {
+    position: sticky;
+    bottom: 0;
+    z-index: 2;
+    background: #fff;
+    padding: 14px 20px !important;
+}
+
+@media (max-height: 760px) {
+    .photo-modal-backdrop {
+        padding-top: 12px !important;
+        padding-bottom: 12px !important;
+    }
+
+    .photo-post-modal .photo-drop-zone {
+        min-height: 110px !important;
+        padding: 13px !important;
+    }
+
+    .photo-post-modal .photo-drop-icon {
+        width: 42px !important;
+        height: 42px !important;
+        margin-bottom: 7px !important;
+        font-size: 18px !important;
+    }
+
+    .photo-post-modal .photo-drop-zone strong {
+        font-size: 14px !important;
+    }
+
+    .photo-post-modal .photo-drop-zone p,
+    .photo-post-modal .photo-drop-zone small {
+        font-size: 12px !important;
+    }
+
+    .photo-post-modal .post-preview {
+        max-height: 110px;
+    }
+
+    .photo-post-modal .photo-field textarea {
+        min-height: 70px !important;
+        max-height: 90px;
+    }
+}
+
+/* v24: 사진 공유 모달 위치/썸네일 스트립 정리 */
+.photo-modal-backdrop {
+    align-items: center !important;
+    overflow: hidden !important;
+    padding: 24px 18px !important;
+}
+
+.photo-post-modal {
+    width: min(560px, calc(100vw - 36px)) !important;
+    max-height: min(86vh, 760px) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+    margin: 0 auto !important;
+}
+
+.photo-post-modal .photo-modal-header {
+    flex: 0 0 auto;
+}
+
+.photo-post-modal .photo-modal-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
+}
+
+.photo-post-modal .photo-modal-body::-webkit-scrollbar {
+    width: 8px;
+}
+
+.photo-post-modal .photo-modal-body::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.photo-post-modal .photo-modal-body::-webkit-scrollbar-thumb {
+    background: #cbd6e6;
+    border-radius: 999px;
+}
+
+.photo-post-modal .photo-drop-zone {
+    min-height: 148px !important;
+    padding: 18px !important;
+}
+
+.photo-post-modal .post-preview {
+    display: flex !important;
+    grid-template-columns: none !important;
+    gap: 10px !important;
+    max-height: none !important;
+    min-height: 0 !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    padding: 0 0 4px !important;
+    scrollbar-gutter: auto;
+}
+
+.photo-post-modal .post-preview:empty {
+    display: none !important;
+}
+
+.photo-post-modal .preview-item {
+    flex: 0 0 76px !important;
+    width: 76px !important;
+    height: 76px !important;
+    min-width: 76px !important;
+    min-height: 76px !important;
+    max-width: 76px !important;
+    max-height: 76px !important;
+    aspect-ratio: 1 / 1 !important;
+    border-radius: 13px !important;
+}
+
+.photo-post-modal .preview-remove {
+    right: 5px !important;
+    top: 5px !important;
+    width: 24px !important;
+    height: 24px !important;
+}
+
+.photo-post-modal .photo-field textarea {
+    height: 88px !important;
+    min-height: 88px !important;
+    max-height: 88px !important;
+    resize: none !important;
+}
+
+.photo-post-modal .photo-modal-footer {
+    flex: 0 0 auto;
+    position: static !important;
+    min-height: 64px !important;
+    padding: 13px 20px !important;
+}
+
+@media (max-height: 760px) {
+    .photo-modal-backdrop {
+        align-items: center !important;
+        padding: 14px 16px !important;
+    }
+
+    .photo-post-modal {
+        max-height: calc(100vh - 28px) !important;
+    }
+
+    .photo-post-modal .photo-modal-header {
+        padding: 13px 18px !important;
+    }
+
+    .photo-post-modal .photo-modal-body {
+        gap: 10px !important;
+        padding: 14px 18px !important;
+    }
+
+    .photo-post-modal .photo-drop-zone {
+        min-height: 124px !important;
+        padding: 14px !important;
+    }
+
+    .photo-post-modal .photo-drop-icon {
+        width: 42px !important;
+        height: 42px !important;
+        margin-bottom: 7px !important;
+        font-size: 18px !important;
+    }
+
+    .photo-post-modal .preview-item {
+        flex-basis: 70px !important;
+        width: 70px !important;
+        height: 70px !important;
+        min-width: 70px !important;
+        min-height: 70px !important;
+        max-width: 70px !important;
+        max-height: 70px !important;
+    }
+
+    .photo-post-modal .photo-field textarea {
+        height: 76px !important;
+        min-height: 76px !important;
+        max-height: 76px !important;
+    }
+
+    .photo-post-modal .photo-modal-footer {
+        min-height: 58px !important;
+        padding: 11px 18px !important;
+    }
+}
+
+/* v25: 사진 공유 모달 썸네일 스트립 높이 고정 + 내부 스크롤 보정 */
+.photo-modal-backdrop {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    overflow: hidden !important;
+    padding: 24px 18px !important;
+}
+
+.photo-post-modal {
+    width: min(560px, calc(100vw - 36px)) !important;
+    max-height: min(88vh, 780px) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+    margin: 0 !important;
+}
+
+.photo-post-modal .photo-modal-header,
+.photo-post-modal .photo-modal-footer {
+    flex: 0 0 auto !important;
+}
+
+.photo-post-modal .photo-modal-body {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    overscroll-behavior: contain !important;
+    padding: 17px 20px !important;
+    gap: 12px !important;
+}
+
+.photo-post-modal .photo-modal-body::-webkit-scrollbar {
+    width: 8px;
+}
+
+.photo-post-modal .photo-modal-body::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.photo-post-modal .photo-modal-body::-webkit-scrollbar-thumb {
+    background: #cbd6e6;
+    border-radius: 999px;
+}
+
+.photo-post-modal .photo-drop-zone {
+    min-height: 150px !important;
+    padding: 18px !important;
+}
+
+.photo-post-modal .photo-file-summary {
+    min-height: 22px !important;
+    margin: 0 !important;
+}
+
+.photo-post-modal .post-preview {
+    display: flex !important;
+    grid-template-columns: none !important;
+    align-items: center !important;
+    gap: 10px !important;
+    width: 100% !important;
+    height: 82px !important;
+    min-height: 82px !important;
+    max-height: 82px !important;
+    margin: 0 0 2px !important;
+    padding: 0 0 6px !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    scrollbar-gutter: auto !important;
+}
+
+.photo-post-modal .post-preview:empty {
+    display: none !important;
+    height: 0 !important;
+    min-height: 0 !important;
+    max-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.photo-post-modal .preview-item {
+    flex: 0 0 76px !important;
+    width: 76px !important;
+    height: 76px !important;
+    min-width: 76px !important;
+    min-height: 76px !important;
+    max-width: 76px !important;
+    max-height: 76px !important;
+    aspect-ratio: auto !important;
+    overflow: hidden !important;
+    border-radius: 13px !important;
+}
+
+.photo-post-modal .preview-item img {
+    display: block !important;
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+}
+
+.photo-post-modal .preview-remove {
+    right: 5px !important;
+    top: 5px !important;
+    width: 24px !important;
+    height: 24px !important;
+}
+
+.photo-post-modal .photo-field textarea {
+    height: 88px !important;
+    min-height: 88px !important;
+    max-height: 88px !important;
+    resize: none !important;
+}
+
+.photo-post-modal .photo-modal-footer {
+    position: static !important;
+    min-height: 64px !important;
+    padding: 13px 20px !important;
+    background: #fff !important;
+}
+
+@media (max-height: 760px) {
+    .photo-modal-backdrop {
+        padding: 14px 16px !important;
+    }
+
+    .photo-post-modal {
+        max-height: calc(100vh - 28px) !important;
+    }
+
+    .photo-post-modal .photo-modal-header {
+        padding: 13px 18px !important;
+    }
+
+    .photo-post-modal .photo-modal-body {
+        padding: 13px 18px !important;
+        gap: 9px !important;
+    }
+
+    .photo-post-modal .photo-drop-zone {
+        min-height: 122px !important;
+        padding: 14px !important;
+    }
+
+    .photo-post-modal .photo-drop-icon {
+        width: 42px !important;
+        height: 42px !important;
+        margin-bottom: 7px !important;
+        font-size: 18px !important;
+    }
+
+    .photo-post-modal .post-preview {
+        height: 76px !important;
+        min-height: 76px !important;
+        max-height: 76px !important;
+        padding-bottom: 5px !important;
+    }
+
+    .photo-post-modal .preview-item {
+        flex-basis: 70px !important;
+        width: 70px !important;
+        height: 70px !important;
+        min-width: 70px !important;
+        min-height: 70px !important;
+        max-width: 70px !important;
+        max-height: 70px !important;
+    }
+
+    .photo-post-modal .photo-field textarea {
+        height: 76px !important;
+        min-height: 76px !important;
+        max-height: 76px !important;
+    }
+
+    .photo-post-modal .photo-modal-footer {
+        min-height: 58px !important;
+        padding: 11px 18px !important;
+    }
+}
+
+/* v26: 사진 카드 설명 영역 높이 통일 */
+.post-card {
+    display: flex !important;
+    flex-direction: column !important;
+    height: 100% !important;
+}
+
+.post-cover {
+    flex: 0 0 auto !important;
+}
+
+.post-card-body {
+    flex: 1 1 auto !important;
+    display: flex !important;
+    flex-direction: column !important;
+    min-height: 164px !important;
+    padding: 15px 16px 16px !important;
+}
+
+.post-card h3 {
+    display: -webkit-box !important;
+    -webkit-line-clamp: 1 !important;
+    -webkit-box-orient: vertical !important;
+    overflow: hidden !important;
+    min-height: 22px !important;
+    margin-bottom: 7px !important;
+}
+
+.post-card p {
+    min-height: 42px !important;
+    max-height: 42px !important;
+    margin: 0 0 12px !important;
+    line-height: 1.5 !important;
+    color: #68758a !important;
+    display: -webkit-box !important;
+    -webkit-line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
+    overflow: hidden !important;
+}
+
+.post-card-footer {
+    margin-top: auto !important;
+    min-height: 30px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 12px !important;
+}
+
+.post-meta {
+    min-width: 0 !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+}
+
+@media (max-width: 700px) {
+    .post-card-body {
+        min-height: 150px !important;
+    }
+    .post-card p {
+        min-height: 38px !important;
+        max-height: 38px !important;
+    }
+}
+
+/* v27: 사진 카드 비율/높이 재정렬 - 세로 사진 때문에 카드가 늘어나는 문제 수정 */
+.photo-month-grid,
+.post-grid {
+    align-items: start !important;
+}
+
+.photo-month-grid .post-card,
+.post-grid .post-card {
+    display: flex !important;
+    flex-direction: column !important;
+    height: 432px !important;
+    min-height: 432px !important;
+    max-height: 432px !important;
+    overflow: hidden !important;
+}
+
+.photo-month-grid .post-cover,
+.post-grid .post-cover {
+    flex: 0 0 258px !important;
+    width: 100% !important;
+    height: 258px !important;
+    min-height: 258px !important;
+    max-height: 258px !important;
+    aspect-ratio: auto !important;
+    overflow: hidden !important;
+    background: linear-gradient(135deg,#eef5fa,#eef1fb) !important;
+}
+
+.photo-month-grid .post-cover img,
+.post-grid .post-cover img {
+    display: block !important;
+    width: 100% !important;
+    height: 100% !important;
+    min-width: 100% !important;
+    min-height: 100% !important;
+    object-fit: cover !important;
+    object-position: center !important;
+}
+
+.photo-month-grid .post-card-body,
+.post-grid .post-card-body {
+    flex: 1 1 auto !important;
+    height: 174px !important;
+    min-height: 174px !important;
+    max-height: 174px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    padding: 14px 16px 15px !important;
+    overflow: hidden !important;
+}
+
+.photo-month-grid .post-album,
+.post-grid .post-album {
+    flex: 0 0 auto !important;
+    align-self: flex-start !important;
+    max-width: 100% !important;
+    margin-bottom: 9px !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+}
+
+.photo-month-grid .post-card h3,
+.post-grid .post-card h3 {
+    flex: 0 0 auto !important;
+    display: block !important;
+    min-height: 22px !important;
+    max-height: 22px !important;
+    margin: 0 0 6px !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    line-height: 22px !important;
+}
+
+.photo-month-grid .post-card p,
+.post-grid .post-card p {
+    flex: 0 0 auto !important;
+    min-height: 38px !important;
+    max-height: 38px !important;
+    margin: 0 0 10px !important;
+    line-height: 1.45 !important;
+    color: #68758a !important;
+    display: -webkit-box !important;
+    -webkit-line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
+    overflow: hidden !important;
+}
+
+.photo-month-grid .post-card p:empty,
+.post-grid .post-card p:empty {
+    display: block !important;
+    visibility: hidden !important;
+}
+
+.photo-month-grid .post-card-footer,
+.post-grid .post-card-footer {
+    flex: 0 0 auto !important;
+    margin-top: auto !important;
+    min-height: 28px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 12px !important;
+}
+
+.photo-month-grid .post-meta,
+.post-grid .post-meta {
+    min-width: 0 !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+}
+
+@media (max-width: 900px) {
+    .photo-month-grid .post-card,
+    .post-grid .post-card {
+        height: 412px !important;
+        min-height: 412px !important;
+        max-height: 412px !important;
+    }
+    .photo-month-grid .post-cover,
+    .post-grid .post-cover {
+        flex-basis: 242px !important;
+        height: 242px !important;
+        min-height: 242px !important;
+        max-height: 242px !important;
+    }
+    .photo-month-grid .post-card-body,
+    .post-grid .post-card-body {
+        height: 170px !important;
+        min-height: 170px !important;
+        max-height: 170px !important;
+    }
+}
+
+@media (max-width: 700px) {
+    .photo-month-grid .post-card,
+    .post-grid .post-card {
+        height: 400px !important;
+        min-height: 400px !important;
+        max-height: 400px !important;
+    }
+    .photo-month-grid .post-cover,
+    .post-grid .post-cover {
+        flex-basis: 230px !important;
+        height: 230px !important;
+        min-height: 230px !important;
+        max-height: 230px !important;
+    }
+}

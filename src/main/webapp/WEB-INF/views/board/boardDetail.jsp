@@ -482,13 +482,14 @@
         /* ===== End MOYO Board Point Theme - subtle ===== */
 
 </style>
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/boardUi.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/boardUi.css?v=board-1st-v4">
 </head>
 <body class="moyo-board-body">
 
     <jsp:include page="/WEB-INF/views/common/header.jsp" />
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/boardUi.css?v=board-1st-v4-after-sidebar">
 
-    <div class="detail-container">
+    <div class="detail-container ${post.boardType eq 'FILE' ? 'board-file-detail-page' : ''}">
         <c:choose>
             <c:when test="${not empty projId}">
                 <a href="/project/board/list?projId=${projId}&type=${post.boardType}&wsId=${post.wsId}" class="board-top-link">← 목록으로 돌아가기</a>
@@ -498,19 +499,64 @@
             </c:otherwise>
         </c:choose>
         <div class="detail-card">
-            <h1 class="detail-title">${post.title}</h1>
-
-            <div class="info-row">
-                작성자: ${post.writerName} | 조회수: ${post.viewCount} | 작성일: ${post.regDt}
+            <div class="detail-kicker">
+                <c:if test="${post.isPinned eq 'Y'}"><span class="board-badge fixed">고정</span></c:if>
+                <c:if test="${post.boardType eq 'NOTICE'}"><span class="board-badge notice">공지</span></c:if>
+                <c:if test="${post.boardType eq 'FILE'}"><span class="board-badge file">자료</span></c:if>
+                <c:if test="${post.hasFile}"><span class="board-badge file">첨부 ${post.fileCount}</span></c:if>
             </div>
 
-            <div class="content-body">
+            <c:if test="${post.isPinned eq 'Y'}">
+                <div class="board-pin-info">
+                    상단 고정
+                    <c:if test="${not empty post.pinStartDt or not empty post.pinEndDt}">
+                        · ${empty post.pinStartDt ? '시작 제한 없음' : post.pinStartDt} ~ ${empty post.pinEndDt ? '종료 제한 없음' : post.pinEndDt}
+                    </c:if>
+                </div>
+            </c:if>
+
+            <div class="detail-title-row">
+                <h1 class="detail-title">${post.title}</h1>
+
+                <c:if test="${user.USER_ID == post.userId}">
+                    <div class="post-actions post-actions-top">
+                        <c:choose>
+                            <c:when test="${not empty projId}">
+                                <a href="/group/board/modifyForm?postId=${post.postId}&wsId=${post.wsId}&projId=${projId}" class="board-detail-action edit">수정</a>
+                            </c:when>
+                            <c:otherwise>
+                                <a href="/group/board/modifyForm?postId=${post.postId}&wsId=${post.wsId}" class="board-detail-action edit">수정</a>
+                            </c:otherwise>
+                        </c:choose>
+                        <a href="javascript:void(0);" onclick="confirmDelete('${post.postId}', '${post.wsId}', '${post.boardType}')" class="board-detail-action delete">삭제</a>
+                    </div>
+                </c:if>
+            </div>
+
+            <div class="info-row detail-meta-grid">
+                <span>작성자 <strong>${post.writerName}</strong></span>
+                <span>작성일 <strong>${post.regDt}</strong></span>
+                <span>조회 <strong>${post.viewCount}</strong></span>
+                <span>댓글 <strong>${post.replyCount}</strong></span>
+                <button type="button" class="board-report-meta-btn" onclick="openReportModal('POST', '${post.postId}')">
+                    <span class="board-report-icon" aria-hidden="true">🚨</span> 신고
+                </button>
+            </div>
+
+            <div class="content-body ${post.boardType eq 'FILE' ? 'board-file-description' : ''}">
+                <c:if test="${post.boardType eq 'FILE'}"><div class="section-mini-title">자료 설명</div></c:if>
                 ${post.content}
+            </div>
+
+            <div class="board-reaction-bar board-reaction-bar-bottom board-detail-action-line">
+                <button type="button" id="boardLikeBtn" class="board-like-btn board-like-btn-bottom-right" onclick="toggleBoardLike()">
+                    <span id="boardLikeIcon">♡</span> 좋아요 <strong id="boardLikeCount">${post.likeCount}</strong>
+                </button>
             </div>
 
             <c:if test="${not empty fileList}">
                 <div class="file-section">
-                    <label>📎 첨부파일</label>
+                    <label><c:choose><c:when test="${post.boardType eq 'FILE'}">📎 자료 파일</c:when><c:otherwise>📎 첨부파일</c:otherwise></c:choose></label>
                     <ul>
                         <c:forEach var="file" items="${fileList}">
                             <li>
@@ -520,20 +566,6 @@
                             </li>
                         </c:forEach>
                     </ul>
-                </div>
-            </c:if>
-
-            <c:if test="${user.USER_ID == post.userId}">
-                <div class="post-actions">
-                    <c:choose>
-                        <c:when test="${not empty projId}">
-                            <a href="/group/board/modifyForm?postId=${post.postId}&wsId=${post.wsId}&projId=${projId}" class="post-action-btn">수정</a>
-                        </c:when>
-                        <c:otherwise>
-                            <a href="/group/board/modifyForm?postId=${post.postId}&wsId=${post.wsId}" class="post-action-btn">수정</a>
-                        </c:otherwise>
-                    </c:choose>
-                    <a href="javascript:void(0);" onclick="confirmDelete('${post.postId}', '${post.wsId}', '${post.boardType}')" class="post-action-btn danger">삭제</a>
                 </div>
             </c:if>
 
@@ -551,17 +583,50 @@
         </div>
     </div>
 
+
+    <div id="boardReportModal" class="board-report-modal" aria-hidden="true">
+        <div class="board-report-dim" onclick="closeReportModal()"></div>
+        <div class="board-report-card">
+            <div class="board-report-head">
+                <h3>신고하기</h3>
+                <button type="button" onclick="closeReportModal()">×</button>
+            </div>
+            <input type="hidden" id="reportContentType">
+            <input type="hidden" id="reportContentId">
+            <label class="board-report-label">신고 사유</label>
+            <select id="reportReason" class="board-report-select">
+                <option value="SPAM">스팸/홍보성 내용</option>
+                <option value="ABUSE">욕설/비방</option>
+                <option value="INAPPROPRIATE">부적절한 내용</option>
+                <option value="PRIVACY">개인정보 노출</option>
+                <option value="ETC">기타</option>
+            </select>
+            <label class="board-report-label">상세 내용</label>
+            <textarea id="reportDetail" class="board-report-textarea" placeholder="신고 내용을 간단히 입력하세요."></textarea>
+            <div class="board-report-actions">
+                <button type="button" class="post-action-btn" onclick="closeReportModal()">취소</button>
+                <button type="button" class="post-action-btn danger" onclick="submitReport()">신고 접수</button>
+            </div>
+        </div>
+    </div>
+
     <jsp:include page="/WEB-INF/views/common/footer.jsp" />
 
     <script>
-        function submitReply() {
-            const content = document.getElementById("replyContent").value.trim();
+        function submitReply(parentReplyId) {
+            const isChild = !!parentReplyId;
+            const input = isChild
+                ? document.getElementById("nestedReplyInput-" + parentReplyId)
+                : document.getElementById("replyContent");
+
+            const content = input ? input.value.trim() : "";
             if (!content) return alert("내용을 입력하세요.");
 
             const data = {
                 postId: parseInt("${post.postId}"),
                 content: content,
-                userId: "${user.USER_ID}"
+                userId: "${user.USER_ID}",
+                parentReplyId: isChild ? Number(parentReplyId) : null
             };
 
             fetch('/api/workspace/${post.wsId}/board/reply', {
@@ -574,30 +639,153 @@
                 return res.json();
             })
             .then(res => {
-                alert("등록 성공!");
-                document.getElementById("replyContent").value = "";
+                input.value = "";
                 loadReplies();
             })
             .catch(err => {
                 console.error("에러 발생:", err);
-                alert("서버 에러 발생!");
+                alert("댓글 등록 중 서버 에러가 발생했습니다.");
             });
         }
 
+        const boardReactionContentType = "${post.boardType}" === "NOTICE" ? "NOTICE" : "BOARD";
+
         window.onload = function() {
             loadReplies();
+            loadBoardReactionStatus();
         };
+
+        function loadBoardReactionStatus() {
+            fetch('/api/reactions/status?contentType=' + boardReactionContentType + '&contentId=${post.postId}&reactionType=LIKE')
+            .then(res => res.ok ? res.json() : null)
+            .then(data => {
+                if (!data) return;
+                updateBoardLikeButton(data.liked || data.reacted, data.likeCount || data.reactionCount || 0);
+            })
+            .catch(err => console.warn('게시글 좋아요 상태 조회 실패:', err));
+        }
+
+        function toggleBoardLike() {
+            fetch('/api/reactions/toggle', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contentType: boardReactionContentType,
+                    contentId: Number('${post.postId}'),
+                    reactionType: 'LIKE'
+                })
+            })
+            .then(res => {
+                if (!res.ok) return res.json().then(data => { throw new Error(data.message || '좋아요 처리 실패'); });
+                return res.json();
+            })
+            .then(data => {
+                updateBoardLikeButton(data.liked || data.reacted, data.likeCount || data.reactionCount || 0);
+            })
+            .catch(err => {
+                console.error('게시글 좋아요 처리 실패:', err);
+                alert(err.message || '좋아요 처리 중 오류가 발생했습니다.');
+            });
+        }
+
+        function updateBoardLikeButton(liked, count) {
+            const btn = document.getElementById('boardLikeBtn');
+            const icon = document.getElementById('boardLikeIcon');
+            const countEl = document.getElementById('boardLikeCount');
+            if (!btn || !icon || !countEl) return;
+            btn.classList.toggle('liked', !!liked);
+            icon.textContent = liked ? '♥' : '♡';
+            countEl.textContent = count;
+        }
+
+
+        function openReportModal(contentType, contentId) {
+            const modal = document.getElementById('boardReportModal');
+            document.getElementById('reportContentType').value = contentType === 'REPLY' ? 'REPLY' : boardReactionContentType;
+            document.getElementById('reportContentId').value = contentId;
+            document.getElementById('reportReason').value = 'SPAM';
+            document.getElementById('reportDetail').value = '';
+            modal.classList.add('is-open');
+            modal.setAttribute('aria-hidden', 'false');
+        }
+
+        function closeReportModal() {
+            const modal = document.getElementById('boardReportModal');
+            if (!modal) return;
+            modal.classList.remove('is-open');
+            modal.setAttribute('aria-hidden', 'true');
+        }
+
+        function submitReport() {
+            const contentType = document.getElementById('reportContentType').value;
+            const contentId = document.getElementById('reportContentId').value;
+            const reason = document.getElementById('reportReason').value;
+            const detail = document.getElementById('reportDetail').value.trim();
+
+            fetch('/api/workspace/${post.wsId}/board/report', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contentType: contentType,
+                    contentId: Number(contentId),
+                    reason: reason,
+                    detail: detail
+                })
+            })
+            .then(res => res.json().then(data => ({ ok: res.ok, data: data })))
+            .then(result => {
+                if (!result.ok || result.data.status === 'FAIL') {
+                    alert(result.data.message || '신고 접수에 실패했습니다.');
+                    return;
+                }
+                if (result.data.status === 'DUPLICATE') {
+                    alert(result.data.message || '이미 신고한 항목입니다.');
+                    closeReportModal();
+                    return;
+                }
+                alert('신고가 접수되었습니다.');
+                closeReportModal();
+            })
+            .catch(err => {
+                console.error('신고 접수 실패:', err);
+                alert('신고 접수 중 오류가 발생했습니다.');
+            });
+        }
 
         function toggleEditReply(replyId) {
             const textWrap = document.getElementById("reply-text-wrap-" + replyId);
             const btnWrap = document.getElementById("reply-btn-wrap-" + replyId);
             const currentContent = document.getElementById("reply-raw-text-" + replyId).textContent;
 
-            textWrap.innerHTML = "<input type='text' id='edit-input-" + replyId + "' class='reply-edit-input'>";
+            textWrap.innerHTML = "<textarea id='edit-input-" + replyId + "' class='reply-edit-input reply-edit-textarea'></textarea>";
             document.getElementById("edit-input-" + replyId).value = currentContent;
 
-            btnWrap.innerHTML = "<a onclick='submitEditReply(" + replyId + ")' style='color:#5cb85c; font-weight:bold;'>완료</a>" +
-                                "<a onclick='loadReplies()' style='color:#aaa;'>취소</a>";
+            btnWrap.innerHTML = "<button type='button' class='reply-action-btn save' onclick='submitEditReply(" + replyId + ")'>완료</button>" +
+                                "<button type='button' class='reply-action-btn muted' onclick='loadReplies()'>취소</button>";
+        }
+
+        function openInlineReplyForm(parentReplyId, author) {
+            closeInlineReplyForm();
+            const parentItem = document.getElementById("reply-item-" + parentReplyId);
+            if (!parentItem) return;
+
+            const form = document.createElement("div");
+            form.className = "nested-reply-form";
+            form.id = "nestedReplyForm-" + parentReplyId;
+            form.innerHTML =
+                "<div class='nested-reply-guide'>" + author + "님에게 답글 작성</div>" +
+                "<textarea id='nestedReplyInput-" + parentReplyId + "' placeholder='답글을 입력하세요.'></textarea>" +
+                "<div class='nested-reply-actions'>" +
+                    "<button type='button' class='reply-action-btn muted' onclick='closeInlineReplyForm()'>취소</button>" +
+                    "<button type='button' class='reply-action-btn save' onclick='submitReply(" + parentReplyId + ")'>답글 등록</button>" +
+                "</div>";
+            parentItem.appendChild(form);
+            document.getElementById("nestedReplyInput-" + parentReplyId).focus();
+        }
+
+        function closeInlineReplyForm() {
+            const opened = document.querySelector(".nested-reply-form");
+            if (opened) opened.remove();
         }
 
         function submitEditReply(replyId) {
@@ -673,39 +861,102 @@
                 list.innerHTML = "";
 
                 if (!data || data.length === 0) {
-                    list.innerHTML = "<li style='color:#999;'>등록된 댓글이 없습니다.</li>";
+                    list.innerHTML = "<li class='reply-empty'>등록된 댓글이 없습니다.</li>";
                     return;
                 }
 
+                const replyMap = {};
+                const rootReplies = [];
                 data.forEach(reply => {
-                    const replyId = reply.REPLY_ID;
-                    const author = reply.USER_NAME || "익명";
-                    const content = reply.CONTENT || "";
-                    const date = reply.REG_DT || "";
-                    const replyUserId = reply.USER_ID ? String(reply.USER_ID).trim() : "";
+                    const replyId = Number(reply.REPLY_ID);
+                    reply._children = [];
+                    replyMap[replyId] = reply;
+                });
 
-                    const li = document.createElement("li");
-                    li.id = "reply-item-" + replyId;
-
-                    let html = "<div class='reply-content-area' id='reply-text-wrap-" + replyId + "'>" +
-                               "<strong>" + author + "</strong>: <span class='reply-text-content' id='reply-raw-text-" + replyId + "'></span>" +
-                               " <small style='color:#aaa; margin-left:10px;'>(" + date + ")</small>" +
-                               "</div>";
-
-                    if (currentUserId && replyUserId && currentUserId === replyUserId) {
-                        html += "<div class='reply-actions' id='reply-btn-wrap-" + replyId + "'>" +
-                                "<a onclick='toggleEditReply(" + replyId + ")'>수정</a>" +
-                                "<a class='delete-action' onclick='deleteReply(" + replyId + ")'>삭제</a>" +
-                                "</div>";
+                data.forEach(reply => {
+                    const parentReplyId = reply.PARENT_REPLY_ID ? Number(reply.PARENT_REPLY_ID) : null;
+                    if (parentReplyId && replyMap[parentReplyId]) {
+                        replyMap[parentReplyId]._children.push(reply);
+                    } else {
+                        rootReplies.push(reply);
                     }
+                });
 
-                    li.innerHTML = html;
-                    list.appendChild(li);
-
-                    document.getElementById("reply-raw-text-" + replyId).textContent = content;
+                rootReplies.forEach(reply => {
+                    list.appendChild(createReplyElement(reply, false, currentUserId));
+                    (reply._children || []).forEach(child => {
+                        list.appendChild(createReplyElement(child, true, currentUserId));
+                    });
                 });
             })
             .catch(err => console.error("댓글 로딩 실패:", err));
+        }
+
+        function createReplyElement(reply, isChild, currentUserId) {
+            const replyId = reply.REPLY_ID;
+            const author = reply.USER_NAME || "익명";
+            const content = reply.CONTENT || "";
+            const date = reply.REG_DT || "";
+            const replyUserId = reply.USER_ID ? String(reply.USER_ID).trim() : "";
+
+            const li = document.createElement("li");
+            li.id = "reply-item-" + replyId;
+            li.className = isChild ? "reply-item reply-child" : "reply-item";
+
+            const body = document.createElement("div");
+            body.className = "reply-content-area";
+            body.id = "reply-text-wrap-" + replyId;
+
+            const meta = document.createElement("div");
+            meta.className = "reply-meta-line";
+            if (isChild) {
+                const marker = document.createElement("span");
+                marker.className = "reply-child-marker";
+                marker.textContent = "↳";
+                meta.appendChild(marker);
+            }
+            const name = document.createElement("strong");
+            name.textContent = author;
+            const dateEl = document.createElement("small");
+            dateEl.textContent = date;
+            meta.appendChild(name);
+            meta.appendChild(dateEl);
+
+            const reportMetaBtn = document.createElement("button");
+            reportMetaBtn.type = "button";
+            reportMetaBtn.className = "reply-meta-report-btn";
+            reportMetaBtn.innerHTML = "<span aria-hidden='true'>🚨</span> 신고";
+            reportMetaBtn.onclick = function() { openReportModal('REPLY', replyId); };
+            meta.appendChild(reportMetaBtn);
+
+            const text = document.createElement("div");
+            text.className = "reply-text-content";
+            text.id = "reply-raw-text-" + replyId;
+            text.textContent = content;
+
+            body.appendChild(meta);
+            body.appendChild(text);
+
+            const actions = document.createElement("div");
+            actions.className = "reply-actions";
+            actions.id = "reply-btn-wrap-" + replyId;
+
+            if (!isChild) {
+                actions.innerHTML += "<button type='button' class='reply-action-btn reply' onclick=\"openInlineReplyForm(" + replyId + ", '" + escapeJs(author) + "')\">답글</button>";
+            }
+            if (currentUserId && replyUserId && currentUserId === replyUserId) {
+                actions.innerHTML += "<button type='button' class='reply-action-btn edit' onclick='toggleEditReply(" + replyId + ")'>수정</button>" +
+                                     "<button type='button' class='reply-action-btn delete' onclick='deleteReply(" + replyId + ")'>삭제</button>";
+            }
+            actions.innerHTML += "<button type='button' class='reply-action-btn report' onclick=\"openReportModal('REPLY', " + replyId + ")\"><span>🚨</span> 신고</button>";
+
+            li.appendChild(body);
+            li.appendChild(actions);
+            return li;
+        }
+
+        function escapeJs(value) {
+            return String(value || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\"/g, '\\"');
         }
     </script>
 </body>

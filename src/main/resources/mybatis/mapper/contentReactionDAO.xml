@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.springboot.project.dao.IcontentReactionDAO">
+
+    <select id="countUserReaction" resultType="int">
+        SELECT COUNT(*)
+          FROM CONTENT_REACTIONS
+         WHERE CONTENT_TYPE = #{contentType}
+           AND CONTENT_ID = #{contentId}
+           AND USER_ID = #{userId}
+           AND REACTION_TYPE = #{reactionType}
+    </select>
+
+    <insert id="insertReaction">
+        INSERT INTO CONTENT_REACTIONS (
+            REACTION_ID, CONTENT_TYPE, CONTENT_ID, USER_ID, REACTION_TYPE, CREATED_AT
+        ) VALUES (
+            SEQ_CONTENT_REACTION_ID.NEXTVAL,
+            #{contentType}, #{contentId}, #{userId}, #{reactionType}, SYSDATE
+        )
+    </insert>
+
+    <delete id="deleteReaction">
+        DELETE FROM CONTENT_REACTIONS
+         WHERE CONTENT_TYPE = #{contentType}
+           AND CONTENT_ID = #{contentId}
+           AND USER_ID = #{userId}
+           AND REACTION_TYPE = #{reactionType}
+    </delete>
+
+    <delete id="deleteByContent">
+        DELETE FROM CONTENT_REACTIONS
+         WHERE CONTENT_TYPE = #{contentType}
+           AND CONTENT_ID = #{contentId}
+    </delete>
+
+    <select id="countReactions" resultType="int">
+        SELECT COUNT(*)
+          FROM CONTENT_REACTIONS
+         WHERE CONTENT_TYPE = #{contentType}
+           AND CONTENT_ID = #{contentId}
+           AND REACTION_TYPE = #{reactionType}
+    </select>
+
+</mapper>

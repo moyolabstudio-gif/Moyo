@@ -322,3 +322,53 @@ body.moyo-app-sidebar-enabled :is(
     color: var(--moyo-primary) !important;
     border: 1px solid var(--moyo-primary-border) !important;
 }
+
+/* ===== COMMON HEADER AVATAR FIX =====
+   공통 헤더의 사용자 아바타는 페이지별 CSS가 아니라 header 공통 스타일을 따릅니다.
+   moyoUi의 텍스트 아바타 일괄 규칙보다 뒤에서 한 번 더 고정합니다. */
+.moyo-header .user-avatar {
+    width: 32px !important;
+    height: 32px !important;
+    border-radius: 50% !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background: linear-gradient(135deg, #397BE8 0%, #4A90E2 45%, #39CDB5 100%) !important;
+    background-color: transparent !important;
+    color: #fff !important;
+    font-size: 14px !important;
+    font-weight: 900 !important;
+    box-shadow: 0 4px 12px rgba(57,145,216,.24) !important;
+    border: 0 !important;
+}
+
+/* Workspace/project header avatar normalization: projectMain.css uses the solid MOYO blue for header user avatar. */
+.moyo-header .user-avatar {
+    background: #4A90E2 !important;
+    background-image: none !important;
+    color: #fff !important;
+}
+
+/* FINAL HEADER AVATAR OVERRIDE: project/workspace 공통 헤더 아바타 */
+.moyo-header .user-avatar,
+body.moyo-app-sidebar-enabled .moyo-header .user-avatar {
+    background: linear-gradient(135deg, #397BE8 0%, #4A90E2 45%, #39CDB5 100%) !important;
+    background-image: linear-gradient(135deg, #397BE8 0%, #4A90E2 45%, #39CDB5 100%) !important;
+    color: #fff !important;
+    box-shadow: 0 4px 12px rgba(57,145,216,.24) !important;
+}
+
+/* FINAL COMMON HEADER AVATAR: project/workspace 공통 헤더 아바타 */
+.moyo-header .user-avatar,
+body.moyo-app-sidebar-enabled .moyo-header .user-avatar,
+body.moyo-app-sidebar-enabled header.moyo-header .user-avatar {
+    width: 32px !important;
+    height: 32px !important;
+    flex: 0 0 32px !important;
+    border-radius: 50% !important;
+    background: linear-gradient(135deg, #397BE8 0%, #4A90E2 45%, #39CDB5 100%) !important;
+    background-image: linear-gradient(135deg, #397BE8 0%, #4A90E2 45%, #39CDB5 100%) !important;
+    color: #fff !important;
+    box-shadow: 0 4px 12px rgba(57,145,216,.24) !important;
+    border: 0 !important;
+}

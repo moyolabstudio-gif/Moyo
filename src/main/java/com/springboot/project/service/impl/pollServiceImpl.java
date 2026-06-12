@@ -70,9 +70,33 @@ public class pollServiceImpl implements IpollService {
             for (Map<String, Object> option : rawOptions) {
                 Map<String, Object> item = new HashMap<>(option);
 
-                if (!hasVoted && !isClosed) {
-                    item.remove("COUNT");
-                    item.remove("count");
+                String textValue = firstNonBlank(item, "TEXT", "text");
+                String mediaUrl = firstNonBlank(item,
+                        "MEDIA_URL", "mediaUrl",
+                        "IMAGE_PATH", "imagePath",
+                        "MEDIA_PATH", "mediaPath",
+                        "VIDEO_URL", "videoUrl",
+                        "URL", "url");
+
+                // 예전 데이터가 URL을 TEXT에 저장한 경우도 영상 주소로 복구합니다.
+                if ((mediaUrl == null || mediaUrl.isBlank()) && looksLikeVideoUrl(textValue)) {
+                    mediaUrl = textValue;
+                }
+
+                String optionType = firstNonBlank(item, "OPTION_TYPE", "optionType");
+                if (looksLikeVideoUrl(mediaUrl)) {
+                    optionType = "VIDEO";
+                }
+
+                if (mediaUrl != null && !mediaUrl.isBlank()) {
+                    item.put("MEDIA_URL", mediaUrl);
+                    item.put("mediaUrl", mediaUrl);
+                    item.put("IMAGE_PATH", mediaUrl);
+                    item.put("imagePath", mediaUrl);
+                }
+                if (optionType != null && !optionType.isBlank()) {
+                    item.put("OPTION_TYPE", optionType);
+                    item.put("optionType", optionType);
                 }
 
                 options.add(item);
@@ -94,10 +118,13 @@ public class pollServiceImpl implements IpollService {
         Long createdBy = toLong(poll.get("USER_ID"));
         boolean canManage = userId != null && createdBy != null && userId.equals(createdBy) && !isClosed;
 
-        result.put("showResults", hasVoted || isClosed);
+        result.put("showResults", true);
         result.put("createdBy", createdBy);
         result.put("creatorName", poll.get("CREATOR_NAME"));
         result.put("canManage", canManage);
+        result.put("canExtend", userId != null && createdBy != null && userId.equals(createdBy) && isClosed);
+        result.put("extendCount", poll.get("EXTEND_COUNT"));
+        result.put("prevEndDt", poll.get("PREV_END_DT"));
         result.put("totalVoteCount", totalVoteCount);
         result.put("canEditOptions", canManage);
         result.put("options", options);
@@ -142,16 +169,17 @@ public class pollServiceImpl implements IpollService {
             throw new IllegalStateException("이미 마감된 투표입니다.");
         }
 
-        if (pollDao.countUserVote(pollId, userId) > 0) {
-            throw new IllegalStateException("이미 참여한 투표는 선택을 변경할 수 없습니다.");
-        }
-
         Map<String, Object> voteParams = new HashMap<>();
         voteParams.put("pollId", pollId);
         voteParams.put("optionId", optionId);
         voteParams.put("userId", userId);
 
-        pollDao.insertVote(voteParams);
+        // 마감 전에는 기존 선택을 다른 선택지로 변경할 수 있습니다.
+        if (pollDao.countUserVote(pollId, userId) > 0) {
+            pollDao.updateVote(voteParams);
+        } else {
+            pollDao.insertVote(voteParams);
+        }
     }
 
     @Override
@@ -268,6 +296,27 @@ public class pollServiceImpl implements IpollService {
         pollDao.deletePoll(pollId);
     }
 
+    @Override
+    @Transactional
+    public void extendPoll(Map<String, Object> params) {
+        Long pollId = toLong(params.get("pollId"));
+        Long userId = toLong(params.get("userId"));
+        String endDtText = String.valueOf(params.get("endDt") == null ? "" : params.get("endDt")).trim();
+        if (pollId == null || userId == null || endDtText.isEmpty()) {
+            throw new IllegalArgumentException("pollId, userId, 새 마감일은 필수입니다.");
+        }
+        Map<String, Object> poll = pollDao.selectPollById(pollId);
+        if (poll == null || poll.isEmpty()) throw new IllegalArgumentException("존재하지 않는 투표입니다.");
+        Long createdBy = toLong(poll.get("USER_ID"));
+        if (createdBy == null || !createdBy.equals(userId)) throw new IllegalStateException("투표 작성자만 연장할 수 있습니다.");
+        Date endDt = poll.get("END_DT") instanceof Date ? (Date) poll.get("END_DT") : null;
+        String status = String.valueOf(poll.get("STATUS") == null ? "ACTIVE" : poll.get("STATUS")).toUpperCase();
+        if (!"CLOSED".equals(status) && (endDt == null || endDt.after(new Date()))) {
+            throw new IllegalStateException("종료된 투표만 연장할 수 있습니다.");
+        }
+        pollDao.extendPoll(params);
+    }
+
     private Map<String, Object> buildOptionParams(Long pollId, Object rawOption) {
         Map<String, Object> option = new HashMap<>();
         option.put("pollId", pollId);
@@ -294,8 +343,20 @@ public class pollServiceImpl implements IpollService {
         }
 
         if ("IMAGE".equals(optionType)) {
-            text = "";
             if (imagePath == null || imagePath.isEmpty()) return null;
+            if (text.isEmpty()) text = "이미지 선택지";
+        } else if ("AUDIO".equals(optionType)) {
+            if (imagePath == null || imagePath.isEmpty()) return null;
+            if (text.isEmpty()) text = "음악 선택지";
+            // 기존 DB의 OPTION_TYPE 제약조건(TEXT/IMAGE)과 호환되도록
+            // 미디어 경로는 IMAGE 타입으로 저장하고 조회 시 확장자로 AUDIO를 복원합니다.
+            optionType = "IMAGE";
+        } else if ("VIDEO".equals(optionType)) {
+            if (imagePath == null || imagePath.isEmpty()) return null;
+            // 기존 DB 제약조건(TEXT/IMAGE)과 호환하면서도 영상 URL이 유실되지 않도록
+            // IMAGE_PATH와 TEXT 양쪽에 URL을 저장합니다. 조회 화면에서는 URL 대신 "영상 N"으로 표시합니다.
+            text = imagePath;
+            optionType = "IMAGE";
         } else {
             optionType = "TEXT";
             imagePath = null;
@@ -308,9 +369,44 @@ public class pollServiceImpl implements IpollService {
         return option;
     }
 
+
+    private String firstNonBlank(Map<String, Object> map, String... keys) {
+        if (map == null || keys == null) return null;
+        for (String key : keys) {
+            Object value = map.get(key);
+            if (value == null) continue;
+            String text = String.valueOf(value).trim();
+            if (!text.isEmpty() && !"null".equalsIgnoreCase(text)) return text;
+        }
+        return null;
+    }
+
+    private boolean looksLikeVideoUrl(String value) {
+        if (value == null) {
+            return false;
+        }
+
+        String text = value.trim().toLowerCase();
+
+        if (!(text.startsWith("http://") || text.startsWith("https://"))) {
+            return false;
+        }
+
+        return text.contains("youtube.com/")
+                || text.contains("youtu.be/")
+                || text.contains("vimeo.com/")
+                || text.matches(".*\\.(mp4|webm|ogg|mov|m4v)(\\?[^#]*)?$");
+    }
+
     private String normalizeScope(String scope) {
-        String value = String.valueOf(scope == null ? "" : scope).trim().toUpperCase();
-        if ("PROJECT".equals(value)) return "PROJECT";
+        String value = String.valueOf(scope == null ? "" : scope)
+                .trim()
+                .toUpperCase();
+
+        if ("PROJECT".equals(value)) {
+            return "PROJECT";
+        }
+
         return "WORKSPACE";
     }
 

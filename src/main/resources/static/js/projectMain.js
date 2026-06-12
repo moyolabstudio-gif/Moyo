@@ -1,3 +1,15 @@
+window.PROJECT_MAIN_CONFIG = window.PROJECT_MAIN_CONFIG || {
+    projectLeaderId: '',
+    loginUserId: '',
+    projectStartDate: '',
+    projectEndDate: '',
+    projectId: '',
+    paramProjId: '',
+    wsId: '',
+    paramWsId: '',
+    canManageProject: false
+};
+
 
 		let currentTaskId = null;
         let projectTaskMemberList = [];
@@ -122,57 +134,166 @@
         }
 
 
-function openAssignModal() {
-		    const urlParams = new URLSearchParams(window.location.search);
-		    const wsId = urlParams.get('wsId');
-		    const projId = urlParams.get('projId');
+function escapeProjectMemberHtml(value) {
+            return String(value == null ? '' : value)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
 
-		    // 경로가 확실한지 콘솔에서 확인합니다.
-		    console.log("요청 URL: /project/api/assignable-members?wsId=" + wsId + "&projId=" + projId);
+        function updateAssignSelectedCount() {
+            const count = document.querySelectorAll(
+                '#assignableList .project-member-checkbox:checked'
+            ).length;
 
-		    fetch('/project/api/assignable-members?wsId=' + wsId + '&projId=' + projId)
-		        .then(res => res.json())
-		        .then(data => {
-		            console.log("서버에서 받은 멤버 데이터: ", data); // 여기서 결과 확인
+            const countEl = document.getElementById('assignSelectedCount');
+            if (countEl) countEl.textContent = count + '명 선택';
+        }
 
-		            const listDiv = document.getElementById('assignableList');
+        function openAssignModal() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const wsId = urlParams.get('wsId');
+            const projId = urlParams.get('projId');
+            const listDiv = document.getElementById('assignableList');
 
-		            if (data.length === 0) {
-		                listDiv.innerHTML = '<p class="text-center p-3">초대 가능한 멤버가 없습니다.</p>';
-		            } else {
-		                listDiv.innerHTML = '';
-		                for (var i = 0; i < data.length; i++) {
-		                    var user = data[i];
-		                    listDiv.innerHTML +=
-		                        '<label class="member-list-item">' +
-		                            '<input class="member-check" type="checkbox" value="' + user.USER_ID + '">' +
-		                            '<div class="member-info">' +
-		                                '<span class="member-name">' + user.USER_NAME + '</span>' +
-		                                '<span class="member-email">' + user.EMAIL + '</span>' +
-		                            '</div>' +
-		                        '</label>';
-		                }
-		            }
-		            openModal('assignMemberModal');
-		        })
-		        .catch(function(err) {
-		            console.error("멤버 로딩 에러: ", err);
-		        });
-		}
+            if (!listDiv) return;
+
+            listDiv.innerHTML =
+                '<div class="project-member-candidate-empty">' +
+                '멤버를 불러오는 중입니다.' +
+                '</div>';
+
+            updateAssignSelectedCount();
+            openModal('assignMemberModal');
+
+            fetch('/project/api/assignable-members?wsId=' +
+                    encodeURIComponent(wsId || '') +
+                    '&projId=' + encodeURIComponent(projId || ''))
+                .then(function(res) {
+                    if (!res.ok) throw new Error('ASSIGNABLE_MEMBER_LOAD_FAILED');
+                    return res.json();
+                })
+                .then(function(members) {
+                    if (!Array.isArray(members) || members.length === 0) {
+                        listDiv.innerHTML =
+                            '<div class="project-member-candidate-empty">' +
+                            '추가 가능한 멤버가 없습니다.' +
+                            '</div>';
+                        updateAssignSelectedCount();
+                        return;
+                    }
+
+                    listDiv.innerHTML = members.map(function(member) {
+                        const userId = member.USER_ID || member.userId || '';
+                        const userName =
+                            member.USER_NAME || member.userName || '이름 없음';
+                        const email = member.EMAIL || member.email || '';
+                        const profileImage =
+                            member.PROFILE_IMAGE_PATH ||
+                            member.profileImagePath ||
+                            member.PROFILE_IMAGE ||
+                            member.profileImage ||
+                            '';
+                        const initial =
+                            Array.from(String(userName).trim())[0] || '?';
+
+                        const avatar = profileImage
+                            ? '<img src="' +
+                              escapeProjectMemberHtml(profileImage) +
+                              '" alt="" onerror="' +
+                              "this.style.display='none';" +
+                              "this.nextElementSibling.style.display='flex';" +
+                              '">' +
+                              '<span style="display:none;">' +
+                              escapeProjectMemberHtml(initial) +
+                              '</span>'
+                            : '<span>' +
+                              escapeProjectMemberHtml(initial) +
+                              '</span>';
+
+                        return '<label class="project-member-candidate-row">' +
+                            '<input type="checkbox" ' +
+                                'class="project-member-checkbox" value="' +
+                                escapeProjectMemberHtml(userId) +
+                                '" onchange="updateAssignSelectedCount()">' +
+                            '<span class="project-member-candidate-avatar">' +
+                                avatar +
+                            '</span>' +
+                            '<span class="project-member-candidate-info">' +
+                                '<strong>' +
+                                    escapeProjectMemberHtml(userName) +
+                                '</strong>' +
+                                '<small>' +
+                                    escapeProjectMemberHtml(email) +
+                                '</small>' +
+                            '</span>' +
+                            '<span class="project-member-candidate-check">' +
+                                '선택' +
+                            '</span>' +
+                        '</label>';
+                    }).join('');
+
+                    updateAssignSelectedCount();
+                })
+                .catch(function(error) {
+                    console.error('추가 가능 멤버 로딩 오류:', error);
+                    listDiv.innerHTML =
+                        '<div class="project-member-candidate-empty is-error">' +
+                        '멤버를 불러오지 못했습니다.' +
+                        '</div>';
+                    updateAssignSelectedCount();
+                });
+        }
 
         function submitAssign() {
-            const projId = new URLSearchParams(window.location.search).get('projId');
-            const selectedUsers = Array.from(document.querySelectorAll('.member-check:checked')).map(el => el.value);
-            if (selectedUsers.length === 0) return alert("멤버를 선택해주세요.");
+            const projId =
+                new URLSearchParams(window.location.search).get('projId');
+
+            const checked = Array.from(document.querySelectorAll(
+                '#assignableList .project-member-checkbox:checked'
+            ));
+
+            if (checked.length === 0) {
+                alert('추가할 멤버를 한 명 이상 선택해주세요.');
+                return;
+            }
+
             const params = new URLSearchParams();
             params.append('projId', projId);
-            selectedUsers.forEach(id => params.append('userIds', id));
-            fetch('/project/api/add-members', { method: 'POST', body: params })
-            .then(res => res.text()).then(result => {
-                if (result === 'SUCCESS') { location.reload(); }
-                else alert('오류가 발생했습니다.');
+
+            checked.forEach(function(checkbox) {
+                params.append('userIds', checkbox.value);
+            });
+
+            fetch('/project/api/add-members', {
+                method: 'POST',
+                body: params
+            })
+            .then(function(response) {
+                if (!response.ok) throw new Error('ADD_FAILED');
+                return response.text();
+            })
+            .then(function(result) {
+                if (result === 'SUCCESS') {
+                    alert(checked.length +
+                        '명의 멤버를 프로젝트에 추가했습니다.');
+                    location.reload();
+                } else if (result === 'NO_PERMISSION') {
+                    alert('멤버 추가 권한이 없습니다.');
+                } else if (result === 'ALREADY_EXISTS') {
+                    alert('이미 프로젝트에 참여 중인 멤버가 있습니다.');
+                } else {
+                    alert('멤버 추가에 실패했습니다.');
+                }
+            })
+            .catch(function(error) {
+                console.error('프로젝트 멤버 추가 오류:', error);
+                alert('멤버 추가 중 오류가 발생했습니다.');
             });
         }
+
 
         function getMemberInitialText(name) {
             const text = String(name || '?').trim();
@@ -373,9 +494,16 @@ function renderProjectMemberList(members, tasks) {
         const roleClass = role.className || 'member';
         const stats = taskStats[userId] || { total: 0, todo: 0, progress: 0, done: 0, delay: 0 };
 
-        html += '<div class="moyo-member-card">';
+        const profileImage = member.PROFILE_IMAGE_PATH || member.profileImagePath || '';
+        const avatarHtml = profileImage
+            ? '<img src="' + escapeTaskHtml(profileImage) + '" alt="">'
+            : escapeTaskHtml(getMemberInitialText(userName));
+
+        html += '<div class="moyo-member-card" role="button" tabindex="0" '
+            + 'onclick="openProjectMemberProfile(' + userId + ')" '
+            + 'onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();openProjectMemberProfile(' + userId + ');}">';
         html += '   <div class="moyo-member-top">';
-        html += '       <div class="moyo-member-avatar">' + escapeTaskHtml(getMemberInitialText(userName)) + '</div>';
+        html += '       <div class="moyo-member-avatar">' + avatarHtml + '</div>';
         html += '       <div class="moyo-member-main">';
         html += '           <div class="moyo-member-name-line">';
         html += '               <span class="moyo-member-name" title="' + escapeTaskHtml(userName) + '">' + escapeTaskHtml(userName) + '</span>';
@@ -2211,58 +2339,151 @@ function loadKanbanBoard() {
             bindGanttDragHandlers();
         }
 
-        function loadProjectSchedules() {
+        async function loadProjectSchedules() {
             const projId = new URLSearchParams(window.location.search).get('projId');
             const target = document.getElementById('projectScheduleList');
 
             if (!target) return;
 
-            fetch('/project/api/schedules?projId=' + projId)
-                .then(res => {
-                    if (!res.ok) throw new Error('프로젝트 일정 조회 실패');
-                    return res.json();
-                })
-                .then(data => {
-                    projectCalendarSchedules = data || [];
-                    generateProjectMiniCalendar();
-                    renderProjectGantt(projectCalendarSchedules);
+            if (!projId) {
+                console.error('[프로젝트 일정] URL에 projId가 없습니다.');
+                target.innerHTML =
+                    '<div class="schedule-empty">프로젝트 정보를 확인할 수 없습니다.</div>';
+                return;
+            }
 
-                    target.innerHTML = '';
+            const requestUrl =
+                '/project/api/schedules?projId=' + encodeURIComponent(projId);
 
-                    if (!data || data.length === 0) {
-                        target.innerHTML = '<div class="schedule-empty">등록된 프로젝트 일정이 없습니다.</div>';
-                        return;
+            try {
+                const response = await fetch(requestUrl, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json'
                     }
-
-                    data.forEach(schedule => {
-                        const scheduleId = schedule.EVENT_ID || schedule.SCHEDULE_ID || schedule.scheduleId;
-                        const title = schedule.TITLE || schedule.title || '제목 없음';
-                        const start = schedule.START_DATE || schedule.startDate || '';
-                        const end = schedule.END_DATE || schedule.endDate || '';
-                        const status = schedule.STATUS || schedule.status || 'TODO';
-                        const color = schedule.COLOR || schedule.color || '#4A90E2';
-
-                        const html =
-                            '<div class="schedule-item" onclick="openScheduleDetailModal(' + scheduleId + ')">' +
-                                '<div class="schedule-left">' +
-                                    '<div class="schedule-title">' +
-                                        '<span class="schedule-dot" style="background:' + color + ';"></span>' +
-                                        '<span>' + title + '</span>' +
-                                    '</div>' +
-                                    '<div class="schedule-date">' + start + ' ~ ' + end + '</div>' +
-                                '</div>' +
-                                '<div class="schedule-status ' + getScheduleStatusClass(status) + '">' +
-                                    getScheduleStatusText(status) +
-                                '</div>' +
-                            '</div>';
-
-                        target.insertAdjacentHTML('beforeend', html);
-                    });
-                })
-                .catch(err => {
-                    console.error(err);
-                    target.innerHTML = '<div class="schedule-empty">프로젝트 일정을 불러오지 못했습니다.</div>';
                 });
+
+                const responseText = await response.text();
+
+                if (!response.ok) {
+                    console.error('[프로젝트 일정] 요청 실패', {
+                        url: requestUrl,
+                        status: response.status,
+                        statusText: response.statusText,
+                        response: responseText
+                    });
+
+                    throw new Error(
+                        '프로젝트 일정 조회 실패'
+                        + ' (' + response.status + ' ' + response.statusText + ')'
+                    );
+                }
+
+                let data;
+
+                try {
+                    data = responseText ? JSON.parse(responseText) : [];
+                } catch (parseError) {
+                    console.error('[프로젝트 일정] JSON 변환 실패', {
+                        url: requestUrl,
+                        response: responseText,
+                        error: parseError
+                    });
+
+                    throw new Error('프로젝트 일정 응답 형식이 올바르지 않습니다.');
+                }
+
+                if (!Array.isArray(data)) {
+                    console.error('[프로젝트 일정] 배열이 아닌 응답 수신', data);
+                    throw new Error('프로젝트 일정 응답 데이터가 올바르지 않습니다.');
+                }
+
+                projectCalendarSchedules = data;
+
+                generateProjectMiniCalendar();
+                renderProjectGantt(projectCalendarSchedules);
+
+                target.innerHTML = '';
+
+                if (data.length === 0) {
+                    target.innerHTML =
+                        '<div class="schedule-empty">등록된 프로젝트 일정이 없습니다.</div>';
+                    return;
+                }
+
+                data.forEach(schedule => {
+                    const scheduleId =
+                        schedule.EVENT_ID
+                        || schedule.SCHEDULE_ID
+                        || schedule.scheduleId;
+
+                    const title =
+                        schedule.TITLE
+                        || schedule.title
+                        || '제목 없음';
+
+                    const start =
+                        schedule.START_DATE
+                        || schedule.startDate
+                        || '';
+
+                    const end =
+                        schedule.END_DATE
+                        || schedule.endDate
+                        || '';
+
+                    const status =
+                        schedule.STATUS
+                        || schedule.status
+                        || 'TODO';
+
+                    const color =
+                        schedule.COLOR
+                        || schedule.color
+                        || '#4A90E2';
+
+                    const html =
+                        '<div class="schedule-item" '
+                        + 'onclick="openScheduleDetailModal(' + scheduleId + ')">'
+                        + '<div class="schedule-left">'
+                        + '<div class="schedule-title">'
+                        + '<span class="schedule-dot" style="background:'
+                        + color + ';"></span>'
+                        + '<span>' + title + '</span>'
+                        + '</div>'
+                        + '<div class="schedule-date">'
+                        + start + ' ~ ' + end
+                        + '</div>'
+                        + '</div>'
+                        + '<div class="schedule-status '
+                        + getScheduleStatusClass(status) + '">'
+                        + getScheduleStatusText(status)
+                        + '</div>'
+                        + '</div>';
+
+                    target.insertAdjacentHTML('beforeend', html);
+                });
+            } catch (error) {
+                console.error('[프로젝트 일정] 로딩 오류:', error);
+
+                projectCalendarSchedules = [];
+
+                try {
+                    generateProjectMiniCalendar();
+                    renderProjectGantt([]);
+                } catch (renderError) {
+                    console.error(
+                        '[프로젝트 일정] 빈 화면 렌더링 오류:',
+                        renderError
+                    );
+                }
+
+                target.innerHTML =
+                    '<div class="schedule-empty">'
+                    + '프로젝트 일정을 불러오지 못했습니다.'
+                    + '<br><small>브라우저 콘솔에서 요청 상태와 서버 응답을 확인해주세요.</small>'
+                    + '</div>';
+            }
         }
 
         function openAddScheduleModal() {
@@ -3171,7 +3392,7 @@ function openEditProjectModal() {
 
 		    const year = projectCalendarDate.getFullYear();
 		    const month = projectCalendarDate.getMonth();
-		    title.textContent = year + '년 ' + (month + 1) + '월';
+		    title.textContent = year + '.' + String(month + 1).padStart(2, '0');
 
 		    grid.querySelectorAll('.day-num, .empty-slot').forEach(el => el.remove());
 
@@ -3195,11 +3416,11 @@ function openEditProjectModal() {
                     div.classList.add('project-period-day');
                 }
 
-                if (isSameProjectDate(cellDate, window.PROJECT_MAIN_CONFIG.projectStartDate)) {
+                if (isSameProjectDate(cellDate, window.PROJECT_MAIN_CONFIG && window.PROJECT_MAIN_CONFIG.projectStartDate)) {
                     div.classList.add('project-start-day');
                 }
 
-                if (isSameProjectDate(cellDate, window.PROJECT_MAIN_CONFIG.projectEndDate)) {
+                if (isSameProjectDate(cellDate, window.PROJECT_MAIN_CONFIG && window.PROJECT_MAIN_CONFIG.projectEndDate)) {
                     div.classList.add('project-end-day');
                 }
 
@@ -3207,12 +3428,12 @@ function openEditProjectModal() {
 		            div.classList.add('today');
 		        }
 
-                if (isSameProjectDate(cellDate, window.PROJECT_MAIN_CONFIG.projectStartDate) || isSameProjectDate(cellDate, window.PROJECT_MAIN_CONFIG.projectEndDate)) {
+                if (isSameProjectDate(cellDate, window.PROJECT_MAIN_CONFIG && window.PROJECT_MAIN_CONFIG.projectStartDate) || isSameProjectDate(cellDate, window.PROJECT_MAIN_CONFIG && window.PROJECT_MAIN_CONFIG.projectEndDate)) {
                     div.classList.add('project-boundary');
                 }
 
-                const matchedSchedules = projectCalendarSchedules.filter(schedule => isDateInScheduleRange(cellDate, schedule));
-                const dueTasks = projectCalendarTasks.filter(task => isTaskDueDate(cellDate, task));
+                const matchedSchedules = (Array.isArray(projectCalendarSchedules) ? projectCalendarSchedules : []).filter(schedule => isDateInScheduleRange(cellDate, schedule));
+                const dueTasks = (Array.isArray(projectCalendarTasks) ? projectCalendarTasks : []).filter(task => isTaskDueDate(cellDate, task));
 
                 if (matchedSchedules.length > 0) {
                     const primarySchedule = matchedSchedules[0];
@@ -3594,7 +3815,7 @@ function updateBoardCounts(oldStatus, newStatus) {
 
 				    let html = '<ul class="board-list-inner">';
 
-				    list.slice(0, 4).forEach(post => {
+				    list.slice(0, 3).forEach(post => {
 				        const postId = post.postId || post.POST_ID;
 				        const title = post.title || post.TITLE || '제목 없음';
 				        const regDt = post.regDt || post.REG_DT || '';
@@ -3640,51 +3861,40 @@ function updateBoardCounts(oldStatus, newStatus) {
 				}
 
         /* ===== Work note widget script ===== */
+        function renderSharedNotePlaceholder(target) {
+            if (!target) return;
+            target.innerHTML = '<div class="work-note-empty shared-note-placeholder">' +
+                '<div class="work-note-empty-left">' +
+                '<div class="work-note-empty-icon">📝</div>' +
+                '<div><strong>공유 노트가 들어갈 자리입니다.</strong><span>노트 기능은 다시 정리해서 연결할 예정입니다.<br>프로젝트 회의록과 작업 메모를 이 영역에서 확인할 수 있게 됩니다.</span></div>' +
+                '</div>' +
+                '</div>';
+        }
+
+        function normalizeSharedNoteSection() {
+            var target = document.getElementById('recentNoteList');
+            if (!target) return;
+            var section = target.closest('.note-main-section, section, article, .widget-card, .dashboard-card, .content-section');
+            if (!section) return;
+
+            section.classList.add('shared-note-ready-section');
+
+            var title = section.querySelector('h1, h2, h3, .section-title, .note-section-title');
+            if (title) title.innerHTML = '📝 공유 노트';
+
+            var desc = section.querySelector('.note-section-header p, .section-desc, .section-subtitle, p');
+            if (desc) desc.textContent = '공유 노트가 들어갈 자리입니다.';
+
+            section.querySelectorAll('.note-write-link, .empty-note-write-link, .note-write-bottom-actions, a[href*="/project/note/write"]').forEach(function(el) {
+                el.style.display = 'none';
+            });
+        }
+
         function loadRecentNotes() {
             const target = document.getElementById('recentNoteList');
             if (!target) return;
-
-            const params = new URLSearchParams(window.location.search);
-            const projId = params.get('projId') || window.PROJECT_MAIN_CONFIG.projectId;
-            const wsId = params.get('wsId') || window.PROJECT_MAIN_CONFIG.paramWsId;
-
-            fetch('/project/note/api/main?wsId=' + wsId + '&projId=' + projId + '&limit=3')
-                .then(res => res.json())
-                .then(data => {
-                    if (!Array.isArray(data) || data.length === 0) {
-                        target.innerHTML = '<div class="work-note-empty">' +
-                            '<div class="work-note-empty-left">' +
-                            '<div class="work-note-empty-icon">📝</div>' +
-                            '<div><strong>아직 작성된 노트가 없습니다.</strong><span>회의 기록이나 작업 메모를 첫 노트로 남기고<br>프로젝트 메인에서 바로 확인해보세요.</span></div>' +
-                            '</div>' +
-                            '<a class="empty-note-write-link" href="/project/note/write?wsId=' + wsId + '&projId=' + projId + '">+ 첫 노트 작성</a>' +
-                            '</div>';
-                        return;
-                    }
-
-                    target.innerHTML = data.map(note => {
-                        const fileCount = note.fileList ? note.fileList.length : 0;
-                        const preview = note.doneContent || note.nextContent || note.changeLog || '작성된 주요 내용이 없습니다.';
-                        const regDate = note.regDt ? String(note.regDt).substring(0, 10) : '';
-
-                        return '<a class="note-item" href="/project/note/detail?noteId=' + note.noteId + '&wsId=' + wsId + '&projId=' + projId + '">' +
-                               '<div class="note-item-title-row">' +
-                               '<h4 class="note-item-title">' + escapeNoteHtml(note.noteTitle || '노트') + '</h4>' +
-                               (note.pinned ? '<span class="note-item-pin">📌 고정</span>' : '') +
-                               '</div>' +
-                               '<div class="work-note-meta">' +
-                               '<span class="work-note-chip">' + escapeNoteHtml(note.userName || '작성자') + '</span>' +
-                               '<span class="work-note-chip">' + escapeNoteHtml(regDate) + '</span>' +
-                               (fileCount > 0 ? '<span class="work-note-chip file">첨부 ' + fileCount + '개</span>' : '') +
-                               '</div>' +
-                               '<div class="work-note-preview">' + escapeNoteHtml(preview) + '</div>' +
-                               '</a>';
-                    }).join('');
-                })
-                .catch(err => {
-                    console.error('최근 노트 조회 실패:', err);
-                    target.innerHTML = '<div class="work-note-empty"><div class="work-note-empty-left"><div class="work-note-empty-icon">⚠️</div><div><strong>노트를 불러오지 못했습니다.</strong><span>잠시 후 다시 확인해주세요.</span></div></div></div>';
-                });
+            normalizeSharedNoteSection();
+            renderSharedNotePlaceholder(target);
         }
 
         function escapeNoteHtml(value) {
@@ -3699,6 +3909,7 @@ function updateBoardCounts(oldStatus, newStatus) {
 
         document.addEventListener('DOMContentLoaded', function() {
             loadRecentNotes();
+            setTimeout(loadRecentNotes, 150);
         });
         /* ===== End work note widget script ===== */
 
@@ -3919,47 +4130,8 @@ function formatWidgetDate(value) {
 
 function loadProjectNoteWidget(projId) {
     const target = document.getElementById('projectNoteBoard');
-    const wsId = new URLSearchParams(window.location.search).get('wsId');
-
     if (!target) return;
-
-    target.innerHTML = '<p class="text-muted" style="margin:0; padding-top:8px;">노트를 불러오는 중...</p>';
-
-    fetch('/project/note/api/main?wsId=' + encodeURIComponent(wsId) + '&projId=' + encodeURIComponent(projId) + '&limit=3')
-        .then(function(res) {
-            if (!res.ok) throw new Error('노트 API 응답 오류: ' + res.status);
-            return res.json();
-        })
-        .then(function(list) {
-            if (!Array.isArray(list) || list.length === 0) {
-                target.innerHTML = '<p class="text-muted" style="margin:0; padding-top:8px;">등록된 노트가 없습니다.</p>';
-                return;
-            }
-
-            let html = '<ul class="board-list-inner">';
-
-            list.slice(0, 4).forEach(function(note) {
-                const noteId = note.noteId || note.NOTE_ID;
-                const title = note.noteTitle || note.NOTE_TITLE || '노트';
-                const regDt = note.regDt || note.REG_DT || '';
-                const fileCount = note.fileList ? note.fileList.length : (note.FILE_COUNT || note.fileCount || 0);
-
-                html += '<li class="board-item">' +
-                            '<a href="/project/note/detail?noteId=' + noteId + '&projId=' + projId + '&wsId=' + wsId + '">' +
-                                escapeWidgetHtml(title) +
-                            '</a>' +
-                            '<span class="board-date">' + formatWidgetDate(regDt) + (fileCount > 0 ? ' · 첨부 ' + fileCount : '') + '</span>' +
-                        '</li>';
-            });
-
-            html += '</ul>';
-            target.innerHTML = html;
-            limitMainWidgetItems();
-        })
-        .catch(function(err) {
-            console.error('노트 위젯 조회 실패:', err);
-            target.innerHTML = '<p class="text-muted" style="margin:0; padding-top:8px;">노트를 불러오지 못했습니다.</p>';
-        });
+    target.innerHTML = '<p class="text-muted" style="margin:0; padding-top:8px;">공유 노트가 들어갈 자리입니다.</p>';
 }
 function escapeWidgetHtml(value) {
     if (value === null || value === undefined) return '';
@@ -4008,3 +4180,390 @@ function isProjectMemberTaskDelayedSafe(endDateText, endTime, status) {
 }
 
         document.addEventListener('DOMContentLoaded', bindScheduleTimeInputNormalization);
+
+
+
+/* ===== 프로젝트 멤버 프로필: 기존 타임라인/캘린더 로직과 분리 ===== */
+function setProjectMemberProfileVisible(visible) {
+    const overlay = document.getElementById('projectMemberProfileOverlay');
+    const modal = document.getElementById('projectMemberProfileModal');
+    if (!overlay || !modal) return;
+
+    overlay.style.display = visible ? 'block' : 'none';
+    modal.style.display = visible ? 'block' : 'none';
+    document.body.classList.toggle('project-member-profile-open', visible);
+}
+
+function closeProjectMemberProfile() {
+    setProjectMemberProfileVisible(false);
+}
+
+function projectProfileValue(data, upper, camel) {
+    return data ? (data[upper] ?? data[camel] ?? '') : '';
+}
+
+function projectMemberPermissionLabel(data) {
+    const isLeader =
+        String(projectProfileValue(data, 'IS_LEADER', 'isLeader')) === 'Y';
+
+    if (isLeader) return '팀장';
+
+    const role = String(
+        projectProfileValue(data, 'PROJ_ROLE', 'projRole') || 'MEMBER'
+    ).toUpperCase();
+
+    return role === 'ADMIN' ? '관리자' : '멤버';
+}
+
+function openProjectMemberProfile(userId) {
+    const body = document.getElementById('projectMemberProfileBody');
+    if (!body) return;
+
+    body.innerHTML =
+        '<div class="project-member-profile-loading">프로필을 불러오는 중입니다.</div>';
+
+    setProjectMemberProfileVisible(true);
+
+    const projId =
+        window.PROJECT_MAIN_CONFIG?.projectId ||
+        window.PROJECT_MAIN_CONFIG?.paramProjId ||
+        new URLSearchParams(window.location.search).get('projId');
+
+    fetch('/project/api/member-profile?projId='
+        + encodeURIComponent(projId)
+        + '&userId=' + encodeURIComponent(userId))
+        .then(function(response) {
+            if (!response.ok) throw new Error('PROFILE_LOAD_FAILED');
+            return response.json();
+        })
+        .then(renderProjectMemberProfile)
+        .catch(function(error) {
+            console.error('프로젝트 멤버 프로필 조회 실패:', error);
+            body.innerHTML =
+                '<div class="project-member-profile-loading">프로필을 불러오지 못했습니다.</div>';
+        });
+}
+
+function renderProjectMemberProfile(profile) {
+    const body = document.getElementById('projectMemberProfileBody');
+    if (!body) return;
+
+    const userId = projectProfileValue(profile, 'USER_ID', 'userId');
+    const displayName =
+        projectProfileValue(profile, 'DISPLAY_NAME', 'displayName') || '이름 없음';
+    const profileImage =
+        projectProfileValue(profile, 'PROFILE_IMAGE_PATH', 'profileImagePath');
+    const email = projectProfileValue(profile, 'EMAIL', 'email') || '-';
+    const phone = projectProfileValue(profile, 'PHONE_NUMBER', 'phoneNumber');
+    const wsPosition =
+        projectProfileValue(profile, 'WS_POSITION', 'wsPosition') || '역할 미지정';
+    const projPosition =
+        projectProfileValue(profile, 'PROJ_POSITION', 'projPosition') || '';
+    const canEdit = Boolean(
+        profile.CAN_EDIT_PROJECT_ROLE ?? profile.canEditProjectRole
+    );
+
+    const permission = projectMemberPermissionLabel(profile);
+    const avatar = profileImage
+        ? '<img src="' + escapeTaskHtml(profileImage) + '" alt="">'
+        : escapeTaskHtml(getMemberInitialText(displayName));
+
+    let html = '';
+    html += '<div class="project-member-profile-summary">';
+    html += '<div class="project-member-profile-avatar">' + avatar + '</div>';
+    html += '<div class="project-member-profile-summary-copy">';
+    html += '<strong>' + escapeTaskHtml(displayName) + '</strong>';
+    html += '<span>' +
+        escapeTaskHtml(projPosition || '프로젝트 역할 미지정') + '</span>';
+    html += '<em>' + escapeTaskHtml(permission) + '</em>';
+    html += '</div></div>';
+
+    html += '<div class="project-member-profile-info">';
+    html += '<div><span>이메일</span><strong>' +
+        escapeTaskHtml(email) + '</strong></div>';
+
+    if (phone) {
+        html += '<div><span>연락처</span><strong>' +
+            escapeTaskHtml(phone) + '</strong></div>';
+    }
+
+    html += '<div><span>워크스페이스 역할</span><strong>' +
+        escapeTaskHtml(wsPosition) + '</strong></div>';
+
+    html += '</div>';
+
+    if (canEdit) {
+        html += '<div class="project-member-profile-role-edit">';
+        html += '<label for="projectMemberProfilePosition">프로젝트 역할</label>';
+        html += '<input type="text" id="projectMemberProfilePosition" '
+            + 'maxlength="100" '
+            + 'value="' + escapeTaskHtml(projPosition) + '" '
+            + 'placeholder="예: 백엔드 개발, 디자인, 일정 관리">';
+        html += '<p>프로젝트에서 맡은 역할만 수정할 수 있습니다.</p>';
+        html += '</div>';
+
+        html += '<div class="project-member-profile-actions">';
+        html += '<button type="button" '
+            + 'onclick="saveProjectMemberProfilePosition(' + userId + ')">'
+            + '역할 저장</button>';
+        html += '</div>';
+    } else {
+        html += '<p class="project-member-profile-source-note">'
+            + '표시 이름, 이미지와 연락처는 워크스페이스 프로필 정보를 사용합니다.'
+            + '</p>';
+    }
+
+    body.innerHTML = html;
+}
+
+function saveProjectMemberProfilePosition(userId) {
+    const input = document.getElementById('projectMemberProfilePosition');
+    if (!input) return;
+
+    const projId =
+        window.PROJECT_MAIN_CONFIG?.projectId ||
+        window.PROJECT_MAIN_CONFIG?.paramProjId ||
+        new URLSearchParams(window.location.search).get('projId');
+
+    const params = new URLSearchParams();
+    params.append('projId', projId);
+    params.append('userId', userId);
+    params.append('projPosition', input.value.trim());
+
+    fetch('/project/api/member-profile/position', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: params
+    })
+    .then(function(response) {
+        if (!response.ok) throw new Error('SAVE_FAILED');
+        return response.text();
+    })
+    .then(function(result) {
+        if (result === 'SUCCESS') {
+            alert('프로젝트 역할을 저장했습니다.');
+            closeProjectMemberProfile();
+
+            if (typeof refreshProjectMemberPanel === 'function') {
+                refreshProjectMemberPanel();
+            }
+        } else if (result === 'NO_PERMISSION') {
+            alert('프로젝트 역할 수정 권한이 없습니다.');
+        } else {
+            alert('프로젝트 역할 저장에 실패했습니다.');
+        }
+    })
+    .catch(function(error) {
+        console.error('프로젝트 역할 저장 실패:', error);
+        alert('프로젝트 역할 저장 중 오류가 발생했습니다.');
+    });
+}
+
+document.addEventListener('keydown', function(event) {
+    if (event.key !== 'Escape') return;
+
+    const modal = document.getElementById('projectMemberProfileModal');
+    if (modal && modal.style.display === 'block') {
+        closeProjectMemberProfile();
+    }
+});
+/* ===== End 프로젝트 멤버 프로필 ===== */
+
+/* ===== 프로젝트 메인 사진첩 위젯 추가 ===== */
+(function () {
+    'use strict';
+
+    function getProjectId() {
+        var params = new URLSearchParams(window.location.search);
+        return params.get('projId')
+            || (window.PROJECT_MAIN_CONFIG && (window.PROJECT_MAIN_CONFIG.projectId || window.PROJECT_MAIN_CONFIG.paramProjId))
+            || '';
+    }
+
+    function escapeProjectPhotoHtml(value) {
+        return String(value == null ? '' : value)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+
+    function firstProjectPhotoValue(object, keys) {
+        if (!object) return '';
+        for (var i = 0; i < keys.length; i += 1) {
+            var key = keys[i];
+            if (object[key] !== undefined && object[key] !== null && String(object[key]).trim() !== '') {
+                return object[key];
+            }
+        }
+        return '';
+    }
+
+    function normalizeProjectPhotoPath(path) {
+        if (!path) return '';
+        var value = String(path);
+        if (/^https?:\/\//i.test(value)) return value;
+        if (value.charAt(0) === '/') return value;
+        return '/' + value;
+    }
+
+    function findProjectPhotoInsertTarget() {
+        var noteSection = findProjectNoteSection();
+        if (noteSection) return { parent: noteSection.parentElement, after: noteSection, noteSection: noteSection, mode: 'note-row' };
+
+        var grids = Array.from(document.querySelectorAll('.widget-grid, .project-widget-grid, .dashboard-widget-grid, .main-content .widget-grid'));
+        var bestGrid = grids.find(function (grid) {
+            var text = (grid.textContent || '').replace(/\s+/g, ' ');
+            return /공지|자료|노트|게시판|피드/.test(text);
+        });
+        if (bestGrid) return { parent: bestGrid, mode: 'append' };
+
+        var main = document.querySelector('.main-content, .project-main-content, .dashboard-main, .container');
+        if (!main) return null;
+        return { parent: main, mode: 'append' };
+    }
+
+    function findProjectNoteSection() {
+        var direct = document.querySelector('.note-main-section');
+        if (direct) return direct;
+
+        var list = document.getElementById('recentNoteList');
+        if (list) {
+            var section = list.closest('section, article, .widget-card, .dashboard-card, .content-section');
+            if (section) return section;
+        }
+
+        var main = document.querySelector('.main-content, .project-main-content, .dashboard-main, .container');
+        if (!main) return null;
+        return Array.from(main.querySelectorAll('section, article, .widget-card, .dashboard-card')).find(function (card) {
+            return /노트/.test(card.textContent || '');
+        }) || null;
+    }
+
+    function arrangeNoteAndPhoto(noteSection, photoCard) {
+        if (!noteSection || !photoCard || !noteSection.parentElement) return false;
+
+        var currentRow = noteSection.closest('.project-note-photo-row') || photoCard.closest('.project-note-photo-row');
+        var row = currentRow || document.createElement('div');
+        if (!currentRow) {
+            row.className = 'project-note-photo-row';
+            noteSection.parentElement.insertBefore(row, noteSection);
+        }
+
+        if (!noteSection.classList.contains('project-note-panel')) {
+            noteSection.classList.add('project-note-panel');
+        }
+        if (!photoCard.classList.contains('project-photo-panel')) {
+            photoCard.classList.add('project-photo-panel');
+        }
+
+        if (noteSection.parentElement !== row) row.appendChild(noteSection);
+        if (photoCard.parentElement !== row) row.appendChild(photoCard);
+        return true;
+    }
+
+    function createProjectPhotoCard(projId) {
+        var href = '/photo-album?scopeType=PROJECT&scopeId=' + encodeURIComponent(projId);
+        var card = document.createElement('section');
+        card.id = 'projectPhotoWidget';
+        card.className = 'widget-card project-photo-widget-card';
+        card.innerHTML =
+            '<div class="project-photo-widget-head">' +
+                '<h3 class="project-photo-widget-title">📷 사진첩</h3>' +
+                '<a class="project-photo-widget-more" href="' + href + '">더보기</a>' +
+            '</div>' +
+            '<div id="projectPhotoWidgetList" class="project-photo-grid">' +
+                '<div class="project-photo-empty"><span class="project-photo-empty-icon">📷</span><div><strong>사진을 불러오는 중입니다.</strong><span>프로젝트에 공유된 사진을 확인하고 있습니다.</span></div></div>' +
+            '</div>';
+        return card;
+    }
+
+    function mountProjectPhotoCard() {
+        var projId = getProjectId();
+        if (!projId || document.getElementById('projectPhotoWidget')) return;
+
+        var target = findProjectPhotoInsertTarget();
+        if (!target || !target.parent) return;
+
+        var card = createProjectPhotoCard(projId);
+        if (target.mode === 'note-row' && target.noteSection) {
+            target.noteSection.insertAdjacentElement('afterend', card);
+            arrangeNoteAndPhoto(target.noteSection, card);
+        } else if (target.mode === 'after' && target.after && target.after.parentElement) {
+            target.after.insertAdjacentElement('afterend', card);
+        } else {
+            target.parent.appendChild(card);
+        }
+        loadProjectPhotoWidget(projId);
+
+        // 노트 섹션이 늦게 렌더링되는 화면도 있어서, 짧게 한 번 더 재배치한다.
+        var retryCount = 0;
+        var retryTimer = window.setInterval(function () {
+            retryCount += 1;
+            var noteSection = findProjectNoteSection();
+            var photoCard = document.getElementById('projectPhotoWidget');
+            if ((noteSection && photoCard && arrangeNoteAndPhoto(noteSection, photoCard)) || retryCount >= 8) {
+                window.clearInterval(retryTimer);
+            }
+        }, 120);
+    }
+
+    function renderProjectPhotoEmpty(list, projId) {
+        var albumUrl = '/photo-album?scopeType=PROJECT&scopeId=' + encodeURIComponent(projId);
+        list.innerHTML =
+            '<div class="project-photo-empty">' +
+                '<span class="project-photo-empty-icon">📷</span>' +
+                '<div>' +
+                    '<strong>아직 공유된 사진이 없습니다.</strong>' +
+                    '<span>프로젝트 자료와 현장 사진을 모아서 공유할 수 있습니다.</span>' +
+                    '<a class="project-photo-empty-action" href="' + albumUrl + '">첫 사진 공유</a>' +
+                '</div>' +
+            '</div>';
+    }
+
+    function renderProjectPhotos(list, posts, projId) {
+        var albumUrl = '/photo-album?scopeType=PROJECT&scopeId=' + encodeURIComponent(projId);
+        if (!Array.isArray(posts) || posts.length === 0) {
+            renderProjectPhotoEmpty(list, projId);
+            return;
+        }
+
+        list.innerHTML = posts.slice(0, 2).map(function (post) {
+            var postId = firstProjectPhotoValue(post, ['postId', 'POST_ID', 'id']);
+            var title = firstProjectPhotoValue(post, ['title', 'TITLE', 'postTitle', 'POST_TITLE']) || '사진 게시물';
+            var creator = firstProjectPhotoValue(post, ['userName', 'USER_NAME', 'creatorName', 'CREATOR_NAME', 'email', 'EMAIL']) || '공유됨';
+            var imageUrl = normalizeProjectPhotoPath(firstProjectPhotoValue(post, [
+                'thumbnailPath', 'THUMBNAIL_PATH', 'filePath', 'FILE_PATH', 'coverPath', 'COVER_PATH', 'photoPath', 'PHOTO_PATH'
+            ]));
+            var photoCount = Number(firstProjectPhotoValue(post, ['photoCount', 'PHOTO_COUNT']) || 0);
+            var href = postId ? (albumUrl + '&postId=' + encodeURIComponent(postId)) : albumUrl;
+
+            return '<a class="project-photo-post" href="' + href + '" aria-label="' + escapeProjectPhotoHtml(title) + '">' +
+                '<span class="project-photo-post-thumb" style="background-image:url(&quot;' + escapeProjectPhotoHtml(imageUrl) + '&quot;)">' +
+                    (photoCount > 1 ? '<span class="project-photo-post-count">▣ ' + photoCount + '</span>' : '') +
+                    '<span class="project-photo-post-overlay"><strong>' + escapeProjectPhotoHtml(title) + '</strong><small>' + escapeProjectPhotoHtml(creator) + '</small></span>' +
+                '</span>' +
+            '</a>';
+        }).join('');
+    }
+
+    function loadProjectPhotoWidget(projId) {
+        var list = document.getElementById('projectPhotoWidgetList');
+        if (!list) return;
+
+        fetch('/api/photo-posts/recent?scopeType=PROJECT&scopeId=' + encodeURIComponent(projId) + '&limit=2')
+            .then(function (response) {
+                if (!response.ok) throw new Error('프로젝트 사진 조회 실패: ' + response.status);
+                return response.json();
+            })
+            .then(function (posts) { renderProjectPhotos(list, posts, projId); })
+            .catch(function (error) {
+                console.error(error);
+                renderProjectPhotoEmpty(list, projId);
+            });
+    }
+
+    document.addEventListener('DOMContentLoaded', mountProjectPhotoCard);
+})();
+/* ===== End 프로젝트 메인 사진첩 위젯 추가 ===== */

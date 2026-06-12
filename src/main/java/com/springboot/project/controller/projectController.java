@@ -19,6 +19,7 @@ import com.springboot.project.dto.postDTO;
 import com.springboot.project.dto.projectRequestDTO;
 import com.springboot.project.dto.usersDto;
 import com.springboot.project.service.IprojectService;
+import com.springboot.project.service.IworkspaceService;
 
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
@@ -29,11 +30,28 @@ import lombok.RequiredArgsConstructor;
 public class projectController {
 
     private final IprojectService projectService;
+    private final IworkspaceService workspaceService;
 
     @GetMapping("/create")
     public String showCreatePage(@RequestParam("wsId") Long wsId, Model model) {
         model.addAttribute("wsId", wsId); 
         return "project/projectCreate";
+    }
+
+
+    @GetMapping("/list")
+    public String projectListPage(@RequestParam("wsId") Long wsId,
+                                  HttpSession session,
+                                  Model model) {
+        usersDto loginUser = (usersDto) session.getAttribute("user");
+        if (loginUser == null) {
+            return "redirect:/login";
+        }
+
+        session.setAttribute("currentWsId", wsId);
+        model.addAttribute("workspace", workspaceService.getWorkspaceDetail(wsId));
+        model.addAttribute("projects", projectService.getProjectListByWorkspaceId(wsId));
+        return "project/projectList";
     }
 
     @PostMapping("/api/create")
@@ -69,9 +87,10 @@ public class projectController {
  // projectController.java 수정본
 
     @GetMapping("/main")
-    public String projectMainPage(@RequestParam("projId") Long projId, 
-                                  @RequestParam("wsId") Long wsId, 
-                                  Model model) {
+    public String projectMainPage(@RequestParam("projId") Long projId,
+                                  @RequestParam("wsId") Long wsId,
+                                  Model model,
+                                  HttpSession session) {
         
         // 1. [추가] 프로젝트 상세 정보 조회 (제목, 설명 등 가져오기)
         projectRequestDTO projectDetail = projectService.getProjectById(projId); 
@@ -84,6 +103,7 @@ public class projectController {
         
         // 3. 모델에 추가
         model.addAttribute("projectDetail", projectDetail); 
+        model.addAttribute("projectLinks", projectService.getProjectLinks(projId));
         model.addAttribute("projId", projId);
         model.addAttribute("wsId", wsId);
         model.addAttribute("projectMemberList", projectMemberList);
@@ -108,10 +128,17 @@ public class projectController {
         List<Map<String, Object>> projectMemberList = projectService.getProjectMembers(projId);
 
         model.addAttribute("projectDetail", projectDetail);
+        model.addAttribute("projectLinks", projectService.getProjectLinks(projId));
         model.addAttribute("projId", projId);
         model.addAttribute("wsId", wsId);
+        boolean isProjectLeader = projectDetail != null
+                && projectDetail.getLeaderId() != null
+                && projectDetail.getLeaderId().equals(loginUser.getUserId());
+
         model.addAttribute("projectMemberList", projectMemberList);
         model.addAttribute("canManageProject", isProjectAdmin(projId, loginUser.getUserId()));
+        model.addAttribute("isProjectLeader", isProjectLeader);
+        model.addAttribute("currentUserId", loginUser.getUserId());
 
         return "project/projectSettings";
     }
@@ -153,6 +180,62 @@ public class projectController {
         } else {
             return "ALREADY_EXISTS";
         }
+    }
+
+
+    @PostMapping("/api/transfer-leader")
+    @ResponseBody
+    public String transferProjectLeader(
+            @RequestParam("projId") Long projId,
+            @RequestParam("userId") Long newLeaderId,
+            @RequestParam(value = "projPosition", required = false) String projPosition,
+            HttpSession session) {
+
+        usersDto loginUser = (usersDto) session.getAttribute("user");
+        if (loginUser == null) {
+            return "LOGIN_FAIL";
+        }
+
+        projectRequestDTO project = projectService.getProjectById(projId);
+        if (project == null) {
+            return "PROJECT_NOT_FOUND";
+        }
+
+        // 팀장 권한 위임은 현재 팀장만 가능하다.
+        if (project.getLeaderId() == null
+                || !project.getLeaderId().equals(loginUser.getUserId())) {
+            return "LEADER_ONLY";
+        }
+
+        if (project.getLeaderId().equals(newLeaderId)) {
+            return "SAME_LEADER";
+        }
+
+        boolean targetExists = projectService.getProjectMembers(projId)
+                .stream()
+                .anyMatch(member -> {
+                    Object value = member.get("USER_ID");
+                    return value != null
+                            && Long.valueOf(String.valueOf(value)).equals(newLeaderId);
+                });
+
+        if (!targetExists) {
+            return "MEMBER_NOT_FOUND";
+        }
+
+        String safePosition = projPosition == null ? null : projPosition.trim();
+        if (safePosition != null && safePosition.length() > 100) {
+            safePosition = safePosition.substring(0, 100);
+        }
+
+        boolean result = projectService.updateProjectMemberSetting(
+                projId,
+                newLeaderId,
+                safePosition,
+                "LEADER"
+        );
+
+        return result ? "SUCCESS" : "FAIL";
     }
 
     @PostMapping("/api/remove-member")
@@ -479,8 +562,11 @@ public class projectController {
             return "LOGIN_FAIL";
         }
 
-        if (!isProjectAdmin(projId, loginUser.getUserId())) {
-            return "NO_PERMISSION";
+        projectRequestDTO project = projectService.getProjectById(projId);
+        if (project == null
+                || project.getLeaderId() == null
+                || !project.getLeaderId().equals(loginUser.getUserId())) {
+            return "LEADER_ONLY";
         }
 
         boolean isDeleted = projectService.deleteProject(projId, loginUser.getUserId());
@@ -497,6 +583,62 @@ public class projectController {
         return isUpdated ? "SUCCESS" : "FAIL";
     }
  // 프로젝트 멤버 조회 API (추가)
+
+    @GetMapping("/api/member-profile")
+    @ResponseBody
+    public ResponseEntity<?> getProjectMemberProfile(
+            @RequestParam("projId") Long projId,
+            @RequestParam("userId") Long targetUserId,
+            HttpSession session) {
+
+        usersDto loginUser = (usersDto) session.getAttribute("user");
+        if (loginUser == null) {
+            return ResponseEntity.status(401).body(Map.of("status", "LOGIN_REQUIRED"));
+        }
+
+        Map<String, Object> profile = projectService.getProjectMemberProfile(
+                projId, targetUserId, loginUser.getUserId());
+
+        if (profile == null || profile.isEmpty()) {
+            return ResponseEntity.status(404).body(Map.of("status", "NOT_FOUND"));
+        }
+
+        // 프로필 모달에서는 본인의 프로젝트 역할만 수정한다.
+        // 다른 멤버의 권한/역할 수정은 프로젝트 설정 > 멤버 관리에서 처리한다.
+        profile.put("CAN_EDIT_PROJECT_ROLE",
+                targetUserId.equals(loginUser.getUserId()));
+
+        return ResponseEntity.ok(profile);
+    }
+
+    @PostMapping("/api/member-profile/position")
+    @ResponseBody
+    public String updateProjectMemberProfilePosition(
+            @RequestParam("projId") Long projId,
+            @RequestParam("userId") Long targetUserId,
+            @RequestParam(value = "projPosition", required = false) String projPosition,
+            HttpSession session) {
+
+        usersDto loginUser = (usersDto) session.getAttribute("user");
+        if (loginUser == null) return "LOGIN_REQUIRED";
+
+        // 프로필 모달 저장 API도 본인 역할 수정만 허용한다.
+        if (!targetUserId.equals(loginUser.getUserId())) {
+            return "NO_PERMISSION";
+        }
+
+        String safePosition = projPosition == null ? null : projPosition.trim();
+        if (safePosition != null && safePosition.length() > 100) {
+            safePosition = safePosition.substring(0, 100);
+        }
+        if (safePosition != null && safePosition.isEmpty()) {
+            safePosition = null;
+        }
+
+        return projectService.updateProjectMemberPosition(
+                projId, targetUserId, safePosition) ? "SUCCESS" : "FAIL";
+    }
+
     @GetMapping("/api/members")
     @ResponseBody
     public List<Map<String, Object>> getProjectMembersApi(@RequestParam("projId") Long projId) {
@@ -525,6 +667,22 @@ public class projectController {
         String safeRole = projRole == null ? "MEMBER" : projRole.trim().toUpperCase();
         if (!"MEMBER".equals(safeRole) && !"ADMIN".equals(safeRole) && !"LEADER".equals(safeRole)) {
             return "INVALID_ROLE";
+        }
+
+        projectRequestDTO project = projectService.getProjectById(projId);
+        boolean currentUserIsLeader = project != null
+                && project.getLeaderId() != null
+                && project.getLeaderId().equals(loginUser.getUserId());
+
+        if ("LEADER".equals(safeRole) && !currentUserIsLeader) {
+            return "LEADER_ONLY";
+        }
+
+        if (project != null
+                && project.getLeaderId() != null
+                && project.getLeaderId().equals(userId)
+                && !"LEADER".equals(safeRole)) {
+            return "LEADER_ROLE_LOCKED";
         }
 
         String safePosition = projPosition == null ? null : projPosition.trim();

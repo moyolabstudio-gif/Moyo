@@ -17,4 +17,6 @@ public interface IpollService {
     void updatePoll(Map<String, Object> params);
 
     void deletePoll(Long pollId, Long userId);
+
+    void extendPoll(Map<String, Object> params);
 }

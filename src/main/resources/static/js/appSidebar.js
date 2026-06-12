@@ -57,12 +57,23 @@
             workspace.classList.toggle('current', wsId === currentWsId);
 
             const toggle = workspace.querySelector('.moyo-app-workspace-toggle');
+            const entry = workspace.querySelector('.moyo-app-workspace-entry');
+
+            if (entry && !currentProjId && currentWsId && wsId === currentWsId && currentPath.startsWith('/workspace/')) {
+                entry.classList.add('active');
+            }
+
             if (!toggle) return;
 
             toggle.setAttribute('aria-expanded', String(shouldOpen));
-            toggle.addEventListener('click', function() {
+            toggle.setAttribute('aria-label', workspace.classList.contains('open') ? '프로젝트 목록 접기' : '프로젝트 목록 펼치기');
+            toggle.addEventListener('click', function(event) {
+                event.preventDefault();
+                event.stopPropagation();
                 workspace.classList.toggle('open');
-                toggle.setAttribute('aria-expanded', String(workspace.classList.contains('open')));
+                const opened = workspace.classList.contains('open');
+                toggle.setAttribute('aria-expanded', String(opened));
+                toggle.setAttribute('aria-label', opened ? '프로젝트 목록 접기' : '프로젝트 목록 펼치기');
                 saveOpenWorkspaceIds();
             });
         });
@@ -79,7 +90,7 @@
             }
         });
 
-        document.querySelectorAll('.moyo-app-workspace-home').forEach(function(link) {
+        document.querySelectorAll('.moyo-app-workspace-entry').forEach(function(link) {
             const wsId = String(link.dataset.wsId || '');
             if (!currentProjId && currentWsId && wsId === currentWsId && currentPath.startsWith('/workspace/')) {
                 link.classList.add('active');

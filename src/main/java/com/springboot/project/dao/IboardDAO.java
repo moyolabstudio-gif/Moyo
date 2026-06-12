@@ -3,42 +3,95 @@ package com.springboot.project.dao;
 import java.util.List;
 import java.util.Map;
 import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Param; // 🚀 @Param 인식 확인
+import org.apache.ibatis.annotations.Param;
 import com.springboot.project.dto.postDTO;
 
 @Mapper
 public interface IboardDAO {
 
-    // 📢 1. 대시보드 위젯용 최신글 추출 (@Param 바인딩 완벽 정렬)
+    // 대시보드 위젯용 최신글
     List<postDTO> selectDashboardLatestPosts(@Param("wsId") Long wsId, @Param("boardType") String boardType);
-    
-    // 📝 2. 게시글 등록
+
+    // 워크스페이스 게시판 목록 / 개수
+    List<postDTO> selectBoardList(@Param("wsId") Long wsId,
+                                  @Param("boardType") String boardType,
+                                  @Param("offset") int offset,
+                                  @Param("size") int size,
+                                  @Param("searchType") String searchType,
+                                  @Param("keyword") String keyword);
+
+    int countBoardList(@Param("wsId") Long wsId,
+                       @Param("boardType") String boardType,
+                       @Param("searchType") String searchType,
+                       @Param("keyword") String keyword);
+
+    // 프로젝트 게시판 목록 / 개수
+    List<postDTO> selectPostsByProject(@Param("projId") Long projId,
+                                        @Param("boardType") String boardType,
+                                        @Param("offset") int offset,
+                                        @Param("size") int size,
+                                        @Param("searchType") String searchType,
+                                        @Param("keyword") String keyword);
+
+    int countPostsByProject(@Param("projId") Long projId,
+                            @Param("boardType") String boardType,
+                            @Param("searchType") String searchType,
+                            @Param("keyword") String keyword);
+
+    // 게시글 등록
     int insertPost(postDTO postDto);
     void insertFile(Map<String, Object> fileMap);
     List<Map<String, Object>> selectFileList(int postId);
     Map<String, Object> selectFileById(String fileId);
     int deleteFile(int fileId);
     postDTO selectPostDetail(int postId);
-    
-    // 💬 4. 특정 게시글에 달린 댓글 리스트 조회 (⚠️ 누락됐던 것 복원 완료!)
-    List<Map<String, Object>> selectReplyList(int postId);
-    
- // 🔄 댓글 수정 (영향받은 행 수 반환을 위해 int 처리)
-    int updateReply(Map<String, Object> replyData);
 
-    // 🗑️ 댓글 삭제 (영향받은 행 수 반환을 위해 int 처리)
+    // 댓글
+    List<Map<String, Object>> selectReplyList(int postId);
+    int updateReply(Map<String, Object> replyData);
     int deleteReply(int replyId);
-    
-    // 💬 5. 댓글 등록 처리 (⚠️ 누락됐던 것 복원 완료!)
     int insertReply(Map<String, Object> replyData);
-    
-    // 📅 6. 캘린더 이벤트 조회
+
+    // 캘린더
     List<Map<String, Object>> selectWorkspaceCalendar(Long wsId);
-    
-    // 🔄 7. 게시글 수정
+
+    // 게시판 권한
+    String selectWorkspaceBoardRole(@Param("wsId") Long wsId, @Param("userId") Long userId);
+    String selectProjectBoardRole(@Param("projId") Long projId, @Param("userId") Long userId);
+
+    // 신고
+    int countReportByUser(@Param("contentType") String contentType,
+                          @Param("contentId") Long contentId,
+                          @Param("reporterId") Long reporterId);
+
+    int insertReport(@Param("contentType") String contentType,
+                     @Param("contentId") Long contentId,
+                     @Param("reporterId") Long reporterId,
+                     @Param("reason") String reason,
+                     @Param("detail") String detail);
+
+    // 신고 관리
+    List<Map<String, Object>> selectReportList(@Param("wsId") Long wsId,
+                                               @Param("projId") Long projId,
+                                               @Param("status") String status,
+                                               @Param("contentType") String contentType,
+                                               @Param("keyword") String keyword,
+                                               @Param("offset") int offset,
+                                               @Param("size") int size);
+
+    int countReportList(@Param("wsId") Long wsId,
+                        @Param("projId") Long projId,
+                        @Param("status") String status,
+                        @Param("contentType") String contentType,
+                        @Param("keyword") String keyword);
+
+    Map<String, Object> selectReportById(@Param("reportId") Long reportId);
+
+    int updateReportStatus(@Param("reportId") Long reportId,
+                           @Param("status") String status,
+                           @Param("procUserId") Long procUserId);
+
+    // 게시글 수정/삭제
     int updatePost(postDTO postData);
-    
-    // 🗑️ 8. 게시글 삭제 (Long 규격 통일)
-    int deletePost(Long postId); 
-    List<postDTO> selectPostsByProject(@Param("projId") Long projId, @Param("boardType") String boardType);
+    int deletePost(Long postId);
 }

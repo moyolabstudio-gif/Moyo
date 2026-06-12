@@ -6,25 +6,146 @@
     SELECT 
         p.POST_ID as postId,
         p.WS_ID as wsId,
+        p.PROJ_ID as projId,
         p.TITLE as title,
         p.USER_ID as userId,
         u.USER_NAME as writerName,
         p.VIEW_COUNT as viewCount,
-        p.IS_PINNED as isPinned,
+        p.BOARD_TYPE as boardType,
+        CASE WHEN p.IS_PINNED = 'Y' AND (p.PIN_START_DT IS NULL OR p.PIN_START_DT &lt;= SYSDATE) AND (p.PIN_END_DT IS NULL OR p.PIN_END_DT >= TRUNC(SYSDATE)) THEN 'Y' ELSE 'N' END as isPinned,
+        TO_CHAR(p.PIN_START_DT, 'YYYY-MM-DD') as pinStartDt,
+        TO_CHAR(p.PIN_END_DT, 'YYYY-MM-DD') as pinEndDt,
         CASE 
             WHEN TO_CHAR(p.REG_DT, 'YYYY-MM-DD') = TO_CHAR(SYSDATE, 'YYYY-MM-DD') 
             THEN TO_CHAR(p.REG_DT, 'HH24:MI')
             ELSE TO_CHAR(p.REG_DT, 'YYYY-MM-DD')
         END as regDt,
-        (SELECT COUNT(*) FROM BOARD_REPLIES r WHERE r.POST_ID = p.POST_ID) as replyCount
+        (SELECT COUNT(*) FROM BOARD_REPLIES r WHERE r.POST_ID = p.POST_ID) as replyCount,
+        (SELECT COUNT(*) FROM ATTACHMENTS a WHERE a.POST_ID = p.POST_ID) as fileCount,
+        CASE WHEN EXISTS (SELECT 1 FROM ATTACHMENTS a WHERE a.POST_ID = p.POST_ID) THEN 1 ELSE 0 END as hasFile,
+        (SELECT COUNT(*) FROM CONTENT_REACTIONS cr
+          WHERE cr.CONTENT_ID = p.POST_ID
+            AND cr.CONTENT_TYPE = CASE WHEN p.BOARD_TYPE = 'NOTICE' THEN 'NOTICE' ELSE 'BOARD' END
+            AND cr.REACTION_TYPE = 'LIKE') as likeCount
     FROM BOARD_POSTS p
     JOIN USERS u ON p.USER_ID = u.USER_ID
     WHERE p.WS_ID = #{wsId}
       AND p.BOARD_TYPE = #{boardType}
       AND p.PROJ_ID IS NULL
-    ORDER BY p.IS_PINNED DESC, p.REG_DT DESC
+    ORDER BY CASE WHEN p.IS_PINNED = 'Y' AND (p.PIN_START_DT IS NULL OR p.PIN_START_DT &lt;= SYSDATE) AND (p.PIN_END_DT IS NULL OR p.PIN_END_DT >= TRUNC(SYSDATE)) THEN 0 ELSE 1 END, p.REG_DT DESC
     FETCH FIRST 5 ROWS ONLY
-</select>
+    </select>
+
+    <select id="selectBoardList" resultType="com.springboot.project.dto.postDTO">
+    SELECT 
+        p.POST_ID as postId,
+        p.WS_ID as wsId,
+        p.PROJ_ID as projId,
+        p.TITLE as title,
+        p.USER_ID as userId,
+        u.USER_NAME as writerName,
+        p.VIEW_COUNT as viewCount,
+        p.BOARD_TYPE as boardType,
+        CASE WHEN p.IS_PINNED = 'Y' AND (p.PIN_START_DT IS NULL OR p.PIN_START_DT &lt;= SYSDATE) AND (p.PIN_END_DT IS NULL OR p.PIN_END_DT >= TRUNC(SYSDATE)) THEN 'Y' ELSE 'N' END as isPinned,
+        TO_CHAR(p.PIN_START_DT, 'YYYY-MM-DD') as pinStartDt,
+        TO_CHAR(p.PIN_END_DT, 'YYYY-MM-DD') as pinEndDt,
+        CASE 
+            WHEN TO_CHAR(p.REG_DT, 'YYYY-MM-DD') = TO_CHAR(SYSDATE, 'YYYY-MM-DD') 
+            THEN TO_CHAR(p.REG_DT, 'HH24:MI')
+            ELSE TO_CHAR(p.REG_DT, 'YYYY-MM-DD')
+        END as regDt,
+        (SELECT COUNT(*) FROM BOARD_REPLIES r WHERE r.POST_ID = p.POST_ID) as replyCount,
+        (SELECT COUNT(*) FROM ATTACHMENTS a WHERE a.POST_ID = p.POST_ID) as fileCount,
+        CASE WHEN EXISTS (SELECT 1 FROM ATTACHMENTS a WHERE a.POST_ID = p.POST_ID) THEN 1 ELSE 0 END as hasFile,
+        (SELECT COUNT(*) FROM CONTENT_REACTIONS cr
+          WHERE cr.CONTENT_ID = p.POST_ID
+            AND cr.CONTENT_TYPE = CASE WHEN p.BOARD_TYPE = 'NOTICE' THEN 'NOTICE' ELSE 'BOARD' END
+            AND cr.REACTION_TYPE = 'LIKE') as likeCount
+    FROM BOARD_POSTS p
+    JOIN USERS u ON p.USER_ID = u.USER_ID
+    WHERE p.WS_ID = #{wsId}
+      AND p.BOARD_TYPE = #{boardType}
+      AND p.PROJ_ID IS NULL
+    <if test="keyword != null and keyword != ''">
+        <choose>
+            <when test="searchType == 'title'">
+                AND UPPER(p.TITLE) LIKE '%' || UPPER(#{keyword}) || '%'
+            </when>
+            <when test="searchType == 'content'">
+                AND UPPER(p.CONTENT) LIKE '%' || UPPER(#{keyword}) || '%'
+            </when>
+            <when test="searchType == 'writer'">
+                AND UPPER(u.USER_NAME) LIKE '%' || UPPER(#{keyword}) || '%'
+            </when>
+            <when test="searchType == 'fileName'">
+                AND EXISTS (
+                    SELECT 1
+                    FROM ATTACHMENTS af
+                    WHERE af.POST_ID = p.POST_ID
+                      AND UPPER(af.FILE_ORIGINAL_NAME) LIKE '%' || UPPER(#{keyword}) || '%'
+                )
+            </when>
+            <otherwise>
+                AND (
+                    UPPER(p.TITLE) LIKE '%' || UPPER(#{keyword}) || '%'
+                    OR UPPER(p.CONTENT) LIKE '%' || UPPER(#{keyword}) || '%'
+                    OR UPPER(u.USER_NAME) LIKE '%' || UPPER(#{keyword}) || '%'
+                    OR EXISTS (
+                        SELECT 1
+                        FROM ATTACHMENTS af
+                        WHERE af.POST_ID = p.POST_ID
+                          AND UPPER(af.FILE_ORIGINAL_NAME) LIKE '%' || UPPER(#{keyword}) || '%'
+                    )
+                )
+            </otherwise>
+        </choose>
+    </if>
+    ORDER BY CASE WHEN p.IS_PINNED = 'Y' AND (p.PIN_START_DT IS NULL OR p.PIN_START_DT &lt;= SYSDATE) AND (p.PIN_END_DT IS NULL OR p.PIN_END_DT >= TRUNC(SYSDATE)) THEN 0 ELSE 1 END, p.REG_DT DESC
+    OFFSET #{offset} ROWS FETCH NEXT #{size} ROWS ONLY
+    </select>
+
+    <select id="countBoardList" resultType="int">
+    SELECT COUNT(*)
+    FROM BOARD_POSTS p
+    JOIN USERS u ON p.USER_ID = u.USER_ID
+    WHERE p.WS_ID = #{wsId}
+      AND p.BOARD_TYPE = #{boardType}
+      AND p.PROJ_ID IS NULL
+    <if test="keyword != null and keyword != ''">
+        <choose>
+            <when test="searchType == 'title'">
+                AND UPPER(p.TITLE) LIKE '%' || UPPER(#{keyword}) || '%'
+            </when>
+            <when test="searchType == 'content'">
+                AND UPPER(p.CONTENT) LIKE '%' || UPPER(#{keyword}) || '%'
+            </when>
+            <when test="searchType == 'writer'">
+                AND UPPER(u.USER_NAME) LIKE '%' || UPPER(#{keyword}) || '%'
+            </when>
+            <when test="searchType == 'fileName'">
+                AND EXISTS (
+                    SELECT 1
+                    FROM ATTACHMENTS af
+                    WHERE af.POST_ID = p.POST_ID
+                      AND UPPER(af.FILE_ORIGINAL_NAME) LIKE '%' || UPPER(#{keyword}) || '%'
+                )
+            </when>
+            <otherwise>
+                AND (
+                    UPPER(p.TITLE) LIKE '%' || UPPER(#{keyword}) || '%'
+                    OR UPPER(p.CONTENT) LIKE '%' || UPPER(#{keyword}) || '%'
+                    OR UPPER(u.USER_NAME) LIKE '%' || UPPER(#{keyword}) || '%'
+                    OR EXISTS (
+                        SELECT 1
+                        FROM ATTACHMENTS af
+                        WHERE af.POST_ID = p.POST_ID
+                          AND UPPER(af.FILE_ORIGINAL_NAME) LIKE '%' || UPPER(#{keyword}) || '%'
+                    )
+                )
+            </otherwise>
+        </choose>
+    </if>
+    </select>
 
     <insert id="insertPost" parameterType="com.springboot.project.dto.postDTO">
     <selectKey keyProperty="postId" resultType="long" order="BEFORE">
@@ -32,7 +153,7 @@
     </selectKey>
     
     INSERT INTO BOARD_POSTS (
-        POST_ID, WS_ID, PROJ_ID, USER_ID, BOARD_TYPE, TITLE, CONTENT, IS_PINNED
+        POST_ID, WS_ID, PROJ_ID, USER_ID, BOARD_TYPE, TITLE, CONTENT, IS_PINNED, PIN_START_DT, PIN_END_DT
     ) VALUES (
         #{postId}, 
         #{wsId}, 
@@ -41,7 +162,9 @@
         #{boardType}, 
         #{title}, 
         #{content}, 
-        #{isPinned, jdbcType=CHAR}
+        #{isPinned, jdbcType=CHAR},
+        TO_DATE(#{pinStartDt, jdbcType=VARCHAR}, 'YYYY-MM-DD'),
+        TO_DATE(#{pinEndDt, jdbcType=VARCHAR}, 'YYYY-MM-DD')
     )
 </insert>
 
@@ -71,34 +194,50 @@
             p.TITLE as title,
             p.CONTENT as content,
             p.USER_ID as userId,
+            p.PROJ_ID as projId,
             u.USER_NAME as writerName,
             p.VIEW_COUNT as viewCount,
             p.BOARD_TYPE as boardType,
-            p.IS_PINNED as isPinned,
-            TO_CHAR(p.REG_DT, 'YYYY-MM-DD HH24:MI') as regDt
+            CASE WHEN p.IS_PINNED = 'Y' AND (p.PIN_START_DT IS NULL OR p.PIN_START_DT &lt;= SYSDATE) AND (p.PIN_END_DT IS NULL OR p.PIN_END_DT >= TRUNC(SYSDATE)) THEN 'Y' ELSE 'N' END as isPinned,
+        TO_CHAR(p.PIN_START_DT, 'YYYY-MM-DD') as pinStartDt,
+        TO_CHAR(p.PIN_END_DT, 'YYYY-MM-DD') as pinEndDt,
+            TO_CHAR(p.REG_DT, 'YYYY-MM-DD HH24:MI') as regDt,
+            (SELECT COUNT(*) FROM BOARD_REPLIES r WHERE r.POST_ID = p.POST_ID) as replyCount,
+            (SELECT COUNT(*) FROM ATTACHMENTS a WHERE a.POST_ID = p.POST_ID) as fileCount,
+            CASE WHEN EXISTS (SELECT 1 FROM ATTACHMENTS a WHERE a.POST_ID = p.POST_ID) THEN 1 ELSE 0 END as hasFile,
+            (SELECT COUNT(*) FROM CONTENT_REACTIONS cr
+              WHERE cr.CONTENT_ID = p.POST_ID
+                AND cr.CONTENT_TYPE = CASE WHEN p.BOARD_TYPE = 'NOTICE' THEN 'NOTICE' ELSE 'BOARD' END
+                AND cr.REACTION_TYPE = 'LIKE') as likeCount
         FROM BOARD_POSTS p
         JOIN USERS u ON p.USER_ID = u.USER_ID
         WHERE p.POST_ID = #{postId}
     </select>
 
 	<select id="selectReplyList" parameterType="int" resultType="map">
-	    SELECT 
-	        R.REPLY_ID, 
-	        R.CONTENT, 
-	        R.USER_ID,  TO_CHAR(R.REG_DT, 'YYYY-MM-DD HH24:MI') AS REG_DT,
-	        U.USER_NAME
-	    FROM BOARD_REPLIES R
-	    JOIN USERS U ON R.USER_ID = U.USER_ID
-	    WHERE R.POST_ID = #{postId}
-	    ORDER BY R.REG_DT ASC
+        SELECT 
+            R.REPLY_ID,
+            R.POST_ID,
+            R.PARENT_REPLY_ID,
+            R.CONTENT,
+            R.USER_ID,
+            TO_CHAR(R.REG_DT, 'YYYY-MM-DD HH24:MI') AS REG_DT,
+            U.USER_NAME
+        FROM BOARD_REPLIES R
+        JOIN USERS U ON R.USER_ID = U.USER_ID
+        WHERE R.POST_ID = #{postId}
+        ORDER BY NVL(R.PARENT_REPLY_ID, R.REPLY_ID) ASC,
+                 CASE WHEN R.PARENT_REPLY_ID IS NULL THEN 0 ELSE 1 END ASC,
+                 R.REG_DT ASC
 	</select>
 
     <insert id="insertReply" parameterType="map">
         INSERT INTO BOARD_REPLIES (
-            REPLY_ID, POST_ID, USER_ID, CONTENT, REG_DT
+            REPLY_ID, POST_ID, PARENT_REPLY_ID, USER_ID, CONTENT, REG_DT
         ) VALUES (
             SEQ_REPLY_ID.NEXTVAL, 
             #{postId, jdbcType=NUMERIC}, 
+            #{parentReplyId, jdbcType=NUMERIC},
             #{userId, jdbcType=VARCHAR}, 
             #{content, jdbcType=VARCHAR}, 
             SYSDATE
@@ -142,8 +281,11 @@
 <update id="updatePost" parameterType="com.springboot.project.dto.postDTO">
     UPDATE BOARD_POSTS
     SET TITLE = #{title},
-        CONTENT = #{content}, -- 💡 에디터에서 보낸 HTML이 들어감
-        UPD_DT = SYSDATE      -- 💡 수정 시간도 함께 업데이트해주면 좋습니다.
+        CONTENT = #{content},
+        IS_PINNED = #{isPinned, jdbcType=CHAR},
+        PIN_START_DT = TO_DATE(#{pinStartDt, jdbcType=VARCHAR}, 'YYYY-MM-DD'),
+        PIN_END_DT = TO_DATE(#{pinEndDt, jdbcType=VARCHAR}, 'YYYY-MM-DD'),
+        UPD_DT = SYSDATE
     WHERE POST_ID = #{postId}
 </update>
 
@@ -168,14 +310,270 @@
 <select id="selectPostsByProject" resultType="com.springboot.project.dto.postDTO">
     SELECT 
         p.POST_ID as postId,
+        p.WS_ID as wsId,
+        p.PROJ_ID as projId,
         p.TITLE as title,
+        p.USER_ID as userId,
         u.USER_NAME as writerName,
-        TO_CHAR(p.REG_DT, 'YYYY-MM-DD') as regDt,
-        p.VIEW_COUNT as viewCount
+        p.VIEW_COUNT as viewCount,
+        p.BOARD_TYPE as boardType,
+        CASE WHEN p.IS_PINNED = 'Y' AND (p.PIN_START_DT IS NULL OR p.PIN_START_DT &lt;= SYSDATE) AND (p.PIN_END_DT IS NULL OR p.PIN_END_DT >= TRUNC(SYSDATE)) THEN 'Y' ELSE 'N' END as isPinned,
+        TO_CHAR(p.PIN_START_DT, 'YYYY-MM-DD') as pinStartDt,
+        TO_CHAR(p.PIN_END_DT, 'YYYY-MM-DD') as pinEndDt,
+        CASE 
+            WHEN TO_CHAR(p.REG_DT, 'YYYY-MM-DD') = TO_CHAR(SYSDATE, 'YYYY-MM-DD') 
+            THEN TO_CHAR(p.REG_DT, 'HH24:MI')
+            ELSE TO_CHAR(p.REG_DT, 'YYYY-MM-DD')
+        END as regDt,
+        (SELECT COUNT(*) FROM BOARD_REPLIES r WHERE r.POST_ID = p.POST_ID) as replyCount,
+        (SELECT COUNT(*) FROM ATTACHMENTS a WHERE a.POST_ID = p.POST_ID) as fileCount,
+        CASE WHEN EXISTS (SELECT 1 FROM ATTACHMENTS a WHERE a.POST_ID = p.POST_ID) THEN 1 ELSE 0 END as hasFile,
+        (SELECT COUNT(*) FROM CONTENT_REACTIONS cr
+          WHERE cr.CONTENT_ID = p.POST_ID
+            AND cr.CONTENT_TYPE = CASE WHEN p.BOARD_TYPE = 'NOTICE' THEN 'NOTICE' ELSE 'BOARD' END
+            AND cr.REACTION_TYPE = 'LIKE') as likeCount
     FROM BOARD_POSTS p
     JOIN USERS u ON p.USER_ID = u.USER_ID
     WHERE p.PROJ_ID = #{projId}
       AND p.BOARD_TYPE = #{boardType}
-    ORDER BY p.POST_ID DESC
+    <if test="keyword != null and keyword != ''">
+        <choose>
+            <when test="searchType == 'title'">
+                AND UPPER(p.TITLE) LIKE '%' || UPPER(#{keyword}) || '%'
+            </when>
+            <when test="searchType == 'content'">
+                AND UPPER(p.CONTENT) LIKE '%' || UPPER(#{keyword}) || '%'
+            </when>
+            <when test="searchType == 'writer'">
+                AND UPPER(u.USER_NAME) LIKE '%' || UPPER(#{keyword}) || '%'
+            </when>
+            <when test="searchType == 'fileName'">
+                AND EXISTS (
+                    SELECT 1
+                    FROM ATTACHMENTS af
+                    WHERE af.POST_ID = p.POST_ID
+                      AND UPPER(af.FILE_ORIGINAL_NAME) LIKE '%' || UPPER(#{keyword}) || '%'
+                )
+            </when>
+            <otherwise>
+                AND (
+                    UPPER(p.TITLE) LIKE '%' || UPPER(#{keyword}) || '%'
+                    OR UPPER(p.CONTENT) LIKE '%' || UPPER(#{keyword}) || '%'
+                    OR UPPER(u.USER_NAME) LIKE '%' || UPPER(#{keyword}) || '%'
+                    OR EXISTS (
+                        SELECT 1
+                        FROM ATTACHMENTS af
+                        WHERE af.POST_ID = p.POST_ID
+                          AND UPPER(af.FILE_ORIGINAL_NAME) LIKE '%' || UPPER(#{keyword}) || '%'
+                    )
+                )
+            </otherwise>
+        </choose>
+    </if>
+    ORDER BY CASE WHEN p.IS_PINNED = 'Y' AND (p.PIN_START_DT IS NULL OR p.PIN_START_DT &lt;= SYSDATE) AND (p.PIN_END_DT IS NULL OR p.PIN_END_DT >= TRUNC(SYSDATE)) THEN 0 ELSE 1 END, p.REG_DT DESC
+    OFFSET #{offset} ROWS FETCH NEXT #{size} ROWS ONLY
 </select>
+
+<select id="countPostsByProject" resultType="int">
+    SELECT COUNT(*)
+    FROM BOARD_POSTS p
+    JOIN USERS u ON p.USER_ID = u.USER_ID
+    WHERE p.PROJ_ID = #{projId}
+      AND p.BOARD_TYPE = #{boardType}
+    <if test="keyword != null and keyword != ''">
+        <choose>
+            <when test="searchType == 'title'">
+                AND UPPER(p.TITLE) LIKE '%' || UPPER(#{keyword}) || '%'
+            </when>
+            <when test="searchType == 'content'">
+                AND UPPER(p.CONTENT) LIKE '%' || UPPER(#{keyword}) || '%'
+            </when>
+            <when test="searchType == 'writer'">
+                AND UPPER(u.USER_NAME) LIKE '%' || UPPER(#{keyword}) || '%'
+            </when>
+            <when test="searchType == 'fileName'">
+                AND EXISTS (
+                    SELECT 1
+                    FROM ATTACHMENTS af
+                    WHERE af.POST_ID = p.POST_ID
+                      AND UPPER(af.FILE_ORIGINAL_NAME) LIKE '%' || UPPER(#{keyword}) || '%'
+                )
+            </when>
+            <otherwise>
+                AND (
+                    UPPER(p.TITLE) LIKE '%' || UPPER(#{keyword}) || '%'
+                    OR UPPER(p.CONTENT) LIKE '%' || UPPER(#{keyword}) || '%'
+                    OR UPPER(u.USER_NAME) LIKE '%' || UPPER(#{keyword}) || '%'
+                    OR EXISTS (
+                        SELECT 1
+                        FROM ATTACHMENTS af
+                        WHERE af.POST_ID = p.POST_ID
+                          AND UPPER(af.FILE_ORIGINAL_NAME) LIKE '%' || UPPER(#{keyword}) || '%'
+                    )
+                )
+            </otherwise>
+        </choose>
+    </if>
+</select>
+
+
+<select id="selectWorkspaceBoardRole" resultType="string">
+    SELECT CASE
+             WHEN w.OWNER_ID = #{userId} THEN 'OWNER'
+             WHEN UPPER(NVL(wm.WS_ROLE, 'MEMBER')) = 'ADMIN' THEN 'ADMIN'
+             ELSE UPPER(NVL(wm.WS_ROLE, 'MEMBER'))
+           END
+    FROM WORKSPACES w
+    JOIN WS_MEMBERS wm ON wm.WS_ID = w.WS_ID AND wm.USER_ID = #{userId}
+    WHERE w.WS_ID = #{wsId}
+</select>
+
+<select id="selectProjectBoardRole" resultType="string">
+    SELECT CASE
+             WHEN p.LEADER_ID = #{userId} THEN 'LEADER'
+             WHEN UPPER(NVL(pm.PROJ_ROLE, 'MEMBER')) = 'ADMIN' THEN 'ADMIN'
+             ELSE UPPER(NVL(pm.PROJ_ROLE, 'MEMBER'))
+           END
+    FROM PROJECTS p
+    LEFT JOIN PROJ_MEMBERS pm ON pm.PROJ_ID = p.PROJ_ID AND pm.USER_ID = #{userId}
+    WHERE p.PROJ_ID = #{projId}
+      AND (p.LEADER_ID = #{userId} OR pm.USER_ID = #{userId})
+</select>
+
+<select id="countReportByUser" resultType="int">
+    SELECT COUNT(*)
+    FROM BOARD_REPORTS
+    WHERE CONTENT_TYPE = #{contentType}
+      AND CONTENT_ID = #{contentId}
+      AND REPORTER_ID = #{reporterId}
+</select>
+
+<insert id="insertReport">
+    INSERT INTO BOARD_REPORTS (
+        REPORT_ID, CONTENT_TYPE, CONTENT_ID, REPORTER_ID, REASON, DETAIL, STATUS, REG_DT
+    ) VALUES (
+        SEQ_BOARD_REPORT_ID.NEXTVAL, #{contentType}, #{contentId}, #{reporterId}, #{reason}, #{detail}, 'WAITING', SYSDATE
+    )
+</insert>
+
+
+<sql id="reportBaseSelect">
+    SELECT
+        br.REPORT_ID,
+        br.CONTENT_TYPE,
+        br.CONTENT_ID,
+        br.REPORTER_ID,
+        reporter.USER_NAME AS REPORTER_NAME,
+        br.REASON,
+        br.DETAIL,
+        br.STATUS,
+        TO_CHAR(br.REG_DT, 'YYYY-MM-DD HH24:MI') AS REG_DT,
+        TO_CHAR(br.PROC_DT, 'YYYY-MM-DD HH24:MI') AS PROC_DT,
+        procUser.USER_NAME AS PROC_USER_NAME,
+        CASE WHEN br.CONTENT_TYPE = 'REPLY' THEN replyPost.POST_ID ELSE post.POST_ID END AS POST_ID,
+        CASE WHEN br.CONTENT_TYPE = 'REPLY' THEN replyPost.WS_ID ELSE post.WS_ID END AS WS_ID,
+        CASE WHEN br.CONTENT_TYPE = 'REPLY' THEN replyPost.PROJ_ID ELSE post.PROJ_ID END AS PROJ_ID,
+        CASE WHEN br.CONTENT_TYPE = 'REPLY' THEN replyPost.BOARD_TYPE ELSE post.BOARD_TYPE END AS BOARD_TYPE,
+        CASE WHEN br.CONTENT_TYPE = 'REPLY' THEN replyPost.TITLE ELSE post.TITLE END AS TARGET_TITLE,
+        CASE
+            WHEN br.CONTENT_TYPE = 'REPLY'
+                THEN REGEXP_REPLACE(reply.CONTENT, '&lt;[^&gt;]*&gt;', '')
+            ELSE REGEXP_REPLACE(DBMS_LOB.SUBSTR(post.CONTENT, 1000, 1), '&lt;[^&gt;]*&gt;', '')
+        END AS TARGET_CONTENT,
+        CASE WHEN br.CONTENT_TYPE = 'REPLY' THEN reply.REPLY_ID ELSE NULL END AS REPLY_ID,
+        targetUser.USER_NAME AS TARGET_WRITER_NAME
+    FROM BOARD_REPORTS br
+    JOIN USERS reporter ON reporter.USER_ID = br.REPORTER_ID
+    LEFT JOIN USERS procUser ON procUser.USER_ID = br.PROC_USER_ID
+    LEFT JOIN BOARD_POSTS post
+           ON br.CONTENT_TYPE IN ('BOARD', 'NOTICE', 'FILE')
+          AND post.POST_ID = br.CONTENT_ID
+    LEFT JOIN BOARD_REPLIES reply
+           ON br.CONTENT_TYPE = 'REPLY'
+          AND reply.REPLY_ID = br.CONTENT_ID
+    LEFT JOIN BOARD_POSTS replyPost
+           ON reply.POST_ID = replyPost.POST_ID
+    LEFT JOIN USERS targetUser
+           ON targetUser.USER_ID = CASE WHEN br.CONTENT_TYPE = 'REPLY' THEN reply.USER_ID ELSE post.USER_ID END
+</sql>
+
+<sql id="reportScopeWhere">
+    WHERE 1 = 1
+    <choose>
+        <when test="projId != null">
+            AND NVL(post.PROJ_ID, replyPost.PROJ_ID) = #{projId}
+        </when>
+        <otherwise>
+            AND NVL(post.WS_ID, replyPost.WS_ID) = #{wsId}
+            AND NVL(post.PROJ_ID, replyPost.PROJ_ID) IS NULL
+        </otherwise>
+    </choose>
+    <if test="status != null and status != ''">
+        AND br.STATUS = #{status}
+    </if>
+    <if test="contentType != null and contentType != ''">
+        AND br.CONTENT_TYPE = #{contentType}
+    </if>
+</sql>
+
+<sql id="reportSearchWhere">
+    <if test="keyword != null and keyword != ''">
+        AND (
+            UPPER(NVL(CASE WHEN br.CONTENT_TYPE = 'REPLY' THEN replyPost.TITLE ELSE post.TITLE END, '')) LIKE '%' || UPPER(#{keyword}) || '%'
+            OR UPPER(NVL(reporter.USER_NAME, '')) LIKE '%' || UPPER(#{keyword}) || '%'
+            OR UPPER(NVL(targetUser.USER_NAME, '')) LIKE '%' || UPPER(#{keyword}) || '%'
+            OR UPPER(NVL(br.REASON, '')) LIKE '%' || UPPER(#{keyword}) || '%'
+            OR UPPER(NVL(br.DETAIL, '')) LIKE '%' || UPPER(#{keyword}) || '%'
+            OR (br.CONTENT_TYPE = 'REPLY' AND UPPER(NVL(reply.CONTENT, '')) LIKE '%' || UPPER(#{keyword}) || '%')
+            OR (br.CONTENT_TYPE != 'REPLY' AND UPPER(NVL(DBMS_LOB.SUBSTR(post.CONTENT, 1000, 1), '')) LIKE '%' || UPPER(#{keyword}) || '%')
+        )
+    </if>
+</sql>
+
+<select id="selectReportList" resultType="map">
+    <include refid="reportBaseSelect" />
+    <include refid="reportScopeWhere" />
+    <include refid="reportSearchWhere" />
+    ORDER BY
+        CASE br.STATUS
+            WHEN 'WAITING' THEN 0
+            WHEN 'CHECKING' THEN 1
+            WHEN 'RESOLVED' THEN 2
+            ELSE 3
+        END,
+        br.REG_DT DESC
+    OFFSET #{offset} ROWS FETCH NEXT #{size} ROWS ONLY
+</select>
+
+<select id="countReportList" resultType="int">
+    SELECT COUNT(*)
+    FROM BOARD_REPORTS br
+    JOIN USERS reporter ON reporter.USER_ID = br.REPORTER_ID
+    LEFT JOIN BOARD_POSTS post
+           ON br.CONTENT_TYPE IN ('BOARD', 'NOTICE', 'FILE')
+          AND post.POST_ID = br.CONTENT_ID
+    LEFT JOIN BOARD_REPLIES reply
+           ON br.CONTENT_TYPE = 'REPLY'
+          AND reply.REPLY_ID = br.CONTENT_ID
+    LEFT JOIN BOARD_POSTS replyPost
+           ON reply.POST_ID = replyPost.POST_ID
+    LEFT JOIN USERS targetUser
+           ON targetUser.USER_ID = CASE WHEN br.CONTENT_TYPE = 'REPLY' THEN reply.USER_ID ELSE post.USER_ID END
+    <include refid="reportScopeWhere" />
+    <include refid="reportSearchWhere" />
+</select>
+
+<select id="selectReportById" resultType="map">
+    <include refid="reportBaseSelect" />
+    WHERE br.REPORT_ID = #{reportId}
+</select>
+
+<update id="updateReportStatus">
+    UPDATE BOARD_REPORTS
+       SET STATUS = #{status},
+           PROC_DT = SYSDATE,
+           PROC_USER_ID = #{procUserId}
+     WHERE REPORT_ID = #{reportId}
+</update>
+
 </mapper>
