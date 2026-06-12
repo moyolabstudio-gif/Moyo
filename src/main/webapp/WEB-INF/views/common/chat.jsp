@@ -286,35 +286,7 @@
         input.value = '';
     }
 
-    function receiveMiniMessage(data) {
-        const area = document.getElementById('chatMessageArea');
-        const myId = document.getElementById('userId').value;
-        
-        // 🌟 자바 DTO 스펙에 맞춰 소문자/대문자/카멜케이스 모두 방어막 구축
-        const senderId = data.senderId || data.sender_id || data.SENDER_ID;
-        const senderName = data.senderName || data.sender_name || data.SENDER_NAME;
-        const message = data.message || data.MESSAGE;
-        const type = data.type || data.TYPE;
-        
-        const isMe = String(senderId) === String(myId);
-        const msgDiv = document.createElement('div');
-        
-        if (type === 'ENTER' || type === 'LEAVE') {
-            msgDiv.style.cssText = "align-self: center; background: #e1e8ed; color: #657786; padding: 4px 12px; border-radius: 20px; font-size: 11px; margin: 4px 0;";
-            msgDiv.innerText = message;
-        } else if (isMe) {
-            msgDiv.style.cssText = "align-self: flex-end; max-width: 75%; margin-bottom: 2px;";
-            msgDiv.innerHTML = `<div style="background: #4A90E2; color: #ffffff; padding: 8px 12px; border-radius: 12px 12px 0px 12px; font-size: 13px; word-break: break-all; text-align: left;">\${message}</div>`;
-        } else {
-            msgDiv.style.cssText = "align-self: flex-start; max-width: 75%; display: flex; flex-direction: column; margin-bottom: 2px;";
-            msgDiv.innerHTML = `
-                <span style="font-size: 10px; color: #657786; margin: 0 0 3px 3px; font-weight: 500;">\${senderName}</span>
-                <div style="background: #ffffff; color: #1c1e21; padding: 8px 12px; border-radius: 12px 12px 12px 0px; font-size: 13px; word-break: break-all; border: 1px solid #e1e8ed;">\${message}</div>
-            `;
-        }
-        area.appendChild(msgDiv);
-        area.scrollTop = area.scrollHeight; 
-    }
+
     
  // 🌐 [통합 및 수정] 웹소켓 가동 및 과거 대화 내역 로딩 결합
     function connectChat() {
@@ -369,43 +341,50 @@
     }
 
  // 📩 [컬럼명 매핑 최종 저격] 메시지 화면 렌더링 함수
-    function receiveMiniMessage(data) {
-        const area = document.getElementById('chatMessageArea');
-        const myId = document.getElementById('userId').value;
-        
-        // 🌟 콘솔 로그 SQL 결과 포맷에 맞춘 완벽한 저격 매핑
-        // 1. 보낸 사람 ID (내역 조회시 sender_id 또는 SENDER_ID / 실시간 변수 senderId)
-        const senderId = data.senderId || data.sender_id || data.SENDER_ID;
-        
-        // 2. 보낸 사람 이름 (SQL에서 senderName으로 별칭을 줬으므로 대소문자 모두 체크)
-        const senderName = data.senderName || data.sendername || data.SENDERNAME;
-        
-        // 3. 💬 [핵심] 메시지 본문 (과거 내역은 content / 실시간 소켓은 message)
-        const message = data.content || data.CONTENT || data.message || data.MESSAGE; 
-        
-        // 4. 메시지 타입 (과거 내역은 기본적으로 TALK 처리)
-        const type = data.type || data.TYPE || 'TALK';
-        
-        // 데이터가 없거나 알맹이가 비어있다면 화면에 그리지 않고 패스
-        if(!message) return;
-
-        const isMe = String(senderId) === String(myId);
-        const msgDiv = document.createElement('div');
-        
-        if (type === 'ENTER' || type === 'LEAVE') {
-            msgDiv.style.cssText = "align-self: center; background: #e1e8ed; color: #657786; padding: 4px 12px; border-radius: 20px; font-size: 11px; margin: 4px 0;";
-            msgDiv.innerText = message;
-        } else if (isMe) {
-            msgDiv.style.cssText = "align-self: flex-end; max-width: 75%; margin-bottom: 2px;";
-            msgDiv.innerHTML = `<div style="background: #4A90E2; color: #ffffff; padding: 8px 12px; border-radius: 12px 12px 0px 12px; font-size: 13px; word-break: break-all; text-align: left;">\${message}</div>`;
-        } else {
-            msgDiv.style.cssText = "align-self: flex-start; max-width: 75%; display: flex; flex-direction: column; margin-bottom: 2px;";
-            msgDiv.innerHTML = `
-                <span style="font-size: 10px; color: #657786; margin: 0 0 3px 3px; font-weight: 500;">\${senderName}</span>
-                <div style="background: #ffffff; color: #1c1e21; padding: 8px 12px; border-radius: 12px 12px 12px 0px; font-size: 13px; word-break: break-all; border: 1px solid #e1e8ed;">\${message}</div>
-            `;
-        }
-        area.appendChild(msgDiv);
-        area.scrollTop = area.scrollHeight; 
+function receiveMiniMessage(data) {
+    console.log("받은 데이터:", data);
+    const area = document.getElementById('chatMessageArea');
+    const myId = document.getElementById('userId').value;
+    
+    const senderId = data.senderId || data.sender_id || data.SENDER_ID;
+    const senderName = data.senderName || data.sendername || data.SENDERNAME || "알수없음";
+    const message = data.content || data.CONTENT || data.message || data.MESSAGE; 
+    const type = data.type || data.TYPE || 'TALK';
+    
+    // 시간 계산
+    const rawDate = data.send_date || data.SEND_DATE || data.sendDate;
+    let displayTime = "";
+    
+    const dateObj = rawDate ? new Date(rawDate) : new Date();
+    
+    if(!isNaN(dateObj.getTime())) {
+        displayTime = dateObj.getHours().toString().padStart(2, '0') + ":" + 
+                      dateObj.getMinutes().toString().padStart(2, '0');
     }
+    
+    if (!message && type !== 'ENTER' && type !== 'LEAVE') return;
+    
+    const isMe = String(senderId) === String(myId);
+    const msgDiv = document.createElement('div');
+    
+    // 템플릿 리터럴(`) 대신 + 연산자 사용
+    if (type === 'ENTER' || type === 'LEAVE') {
+        msgDiv.style.cssText = "align-self: center; background: #e1e8ed; color: #657786; padding: 4px 12px; border-radius: 20px; font-size: 11px; margin: 4px 0;";
+        msgDiv.innerText = message || "입장/퇴장";
+    } else if (isMe) {
+        msgDiv.style.cssText = "align-self: flex-end; display: flex; align-items: flex-end; gap: 5px; max-width: 75%; margin-bottom: 2px;";
+        msgDiv.innerHTML = '<span style="font-size: 10px; color: #a1a8ae;">' + displayTime + '</span>' +
+                           '<div style="background: #4A90E2; color: #ffffff; padding: 8px 12px; border-radius: 12px 12px 0px 12px; font-size: 13px; word-break: break-all; text-align: left;">' + message + '</div>';
+    } else {
+        msgDiv.style.cssText = "align-self: flex-start; max-width: 75%; display: flex; flex-direction: column; margin-bottom: 2px;";
+        msgDiv.innerHTML = '<span style="font-size: 10px; color: #657786; margin: 0 0 3px 3px; font-weight: 500;">' + senderName + '</span>' +
+                           '<div style="display: flex; align-items: flex-end; gap: 5px;">' +
+                           '<div style="background: #ffffff; color: #1c1e21; padding: 8px 12px; border-radius: 12px 12px 12px 0px; font-size: 13px; word-break: break-all; border: 1px solid #e1e8ed;">' + message + '</div>' +
+                           '<span style="font-size: 10px; color: #a1a8ae;">' + displayTime + '</span>' +
+                           '</div>';
+    }
+    
+    area.appendChild(msgDiv);
+    area.scrollTop = area.scrollHeight; 
+}
 </script>

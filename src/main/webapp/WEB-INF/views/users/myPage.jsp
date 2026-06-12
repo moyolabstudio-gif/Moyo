@@ -157,6 +157,11 @@
     </div>
 </div>
 
+<footer>
+    <%@ include file="../common/footer.jsp"%>
+</footer>
+
+
 <script>
     function changeTab(tabName) {
         // 모든 섹션 숨기기
