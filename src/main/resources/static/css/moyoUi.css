@@ -372,3 +372,85 @@ body.moyo-app-sidebar-enabled header.moyo-header .user-avatar {
     box-shadow: 0 4px 12px rgba(57,145,216,.24) !important;
     border: 0 !important;
 }
+
+/* ===== MOYO SCOPE COLORS =====
+   공통 규칙: 개인=메인 블루, 워크스페이스=민트, 프로젝트=보라
+   노트/캘린더/사진/게시판/알림에서 같은 변수를 재사용한다. */
+:root {
+    --moyo-blue: #4f7df7;
+    --moyo-blue-soft: #eef4ff;
+    --moyo-blue-border: #cfe0ff;
+    --moyo-mint: #65d8c8;
+    --moyo-mint-soft: #effcf9;
+    --moyo-mint-border: #b8eee6;
+    --moyo-purple: #8b7cff;
+    --moyo-purple-soft: #f4f2ff;
+    --moyo-purple-border: #ddd8ff;
+
+    --moyo-scope-color: var(--moyo-blue);
+    --moyo-scope-soft: var(--moyo-blue-soft);
+    --moyo-scope-border: var(--moyo-blue-border);
+}
+
+.moyo-scope-private,
+.note-scope-private {
+    --moyo-scope-color: var(--moyo-blue);
+    --moyo-scope-soft: var(--moyo-blue-soft);
+    --moyo-scope-border: var(--moyo-blue-border);
+}
+
+.moyo-scope-workspace,
+.note-scope-workspace {
+    --moyo-scope-color: var(--moyo-mint);
+    --moyo-scope-soft: var(--moyo-mint-soft);
+    --moyo-scope-border: var(--moyo-mint-border);
+}
+
+.moyo-scope-project,
+.note-scope-project {
+    --moyo-scope-color: var(--moyo-purple);
+    --moyo-scope-soft: var(--moyo-purple-soft);
+    --moyo-scope-border: var(--moyo-purple-border);
+}
+
+.moyo-scope-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    background: var(--moyo-scope-color);
+    box-shadow: 0 0 0 4px var(--moyo-scope-soft);
+}
+
+.moyo-scope-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    min-height: 30px;
+    padding: 0 11px;
+    border-radius: 999px;
+    border: 1px solid var(--moyo-scope-border);
+    background: var(--moyo-scope-soft);
+    color: var(--moyo-scope-color);
+    font-size: 13px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.moyo-scope-leftbar {
+    border-left: 4px solid var(--moyo-scope-color);
+}
+
+.moyo-scope-topline {
+    position: relative;
+}
+
+.moyo-scope-topline::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--moyo-scope-color), rgba(101, 216, 200, .55));
+}

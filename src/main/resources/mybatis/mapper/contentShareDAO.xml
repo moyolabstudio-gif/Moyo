@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.springboot.project.dao.IcontentShareDAO">
+
+    <resultMap id="shareResultMap" type="com.springboot.project.dto.contentShareDTO">
+        <id property="shareId" column="SHARE_ID"/>
+        <result property="contentType" column="CONTENT_TYPE"/>
+        <result property="contentId" column="CONTENT_ID"/>
+        <result property="ownerId" column="OWNER_ID"/>
+        <result property="targetType" column="TARGET_TYPE"/>
+        <result property="targetId" column="TARGET_ID"/>
+        <result property="permissionType" column="PERMISSION_TYPE"/>
+        <result property="sharedBy" column="SHARED_BY"/>
+        <result property="createdAt" column="CREATED_AT"/>
+        <result property="expiresAt" column="EXPIRES_AT"/>
+        <result property="activeYn" column="ACTIVE_YN"/>
+        <result property="targetName" column="TARGET_NAME"/>
+        <result property="targetSubtext" column="TARGET_SUBTEXT"/>
+    </resultMap>
+
+    <select id="countManagePermission" resultType="int">
+        SELECT COUNT(*)
+        FROM NOTES n
+        WHERE #{contentType} = 'NOTE'
+          AND n.NOTE_ID = #{contentId}
+          AND n.USER_ID = #{userId}
+    </select>
+
+    <select id="selectContentOwnerId" resultType="long">
+        SELECT n.USER_ID
+        FROM NOTES n
+        WHERE #{contentType} = 'NOTE'
+          AND n.NOTE_ID = #{contentId}
+    </select>
+
+    <select id="selectShares" resultMap="shareResultMap">
+        SELECT s.SHARE_ID, s.CONTENT_TYPE, s.CONTENT_ID, s.OWNER_ID,
+               s.TARGET_TYPE, s.TARGET_ID, s.PERMISSION_TYPE, s.SHARED_BY,
+               s.CREATED_AT, s.EXPIRES_AT, s.ACTIVE_YN,
+               CASE s.TARGET_TYPE
+                   WHEN 'USER' THEN u.USER_NAME
+                   WHEN 'WS' THEN w.WS_NAME
+                   WHEN 'PROJ' THEN p.PROJ_NAME
+               END AS TARGET_NAME,
+               CASE s.TARGET_TYPE
+                   WHEN 'USER' THEN u.EMAIL
+                   WHEN 'WS' THEN '워크스페이스'
+                   WHEN 'PROJ' THEN w2.WS_NAME
+               END AS TARGET_SUBTEXT
+        FROM CONTENT_SHARES s
+        LEFT JOIN USERS u ON s.TARGET_TYPE = 'USER' AND u.USER_ID = s.TARGET_ID
+        LEFT JOIN WORKSPACES w ON s.TARGET_TYPE = 'WS' AND w.WS_ID = s.TARGET_ID
+        LEFT JOIN PROJECTS p ON s.TARGET_TYPE = 'PROJ' AND p.PROJ_ID = s.TARGET_ID
+        LEFT JOIN WORKSPACES w2 ON p.WS_ID = w2.WS_ID
+        WHERE s.CONTENT_TYPE = #{contentType}
+          AND s.CONTENT_ID = #{contentId}
+          AND s.ACTIVE_YN = 'Y'
+          AND (s.EXPIRES_AT IS NULL OR s.EXPIRES_AT >= SYSDATE)
+        ORDER BY s.CREATED_AT DESC, s.SHARE_ID DESC
+    </select>
+
+    <insert id="mergeShare" parameterType="com.springboot.project.dto.contentShareDTO">
+        MERGE INTO CONTENT_SHARES s
+        USING (
+            SELECT #{contentType} CONTENT_TYPE,
+                   #{contentId} CONTENT_ID,
+                   #{targetType} TARGET_TYPE,
+                   #{targetId} TARGET_ID
+            FROM DUAL
+        ) x
+        ON (s.CONTENT_TYPE = x.CONTENT_TYPE
+            AND s.CONTENT_ID = x.CONTENT_ID
+            AND s.TARGET_TYPE = x.TARGET_TYPE
+            AND s.TARGET_ID = x.TARGET_ID)
+        WHEN MATCHED THEN UPDATE SET
+            s.PERMISSION_TYPE = #{permissionType},
+            s.SHARED_BY = #{sharedBy},
+            s.OWNER_ID = #{ownerId},
+            s.ACTIVE_YN = 'Y',
+            s.EXPIRES_AT = #{expiresAt,jdbcType=TIMESTAMP},
+            s.UPDATED_AT = SYSDATE
+        WHEN NOT MATCHED THEN INSERT (
+            SHARE_ID, CONTENT_TYPE, CONTENT_ID, OWNER_ID, TARGET_TYPE, TARGET_ID,
+            PERMISSION_TYPE, SHARED_BY, CREATED_AT, UPDATED_AT, EXPIRES_AT, ACTIVE_YN
+        ) VALUES (
+            SEQ_CONTENT_SHARE_ID.NEXTVAL, #{contentType}, #{contentId}, #{ownerId},
+            #{targetType}, #{targetId}, #{permissionType}, #{sharedBy},
+            SYSDATE, SYSDATE, #{expiresAt,jdbcType=TIMESTAMP}, 'Y'
+        )
+    </insert>
+
+    <update id="deleteShare">
+        UPDATE CONTENT_SHARES s
+           SET s.ACTIVE_YN = 'N',
+               s.UPDATED_AT = SYSDATE
+         WHERE s.SHARE_ID = #{shareId}
+           AND s.OWNER_ID = #{userId}
+           AND s.ACTIVE_YN = 'Y'
+    </update>
+
+    <delete id="deleteSharesByContent">
+        DELETE FROM CONTENT_SHARES
+        WHERE CONTENT_TYPE = #{contentType}
+          AND CONTENT_ID = #{contentId}
+    </delete>
+
+    <select id="selectUserTargets" resultType="map">
+        SELECT * FROM (
+            SELECT u.USER_ID AS "targetId",
+                   NVL(u.USER_NAME, u.EMAIL) AS "targetName",
+                   u.EMAIL AS "targetSubtext",
+                   u.PROFILE_IMAGE_PATH AS "profileImagePath"
+            FROM USERS u
+            WHERE u.USER_ID != #{userId}
+              AND NVL(u.STATUS, 'ACTIVE') = 'ACTIVE'
+              AND EXISTS (
+                  SELECT 1
+                    FROM USER_FRIENDS f
+                   WHERE f.STATUS = 'ACCEPTED'
+                     AND (
+                         (f.REQUESTER_ID = #{userId} AND f.ADDRESSEE_ID = u.USER_ID)
+                         OR
+                         (f.ADDRESSEE_ID = #{userId} AND f.REQUESTER_ID = u.USER_ID)
+                     )
+              )
+              <if test="keyword != null and keyword != ''">
+                AND (UPPER(NVL(u.USER_NAME, u.EMAIL)) LIKE '%' || UPPER(#{keyword}) || '%'
+                     OR UPPER(u.EMAIL) LIKE '%' || UPPER(#{keyword}) || '%')
+              </if>
+            ORDER BY NVL(u.USER_NAME, u.EMAIL), u.EMAIL
+        ) WHERE ROWNUM &lt;= 30
+    </select>
+
+    <select id="countAcceptedFriend" resultType="int">
+        SELECT COUNT(*)
+        FROM USER_FRIENDS f
+        WHERE f.STATUS = 'ACCEPTED'
+          AND (
+                (f.REQUESTER_ID = #{userId} AND f.ADDRESSEE_ID = #{friendUserId})
+             OR (f.REQUESTER_ID = #{friendUserId} AND f.ADDRESSEE_ID = #{userId})
+          )
+    </select>
+
+    <select id="selectWorkspaceTargets" resultType="map">
+        SELECT w.WS_ID AS "targetId",
+               w.WS_NAME AS "targetName",
+               '워크스페이스' AS "targetSubtext",
+               w.WS_IMAGE_PATH AS "profileImagePath"
+        FROM WORKSPACES w
+        WHERE w.OWNER_ID = #{userId}
+           OR EXISTS (SELECT 1 FROM WS_MEMBERS wm WHERE wm.WS_ID = w.WS_ID AND wm.USER_ID = #{userId})
+        ORDER BY w.WS_NAME
+    </select>
+
+    <select id="selectProjectTargets" resultType="map">
+        SELECT p.PROJ_ID AS "targetId",
+               p.PROJ_NAME AS "targetName",
+               w.WS_NAME AS "targetSubtext",
+               CAST(NULL AS VARCHAR2(500)) AS "profileImagePath"
+        FROM PROJECTS p
+        JOIN WORKSPACES w ON w.WS_ID = p.WS_ID
+        WHERE p.LEADER_ID = #{userId}
+           OR EXISTS (SELECT 1 FROM PROJ_MEMBERS pm WHERE pm.PROJ_ID = p.PROJ_ID AND pm.USER_ID = #{userId})
+        ORDER BY w.WS_NAME, p.PROJ_NAME
+    </select>
+</mapper>

@@ -16,19 +16,22 @@ public interface InoteDAO {
 
     List<noteDTO> selectMainNoteList(Map<String, Object> paramMap);
 
-    int countPinnedNotes(@Param("userId") Long userId, @Param("projId") Long projId);
+    int countPinnedNotes(@Param("userId") Long userId, @Param("pinScopeKey") String pinScopeKey);
 
-    Integer selectNextPinOrder(@Param("userId") Long userId, @Param("projId") Long projId);
+    Integer selectNextPinOrder(@Param("userId") Long userId, @Param("pinScopeKey") String pinScopeKey);
 
-    int insertNotePin(@Param("userId") Long userId, @Param("projId") Long projId, @Param("noteId") Long noteId, @Param("pinOrder") Integer pinOrder);
+    int insertNotePin(@Param("userId") Long userId,
+                      @Param("pinScopeKey") String pinScopeKey,
+                      @Param("noteId") Long noteId,
+                      @Param("pinOrder") Integer pinOrder);
 
-    int deleteNotePin(@Param("userId") Long userId, @Param("projId") Long projId, @Param("noteId") Long noteId);
+    int deleteNotePin(@Param("userId") Long userId, @Param("noteId") Long noteId);
 
     int deleteNotePinsByNoteId(@Param("noteId") Long noteId);
 
     int countNoteDeletePermission(@Param("noteId") Long noteId, @Param("userId") Long userId);
 
-    noteDTO selectNoteDetail(@Param("noteId") Long noteId);
+    noteDTO selectNoteDetail(@Param("noteId") Long noteId, @Param("userId") Long userId);
 
     int insertNote(noteDTO note);
 
@@ -50,8 +53,9 @@ public interface InoteDAO {
 
     int insertNoteReply(noteReplyDTO reply);
 
+    int updateNoteReply(noteReplyDTO reply);
+
     int deleteNoteReply(@Param("replyId") Long replyId, @Param("userId") Long userId);
 
     int deleteNoteRepliesByNoteId(@Param("noteId") Long noteId);
 }
-

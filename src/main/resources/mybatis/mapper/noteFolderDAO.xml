@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.springboot.project.dao.InoteFolderDAO">
+ <resultMap id="folderMap" type="com.springboot.project.dto.noteFolderDTO">
+  <id property="folderId" column="FOLDER_ID"/><result property="parentFolderId" column="PARENT_FOLDER_ID"/>
+  <result property="ownerUserId" column="OWNER_USER_ID"/><result property="scopeType" column="SCOPE_TYPE"/>
+  <result property="wsId" column="WS_ID"/><result property="projId" column="PROJ_ID"/>
+  <result property="folderName" column="FOLDER_NAME"/><result property="sortOrder" column="SORT_ORDER"/>
+  <result property="depth" column="DEPTH"/><result property="folderPath" column="FOLDER_PATH"/>
+  <result property="regDt" column="REG_DT"/><result property="updDt" column="UPD_DT"/>
+ </resultMap>
+ <select id="selectFolderList" parameterType="map" resultMap="folderMap">
+  SELECT FOLDER_ID,PARENT_FOLDER_ID,OWNER_USER_ID,SCOPE_TYPE,WS_ID,PROJ_ID,FOLDER_NAME,SORT_ORDER,REG_DT,UPD_DT,
+         LEVEL AS DEPTH, SYS_CONNECT_BY_PATH(FOLDER_NAME,' / ') AS FOLDER_PATH
+  FROM NOTE_FOLDERS
+  WHERE SCOPE_TYPE=#{scopeType}
+    AND NVL(WS_ID,-1)=NVL(#{wsId,jdbcType=NUMERIC},-1)
+    AND NVL(PROJ_ID,-1)=NVL(#{projId,jdbcType=NUMERIC},-1)
+    <if test="scopeType == 'PRIVATE'">
+      AND OWNER_USER_ID=#{userId,jdbcType=NUMERIC}
+    </if>
+  START WITH PARENT_FOLDER_ID IS NULL
+  CONNECT BY PRIOR FOLDER_ID=PARENT_FOLDER_ID
+  ORDER SIBLINGS BY SORT_ORDER,FOLDER_NAME
+ </select>
+ <insert id="insertFolder" parameterType="com.springboot.project.dto.noteFolderDTO">
+  <selectKey keyProperty="folderId" resultType="long" order="BEFORE">SELECT SEQ_NOTE_FOLDER_ID.NEXTVAL FROM DUAL</selectKey>
+  INSERT INTO NOTE_FOLDERS(FOLDER_ID,PARENT_FOLDER_ID,OWNER_USER_ID,SCOPE_TYPE,WS_ID,PROJ_ID,FOLDER_NAME,SORT_ORDER,REG_DT)
+  SELECT #{folderId},#{parentFolderId,jdbcType=NUMERIC},#{ownerUserId},#{scopeType},#{wsId,jdbcType=NUMERIC},#{projId,jdbcType=NUMERIC},#{folderName},NVL(#{sortOrder,jdbcType=NUMERIC},0),SYSDATE
+  FROM DUAL
+  WHERE (
+      #{scopeType} = 'PRIVATE'
+      OR (#{scopeType} = 'WS' AND (
+          EXISTS (SELECT 1 FROM WORKSPACES w WHERE w.WS_ID=#{wsId,jdbcType=NUMERIC} AND w.OWNER_ID=#{ownerUserId})
+          OR EXISTS (SELECT 1 FROM WS_MEMBERS wm WHERE wm.WS_ID=#{wsId,jdbcType=NUMERIC} AND wm.USER_ID=#{ownerUserId} AND UPPER(NVL(wm.WS_ROLE,'MEMBER'))='ADMIN')
+      ))
+      OR (#{scopeType} = 'PROJ' AND (
+          EXISTS (SELECT 1 FROM PROJECTS p WHERE p.PROJ_ID=#{projId,jdbcType=NUMERIC} AND p.LEADER_ID=#{ownerUserId})
+          OR EXISTS (SELECT 1 FROM PROJ_MEMBERS pm WHERE pm.PROJ_ID=#{projId,jdbcType=NUMERIC} AND pm.USER_ID=#{ownerUserId} AND UPPER(NVL(pm.PROJ_ROLE,'MEMBER'))='ADMIN')
+      ))
+  )
+ </insert>
+ <update id="updateFolderName">
+  UPDATE NOTE_FOLDERS f SET f.FOLDER_NAME=#{folderName},f.UPD_DT=SYSDATE
+  WHERE f.FOLDER_ID=#{folderId}
+    AND (f.OWNER_USER_ID=#{userId}
+      OR (f.SCOPE_TYPE='WS' AND (
+          EXISTS (SELECT 1 FROM WORKSPACES w WHERE w.WS_ID=f.WS_ID AND w.OWNER_ID=#{userId})
+          OR EXISTS (SELECT 1 FROM WS_MEMBERS wm WHERE wm.WS_ID=f.WS_ID AND wm.USER_ID=#{userId} AND UPPER(NVL(wm.WS_ROLE,'MEMBER'))='ADMIN')
+      ))
+      OR (f.SCOPE_TYPE='PROJ' AND (
+          EXISTS (SELECT 1 FROM PROJECTS p WHERE p.PROJ_ID=f.PROJ_ID AND p.LEADER_ID=#{userId})
+          OR EXISTS (SELECT 1 FROM PROJ_MEMBERS pm WHERE pm.PROJ_ID=f.PROJ_ID AND pm.USER_ID=#{userId} AND UPPER(NVL(pm.PROJ_ROLE,'MEMBER'))='ADMIN')
+      )))
+ </update>
+ <delete id="deleteFolder">
+  DELETE NOTE_FOLDERS f WHERE f.FOLDER_ID=#{folderId}
+    AND (f.OWNER_USER_ID=#{userId}
+      OR (f.SCOPE_TYPE='WS' AND (
+          EXISTS (SELECT 1 FROM WORKSPACES w WHERE w.WS_ID=f.WS_ID AND w.OWNER_ID=#{userId})
+          OR EXISTS (SELECT 1 FROM WS_MEMBERS wm WHERE wm.WS_ID=f.WS_ID AND wm.USER_ID=#{userId} AND UPPER(NVL(wm.WS_ROLE,'MEMBER'))='ADMIN')
+      ))
+      OR (f.SCOPE_TYPE='PROJ' AND (
+          EXISTS (SELECT 1 FROM PROJECTS p WHERE p.PROJ_ID=f.PROJ_ID AND p.LEADER_ID=#{userId})
+          OR EXISTS (SELECT 1 FROM PROJ_MEMBERS pm WHERE pm.PROJ_ID=f.PROJ_ID AND pm.USER_ID=#{userId} AND UPPER(NVL(pm.PROJ_ROLE,'MEMBER'))='ADMIN')
+      )))
+ </delete>
+ <select id="countChildFolders" resultType="int">SELECT COUNT(*) FROM NOTE_FOLDERS WHERE PARENT_FOLDER_ID=#{folderId}</select>
+ <select id="countFolderNotes" resultType="int">SELECT COUNT(*) FROM NOTES WHERE FOLDER_ID=#{folderId}</select>
+ <update id="moveNote">
+  UPDATE NOTES n
+     SET n.FOLDER_ID = #{folderId,jdbcType=NUMERIC},
+         n.UPD_DT = SYSDATE
+   WHERE n.NOTE_ID = #{noteId}
+     AND (
+          n.USER_ID = #{userId}
+          OR (n.SCOPE_TYPE = 'WS' AND (
+                EXISTS (SELECT 1 FROM WORKSPACES w WHERE w.WS_ID = n.WS_ID AND w.OWNER_ID = #{userId})
+                OR EXISTS (SELECT 1 FROM WS_MEMBERS wm WHERE wm.WS_ID = n.WS_ID AND wm.USER_ID = #{userId} AND UPPER(NVL(wm.WS_ROLE,'MEMBER')) = 'ADMIN')
+          ))
+          OR (n.SCOPE_TYPE = 'PROJ' AND (
+                EXISTS (SELECT 1 FROM PROJECTS p WHERE p.PROJ_ID = n.PROJ_ID AND p.LEADER_ID = #{userId})
+                OR EXISTS (SELECT 1 FROM PROJ_MEMBERS pm WHERE pm.PROJ_ID = n.PROJ_ID AND pm.USER_ID = #{userId} AND UPPER(NVL(pm.PROJ_ROLE,'MEMBER')) = 'ADMIN')
+          ))
+     )
+     AND (
+          #{folderId,jdbcType=NUMERIC} IS NULL
+          OR EXISTS (
+              SELECT 1
+                FROM NOTE_FOLDERS f
+               WHERE f.FOLDER_ID = #{folderId,jdbcType=NUMERIC}
+                 AND f.SCOPE_TYPE = n.SCOPE_TYPE
+                 AND NVL(f.WS_ID,-1) = NVL(n.WS_ID,-1)
+                 AND NVL(f.PROJ_ID,-1) = NVL(n.PROJ_ID,-1)
+          )
+     )
+ </update>
+
+ <select id="selectAccessibleWorkspaces" resultType="map">
+  SELECT w.WS_ID AS "wsId", w.WS_NAME AS "wsName", w.WS_IMAGE_PATH AS "wsImagePath",
+         CASE WHEN w.OWNER_ID=#{userId} OR EXISTS (SELECT 1 FROM WS_MEMBERS wa WHERE wa.WS_ID=w.WS_ID AND wa.USER_ID=#{userId} AND UPPER(NVL(wa.WS_ROLE,'MEMBER'))='ADMIN') THEN 1 ELSE 0 END AS "canManage"
+  FROM WORKSPACES w
+  WHERE (w.OWNER_ID = #{userId} OR EXISTS (SELECT 1 FROM WS_MEMBERS wm WHERE wm.WS_ID=w.WS_ID AND wm.USER_ID=#{userId}))
+  ORDER BY w.WS_NAME
+ </select>
+ <select id="selectAccessibleProjects" resultType="map">
+  SELECT p.PROJ_ID AS "projId", p.PROJ_NAME AS "projName", p.WS_ID AS "wsId", w.WS_NAME AS "wsName",
+         CASE WHEN p.LEADER_ID=#{userId} OR EXISTS (SELECT 1 FROM PROJ_MEMBERS pa WHERE pa.PROJ_ID=p.PROJ_ID AND pa.USER_ID=#{userId} AND UPPER(NVL(pa.PROJ_ROLE,'MEMBER'))='ADMIN') THEN 1 ELSE 0 END AS "canManage"
+  FROM PROJECTS p
+  JOIN WORKSPACES w ON w.WS_ID=p.WS_ID
+  WHERE (p.LEADER_ID = #{userId} OR EXISTS (SELECT 1 FROM PROJ_MEMBERS pm WHERE pm.PROJ_ID=p.PROJ_ID AND pm.USER_ID=#{userId}))
+  ORDER BY w.WS_NAME, p.PROJ_NAME
+ </select>
+ <select id="selectShareWorkspaceMembers" resultType="map">
+  SELECT w.WS_ID AS "wsId",
+         w.WS_NAME AS "wsName",
+         u.USER_ID AS "userId",
+         CASE
+           WHEN NVL(mp.USE_ACCOUNT_PROFILE, 'Y') = 'N' THEN NVL(mp.DISPLAY_NAME, u.USER_NAME)
+           ELSE u.USER_NAME
+         END AS "userName",
+         NVL(mp.CONTACT_EMAIL, u.EMAIL) AS "email",
+         wm.WS_ROLE AS "roleName",
+         CASE
+           WHEN NVL(mp.USE_ACCOUNT_PROFILE, 'Y') = 'N' THEN mp.PROFILE_IMAGE_PATH
+           ELSE u.PROFILE_IMAGE_PATH
+         END AS "profileImagePath"
+  FROM WS_MEMBERS wm
+  JOIN WORKSPACES w ON w.WS_ID = wm.WS_ID
+  JOIN USERS u ON u.USER_ID = wm.USER_ID
+  LEFT JOIN WS_MEMBER_PROFILES mp
+    ON mp.WS_ID = wm.WS_ID
+   AND mp.USER_ID = wm.USER_ID
+  WHERE (w.OWNER_ID = #{userId} OR EXISTS (
+      SELECT 1
+        FROM WS_MEMBERS me
+       WHERE me.WS_ID = wm.WS_ID
+         AND me.USER_ID = #{userId}
+  ))
+    AND wm.USER_ID != #{userId}
+  ORDER BY w.WS_NAME,
+           CASE WHEN wm.USER_ID = w.OWNER_ID THEN 1 WHEN UPPER(NVL(wm.WS_ROLE,'MEMBER')) = 'ADMIN' THEN 2 ELSE 3 END,
+           CASE WHEN NVL(mp.USE_ACCOUNT_PROFILE, 'Y') = 'N' THEN NVL(mp.DISPLAY_NAME, u.USER_NAME) ELSE u.USER_NAME END
+ </select>
+
+ <select id="selectShareProjectMembers" resultType="map">
+  SELECT p.PROJ_ID AS "projId",
+         p.PROJ_NAME AS "projName",
+         w.WS_ID AS "wsId",
+         w.WS_NAME AS "wsName",
+         u.USER_ID AS "userId",
+         CASE
+           WHEN NVL(mp.USE_ACCOUNT_PROFILE, 'Y') = 'N' THEN NVL(mp.DISPLAY_NAME, u.USER_NAME)
+           ELSE u.USER_NAME
+         END AS "userName",
+         NVL(mp.CONTACT_EMAIL, u.EMAIL) AS "email",
+         pm.PROJ_ROLE AS "roleName",
+         CASE
+           WHEN NVL(mp.USE_ACCOUNT_PROFILE, 'Y') = 'N' THEN mp.PROFILE_IMAGE_PATH
+           ELSE u.PROFILE_IMAGE_PATH
+         END AS "profileImagePath"
+  FROM PROJ_MEMBERS pm
+  JOIN PROJECTS p ON p.PROJ_ID = pm.PROJ_ID
+  JOIN WORKSPACES w ON w.WS_ID = p.WS_ID
+  JOIN USERS u ON u.USER_ID = pm.USER_ID
+  LEFT JOIN WS_MEMBER_PROFILES mp
+    ON mp.WS_ID = p.WS_ID
+   AND mp.USER_ID = pm.USER_ID
+  WHERE (p.LEADER_ID = #{userId} OR EXISTS (
+      SELECT 1
+        FROM PROJ_MEMBERS me
+       WHERE me.PROJ_ID = pm.PROJ_ID
+         AND me.USER_ID = #{userId}
+  ))
+    AND pm.USER_ID != #{userId}
+  ORDER BY w.WS_NAME, p.PROJ_NAME,
+           CASE WHEN pm.USER_ID = p.LEADER_ID THEN 1 WHEN UPPER(NVL(pm.PROJ_ROLE,'MEMBER')) = 'ADMIN' THEN 2 ELSE 3 END,
+           CASE WHEN NVL(mp.USE_ACCOUNT_PROFILE, 'Y') = 'N' THEN NVL(mp.DISPLAY_NAME, u.USER_NAME) ELSE u.USER_NAME END
+ </select>
+
+</mapper>

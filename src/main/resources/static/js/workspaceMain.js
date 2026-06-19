@@ -1185,8 +1185,152 @@ document.addEventListener('keydown', function(event) {
             location.href = WORKSPACE_CONFIG.contextPath + '/calendar?wsId=' + WORKSPACE_CONFIG.wsId + '&mode=GROUP_REG';
         }
 
+
+
+        /* ===== Workspace shared note widget ===== */
+        function escapeWorkspaceNoteHtml(value) {
+            if (value === null || value === undefined) return '';
+            return String(value)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function stripWorkspaceNoteHtml(value) {
+            if (!value) return '';
+            var temp = document.createElement('div');
+            temp.innerHTML = String(value);
+            return (temp.textContent || temp.innerText || '').replace(/\s+/g, ' ').trim();
+        }
+
+        function getWorkspaceNoteQuery() {
+            var target = document.getElementById('workspaceRecentNoteList');
+            var wsId = target && target.dataset ? target.dataset.wsId : '';
+            if (!wsId && typeof WORKSPACE_CONFIG !== 'undefined') wsId = WORKSPACE_CONFIG.wsId || '';
+            return 'scope=WS&wsId=' + encodeURIComponent(wsId);
+        }
+
+        function getWorkspaceNoteListUrl() {
+            return '/note/list?' + getWorkspaceNoteQuery();
+        }
+
+        function getWorkspaceNoteWriteUrl() {
+            return '/note/write?' + getWorkspaceNoteQuery();
+        }
+
+        function getWorkspaceNoteDetailUrl(noteId) {
+            return '/note/detail?noteId=' + encodeURIComponent(noteId) + '&' + getWorkspaceNoteQuery();
+        }
+
+        function renderWorkspaceNoteEmpty(target) {
+            target.innerHTML = '<a class="workspace-note-empty-link" href="' + getWorkspaceNoteWriteUrl() + '">' +
+                '<span class="workspace-note-placeholder-icon">📝</span>' +
+                '<span class="workspace-note-placeholder-copy">' +
+                '<strong>아직 작성된 노트가 없습니다.</strong>' +
+                '<span>첫 공유 노트를 작성해 멤버들과 함께 확인하세요.</span>' +
+                '<em>첫 노트 작성 →</em>' +
+                '</span></a>';
+        }
+
+        function normalizeWorkspaceNoteList(payload) {
+            if (Array.isArray(payload)) return payload;
+            if (!payload || typeof payload !== 'object') return [];
+            var candidates = [
+                payload.notes,
+                payload.noteList,
+                payload.recentNotes,
+                payload.data,
+                payload.list,
+                payload.items,
+                payload.content
+            ];
+            for (var i = 0; i < candidates.length; i++) {
+                if (Array.isArray(candidates[i])) return candidates[i];
+            }
+            return [];
+        }
+
+        function isWorkspaceNotePinned(note) {
+            var value = note.pinned;
+            if (value === undefined) value = note.PINNED;
+            if (value === undefined) value = note.pinnedYn;
+            if (value === undefined) value = note.PINNED_YN;
+            if (value === undefined) value = note.isPinned;
+            return value === true || value === 1 || String(value || '').toUpperCase() === 'Y';
+        }
+
+        function getWorkspaceNoteFileCount(note) {
+            var files = note.fileList || note.FILE_LIST || note.files || note.FILES;
+            if (Array.isArray(files)) return files.length;
+            var count = note.fileCount;
+            if (count === undefined) count = note.FILE_COUNT;
+            if (count === undefined) count = note.attachCount;
+            if (count === undefined) count = note.ATTACH_COUNT;
+            count = Number(count || 0);
+            return Number.isFinite(count) ? count : 0;
+        }
+
+        function renderWorkspaceNotes(payload) {
+            var target = document.getElementById('workspaceRecentNoteList');
+            if (!target) return;
+
+            var list = normalizeWorkspaceNoteList(payload);
+            if (list.length === 0) {
+                renderWorkspaceNoteEmpty(target);
+                return;
+            }
+
+            var visible = list.slice(0, 2);
+            var html = '<div class="workspace-note-items">';
+            visible.forEach(function(note) {
+                var noteId = note.noteId || note.NOTE_ID || '';
+                var title = escapeWorkspaceNoteHtml(note.noteTitle || note.NOTE_TITLE || note.title || note.TITLE || '제목 없음');
+                var userName = escapeWorkspaceNoteHtml(note.userName || note.USER_NAME || note.writerName || note.WRITER_NAME || '작성자');
+                var content = note.memo || note.MEMO || note.content || note.CONTENT || note.noteContent || note.NOTE_CONTENT || '';
+                var previewText = stripWorkspaceNoteHtml(content) || '작성된 내용이 없습니다.';
+                var preview = escapeWorkspaceNoteHtml(previewText);
+                var pinned = isWorkspaceNotePinned(note);
+                var fileCount = getWorkspaceNoteFileCount(note);
+
+                html += '<a class="workspace-note-item" href="' + getWorkspaceNoteDetailUrl(noteId) + '">' +
+                    '<span class="workspace-note-item-title-row">' +
+                        '<strong class="workspace-note-item-title">' + title + '</strong>' +
+                        (pinned ? '<span class="workspace-note-mini-chip pin">고정</span>' : '') +
+                    '</span>' +
+                    '<span class="workspace-note-item-preview">' + preview + '</span>' +
+                    '<span class="workspace-note-item-footer">' +
+                        '<span class="workspace-note-author">' + userName + '</span>' +
+                        (fileCount > 0 ? '<span class="workspace-note-mini-chip">첨부 ' + fileCount + '</span>' : '') +
+                    '</span>' +
+                '</a>';
+            });
+            if (list.length > 2) {
+                html += '<a class="workspace-note-more-row" href="' + getWorkspaceNoteListUrl() + '">+' + (list.length - 2) + '개 노트 더 보기</a>';
+            }
+            html += '</div>';
+            target.innerHTML = html;
+        }
+
+        function loadWorkspaceNotes() {
+            var target = document.getElementById('workspaceRecentNoteList');
+            if (!target) return;
+            fetch('/note/api/main?' + getWorkspaceNoteQuery() + '&limit=3')
+                .then(function(response) {
+                    if (!response.ok) throw new Error('워크스페이스 노트 API 응답 오류: ' + response.status);
+                    return response.json();
+                })
+                .then(function(payload) { renderWorkspaceNotes(payload); })
+                .catch(function(error) {
+                    console.error('워크스페이스 공유 노트 로딩 실패:', error);
+                    renderWorkspaceNoteEmpty(target);
+                });
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
             loadDashboardWidgets();
+            loadWorkspaceNotes();
             generateCalendar();
             loadCalendarEvents();
         });

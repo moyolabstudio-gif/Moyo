@@ -692,10 +692,6 @@
                         el.removeAttribute(attr.name);
                         return;
                     }
-
-                    if (name === 'src' && value.startsWith('data:image/')) {
-                        el.removeAttribute(attr.name);
-                    }
                 });
             });
 
@@ -746,15 +742,36 @@
         }
 
         function MyCustomUploadAdapterPlugin(editor) {
+            editor._boardUploadCount = 0;
+            editor._boardUploadWaiters = [];
+
+            editor.waitForBoardUploads = function() {
+                if (editor._boardUploadCount === 0) return Promise.resolve();
+                return new Promise(resolve => editor._boardUploadWaiters.push(resolve));
+            };
+
+            function completeUpload() {
+                editor._boardUploadCount = Math.max(0, editor._boardUploadCount - 1);
+                if (editor._boardUploadCount !== 0) return;
+                editor._boardUploadWaiters.splice(0).forEach(resolve => resolve());
+            }
+
             editor.plugins.get('FileRepository').createUploadAdapter = (loader) => {
+                let xhr = null;
+                let active = false;
+
                 return {
                     upload() {
+                        if (!active) {
+                            active = true;
+                            editor._boardUploadCount += 1;
+                        }
+
                         return loader.file.then(file => new Promise((resolve, reject) => {
                             if (!BOARD_EDITOR_IMAGE_TYPES.includes(file.type)) {
                                 reject('본문 이미지는 jpg, png, gif, webp 형식만 업로드할 수 있습니다.');
                                 return;
                             }
-
                             if (file.size > BOARD_EDITOR_MAX_IMAGE_SIZE) {
                                 reject('본문 이미지는 5MB 이하만 업로드할 수 있습니다.');
                                 return;
@@ -763,18 +780,15 @@
                             const formData = new FormData();
                             formData.append('upload', file);
 
-                            $.ajax({
+                            xhr = $.ajax({
                                 url: '/api/workspace/board/image-upload',
                                 type: 'POST',
                                 data: formData,
                                 processData: false,
                                 contentType: false,
                                 success: function(res) {
-                                    if (res.uploaded && res.url) {
-                                        resolve({ default: res.url });
-                                    } else {
-                                        reject(res.error ? res.error.message : '이미지 업로드에 실패했습니다.');
-                                    }
+                                    if (res.uploaded && res.url) resolve({ default: res.url });
+                                    else reject(res.error ? res.error.message : '이미지 업로드에 실패했습니다.');
                                 },
                                 error: function(xhr) {
                                     const message = xhr.responseJSON && xhr.responseJSON.error
@@ -783,9 +797,16 @@
                                     reject(message);
                                 }
                             });
-                        }));
+                        })).finally(() => {
+                            if (active) {
+                                active = false;
+                                completeUpload();
+                            }
+                        });
                     },
-                    abort() {}
+                    abort() {
+                        if (xhr && typeof xhr.abort === 'function') xhr.abort();
+                    }
                 };
             };
         }
@@ -802,7 +823,7 @@
                     'fontColor', 'fontBackgroundColor', '|',
                     'alignment', '|',
                     'numberedList', 'bulletedList', '|',
-                    'link', 'uploadImage', 'insertTable', 'blockQuote', '|',
+                    'link', 'uploadImage', 'mediaEmbed', 'insertTable', 'blockQuote', '|',
                     'removeFormat', 'undo', 'redo'
                 ],
                 shouldNotGroupWhenFull: false
@@ -827,7 +848,8 @@
             },
             table: {
                 contentToolbar: [
-                    'tableColumn', 'tableRow', 'mergeTableCells'
+                    'tableColumn', 'tableRow', 'mergeTableCells', '|',
+                    'tableProperties', 'tableCellProperties'
                 ],
                 defaultHeadings: { rows: 0, columns: 0 }
             },
@@ -847,7 +869,7 @@
                 'CKBoxImageEdit', 'ExportPdf', 'ExportWord', 'ImportWord', 'ImportFromWord',
                 'MultiLevelList', 'CaseChange',
                 'ListProperties', 'TodoList',
-                'TableProperties', 'TableCellProperties', 'TableColumnResize', 'TableCaption'
+                'TableColumnResize', 'TableCaption'
             ]
         };
 
@@ -860,7 +882,38 @@
                 console.error("에디터 인스턴스 초기화 실패:", error);
             });
 
-        document.querySelector('form').addEventListener('submit', function(e) {
+        document.querySelector('form').addEventListener('submit', async function(e) {
+            if (myEditor && myEditor._boardUploadCount > 0) {
+                e.preventDefault();
+                const form = this;
+                const submitButton = form.querySelector('button[type="submit"], input[type="submit"]');
+                const originalSubmitText = submitButton
+                    ? (submitButton.tagName === 'BUTTON' ? submitButton.textContent : submitButton.value)
+                    : '';
+
+                if (submitButton) {
+                    submitButton.disabled = true;
+                    if (submitButton.tagName === 'BUTTON') submitButton.textContent = '이미지 업로드 중...';
+                    else submitButton.value = '이미지 업로드 중...';
+                }
+
+                await myEditor.waitForBoardUploads();
+                const finalHtml = sanitizeEditorHtml(myEditor.getData());
+
+                if (/src\s*=\s*["']data:image\//i.test(finalHtml)) {
+                    if (submitButton) {
+                        submitButton.disabled = false;
+                        if (submitButton.tagName === 'BUTTON') submitButton.textContent = originalSubmitText;
+                        else submitButton.value = originalSubmitText;
+                    }
+                    alert('이미지 업로드가 아직 완료되지 않았습니다. 잠시 후 다시 저장해 주세요.');
+                    return false;
+                }
+
+                document.querySelector('#editor').value = finalHtml;
+                form.submit();
+                return false;
+            }
             const isPinnedEl = document.getElementById('isPinned');
             const pinStartEl = document.getElementById('pinStartDt');
             const pinEndEl = document.getElementById('pinEndDt');

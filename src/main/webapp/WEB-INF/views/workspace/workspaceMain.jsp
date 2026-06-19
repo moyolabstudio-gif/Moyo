@@ -6,8 +6,8 @@
     <meta charset="UTF-8">
     <title>${workspace.wsName} 커뮤니티 홈</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/moyoUi.css">
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/workspaceMain.css?v=20260612-first-workspace-empty-v1">
-    <script defer src="${pageContext.request.contextPath}/js/workspaceMain.js?v=workspace-first-empty-v1"></script>
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/workspaceMain.css?v=workspace-note-widget-v5">
+    <script defer src="${pageContext.request.contextPath}/js/workspaceMain.js?v=workspace-note-widget-v5"></script>
 </head>
 <body class="moyo-app-sidebar-enabled workspace-community-body"
       data-ws-id="${workspace.wsId}"
@@ -139,13 +139,17 @@
                     <section class="ws-card workspace-note-card workspace-compact-community-card workspace-feature-card workspace-note-feature-card">
                         <div class="board-title">
                             <span>📝 공유 노트</span>
-                            <span class="workspace-note-ready-label">준비 중</span>
+                            <a href="${pageContext.request.contextPath}/note/list?scope=WS&amp;wsId=${workspace.wsId}">더보기</a>
                         </div>
-                        <div class="workspace-note-preview">
-                            <div class="workspace-note-placeholder-icon">📝</div>
-                            <div class="workspace-note-placeholder-copy">
-                                <strong>공유 노트가 들어갈 자리입니다.</strong>
-                                <span>회의록과 아이디어를 워크스페이스 안에서 바로 모아볼 수 있게 연결할 예정입니다.</span>
+                        <div id="workspaceRecentNoteList"
+                             class="workspace-note-preview workspace-note-list"
+                             data-ws-id="${workspace.wsId}">
+                            <div class="workspace-note-loading">
+                                <div class="workspace-note-placeholder-icon">📝</div>
+                                <div class="workspace-note-placeholder-copy">
+                                    <strong>노트를 불러오는 중입니다.</strong>
+                                    <span>잠시만 기다려주세요.</span>
+                                </div>
                             </div>
                         </div>
                     </section>

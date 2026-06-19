@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.springboot.project.dao.IfriendDAO">
+
+    <resultMap id="friendResultMap" type="com.springboot.project.dto.friendDTO">
+        <id property="friendId" column="FRIEND_ID"/>
+        <result property="requesterId" column="REQUESTER_ID"/>
+        <result property="addresseeId" column="ADDRESSEE_ID"/>
+        <result property="status" column="STATUS"/>
+        <result property="requestedAt" column="REQUESTED_AT"/>
+        <result property="respondedAt" column="RESPONDED_AT"/>
+        <result property="updatedAt" column="UPDATED_AT"/>
+        <result property="userId" column="USER_ID"/>
+        <result property="userName" column="USER_NAME"/>
+        <result property="email" column="EMAIL"/>
+        <result property="profileImagePath" column="PROFILE_IMAGE_PATH"/>
+        <result property="relationStatus" column="RELATION_STATUS"/>
+        <result property="direction" column="DIRECTION"/>
+    </resultMap>
+
+    <select id="searchUsers" resultMap="friendResultMap">
+        SELECT *
+        FROM (
+            SELECT u.USER_ID,
+                   NVL(u.USER_NAME, u.EMAIL) AS USER_NAME,
+                   u.EMAIL,
+                   u.PROFILE_IMAGE_PATH,
+                   f.FRIEND_ID,
+                   f.REQUESTER_ID,
+                   f.ADDRESSEE_ID,
+                   f.STATUS,
+                   f.REQUESTED_AT,
+                   f.RESPONDED_AT,
+                   f.UPDATED_AT,
+                   NVL(f.STATUS, 'NONE') AS RELATION_STATUS,
+                   CASE
+                       WHEN f.FRIEND_ID IS NULL THEN 'NONE'
+                       WHEN f.REQUESTER_ID = #{userId} THEN 'SENT'
+                       ELSE 'RECEIVED'
+                   END AS DIRECTION
+              FROM USERS u
+              LEFT JOIN USER_FRIENDS f
+                ON ((f.REQUESTER_ID = #{userId} AND f.ADDRESSEE_ID = u.USER_ID)
+                 OR (f.ADDRESSEE_ID = #{userId} AND f.REQUESTER_ID = u.USER_ID))
+             WHERE u.USER_ID != #{userId}
+               AND NVL(u.STATUS, 'ACTIVE') = 'ACTIVE'
+               <if test="keyword != null and keyword != ''">
+                 AND (
+                     UPPER(NVL(u.USER_NAME, u.EMAIL)) LIKE '%' || UPPER(#{keyword}) || '%'
+                     OR UPPER(u.EMAIL) LIKE '%' || UPPER(#{keyword}) || '%'
+                 )
+               </if>
+             ORDER BY NVL(u.USER_NAME, u.EMAIL), u.EMAIL
+        )
+        WHERE ROWNUM &lt;= 30
+    </select>
+
+    <select id="selectFriends" resultMap="friendResultMap">
+        SELECT f.FRIEND_ID,
+               f.REQUESTER_ID,
+               f.ADDRESSEE_ID,
+               f.STATUS,
+               f.REQUESTED_AT,
+               f.RESPONDED_AT,
+               f.UPDATED_AT,
+               u.USER_ID,
+               NVL(u.USER_NAME, u.EMAIL) AS USER_NAME,
+               u.EMAIL,
+               u.PROFILE_IMAGE_PATH,
+               f.STATUS AS RELATION_STATUS,
+               CASE WHEN f.REQUESTER_ID = #{userId} THEN 'SENT' ELSE 'RECEIVED' END AS DIRECTION
+          FROM USER_FRIENDS f
+          JOIN USERS u
+            ON u.USER_ID = CASE WHEN f.REQUESTER_ID = #{userId} THEN f.ADDRESSEE_ID ELSE f.REQUESTER_ID END
+         WHERE f.STATUS = 'ACCEPTED'
+           AND (f.REQUESTER_ID = #{userId} OR f.ADDRESSEE_ID = #{userId})
+           <if test="keyword != null and keyword != ''">
+             AND (
+                 UPPER(NVL(u.USER_NAME, u.EMAIL)) LIKE '%' || UPPER(#{keyword}) || '%'
+                 OR UPPER(u.EMAIL) LIKE '%' || UPPER(#{keyword}) || '%'
+             )
+           </if>
+         ORDER BY NVL(u.USER_NAME, u.EMAIL), u.EMAIL
+    </select>
+
+    <select id="selectReceivedRequests" resultMap="friendResultMap">
+        SELECT f.FRIEND_ID,
+               f.REQUESTER_ID,
+               f.ADDRESSEE_ID,
+               f.STATUS,
+               f.REQUESTED_AT,
+               f.RESPONDED_AT,
+               f.UPDATED_AT,
+               u.USER_ID,
+               NVL(u.USER_NAME, u.EMAIL) AS USER_NAME,
+               u.EMAIL,
+               u.PROFILE_IMAGE_PATH,
+               f.STATUS AS RELATION_STATUS,
+               'RECEIVED' AS DIRECTION
+          FROM USER_FRIENDS f
+          JOIN USERS u ON u.USER_ID = f.REQUESTER_ID
+         WHERE f.ADDRESSEE_ID = #{userId}
+           AND f.STATUS = 'PENDING'
+         ORDER BY f.REQUESTED_AT DESC, f.FRIEND_ID DESC
+    </select>
+
+    <select id="selectSentRequests" resultMap="friendResultMap">
+        SELECT f.FRIEND_ID,
+               f.REQUESTER_ID,
+               f.ADDRESSEE_ID,
+               f.STATUS,
+               f.REQUESTED_AT,
+               f.RESPONDED_AT,
+               f.UPDATED_AT,
+               u.USER_ID,
+               NVL(u.USER_NAME, u.EMAIL) AS USER_NAME,
+               u.EMAIL,
+               u.PROFILE_IMAGE_PATH,
+               f.STATUS AS RELATION_STATUS,
+               'SENT' AS DIRECTION
+          FROM USER_FRIENDS f
+          JOIN USERS u ON u.USER_ID = f.ADDRESSEE_ID
+         WHERE f.REQUESTER_ID = #{userId}
+           AND f.STATUS = 'PENDING'
+         ORDER BY f.REQUESTED_AT DESC, f.FRIEND_ID DESC
+    </select>
+
+    <select id="countPendingReceived" resultType="int">
+        SELECT COUNT(*)
+          FROM USER_FRIENDS
+         WHERE ADDRESSEE_ID = #{userId}
+           AND STATUS = 'PENDING'
+    </select>
+
+    <select id="selectRelation" resultMap="friendResultMap">
+        SELECT *
+        FROM (
+            SELECT f.FRIEND_ID,
+                   f.REQUESTER_ID,
+                   f.ADDRESSEE_ID,
+                   f.STATUS,
+                   f.REQUESTED_AT,
+                   f.RESPONDED_AT,
+                   f.UPDATED_AT,
+                   CASE WHEN f.REQUESTER_ID = #{userId} THEN 'SENT' ELSE 'RECEIVED' END AS DIRECTION
+              FROM USER_FRIENDS f
+             WHERE (f.REQUESTER_ID = #{userId} AND f.ADDRESSEE_ID = #{targetUserId})
+                OR (f.REQUESTER_ID = #{targetUserId} AND f.ADDRESSEE_ID = #{userId})
+             ORDER BY f.UPDATED_AT DESC, f.FRIEND_ID DESC
+        )
+        WHERE ROWNUM = 1
+    </select>
+
+    <insert id="insertRequest">
+        INSERT INTO USER_FRIENDS (
+            FRIEND_ID, REQUESTER_ID, ADDRESSEE_ID, STATUS, REQUESTED_AT, UPDATED_AT
+        ) VALUES (
+            SEQ_USER_FRIEND_ID.NEXTVAL, #{requesterId}, #{addresseeId}, 'PENDING', SYSDATE, SYSDATE
+        )
+    </insert>
+
+    <update id="acceptRequest">
+        UPDATE USER_FRIENDS
+           SET STATUS = 'ACCEPTED',
+               RESPONDED_AT = SYSDATE,
+               UPDATED_AT = SYSDATE
+         WHERE FRIEND_ID = #{friendId}
+           AND ADDRESSEE_ID = #{userId}
+           AND STATUS = 'PENDING'
+    </update>
+
+    <update id="rejectRequest">
+        UPDATE USER_FRIENDS
+           SET STATUS = 'REJECTED',
+               RESPONDED_AT = SYSDATE,
+               UPDATED_AT = SYSDATE
+         WHERE FRIEND_ID = #{friendId}
+           AND ADDRESSEE_ID = #{userId}
+           AND STATUS = 'PENDING'
+    </update>
+
+    <delete id="cancelRequest">
+        DELETE FROM USER_FRIENDS
+         WHERE FRIEND_ID = #{friendId}
+           AND REQUESTER_ID = #{userId}
+           AND STATUS = 'PENDING'
+    </delete>
+
+    <delete id="deleteFriend">
+        DELETE FROM USER_FRIENDS
+         WHERE FRIEND_ID = #{friendId}
+           AND STATUS = 'ACCEPTED'
+           AND (REQUESTER_ID = #{userId} OR ADDRESSEE_ID = #{userId})
+    </delete>
+</mapper>

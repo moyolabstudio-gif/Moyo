@@ -6,7 +6,7 @@
 <head>
 <meta charset="UTF-8">
 	    <title>🎈 프로젝트 대시보드</title>
-		<link rel="stylesheet" href="${pageContext.request.contextPath}/css/projectMain.css?v=project-main-config-fix-v4">
+		<link rel="stylesheet" href="${pageContext.request.contextPath}/css/projectMain.css?v=project-note-widget-v10">
     <script>
         window.PROJECT_MAIN_CONFIG = {
             projectLeaderId: '<c:out value="${projectDetail.leaderId}"/>',
@@ -20,7 +20,7 @@
             canManageProject: <c:choose><c:when test="${canManageProject eq true}">true</c:when><c:otherwise>false</c:otherwise></c:choose>
         };
     </script>
-    <script src="${pageContext.request.contextPath}/js/projectMain.js?v=project-main-config-fix-v4"></script>
+    <script src="${pageContext.request.contextPath}/js/projectMain.js?v=project-note-widget-v10"></script>
 
 </head>
 <body data-user-id="${sessionScope.user.userId}">
@@ -103,7 +103,7 @@
                     <div class="widget-card notice-widget-card">
                         <div class="board-title">
                             <span>📢 공지사항</span>
-                            <a href="/project/board/list?projId=${projectDetail.projId}&type=NOTICE&wsId=${param.wsId}">더보기</a>
+                            <a href="/project/board/list?projId=${param.projId}&type=NOTICE&wsId=${param.wsId}">더보기</a>
                         </div>
                         <div id="noticeBoard" class="board-list"></div>
                     </div>
@@ -114,7 +114,7 @@
                                 <span>📊 진행 중인 투표</span>
                                 <span id="projectActivePollCount" class="project-poll-title-count">0</span>
                             </span>
-                            <a href="/poll/list?scope=PROJECT&wsId=${param.wsId}&projId=${projectDetail.projId}">더보기</a>
+                            <a href="/poll/list?scope=PROJECT&wsId=${param.wsId}&projId=${param.projId}">더보기</a>
                         </div>
                         <div id="projectActivePollArea" class="project-active-poll-area">
                             <div class="project-poll-empty">진행 중인 투표 목록을 불러오는 중입니다.</div>
@@ -124,7 +124,7 @@
                     <div class="widget-card resource-widget-card">
                         <div class="board-title">
                             <span>📁 자료실</span>
-                            <a href="/project/board/list?projId=${projectDetail.projId}&type=FILE&wsId=${param.wsId}">더보기</a>
+                            <a href="/project/board/list?projId=${param.projId}&type=FILE&wsId=${param.wsId}">더보기</a>
                         </div>
                         <div id="fileBoard" class="board-list"></div>
                     </div>
@@ -165,11 +165,11 @@
                 <div class="section-card work-note-section note-main-section">
                     <div class="section-header note-section-header">
                         <div>
-                            <h3>📝 노트</h3>
+                            <h3>📝 공유 노트</h3>
                             <p>회의 기록, 작업 메모, 첨부파일을 공유합니다.</p>
                         </div>
                         <div class="note-section-actions">
-                            <a href="/project/note/list?wsId=${param.wsId}&projId=${projectDetail.projId}" class="section-more-link">더보기</a>
+                            <a href="/note/list?scope=PROJ&wsId=${param.wsId}&projId=${param.projId}" class="section-more-link">더보기</a>
                         </div>
                     </div>
 
@@ -182,12 +182,12 @@
                                     <span>회의 기록이나 작업 메모를 첫 노트로 남기고<br>프로젝트 메인에서 바로 확인해보세요.</span>
                                 </div>
                             </div>
-                            <a class="empty-note-write-link" href="/project/note/write?wsId=${param.wsId}&projId=${projectDetail.projId}">+ 첫 노트 작성</a>
+                            <a class="empty-note-write-link" href="/note/write?scope=PROJ&wsId=${param.wsId}&projId=${param.projId}">+ 첫 노트 작성</a>
                         </div>
                     </div>
                     <div class="note-write-bottom-actions">
                         <button type="button" id="noteWidgetToggle" class="note-widget-toggle" aria-expanded="false">내용 펼치기</button>
-                        <a href="/project/note/write?wsId=${param.wsId}&projId=${projectDetail.projId}" class="note-write-link">+ 노트 작성</a>
+                        <a href="/note/write?scope=PROJ&wsId=${param.wsId}&projId=${param.projId}" class="note-write-link">+ 노트 작성</a>
                     </div>
                 </div>
                 <!-- ===== End 노트 섹션 ===== -->
@@ -260,7 +260,7 @@
                             <span id="projectCalendarTitle" class="moyo-calendar-month-title"></span>
                             <button type="button" class="calendar-arrow moyo-calendar-nav-btn" onclick="changeProjectMonth(1)" aria-label="다음 달">›</button>
                         </div>
-                        <a class="moyo-calendar-more" href="${pageContext.request.contextPath}/calendar?projId=${projectDetail.projId}&wsId=${param.wsId}">전체보기</a>
+                        <a class="moyo-calendar-more" href="${pageContext.request.contextPath}/calendar?projId=${param.projId}&wsId=${param.wsId}">전체보기</a>
                     </div>
 
                     <div class="calendar-grid moyo-calendar-grid" id="projectCalendarGrid">

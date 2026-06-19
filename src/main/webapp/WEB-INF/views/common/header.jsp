@@ -1,6 +1,8 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 
+<link rel="icon" type="image/png" href="${pageContext.request.contextPath}/brand/moyo_logo.png">
+
 <link rel="stylesheet" href="${pageContext.request.contextPath}/css/moyoModal.css">
 
 <link rel="stylesheet" href="${pageContext.request.contextPath}/css/appSidebar.css?v=poll-layout-shell-v3">
@@ -28,8 +30,8 @@
         overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
         transform:translateY(1px);
     }
-    .moyo-main-nav { display:flex; align-items:center; gap:24px; min-width:0; }
-    .nav-menu { display:flex; align-items:center; gap:30px; }
+    .moyo-main-nav { display:flex; align-items:center; gap:20px; min-width:0; }
+    .nav-menu { display:flex; align-items:center; gap:22px; }
     .moyo-nav-link {
         position:relative; display:inline-flex; align-items:center; gap:7px;
         color:#344054; text-decoration:none; font-size:13px; font-weight:800;
@@ -84,6 +86,11 @@
         font-size:10px; font-weight:900; line-height:16px; text-align:center;
         box-shadow:0 0 0 2px #fff;
     }
+    @media(max-width:1180px) {
+        .nav-menu { gap:16px; }
+        .moyo-main-nav { gap:14px; }
+        .user-status { gap:14px; padding-left:16px; }
+    }
     @media(max-width:980px) {
         .moyo-header-location { display:none; }
         .moyo-header-inner { padding-right:12px; }
@@ -129,6 +136,14 @@
                         <a href="/calendar" class="moyo-nav-link">
                             <span class="moyo-nav-icon">📅</span>
                             <span class="moyo-nav-label">내 캘린더</span>
+                        </a>
+                        <a href="${pageContext.request.contextPath}/note/list?scope=PRIVATE" class="moyo-nav-link">
+                            <span class="moyo-nav-icon">📝</span>
+                            <span class="moyo-nav-label">노트</span>
+                        </a>
+                        <a href="${pageContext.request.contextPath}/photo-album?scopeType=PERSONAL&amp;scopeId=${sessionScope.user.userId}" class="moyo-nav-link">
+                            <span class="moyo-nav-icon">🖼️</span>
+                            <span class="moyo-nav-label">사진</span>
                         </a>
                         <a href="/workspace/invitations" class="moyo-nav-link">
                             <span class="moyo-nav-icon">🔔</span>

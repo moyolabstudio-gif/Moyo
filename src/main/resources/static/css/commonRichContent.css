@@ -1,0 +1,464 @@
+/* MOYO shared rich-content renderer
+   CKEditor editing area and saved board/note detail use the same media/table rules. */
+
+.ck-content,
+.moyo-rich-content {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
+.ck-content::after,
+.moyo-rich-content::after {
+    content: "";
+    display: block;
+    clear: both;
+}
+
+/* Images: preserve CKEditor figure inline width, never stretch vertically. */
+.ck-content figure.image,
+.moyo-rich-content figure.image {
+    max-width: 100% !important;
+    margin-top: 14px !important;
+    margin-bottom: 14px !important;
+}
+
+.ck-content figure.image[style*="width"],
+.moyo-rich-content figure.image[style*="width"] {
+    display: block !important;
+}
+
+.ck-content figure.image:not([style*="width"]),
+.moyo-rich-content figure.image:not([style*="width"]) {
+    display: table !important;
+    width: auto !important;
+}
+
+.ck-content figure.image img,
+.moyo-rich-content figure.image img {
+    display: block !important;
+    max-width: 100% !important;
+    height: auto !important;
+    max-height: none !important;
+    object-fit: contain !important;
+    border-radius: 8px;
+}
+
+.ck-content figure.image[style*="width"] img,
+.moyo-rich-content figure.image[style*="width"] img {
+    width: 100% !important;
+}
+
+.ck-content figure.image:not([style*="width"]) img,
+.moyo-rich-content figure.image:not([style*="width"]) img {
+    width: auto !important;
+}
+
+.ck-content figure.image-style-align-left,
+.moyo-rich-content figure.image-style-align-left {
+    float: none !important;
+    margin-left: 0 !important;
+    margin-right: auto !important;
+}
+
+.ck-content figure.image-style-align-center,
+.moyo-rich-content figure.image-style-align-center,
+.ck-content figure.image:not(.image-style-align-left):not(.image-style-align-right):not(.image-style-side),
+.moyo-rich-content figure.image:not(.image-style-align-left):not(.image-style-align-right):not(.image-style-side) {
+    float: none !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+}
+
+.ck-content figure.image-style-align-right,
+.moyo-rich-content figure.image-style-align-right {
+    float: none !important;
+    margin-left: auto !important;
+    margin-right: 0 !important;
+}
+
+.ck-content figure.image-style-side,
+.moyo-rich-content figure.image-style-side {
+    float: right !important;
+    max-width: 50% !important;
+    margin-left: 1.5em !important;
+    margin-right: 0 !important;
+}
+
+/* Tables: preserve generated figure/table markup in detail views. */
+.ck-content figure.table,
+.moyo-rich-content figure.table {
+    display: table !important;
+    width: auto;
+    max-width: 100% !important;
+    margin-top: 14px !important;
+    margin-bottom: 14px !important;
+    overflow-x: auto !important;
+}
+
+.ck-content figure.table table,
+.moyo-rich-content figure.table table {
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    table-layout: auto !important;
+    border-collapse: collapse !important;
+    margin: 0 !important;
+}
+
+.ck-content figure.table td,
+.ck-content figure.table th,
+.moyo-rich-content figure.table td,
+.moyo-rich-content figure.table th {
+    min-width: 52px !important;
+    height: 34px !important;
+    padding: 6px 10px !important;
+    border: 1px solid #d7e2f0 !important;
+    vertical-align: middle !important;
+}
+
+.ck-content figure.table.table-style-align-left,
+.moyo-rich-content figure.table.table-style-align-left,
+.ck-content figure.table[style*="float: left"],
+.moyo-rich-content figure.table[style*="float: left"] {
+    float: left !important;
+    margin-left: 0 !important;
+    margin-right: 1.5em !important;
+}
+
+.ck-content figure.table.table-style-align-center,
+.moyo-rich-content figure.table.table-style-align-center,
+.ck-content figure.table:not([style*="float"]):not(.table-style-align-left):not(.table-style-align-right),
+.moyo-rich-content figure.table:not([style*="float"]):not(.table-style-align-left):not(.table-style-align-right) {
+    float: none !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+}
+
+.ck-content figure.table.table-style-align-right,
+.moyo-rich-content figure.table.table-style-align-right,
+.ck-content figure.table[style*="float: right"],
+.moyo-rich-content figure.table[style*="float: right"] {
+    float: right !important;
+    margin-left: 1.5em !important;
+    margin-right: 0 !important;
+}
+
+/* Media embeds */
+.ck-content figure.media,
+.moyo-rich-content figure.media {
+    position: relative;
+    width: 100%;
+    max-width: 860px;
+    margin: 20px auto !important;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    border-radius: 12px;
+    background: #000;
+}
+
+.ck-content figure.media iframe,
+.moyo-rich-content figure.media iframe {
+    position: absolute;
+    inset: 0;
+    width: 100% !important;
+    height: 100% !important;
+    border: 0;
+}
+
+/* v2 - beat legacy note/board media rules with page-specific selectors.
+   CKEditor stores resized image width on figure.image, usually as a percentage.
+   The figure owns the width; the img must fill that figure without changing ratio. */
+body.note-page-body .note-editor-canvas .ck-content figure.image,
+body.note-page-body .note-detail-wrap .note-content-box.moyo-rich-content figure.image,
+body.moyo-board-body .write-page .ck-content figure.image,
+body.moyo-board-body .modify-page .ck-content figure.image,
+body.moyo-board-body .board-detail-content.moyo-rich-content figure.image,
+body.moyo-board-body .detail-content.moyo-rich-content figure.image {
+    box-sizing: border-box !important;
+    max-width: 100% !important;
+    height: auto !important;
+}
+
+body.note-page-body .note-editor-canvas .ck-content figure.image[style*="width"],
+body.note-page-body .note-detail-wrap .note-content-box.moyo-rich-content figure.image[style*="width"],
+body.moyo-board-body .write-page .ck-content figure.image[style*="width"],
+body.moyo-board-body .modify-page .ck-content figure.image[style*="width"],
+body.moyo-board-body .board-detail-content.moyo-rich-content figure.image[style*="width"],
+body.moyo-board-body .detail-content.moyo-rich-content figure.image[style*="width"] {
+    display: block !important;
+}
+
+body.note-page-body .note-editor-canvas .ck-content figure.image img,
+body.note-page-body .note-detail-wrap .note-content-box.moyo-rich-content figure.image img,
+body.moyo-board-body .write-page .ck-content figure.image img,
+body.moyo-board-body .modify-page .ck-content figure.image img,
+body.moyo-board-body .board-detail-content.moyo-rich-content figure.image img,
+body.moyo-board-body .detail-content.moyo-rich-content figure.image img {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    max-height: none !important;
+    object-fit: contain !important;
+    aspect-ratio: auto !important;
+}
+
+body.note-page-body .note-editor-canvas .ck-content figure.image:not([style*="width"]),
+body.note-page-body .note-detail-wrap .note-content-box.moyo-rich-content figure.image:not([style*="width"]),
+body.moyo-board-body .write-page .ck-content figure.image:not([style*="width"]),
+body.moyo-board-body .modify-page .ck-content figure.image:not([style*="width"]),
+body.moyo-board-body .board-detail-content.moyo-rich-content figure.image:not([style*="width"]),
+body.moyo-board-body .detail-content.moyo-rich-content figure.image:not([style*="width"]) {
+    display: table !important;
+    width: auto !important;
+}
+
+body.note-page-body .note-editor-canvas .ck-content figure.image:not([style*="width"]) img,
+body.note-page-body .note-detail-wrap .note-content-box.moyo-rich-content figure.image:not([style*="width"]) img,
+body.moyo-board-body .write-page .ck-content figure.image:not([style*="width"]) img,
+body.moyo-board-body .modify-page .ck-content figure.image:not([style*="width"]) img,
+body.moyo-board-body .board-detail-content.moyo-rich-content figure.image:not([style*="width"]) img,
+body.moyo-board-body .detail-content.moyo-rich-content figure.image:not([style*="width"]) img {
+    width: auto !important;
+}
+
+/* Keep saved table markup visible and identical in edit/detail. */
+body.note-page-body .note-editor-canvas .ck-content figure.table,
+body.note-page-body .note-detail-wrap .note-content-box.moyo-rich-content figure.table,
+body.moyo-board-body .write-page .ck-content figure.table,
+body.moyo-board-body .modify-page .ck-content figure.table,
+body.moyo-board-body .board-detail-content.moyo-rich-content figure.table,
+body.moyo-board-body .detail-content.moyo-rich-content figure.table {
+    display: table !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    width: auto !important;
+    max-width: 100% !important;
+}
+
+body.note-page-body .note-editor-canvas .ck-content figure.table table,
+body.note-page-body .note-detail-wrap .note-content-box.moyo-rich-content figure.table table,
+body.moyo-board-body .write-page .ck-content figure.table table,
+body.moyo-board-body .modify-page .ck-content figure.table table,
+body.moyo-board-body .board-detail-content.moyo-rich-content figure.table table,
+body.moyo-board-body .detail-content.moyo-rich-content figure.table table {
+    display: table !important;
+    visibility: visible !important;
+    border-collapse: collapse !important;
+}
+
+/* v3 - edit/detail alignment parity
+   CKEditor output without an explicit alignment class is treated as left-aligned.
+   Only an explicit center/right class is centered/right-aligned. */
+
+/* IMAGE: default + explicit left */
+.ck-content figure.image:not(.image-style-align-center):not(.image-style-block-align-center):not(.image-style-align-right):not(.image-style-block-align-right):not(.image-style-side),
+.moyo-rich-content figure.image:not(.image-style-align-center):not(.image-style-block-align-center):not(.image-style-align-right):not(.image-style-block-align-right):not(.image-style-side),
+.ck-content figure.image.image-style-align-left,
+.ck-content figure.image.image-style-block-align-left,
+.moyo-rich-content figure.image.image-style-align-left,
+.moyo-rich-content figure.image.image-style-block-align-left {
+    float: none !important;
+    margin-left: 0 !important;
+    margin-right: auto !important;
+}
+
+/* IMAGE: explicit center */
+.ck-content figure.image.image-style-align-center,
+.ck-content figure.image.image-style-block-align-center,
+.moyo-rich-content figure.image.image-style-align-center,
+.moyo-rich-content figure.image.image-style-block-align-center {
+    float: none !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+}
+
+/* IMAGE: explicit right */
+.ck-content figure.image.image-style-align-right,
+.ck-content figure.image.image-style-block-align-right,
+.moyo-rich-content figure.image.image-style-align-right,
+.moyo-rich-content figure.image.image-style-block-align-right {
+    float: none !important;
+    margin-left: auto !important;
+    margin-right: 0 !important;
+}
+
+/* TABLE: default + explicit left */
+.ck-content figure.table:not(.table-style-align-center):not(.table-style-align-right):not([style*="float: right"]):not([style*="float:right"]),
+.moyo-rich-content figure.table:not(.table-style-align-center):not(.table-style-align-right):not([style*="float: right"]):not([style*="float:right"]),
+.ck-content figure.table.table-style-align-left,
+.moyo-rich-content figure.table.table-style-align-left,
+.ck-content figure.table[style*="float: left"],
+.ck-content figure.table[style*="float:left"],
+.moyo-rich-content figure.table[style*="float: left"],
+.moyo-rich-content figure.table[style*="float:left"] {
+    float: none !important;
+    margin-left: 0 !important;
+    margin-right: auto !important;
+}
+
+/* TABLE: explicit center */
+.ck-content figure.table.table-style-align-center,
+.moyo-rich-content figure.table.table-style-align-center {
+    float: none !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+}
+
+/* TABLE: explicit right */
+.ck-content figure.table.table-style-align-right,
+.moyo-rich-content figure.table.table-style-align-right,
+.ck-content figure.table[style*="float: right"],
+.ck-content figure.table[style*="float:right"],
+.moyo-rich-content figure.table[style*="float: right"],
+.moyo-rich-content figure.table[style*="float:right"] {
+    float: none !important;
+    margin-left: auto !important;
+    margin-right: 0 !important;
+}
+
+/* ===== Board rich-content final override =====
+   boardUi.css is intentionally loaded first. These rules are the single final
+   authority for saved board content and the board CKEditor canvas. */
+
+/* Images */
+body.moyo-board-body .board-detail-content #boardRichContent figure.image,
+body.moyo-board-body .modify-page .ck-content figure.image,
+body.moyo-board-body .write-page .ck-content figure.image {
+    display: block !important;
+    position: relative !important;
+    box-sizing: border-box !important;
+    max-width: 100% !important;
+    height: auto !important;
+    min-height: 1px !important;
+    overflow: visible !important;
+    margin-top: 14px !important;
+    margin-bottom: 14px !important;
+}
+
+body.moyo-board-body .board-detail-content #boardRichContent figure.image img,
+body.moyo-board-body .modify-page .ck-content figure.image img,
+body.moyo-board-body .write-page .ck-content figure.image img {
+    display: block !important;
+    position: static !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    min-height: 1px !important;
+    max-height: none !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    object-fit: contain !important;
+    aspect-ratio: auto !important;
+}
+
+body.moyo-board-body .board-detail-content #boardRichContent figure.image:not([style*="width"]),
+body.moyo-board-body .modify-page .ck-content figure.image:not([style*="width"]),
+body.moyo-board-body .write-page .ck-content figure.image:not([style*="width"]) {
+    width: fit-content !important;
+}
+
+body.moyo-board-body .board-detail-content #boardRichContent figure.image:not([style*="width"]) img,
+body.moyo-board-body .modify-page .ck-content figure.image:not([style*="width"]) img,
+body.moyo-board-body .write-page .ck-content figure.image:not([style*="width"]) img {
+    width: auto !important;
+}
+
+/* Default image alignment = left */
+body.moyo-board-body .board-detail-content #boardRichContent figure.image:not(.image-style-align-center):not(.image-style-block-align-center):not(.image-style-align-right):not(.image-style-block-align-right):not(.image-style-side),
+body.moyo-board-body .modify-page .ck-content figure.image:not(.image-style-align-center):not(.image-style-block-align-center):not(.image-style-align-right):not(.image-style-block-align-right):not(.image-style-side),
+body.moyo-board-body .write-page .ck-content figure.image:not(.image-style-align-center):not(.image-style-block-align-center):not(.image-style-align-right):not(.image-style-block-align-right):not(.image-style-side) {
+    float: none !important;
+    margin-left: 0 !important;
+    margin-right: auto !important;
+}
+
+body.moyo-board-body .board-detail-content #boardRichContent figure.image.image-style-align-center,
+body.moyo-board-body .board-detail-content #boardRichContent figure.image.image-style-block-align-center,
+body.moyo-board-body .modify-page .ck-content figure.image.image-style-align-center,
+body.moyo-board-body .modify-page .ck-content figure.image.image-style-block-align-center,
+body.moyo-board-body .write-page .ck-content figure.image.image-style-align-center,
+body.moyo-board-body .write-page .ck-content figure.image.image-style-block-align-center {
+    float: none !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+}
+
+body.moyo-board-body .board-detail-content #boardRichContent figure.image.image-style-align-right,
+body.moyo-board-body .board-detail-content #boardRichContent figure.image.image-style-block-align-right,
+body.moyo-board-body .modify-page .ck-content figure.image.image-style-align-right,
+body.moyo-board-body .modify-page .ck-content figure.image.image-style-block-align-right,
+body.moyo-board-body .write-page .ck-content figure.image.image-style-align-right,
+body.moyo-board-body .write-page .ck-content figure.image.image-style-block-align-right {
+    float: none !important;
+    margin-left: auto !important;
+    margin-right: 0 !important;
+}
+
+/* Tables */
+body.moyo-board-body .board-detail-content #boardRichContent figure.table,
+body.moyo-board-body .modify-page .ck-content figure.table,
+body.moyo-board-body .write-page .ck-content figure.table {
+    display: table !important;
+    width: auto !important;
+    max-width: 100% !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    overflow-x: auto !important;
+    margin-top: 14px !important;
+    margin-bottom: 14px !important;
+}
+
+/* CKEditor stores the normal/default table without an alignment class.
+   In MOYO board pages that default is left, matching the initial editor view. */
+body.moyo-board-body .board-detail-content #boardRichContent figure.table:not(.table-style-align-center):not(.table-style-align-right):not([style*="float: right"]):not([style*="float:right"]),
+body.moyo-board-body .modify-page .ck-content figure.table:not(.table-style-align-center):not(.table-style-align-right):not([style*="float: right"]):not([style*="float:right"]),
+body.moyo-board-body .write-page .ck-content figure.table:not(.table-style-align-center):not(.table-style-align-right):not([style*="float: right"]):not([style*="float:right"]) {
+    float: none !important;
+    margin-left: 0 !important;
+    margin-right: auto !important;
+}
+
+body.moyo-board-body .board-detail-content #boardRichContent figure.table.table-style-align-center,
+body.moyo-board-body .modify-page .ck-content figure.table.table-style-align-center,
+body.moyo-board-body .write-page .ck-content figure.table.table-style-align-center {
+    float: none !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+}
+
+body.moyo-board-body .board-detail-content #boardRichContent figure.table.table-style-align-right,
+body.moyo-board-body .modify-page .ck-content figure.table.table-style-align-right,
+body.moyo-board-body .write-page .ck-content figure.table.table-style-align-right,
+body.moyo-board-body .board-detail-content #boardRichContent figure.table[style*="float: right"],
+body.moyo-board-body .modify-page .ck-content figure.table[style*="float: right"],
+body.moyo-board-body .write-page .ck-content figure.table[style*="float: right"] {
+    float: none !important;
+    margin-left: auto !important;
+    margin-right: 0 !important;
+}
+
+body.moyo-board-body .board-detail-content #boardRichContent figure.table table,
+body.moyo-board-body .modify-page .ck-content figure.table table,
+body.moyo-board-body .write-page .ck-content figure.table table {
+    display: table !important;
+    width: auto !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    border-collapse: collapse !important;
+}
+
+body.moyo-board-body .board-detail-content #boardRichContent figure.table td,
+body.moyo-board-body .board-detail-content #boardRichContent figure.table th,
+body.moyo-board-body .modify-page .ck-content figure.table td,
+body.moyo-board-body .modify-page .ck-content figure.table th,
+body.moyo-board-body .write-page .ck-content figure.table td,
+body.moyo-board-body .write-page .ck-content figure.table th {
+    min-width: 52px !important;
+    height: 34px !important;
+    padding: 6px 10px !important;
+    border: 1px solid #d7e2f0 !important;
+    vertical-align: middle !important;
+}
+/* ===== End board rich-content final override ===== */
+

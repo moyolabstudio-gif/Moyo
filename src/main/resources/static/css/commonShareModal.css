@@ -1,0 +1,654 @@
+/* =========================================================
+   MOYO Note Share / Permission Modal
+   - 공유: 보기 범위(USER/WS/PROJ)
+   - 권한: 공유 대상에 속한 사용자 중 편집자 지정
+   - 과거 멤버별 공유/중복 표시용 스타일 제거
+   ========================================================= */
+
+:root {
+    --moyo-blue: #4f7cff;
+    --moyo-blue-soft: #eef4ff;
+    --moyo-mint: #66d7c7;
+    --moyo-mint-soft: #eafffb;
+    --moyo-purple: #7d6bff;
+    --moyo-purple-soft: #f2efff;
+    --moyo-border: #dbe5f4;
+    --moyo-line: #edf2f7;
+    --moyo-text: #1f2937;
+    --moyo-muted: #98a2b3;
+    --moyo-panel: #f8fafc;
+}
+
+.note-template-dialog[hidden],
+.note-write-share-modal[hidden],
+.content-share-modal[hidden] {
+    display: none !important;
+}
+
+.note-template-dialog,
+.note-write-share-modal,
+.content-share-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 1200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 18px;
+    background: rgba(15, 23, 42, .36);
+}
+
+.note-template-dialog-backdrop,
+.note-write-share-backdrop {
+    position: absolute;
+    inset: 0;
+}
+
+.note-template-dialog-panel,
+.note-write-share-panel,
+.content-share-dialog {
+    position: relative;
+    width: min(620px, calc(100vw - 32px));
+    max-height: min(92vh, 760px);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    background: #fff;
+    border: 1px solid var(--moyo-border);
+    border-radius: 20px;
+    box-shadow: 0 26px 72px rgba(15, 23, 42, .22);
+    color: var(--moyo-text);
+}
+
+.note-template-dialog-head,
+.note-write-share-modal-head,
+.content-share-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 18px 20px;
+    border-bottom: 1px solid var(--moyo-line);
+}
+
+.note-template-dialog-head h3,
+.note-write-share-modal-head h3,
+.content-share-head h2,
+.content-share-head h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 800;
+    color: #142033;
+}
+
+.note-write-share-modal-head p,
+.content-share-head p {
+    display: none;
+}
+
+.note-template-dialog-close,
+.note-write-share-close,
+.content-share-close {
+    border: 0;
+    background: transparent;
+    color: #667085;
+    font-size: 22px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.note-write-share-tabs,
+.content-share-tabs {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 20px 0;
+}
+
+.note-write-share-tab,
+.content-share-tabs button {
+    height: 32px;
+    padding: 0 14px;
+    border: 1px solid var(--moyo-border);
+    border-radius: 999px;
+    background: #fff;
+    color: #64748b;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.note-write-share-tab.is-active,
+.content-share-tabs button.is-active,
+.content-share-tabs button.active {
+    border-color: #a8c2ff;
+    background: var(--moyo-blue-soft);
+    color: var(--moyo-blue);
+}
+
+.note-write-share-toolbar,
+.content-share-toolbar {
+    display: flex;
+    gap: 8px;
+    padding: 12px 20px 0;
+}
+
+.note-write-share-input,
+.note-write-share-select,
+.content-share-search-wrap input,
+#contentSharePermission {
+    width: 100%;
+    height: 36px;
+    border: 1px solid var(--moyo-border);
+    border-radius: 12px;
+    padding: 0 12px;
+    background: #fff;
+    color: var(--moyo-text);
+    font-size: 13px;
+    outline: none;
+}
+
+.note-write-share-input:focus,
+.content-share-search-wrap input:focus {
+    border-color: var(--moyo-blue);
+    box-shadow: 0 0 0 3px rgba(79, 124, 255, .12);
+}
+
+.note-write-share-body {
+    padding: 14px 20px 0;
+    overflow: visible;
+}
+
+.note-write-share-subtitle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 8px;
+    color: #27364b;
+    font-size: 13px;
+    font-weight: 800;
+}
+
+.note-share-modal-count,
+.note-share-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 6px;
+    border-radius: 999px;
+    background: var(--moyo-blue);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 800;
+}
+
+.note-share-modal-count {
+    min-width: 0;
+    height: auto;
+    padding: 0;
+    background: transparent;
+    color: var(--moyo-blue);
+    font-size: 13px;
+}
+
+.note-write-share-list,
+.note-write-share-selected,
+.content-share-picker,
+.content-share-current {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-height: 116px;
+    max-height: 220px;
+    overflow-y: auto;
+    padding: 10px;
+    border: 1px solid var(--moyo-border);
+    border-radius: 14px;
+    background: var(--moyo-panel);
+}
+
+.note-write-share-selected,
+.content-share-current {
+    min-height: 86px;
+    max-height: 170px;
+}
+
+.note-write-share-picked-wrap {
+    padding: 16px 20px 0;
+}
+
+.note-write-share-picked-wrap .note-write-share-subtitle {
+    margin-bottom: 10px;
+}
+
+.note-write-share-empty {
+    display: flex;
+    align-items: center;
+    min-height: 72px;
+    padding: 16px 18px;
+    border-radius: 13px;
+    background: #fff;
+    color: var(--moyo-muted);
+    font-size: 13px;
+}
+
+.note-write-share-empty-compact {
+    min-height: 44px;
+}
+
+.note-write-share-picked-list,
+.note-share-permission-member-list,
+.note-share-selected-list-view {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.note-share-target-block {
+    width: 100%;
+}
+
+.note-write-share-card,
+.content-share-target,
+.content-share-current-item {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    min-height: 54px;
+    padding: 9px 10px;
+    border: 1px solid #e2e8f0;
+    border-radius: 13px;
+    background: #fff;
+    color: var(--moyo-text);
+    text-align: left;
+}
+
+.note-write-share-card[role="button"],
+.content-share-target {
+    cursor: pointer;
+}
+
+.note-write-share-card:hover,
+.content-share-target:hover {
+    border-color: #bfd0ff;
+    background: #fbfdff;
+}
+
+.note-write-share-card.is-added,
+.note-share-selected-user .note-write-share-card {
+    border-color: #bcd0ff;
+    background: #eef4ff;
+}
+
+.note-share-type-ws .note-write-share-card,
+.note-write-share-card.note-share-type-ws {
+    border-color: #9ee9dc;
+    background: var(--moyo-mint-soft);
+}
+
+.note-share-type-proj .note-write-share-card,
+.note-write-share-card.note-share-type-proj {
+    border-color: #d4c9ff;
+    background: var(--moyo-purple-soft);
+}
+
+.note-write-share-main,
+.content-share-target-text,
+.content-share-current-copy {
+    display: flex;
+    min-width: 0;
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.note-write-share-main strong,
+.content-share-target-text strong,
+.content-share-current-copy strong {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    font-size: 13px;
+    font-weight: 800;
+    color: #142033;
+}
+
+.note-write-share-main small,
+.content-share-target-text small,
+.content-share-current-copy small {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    font-size: 11px;
+    color: var(--moyo-muted);
+}
+
+.note-write-share-avatar,
+.note-share-avatar,
+.content-share-avatar {
+    position: relative;
+    flex: 0 0 36px;
+    width: 36px;
+    height: 36px;
+    overflow: hidden;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #56d9c7, #59a7ff);
+    color: #fff;
+    font-size: 14px;
+    font-weight: 900;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.55);
+}
+
+.note-write-share-avatar img,
+.note-share-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.note-share-avatar.note-share-type-user { background: linear-gradient(135deg, #38bdf8, #4f7cff); }
+.note-share-avatar.note-share-type-ws { background: linear-gradient(135deg, #60dbc8, #40bfb0); }
+.note-share-avatar.note-share-type-proj { background: linear-gradient(135deg, #8b7cff, #6d8cff); }
+
+.note-share-candidate-actions,
+.note-share-selected-actions {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.note-share-selected-actions .note-share-remove {
+    margin-left: 2px;
+}
+
+.note-share-member-only-badge,
+.note-share-readonly-permission,
+.content-share-add {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    height: 28px;
+    padding: 0 12px;
+    border: 0;
+    border-radius: 999px;
+    background: #f8fafc;
+    color: #344054;
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.note-write-share-check {
+    flex: 0 0 22px;
+    width: 22px;
+    height: 22px;
+    border: 1px solid #cbdaf0;
+    border-radius: 50%;
+    background: #fff;
+}
+
+.note-write-share-card.is-added .note-write-share-check::after {
+    content: '✓';
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: var(--moyo-blue);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 900;
+}
+
+.note-share-remove,
+.note-share-permission-add-btn {
+    flex: 0 0 auto;
+    border: 0;
+    border-radius: 999px;
+    background: #f8fafc;
+    color: #344054;
+    font-size: 12px;
+    font-weight: 800;
+    white-space: nowrap;
+    text-align: center;
+    cursor: pointer;
+}
+
+.note-share-remove {
+    min-width: 28px;
+    height: 28px;
+    padding: 0 9px;
+    color: #94a3b8;
+}
+
+.note-share-remove-text,
+.note-share-permission-add-btn {
+    min-width: 58px;
+    height: 30px;
+    padding: 0 14px;
+}
+
+.note-share-permission-add-btn {
+    color: var(--moyo-blue);
+    background: #f4f8ff;
+}
+
+.note-share-remove-text {
+    color: #475569;
+    background: #f8fafc;
+}
+
+.note-share-remove:hover,
+.note-share-permission-add-btn:hover {
+    filter: brightness(.98);
+}
+
+.note-share-permission-member-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    min-height: 52px;
+    padding: 9px 10px;
+    border: 1px solid #e2e8f0;
+    border-radius: 13px;
+    background: #fff;
+}
+
+.note-share-permission-member-row.is-editor {
+    border-color: #bcd0ff;
+    background: #eef4ff;
+}
+
+.note-share-permission-member-main {
+    min-width: 0;
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.note-share-permission-member-main strong {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    font-size: 13px;
+    font-weight: 800;
+    color: #142033;
+}
+
+.note-share-source-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.note-share-source-tag {
+    display: inline-flex;
+    align-items: center;
+    max-width: 126px;
+    height: 18px;
+    padding: 0 7px;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    font-size: 10px;
+    line-height: 18px;
+    font-weight: 800;
+}
+
+.note-share-source-tag-user {
+    border-color: #b9d7ff;
+    background: #eef6ff;
+    color: #2563eb;
+}
+
+.note-share-source-tag-ws {
+    border-color: #9ee9dc;
+    background: var(--moyo-mint-soft);
+    color: #0f9f8f;
+}
+
+.note-share-source-tag-proj {
+    border-color: #d4c9ff;
+    background: var(--moyo-purple-soft);
+    color: #6d4aff;
+}
+
+.note-write-share-default-permission {
+    margin: 10px 20px 0;
+    padding: 8px 10px;
+    border-radius: 12px;
+    background: #f8fafc;
+    color: #64748b;
+    font-size: 12px;
+}
+
+.note-write-share-default-permission strong {
+    color: var(--moyo-blue);
+}
+
+.note-write-share-modal-actions,
+.note-template-dialog-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 14px;
+    padding: 14px 20px 18px;
+    border-top: 1px solid var(--moyo-line);
+}
+
+.note-write-share-modal-actions .btn,
+.note-template-dialog-actions .btn {
+    min-width: 58px;
+    height: 38px;
+    border-radius: 12px;
+    font-weight: 800;
+}
+
+.note-write-share-modal-actions .btn-primary {
+    border: 0;
+    background: linear-gradient(135deg, #5e8cff, #6c5cff);
+    color: #fff;
+}
+
+.note-meta-permission {
+    margin-left: 6px;
+}
+
+/* 간단 공유(contentShare.js) 호환 */
+.content-share-body {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    padding: 14px 20px 0;
+}
+
+.content-share-picker,
+.content-share-current {
+    min-height: 220px;
+}
+
+.content-share-help {
+    margin: 10px 20px 0;
+    color: var(--moyo-muted);
+    font-size: 12px;
+}
+
+.content-share-current-permission,
+#contentSharePermission {
+    height: 30px;
+    border: 1px solid var(--moyo-border);
+    border-radius: 999px;
+    padding: 0 10px;
+    background: #fff;
+    font-size: 12px;
+}
+
+.content-share-loading,
+.content-share-empty {
+    padding: 14px;
+    color: var(--moyo-muted);
+    font-size: 13px;
+}
+
+/* 템플릿 저장 모달 호환 */
+.note-template-dialog-panel p,
+.note-template-dialog-panel label {
+    display: block;
+    margin: 16px 20px 8px;
+    color: #667085;
+    font-size: 13px;
+}
+
+.note-template-dialog-panel input {
+    width: calc(100% - 40px);
+    height: 40px;
+    margin: 0 20px 18px;
+    border: 1px solid var(--moyo-border);
+    border-radius: 12px;
+    padding: 0 12px;
+}
+
+
+/* final polish: selected action spacing + permission action no-wrap */
+.note-share-permission-member-row .note-share-remove-text,
+.note-share-permission-member-row .note-share-permission-add-btn {
+    min-width: 58px;
+    white-space: nowrap;
+}
+
+.note-write-share-selected .note-share-selected-actions {
+    margin-left: 4px;
+}
+
+@media (max-width: 640px) {
+    .note-write-share-panel,
+    .content-share-dialog,
+    .note-template-dialog-panel {
+        width: calc(100vw - 20px);
+        max-height: 94vh;
+        border-radius: 18px;
+    }
+
+    .note-write-share-list,
+    .note-write-share-selected {
+        max-height: 190px;
+    }
+
+    .content-share-body {
+        grid-template-columns: 1fr;
+    }
+}

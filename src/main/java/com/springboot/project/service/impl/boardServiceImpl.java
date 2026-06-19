@@ -29,7 +29,6 @@ public class boardServiceImpl implements IboardService {
     private static final Pattern EVENT_ATTRIBUTE_PATTERN = Pattern.compile("(?i)\\s+on[a-z0-9_-]+\\s*=\\s*(\"[^\"]*\"|'[^']*'|[^\\s>]+)");
     private static final Pattern STYLE_ATTRIBUTE_PATTERN = Pattern.compile("(?i)\\s+style\\s*=\\s*(\"[^\"]*\"|'[^']*'|[^\\s>]+)");
     private static final Pattern JAVASCRIPT_URL_PATTERN = Pattern.compile("(?i)(href|src)\\s*=\\s*(\"|')?\\s*javascript:[^\"'\\s>]*(\"|')?");
-    private static final Pattern BASE64_IMAGE_PATTERN = Pattern.compile("(?i)src\\s*=\\s*(\"|')\\s*data:image/[^\"']*(\"|')");
 
     private String stripStyleQuotes(String value) {
         if (value == null) return "";
@@ -89,7 +88,6 @@ public class boardServiceImpl implements IboardService {
         clean = EVENT_ATTRIBUTE_PATTERN.matcher(clean).replaceAll("");
         clean = sanitizeStyleAttributes(clean);
         clean = JAVASCRIPT_URL_PATTERN.matcher(clean).replaceAll("$1=\"#\"");
-        clean = BASE64_IMAGE_PATTERN.matcher(clean).replaceAll("src=\"\"");
         clean = clean.replaceAll("(?i)<\\s*a([^>]*)target\\s*=\\s*(\"[^\"]*\"|'[^']*'|[^\\s>]+)", "<a$1");
         clean = clean.replaceAll("(?i)<\\s*a([^>]*)>", "<a$1 target=\"_blank\" rel=\"noopener noreferrer\">");
         return clean.trim();

@@ -8,17 +8,17 @@ import java.util.List;
 
 public interface InoteService {
 
-    List<noteDTO> getNoteList(Long wsId, Long projId, Long userId);
+    List<noteDTO> getNoteList(String scopeType, Long wsId, Long projId, Long userId, String keyword);
 
-    List<noteDTO> getMainNoteList(Long wsId, Long projId, Long userId, int limit);
+    List<noteDTO> getMainNoteList(String scopeType, Long wsId, Long projId, Long userId, int limit);
 
-    boolean pinNote(Long userId, Long projId, Long noteId);
+    boolean pinNote(Long userId, Long noteId);
 
-    boolean unpinNote(Long userId, Long projId, Long noteId);
+    boolean unpinNote(Long userId, Long noteId);
 
     boolean canDeleteNote(Long noteId, Long userId);
 
-    noteDTO getNoteDetail(Long noteId);
+    noteDTO getNoteDetail(Long noteId, Long userId);
 
     boolean registerNote(noteDTO note);
 
@@ -42,6 +42,7 @@ public interface InoteService {
 
     boolean registerNoteReply(noteReplyDTO reply);
 
+    boolean modifyNoteReply(noteReplyDTO reply);
+
     boolean removeNoteReply(Long replyId, Long userId);
 }
-

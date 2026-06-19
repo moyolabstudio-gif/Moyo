@@ -71,6 +71,23 @@ public class noteFileDTO {
         this.fileExt = fileExt;
     }
 
+
+    public boolean isImageFile() {
+        String ext = fileExt;
+        if ((ext == null || ext.isBlank()) && originFileName != null) {
+            int dot = originFileName.lastIndexOf('.');
+            if (dot >= 0 && dot < originFileName.length() - 1) {
+                ext = originFileName.substring(dot + 1);
+            }
+        }
+        if (ext == null) return false;
+        String normalized = ext.trim().toLowerCase();
+        if (normalized.startsWith(".")) normalized = normalized.substring(1);
+        return normalized.equals("jpg") || normalized.equals("jpeg")
+                || normalized.equals("png") || normalized.equals("gif")
+                || normalized.equals("webp") || normalized.equals("bmp");
+    }
+
     public Date getRegDt() {
         return regDt;
     }

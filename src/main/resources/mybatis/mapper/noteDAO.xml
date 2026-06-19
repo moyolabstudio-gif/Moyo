@@ -5,12 +5,9 @@
 
 <mapper namespace="com.springboot.project.dao.InoteDAO">
 
-    <!-- =========================
-         ResultMap
-    ========================== -->
-
     <resultMap id="noteResultMap" type="com.springboot.project.dto.noteDTO">
         <id property="noteId" column="NOTE_ID"/>
+        <result property="scopeType" column="SCOPE_TYPE"/>
         <result property="wsId" column="WS_ID"/>
         <result property="projId" column="PROJ_ID"/>
         <result property="userId" column="USER_ID"/>
@@ -20,11 +17,26 @@
         <result property="issueContent" column="ISSUE_CONTENT"/>
         <result property="changeLog" column="CHANGE_LOG"/>
         <result property="memo" column="MEMO"/>
+        <result property="category" column="CATEGORY"/>
+        <result property="icon" column="ICON"/>
+        <result property="folderId" column="FOLDER_ID"/>
+        <result property="folderName" column="FOLDER_NAME"/>
+        <result property="folderPath" column="FOLDER_PATH"/>
+        <result property="workspaceName" column="WS_NAME"/>
+        <result property="projectName" column="PROJ_NAME"/>
+        <result property="shareScopeTypes" column="SHARE_SCOPE_TYPES"/>
+        <result property="shareScopeNames" column="SHARE_SCOPE_NAMES"/>
         <result property="regDt" column="REG_DT"/>
         <result property="updDt" column="UPD_DT"/>
         <result property="userName" column="USER_NAME"/>
         <result property="pinned" column="PINNED" javaType="boolean"/>
         <result property="pinOrder" column="PIN_ORDER"/>
+        <result property="canManage" column="CAN_MANAGE" javaType="boolean"/>
+        <result property="canEdit" column="CAN_EDIT" javaType="boolean"/>
+        <result property="canManageSpace" column="CAN_MANAGE_SPACE" javaType="boolean"/>
+        <result property="attachmentCount" column="ATTACHMENT_COUNT"/>
+        <result property="firstAttachmentName" column="FIRST_ATTACHMENT_NAME"/>
+        <result property="previewImageFileId" column="PREVIEW_IMAGE_FILE_ID"/>
     </resultMap>
 
     <resultMap id="noteFileResultMap" type="com.springboot.project.dto.noteFileDTO">
@@ -48,65 +60,277 @@
         <result property="userName" column="USER_NAME"/>
     </resultMap>
 
+    <sql id="noteReadableScope">
+        (
+            (n.SCOPE_TYPE = 'PRIVATE' AND n.USER_ID = #{userId, jdbcType=NUMERIC})
+            OR
+            (n.SCOPE_TYPE = 'WS' AND EXISTS (
+                SELECT 1 FROM WS_MEMBERS wm
+                WHERE wm.WS_ID = n.WS_ID AND wm.USER_ID = #{userId, jdbcType=NUMERIC}
+            ))
+            OR
+            (n.SCOPE_TYPE = 'PROJ' AND EXISTS (
+                SELECT 1 FROM PROJ_MEMBERS pm
+                WHERE pm.PROJ_ID = n.PROJ_ID AND pm.USER_ID = #{userId, jdbcType=NUMERIC}
+            ))
+            OR
+            EXISTS (
+                SELECT 1
+                FROM CONTENT_SHARES cs
+                WHERE cs.CONTENT_TYPE = 'NOTE'
+                  AND cs.CONTENT_ID = n.NOTE_ID
+                  AND cs.ACTIVE_YN = 'Y'
+                  AND (cs.EXPIRES_AT IS NULL OR cs.EXPIRES_AT >= SYSDATE)
+                  AND (
+                      (cs.TARGET_TYPE = 'USER' AND cs.TARGET_ID = #{userId, jdbcType=NUMERIC})
+                      OR (cs.TARGET_TYPE = 'WS' AND EXISTS (
+                          SELECT 1 FROM WS_MEMBERS swm
+                          WHERE swm.WS_ID = cs.TARGET_ID AND swm.USER_ID = #{userId, jdbcType=NUMERIC}
+                      ))
+                      OR (cs.TARGET_TYPE = 'PROJ' AND EXISTS (
+                          SELECT 1 FROM PROJ_MEMBERS spm
+                          WHERE spm.PROJ_ID = cs.TARGET_ID AND spm.USER_ID = #{userId, jdbcType=NUMERIC}
+                      ))
+                  )
+            )
+        )
+    </sql>
 
-    <!-- =========================
-         Note
-    ========================== -->
+    <!-- 목록/위젯용 기본 접근 범위: 공유받은 노트는 기존 scope/folder 목록에 섞지 않습니다. -->
+    <sql id="noteBaseReadableScope">
+        (
+            (n.SCOPE_TYPE = 'PRIVATE' AND n.USER_ID = #{userId, jdbcType=NUMERIC})
+            OR
+            (n.SCOPE_TYPE = 'WS' AND EXISTS (
+                SELECT 1 FROM WS_MEMBERS wm
+                WHERE wm.WS_ID = n.WS_ID AND wm.USER_ID = #{userId, jdbcType=NUMERIC}
+            ))
+            OR
+            (n.SCOPE_TYPE = 'PROJ' AND EXISTS (
+                SELECT 1 FROM PROJ_MEMBERS pm
+                WHERE pm.PROJ_ID = n.PROJ_ID AND pm.USER_ID = #{userId, jdbcType=NUMERIC}
+            ))
+        )
+    </sql>
 
-    <!-- 프로젝트 노트 목록: 로그인 사용자 기준 고정 여부 포함 -->
+    <sql id="selectedNoteScope">
+        <choose>
+            <!-- 개인 노트 홈: 내 개인 노트 + 친구/사용자에게 직접 공유받은 노트만 표시 -->
+            <when test="scopeType == 'PRIVATE'">
+                AND (
+                    (n.SCOPE_TYPE = 'PRIVATE' AND n.USER_ID = #{userId, jdbcType=NUMERIC})
+                    OR EXISTS (
+                        SELECT 1
+                        FROM CONTENT_SHARES cs_user_scope
+                        WHERE cs_user_scope.CONTENT_TYPE = 'NOTE'
+                          AND cs_user_scope.CONTENT_ID = n.NOTE_ID
+                          AND cs_user_scope.TARGET_TYPE = 'USER'
+                          AND cs_user_scope.TARGET_ID = #{userId, jdbcType=NUMERIC}
+                          AND cs_user_scope.ACTIVE_YN = 'Y'
+                          AND (cs_user_scope.EXPIRES_AT IS NULL OR cs_user_scope.EXPIRES_AT >= SYSDATE)
+                    )
+                )
+            </when>
+            <!-- 워크스페이스 노트: 해당 워크스페이스로 공유된 노트만 표시 -->
+            <when test="scopeType == 'WS'">
+                AND EXISTS (
+                    SELECT 1
+                    FROM CONTENT_SHARES cs_ws_scope
+                    WHERE cs_ws_scope.CONTENT_TYPE = 'NOTE'
+                      AND cs_ws_scope.CONTENT_ID = n.NOTE_ID
+                      AND cs_ws_scope.TARGET_TYPE = 'WS'
+                      AND cs_ws_scope.TARGET_ID = #{wsId, jdbcType=NUMERIC}
+                      AND cs_ws_scope.ACTIVE_YN = 'Y'
+                      AND (cs_ws_scope.EXPIRES_AT IS NULL OR cs_ws_scope.EXPIRES_AT >= SYSDATE)
+                )
+            </when>
+            <!-- 프로젝트 노트: 해당 프로젝트로 공유된 노트만 표시 -->
+            <when test="scopeType == 'PROJ'">
+                AND EXISTS (
+                    SELECT 1
+                    FROM CONTENT_SHARES cs_proj_scope
+                    WHERE cs_proj_scope.CONTENT_TYPE = 'NOTE'
+                      AND cs_proj_scope.CONTENT_ID = n.NOTE_ID
+                      AND cs_proj_scope.TARGET_TYPE = 'PROJ'
+                      AND cs_proj_scope.TARGET_ID = #{projId, jdbcType=NUMERIC}
+                      AND cs_proj_scope.ACTIVE_YN = 'Y'
+                      AND (cs_proj_scope.EXPIRES_AT IS NULL OR cs_proj_scope.EXPIRES_AT >= SYSDATE)
+                )
+            </when>
+            <otherwise></otherwise>
+        </choose>
+    </sql>
+
     <select id="selectNoteList" parameterType="map" resultMap="noteResultMap">
-        SELECT
-            n.NOTE_ID, n.WS_ID, n.PROJ_ID, n.USER_ID, n.NOTE_TITLE,
-            n.DONE_CONTENT, n.NEXT_CONTENT, n.ISSUE_CONTENT, n.CHANGE_LOG, n.MEMO,
-            n.REG_DT, n.UPD_DT, u.USER_NAME,
-            CASE WHEN p.NOTE_ID IS NULL THEN 0 ELSE 1 END AS PINNED,
-            p.PIN_ORDER
-        FROM NOTES n
-        JOIN USERS u ON n.USER_ID = u.USER_ID
-        LEFT JOIN NOTE_PINS p
-          ON p.NOTE_ID = n.NOTE_ID
-         AND p.PROJ_ID = n.PROJ_ID
-         AND p.USER_ID = #{userId, jdbcType=NUMERIC}
-        WHERE n.WS_ID = #{wsId, jdbcType=NUMERIC}
-          AND n.PROJ_ID = #{projId, jdbcType=NUMERIC}
-        ORDER BY
-            CASE WHEN n.USER_ID = #{userId, jdbcType=NUMERIC} THEN 0 ELSE 1 END,
-            u.USER_NAME ASC,
-            CASE WHEN p.NOTE_ID IS NULL THEN 1 ELSE 0 END,
-            p.PIN_ORDER ASC,
-            n.REG_DT DESC,
-            n.NOTE_ID DESC
+        SELECT *
+        FROM (
+            SELECT ordered_notes.*, ROWNUM AS RN
+            FROM (
+                SELECT
+                    n.NOTE_ID,
+                    n.SCOPE_TYPE,
+                    n.WS_ID,
+                    n.PROJ_ID,
+                    n.USER_ID,
+                    n.NOTE_TITLE,
+                    CAST(NULL AS VARCHAR2(1)) AS DONE_CONTENT,
+                    CAST(NULL AS VARCHAR2(1)) AS NEXT_CONTENT,
+                    CAST(NULL AS VARCHAR2(1)) AS ISSUE_CONTENT,
+                    CAST(NULL AS VARCHAR2(1)) AS CHANGE_LOG,
+                    CAST(NULL AS VARCHAR2(1)) AS MEMO,
+                    n.CATEGORY,
+                    n.ICON,
+                    n.FOLDER_ID,
+                    NULL AS FOLDER_NAME,
+                    NULL AS FOLDER_PATH,
+                    nw.WS_NAME,
+                    np.PROJ_NAME,
+                    CASE
+                        WHEN n.SCOPE_TYPE = 'PRIVATE' THEN 'PRIVATE'
+                        WHEN n.SCOPE_TYPE = 'WS' THEN 'WS'
+                        WHEN n.SCOPE_TYPE = 'PROJ' THEN 'PROJ'
+                        ELSE n.SCOPE_TYPE
+                    END AS SHARE_SCOPE_TYPES,
+                    CASE
+                        WHEN n.SCOPE_TYPE = 'PRIVATE' THEN '개인'
+                        WHEN n.SCOPE_TYPE = 'WS' THEN NVL(nw.WS_NAME, '워크스페이스')
+                        WHEN n.SCOPE_TYPE = 'PROJ' THEN NVL(np.PROJ_NAME, '프로젝트')
+                        ELSE n.SCOPE_TYPE
+                    END AS SHARE_SCOPE_NAMES,
+                    n.REG_DT,
+                    n.UPD_DT,
+                    u.USER_NAME,
+                    0 AS ATTACHMENT_COUNT,
+                    NULL AS FIRST_ATTACHMENT_NAME,
+                    NULL AS PREVIEW_IMAGE_FILE_ID,
+                    0 AS PINNED,
+                    NULL AS PIN_ORDER,
+                    CASE
+                        WHEN n.USER_ID = #{userId, jdbcType=NUMERIC} THEN 1
+                        WHEN n.SCOPE_TYPE = 'WS'
+                             AND (nw.OWNER_ID = #{userId, jdbcType=NUMERIC}
+                                  OR UPPER(NVL(wm_role.WS_ROLE, 'MEMBER')) = 'ADMIN') THEN 1
+                        WHEN n.SCOPE_TYPE = 'PROJ'
+                             AND (np.LEADER_ID = #{userId, jdbcType=NUMERIC}
+                                  OR UPPER(NVL(pm_role.PROJ_ROLE, 'MEMBER')) = 'ADMIN') THEN 1
+                        ELSE 0
+                    END AS CAN_MANAGE,
+                    CASE
+                        WHEN n.USER_ID = #{userId, jdbcType=NUMERIC} THEN 1
+                        WHEN EXISTS (
+                            SELECT 1
+                            FROM CONTENT_SHARES cs_edit
+                            WHERE cs_edit.CONTENT_TYPE = 'NOTE'
+                              AND cs_edit.CONTENT_ID = n.NOTE_ID
+                              AND cs_edit.ACTIVE_YN = 'Y'
+                              AND cs_edit.PERMISSION_TYPE = 'EDIT'
+                              AND cs_edit.TARGET_TYPE = 'USER'
+                              AND cs_edit.TARGET_ID = #{userId, jdbcType=NUMERIC}
+                              AND (cs_edit.EXPIRES_AT IS NULL OR cs_edit.EXPIRES_AT >= SYSDATE)
+                        ) THEN 1
+                        ELSE 0
+                    END AS CAN_EDIT,
+                    CASE
+                        WHEN n.SCOPE_TYPE = 'PRIVATE' AND n.USER_ID = #{userId, jdbcType=NUMERIC} THEN 1
+                        WHEN n.SCOPE_TYPE = 'WS'
+                             AND (nw.OWNER_ID = #{userId, jdbcType=NUMERIC}
+                                  OR UPPER(NVL(wm_role.WS_ROLE, 'MEMBER')) = 'ADMIN') THEN 1
+                        WHEN n.SCOPE_TYPE = 'PROJ'
+                             AND (np.LEADER_ID = #{userId, jdbcType=NUMERIC}
+                                  OR UPPER(NVL(pm_role.PROJ_ROLE, 'MEMBER')) = 'ADMIN') THEN 1
+                        ELSE 0
+                    END AS CAN_MANAGE_SPACE
+                FROM NOTES n
+                JOIN USERS u ON u.USER_ID = n.USER_ID
+                LEFT JOIN WORKSPACES nw ON nw.WS_ID = n.WS_ID
+                LEFT JOIN PROJECTS np ON np.PROJ_ID = n.PROJ_ID
+                LEFT JOIN WS_MEMBERS wm_role
+                  ON wm_role.WS_ID = n.WS_ID
+                 AND wm_role.USER_ID = #{userId, jdbcType=NUMERIC}
+                LEFT JOIN PROJ_MEMBERS pm_role
+                  ON pm_role.PROJ_ID = n.PROJ_ID
+                 AND pm_role.USER_ID = #{userId, jdbcType=NUMERIC}
+                WHERE <include refid="noteReadableScope"/>
+                  <include refid="selectedNoteScope"/>
+                <if test="keyword != null and keyword != ''">
+                  AND UPPER(n.NOTE_TITLE) LIKE '%' || UPPER(#{keyword, jdbcType=VARCHAR}) || '%'
+                </if>
+                ORDER BY
+                    NVL(n.UPD_DT, n.REG_DT) DESC,
+                    n.NOTE_ID DESC
+            ) ordered_notes
+            WHERE ROWNUM <![CDATA[<=]]> 50
+        )
     </select>
 
-    <!--
-      메인 위젯 규칙
-      1) 로그인 사용자가 고정한 노트가 하나라도 있으면 고정 노트만 최대 3개
-      2) 고정한 노트가 없으면 최신 노트 최대 3개
-    -->
     <select id="selectMainNoteList" parameterType="map" resultMap="noteResultMap">
         SELECT *
         FROM (
             SELECT
-                n.NOTE_ID, n.WS_ID, n.PROJ_ID, n.USER_ID, n.NOTE_TITLE,
-                n.DONE_CONTENT, n.NEXT_CONTENT, n.ISSUE_CONTENT, n.CHANGE_LOG, n.MEMO,
+                n.NOTE_ID, n.SCOPE_TYPE, n.WS_ID, n.PROJ_ID, n.USER_ID, n.NOTE_TITLE,
+                n.DONE_CONTENT, n.NEXT_CONTENT, n.ISSUE_CONTENT, n.CHANGE_LOG, n.MEMO, n.CATEGORY, n.ICON, n.FOLDER_ID, nf.FOLDER_NAME, nf.FOLDER_NAME AS FOLDER_PATH, nw.WS_NAME, np.PROJ_NAME,
+                NULL AS SHARE_SCOPE_TYPES, NULL AS SHARE_SCOPE_NAMES,
                 n.REG_DT, n.UPD_DT, u.USER_NAME,
                 CASE WHEN p.NOTE_ID IS NULL THEN 0 ELSE 1 END AS PINNED,
-                p.PIN_ORDER
+                p.PIN_ORDER,
+                CASE
+                    WHEN n.USER_ID = #{userId, jdbcType=NUMERIC} THEN 1
+                    WHEN n.SCOPE_TYPE = 'WS' AND (nw.OWNER_ID = #{userId, jdbcType=NUMERIC} OR UPPER(NVL(wm_role.WS_ROLE, 'MEMBER')) = 'ADMIN') THEN 1
+                    WHEN n.SCOPE_TYPE = 'PROJ' AND (np.LEADER_ID = #{userId, jdbcType=NUMERIC} OR UPPER(NVL(pm_role.PROJ_ROLE, 'MEMBER')) = 'ADMIN') THEN 1
+                    ELSE 0
+                END AS CAN_MANAGE,
+                CASE
+                    WHEN n.USER_ID = #{userId, jdbcType=NUMERIC} THEN 1
+                    WHEN EXISTS (
+                        SELECT 1
+                        FROM CONTENT_SHARES cs_edit_main
+                        WHERE cs_edit_main.CONTENT_TYPE = 'NOTE'
+                          AND cs_edit_main.CONTENT_ID = n.NOTE_ID
+                          AND cs_edit_main.ACTIVE_YN = 'Y'
+                          AND cs_edit_main.PERMISSION_TYPE = 'EDIT'
+                          AND (cs_edit_main.EXPIRES_AT IS NULL OR cs_edit_main.EXPIRES_AT >= SYSDATE)
+                          AND (
+                              (cs_edit_main.TARGET_TYPE = 'USER' AND cs_edit_main.TARGET_ID = #{userId, jdbcType=NUMERIC})
+                              OR (cs_edit_main.TARGET_TYPE = 'WS' AND EXISTS (
+                                  SELECT 1 FROM WS_MEMBERS swm_edit_main
+                                  WHERE swm_edit_main.WS_ID = cs_edit_main.TARGET_ID
+                                    AND swm_edit_main.USER_ID = #{userId, jdbcType=NUMERIC}
+                              ))
+                              OR (cs_edit_main.TARGET_TYPE = 'PROJ' AND EXISTS (
+                                  SELECT 1 FROM PROJ_MEMBERS spm_edit_main
+                                  WHERE spm_edit_main.PROJ_ID = cs_edit_main.TARGET_ID
+                                    AND spm_edit_main.USER_ID = #{userId, jdbcType=NUMERIC}
+                              ))
+                          )
+                    ) THEN 1
+                    ELSE 0
+                END AS CAN_EDIT,
+                CASE
+                    WHEN n.SCOPE_TYPE = 'PRIVATE' AND n.USER_ID = #{userId, jdbcType=NUMERIC} THEN 1
+                    WHEN n.SCOPE_TYPE = 'WS' AND (nw.OWNER_ID = #{userId, jdbcType=NUMERIC} OR UPPER(NVL(wm_role.WS_ROLE, 'MEMBER')) = 'ADMIN') THEN 1
+                    WHEN n.SCOPE_TYPE = 'PROJ' AND (np.LEADER_ID = #{userId, jdbcType=NUMERIC} OR UPPER(NVL(pm_role.PROJ_ROLE, 'MEMBER')) = 'ADMIN') THEN 1
+                    ELSE 0
+                END AS CAN_MANAGE_SPACE
             FROM NOTES n
             JOIN USERS u ON n.USER_ID = u.USER_ID
+        LEFT JOIN NOTE_FOLDERS nf ON nf.FOLDER_ID = n.FOLDER_ID
+        LEFT JOIN WORKSPACES nw ON nw.WS_ID = n.WS_ID
+        LEFT JOIN PROJECTS np ON np.PROJ_ID = n.PROJ_ID
+            LEFT JOIN WS_MEMBERS wm_role ON wm_role.WS_ID = n.WS_ID AND wm_role.USER_ID = #{userId, jdbcType=NUMERIC}
+            LEFT JOIN PROJ_MEMBERS pm_role ON pm_role.PROJ_ID = n.PROJ_ID AND pm_role.USER_ID = #{userId, jdbcType=NUMERIC}
             LEFT JOIN NOTE_PINS p
               ON p.NOTE_ID = n.NOTE_ID
-             AND p.PROJ_ID = n.PROJ_ID
+             AND p.PIN_SCOPE_KEY = #{pinScopeKey, jdbcType=VARCHAR}
              AND p.USER_ID = #{userId, jdbcType=NUMERIC}
-            WHERE n.WS_ID = #{wsId, jdbcType=NUMERIC}
-              AND n.PROJ_ID = #{projId, jdbcType=NUMERIC}
+            WHERE <include refid="noteReadableScope"/>
+              <include refid="selectedNoteScope"/>
               AND (
                     p.NOTE_ID IS NOT NULL
                     OR NOT EXISTS (
                         SELECT 1
                         FROM NOTE_PINS px
                         WHERE px.USER_ID = #{userId, jdbcType=NUMERIC}
-                          AND px.PROJ_ID = #{projId, jdbcType=NUMERIC}
+                          AND px.PIN_SCOPE_KEY = #{pinScopeKey, jdbcType=VARCHAR}
                     )
               )
             ORDER BY
@@ -122,38 +346,39 @@
         SELECT COUNT(*)
         FROM NOTE_PINS
         WHERE USER_ID = #{userId, jdbcType=NUMERIC}
-          AND PROJ_ID = #{projId, jdbcType=NUMERIC}
+          AND PIN_SCOPE_KEY = #{pinScopeKey, jdbcType=VARCHAR}
     </select>
 
     <select id="selectNextPinOrder" resultType="int">
-        SELECT NVL(MIN(candidate), 1)
-        FROM (
-            SELECT LEVEL AS candidate
-            FROM DUAL
-            CONNECT BY LEVEL <![CDATA[<=]]> 3
-            MINUS
-            SELECT PIN_ORDER
-            FROM NOTE_PINS
-            WHERE USER_ID = #{userId, jdbcType=NUMERIC}
-              AND PROJ_ID = #{projId, jdbcType=NUMERIC}
-        )
+        SELECT NVL(MAX(PIN_ORDER), 0) + 1
+        FROM NOTE_PINS
+        WHERE USER_ID = #{userId, jdbcType=NUMERIC}
+          AND PIN_SCOPE_KEY = #{pinScopeKey, jdbcType=VARCHAR}
     </select>
 
     <insert id="insertNotePin">
-        INSERT INTO NOTE_PINS (USER_ID, PROJ_ID, NOTE_ID, PIN_ORDER, PINNED_AT)
-        VALUES (
-            #{userId, jdbcType=NUMERIC},
-            #{projId, jdbcType=NUMERIC},
-            #{noteId, jdbcType=NUMERIC},
-            #{pinOrder, jdbcType=NUMERIC},
-            SYSDATE
+        MERGE INTO NOTE_PINS target
+        USING (
+            SELECT
+                #{userId, jdbcType=NUMERIC} AS USER_ID,
+                #{pinScopeKey, jdbcType=VARCHAR} AS PIN_SCOPE_KEY,
+                #{noteId, jdbcType=NUMERIC} AS NOTE_ID,
+                #{pinOrder, jdbcType=NUMERIC} AS PIN_ORDER
+            FROM DUAL
+        ) source
+        ON (
+            target.USER_ID = source.USER_ID
+            AND target.PIN_SCOPE_KEY = source.PIN_SCOPE_KEY
+            AND target.NOTE_ID = source.NOTE_ID
         )
+        WHEN NOT MATCHED THEN
+            INSERT (USER_ID, PIN_SCOPE_KEY, NOTE_ID, PIN_ORDER, PINNED_AT)
+            VALUES (source.USER_ID, source.PIN_SCOPE_KEY, source.NOTE_ID, source.PIN_ORDER, SYSDATE)
     </insert>
 
     <delete id="deleteNotePin">
         DELETE FROM NOTE_PINS
         WHERE USER_ID = #{userId, jdbcType=NUMERIC}
-          AND PROJ_ID = #{projId, jdbcType=NUMERIC}
           AND NOTE_ID = #{noteId, jdbcType=NUMERIC}
     </delete>
 
@@ -162,65 +387,95 @@
         WHERE NOTE_ID = #{noteId, jdbcType=NUMERIC}
     </delete>
 
-    <!-- 작성자 또는 프로젝트 팀장/관리자만 노트 삭제 가능 -->
     <select id="countNoteDeletePermission" resultType="int">
         SELECT COUNT(*)
         FROM NOTES n
-        LEFT JOIN PROJ_MEMBERS pm
-          ON pm.PROJ_ID = n.PROJ_ID
-         AND pm.USER_ID = #{userId, jdbcType=NUMERIC}
-        LEFT JOIN PROJECTS p
-          ON p.PROJ_ID = n.PROJ_ID
+        LEFT JOIN WORKSPACES w ON w.WS_ID = n.WS_ID
+        LEFT JOIN WS_MEMBERS wm ON wm.WS_ID = n.WS_ID AND wm.USER_ID = #{userId, jdbcType=NUMERIC}
+        LEFT JOIN PROJECTS p ON p.PROJ_ID = n.PROJ_ID
+        LEFT JOIN PROJ_MEMBERS pm ON pm.PROJ_ID = n.PROJ_ID AND pm.USER_ID = #{userId, jdbcType=NUMERIC}
         WHERE n.NOTE_ID = #{noteId, jdbcType=NUMERIC}
           AND (
                 n.USER_ID = #{userId, jdbcType=NUMERIC}
-                OR p.LEADER_ID = #{userId, jdbcType=NUMERIC}
-                OR UPPER(NVL(pm.PROJ_ROLE, 'MEMBER')) = 'ADMIN'
+                OR (n.SCOPE_TYPE = 'WS' AND (w.OWNER_ID = #{userId, jdbcType=NUMERIC} OR UPPER(NVL(wm.WS_ROLE, 'MEMBER')) = 'ADMIN'))
+                OR (n.SCOPE_TYPE = 'PROJ' AND (p.LEADER_ID = #{userId, jdbcType=NUMERIC} OR UPPER(NVL(pm.PROJ_ROLE, 'MEMBER')) = 'ADMIN'))
               )
     </select>
 
-    <!-- 노트 상세 -->
-    <select id="selectNoteDetail" parameterType="long" resultMap="noteResultMap">
+    <select id="selectNoteDetail" resultMap="noteResultMap">
         SELECT
-            r.NOTE_ID,
-            r.WS_ID,
-            r.PROJ_ID,
-            r.USER_ID,
-            r.NOTE_TITLE,
-            r.DONE_CONTENT,
-            r.NEXT_CONTENT,
-            r.ISSUE_CONTENT,
-            r.CHANGE_LOG,
-            r.MEMO,
-            r.REG_DT,
-            r.UPD_DT,
-            u.USER_NAME
-        FROM NOTES r
-        JOIN USERS u
-          ON r.USER_ID = u.USER_ID
-        WHERE r.NOTE_ID = #{noteId, jdbcType=NUMERIC}
+            n.NOTE_ID, n.SCOPE_TYPE, n.WS_ID, n.PROJ_ID, n.USER_ID, n.NOTE_TITLE,
+            n.DONE_CONTENT, n.NEXT_CONTENT, n.ISSUE_CONTENT, n.CHANGE_LOG, n.MEMO, n.CATEGORY, n.ICON, n.FOLDER_ID, nf.FOLDER_NAME, nf.FOLDER_NAME AS FOLDER_PATH, nw.WS_NAME, np.PROJ_NAME,
+            NULL AS SHARE_SCOPE_TYPES, NULL AS SHARE_SCOPE_NAMES,
+            n.REG_DT, n.UPD_DT, u.USER_NAME,
+            (SELECT COUNT(*) FROM NOTE_FILES nfc WHERE nfc.NOTE_ID = n.NOTE_ID) AS ATTACHMENT_COUNT,
+            (SELECT MIN(nff.ORIGIN_FILE_NAME) KEEP (DENSE_RANK FIRST ORDER BY nff.FILE_ID)
+               FROM NOTE_FILES nff WHERE nff.NOTE_ID = n.NOTE_ID) AS FIRST_ATTACHMENT_NAME,
+            (SELECT MIN(nfi.FILE_ID) KEEP (DENSE_RANK FIRST ORDER BY nfi.FILE_ID)
+               FROM NOTE_FILES nfi
+              WHERE nfi.NOTE_ID = n.NOTE_ID
+                AND LOWER(LTRIM(nfi.FILE_EXT, '.')) IN ('jpg','jpeg','png','gif','webp','bmp')) AS PREVIEW_IMAGE_FILE_ID,
+            CASE WHEN p.NOTE_ID IS NULL THEN 0 ELSE 1 END AS PINNED,
+            p.PIN_ORDER,
+            CASE
+                WHEN n.USER_ID = #{userId, jdbcType=NUMERIC} THEN 1
+                WHEN n.SCOPE_TYPE = 'WS'
+                     AND (nw.OWNER_ID = #{userId, jdbcType=NUMERIC}
+                          OR UPPER(NVL(wm_role.WS_ROLE, 'MEMBER')) = 'ADMIN') THEN 1
+                WHEN n.SCOPE_TYPE = 'PROJ'
+                     AND (np.LEADER_ID = #{userId, jdbcType=NUMERIC}
+                          OR UPPER(NVL(pm_role.PROJ_ROLE, 'MEMBER')) = 'ADMIN') THEN 1
+                ELSE 0
+            END AS CAN_MANAGE,
+            CASE
+                WHEN n.USER_ID = #{userId, jdbcType=NUMERIC} THEN 1
+                WHEN EXISTS (
+                    SELECT 1
+                    FROM CONTENT_SHARES cs_edit
+                    WHERE cs_edit.CONTENT_TYPE = 'NOTE'
+                      AND cs_edit.CONTENT_ID = n.NOTE_ID
+                      AND cs_edit.ACTIVE_YN = 'Y'
+                      AND cs_edit.PERMISSION_TYPE = 'EDIT'
+                      AND cs_edit.TARGET_TYPE = 'USER'
+                      AND cs_edit.TARGET_ID = #{userId, jdbcType=NUMERIC}
+                      AND (cs_edit.EXPIRES_AT IS NULL OR cs_edit.EXPIRES_AT >= SYSDATE)
+                ) THEN 1
+                ELSE 0
+            END AS CAN_EDIT,
+            CASE
+                WHEN n.SCOPE_TYPE = 'PRIVATE' AND n.USER_ID = #{userId, jdbcType=NUMERIC} THEN 1
+                WHEN n.SCOPE_TYPE = 'WS'
+                     AND (nw.OWNER_ID = #{userId, jdbcType=NUMERIC}
+                          OR UPPER(NVL(wm_role.WS_ROLE, 'MEMBER')) = 'ADMIN') THEN 1
+                WHEN n.SCOPE_TYPE = 'PROJ'
+                     AND (np.LEADER_ID = #{userId, jdbcType=NUMERIC}
+                          OR UPPER(NVL(pm_role.PROJ_ROLE, 'MEMBER')) = 'ADMIN') THEN 1
+                ELSE 0
+            END AS CAN_MANAGE_SPACE
+        FROM NOTES n
+        JOIN USERS u ON n.USER_ID = u.USER_ID
+        LEFT JOIN NOTE_FOLDERS nf ON nf.FOLDER_ID = n.FOLDER_ID
+        LEFT JOIN WORKSPACES nw ON nw.WS_ID = n.WS_ID
+        LEFT JOIN PROJECTS np ON np.PROJ_ID = n.PROJ_ID
+        LEFT JOIN WS_MEMBERS wm_role ON wm_role.WS_ID = n.WS_ID AND wm_role.USER_ID = #{userId, jdbcType=NUMERIC}
+        LEFT JOIN PROJ_MEMBERS pm_role ON pm_role.PROJ_ID = n.PROJ_ID AND pm_role.USER_ID = #{userId, jdbcType=NUMERIC}
+        LEFT JOIN NOTE_PINS p
+          ON p.NOTE_ID = n.NOTE_ID
+         AND p.USER_ID = #{userId, jdbcType=NUMERIC}
+        WHERE n.NOTE_ID = #{noteId, jdbcType=NUMERIC}
+          AND <include refid="noteReadableScope"/>
     </select>
 
-    <!-- 노트 등록 -->
     <insert id="insertNote" parameterType="com.springboot.project.dto.noteDTO">
         <selectKey keyProperty="noteId" resultType="long" order="BEFORE">
             SELECT SEQ_NOTE_ID.NEXTVAL FROM DUAL
         </selectKey>
-
         INSERT INTO NOTES (
-            NOTE_ID,
-            WS_ID,
-            PROJ_ID,
-            USER_ID,
-            NOTE_TITLE,
-            DONE_CONTENT,
-            NEXT_CONTENT,
-            ISSUE_CONTENT,
-            CHANGE_LOG,
-            MEMO,
-            REG_DT
+            NOTE_ID, SCOPE_TYPE, WS_ID, PROJ_ID, USER_ID, NOTE_TITLE,
+            DONE_CONTENT, NEXT_CONTENT, ISSUE_CONTENT, CHANGE_LOG, MEMO, CATEGORY, ICON, FOLDER_ID, REG_DT
         ) VALUES (
             #{noteId, jdbcType=NUMERIC},
+            #{scopeType, jdbcType=VARCHAR},
             #{wsId, jdbcType=NUMERIC},
             #{projId, jdbcType=NUMERIC},
             #{userId, jdbcType=NUMERIC},
@@ -230,124 +485,65 @@
             #{issueContent, jdbcType=CLOB},
             #{changeLog, jdbcType=CLOB},
             #{memo, jdbcType=CLOB},
+            #{category, jdbcType=VARCHAR},
+            #{icon, jdbcType=VARCHAR},
+            #{folderId, jdbcType=NUMERIC},
             SYSDATE
         )
     </insert>
 
-    <!-- 노트 수정 -->
     <update id="updateNote" parameterType="com.springboot.project.dto.noteDTO">
         UPDATE NOTES
-        SET
-            NOTE_TITLE = #{noteTitle, jdbcType=VARCHAR},
+        SET NOTE_TITLE = #{noteTitle, jdbcType=VARCHAR},
             DONE_CONTENT = #{doneContent, jdbcType=CLOB},
-            NEXT_CONTENT = #{nextContent, jdbcType=CLOB},
-            ISSUE_CONTENT = #{issueContent, jdbcType=CLOB},
-            CHANGE_LOG = #{changeLog, jdbcType=CLOB},
             MEMO = #{memo, jdbcType=CLOB},
+            CATEGORY = #{category, jdbcType=VARCHAR},
+            ICON = #{icon, jdbcType=VARCHAR},
+            FOLDER_ID = #{folderId, jdbcType=NUMERIC},
             UPD_DT = SYSDATE
         WHERE NOTE_ID = #{noteId, jdbcType=NUMERIC}
-          AND WS_ID = #{wsId, jdbcType=NUMERIC}
-          AND PROJ_ID = #{projId, jdbcType=NUMERIC}
     </update>
 
-    <!-- 노트 삭제 -->
-    <delete id="deleteNote" parameterType="long">
+    <delete id="deleteNote">
         DELETE FROM NOTES
         WHERE NOTE_ID = #{noteId, jdbcType=NUMERIC}
     </delete>
 
-
-    <!-- =========================
-         Note File
-    ========================== -->
-
-    <!-- 노트 첨부파일 등록 -->
     <insert id="insertNoteFile" parameterType="com.springboot.project.dto.noteFileDTO">
         <selectKey keyProperty="fileId" resultType="long" order="BEFORE">
             SELECT SEQ_NOTE_FILE_ID.NEXTVAL FROM DUAL
         </selectKey>
-
-        INSERT INTO NOTE_FILES (
-            FILE_ID,
-            NOTE_ID,
-            ORIGIN_FILE_NAME,
-            STORED_FILE_NAME,
-            FILE_PATH,
-            FILE_SIZE,
-            FILE_EXT,
-            REG_DT
-        ) VALUES (
-            #{fileId, jdbcType=NUMERIC},
-            #{noteId, jdbcType=NUMERIC},
-            #{originFileName, jdbcType=VARCHAR},
-            #{storedFileName, jdbcType=VARCHAR},
-            #{filePath, jdbcType=VARCHAR},
-            #{fileSize, jdbcType=NUMERIC},
-            #{fileExt, jdbcType=VARCHAR},
-            SYSDATE
-        )
+        INSERT INTO NOTE_FILES (FILE_ID, NOTE_ID, ORIGIN_FILE_NAME, STORED_FILE_NAME, FILE_PATH, FILE_SIZE, FILE_EXT, REG_DT)
+        VALUES (#{fileId, jdbcType=NUMERIC}, #{noteId, jdbcType=NUMERIC}, #{originFileName, jdbcType=VARCHAR}, #{storedFileName, jdbcType=VARCHAR}, #{filePath, jdbcType=VARCHAR}, #{fileSize, jdbcType=NUMERIC}, #{fileExt, jdbcType=VARCHAR}, SYSDATE)
     </insert>
 
-    <!-- 노트 첨부파일 목록 -->
-    <select id="selectNoteFileList" parameterType="long" resultMap="noteFileResultMap">
-        SELECT
-            FILE_ID,
-            NOTE_ID,
-            ORIGIN_FILE_NAME,
-            STORED_FILE_NAME,
-            FILE_PATH,
-            FILE_SIZE,
-            FILE_EXT,
-            REG_DT
+    <select id="selectNoteFileList" resultMap="noteFileResultMap">
+        SELECT FILE_ID, NOTE_ID, ORIGIN_FILE_NAME, STORED_FILE_NAME, FILE_PATH, FILE_SIZE, FILE_EXT, REG_DT
         FROM NOTE_FILES
         WHERE NOTE_ID = #{noteId, jdbcType=NUMERIC}
         ORDER BY FILE_ID ASC
     </select>
 
-    <!-- 첨부파일 단건 조회: 다운로드용 -->
-    <select id="selectNoteFile" parameterType="long" resultMap="noteFileResultMap">
-        SELECT
-            FILE_ID,
-            NOTE_ID,
-            ORIGIN_FILE_NAME,
-            STORED_FILE_NAME,
-            FILE_PATH,
-            FILE_SIZE,
-            FILE_EXT,
-            REG_DT
+    <select id="selectNoteFile" resultMap="noteFileResultMap">
+        SELECT FILE_ID, NOTE_ID, ORIGIN_FILE_NAME, STORED_FILE_NAME, FILE_PATH, FILE_SIZE, FILE_EXT, REG_DT
         FROM NOTE_FILES
         WHERE FILE_ID = #{fileId, jdbcType=NUMERIC}
     </select>
 
-    <!-- 첨부파일 단건 삭제 -->
-    <delete id="deleteNoteFile" parameterType="long">
+    <delete id="deleteNoteFile">
         DELETE FROM NOTE_FILES
         WHERE FILE_ID = #{fileId, jdbcType=NUMERIC}
     </delete>
 
-    <!-- 노트 기준 첨부파일 삭제 -->
-    <delete id="deleteNoteFilesByNoteId" parameterType="long">
+    <delete id="deleteNoteFilesByNoteId">
         DELETE FROM NOTE_FILES
         WHERE NOTE_ID = #{noteId, jdbcType=NUMERIC}
     </delete>
 
-
-    <!-- =========================
-         Note Reply
-    ========================== -->
-
-    <select id="selectNoteReplyList" parameterType="long" resultMap="noteReplyResultMap">
-        SELECT
-            rr.REPLY_ID,
-            rr.NOTE_ID,
-            rr.USER_ID,
-            rr.REPLY_CONTENT,
-            rr.REG_DT,
-            rr.UPD_DT,
-            u.USER_NAME
+    <select id="selectNoteReplyList" resultMap="noteReplyResultMap">
+        SELECT rr.REPLY_ID, rr.NOTE_ID, rr.USER_ID, rr.REPLY_CONTENT, rr.REG_DT, rr.UPD_DT, u.USER_NAME
         FROM NOTE_REPLIES rr
-        JOIN USERS u
-          ON rr.USER_ID = u.USER_ID
+        JOIN USERS u ON rr.USER_ID = u.USER_ID
         WHERE rr.NOTE_ID = #{noteId, jdbcType=NUMERIC}
         ORDER BY rr.REG_DT ASC, rr.REPLY_ID ASC
     </select>
@@ -356,21 +552,18 @@
         <selectKey keyProperty="replyId" resultType="long" order="BEFORE">
             SELECT SEQ_NOTE_REPLY_ID.NEXTVAL FROM DUAL
         </selectKey>
-
-        INSERT INTO NOTE_REPLIES (
-            REPLY_ID,
-            NOTE_ID,
-            USER_ID,
-            REPLY_CONTENT,
-            REG_DT
-        ) VALUES (
-            #{replyId, jdbcType=NUMERIC},
-            #{noteId, jdbcType=NUMERIC},
-            #{userId, jdbcType=NUMERIC},
-            #{replyContent, jdbcType=CLOB},
-            SYSDATE
-        )
+        INSERT INTO NOTE_REPLIES (REPLY_ID, NOTE_ID, USER_ID, REPLY_CONTENT, REG_DT)
+        VALUES (#{replyId, jdbcType=NUMERIC}, #{noteId, jdbcType=NUMERIC}, #{userId, jdbcType=NUMERIC}, #{replyContent, jdbcType=CLOB}, SYSDATE)
     </insert>
+
+    <update id="updateNoteReply" parameterType="com.springboot.project.dto.noteReplyDTO">
+        UPDATE NOTE_REPLIES
+        SET REPLY_CONTENT = #{replyContent, jdbcType=CLOB},
+            UPD_DT = SYSDATE
+        WHERE REPLY_ID = #{replyId, jdbcType=NUMERIC}
+          AND NOTE_ID = #{noteId, jdbcType=NUMERIC}
+          AND USER_ID = #{userId, jdbcType=NUMERIC}
+    </update>
 
     <delete id="deleteNoteReply">
         DELETE FROM NOTE_REPLIES
@@ -378,7 +571,7 @@
           AND USER_ID = #{userId, jdbcType=NUMERIC}
     </delete>
 
-    <delete id="deleteNoteRepliesByNoteId" parameterType="long">
+    <delete id="deleteNoteRepliesByNoteId">
         DELETE FROM NOTE_REPLIES
         WHERE NOTE_ID = #{noteId, jdbcType=NUMERIC}
     </delete>

@@ -3863,12 +3863,28 @@ function updateBoardCounts(oldStatus, newStatus) {
         /* ===== Work note widget script ===== */
         function renderSharedNotePlaceholder(target) {
             if (!target) return;
-            target.innerHTML = '<div class="work-note-empty shared-note-placeholder">' +
+            target.innerHTML = '<div class="work-note-empty">' +
                 '<div class="work-note-empty-left">' +
                 '<div class="work-note-empty-icon">📝</div>' +
-                '<div><strong>공유 노트가 들어갈 자리입니다.</strong><span>노트 기능은 다시 정리해서 연결할 예정입니다.<br>프로젝트 회의록과 작업 메모를 이 영역에서 확인할 수 있게 됩니다.</span></div>' +
+                '<div><strong>아직 작성된 노트가 없습니다.</strong><span>회의 기록이나 작업 메모를 첫 노트로 남기고<br>프로젝트 메인에서 바로 확인해보세요.</span></div>' +
                 '</div>' +
+                '<a class="empty-note-write-link" href="' + getProjectNoteWriteUrl() + '">+ 첫 노트 작성</a>' +
                 '</div>';
+        }
+
+        function getProjectNoteScopeQuery() {
+            const params = new URLSearchParams(window.location.search);
+            const wsId = params.get('wsId') || (window.PROJECT_MAIN_CONFIG && (window.PROJECT_MAIN_CONFIG.paramWsId || window.PROJECT_MAIN_CONFIG.wsId)) || '';
+            const projId = params.get('projId') || (window.PROJECT_MAIN_CONFIG && (window.PROJECT_MAIN_CONFIG.paramProjId || window.PROJECT_MAIN_CONFIG.projectId)) || '';
+            return 'scope=PROJ&wsId=' + encodeURIComponent(wsId) + '&projId=' + encodeURIComponent(projId);
+        }
+
+        function getProjectNoteWriteUrl() {
+            return '/note/write?' + getProjectNoteScopeQuery();
+        }
+
+        function getProjectNoteDetailUrl(noteId) {
+            return '/note/detail?noteId=' + encodeURIComponent(noteId) + '&' + getProjectNoteScopeQuery();
         }
 
         function normalizeSharedNoteSection() {
@@ -3876,25 +3892,54 @@ function updateBoardCounts(oldStatus, newStatus) {
             if (!target) return;
             var section = target.closest('.note-main-section, section, article, .widget-card, .dashboard-card, .content-section');
             if (!section) return;
-
             section.classList.add('shared-note-ready-section');
-
             var title = section.querySelector('h1, h2, h3, .section-title, .note-section-title');
             if (title) title.innerHTML = '📝 공유 노트';
-
             var desc = section.querySelector('.note-section-header p, .section-desc, .section-subtitle, p');
-            if (desc) desc.textContent = '공유 노트가 들어갈 자리입니다.';
-
-            section.querySelectorAll('.note-write-link, .empty-note-write-link, .note-write-bottom-actions, a[href*="/project/note/write"]').forEach(function(el) {
-                el.style.display = 'none';
-            });
+            if (desc) desc.textContent = '회의 기록, 작업 메모, 첨부파일을 공유합니다.';
         }
 
         function loadRecentNotes() {
             const target = document.getElementById('recentNoteList');
             if (!target) return;
             normalizeSharedNoteSection();
-            renderSharedNotePlaceholder(target);
+            target.innerHTML = '<div class="work-note-empty"><div class="work-note-empty-left"><div class="work-note-empty-icon">📝</div><div><strong>노트를 불러오는 중입니다.</strong><span>잠시만 기다려 주세요.</span></div></div></div>';
+            fetch('/note/api/main?' + getProjectNoteScopeQuery() + '&limit=3')
+                .then(function(response) { return response.ok ? response.json() : []; })
+                .then(function(list) { renderRecentNotes(list || []); })
+                .catch(function() { renderSharedNotePlaceholder(target); });
+        }
+
+        function renderRecentNotes(list) {
+            const target = document.getElementById('recentNoteList');
+            if (!target) return;
+            if (!Array.isArray(list) || list.length === 0) {
+                renderSharedNotePlaceholder(target);
+                return;
+            }
+            var visible = list.slice(0, 2);
+            var html = '<div class="project-note-items">';
+            visible.forEach(function(note) {
+                var noteId = note.noteId || note.NOTE_ID;
+                var title = escapeNoteHtml(note.noteTitle || note.NOTE_TITLE || '제목 없음');
+                var userName = escapeNoteHtml(note.userName || note.USER_NAME || '작성자');
+                var memo = escapeNoteHtml((note.memo || note.MEMO || '작성된 내용이 없습니다.').replace(/<[^>]*>/g, ' '));
+                var pinned = note.pinned || note.PINNED;
+                var files = note.fileList || [];
+                html += '<a class="project-note-row" href="' + getProjectNoteDetailUrl(noteId) + '">' +
+                    '<span class="project-note-row-head">' +
+                        '<strong class="project-note-row-title">' + title + '</strong>' +
+                        (pinned ? '<span class="project-note-row-chip pin">고정</span>' : '') +
+                    '</span>' +
+                    '<span class="project-note-row-preview">' + memo + '</span>' +
+                    '<span class="project-note-row-foot">' +
+                        '<span class="project-note-row-writer">' + userName + '</span>' +
+                        (files.length ? '<span class="project-note-row-chip file">첨부 ' + files.length + '</span>' : '') +
+                    '</span>' +
+                '</a>';
+            });
+            html += '</div>';
+            target.innerHTML = html;
         }
 
         function escapeNoteHtml(value) {

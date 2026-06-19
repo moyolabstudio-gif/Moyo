@@ -10353,7 +10353,7 @@ body.project-member-profile-open {
 .shared-note-ready-section .note-section-header .section-more-link,
 .shared-note-ready-section .note-write-link,
 .shared-note-ready-section .note-write-bottom-actions,
-.shared-note-ready-section a[href*="/project/note/write"] {
+.shared-note-ready-section a[href*="/note/write"] {
     display: none !important;
 }
 
@@ -10943,3 +10943,579 @@ body.project-member-profile-open {
     grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
 }
 /* ===== End project calendar widget width align patch ===== */
+
+/* ===== PROJECT NOTE WIDGET v3: workspace-style stable layout ===== */
+.project-note-photo-row .note-main-section {
+    min-width: 0 !important;
+    overflow: hidden !important;
+}
+
+.project-note-photo-row .note-main-list {
+    width: 100% !important;
+    min-width: 0 !important;
+    margin-top: 0 !important;
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+    align-items: stretch !important;
+    overflow: hidden !important;
+}
+
+.project-note-photo-row .note-main-list .note-item {
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 132px !important;
+    height: 132px !important;
+    padding: 12px !important;
+    border-radius: 13px !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+    box-shadow: none !important;
+}
+
+.project-note-photo-row .note-item-main-link {
+    width: 100% !important;
+    min-width: 0 !important;
+    height: 100% !important;
+    overflow: hidden !important;
+}
+
+.project-note-photo-row .note-item-title-row {
+    width: 100% !important;
+    min-width: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 6px !important;
+    margin-bottom: 8px !important;
+}
+
+.project-note-photo-row .note-item-title {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    word-break: keep-all !important;
+    writing-mode: horizontal-tb !important;
+    font-size: 12px !important;
+    font-weight: 700 !important;
+}
+
+.project-note-photo-row .note-item-pin {
+    flex: 0 0 auto !important;
+    height: 20px !important;
+    padding: 0 7px !important;
+    white-space: nowrap !important;
+    word-break: keep-all !important;
+    writing-mode: horizontal-tb !important;
+    font-size: 10px !important;
+}
+
+.project-note-photo-row .work-note-meta {
+    width: 100% !important;
+    min-width: 0 !important;
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    gap: 5px !important;
+    margin-bottom: 7px !important;
+    overflow: hidden !important;
+}
+
+.project-note-photo-row .work-note-chip {
+    flex: 0 1 auto !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    min-height: 20px !important;
+    height: 20px !important;
+    padding: 0 7px !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    word-break: keep-all !important;
+    writing-mode: horizontal-tb !important;
+    font-size: 10px !important;
+    font-weight: 600 !important;
+}
+
+.project-note-photo-row .work-note-preview {
+    margin: 0 !important;
+    max-height: 36px !important;
+    display: -webkit-box !important;
+    -webkit-box-orient: vertical !important;
+    -webkit-line-clamp: 2 !important;
+    overflow: hidden !important;
+    white-space: normal !important;
+    word-break: break-word !important;
+    writing-mode: horizontal-tb !important;
+    font-size: 11px !important;
+    line-height: 1.55 !important;
+}
+
+.project-note-photo-row .note-main-list .work-note-empty {
+    grid-column: 1 / -1 !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    height: 100% !important;
+    min-height: 122px !important;
+    padding: 16px !important;
+    display: grid !important;
+    grid-template-columns: 42px minmax(0, 1fr) auto !important;
+    align-items: center !important;
+    gap: 12px !important;
+    overflow: hidden !important;
+}
+
+.project-note-photo-row .work-note-empty-left {
+    min-width: 0 !important;
+    display: contents !important;
+}
+
+.project-note-photo-row .work-note-empty-left > div:last-child {
+    min-width: 0 !important;
+    overflow: hidden !important;
+}
+
+.project-note-photo-row .work-note-empty strong,
+.project-note-photo-row .work-note-empty span {
+    width: 100% !important;
+    max-width: 100% !important;
+    white-space: normal !important;
+    word-break: keep-all !important;
+    overflow-wrap: break-word !important;
+    writing-mode: horizontal-tb !important;
+}
+
+.project-note-photo-row .work-note-empty span br {
+    display: none !important;
+}
+
+.project-note-photo-row .empty-note-write-link {
+    flex: 0 0 auto !important;
+    min-height: 32px !important;
+    padding: 0 11px !important;
+    border-radius: 10px !important;
+    background: #fff !important;
+    border: 1px solid #cfe0f1 !important;
+    color: #2563eb !important;
+    box-shadow: none !important;
+    white-space: nowrap !important;
+    word-break: keep-all !important;
+    writing-mode: horizontal-tb !important;
+    font-size: 11px !important;
+    font-weight: 600 !important;
+}
+
+.project-note-photo-row .note-write-bottom-actions {
+    display: none !important;
+}
+
+@media (max-width: 1320px) {
+    .project-note-photo-row .note-main-list {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+}
+
+@media (max-width: 1180px) {
+    .project-note-photo-row .note-main-list {
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    }
+}
+
+@media (max-width: 760px) {
+    .project-note-photo-row .note-main-list {
+        grid-template-columns: 1fr !important;
+    }
+    .project-note-photo-row .note-main-list .work-note-empty {
+        grid-template-columns: 42px minmax(0, 1fr) !important;
+    }
+    .project-note-photo-row .empty-note-write-link {
+        grid-column: 1 / -1 !important;
+        width: 100% !important;
+    }
+}
+/* ===== End PROJECT NOTE WIDGET v3 ===== */
+
+
+/* ===== Project shared note widget v4: unified compact rows ===== */
+.project-note-photo-row .note-main-section {
+    min-width: 0;
+    overflow: hidden;
+}
+.project-note-photo-row .note-main-list {
+    display: block !important;
+    min-width: 0;
+    overflow: hidden;
+}
+.project-note-photo-row .project-note-items {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+    min-width: 0;
+}
+.project-note-photo-row .project-note-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    padding: 10px 12px;
+    border: 1px solid #e4edf7;
+    border-radius: 12px;
+    background: #fff;
+    color: inherit;
+    text-decoration: none;
+}
+.project-note-photo-row .project-note-row:hover {
+    border-color: #c8dbef;
+    background: #fbfdff;
+}
+.project-note-photo-row .project-note-row-main,
+.project-note-photo-row .project-note-row-title-line,
+.project-note-photo-row .project-note-row-meta {
+    min-width: 0;
+}
+.project-note-photo-row .project-note-row-main {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.project-note-photo-row .project-note-row-title-line {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.project-note-photo-row .project-note-row-title {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.35;
+}
+.project-note-photo-row .project-note-row-preview {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    color: #718096;
+    font-size: 11px;
+    line-height: 1.35;
+}
+.project-note-photo-row .project-note-row-meta {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 5px;
+    white-space: nowrap;
+    color: #65758b;
+    font-size: 10px;
+}
+.project-note-photo-row .project-note-row-meta > span:first-child {
+    max-width: 58px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.project-note-photo-row .project-note-row-chip {
+    flex: 0 0 auto;
+    padding: 2px 6px;
+    border: 1px solid #dce8f5;
+    border-radius: 999px;
+    background: #f8fbff;
+    color: #5c6f86;
+    font-size: 9px;
+    font-weight: 500;
+}
+.project-note-photo-row .project-note-row-chip.pin {
+    border-color: #cfd8ff;
+    background: #f4f5ff;
+    color: #5568d8;
+}
+.project-note-photo-row .project-note-row-meta b {
+    color: #7fa8d8;
+    font-size: 17px;
+    font-weight: 400;
+}
+.project-note-photo-row .project-note-more-row {
+    display: block;
+    padding: 6px 4px 0;
+    text-align: right;
+    color: #4f86c6;
+    font-size: 11px;
+    text-decoration: none;
+}
+.project-note-photo-row .project-note-empty-link,
+.project-note-photo-row .note-main-list .work-note-empty {
+    display: grid !important;
+    grid-template-columns: 46px minmax(0, 1fr);
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    min-width: 0;
+    min-height: 118px;
+    padding: 18px;
+    border: 1px dashed #d5e3f1;
+    border-radius: 13px;
+    background: #fbfdff;
+    color: inherit;
+    text-decoration: none;
+}
+.project-note-photo-row .project-note-empty-icon {
+    display: grid;
+    place-items: center;
+    width: 46px;
+    height: 46px;
+    border-radius: 13px;
+    background: #eef6ff;
+    font-size: 21px;
+}
+.project-note-photo-row .project-note-empty-copy {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+}
+.project-note-photo-row .project-note-empty-copy strong,
+.project-note-photo-row .project-note-empty-copy span,
+.project-note-photo-row .project-note-empty-copy em {
+    display: block;
+    width: 100%;
+    white-space: normal;
+    word-break: keep-all;
+    overflow-wrap: break-word;
+    writing-mode: horizontal-tb;
+}
+.project-note-photo-row .project-note-empty-copy strong {
+    color: #223047;
+    font-size: 13px;
+    line-height: 1.4;
+}
+.project-note-photo-row .project-note-empty-copy span {
+    color: #78889d;
+    font-size: 11px;
+    line-height: 1.45;
+}
+.project-note-photo-row .project-note-empty-copy em {
+    margin-top: 2px;
+    color: #347fd0;
+    font-size: 11px;
+    font-style: normal;
+    font-weight: 600;
+}
+.project-note-photo-row .note-write-bottom-actions { display: none !important; }
+/* ===== End project shared note widget v4 ===== */
+
+
+/* ===== PROJECT MAIN shared note widget v6 polish ===== */
+.project-note-photo-row .note-section-header {
+    height: auto !important;
+    min-height: 48px !important;
+    align-items: flex-start !important;
+}
+
+.project-note-photo-row .note-section-header > div:first-child {
+    min-width: 0 !important;
+    flex: 1 1 auto !important;
+}
+
+.project-note-photo-row .note-section-header h3 {
+    margin: 0 !important;
+    font-size: 17px !important;
+    font-weight: 800 !important;
+    line-height: 1.25 !important;
+    color: #111827 !important;
+}
+
+.project-note-photo-row .note-section-header p {
+    margin: 5px 0 0 !important;
+    max-width: 100% !important;
+    overflow: hidden !important;
+    white-space: nowrap !important;
+    text-overflow: ellipsis !important;
+    font-size: 11px !important;
+    line-height: 1.35 !important;
+    color: #8a94a6 !important;
+}
+
+.project-note-photo-row .note-section-actions {
+    flex: 0 0 auto !important;
+    padding-top: 2px !important;
+}
+
+.project-note-photo-row .project-note-items {
+    gap: 8px !important;
+}
+
+.project-note-photo-row .project-note-row {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 5px !important;
+    min-height: 58px !important;
+    padding: 9px 11px !important;
+    border-radius: 11px !important;
+}
+
+.project-note-photo-row .project-note-row-head,
+.project-note-photo-row .project-note-row-foot {
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    min-width: 0 !important;
+}
+
+.project-note-photo-row .project-note-row-head {
+    justify-content: space-between !important;
+}
+
+.project-note-photo-row .project-note-row-title {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    color: #1f2937 !important;
+}
+
+.project-note-photo-row .project-note-row-preview {
+    width: 100% !important;
+    color: #718096 !important;
+    font-size: 11px !important;
+}
+
+.project-note-photo-row .project-note-row-foot {
+    justify-content: flex-start !important;
+    color: #8a94a6 !important;
+    font-size: 10px !important;
+}
+
+.project-note-photo-row .project-note-row-writer {
+    min-width: 0 !important;
+    max-width: 110px !important;
+    overflow: hidden !important;
+    white-space: nowrap !important;
+    text-overflow: ellipsis !important;
+}
+
+.project-note-photo-row .project-note-row-chip {
+    padding: 2px 6px !important;
+    font-size: 9px !important;
+}
+
+.project-note-photo-row .project-note-row-chip.file {
+    background: #f5fffb !important;
+    border-color: #d7f3ec !important;
+    color: #0e9f8b !important;
+}
+
+.project-note-photo-row .project-note-row-meta,
+.project-note-photo-row .project-note-row-main,
+.project-note-photo-row .project-note-row-title-line {
+    display: none !important;
+}
+/* ===== End PROJECT MAIN shared note widget v6 polish ===== */
+
+
+/* ===== PROJECT MAIN shared note widget v7: more link + clipping fix ===== */
+/* 이전 준비중 규칙이 실제 공유 노트의 더보기 링크까지 숨기던 문제 복구 */
+.project-note-photo-row .shared-note-ready-section .note-section-header .section-more-link,
+.project-note-photo-row .note-main-section .note-section-header .section-more-link {
+    display: inline-flex !important;
+    align-items: center !important;
+    flex: 0 0 auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    color: #64748b !important;
+    font-size: 12px !important;
+    font-weight: 500 !important;
+    line-height: 1.2 !important;
+    text-decoration: none !important;
+    white-space: nowrap !important;
+}
+.project-note-photo-row .note-main-section .note-section-header .section-more-link:hover {
+    color: #4a90e2 !important;
+}
+
+/* 노트 두 건의 제목/본문/작성자 행이 카드 하단에서 잘리지 않도록 여유 확보 */
+.project-note-photo-row .note-main-section,
+.project-note-photo-row .project-photo-widget-card,
+.project-note-photo-row .widget-card.project-photo-widget-card {
+    height: 260px !important;
+    min-height: 260px !important;
+}
+.project-note-photo-row .note-main-list {
+    overflow: hidden !important;
+}
+.project-note-photo-row .project-note-items {
+    height: 100% !important;
+    min-height: 0 !important;
+    gap: 8px !important;
+    overflow: hidden !important;
+}
+.project-note-photo-row .project-note-row {
+    flex: 0 0 auto !important;
+    min-height: 64px !important;
+    padding: 8px 11px !important;
+    box-sizing: border-box !important;
+}
+.project-note-photo-row .project-note-row-head,
+.project-note-photo-row .project-note-row-foot {
+    min-height: 16px !important;
+}
+.project-note-photo-row .project-note-row-preview {
+    min-height: 15px !important;
+    line-height: 1.35 !important;
+}
+
+@media (max-width: 1180px) {
+    .project-note-photo-row .note-main-section,
+    .project-note-photo-row .project-photo-widget-card,
+    .project-note-photo-row .widget-card.project-photo-widget-card {
+        height: auto !important;
+        min-height: 240px !important;
+    }
+}
+/* ===== End PROJECT MAIN shared note widget v7 ===== */
+
+/* ===== PROJECT MAIN shared note widget v8: second card bottom clipping final fix ===== */
+.project-note-photo-row .note-main-section,
+.project-note-photo-row .project-photo-widget-card,
+.project-note-photo-row .widget-card.project-photo-widget-card {
+    height: 278px !important;
+    min-height: 278px !important;
+}
+
+.project-note-photo-row .note-main-section {
+    overflow: hidden !important;
+}
+
+.project-note-photo-row .note-main-list {
+    height: auto !important;
+    min-height: 0 !important;
+    padding-bottom: 2px !important;
+    overflow: visible !important;
+}
+
+.project-note-photo-row .project-note-items {
+    height: auto !important;
+    min-height: 0 !important;
+    padding-bottom: 2px !important;
+    overflow: visible !important;
+}
+
+.project-note-photo-row .project-note-row {
+    min-height: 66px !important;
+    flex: 0 0 66px !important;
+}
+
+@media (max-width: 1180px) {
+    .project-note-photo-row .note-main-section,
+    .project-note-photo-row .project-photo-widget-card,
+    .project-note-photo-row .widget-card.project-photo-widget-card {
+        height: auto !important;
+        min-height: 252px !important;
+    }
+}
+/* ===== End PROJECT MAIN shared note widget v8 ===== */

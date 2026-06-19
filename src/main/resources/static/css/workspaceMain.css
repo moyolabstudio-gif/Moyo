@@ -4060,3 +4060,525 @@ body.workspace-main-invite-open {
     background: linear-gradient(135deg, #4A90E2, #6C63FF);
 }
 /* ===== End workspace/project calendar widget shared UI tone ===== */
+
+
+/* ===== Workspace shared note widget v1 ===== */
+.workspace-community-container .workspace-note-list {
+    min-height: 118px;
+    padding: 12px 14px;
+    display: block;
+    overflow: hidden;
+}
+.workspace-community-container .workspace-note-loading,
+.workspace-community-container .workspace-note-empty-link {
+    min-height: 92px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    width: 100%;
+    color: inherit;
+    text-decoration: none;
+}
+.workspace-community-container .workspace-note-empty-link {
+    border: 1px dashed #d7e5f4;
+    border-radius: 14px;
+    padding: 14px 16px;
+    background: #fbfdff;
+}
+.workspace-community-container .workspace-note-empty-action {
+    margin-left: auto;
+    flex: 0 0 auto;
+    padding: 7px 12px;
+    border: 1px solid #d6e5f5;
+    border-radius: 10px;
+    color: #397bc5;
+    background: #fff;
+    font-size: 12px;
+    font-weight: 600;
+}
+.workspace-community-container .workspace-note-items {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.workspace-community-container .workspace-note-item {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 9px 10px;
+    border: 1px solid transparent;
+    border-radius: 11px;
+    color: inherit;
+    text-decoration: none;
+    transition: background-color .15s ease, border-color .15s ease;
+}
+.workspace-community-container .workspace-note-item:hover {
+    background: #f8fbff;
+    border-color: #e0ebf7;
+}
+.workspace-community-container .workspace-note-item-main {
+    min-width: 0;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+.workspace-community-container .workspace-note-item-title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: #172033;
+    font-size: 13px;
+    font-weight: 650;
+}
+.workspace-community-container .workspace-note-item-preview {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: #7f8ca1;
+    font-size: 11px;
+}
+.workspace-community-container .workspace-note-item-meta {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+.workspace-community-container .workspace-note-mini-chip {
+    padding: 3px 6px;
+    border-radius: 999px;
+    background: #f2f7fc;
+    color: #68809a;
+    font-size: 10px;
+    line-height: 1;
+    white-space: nowrap;
+}
+.workspace-community-container .workspace-note-mini-chip.pin {
+    background: #eef3ff;
+    color: #5573d8;
+}
+.workspace-community-container .workspace-note-author {
+    max-width: 72px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: #8b97a8;
+    font-size: 10px;
+}
+@media (max-width: 1100px) {
+    .workspace-community-container .workspace-note-item-meta { display: none; }
+}
+
+/* ===== Workspace shared note widget v2: empty/loading layout stabilization ===== */
+.workspace-community-container .workspace-note-feature-card,
+.workspace-community-container .workspace-note-list,
+.workspace-community-container .workspace-note-loading,
+.workspace-community-container .workspace-note-empty-link {
+    min-width: 0 !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+.workspace-community-container .workspace-note-list {
+    min-height: 122px !important;
+    padding: 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+    overflow: hidden !important;
+}
+
+.workspace-community-container .workspace-note-loading,
+.workspace-community-container .workspace-note-empty-link {
+    min-height: 122px !important;
+    padding: 16px 18px !important;
+    display: grid !important;
+    grid-template-columns: 44px minmax(0, 1fr) auto !important;
+    align-items: center !important;
+    column-gap: 14px !important;
+    border: 1px dashed #dce6f1 !important;
+    border-radius: 14px !important;
+    background: #f9fbfd !important;
+    text-align: left !important;
+}
+
+.workspace-community-container .workspace-note-placeholder-icon {
+    grid-column: 1 !important;
+    width: 44px !important;
+    height: 44px !important;
+    min-width: 44px !important;
+    flex: none !important;
+}
+
+.workspace-community-container .workspace-note-placeholder-copy {
+    grid-column: 2 !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 4px !important;
+    writing-mode: horizontal-tb !important;
+    word-break: keep-all !important;
+    overflow-wrap: break-word !important;
+}
+
+.workspace-community-container .workspace-note-placeholder-copy strong,
+.workspace-community-container .workspace-note-placeholder-copy span {
+    display: block !important;
+    width: 100% !important;
+    max-width: none !important;
+    writing-mode: horizontal-tb !important;
+    white-space: normal !important;
+    word-break: keep-all !important;
+}
+
+.workspace-community-container .workspace-note-placeholder-copy strong {
+    color: #334155 !important;
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    line-height: 1.4 !important;
+}
+
+.workspace-community-container .workspace-note-placeholder-copy span {
+    color: #8a94a6 !important;
+    font-size: 11px !important;
+    line-height: 1.5 !important;
+}
+
+.workspace-community-container .workspace-note-empty-action {
+    grid-column: 3 !important;
+    margin-left: 0 !important;
+    white-space: nowrap !important;
+    align-self: center !important;
+}
+
+.workspace-community-container .workspace-note-items {
+    width: 100% !important;
+    min-height: 122px !important;
+    padding: 4px 0 !important;
+}
+
+@media (max-width: 700px) {
+    .workspace-community-container .workspace-note-loading,
+    .workspace-community-container .workspace-note-empty-link {
+        grid-template-columns: 40px minmax(0, 1fr) !important;
+        row-gap: 10px !important;
+    }
+
+    .workspace-community-container .workspace-note-empty-action {
+        grid-column: 2 !important;
+        justify-self: start !important;
+    }
+}
+/* ===== End Workspace shared note widget v2 ===== */
+
+
+/* ===== Workspace shared note widget v4: unified compact rows ===== */
+.workspace-community-container .workspace-note-list {
+    display: block !important;
+    min-width: 0;
+    overflow: hidden;
+}
+.workspace-community-container .workspace-note-items {
+    display: flex !important;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+    min-width: 0;
+}
+.workspace-community-container .workspace-note-item {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    padding: 10px 12px;
+    border: 1px solid #e4edf7;
+    border-radius: 12px;
+    background: #fff;
+    color: inherit;
+    text-decoration: none;
+}
+.workspace-community-container .workspace-note-item:hover {
+    border-color: #c8dbef;
+    background: #fbfdff;
+}
+.workspace-community-container .workspace-note-item-main {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 4px;
+}
+.workspace-community-container .workspace-note-item-title-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+}
+.workspace-community-container .workspace-note-item-title {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    font-size: 13px;
+    font-weight: 600;
+}
+.workspace-community-container .workspace-note-item-preview {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    color: #718096;
+    font-size: 11px;
+}
+.workspace-community-container .workspace-note-item-meta {
+    display: flex !important;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 5px;
+    min-width: 0;
+    white-space: nowrap;
+    color: #65758b;
+    font-size: 10px;
+}
+.workspace-community-container .workspace-note-author {
+    max-width: 58px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+.workspace-community-container .workspace-note-arrow {
+    color: #7fa8d8;
+    font-size: 17px;
+}
+.workspace-community-container .workspace-note-more-row {
+    display: block;
+    padding: 6px 4px 0;
+    text-align: right;
+    color: #4f86c6;
+    font-size: 11px;
+    text-decoration: none;
+}
+.workspace-community-container .workspace-note-loading,
+.workspace-community-container .workspace-note-empty-link {
+    display: grid !important;
+    grid-template-columns: 46px minmax(0, 1fr);
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    min-width: 0;
+    min-height: 118px;
+    padding: 18px;
+    border: 1px dashed #d5e3f1;
+    border-radius: 13px;
+    background: #fbfdff;
+    color: inherit;
+    text-decoration: none;
+}
+.workspace-community-container .workspace-note-placeholder-icon {
+    display: grid;
+    place-items: center;
+    width: 46px;
+    height: 46px;
+    border-radius: 13px;
+    background: #eef6ff;
+    font-size: 21px;
+}
+.workspace-community-container .workspace-note-placeholder-copy {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+}
+.workspace-community-container .workspace-note-placeholder-copy strong,
+.workspace-community-container .workspace-note-placeholder-copy span,
+.workspace-community-container .workspace-note-placeholder-copy em {
+    display: block;
+    width: 100%;
+    white-space: normal;
+    word-break: keep-all;
+    overflow-wrap: break-word;
+    writing-mode: horizontal-tb;
+}
+.workspace-community-container .workspace-note-placeholder-copy strong {
+    color: #223047;
+    font-size: 13px;
+    line-height: 1.4;
+}
+.workspace-community-container .workspace-note-placeholder-copy span {
+    color: #78889d;
+    font-size: 11px;
+    line-height: 1.45;
+}
+.workspace-community-container .workspace-note-placeholder-copy em {
+    margin-top: 2px;
+    color: #347fd0;
+    font-size: 11px;
+    font-style: normal;
+    font-weight: 600;
+}
+/* ===== End workspace shared note widget v4 ===== */
+
+
+/* ===== Workspace shared note widget v5: project widget parity ===== */
+.workspace-community-container .workspace-note-feature-card {
+    min-width: 0 !important;
+    height: 178px !important;
+    min-height: 178px !important;
+    padding: 18px 20px !important;
+}
+.workspace-community-container .workspace-note-feature-card .board-title {
+    min-height: 24px !important;
+    margin-bottom: 10px !important;
+    padding-bottom: 8px !important;
+    border-bottom: 1px solid #e9eef5 !important;
+}
+.workspace-community-container .workspace-note-feature-card .workspace-note-list {
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 122px !important;
+    height: 122px !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+}
+.workspace-community-container .workspace-note-feature-card .workspace-note-items {
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    height: 100% !important;
+    padding: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 7px !important;
+}
+.workspace-community-container .workspace-note-feature-card .workspace-note-item {
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 54px !important;
+    padding: 8px 10px !important;
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    grid-template-rows: auto auto !important;
+    column-gap: 8px !important;
+    row-gap: 3px !important;
+    align-content: center !important;
+    border: 1px solid #e4edf7 !important;
+    border-radius: 11px !important;
+    background: #fff !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+}
+.workspace-community-container .workspace-note-feature-card .workspace-note-item-title-row {
+    grid-column: 1 / -1 !important;
+    min-width: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+}
+.workspace-community-container .workspace-note-feature-card .workspace-note-item-title {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    color: #172033 !important;
+    font-size: 12px !important;
+    font-weight: 750 !important;
+    line-height: 1.25 !important;
+}
+.workspace-community-container .workspace-note-feature-card .workspace-note-item-preview {
+    grid-column: 1 !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    color: #718096 !important;
+    font-size: 10.5px !important;
+    line-height: 1.3 !important;
+}
+.workspace-community-container .workspace-note-feature-card .workspace-note-item-footer {
+    grid-column: 2 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    gap: 5px !important;
+    min-width: 0 !important;
+    white-space: nowrap !important;
+}
+.workspace-community-container .workspace-note-feature-card .workspace-note-author {
+    max-width: 62px !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    color: #8b97a8 !important;
+    font-size: 10px !important;
+    line-height: 1 !important;
+}
+.workspace-community-container .workspace-note-feature-card .workspace-note-mini-chip {
+    flex: 0 0 auto !important;
+    min-height: 18px !important;
+    padding: 0 6px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    border-radius: 999px !important;
+    background: #f2f7fc !important;
+    color: #68809a !important;
+    font-size: 9.5px !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+}
+.workspace-community-container .workspace-note-feature-card .workspace-note-mini-chip.pin {
+    background: #eef3ff !important;
+    color: #5573d8 !important;
+    border: 1px solid #d7e0ff !important;
+}
+.workspace-community-container .workspace-note-feature-card .workspace-note-more-row {
+    margin-top: auto !important;
+    padding: 1px 2px 0 !important;
+    display: block !important;
+    text-align: right !important;
+    color: #4f86c6 !important;
+    font-size: 10.5px !important;
+    line-height: 1.2 !important;
+    text-decoration: none !important;
+}
+.workspace-community-container .workspace-note-feature-card .workspace-note-loading,
+.workspace-community-container .workspace-note-feature-card .workspace-note-empty-link {
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 122px !important;
+    height: 122px !important;
+    padding: 16px 18px !important;
+    display: grid !important;
+    grid-template-columns: 44px minmax(0, 1fr) !important;
+    align-items: center !important;
+    gap: 14px !important;
+    border: 1px dashed #dce6f1 !important;
+    border-radius: 14px !important;
+    background: #f9fbfd !important;
+    box-sizing: border-box !important;
+}
+.workspace-community-container .workspace-note-feature-card .workspace-note-placeholder-copy {
+    min-width: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 4px !important;
+}
+.workspace-community-container .workspace-note-feature-card .workspace-note-placeholder-copy strong,
+.workspace-community-container .workspace-note-feature-card .workspace-note-placeholder-copy span,
+.workspace-community-container .workspace-note-feature-card .workspace-note-placeholder-copy em {
+    max-width: 100% !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    word-break: normal !important;
+}
+@media (max-width: 700px) {
+    .workspace-community-container .workspace-note-feature-card {
+        height: auto !important;
+        min-height: 178px !important;
+    }
+}
+/* ===== End workspace shared note widget v5 ===== */

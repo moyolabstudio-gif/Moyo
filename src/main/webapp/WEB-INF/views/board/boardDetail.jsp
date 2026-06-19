@@ -543,7 +543,7 @@
                 </button>
             </div>
 
-            <div class="content-body ${post.boardType eq 'FILE' ? 'board-file-description' : ''}">
+            <div class="content-body board-detail-content ${post.boardType eq 'FILE' ? 'board-file-description' : ''}">
                 <c:if test="${post.boardType eq 'FILE'}"><div class="section-mini-title">자료 설명</div></c:if>
                 ${post.content}
             </div>
