@@ -71,4 +71,10 @@
           FROM WORKSPACES
          WHERE OWNER_ID = #{userId}
     </select>
+    
+    
+    <select id="getAllUserIds" resultType="long">
+        SELECT USER_ID 
+        FROM USERS
+    </select>
 </mapper>

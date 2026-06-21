@@ -127,7 +127,7 @@ public class usersController {
 			session.setAttribute("user", loginUser);
 			return "redirect:/calendar";
 		}
-		return "redirect:/loginForm?error";
+		return "redirect:/users/loginForm?error";
 	}
 	
 	@GetMapping("/users/logout")

@@ -18,4 +18,7 @@ public interface IusersDao {
     void insertWorkspaceMember(@Param("wsId") Long wsId, @Param("userId") Long userId, @Param("role") String role);
     usersDto findByEmail(@Param("email") String email);
     List<workspaceDTO> findWorkspacesByUserId(Long userId);
+    
+    //알람용 유저 아이디 가져오기
+    List<Long> getAllUserIds();
 }

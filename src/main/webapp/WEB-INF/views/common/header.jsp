@@ -80,7 +80,7 @@
         transform:translateY(-1px);
         box-shadow:0 12px 24px rgba(67,104,222,.26);
     }
-    #inviteCountBadge {
+    #alarmBadge {
         display:none; position:absolute; top:-10px; right:-13px; min-width:16px; height:16px;
         padding:0 4px; border-radius:999px; background:#FF4D4F; color:#fff;
         font-size:10px; font-weight:900; line-height:16px; text-align:center;
@@ -145,11 +145,23 @@
                             <span class="moyo-nav-icon">🖼️</span>
                             <span class="moyo-nav-label">사진</span>
                         </a>
-                        <a href="/workspace/invitations" class="moyo-nav-link">
+                        <div class="moyo-nav-link" id="alarmContainer" style="cursor:pointer;">
                             <span class="moyo-nav-icon">🔔</span>
                             <span class="moyo-nav-label">알림</span>
-                            <span id="inviteCountBadge">0</span>
+                            <span id="alarmBadge">0</span>
+
+                            <div id="alarmDropdown" style="display:none; position:absolute; top:40px; right:0; width:300px; background:#fff; border:1px solid #e9eef4; border-radius:12px; box-shadow:0 10px 25px rgba(0,0,0,0.1); z-index:1000; padding:10px;">
+                                <div style="font-weight:900; padding:10px; border-bottom:1px solid #eee;">새로운 알림</div>
+                                <ul id="alarmList" style="list-style:none; padding:0; margin:0; max-height:300px; overflow-y:auto;">
+                                    </ul>
+                            </div>
+                        </div>
+                        
+                        <a href="/common/noticeList" class="moyo-nav-link">
+                            <span class="moyo-nav-icon">⚠️</span>
+                            <span class="moyo-nav-label">공지</span>
                         </a>
+                        
                     </div>
                     <div class="user-status">
                         <a href="/users/mypage" class="user-link" aria-label="내 정보로 이동">
@@ -175,21 +187,104 @@
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="${pageContext.request.contextPath}/js/appSidebar.js"></script>
 <script>
-    function updateInviteBadge() {
-        $.get('/workspace/api/invitations', function(data) {
-            const badge = $('#inviteCountBadge');
-            if (data && data.length > 0) {
-                badge.text(data.length).show();
+    // 2. 알림 배지 업데이트 함수
+    function updateAlarmCount() {
+        $.get('/api/alarm/list', function(data) {
+            const unreadCount = data.filter(item => item.isRead === 'N').length;
+            const $badge = $('#alarmBadge');
+            
+            if (unreadCount > 0) {
+                $badge.text(unreadCount).show();
             } else {
-                badge.hide();
+                $badge.hide();
             }
         });
     }
 
+    // 3. 페이지 로드 시 실행
     $(document).ready(function() {
         if ('${not empty sessionScope.user}' === 'true') {
-            updateInviteBadge();
-            setInterval(updateInviteBadge, 30000);
+                     updateAlarmCount();
+            
+            setInterval(function() {
+         
+                updateAlarmCount();
+            }, 30000);
+        }
+    });
+    
+    // 4. 알림창 토글 및 기타 기능들
+function clickAlarm(alarmId, noticeId) {
+    console.log("보내는 ID:", alarmId);
+
+    $.ajax({
+        url: '/api/alarm/read',
+        type: 'POST',
+        // 서버에 폼 데이터로 보내겠다고 명시
+        contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
+        // 데이터를 문자열 쿼리 형태로 확실하게 변환
+        data: $.param({ alarmId: alarmId }),
+        success: function(response) {
+            console.log("읽음 처리 성공:", response);
+            location.href = '/common/noticeList?openId=' + noticeId;
+        },
+        error: function(xhr, status, error) {
+            console.error("400 에러 발생:", xhr.responseText);
+        }
+    });
+}
+
+$('#alarmContainer').on('click', function(e) {
+    e.stopPropagation(); 
+    const $dropdown = $('#alarmDropdown');
+    
+    if ($dropdown.is(':visible')) {
+        $dropdown.hide();
+    } else {
+        $.get('/api/alarm/list', function(data) {
+            console.log("받아온 데이터:", data); // 여기서 item.alarm_id 값이 보이는지 확인하세요!
+            const $list = $('#alarmList');
+            $list.empty();
+            
+            if (!data || data.length === 0) {
+                $list.append('<li style="padding:15px; text-align:center; color:#999;">새로운 알림이 없습니다.</li>');
+            } else {
+                data.forEach(item => {
+                
+                	    // 모든 키를 콘솔에 출력해서 눈으로 직접 확인하세요!
+                	    console.log("객체 키 확인:", Object.keys(item)); 
+                	    
+                	    // 이 중에서 숫자가 들어있는 키를 찾으세요.
+                	    // 만약 alarmId로 되어있다면 아래를 item.alarmId로 바꾸면 바로 해결됩니다.
+                	    const alarmId = item.alarm_id || item.alarmId; 
+                	    const noticeId = item.notice_id || item.noticeId;
+                	    const title = item.title;
+
+                	    console.log("최종 확인된 ID:", alarmId);
+                	    
+               
+                    const $li = $('<li>').css({
+                        'padding': '15px',
+                        'cursor': 'pointer',
+                        'border-bottom': '1px solid #eee',
+                        'color': '#333'
+                    }).html('<b>' + title + '</b>');
+
+                    $li.on('click', function() {
+                        // 이제 여기서 올바른 alarmId를 넘겨주게 됩니다.
+                        clickAlarm(alarmId, noticeId);
+                    });
+
+                    $list.append($li);
+                });
+            }
+            $dropdown.show();
+        });
+    }
+});
+    $(document).click(function(e) {
+        if (!$(e.target).closest('#alarmContainer').length) {
+            $('#alarmDropdown').hide();
         }
     });
 </script>

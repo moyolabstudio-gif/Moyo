@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.springboot.project.dao.InoticeDAO">
+
+    <select id="selectNoticeList" resultType="com.springboot.project.dto.noticeDTO">
+        SELECT NOTICE_ID, USER_ID, TITLE, CONTENT, VIEW_COUNT, IS_PINNED, REG_DT, UPD_DT
+        FROM SYSTEM_NOTICES
+        ORDER BY IS_PINNED DESC, REG_DT DESC
+    </select>
+
+    <select id="selectNoticeById" parameterType="long" resultType="com.springboot.project.dto.noticeDTO">
+        SELECT * FROM SYSTEM_NOTICES 
+        WHERE NOTICE_ID = #{noticeId}
+    </select>
+
+<insert id="insertNotice" parameterType="com.springboot.project.dto.noticeDTO"
+        useGeneratedKeys="true" keyProperty="noticeId" keyColumn="NOTICE_ID">
+    INSERT INTO SYSTEM_NOTICES (
+        NOTICE_ID, USER_ID, TITLE, CONTENT, IS_PINNED, IS_PUSH, REG_DT
+    ) VALUES (
+        SEQ_SYSTEM_NOTICE_ID.NEXTVAL, 
+        #{userId, jdbcType=BIGINT}, 
+        #{title, jdbcType=VARCHAR}, 
+        #{content, jdbcType=VARCHAR}, 
+        NVL(#{isPinned, jdbcType=VARCHAR}, 'N'), 
+        NVL(#{isPush, jdbcType=VARCHAR}, 'N'),  
+        SYSDATE
+    )
+</insert>
+    
+    <update id="updateNotice" parameterType="com.springboot.project.dto.noticeDTO">
+        UPDATE SYSTEM_NOTICES 
+        SET TITLE = #{title}, 
+            CONTENT = #{content}, 
+            IS_PINNED = #{isPinned},
+            UPD_DT = SYSDATE
+        WHERE NOTICE_ID = #{noticeId}
+    </update>
+
+    <delete id="deleteNotice" parameterType="long">
+        DELETE FROM SYSTEM_NOTICES WHERE NOTICE_ID = #{noticeId}
+    </delete>
+
+</mapper>

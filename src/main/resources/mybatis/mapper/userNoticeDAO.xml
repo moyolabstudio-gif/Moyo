@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.springboot.project.dao.IuserNoticeDAO">
+
+    <insert id="insertAlarm">
+        INSERT INTO USER_NOTICES (ALARM_ID, USER_ID, NOTICE_ID, IS_READ)
+        VALUES (SEQ_ALARM_ID.NEXTVAL, #{userId}, #{noticeId}, 'N')
+    </insert>
+
+    <select id="selectMyNotices" resultType="com.springboot.project.dto.userNoticeDTO">
+        SELECT A.ALARM_ID, A.USER_ID, A.NOTICE_ID, A.IS_READ, A.REG_DT, N.TITLE 
+        FROM USER_NOTICES A
+        JOIN SYSTEM_NOTICES N ON A.NOTICE_ID = N.NOTICE_ID
+        WHERE A.USER_ID = #{userId}
+        ORDER BY A.REG_DT DESC
+    </select>
+
+    <update id="updateAlarmRead" parameterType="Long">
+        UPDATE USER_NOTICES 
+        SET IS_READ = 'Y' 
+        WHERE ALARM_ID = #{alarmId}
+    </update>
+</mapper>
