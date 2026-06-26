@@ -1,0 +1,20 @@
+<div class="nl-modal-backdrop common-folder-modal" id="noteMoveModal" hidden>
+    <section class="nl-move-modal" role="dialog" aria-modal="true" aria-labelledby="noteMoveModalTitle">
+        <div class="nl-modal-head">
+            <div>
+                <h2 id="noteMoveModalTitle">폴더 이동</h2>
+                <p id="noteMoveModalDescription">같은 영역의 폴더로만 이동할 수 있습니다.</p>
+            </div>
+            <button type="button" class="nl-modal-close" data-move-close aria-label="닫기">×</button>
+        </div>
+        <div class="nl-move-folder-tools" data-modal-folder-tools hidden>
+            <button type="button" class="nl-modal-folder-create" data-modal-folder-create>
+                <i class="fa-solid fa-plus" aria-hidden="true"></i> 새 폴더
+            </button>
+        </div>
+        <div class="nl-folder-choice-list" id="noteMoveFolderList"></div>
+        <div class="nl-modal-actions">
+            <button type="button" class="nl-modal-cancel" data-move-close>취소</button>
+        </div>
+    </section>
+</div>

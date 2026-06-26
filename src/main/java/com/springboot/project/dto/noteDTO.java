@@ -21,6 +21,7 @@ public class noteDTO {
     private String issueContent;
     private String changeLog;
     private String memo;
+    private String previewContent;
     private String category;
     private String icon;
     private Long folderId;
@@ -35,9 +36,12 @@ public class noteDTO {
 
     private Date regDt;
     private Date updDt;
+    private Long updatedBy;
 
     // 화면 표시용
     private String userName;
+    private String profileImagePath;
+    private String updatedByName;
 
     // 로그인 사용자 기준 고정 여부/순서
     private boolean pinned;
@@ -47,9 +51,14 @@ public class noteDTO {
     private boolean canManage;
     private boolean canEdit;
     private boolean canManageSpace;
+    private boolean ownedByMe;
 
-    // 목록 미리보기용 첨부 정보
+    // 목록 미리보기용 첨부/피드백 정보
     private Integer attachmentCount;
+    private Integer feedbackCount;
+    private Integer tableCount;
+    private Integer imageCount;
+    private Integer videoCount;
     private String firstAttachmentName;
     private Long previewImageFileId;
 
@@ -163,45 +172,19 @@ public class noteDTO {
         };
     }
 
+    public String getPreviewContent() {
+        return previewContent;
+    }
+
+    public void setPreviewContent(String previewContent) {
+        this.previewContent = previewContent;
+    }
+
     public String getPreviewText() {
-        if (memo == null || memo.isBlank()) return "내용이 비어있는 노트입니다.";
-
-        /*
-         * 목록/카드 미리보기에서는 본문 전체가 필요하지 않습니다.
-         * 특히 CKEditor가 data:image;base64 이미지를 본문에 넣은 경우
-         * 정규식/EL 처리 중 응답이 끊길 수 있으므로 먼저 이미지 태그와
-         * data 이미지 문자열을 제거하고, 처리 범위도 제한합니다.
-         */
-        String source = memo;
-        if (source.length() > 5000) {
-            source = source.substring(0, 5000);
+        if (previewContent == null || previewContent.isBlank()) {
+            return "내용이 비어있는 노트입니다.";
         }
-
-        String text = source
-                .replaceAll("(?is)<(script|style)[^>]*>.*?</\\1>", " ")
-                .replaceAll("(?is)<img\\b[^>]*>", " ")
-                .replaceAll("(?is)data:image/[^\\s\"'>]+", " ")
-                .replaceAll("(?i)<br\\s*/?>", "\n")
-                .replaceAll("(?i)</(p|div|li|h[1-6]|tr|blockquote|pre)>", "\n")
-                .replaceAll("(?i)<li[^>]*>", "• ")
-                .replaceAll("(?s)<[^>]+>", " ")
-                .replace("&nbsp;", " ")
-                .replace("&#160;", " ")
-                .replace("&amp;", "&")
-                .replace("&lt;", "<")
-                .replace("&gt;", ">")
-                .replace("&quot;", "\"")
-                .replace("&#39;", "'")
-                .replace("&apos;", "'")
-                .replace("\r\n", "\n")
-                .replace("\r", "\n")
-                .replaceAll("[\\t\\f\\x0B ]+", " ")
-                .replaceAll(" *\\n *", "\n")
-                .replaceAll("\\n{3,}", "\n\n")
-                .trim();
-
-        if (text.isBlank()) return "내용이 비어있는 노트입니다.";
-        return text.length() > 240 ? text.substring(0, 240) : text;
+        return previewContent;
     }
 
     public String getIcon() {
@@ -296,12 +279,37 @@ public class noteDTO {
         this.updDt = updDt;
     }
 
+
+    public Long getUpdatedBy() {
+        return updatedBy;
+    }
+
+    public void setUpdatedBy(Long updatedBy) {
+        this.updatedBy = updatedBy;
+    }
+
+    public String getUpdatedByName() {
+        return updatedByName;
+    }
+
+    public void setUpdatedByName(String updatedByName) {
+        this.updatedByName = updatedByName;
+    }
+
     public String getUserName() {
         return userName;
     }
 
     public void setUserName(String userName) {
         this.userName = userName;
+    }
+
+    public String getProfileImagePath() {
+        return profileImagePath;
+    }
+
+    public void setProfileImagePath(String profileImagePath) {
+        this.profileImagePath = profileImagePath;
     }
 
     public boolean isPinned() {
@@ -344,6 +352,14 @@ public class noteDTO {
         this.canManageSpace = canManageSpace;
     }
 
+    public boolean isOwnedByMe() {
+        return ownedByMe;
+    }
+
+    public void setOwnedByMe(boolean ownedByMe) {
+        this.ownedByMe = ownedByMe;
+    }
+
 
     public Integer getAttachmentCount() {
         if (attachmentCount != null) return attachmentCount;
@@ -352,6 +368,38 @@ public class noteDTO {
 
     public void setAttachmentCount(Integer attachmentCount) {
         this.attachmentCount = attachmentCount;
+    }
+
+    public Integer getFeedbackCount() {
+        return feedbackCount == null ? 0 : feedbackCount;
+    }
+
+    public void setFeedbackCount(Integer feedbackCount) {
+        this.feedbackCount = feedbackCount;
+    }
+
+    public int getTableCount() {
+        return tableCount == null ? 0 : tableCount;
+    }
+
+    public void setTableCount(Integer tableCount) {
+        this.tableCount = tableCount;
+    }
+
+    public int getImageCount() {
+        return imageCount == null ? 0 : imageCount;
+    }
+
+    public void setImageCount(Integer imageCount) {
+        this.imageCount = imageCount;
+    }
+
+    public int getVideoCount() {
+        return videoCount == null ? 0 : videoCount;
+    }
+
+    public void setVideoCount(Integer videoCount) {
+        this.videoCount = videoCount;
     }
 
     public String getFirstAttachmentName() {

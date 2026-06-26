@@ -7,9 +7,9 @@
                A.COVER_PHOTO_ID, A.CREATED_BY, U.USER_NAME AS CREATOR_NAME,
                TO_CHAR(A.CREATED_AT, 'YYYY-MM-DD') AS CREATED_AT,
                TO_CHAR(A.UPDATED_AT, 'YYYY-MM-DD HH24:MI') AS UPDATED_AT,
-               (SELECT COUNT(*) FROM PHOTO_POSTS PP WHERE PP.ALBUM_ID = A.ALBUM_ID) AS POST_COUNT,
+               (SELECT COUNT(*) FROM PHOTO_POSTS PP WHERE PP.ALBUM_ID = A.ALBUM_ID AND NVL(PP.DELETED_YN, 'N') = 'N') AS POST_COUNT,
                (SELECT COUNT(*) FROM PHOTOS P JOIN PHOTO_POSTS PP ON PP.POST_ID = P.POST_ID
-                 WHERE PP.ALBUM_ID = A.ALBUM_ID) AS PHOTO_COUNT,
+                 WHERE PP.ALBUM_ID = A.ALBUM_ID AND NVL(PP.DELETED_YN, 'N') = 'N') AS PHOTO_COUNT,
                CP.FILE_PATH AS COVER_PATH
           FROM PHOTO_ALBUMS A
           JOIN USERS U ON U.USER_ID = A.CREATED_BY
@@ -24,9 +24,9 @@
                A.COVER_PHOTO_ID, A.CREATED_BY, U.USER_NAME AS CREATOR_NAME,
                TO_CHAR(A.CREATED_AT, 'YYYY-MM-DD HH24:MI') AS CREATED_AT,
                TO_CHAR(A.UPDATED_AT, 'YYYY-MM-DD HH24:MI') AS UPDATED_AT,
-               (SELECT COUNT(*) FROM PHOTO_POSTS PP WHERE PP.ALBUM_ID = A.ALBUM_ID) AS POST_COUNT,
+               (SELECT COUNT(*) FROM PHOTO_POSTS PP WHERE PP.ALBUM_ID = A.ALBUM_ID AND NVL(PP.DELETED_YN, 'N') = 'N') AS POST_COUNT,
                (SELECT COUNT(*) FROM PHOTOS P JOIN PHOTO_POSTS PP ON PP.POST_ID = P.POST_ID
-                 WHERE PP.ALBUM_ID = A.ALBUM_ID) AS PHOTO_COUNT
+                 WHERE PP.ALBUM_ID = A.ALBUM_ID AND NVL(PP.DELETED_YN, 'N') = 'N') AS PHOTO_COUNT
           FROM PHOTO_ALBUMS A
           JOIN USERS U ON U.USER_ID = A.CREATED_BY
          WHERE A.ALBUM_ID = #{albumId}
@@ -60,11 +60,17 @@
     <sql id="postColumns">
         PP.POST_ID, PP.SCOPE_TYPE, PP.SCOPE_ID, PP.ALBUM_ID,
         A.ALBUM_NAME, PP.TITLE, PP.DESCRIPTION, PP.CREATED_BY,
+        PP.CREATED_BY AS USER_ID,
+        NVL(PP.DELETED_YN, 'N') AS DELETED_YN, PP.DELETED_AT, PP.DELETED_BY, PP.ORIGINAL_ALBUM_ID,
+        NVL(PP.VISIBILITY_TYPE, 'PRIVATE') AS VISIBILITY_TYPE,
         U.USER_NAME AS CREATOR_NAME,
         TO_CHAR(PP.CREATED_AT, 'YYYY-MM-DD HH24:MI') AS CREATED_AT,
         TO_CHAR(PP.UPDATED_AT, 'YYYY-MM-DD HH24:MI') AS UPDATED_AT,
-        (SELECT COUNT(*) FROM PHOTOS PX WHERE PX.POST_ID = PP.POST_ID) AS PHOTO_COUNT,
-        (SELECT COUNT(*) FROM CONTENT_REACTIONS CR
+        (SELECT COUNT(1) FROM PHOTOS PX WHERE PX.POST_ID = PP.POST_ID) AS PHOTO_COUNT,
+        (SELECT COUNT(1) FROM PHOTO_POST_COMMENTS C
+          WHERE C.POST_ID = PP.POST_ID
+            AND NVL(C.DELETED_YN, 'N') = 'N') AS COMMENT_COUNT,
+        (SELECT COUNT(1) FROM CONTENT_REACTIONS CR
           WHERE CR.CONTENT_TYPE = 'PHOTO_POST'
             AND CR.CONTENT_ID = PP.POST_ID
             AND CR.REACTION_TYPE = 'LIKE') AS LIKE_COUNT,
@@ -75,20 +81,258 @@
                AND CR.USER_ID = #{userId,jdbcType=NUMERIC}
                AND CR.REACTION_TYPE = 'LIKE'
         ) THEN 1 ELSE 0 END AS LIKED_BY_ME,
-        (SELECT FILE_PATH FROM (
-            SELECT PX.FILE_PATH FROM PHOTOS PX
-             WHERE PX.POST_ID = PP.POST_ID
-             ORDER BY PX.SORT_ORDER ASC, PX.PHOTO_ID ASC
-        ) WHERE ROWNUM = 1) AS COVER_PATH
+        CASE WHEN #{userId,jdbcType=NUMERIC} IS NOT NULL AND EXISTS (
+            SELECT 1 FROM CONTENT_REACTIONS CR
+             WHERE CR.CONTENT_TYPE = 'PHOTO_POST'
+               AND CR.CONTENT_ID = PP.POST_ID
+               AND CR.USER_ID = #{userId,jdbcType=NUMERIC}
+               AND CR.REACTION_TYPE = 'COLLECT'
+        ) THEN 1 ELSE 0 END AS COLLECTED_BY_ME,
+        CASE WHEN EXISTS (
+            SELECT 1 FROM CONTENT_REACTIONS CL
+             WHERE CL.CONTENT_TYPE = 'PHOTO_COLLECT_LINK'
+               AND CL.CONTENT_ID = PP.POST_ID
+               AND CL.REACTION_TYPE LIKE 'SRC_%'
+        ) THEN 1 ELSE 0 END AS IS_COLLECTED_COPY,
+        (SELECT TO_NUMBER(SUBSTR(CL.REACTION_TYPE, 5))
+           FROM CONTENT_REACTIONS CL
+          WHERE CL.CONTENT_TYPE = 'PHOTO_COLLECT_LINK'
+            AND CL.CONTENT_ID = PP.POST_ID
+            AND CL.REACTION_TYPE LIKE 'SRC_%'
+            AND ROWNUM = 1) AS COLLECTED_SOURCE_POST_ID,
+        (SELECT SRC.CREATED_BY
+           FROM PHOTO_POSTS SRC
+          WHERE SRC.POST_ID = (
+                SELECT TO_NUMBER(SUBSTR(CL.REACTION_TYPE, 5))
+                  FROM CONTENT_REACTIONS CL
+                 WHERE CL.CONTENT_TYPE = 'PHOTO_COLLECT_LINK'
+                   AND CL.CONTENT_ID = PP.POST_ID
+                   AND CL.REACTION_TYPE LIKE 'SRC_%'
+                   AND ROWNUM = 1
+          )) AS COLLECTED_SOURCE_USER_ID,
+        (SELECT SU.USER_NAME
+           FROM PHOTO_POSTS SRC
+           JOIN USERS SU ON SU.USER_ID = SRC.CREATED_BY
+          WHERE SRC.POST_ID = (
+                SELECT TO_NUMBER(SUBSTR(CL.REACTION_TYPE, 5))
+                  FROM CONTENT_REACTIONS CL
+                 WHERE CL.CONTENT_TYPE = 'PHOTO_COLLECT_LINK'
+                   AND CL.CONTENT_ID = PP.POST_ID
+                   AND CL.REACTION_TYPE LIKE 'SRC_%'
+                   AND ROWNUM = 1
+          )) AS COLLECTED_SOURCE_CREATOR_NAME,
+        (SELECT MIN(PX.FILE_PATH) KEEP (DENSE_RANK FIRST ORDER BY NVL(PX.SORT_ORDER, 0), PX.PHOTO_ID)
+           FROM PHOTOS PX
+          WHERE PX.POST_ID = PP.POST_ID) AS COVER_PATH,
+        CASE WHEN #{userId,jdbcType=NUMERIC} IS NOT NULL AND EXISTS (
+            SELECT 1
+              FROM CONTENT_SHARES CS
+             WHERE CS.CONTENT_TYPE = 'PHOTO'
+               AND CS.CONTENT_ID = PP.POST_ID
+               AND CS.ACTIVE_YN = 'Y'
+               AND NVL(CS.SHARE_STATUS, 'ACCEPTED') = 'ACCEPTED'
+               AND (CS.EXPIRES_AT IS NULL OR CS.EXPIRES_AT >= SYSDATE)
+               AND CS.TARGET_TYPE = 'USER'
+               AND CS.TARGET_ID = #{userId,jdbcType=NUMERIC}
+        ) THEN 1 ELSE 0 END AS IS_SHARED_TO_ME,
+        (SELECT MIN(CS.SHARE_ID) KEEP (DENSE_RANK FIRST ORDER BY CS.CREATED_AT DESC, CS.SHARE_ID DESC)
+           FROM CONTENT_SHARES CS
+          WHERE CS.CONTENT_TYPE = 'PHOTO'
+            AND CS.CONTENT_ID = PP.POST_ID
+            AND CS.ACTIVE_YN = 'Y'
+            AND NVL(CS.SHARE_STATUS, 'ACCEPTED') = 'ACCEPTED'
+            AND (CS.EXPIRES_AT IS NULL OR CS.EXPIRES_AT >= SYSDATE)
+            AND CS.TARGET_TYPE = 'USER'
+            AND CS.TARGET_ID = #{userId,jdbcType=NUMERIC}) AS RECEIVED_SHARE_ID,
+        (SELECT LISTAGG(T.TARGET_TYPE, ',') WITHIN GROUP (ORDER BY T.TARGET_TYPE)
+           FROM (
+                SELECT DISTINCT CS.TARGET_TYPE
+                  FROM CONTENT_SHARES CS
+                 WHERE CS.CONTENT_TYPE = 'PHOTO'
+                   AND CS.CONTENT_ID = PP.POST_ID
+                   AND CS.ACTIVE_YN = 'Y'
+                   AND NVL(CS.SHARE_STATUS, 'ACCEPTED') = 'ACCEPTED'
+                   AND (CS.EXPIRES_AT IS NULL OR CS.EXPIRES_AT >= SYSDATE)
+           ) T) AS SHARE_TARGET_TYPES,
+        CASE WHEN #{userId,jdbcType=NUMERIC} IS NOT NULL AND PP.CREATED_BY = #{userId,jdbcType=NUMERIC} AND EXISTS (
+            SELECT 1
+              FROM CONTENT_SHARES CS
+             WHERE CS.CONTENT_TYPE = 'PHOTO'
+               AND CS.CONTENT_ID = PP.POST_ID
+               AND CS.ACTIVE_YN = 'Y'
+               AND NVL(CS.SHARE_STATUS, 'ACCEPTED') = 'ACCEPTED'
+               AND (CS.EXPIRES_AT IS NULL OR CS.EXPIRES_AT >= SYSDATE)
+               AND CS.TARGET_TYPE = 'USER'
+        ) THEN 1 ELSE 0 END AS IS_SHARED_BY_ME,
+        (SELECT LISTAGG(TO_CHAR(CS.TARGET_ID), ',') WITHIN GROUP (ORDER BY CS.TARGET_ID)
+           FROM CONTENT_SHARES CS
+          WHERE CS.CONTENT_TYPE = 'PHOTO'
+            AND CS.CONTENT_ID = PP.POST_ID
+            AND CS.ACTIVE_YN = 'Y'
+            AND NVL(CS.SHARE_STATUS, 'ACCEPTED') = 'ACCEPTED'
+            AND (CS.EXPIRES_AT IS NULL OR CS.EXPIRES_AT >= SYSDATE)
+            AND CS.TARGET_TYPE = 'USER'
+            AND PP.CREATED_BY = #{userId,jdbcType=NUMERIC}) AS SHARE_TARGET_USER_IDS
+    </sql>
+
+    <sql id="postListColumns">
+        PP.POST_ID, PP.SCOPE_TYPE, PP.SCOPE_ID, PP.ALBUM_ID,
+        A.ALBUM_NAME, PP.TITLE, PP.DESCRIPTION, PP.CREATED_BY,
+        PP.CREATED_BY AS USER_ID,
+        NVL(PP.DELETED_YN, 'N') AS DELETED_YN, PP.DELETED_AT, PP.DELETED_BY, PP.ORIGINAL_ALBUM_ID,
+        NVL(PP.VISIBILITY_TYPE, 'PRIVATE') AS VISIBILITY_TYPE,
+        U.USER_NAME AS CREATOR_NAME,
+        TO_CHAR(PP.CREATED_AT, 'YYYY-MM-DD HH24:MI') AS CREATED_AT,
+        TO_CHAR(PP.UPDATED_AT, 'YYYY-MM-DD HH24:MI') AS UPDATED_AT,
+        (SELECT COUNT(1) FROM PHOTOS PX WHERE PX.POST_ID = PP.POST_ID) AS PHOTO_COUNT,
+        (SELECT COUNT(1) FROM PHOTO_POST_COMMENTS C
+          WHERE C.POST_ID = PP.POST_ID
+            AND NVL(C.DELETED_YN, 'N') = 'N') AS COMMENT_COUNT,
+        (SELECT COUNT(1) FROM CONTENT_REACTIONS CR
+          WHERE CR.CONTENT_TYPE = 'PHOTO_POST'
+            AND CR.CONTENT_ID = PP.POST_ID
+            AND CR.REACTION_TYPE = 'LIKE') AS LIKE_COUNT,
+        CASE WHEN #{userId,jdbcType=NUMERIC} IS NOT NULL AND EXISTS (
+            SELECT 1 FROM CONTENT_REACTIONS CR
+             WHERE CR.CONTENT_TYPE = 'PHOTO_POST'
+               AND CR.CONTENT_ID = PP.POST_ID
+               AND CR.USER_ID = #{userId,jdbcType=NUMERIC}
+               AND CR.REACTION_TYPE = 'LIKE'
+        ) THEN 1 ELSE 0 END AS LIKED_BY_ME,
+        CASE WHEN #{userId,jdbcType=NUMERIC} IS NOT NULL AND EXISTS (
+            SELECT 1 FROM CONTENT_REACTIONS CR
+             WHERE CR.CONTENT_TYPE = 'PHOTO_POST'
+               AND CR.CONTENT_ID = PP.POST_ID
+               AND CR.USER_ID = #{userId,jdbcType=NUMERIC}
+               AND CR.REACTION_TYPE = 'COLLECT'
+        ) THEN 1 ELSE 0 END AS COLLECTED_BY_ME,
+        CASE WHEN EXISTS (
+            SELECT 1 FROM CONTENT_REACTIONS CL
+             WHERE CL.CONTENT_TYPE = 'PHOTO_COLLECT_LINK'
+               AND CL.CONTENT_ID = PP.POST_ID
+               AND CL.REACTION_TYPE LIKE 'SRC_%'
+        ) THEN 1 ELSE 0 END AS IS_COLLECTED_COPY,
+        (SELECT TO_NUMBER(SUBSTR(CL.REACTION_TYPE, 5))
+           FROM CONTENT_REACTIONS CL
+          WHERE CL.CONTENT_TYPE = 'PHOTO_COLLECT_LINK'
+            AND CL.CONTENT_ID = PP.POST_ID
+            AND CL.REACTION_TYPE LIKE 'SRC_%'
+            AND ROWNUM = 1) AS COLLECTED_SOURCE_POST_ID,
+        (SELECT SRC.CREATED_BY
+           FROM PHOTO_POSTS SRC
+          WHERE SRC.POST_ID = (
+                SELECT TO_NUMBER(SUBSTR(CL.REACTION_TYPE, 5))
+                  FROM CONTENT_REACTIONS CL
+                 WHERE CL.CONTENT_TYPE = 'PHOTO_COLLECT_LINK'
+                   AND CL.CONTENT_ID = PP.POST_ID
+                   AND CL.REACTION_TYPE LIKE 'SRC_%'
+                   AND ROWNUM = 1
+          )) AS COLLECTED_SOURCE_USER_ID,
+        (SELECT SU.USER_NAME
+           FROM PHOTO_POSTS SRC
+           JOIN USERS SU ON SU.USER_ID = SRC.CREATED_BY
+          WHERE SRC.POST_ID = (
+                SELECT TO_NUMBER(SUBSTR(CL.REACTION_TYPE, 5))
+                  FROM CONTENT_REACTIONS CL
+                 WHERE CL.CONTENT_TYPE = 'PHOTO_COLLECT_LINK'
+                   AND CL.CONTENT_ID = PP.POST_ID
+                   AND CL.REACTION_TYPE LIKE 'SRC_%'
+                   AND ROWNUM = 1
+          )) AS COLLECTED_SOURCE_CREATOR_NAME,
+        (SELECT MIN(PX.FILE_PATH) KEEP (DENSE_RANK FIRST ORDER BY NVL(PX.SORT_ORDER, 0), PX.PHOTO_ID)
+           FROM PHOTOS PX
+          WHERE PX.POST_ID = PP.POST_ID) AS COVER_PATH,
+        CASE WHEN #{userId,jdbcType=NUMERIC} IS NOT NULL AND EXISTS (
+            SELECT 1
+              FROM CONTENT_SHARES CS
+             WHERE CS.CONTENT_TYPE = 'PHOTO'
+               AND CS.CONTENT_ID = PP.POST_ID
+               AND CS.ACTIVE_YN = 'Y'
+               AND NVL(CS.SHARE_STATUS, 'ACCEPTED') = 'ACCEPTED'
+               AND (CS.EXPIRES_AT IS NULL OR CS.EXPIRES_AT >= SYSDATE)
+               AND CS.TARGET_TYPE = 'USER'
+               AND CS.TARGET_ID = #{userId,jdbcType=NUMERIC}
+        ) THEN 1 ELSE 0 END AS IS_SHARED_TO_ME,
+        (SELECT MIN(CS.SHARE_ID) KEEP (DENSE_RANK FIRST ORDER BY CS.CREATED_AT DESC, CS.SHARE_ID DESC)
+           FROM CONTENT_SHARES CS
+          WHERE CS.CONTENT_TYPE = 'PHOTO'
+            AND CS.CONTENT_ID = PP.POST_ID
+            AND CS.ACTIVE_YN = 'Y'
+            AND NVL(CS.SHARE_STATUS, 'ACCEPTED') = 'ACCEPTED'
+            AND (CS.EXPIRES_AT IS NULL OR CS.EXPIRES_AT >= SYSDATE)
+            AND CS.TARGET_TYPE = 'USER'
+            AND CS.TARGET_ID = #{userId,jdbcType=NUMERIC}) AS RECEIVED_SHARE_ID,
+        (SELECT LISTAGG(T.TARGET_TYPE, ',') WITHIN GROUP (ORDER BY T.TARGET_TYPE)
+           FROM (
+                SELECT DISTINCT CS.TARGET_TYPE
+                  FROM CONTENT_SHARES CS
+                 WHERE CS.CONTENT_TYPE = 'PHOTO'
+                   AND CS.CONTENT_ID = PP.POST_ID
+                   AND CS.ACTIVE_YN = 'Y'
+                   AND NVL(CS.SHARE_STATUS, 'ACCEPTED') = 'ACCEPTED'
+                   AND (CS.EXPIRES_AT IS NULL OR CS.EXPIRES_AT >= SYSDATE)
+           ) T) AS SHARE_TARGET_TYPES,
+        CASE WHEN #{userId,jdbcType=NUMERIC} IS NOT NULL AND PP.CREATED_BY = #{userId,jdbcType=NUMERIC} AND EXISTS (
+            SELECT 1
+              FROM CONTENT_SHARES CS
+             WHERE CS.CONTENT_TYPE = 'PHOTO'
+               AND CS.CONTENT_ID = PP.POST_ID
+               AND CS.ACTIVE_YN = 'Y'
+               AND NVL(CS.SHARE_STATUS, 'ACCEPTED') = 'ACCEPTED'
+               AND (CS.EXPIRES_AT IS NULL OR CS.EXPIRES_AT >= SYSDATE)
+               AND CS.TARGET_TYPE = 'USER'
+        ) THEN 1 ELSE 0 END AS IS_SHARED_BY_ME,
+        (SELECT LISTAGG(TO_CHAR(CS.TARGET_ID), ',') WITHIN GROUP (ORDER BY CS.TARGET_ID)
+           FROM CONTENT_SHARES CS
+          WHERE CS.CONTENT_TYPE = 'PHOTO'
+            AND CS.CONTENT_ID = PP.POST_ID
+            AND CS.ACTIVE_YN = 'Y'
+            AND NVL(CS.SHARE_STATUS, 'ACCEPTED') = 'ACCEPTED'
+            AND (CS.EXPIRES_AT IS NULL OR CS.EXPIRES_AT >= SYSDATE)
+            AND CS.TARGET_TYPE = 'USER'
+            AND PP.CREATED_BY = #{userId,jdbcType=NUMERIC}) AS SHARE_TARGET_USER_IDS
     </sql>
 
     <select id="selectPosts" resultType="map">
-        SELECT <include refid="postColumns"/>
+        SELECT <include refid="postListColumns"/>
           FROM PHOTO_POSTS PP
           JOIN USERS U ON U.USER_ID = PP.CREATED_BY
           LEFT JOIN PHOTO_ALBUMS A ON A.ALBUM_ID = PP.ALBUM_ID
-         WHERE PP.SCOPE_TYPE = #{scopeType}
-           AND PP.SCOPE_ID = #{scopeId}
+         WHERE (
+                (PP.SCOPE_TYPE = #{scopeType} AND PP.SCOPE_ID = #{scopeId})
+                OR (#{scopeType} = 'PERSONAL'
+                    AND #{albumId,jdbcType=NUMERIC} IS NULL
+                    AND PP.SCOPE_TYPE = 'PERSONAL'
+                    AND NVL(PP.VISIBILITY_TYPE, 'PRIVATE') = 'FRIENDS'
+                    AND PP.CREATED_BY &lt;&gt; #{userId}
+                    AND EXISTS (
+                        SELECT 1
+                          FROM USER_FRIENDS UF
+                         WHERE UF.STATUS = 'ACCEPTED'
+                           AND (
+                                (UF.REQUESTER_ID = #{userId} AND UF.ADDRESSEE_ID = PP.CREATED_BY)
+                                OR (UF.ADDRESSEE_ID = #{userId} AND UF.REQUESTER_ID = PP.CREATED_BY)
+                           )
+                    )
+                )
+                OR EXISTS (
+                    SELECT 1
+                      FROM CONTENT_SHARES CS
+                     WHERE CS.CONTENT_TYPE = 'PHOTO'
+                       AND CS.CONTENT_ID = PP.POST_ID
+                       AND CS.ACTIVE_YN = 'Y'
+                       AND NVL(CS.SHARE_STATUS, 'ACCEPTED') = 'ACCEPTED'
+                       AND (CS.EXPIRES_AT IS NULL OR CS.EXPIRES_AT >= SYSDATE)
+                       AND (
+                            (#{scopeType} = 'PERSONAL' AND CS.TARGET_TYPE = 'USER' AND CS.TARGET_ID = #{userId})
+                         OR (#{scopeType} = 'WORKSPACE' AND CS.TARGET_TYPE = 'WS' AND CS.TARGET_ID = #{scopeId}
+                             AND EXISTS (SELECT 1 FROM WS_MEMBERS WSM WHERE WSM.WS_ID = CS.TARGET_ID AND WSM.USER_ID = #{userId}))
+                         OR (#{scopeType} = 'PROJECT' AND CS.TARGET_TYPE = 'PROJ' AND CS.TARGET_ID = #{scopeId}
+                             AND EXISTS (SELECT 1 FROM PROJ_MEMBERS PM WHERE PM.PROJ_ID = CS.TARGET_ID AND PM.USER_ID = #{userId}))
+                       )
+                )
+           )
+           AND NVL(PP.DELETED_YN, 'N') = 'N'
         <if test="albumId != null">
            AND PP.ALBUM_ID = #{albumId}
         </if>
@@ -97,12 +341,44 @@
 
     <select id="selectRecentPosts" resultType="map">
         SELECT * FROM (
-            SELECT <include refid="postColumns"/>
+            SELECT <include refid="postListColumns"/>
               FROM PHOTO_POSTS PP
               JOIN USERS U ON U.USER_ID = PP.CREATED_BY
               LEFT JOIN PHOTO_ALBUMS A ON A.ALBUM_ID = PP.ALBUM_ID
-             WHERE PP.SCOPE_TYPE = #{scopeType}
-               AND PP.SCOPE_ID = #{scopeId}
+             WHERE (
+                    (PP.SCOPE_TYPE = #{scopeType} AND PP.SCOPE_ID = #{scopeId})
+                    OR (#{scopeType} = 'PERSONAL'
+                        AND PP.SCOPE_TYPE = 'PERSONAL'
+                        AND NVL(PP.VISIBILITY_TYPE, 'PRIVATE') = 'FRIENDS'
+                        AND PP.CREATED_BY &lt;&gt; #{userId}
+                        AND EXISTS (
+                            SELECT 1
+                              FROM USER_FRIENDS UF
+                             WHERE UF.STATUS = 'ACCEPTED'
+                               AND (
+                                    (UF.REQUESTER_ID = #{userId} AND UF.ADDRESSEE_ID = PP.CREATED_BY)
+                                    OR (UF.ADDRESSEE_ID = #{userId} AND UF.REQUESTER_ID = PP.CREATED_BY)
+                               )
+                        )
+                    )
+                OR EXISTS (
+                    SELECT 1
+                      FROM CONTENT_SHARES CS
+                     WHERE CS.CONTENT_TYPE = 'PHOTO'
+                       AND CS.CONTENT_ID = PP.POST_ID
+                       AND CS.ACTIVE_YN = 'Y'
+                       AND NVL(CS.SHARE_STATUS, 'ACCEPTED') = 'ACCEPTED'
+                       AND (CS.EXPIRES_AT IS NULL OR CS.EXPIRES_AT >= SYSDATE)
+                       AND (
+                            (#{scopeType} = 'PERSONAL' AND CS.TARGET_TYPE = 'USER' AND CS.TARGET_ID = #{userId})
+                         OR (#{scopeType} = 'WORKSPACE' AND CS.TARGET_TYPE = 'WS' AND CS.TARGET_ID = #{scopeId}
+                             AND EXISTS (SELECT 1 FROM WS_MEMBERS WSM WHERE WSM.WS_ID = CS.TARGET_ID AND WSM.USER_ID = #{userId}))
+                         OR (#{scopeType} = 'PROJECT' AND CS.TARGET_TYPE = 'PROJ' AND CS.TARGET_ID = #{scopeId}
+                             AND EXISTS (SELECT 1 FROM PROJ_MEMBERS PM WHERE PM.PROJ_ID = CS.TARGET_ID AND PM.USER_ID = #{userId}))
+                       )
+                )
+               )
+               AND NVL(PP.DELETED_YN, 'N') = 'N'
              ORDER BY PP.CREATED_AT DESC, PP.POST_ID DESC
         ) WHERE ROWNUM &lt;= #{limit}
     </select>
@@ -113,6 +389,29 @@
           JOIN USERS U ON U.USER_ID = PP.CREATED_BY
           LEFT JOIN PHOTO_ALBUMS A ON A.ALBUM_ID = PP.ALBUM_ID
          WHERE PP.POST_ID = #{postId}
+           AND NVL(PP.DELETED_YN, 'N') = 'N'
+    </select>
+
+    <select id="selectTrashPosts" resultType="map">
+        SELECT <include refid="postListColumns"/>
+          FROM PHOTO_POSTS PP
+          JOIN USERS U ON U.USER_ID = PP.CREATED_BY
+          LEFT JOIN PHOTO_ALBUMS A ON A.ALBUM_ID = PP.ORIGINAL_ALBUM_ID
+         WHERE NVL(PP.DELETED_YN, 'N') = 'Y'
+           AND PP.DELETED_BY = #{userId}
+         ORDER BY PP.DELETED_AT DESC, PP.POST_ID DESC
+    </select>
+
+    <select id="selectTrashPost" resultType="map">
+        SELECT <include refid="postColumns"/>
+          FROM PHOTO_POSTS PP
+          JOIN USERS U ON U.USER_ID = PP.CREATED_BY
+          LEFT JOIN PHOTO_ALBUMS A ON A.ALBUM_ID = PP.ORIGINAL_ALBUM_ID
+         WHERE PP.POST_ID = #{postId}
+           AND NVL(PP.DELETED_YN, 'N') = 'Y'
+        <if test="userId != null">
+           AND PP.DELETED_BY = #{userId}
+        </if>
     </select>
 
     <select id="selectPostPhotos" resultType="map">
@@ -132,11 +431,11 @@
         </selectKey>
         INSERT INTO PHOTO_POSTS (
             POST_ID, SCOPE_TYPE, SCOPE_ID, ALBUM_ID, TITLE, DESCRIPTION,
-            CREATED_BY, CREATED_AT, UPDATED_AT
+            VISIBILITY_TYPE, CREATED_BY, CREATED_AT, UPDATED_AT
         ) VALUES (
             #{postId}, #{scopeType}, #{scopeId}, #{albumId,jdbcType=NUMERIC},
             #{title,jdbcType=VARCHAR}, #{description,jdbcType=VARCHAR},
-            #{createdBy}, SYSDATE, SYSDATE
+            #{visibilityType,jdbcType=VARCHAR}, #{createdBy}, SYSDATE, SYSDATE
         )
     </insert>
 
@@ -156,14 +455,144 @@
          WHERE POST_ID = #{postId}
     </update>
 
+    <update id="updatePostVisibility">
+        UPDATE PHOTO_POSTS
+           SET VISIBILITY_TYPE = #{visibilityType,jdbcType=VARCHAR},
+               UPDATED_AT = SYSDATE
+         WHERE POST_ID = #{postId}
+    </update>
+
     <update id="updatePhotoAlbumByPost">
         UPDATE PHOTOS
            SET ALBUM_ID = #{albumId,jdbcType=NUMERIC}
          WHERE POST_ID = #{postId}
     </update>
 
+    <update id="movePostToTrash">
+        UPDATE PHOTO_POSTS PP
+           SET PP.ORIGINAL_ALBUM_ID = PP.ALBUM_ID,
+               PP.ALBUM_ID = NULL,
+               PP.DELETED_YN = 'Y',
+               PP.DELETED_AT = SYSDATE,
+               PP.DELETED_BY = #{userId},
+               PP.UPDATED_AT = SYSDATE
+         WHERE PP.POST_ID = #{postId}
+           AND NVL(PP.DELETED_YN, 'N') = 'N'
+           AND (
+                PP.CREATED_BY = #{userId}
+                OR (PP.SCOPE_TYPE = 'WORKSPACE' AND (
+                    EXISTS (SELECT 1 FROM WORKSPACES W WHERE W.WS_ID = PP.SCOPE_ID AND W.OWNER_ID = #{userId})
+                    OR EXISTS (SELECT 1 FROM WS_MEMBERS WM WHERE WM.WS_ID = PP.SCOPE_ID AND WM.USER_ID = #{userId} AND UPPER(NVL(WM.WS_ROLE, 'MEMBER')) = 'ADMIN')
+                ))
+                OR (PP.SCOPE_TYPE = 'PROJECT' AND (
+                    EXISTS (SELECT 1 FROM PROJECTS P WHERE P.PROJ_ID = PP.SCOPE_ID AND P.LEADER_ID = #{userId})
+                    OR EXISTS (SELECT 1 FROM PROJ_MEMBERS PM WHERE PM.PROJ_ID = PP.SCOPE_ID AND PM.USER_ID = #{userId} AND UPPER(NVL(PM.PROJ_ROLE, 'MEMBER')) IN ('ADMIN', 'LEADER', 'OWNER', 'PM'))
+                ))
+           )
+    </update>
+
+    <update id="restorePostFromTrash">
+        UPDATE PHOTO_POSTS PP
+           SET PP.ALBUM_ID = CASE
+                                WHEN PP.ORIGINAL_ALBUM_ID IS NOT NULL
+                                 AND EXISTS (SELECT 1 FROM PHOTO_ALBUMS A WHERE A.ALBUM_ID = PP.ORIGINAL_ALBUM_ID)
+                                THEN PP.ORIGINAL_ALBUM_ID
+                                ELSE NULL
+                             END,
+               PP.ORIGINAL_ALBUM_ID = NULL,
+               PP.DELETED_YN = 'N',
+               PP.DELETED_AT = NULL,
+               PP.DELETED_BY = NULL,
+               PP.UPDATED_AT = SYSDATE
+         WHERE PP.POST_ID = #{postId}
+           AND NVL(PP.DELETED_YN, 'N') = 'Y'
+           AND PP.DELETED_BY = #{userId}
+    </update>
+
+    <select id="countTrashOwner" resultType="int">
+        SELECT COUNT(*)
+          FROM PHOTO_POSTS
+         WHERE POST_ID = #{postId}
+           AND NVL(DELETED_YN, 'N') = 'Y'
+           AND DELETED_BY = #{userId}
+    </select>
+
     <delete id="deletePost">
         DELETE FROM PHOTO_POSTS WHERE POST_ID = #{postId}
+    </delete>
+
+    <select id="countPostCollect" resultType="int">
+        SELECT COUNT(1)
+          FROM CONTENT_REACTIONS
+         WHERE CONTENT_TYPE = 'PHOTO_POST'
+           AND CONTENT_ID = #{postId}
+           AND USER_ID = #{userId}
+           AND REACTION_TYPE = 'COLLECT'
+    </select>
+
+    <insert id="insertPostCollect">
+        INSERT INTO CONTENT_REACTIONS (
+            REACTION_ID, CONTENT_TYPE, CONTENT_ID, USER_ID, REACTION_TYPE, CREATED_AT
+        )
+        SELECT SEQ_CONTENT_REACTION_ID.NEXTVAL, 'PHOTO_POST', #{postId}, #{userId}, 'COLLECT', SYSDATE
+          FROM DUAL
+         WHERE NOT EXISTS (
+            SELECT 1
+              FROM CONTENT_REACTIONS
+             WHERE CONTENT_TYPE = 'PHOTO_POST'
+               AND CONTENT_ID = #{postId}
+               AND USER_ID = #{userId}
+               AND REACTION_TYPE = 'COLLECT'
+         )
+    </insert>
+
+
+    <insert id="insertCollectedPostLink">
+        INSERT INTO CONTENT_REACTIONS (
+            REACTION_ID, CONTENT_TYPE, CONTENT_ID, USER_ID, REACTION_TYPE, CREATED_AT
+        )
+        SELECT SEQ_CONTENT_REACTION_ID.NEXTVAL, 'PHOTO_COLLECT_LINK', #{collectedPostId}, #{userId}, 'SRC_' || #{sourcePostId}, SYSDATE
+          FROM DUAL
+         WHERE NOT EXISTS (
+            SELECT 1
+              FROM CONTENT_REACTIONS
+             WHERE CONTENT_TYPE = 'PHOTO_COLLECT_LINK'
+               AND CONTENT_ID = #{collectedPostId}
+               AND USER_ID = #{userId}
+         )
+    </insert>
+
+    <select id="selectCollectedSourcePostId" resultType="long">
+        SELECT TO_NUMBER(SUBSTR(REACTION_TYPE, 5))
+          FROM CONTENT_REACTIONS
+         WHERE CONTENT_TYPE = 'PHOTO_COLLECT_LINK'
+           AND CONTENT_ID = #{collectedPostId}
+           AND USER_ID = #{userId}
+           AND REACTION_TYPE LIKE 'SRC_%'
+           AND ROWNUM = 1
+    </select>
+
+    <select id="selectCollectedPostIdBySource" resultType="java.lang.Long">
+        SELECT CONTENT_ID
+          FROM CONTENT_REACTIONS
+         WHERE CONTENT_TYPE = 'PHOTO_COLLECT_LINK'
+           AND USER_ID = #{userId}
+           AND REACTION_TYPE = 'SRC_' || #{sourcePostId}
+           AND ROWNUM = 1
+    </select>
+
+    <delete id="deletePostCollect">
+        DELETE FROM CONTENT_REACTIONS
+         WHERE CONTENT_TYPE = 'PHOTO_POST'
+           AND CONTENT_ID = #{postId}
+           AND USER_ID = #{userId}
+           AND REACTION_TYPE = 'COLLECT'
+    </delete>
+
+    <delete id="deleteCollectedPostLink">
+        DELETE FROM CONTENT_REACTIONS
+         WHERE CONTENT_TYPE = 'PHOTO_COLLECT_LINK'
+           AND CONTENT_ID = #{collectedPostId}
     </delete>
 
     <insert id="insertPhoto" parameterType="map">
@@ -211,4 +640,100 @@
              ORDER BY PP.CREATED_AT DESC, P.SORT_ORDER ASC, P.PHOTO_ID ASC
         ) WHERE ROWNUM = 1
     </select>
+    <select id="selectPostComments" resultType="map">
+        SELECT C.COMMENT_ID,
+               C.POST_ID,
+               C.PARENT_COMMENT_ID,
+               C.USER_ID,
+               CASE WHEN NVL(C.DELETED_YN, 'N') = 'Y'
+                    THEN '삭제된 댓글입니다.'
+                    ELSE C.COMMENT_CONTENT
+                END AS COMMENT_CONTENT,
+               NVL(C.DELETED_YN, 'N') AS DELETED_YN,
+               U.USER_NAME,
+               U.PROFILE_IMAGE_PATH,
+               TO_CHAR(C.CREATED_AT, 'YYYY-MM-DD HH24:MI') AS CREATED_AT,
+               TO_CHAR(C.UPDATED_AT, 'YYYY-MM-DD HH24:MI') AS UPDATED_AT,
+               CASE WHEN NVL(C.DELETED_YN, 'N') = 'Y' THEN 0 ELSE (
+                    SELECT COUNT(1)
+                      FROM CONTENT_REACTIONS CR
+                     WHERE CR.CONTENT_TYPE = 'PHOTO_COMMENT'
+                       AND CR.CONTENT_ID = C.COMMENT_ID
+                       AND CR.REACTION_TYPE = 'LIKE'
+               ) END AS LIKE_COUNT,
+               CASE WHEN NVL(C.DELETED_YN, 'N') = 'Y' THEN 0 ELSE (
+                    CASE WHEN #{userId,jdbcType=NUMERIC} IS NOT NULL AND EXISTS (
+                         SELECT 1
+                           FROM CONTENT_REACTIONS CR
+                          WHERE CR.CONTENT_TYPE = 'PHOTO_COMMENT'
+                            AND CR.CONTENT_ID = C.COMMENT_ID
+                            AND CR.USER_ID = #{userId,jdbcType=NUMERIC}
+                            AND CR.REACTION_TYPE = 'LIKE'
+                    ) THEN 1 ELSE 0 END
+               ) END AS LIKED_BY_ME
+          FROM PHOTO_POST_COMMENTS C
+          JOIN USERS U ON U.USER_ID = C.USER_ID
+         WHERE C.POST_ID = #{postId}
+           AND (
+                NVL(C.DELETED_YN, 'N') = 'N'
+                OR EXISTS (
+                    SELECT 1
+                      FROM PHOTO_POST_COMMENTS CC
+                     WHERE CC.POST_ID = C.POST_ID
+                       AND CC.PARENT_COMMENT_ID = C.COMMENT_ID
+                       AND NVL(CC.DELETED_YN, 'N') = 'N'
+                )
+           )
+         ORDER BY NVL(C.PARENT_COMMENT_ID, C.COMMENT_ID) ASC,
+                  CASE WHEN C.PARENT_COMMENT_ID IS NULL THEN 0 ELSE 1 END ASC,
+                  C.CREATED_AT ASC,
+                  C.COMMENT_ID ASC
+    </select>
+
+    <select id="countActivePostComment" resultType="int">
+        SELECT COUNT(1)
+          FROM PHOTO_POST_COMMENTS
+         WHERE POST_ID = #{postId}
+           AND COMMENT_ID = #{commentId}
+           AND NVL(DELETED_YN, 'N') = 'N'
+    </select>
+
+    <insert id="insertPostComment" parameterType="map">
+        <selectKey keyProperty="commentId" order="BEFORE" resultType="long">
+            SELECT SEQ_PHOTO_POST_COMMENT_ID.NEXTVAL FROM DUAL
+        </selectKey>
+        INSERT INTO PHOTO_POST_COMMENTS (
+            COMMENT_ID, POST_ID, PARENT_COMMENT_ID, USER_ID,
+            COMMENT_CONTENT, DELETED_YN, CREATED_AT, UPDATED_AT
+        ) VALUES (
+            #{commentId}, #{postId}, #{parentCommentId,jdbcType=NUMERIC}, #{userId},
+            #{content}, 'N', SYSDATE, SYSDATE
+        )
+    </insert>
+
+
+    <update id="updatePostComment">
+        UPDATE PHOTO_POST_COMMENTS
+           SET COMMENT_CONTENT = #{content},
+               UPDATED_AT = SYSDATE
+         WHERE COMMENT_ID = #{commentId}
+           AND POST_ID = #{postId}
+           AND USER_ID = #{userId}
+           AND NVL(DELETED_YN, 'N') = 'N'
+    </update>
+
+    <update id="deletePostComment">
+        UPDATE PHOTO_POST_COMMENTS
+           SET DELETED_YN = 'Y',
+               COMMENT_CONTENT = '삭제된 댓글입니다.',
+               UPDATED_AT = SYSDATE
+         WHERE COMMENT_ID = #{commentId}
+           AND POST_ID = #{postId}
+           AND NVL(DELETED_YN, 'N') = 'N'
+           AND (
+                USER_ID = #{userId}
+                OR #{canManage} = 1
+           )
+    </update>
+
 </mapper>

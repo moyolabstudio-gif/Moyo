@@ -1,0 +1,3665 @@
+/* ========================================================================== 
+   MOYO NOTE LIST
+   리스트 전용 스타일. 작성/수정/상세/에디터용 note.css와 분리한다.
+   ========================================================================== */
+
+:root {
+    --nl-blue: #3f73f4;
+    --nl-blue-deep: #3567e8;
+    --nl-friend: #f59e0b;
+    --nl-mint: #24bfae;
+    --nl-violet: #8b5cf6;
+    --nl-ink: #172033;
+    --nl-muted: #7f8a9d;
+    --nl-line: #e7ecf4;
+    --nl-surface: #ffffff;
+    --nl-page: #fbfcff;
+}
+
+/* 1. Page */
+.note-list-page {
+    margin: 0;
+    color: var(--nl-ink);
+    background: var(--nl-page);
+}
+
+.nl-shell {
+    width: min(1500px, calc(100% - 42px));
+    min-height: calc(100vh - 250px);
+    margin: 18px auto 64px;
+}
+
+/* 2. Hero */
+.nl-hero {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    min-height: 48px;
+    padding: 8px 18px;
+    overflow: hidden;
+    border: 1px solid rgba(79, 125, 247, .10);
+    border-radius: 14px;
+    background: linear-gradient(125deg, rgba(85, 215, 202, .075), rgba(79, 125, 247, .045) 52%, rgba(128, 114, 245, .06));
+}
+
+.nl-hero::after {
+    position: absolute;
+    top: -76px;
+    right: -30px;
+    width: 132px;
+    height: 132px;
+    border-radius: 50%;
+    background: rgba(79, 125, 247, .055);
+    filter: blur(4px);
+    content: "";
+}
+
+.nl-hero > div,
+.nl-create-button {
+    position: relative;
+    z-index: 1;
+}
+
+.nl-hero > div {
+    display: flex;
+    min-width: 0;
+    align-items: baseline;
+    gap: 10px;
+}
+
+.nl-hero h1 {
+    margin: 0;
+    color: var(--nl-ink);
+    flex: 0 0 auto;
+    font-size: 24px;
+    line-height: 1;
+    letter-spacing: -.045em;
+}
+
+.nl-hero p {
+    min-width: 0;
+    margin: 0;
+    overflow: hidden;
+    color: #7f8ba0;
+    font-size: 10.5px;
+    line-height: 1.2;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.nl-create-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    height: 32px;
+    padding: 0 12px;
+    border-radius: 10px;
+    color: #fff;
+    background: linear-gradient(135deg, var(--nl-mint), var(--nl-blue) 58%, var(--nl-violet));
+    box-shadow: 0 5px 13px rgba(79, 125, 247, .14);
+    font-size: 11px;
+    font-weight: 800;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: transform .15s ease;
+}
+
+.nl-create-button:hover {
+    transform: translateY(-1px);
+}
+
+/* 3. Scope toolbar */
+.nl-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 10px 0;
+    padding: 6px 7px;
+    border: 1px solid var(--nl-line);
+    border-radius: 14px;
+    background: var(--nl-surface);
+    box-shadow: 0 5px 16px rgba(31, 45, 73, .025);
+}
+
+.nl-scope-tabs {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    min-width: 0;
+}
+
+.nl-scope-tab {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 32px;
+    padding: 0 12px;
+    border: 0;
+    border-radius: 9px;
+    color: #68758a;
+    background: transparent;
+    font: inherit;
+    font-size: 11px;
+    font-weight: 700;
+    text-decoration: none;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.nl-scope-tab:hover {
+    color: var(--nl-blue);
+}
+
+.nl-scope-tab.is-active {
+    color: var(--nl-blue-deep);
+    background: linear-gradient(135deg, rgba(85, 215, 202, .15), rgba(79, 125, 247, .13), rgba(128, 114, 245, .13));
+}
+
+.nl-search {
+    position: relative;
+    display: block;
+    width: min(320px, 30vw);
+    height: 32px;
+    margin-left: auto;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+}
+
+.nl-search:focus-within {
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+}
+
+.nl-search-icon {
+    position: absolute;
+    top: 50%;
+    left: 11px;
+    z-index: 1;
+    color: #97a2b3;
+    font-size: 14px;
+    line-height: 1;
+    pointer-events: none;
+    transform: translateY(-50%);
+}
+
+.nl-search input[type="search"] {
+    width: 100%;
+    min-width: 0;
+    height: 32px;
+    padding: 0 12px 0 32px;
+    border: 1px solid #dfe5ee !important;
+    border-radius: 10px !important;
+    outline: 0;
+    color: var(--nl-ink);
+    background: #fff !important;
+    box-shadow: none !important;
+    font: inherit;
+    font-size: 11px;
+    -webkit-appearance: none;
+    appearance: none;
+    transition: border-color .18s, box-shadow .18s;
+}
+
+.nl-search input[type="search"]:focus {
+    border-color: #9fbbfb !important;
+    box-shadow: 0 0 0 3px rgba(79, 125, 247, .07) !important;
+}
+
+.nl-search input[type="search"]::-webkit-search-decoration,
+.nl-search input[type="search"]::-webkit-search-cancel-button,
+.nl-search input[type="search"]::-webkit-search-results-button,
+.nl-search input[type="search"]::-webkit-search-results-decoration {
+    -webkit-appearance: none;
+}
+
+.nl-sort {
+    flex: 0 0 auto;
+}
+
+.nl-sort select {
+    height: 32px;
+    padding: 0 29px 0 10px;
+    border: 1px solid #edf0f5;
+    border-radius: 9px;
+    outline: 0;
+    color: #596579;
+    background: #fafbfe;
+    font: inherit;
+    font-size: 10px;
+    cursor: pointer;
+}
+
+/* 4. Workspace / project picker */
+.nl-space-picker {
+    margin: -2px 0 12px;
+    padding: 13px;
+    border: 1px solid var(--nl-line);
+    border-radius: 15px;
+    background: var(--nl-surface);
+    box-shadow: 0 12px 28px rgba(31, 45, 73, .06);
+}
+
+.nl-space-picker-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 9px;
+    font-size: 12px;
+}
+
+.nl-picker-close {
+    border: 0;
+    color: #8a95a6;
+    background: transparent;
+    font-size: 20px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.nl-space-options {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 7px;
+}
+
+.nl-space-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    min-height: 48px;
+    padding: 6px 9px;
+    border: 1px solid #edf0f6;
+    border-radius: 10px;
+    color: #344054;
+    text-decoration: none;
+}
+
+.nl-space-option:hover {
+    border-color: #cad9ff;
+    background: #f9fbff;
+}
+
+.nl-space-name {
+    min-width: 0;
+    overflow: hidden;
+    color: #344054;
+    font-size: 12px;
+    font-weight: 700;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+
+.nl-space-avatar {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    flex: 0 0 30px;
+    overflow: hidden;
+    border: 1px solid rgba(36, 191, 174, .18);
+    border-radius: 50%;
+    background: #eefbf8;
+    box-shadow: 0 2px 7px rgba(31, 45, 73, .08);
+}
+
+.nl-space-avatar img,
+.nl-space-avatar-fallback {
+    width: 100%;
+    height: 100%;
+}
+
+.nl-space-avatar img {
+    display: block;
+    object-fit: cover;
+}
+
+.nl-space-avatar-fallback {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    background: linear-gradient(135deg, #40d2c0, #4f7df7 62%, #8f5ce8);
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.nl-space-avatar-fallback[hidden] {
+    display: none;
+}
+
+.nl-space-avatar-all {
+    color: #fff;
+    border-color: transparent;
+    background: linear-gradient(135deg, #31c8b5, #4f7df7 64%, #8c5ae7);
+    width: 28px;
+    height: 28px;
+    flex-basis: 28px;
+    font-size: 11px;
+}
+
+.nl-space-option.is-selected .nl-space-avatar {
+    border-color: rgba(36, 191, 174, .42);
+    box-shadow: 0 0 0 3px rgba(36, 191, 174, .10);
+}
+
+.nl-space-option b,
+.nl-space-option small {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.nl-space-option b {
+    font-size: 11px;
+}
+
+.nl-space-option small {
+    margin-top: 2px;
+    color: #929caf;
+    font-size: 9px;
+}
+
+.nl-space-dot {
+    width: 7px;
+    height: 7px;
+    flex: 0 0 auto;
+    border-radius: 50%;
+}
+
+.nl-space-dot-ws { background: var(--nl-mint); }
+.nl-space-dot-project { background: var(--nl-violet); }
+
+.nl-picker-empty {
+    grid-column: 1 / -1;
+    padding: 14px;
+    color: #929caf;
+    font-size: 11px;
+    text-align: center;
+}
+
+/* 5. List section */
+.nl-list-section {
+    padding: 14px;
+    border: 1px solid var(--nl-line);
+    border-radius: 17px;
+    background: var(--nl-surface);
+    box-shadow: 0 10px 28px rgba(31, 45, 73, .035);
+}
+
+.nl-section-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 11px;
+}
+
+.nl-section-head > div {
+    display: flex;
+    align-items: baseline;
+    gap: 7px;
+}
+
+.nl-section-head h2 {
+    margin: 0;
+    font-size: 14px;
+    letter-spacing: -.025em;
+}
+
+.nl-section-head span {
+    color: #98a2b3;
+    font-size: 10px;
+}
+
+.nl-note-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    align-items: start;
+    gap: 13px;
+}
+
+/* 6. Card */
+.nl-note-card {
+    position: relative;
+    min-width: 0;
+    overflow: hidden;
+    border: 1px solid #dfe6f1;
+    border-radius: 13px;
+    background: #fff;
+    box-shadow: 0 3px 10px rgba(31, 45, 73, .035);
+    transition: transform .15s ease, border-color .15s ease, box-shadow .15s ease;
+}
+
+.nl-note-card::before {
+    position: absolute;
+    inset: 0 0 auto;
+    height: 2px;
+    background: var(--nl-blue);
+    content: "";
+}
+
+.nl-note-card:hover {
+    transform: translateY(-2px);
+}
+
+.nl-note-link {
+    display: flex;
+    flex-direction: column;
+    height: 164px;
+    padding: 14px 15px 12px;
+    color: inherit;
+    text-decoration: none;
+}
+
+.nl-card-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-width: 0;
+}
+
+/* 7. Card header */
+.nl-card-head-row {
+    height: 27px;
+    padding-right: 28px;
+    gap: 8px;
+}
+
+.nl-card-title {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    min-height: 22px;
+    flex: 1;
+    overflow: hidden;
+    margin: 0;
+    color: #1f2937;
+    font-size: 15px;
+    font-weight: 800;
+    line-height: 1.2;
+    letter-spacing: -.025em;
+}
+
+.nl-title-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    align-self: center;
+    font-size: 16px;
+    line-height: 1;
+}
+
+.nl-title-text {
+    display: block;
+    min-width: 0;
+    max-width: none;
+    flex: 0 1 auto;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    line-height: 22px;
+}
+
+.nl-title-permission {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    align-self: center;
+    height: 20px;
+    margin-left: 1px;
+    padding: 0 7px;
+    border-radius: 999px;
+    font-size: 9px;
+    font-weight: 800;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+.nl-permission-badge.is-shared {
+    border: 1px solid #c7d4ef;
+    color: #5270ad;
+    background: #fff;
+}
+
+.nl-permission-badge.is-editable {
+    border: 1px solid #d2caef;
+    color: #6a57bd;
+    background: #fff;
+}
+
+.nl-scope-badge {
+    flex: 0 0 auto;
+    padding: 3px 7px;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    font-size: 9px;
+    font-weight: 800;
+    line-height: 1;
+}
+
+
+.nl-title-scope {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    align-self: center;
+    margin-left: 1px;
+    white-space: nowrap;
+}
+
+.nl-pin-button {
+    position: absolute;
+    z-index: 2;
+    top: 10px;
+    right: 9px;
+    width: 27px;
+    height: 27px;
+    border: 0;
+    border-radius: 9px;
+    color: #b8c2d1;
+    background: transparent;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+/* 8. Author / counts */
+.nl-card-meta-row {
+    height: 26px;
+    margin-top: 3px;
+    gap: 8px;
+    color: #69768a;
+    font-size: 10px;
+}
+
+.nl-card-author {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    gap: 5px;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.nl-author-label {
+    color: #a0a9b8;
+    font-size: 9px;
+}
+
+.nl-card-author strong {
+    overflow: hidden;
+    color: #526074;
+    font-size: 10px;
+    font-weight: 700;
+    text-overflow: ellipsis;
+}
+
+.nl-card-counts {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex: 0 0 auto;
+    gap: 7px;
+}
+
+.nl-card-count {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    color: #657287;
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+/* 9. Preview */
+.nl-card-preview {
+    display: -webkit-box;
+    height: 43px;
+    min-height: 43px;
+    overflow: hidden;
+    margin: 7px 0 8px;
+    color: #445167;
+    font-size: 12px;
+    line-height: 1.72;
+    white-space: pre-line;
+    word-break: break-word;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+
+/* 10. Footer metadata */
+.nl-card-foot-row {
+    height: 25px;
+    margin-top: auto;
+    padding-top: 7px;
+    border-top: 1px solid #edf1f6;
+    gap: 10px;
+    color: #6f7c90;
+    font-size: 11px;
+    line-height: 1.35;
+}
+
+.nl-card-location {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    gap: 4px;
+    overflow: hidden;
+    color: #6f7c90;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.nl-card-location strong,
+.nl-card-location span:last-child {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.nl-card-location strong {
+    color: #526176;
+    font-weight: 600;
+}
+
+.nl-card-location span {
+    color: #8994a5;
+    font-weight: 500;
+}
+
+.nl-card-location span:last-child {
+    color: #6f7c90;
+}
+
+.nl-card-update-meta {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex: 0 0 auto;
+    gap: 8px;
+    min-width: 0;
+    color: #6f7c90;
+    font-size: 11px;
+    line-height: 1.35;
+}
+
+.nl-card-updater {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    max-width: 120px;
+    overflow: hidden;
+    font-size: 11px;
+    line-height: 1.35;
+    white-space: nowrap;
+}
+
+.nl-card-updater-label {
+    flex: 0 0 auto;
+    color: #8994a5;
+    font-weight: 500;
+}
+
+.nl-card-updater-name {
+    min-width: 0;
+    overflow: hidden;
+    color: #526176;
+    font-weight: 600;
+    text-overflow: ellipsis;
+}
+
+.nl-card-update-dot {
+    flex: 0 0 auto;
+    margin: 0 2px;
+    color: #a5aebb;
+    font-size: 11px;
+    line-height: 1;
+}
+
+.nl-card-update-meta time {
+    flex: 0 0 auto;
+    color: #8b96a7;
+    font-size: 11px;
+    font-weight: 500;
+    line-height: 1.35;
+}
+
+/* 11. Scope colors */
+.nl-note-card.nl-card-PRIVATE::before { background: var(--nl-blue); }
+.nl-note-card.nl-card-FRIEND::before { background: var(--nl-friend); }
+.nl-note-card.nl-card-WS::before { background: var(--nl-mint); }
+.nl-note-card.nl-card-PROJ::before { background: var(--nl-violet); }
+
+.nl-note-card.nl-card-PRIVATE:hover {
+    border-color: rgba(79, 124, 247, .34);
+    box-shadow: 0 10px 24px rgba(79, 124, 247, .09);
+}
+
+.nl-note-card.nl-card-FRIEND:hover {
+    border-color: rgba(245, 158, 11, .40);
+    box-shadow: 0 10px 24px rgba(180, 112, 10, .10);
+}
+
+.nl-note-card.nl-card-WS:hover {
+    border-color: rgba(47, 203, 178, .38);
+    box-shadow: 0 10px 24px rgba(22, 138, 121, .09);
+}
+
+.nl-note-card.nl-card-PROJ:hover {
+    border-color: rgba(139, 92, 246, .34);
+    box-shadow: 0 10px 24px rgba(109, 76, 210, .09);
+}
+
+.nl-scope-PRIVATE {
+    border-color: #cfddff;
+    color: #315fc7;
+    background: #f2f6ff;
+}
+
+.nl-scope-FRIEND {
+    border-color: #f6d789;
+    color: #9a5b00;
+    background: #fff7df;
+}
+
+.nl-scope-WS {
+    border-color: #c6eee7;
+    color: #087d70;
+    background: #f5fcfb;
+}
+
+.nl-scope-PROJ {
+    border-color: #e8cdfa;
+    color: #7a2fbd;
+    background: #f7f3ff;
+}
+
+/* 12. Pin states */
+.nl-note-card.nl-card-PRIVATE .nl-pin-button.is-pinned { color: var(--nl-blue); }
+.nl-note-card.nl-card-FRIEND .nl-pin-button.is-pinned { color: var(--nl-friend); }
+.nl-note-card.nl-card-WS .nl-pin-button.is-pinned { color: #18a997; }
+.nl-note-card.nl-card-PROJ .nl-pin-button.is-pinned { color: var(--nl-violet); }
+
+.nl-note-card.nl-card-PRIVATE .nl-pin-button:hover {
+    color: var(--nl-blue);
+    background: #f2f6ff;
+}
+
+.nl-note-card.nl-card-FRIEND .nl-pin-button:hover {
+    color: #d98700;
+    background: #fff7df;
+}
+
+.nl-note-card.nl-card-WS .nl-pin-button:hover {
+    color: #148f81;
+    background: #f5fcfb;
+}
+
+.nl-note-card.nl-card-PROJ .nl-pin-button:hover {
+    color: #7c3aed;
+    background: #f7f3ff;
+}
+
+/* 13. Empty state */
+.nl-empty-state {
+    display: flex;
+    min-height: 250px;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 26px;
+    text-align: center;
+}
+
+.nl-empty-mark {
+    display: grid;
+    width: 46px;
+    height: 46px;
+    place-items: center;
+    margin-bottom: 12px;
+    border-radius: 14px;
+    color: #fff;
+    background: linear-gradient(135deg, var(--nl-mint), var(--nl-blue) 58%, var(--nl-violet));
+    box-shadow: 0 10px 22px rgba(79, 125, 247, .16);
+    font-size: 19px;
+    font-weight: 850;
+}
+
+.nl-empty-state strong { font-size: 13px; }
+
+.nl-empty-state p {
+    margin: 5px 0 13px;
+    color: #929caf;
+    font-size: 11px;
+}
+
+.nl-empty-state a {
+    padding: 7px 12px;
+    border-radius: 9px;
+    color: var(--nl-blue-deep);
+    background: #eef3ff;
+    font-size: 11px;
+    font-weight: 750;
+    text-decoration: none;
+}
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    border: 0;
+    white-space: nowrap;
+}
+
+
+/* Workspace tab: default shared-note view and compact empty layout */
+.nl-space-picker-ws {
+    margin-bottom: 12px;
+    box-shadow: 0 6px 18px rgba(31, 45, 73, .035);
+}
+
+.nl-space-picker-ws .nl-space-picker-head {
+    justify-content: flex-start;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.nl-space-picker-ws .nl-space-picker-head > span {
+    color: #94a0b2;
+    font-size: 10px;
+    font-weight: 500;
+}
+
+.nl-space-option.is-selected {
+    border-color: rgba(36, 191, 174, .34);
+    color: #087d70;
+    background: #f5fcfb;
+}
+
+.nl-picker-empty {
+    grid-column: 1 / -1;
+    display: flex;
+    min-height: 46px;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    color: #98a3b4;
+    font-size: 10px;
+    text-align: center;
+}
+
+.nl-picker-empty strong {
+    color: #667388;
+    font-size: 10px;
+}
+
+.nl-list-section.is-workspace-empty {
+    min-height: calc(100vh - 390px);
+    padding: 0;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+}
+
+.nl-list-section.is-workspace-empty .nl-section-head,
+.nl-list-section.is-workspace-empty .nl-empty-state {
+    display: none;
+}
+
+/* 14. Responsive */
+@media (max-width: 1200px) {
+    .nl-note-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .nl-space-options { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+@media (max-width: 900px) {
+    .nl-toolbar { flex-wrap: wrap; }
+    .nl-search {
+        order: 3;
+        width: 100%;
+        margin-left: 0;
+    }
+    .nl-note-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 760px) {
+   .nl-shell {
+        width: calc(100% - 26px);
+        margin-top: 14px;
+    }
+
+    .nl-hero {
+        min-height: 46px;
+        padding: 8px 13px;
+    }
+
+    .nl-hero > div { gap: 0; }
+    .nl-hero h1 { font-size: 22px; }
+    .nl-hero p { display: none; }
+
+    .nl-create-button {
+        height: 31px;
+        padding: 0 10px;
+    }
+
+    .nl-scope-tabs {
+        width: 100%;
+        overflow-x: auto;
+    }
+
+    .nl-scope-tab { flex: 0 0 auto; }
+    .nl-sort { margin-left: auto; }
+    .nl-space-options { grid-template-columns: 1fr; }
+    .nl-list-section { padding: 12px; }
+    .nl-note-link { height: 166px; }
+}
+
+@media (max-width: 520px) {
+    .nl-note-grid { grid-template-columns: 1fr; }
+}
+
+/* Workspace / folder horizontal navigation */
+.nl-horizontal-scroller {
+    position: relative;
+    display: block;
+    min-width: 0;
+}
+
+.nl-scroll-viewport {
+    min-width: 0;
+    padding-inline: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-behavior: smooth;
+    scrollbar-width: none;
+    overscroll-behavior-inline: contain;
+    scroll-padding-inline: 0 36px;
+}
+
+.nl-scroll-viewport::-webkit-scrollbar {
+    display: none;
+}
+
+.nl-scroll-button {
+    position: absolute;
+    top: 50%;
+    z-index: 4;
+    display: inline-flex;
+    width: 28px;
+    height: 38px;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #e5eaf2;
+    border-radius: 9px;
+    color: #667388;
+    background: #fff;
+    box-shadow: 0 2px 7px rgba(31, 45, 73, .04);
+    font-size: 10px;
+    cursor: pointer;
+    transform: translateY(-50%);
+    transition: border-color .15s ease, color .15s ease, background .15s ease, opacity .15s ease;
+}
+
+.nl-scroll-button[data-scroll-direction="prev"],
+.nl-scroll-button:first-child {
+    left: 0;
+}
+
+.nl-scroll-button[data-scroll-direction="next"],
+.nl-scroll-button:last-child {
+    right: 0;
+}
+
+.nl-scroll-button:hover:not(:disabled) {
+    border-color: #b8d9d4;
+    color: #148f81;
+    background: #f6fcfb;
+}
+
+.nl-scroll-button:disabled {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    cursor: default;
+}
+
+.nl-space-options {
+    display: flex;
+    gap: 7px;
+    width: max-content;
+    min-width: 100%;
+}
+
+.nl-workspace-scroller .nl-space-option {
+    width: clamp(210px, 24vw, 320px);
+    flex: 0 0 clamp(210px, 24vw, 320px);
+}
+
+.nl-workspace-scroller .nl-picker-empty {
+    width: 100%;
+    min-width: min(620px, calc(100vw - 110px));
+}
+
+.nl-folder-explorer {
+    margin: -2px 0 12px;
+    padding: 10px 13px;
+    border: 1px solid var(--nl-line);
+    border-radius: 15px;
+    background: var(--nl-surface);
+    box-shadow: 0 10px 24px rgba(31,45,73,.045);
+}
+
+.nl-folder-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 7px;
+}
+
+.nl-folder-head strong {
+    font-size: 12px;
+}
+
+.nl-folder-head span {
+    margin-left: 7px;
+    color: #98a2b3;
+    font-size: 10px;
+}
+
+.nl-folder-list {
+    display: flex;
+    gap: 7px;
+    width: max-content;
+    min-width: 100%;
+}
+
+.nl-folder-scroller .nl-scroll-button {
+    height: 34px;
+}
+
+.nl-folder-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-width: max-content;
+    flex: 0 0 auto;
+    padding: 7px 11px 7px calc(11px + (var(--folder-depth, 0) * 8px));
+    border: 1px solid #e8edf5;
+    border-radius: 9px;
+    color: #475467;
+    background: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.nl-folder-item i {
+    color: #f2b84b;
+}
+
+.nl-folder-item:hover {
+    border-color: #bde9e3;
+    background: #f8fffd;
+}
+
+.nl-folder-item.is-selected {
+    color: #128f81;
+    border-color: #9fe2d9;
+    background: #edfbf8;
+}
+
+@media (max-width: 780px) {
+    .nl-scroll-viewport {
+        padding-inline: 21px;
+    }
+
+    .nl-scroll-button {
+        width: 27px;
+    }
+
+    .nl-workspace-scroller .nl-space-option {
+        width: min(76vw, 270px);
+        flex-basis: min(76vw, 270px);
+    }
+
+    .nl-folder-head span {
+        display: block;
+        margin: 2px 0 0;
+    }
+}
+
+
+/* 그룹/프로젝트 분리 탐색 */
+.nl-space-picker-project {
+    border-color: rgba(139, 92, 246, 0.18);
+    background: linear-gradient(180deg, rgba(139, 92, 246, 0.025), rgba(255, 255, 255, 0.96));
+}
+
+.nl-project-scroller .nl-space-option {
+    flex: 0 0 250px;
+    min-width: 250px;
+}
+
+.nl-project-option {
+    align-items: center;
+}
+
+.nl-project-avatar .nl-space-avatar-fallback {
+    background: linear-gradient(135deg, #8b5cf6, #6366f1);
+}
+
+.nl-project-name-wrap {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.nl-project-name-wrap .nl-space-name,
+.nl-project-name-wrap small {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.nl-project-name-wrap small {
+    color: #8b8fa3;
+    font-size: 11px;
+    font-weight: 500;
+}
+
+.nl-space-picker-project .nl-space-option.is-selected {
+    border-color: rgba(139, 92, 246, 0.38);
+    background: rgba(139, 92, 246, 0.075);
+    box-shadow: inset 0 0 0 1px rgba(139, 92, 246, 0.05);
+}
+
+.nl-space-picker-project .nl-space-option.is-selected .nl-space-avatar {
+    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.12);
+}
+
+@media (max-width: 760px) {
+    .nl-project-scroller .nl-space-option {
+        flex-basis: 220px;
+        min-width: 220px;
+    }
+}
+
+/* Separate project tab: group filter -> project filter -> folder */
+.nl-project-group-picker { margin-bottom: 12px; }
+
+.nl-space-picker-project {
+    margin-top: 0;
+}
+
+.nl-project-options .nl-space-option {
+    min-width: 210px;
+    border-color: #e6e0f5;
+}
+
+.nl-project-options .nl-space-option.is-selected {
+    border-color: #c8aef2;
+    background: #f8f4ff;
+}
+
+.nl-project-inline-avatar {
+    display: inline-flex;
+    width: 30px;
+    height: 30px;
+    flex: 0 0 30px;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    color: #fff;
+    background: linear-gradient(135deg, #667eea, #8b5cf6);
+    font-size: 11px;
+    font-weight: 800;
+}
+
+.nl-project-name-wrap {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.nl-project-name-wrap small {
+    overflow: hidden;
+    color: #98a2b3;
+    font-size: 9px;
+    line-height: 1.2;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+@media (max-width: 700px) {
+    .nl-project-options .nl-space-option { min-width: 180px; }
+}
+
+/* Project tab density refinement */
+.nl-project-group-picker {
+    margin-bottom: 8px;
+}
+
+.nl-space-picker-project {
+    margin-bottom: 8px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    border-color: rgba(139, 92, 246, .14);
+    background: linear-gradient(180deg, rgba(139, 92, 246, .016), rgba(255, 255, 255, .98));
+    box-shadow: 0 8px 20px rgba(31, 45, 73, .04);
+}
+
+.nl-space-picker-project .nl-space-picker-head {
+    margin-bottom: 7px;
+}
+
+.nl-project-scroller .nl-space-option,
+.nl-project-options .nl-space-option {
+    width: 210px;
+    min-width: 210px;
+    min-height: 40px;
+    flex: 0 0 210px;
+    gap: 7px;
+    padding: 5px 8px;
+    border-color: #ece9f5;
+    border-radius: 9px;
+    background: #fff;
+}
+
+.nl-project-options .nl-space-option:hover {
+    border-color: rgba(139, 92, 246, .24);
+    background: rgba(139, 92, 246, .025);
+}
+
+.nl-project-options .nl-space-option.is-selected,
+.nl-space-picker-project .nl-space-option.is-selected {
+    border-color: rgba(139, 92, 246, .30);
+    background: rgba(139, 92, 246, .055);
+    box-shadow: inset 0 0 0 1px rgba(139, 92, 246, .025);
+}
+
+.nl-project-inline-avatar {
+    width: 26px;
+    height: 26px;
+    flex-basis: 26px;
+    font-size: 10px;
+}
+
+.nl-project-name-wrap {
+    gap: 1px;
+}
+
+.nl-project-name-wrap .nl-space-name {
+    font-size: 11px;
+}
+
+.nl-project-name-wrap small {
+    font-size: 9px;
+    line-height: 1.15;
+}
+
+.nl-space-picker-project + .nl-folder-explorer {
+    margin-top: 0;
+}
+
+@media (max-width: 760px) {
+    .nl-project-scroller .nl-space-option,
+    .nl-project-options .nl-space-option {
+        width: 184px;
+        min-width: 184px;
+        flex-basis: 184px;
+    }
+}
+
+/* Project picker final detail refinement */
+.nl-project-scroller .nl-space-option,
+.nl-project-options .nl-space-option {
+    gap: 10px;
+}
+
+.nl-space-picker-project .nl-space-picker-head span {
+    color: #a8b1c0;
+    font-weight: 400;
+}
+
+/* Folder selection follows the active project scope color. */
+.nl-space-picker-project + .nl-folder-explorer .nl-folder-item:hover {
+    border-color: rgba(139, 92, 246, .24);
+    background: rgba(139, 92, 246, .025);
+}
+
+.nl-space-picker-project + .nl-folder-explorer .nl-folder-item.is-selected {
+    color: #7350d8;
+    border-color: rgba(139, 92, 246, .30);
+    background: rgba(139, 92, 246, .065);
+}
+
+.nl-space-picker-project + .nl-folder-explorer .nl-folder-item.is-selected i {
+    color: #8b5cf6;
+}
+
+/* Personal/friend folder scopes use the same scope color as their note cards. */
+.nl-folder-explorer-PRIVATE .nl-folder-item:hover {
+    border-color: rgba(63, 115, 244, .24);
+    background: rgba(63, 115, 244, .025);
+}
+
+.nl-folder-explorer-PRIVATE .nl-folder-item.is-selected {
+    color: #3567e8;
+    border-color: rgba(63, 115, 244, .30);
+    background: rgba(63, 115, 244, .065);
+}
+
+.nl-folder-explorer-PRIVATE .nl-folder-item.is-selected i {
+    color: var(--nl-blue);
+}
+
+.nl-folder-explorer-FRIEND .nl-folder-item:hover {
+    border-color: rgba(245, 158, 11, .26);
+    background: rgba(245, 158, 11, .035);
+}
+
+.nl-folder-explorer-FRIEND .nl-folder-item.is-selected {
+    color: #c87908;
+    border-color: rgba(245, 158, 11, .34);
+    background: rgba(245, 158, 11, .085);
+}
+
+.nl-folder-explorer-FRIEND .nl-folder-item.is-selected i {
+    color: var(--nl-friend);
+}
+
+
+/* 2차: 프로젝트 빈 상태 및 목록 정렬 위치 */
+.nl-project-empty-row {
+    width: 100%;
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    color: #94a3b8;
+    font-size: 13px;
+    border: 1px dashed #d8deea;
+    border-radius: 10px;
+    background: #fbfcff;
+}
+
+.nl-project-empty-row i {
+    color: #a78bfa;
+}
+
+.nl-section-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.nl-section-title-wrap {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    min-width: 0;
+}
+
+.nl-sort-list {
+    margin-left: auto;
+    flex: 0 0 auto;
+}
+
+@media (max-width: 720px) {
+    .nl-section-head {
+        align-items: flex-start;
+    }
+
+    .nl-sort-list select {
+        max-width: 132px;
+    }
+}
+
+/* ========================================================================== 
+   2차 전체 레이아웃 리듬 정리
+   공통 헤더 아래에서 타이틀/탐색/목록이 한 페이지처럼 이어지도록 조정한다.
+   ========================================================================== */
+
+/* 페이지 바깥 여백과 세로 간격을 줄여 첫 화면에 노트가 더 빨리 보이게 한다. */
+.nl-shell {
+    width: min(1500px, calc(100% - 28px));
+    margin-top: 12px;
+    margin-bottom: 44px;
+}
+
+/* 히어로를 배너가 아닌 페이지 타이틀 바에 가깝게 약화한다. */
+.nl-hero {
+    min-height: 44px;
+    padding: 7px 14px;
+    border-color: rgba(79, 125, 247, .08);
+    border-radius: 12px;
+    background: linear-gradient(110deg, rgba(36, 191, 174, .035), rgba(63, 115, 244, .025) 58%, rgba(139, 92, 246, .035));
+    box-shadow: none;
+}
+
+.nl-hero::after {
+    display: none;
+}
+
+.nl-hero > div {
+    gap: 9px;
+}
+
+.nl-hero h1 {
+    font-size: 22px;
+}
+
+.nl-hero p {
+    color: #8a95a6;
+    font-size: 10px;
+}
+
+.nl-create-button {
+    height: 30px;
+    padding: 0 11px;
+    border-radius: 9px;
+    box-shadow: 0 3px 9px rgba(79, 125, 247, .11);
+    font-size: 10.5px;
+}
+
+/* 탭/검색을 별도 카드보다 얇은 조작 바처럼 보이게 한다. */
+.nl-toolbar {
+    min-height: 38px;
+    margin: 7px 0 8px;
+    padding: 4px 5px;
+    border-color: #edf1f6;
+    border-radius: 11px;
+    box-shadow: none;
+}
+
+.nl-scope-tabs {
+    gap: 1px;
+}
+
+/* 그룹/프로젝트 선택은 위젯 카드가 아닌 탐색 행으로 약화한다. */
+.nl-space-picker,
+.nl-folder-explorer {
+    margin: 0 0 7px;
+    padding: 8px 10px;
+    border-color: #edf1f6;
+    border-radius: 12px;
+    box-shadow: none;
+}
+
+.nl-space-picker-head,
+.nl-folder-head {
+    justify-content: flex-start;
+    gap: 7px;
+    min-height: 18px;
+    margin-bottom: 6px;
+}
+
+.nl-space-picker-head strong,
+.nl-folder-head strong {
+    font-size: 11px;
+}
+
+.nl-space-picker-head > span,
+.nl-folder-head span {
+    margin-left: 0;
+    color: #a3adbc;
+    font-size: 9.5px;
+}
+
+.nl-space-option {
+    min-height: 43px;
+    padding: 5px 8px;
+    border-radius: 9px;
+}
+
+.nl-workspace-scroller .nl-space-option {
+    width: clamp(205px, 23vw, 300px);
+    flex-basis: clamp(205px, 23vw, 300px);
+}
+
+.nl-space-avatar {
+    width: 28px;
+    height: 28px;
+    flex-basis: 28px;
+}
+
+.nl-space-avatar-all {
+    width: 27px;
+    height: 27px;
+    flex-basis: 27px;
+}
+
+.nl-space-name,
+.nl-space-option b {
+    font-size: 11px;
+}
+
+/* 프로젝트 줄은 그룹 줄보다 한 단계 더 조밀하게 유지한다. */
+.nl-space-picker-project {
+    padding-top: 7px;
+    padding-bottom: 7px;
+}
+
+.nl-project-scroller .nl-space-option,
+.nl-project-options .nl-space-option {
+    min-height: 39px;
+    padding-top: 4px;
+    padding-bottom: 4px;
+}
+
+.nl-project-scroller .nl-space-avatar,
+.nl-project-options .nl-space-avatar {
+    width: 25px;
+    height: 25px;
+    flex-basis: 25px;
+}
+
+/* 폴더 줄은 탐색 칩 한 줄로 더 얇게 정리한다. */
+.nl-folder-explorer {
+    padding-top: 7px;
+    padding-bottom: 7px;
+}
+
+.nl-folder-head {
+    margin-bottom: 5px;
+}
+
+.nl-folder-list {
+    gap: 6px;
+}
+
+.nl-folder-item {
+    min-height: 29px;
+    padding: 0 10px;
+    border-radius: 8px;
+    font-size: 10px;
+}
+
+/* 목록 컨테이너도 별도 대형 위젯보다 본문 섹션처럼 보이게 한다. */
+.nl-list-section {
+    padding: 10px 10px 12px;
+    border-color: #edf1f6;
+    border-radius: 12px;
+    box-shadow: none;
+}
+
+.nl-section-head {
+    min-height: 30px;
+    margin-bottom: 8px;
+}
+
+.nl-section-head h2 {
+    font-size: 13px;
+}
+
+.nl-section-head span {
+    font-size: 9.5px;
+}
+
+.nl-note-grid {
+    gap: 11px;
+}
+
+.nl-sort-list select {
+    height: 30px;
+    border-color: #e8edf4;
+    background: #fff;
+}
+
+@media (max-width: 760px) {
+    .nl-shell {
+        width: min(100% - 16px, 1500px);
+        margin-top: 8px;
+    }
+
+    .nl-hero {
+        min-height: 42px;
+        padding: 7px 10px;
+    }
+}
+
+/* ========================================================================== 
+   타이틀 존재감 및 탐색 구간 미세 조정
+   전체 레이아웃 밀도는 유지하면서 제목/선택행/목록 시작점의 호흡만 보완한다.
+   ========================================================================== */
+
+/* 타이틀 바가 공통 헤더 아래의 페이지 제목으로 읽히도록 존재감을 소폭 복원한다. */
+.nl-hero {
+    min-height: 50px;
+    padding: 9px 15px;
+    background: linear-gradient(110deg, rgba(36, 191, 174, .05), rgba(63, 115, 244, .04) 58%, rgba(139, 92, 246, .05));
+    border-color: rgba(79, 125, 247, .11);
+}
+
+.nl-hero > div {
+    gap: 10px;
+}
+
+.nl-hero h1 {
+    font-size: 23px;
+    line-height: 1.15;
+}
+
+.nl-hero p {
+    color: #7f8b9d;
+    font-size: 10.5px;
+}
+
+/* 그룹/프로젝트/폴더 제목과 선택 항목 사이에 최소한의 호흡을 둔다. */
+.nl-space-picker-head,
+.nl-folder-head {
+    margin-bottom: 9px;
+}
+
+.nl-space-picker-project .nl-space-picker-head {
+    margin-bottom: 8px;
+}
+
+/* 목록 제목과 첫 카드가 너무 붙지 않도록 첫 행 시작 간격만 보완한다. */
+.nl-section-head {
+    margin-bottom: 11px;
+}
+
+@media (max-width: 760px) {
+    .nl-hero {
+        min-height: 46px;
+        padding: 8px 11px;
+    }
+
+    .nl-hero h1 {
+        font-size: 21px;
+    }
+}
+
+/* ========================================================================== 
+   영역 구분 및 최종 호흡 보완
+   상단 밀도는 유지하되 그룹/프로젝트/폴더 단계와 목록 시작점을 더 명확히 한다.
+   ========================================================================== */
+
+/* 제목과 설명이 한 덩어리처럼 붙지 않도록 간격만 넓힌다. */
+.nl-hero > div {
+    gap: 16px;
+}
+
+.nl-hero p {
+    line-height: 1.45;
+}
+
+/* 그룹과 프로젝트 탐색 행은 색을 아주 약하게 달리해 단계만 구분한다. */
+.nl-space-picker-ws {
+    background: linear-gradient(90deg, rgba(20, 184, 166, .025), rgba(255, 255, 255, .92) 38%);
+    border-color: rgba(20, 184, 166, .10);
+}
+
+.nl-space-picker-project {
+    background: linear-gradient(90deg, rgba(139, 92, 246, .028), rgba(255, 255, 255, .94) 42%);
+    border-color: rgba(139, 92, 246, .11);
+}
+
+/* 폴더는 별도 위젯처럼 키우지 않고 중립적인 얇은 탐색 줄로 유지한다. */
+.nl-folder-explorer {
+    background: rgba(248, 250, 252, .58);
+    border-color: #edf1f6;
+}
+
+/* 각 탐색 단계 사이에 얇은 구분감을 더하되 높이는 늘리지 않는다. */
+.nl-space-picker + .nl-space-picker,
+.nl-space-picker + .nl-folder-explorer,
+.nl-folder-explorer + .nl-list-section {
+    margin-top: 2px;
+}
+
+/* 목록 제목과 첫 카드 사이의 시작 호흡을 조금 더 확보한다. */
+.nl-section-head {
+    margin-bottom: 15px;
+}
+
+@media (max-width: 760px) {
+    .nl-hero > div {
+        gap: 9px;
+    }
+
+    .nl-section-head {
+        margin-bottom: 11px;
+    }
+}
+
+/* ========================================================================== 
+   탐색 영역 플랫 레이아웃
+   그룹/프로젝트/폴더/목록을 개별 박스로 감싸지 않고 제목·간격·얇은 선으로 구분한다.
+   선택 항목과 노트 카드만 카드 형태를 유지한다.
+   ========================================================================== */
+
+/* 탐색 단계의 바깥 컨테이너 박스 제거 */
+.nl-space-picker,
+.nl-space-picker-ws,
+.nl-space-picker-project,
+.nl-folder-explorer {
+    margin: 0;
+    padding: 9px 5px 10px;
+    background: transparent !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+}
+
+/* 단계 사이는 배경 박스 대신 얇은 선과 간격으로만 구분 */
+.nl-space-picker + .nl-space-picker,
+.nl-space-picker + .nl-folder-explorer,
+.nl-folder-explorer + .nl-list-section {
+    margin-top: 0;
+    border-top: 1px solid #edf1f6 !important;
+}
+
+.nl-space-picker-head,
+.nl-folder-head {
+    margin-bottom: 8px;
+}
+
+/* 노트 목록 섹션 역시 바깥 대형 박스를 제거하고 본문으로 연결 */
+.nl-list-section {
+    margin: 0;
+    padding: 12px 5px 14px;
+    background: transparent !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+}
+
+.nl-folder-explorer + .nl-list-section,
+.nl-space-picker + .nl-list-section {
+    border-top: 1px solid #e7ecf3 !important;
+}
+
+.nl-section-head {
+    margin-bottom: 13px;
+}
+
+/* 빈 상태에서도 외곽 박스가 다시 나타나지 않도록 고정 */
+.nl-list-section.is-workspace-empty {
+    background: transparent !important;
+    border: 0 !important;
+    border-top: 1px solid #e7ecf3 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+}
+
+/* 작은 화면에서도 같은 플랫 구조 유지 */
+@media (max-width: 760px) {
+    .nl-space-picker,
+    .nl-folder-explorer {
+        padding-left: 2px;
+        padding-right: 2px;
+    }
+
+    .nl-list-section {
+        padding-left: 2px;
+        padding-right: 2px;
+    }
+}
+
+/* ========================================================================== 
+   리듬 기반 탐색 레이아웃
+   박스/구분선이 아니라 제목, 크기, 간격, 선택 상태로 정보 위계를 만든다.
+   사진 목록에서도 재사용할 수 있도록 탐색 단계의 공통 리듬을 기준으로 한다.
+   ========================================================================== */
+
+/* 탐색 전체는 하나의 연속된 배경으로 보이게 한다. */
+.nl-space-picker,
+.nl-space-picker-ws,
+.nl-space-picker-project,
+.nl-folder-explorer,
+.nl-list-section,
+.nl-list-section.is-workspace-empty {
+    background: transparent !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+}
+
+/* 기존 단계 구분선을 모두 제거한다. */
+.nl-space-picker + .nl-space-picker,
+.nl-space-picker + .nl-folder-explorer,
+.nl-folder-explorer + .nl-list-section,
+.nl-space-picker + .nl-list-section,
+.nl-list-section.is-workspace-empty {
+    border-top: 0 !important;
+}
+
+/* 그룹: 가장 큰 탐색 단위. */
+.nl-space-picker-ws {
+    margin: 0;
+    padding: 10px 5px 0;
+}
+
+.nl-space-picker-ws .nl-space-picker-head {
+    margin-bottom: 9px;
+}
+
+.nl-workspace-scroller .nl-space-option {
+    min-height: 46px;
+}
+
+/* 프로젝트: 그룹보다 한 단계 낮은 탐색 단위. */
+.nl-space-picker-project {
+    margin: 17px 0 0;
+    padding: 0 5px;
+}
+
+.nl-space-picker-project .nl-space-picker-head {
+    margin-bottom: 8px;
+}
+
+.nl-project-scroller .nl-space-option,
+.nl-project-options .nl-space-option {
+    min-height: 39px;
+}
+
+/* 폴더: 가장 작은 탐색 단위. 칩과 짧은 간격으로만 표현한다. */
+.nl-folder-explorer {
+    margin: 14px 0 0;
+    padding: 0 5px;
+}
+
+.nl-folder-head {
+    margin-bottom: 7px;
+}
+
+.nl-folder-item {
+    min-height: 29px;
+}
+
+/* 제목 크기와 설명 농도로 단계가 읽히도록 한다. */
+.nl-space-picker-head strong,
+.nl-folder-head strong {
+    color: var(--nl-ink);
+    font-size: 11.5px;
+    font-weight: 700;
+    letter-spacing: -.01em;
+}
+
+.nl-space-picker-head > span,
+.nl-folder-head span {
+    color: #9aa5b5;
+    font-size: 9.5px;
+    font-weight: 400;
+}
+
+/* 탐색과 결과는 선 대신 가장 큰 여백으로 분리한다. */
+.nl-list-section {
+    margin: 24px 0 0;
+    padding: 0 5px 14px;
+}
+
+.nl-section-head {
+    min-height: 31px;
+    margin-bottom: 12px;
+}
+
+/* 선택 항목만 색과 배경으로 구분한다. 비선택 항목은 조용하게 유지한다. */
+.nl-space-option:not(.is-selected),
+.nl-folder-item:not(.is-selected) {
+    background-color: var(--nl-surface);
+}
+
+.nl-space-option:not(.is-selected):hover,
+.nl-folder-item:not(.is-selected):hover {
+    transform: none;
+}
+
+/* 탭과 탐색 사이도 선보다 여백으로 이어지게 한다. */
+.nl-toolbar {
+    margin-bottom: 5px;
+}
+
+/* 작은 화면에서도 같은 위계를 유지하되 간격만 줄인다. */
+@media (max-width: 760px) {
+    .nl-space-picker-ws {
+        padding-top: 8px;
+    }
+
+    .nl-space-picker-project {
+        margin-top: 13px;
+    }
+
+    .nl-folder-explorer {
+        margin-top: 11px;
+    }
+
+    .nl-list-section {
+        margin-top: 19px;
+    }
+}
+
+/* ========================================================================== 
+   통합 페이지 헤더
+   타이틀과 범위 탭/검색을 하나의 상단 영역으로 묶어 본문과 같은 플랫 언어로 정리한다.
+   ========================================================================== */
+.nl-page-header {
+    margin: 0 0 14px;
+    padding: 14px 14px 8px;
+    background: linear-gradient(110deg, rgba(36, 191, 174, .038), rgba(63, 115, 244, .028) 56%, rgba(139, 92, 246, .04));
+    border: 0;
+    border-radius: 14px;
+    box-shadow: none;
+}
+
+.nl-page-header .nl-hero {
+    min-height: auto;
+    margin: 0;
+    padding: 0 0 11px;
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+}
+
+.nl-page-header .nl-hero > div {
+    gap: 14px;
+}
+
+.nl-page-header .nl-hero h1 {
+    font-size: 23px;
+}
+
+.nl-page-header .nl-hero p {
+    color: #7f8b9d;
+    font-size: 10.5px;
+}
+
+.nl-page-header .nl-toolbar {
+    min-height: 36px;
+    margin: 0;
+    padding: 5px 0 0;
+    background: transparent;
+    border: 0;
+    border-top: 1px solid rgba(148, 163, 184, .14);
+    border-radius: 0;
+    box-shadow: none;
+}
+
+.nl-page-header .nl-scope-tabs {
+    min-width: 0;
+}
+
+.nl-page-header .nl-search {
+    width: min(310px, 34vw);
+    margin-left: auto;
+}
+
+.nl-page-header .nl-search input[type="search"] {
+    background: rgba(255, 255, 255, .82);
+}
+
+@media (max-width: 760px) {
+    .nl-page-header {
+        margin-bottom: 10px;
+        padding: 11px 10px 7px;
+        border-radius: 12px;
+    }
+
+    .nl-page-header .nl-hero {
+        padding-bottom: 9px;
+    }
+
+    .nl-page-header .nl-toolbar {
+        gap: 7px;
+        padding-top: 5px;
+    }
+
+    .nl-page-header .nl-search {
+        width: 100%;
+        max-width: none;
+    }
+}
+
+/* 공통 헤더와 노트 페이지 헤더 사이의 불필요한 상단 여백 제거 */
+.nl-shell {
+    margin-top: 0;
+}
+
+@media (max-width: 760px) {
+    .nl-shell {
+        margin-top: 0;
+    }
+}
+
+/* 통합 페이지 헤더와 첫 탐색 영역 사이의 과한 공백 축소 */
+.nl-page-header {
+    margin-bottom: 6px;
+}
+
+.nl-space-picker-ws {
+    padding-top: 6px;
+}
+
+@media (max-width: 760px) {
+    .nl-page-header {
+        margin-bottom: 5px;
+    }
+
+    .nl-space-picker-ws {
+        padding-top: 5px;
+    }
+}
+
+
+/* ========================================================================== 
+   플랫 탐색 리듬 보정
+   선이나 박스를 추가하지 않고 단계별 간격만으로 위계를 분명하게 만든다.
+   ========================================================================== */
+.nl-page-header {
+    margin-bottom: 10px;
+}
+
+.nl-space-picker-ws {
+    padding-top: 6px;
+}
+
+.nl-space-picker-ws .nl-space-picker-head {
+    margin-bottom: 9px;
+}
+
+.nl-space-picker-project {
+    margin-top: 14px;
+}
+
+.nl-space-picker-project .nl-space-picker-head {
+    margin-bottom: 8px;
+}
+
+.nl-folder-explorer {
+    margin-top: 12px;
+}
+
+.nl-folder-head {
+    margin-bottom: 7px;
+}
+
+.nl-list-section {
+    margin-top: 22px;
+}
+
+.nl-section-head {
+    margin-bottom: 10px;
+}
+
+@media (max-width: 760px) {
+    .nl-page-header {
+        margin-bottom: 8px;
+    }
+
+    .nl-space-picker-ws {
+        padding-top: 5px;
+    }
+
+    .nl-space-picker-project {
+        margin-top: 12px;
+    }
+
+    .nl-folder-explorer {
+        margin-top: 10px;
+    }
+
+    .nl-list-section {
+        margin-top: 18px;
+    }
+
+    .nl-section-head {
+        margin-bottom: 9px;
+    }
+}
+
+/* ========================================================================== 
+   목록 헤더 정렬 및 탐색 설명 농도 보정
+   ========================================================================== */
+.nl-section-head {
+    padding-right: 12px;
+}
+
+.nl-sort-list {
+    margin-right: 0;
+}
+
+.nl-space-picker-head p,
+.nl-folder-head p,
+.nl-space-picker-head .nl-space-helper,
+.nl-folder-head .nl-folder-helper {
+    color: #a7b0c0;
+    font-weight: 400;
+    opacity: .78;
+}
+
+@media (max-width: 760px) {
+    .nl-section-head {
+        padding-right: 0;
+    }
+}
+
+/* ========================================================================== 
+   탐색 단계 설명 문구 통일
+   그룹/프로젝트/폴더 모두 동일한 제목-설명 구조와 농도를 사용한다.
+   ========================================================================== */
+.nl-space-picker-title,
+.nl-folder-head > div {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.nl-space-picker-title > strong,
+.nl-folder-head > div > strong {
+    flex: 0 0 auto;
+    color: var(--nl-ink);
+    font-size: 11.5px;
+    font-weight: 700;
+    line-height: 1.35;
+    letter-spacing: -.01em;
+}
+
+.nl-space-picker-title > span,
+.nl-folder-head > div > span {
+    color: #9aa5b5;
+    font-size: 9.5px;
+    font-weight: 400;
+    line-height: 1.4;
+    letter-spacing: 0;
+    opacity: 1;
+}
+
+/* 기존 범위별 선택자가 설명 농도를 다르게 덮어쓰지 않도록 통일한다. */
+.nl-space-picker-ws .nl-space-picker-title > span,
+.nl-space-picker-project .nl-space-picker-title > span,
+.nl-folder-explorer .nl-folder-head > div > span {
+    color: #9aa5b5;
+    font-size: 9.5px;
+    font-weight: 400;
+    opacity: 1;
+}
+
+@media (max-width: 760px) {
+    .nl-space-picker-title,
+    .nl-folder-head > div {
+        gap: 5px;
+    }
+
+    .nl-space-picker-title > strong,
+    .nl-folder-head > div > strong {
+        font-size: 11px;
+    }
+
+    .nl-space-picker-title > span,
+    .nl-folder-head > div > span {
+        font-size: 9px;
+    }
+}
+
+/* ========================================================================== 
+   페이지 공통 좌우 여백 보정
+   넓은 화면에서도 헤더·탐색·목록이 화면 끝에 붙지 않도록 동일한 시작선을 사용한다.
+   ========================================================================== */
+.nl-page-header,
+.nl-space-picker,
+.nl-folder-explorer,
+.nl-list-section {
+    box-sizing: border-box;
+    padding-left: 16px;
+    padding-right: 16px;
+}
+
+@media (max-width: 760px) {
+    .nl-page-header,
+    .nl-space-picker,
+    .nl-folder-explorer,
+    .nl-list-section {
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+}
+
+/* ========================================================================== 
+   탭별 목록 시작 리듬 정규화
+   전체/중요/개인/친구/그룹/프로젝트에서 마지막 탐색 요소 이후 목록 헤더와
+   첫 카드가 동일한 간격 규칙을 사용하도록 공통값으로 고정한다.
+   ========================================================================== */
+:root {
+    --nl-result-gap: 20px;
+    --nl-result-head-gap: 10px;
+    --nl-result-head-height: 32px;
+}
+
+/* 탐색 단계의 유무와 관계없이 결과 목록 앞 간격은 동일하게 유지한다. */
+.nl-list-section,
+.nl-folder-explorer + .nl-list-section,
+.nl-space-picker + .nl-list-section,
+.nl-space-picker-project + .nl-list-section {
+    margin-top: var(--nl-result-gap) !important;
+}
+
+/* 목록 제목, 개수, 정렬 컨트롤을 모든 탭에서 같은 기준선에 맞춘다. */
+.nl-section-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: var(--nl-result-head-height);
+    margin-bottom: var(--nl-result-head-gap) !important;
+    padding-top: 0;
+    padding-bottom: 0;
+}
+
+.nl-section-head > div {
+    display: flex;
+    align-items: baseline;
+    min-width: 0;
+    gap: 7px;
+}
+
+.nl-section-head h2,
+.nl-section-head span {
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
+.nl-sort-list {
+    flex: 0 0 auto;
+    align-self: center;
+}
+
+/* 폴더가 있는 탭도 마지막 칩 줄 아래에서 동일한 호흡으로 결과가 시작된다. */
+.nl-folder-explorer {
+    padding-bottom: 0;
+}
+
+/* 그룹/프로젝트 선택 단계가 있는 탭의 마지막 탐색 줄도 별도 추가 여백을 만들지 않는다. */
+.nl-space-picker-ws,
+.nl-space-picker-project {
+    padding-bottom: 0;
+}
+
+@media (max-width: 760px) {
+    :root {
+        --nl-result-gap: 17px;
+        --nl-result-head-gap: 9px;
+        --nl-result-head-height: 30px;
+    }
+}
+
+
+/* note list 3rd: card actions / folder move / trash */
+.nl-tab-divider{width:1px;height:18px;background:#dbe3ef;margin:0 4px;align-self:center}
+.nl-trash-tab{gap:6px;color:#758196}
+.nl-trash-tab.is-active{color:#475569;background:#eef2f7}
+.nl-note-card{position:relative}
+.nl-card-menu-wrap{position:absolute;top:14px;right:12px;z-index:8}
+.nl-pin-button + .nl-card-menu-wrap{right:40px}
+.nl-card-menu-button{width:26px;height:26px;border:0;border-radius:8px;background:transparent;color:#9aa6b8;display:grid;place-items:center;cursor:pointer}
+.nl-card-menu-button:hover,.nl-card-menu-button[aria-expanded="true"]{background:#f1f5f9;color:#475569}
+.nl-card-menu{position:absolute;top:31px;right:0;width:160px;padding:6px;background:#fff;border:1px solid #e2e8f0;border-radius:11px;box-shadow:0 12px 32px rgba(15,23,42,.14);z-index:30}
+.nl-card-menu button{width:100%;height:34px;border:0;border-radius:7px;background:transparent;display:flex;align-items:center;gap:9px;padding:0 10px;color:#334155;font-size:13px;text-align:left;cursor:pointer}
+.nl-card-menu button:hover{background:#f8fafc}.nl-card-menu button.is-danger{color:#dc5362}.nl-card-menu button.is-danger:hover{background:#fff1f2}
+.nl-card-menu button i{width:15px;text-align:center}
+.nl-note-link.is-trash-card{cursor:default}
+.nl-modal-backdrop{position:fixed;inset:0;z-index:1500;background:rgba(15,23,42,.34);display:grid;place-items:center;padding:24px}
+.nl-modal-backdrop[hidden]{display:none}
+.nl-move-modal{width:min(440px,100%);max-height:min(620px,80vh);background:#fff;border-radius:18px;box-shadow:0 24px 70px rgba(15,23,42,.22);display:flex;flex-direction:column;overflow:hidden}
+.nl-modal-head{display:flex;justify-content:space-between;gap:20px;padding:22px 22px 16px;border-bottom:1px solid #edf1f6}.nl-modal-head h2{margin:0;font-size:18px;color:#172033}.nl-modal-head p{margin:5px 0 0;font-size:12px;color:#8a96a8}
+.nl-modal-close{width:32px;height:32px;border:0;border-radius:9px;background:#f4f7fa;color:#64748b;font-size:22px;cursor:pointer}
+.nl-folder-choice-list{padding:10px;overflow:auto;min-height:130px}
+.nl-folder-choice{width:100%;min-height:42px;border:0;border-radius:10px;background:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 12px;color:#334155;cursor:pointer;text-align:left}
+.nl-folder-choice:hover:not(:disabled){background:#f4f7fb}.nl-folder-choice:disabled{background:#f8fafc;color:#94a3b8;cursor:default}.nl-folder-choice span{display:flex;align-items:center;gap:9px;padding-left:calc(var(--folder-depth,0) * 16px)}.nl-folder-choice i{color:#718096}.nl-folder-choice em{font-style:normal;font-size:11px;color:#94a3b8}
+.nl-modal-actions{display:flex;justify-content:flex-end;padding:14px 18px;border-top:1px solid #edf1f6}.nl-modal-cancel{height:36px;padding:0 16px;border:1px solid #dfe6ef;border-radius:9px;background:#fff;color:#526174;cursor:pointer}
+body.nl-modal-open{overflow:hidden}
+
+
+/* note list toolbar / card action alignment v2 */
+.nl-page-header .nl-toolbar {
+    gap: 8px;
+}
+
+.nl-page-header .nl-search {
+    flex: 0 1 286px;
+    width: 286px;
+    margin-left: 4px;
+}
+
+.nl-trash-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    flex: 0 0 auto;
+    height: 32px;
+    margin-left: auto;
+    padding: 0 12px;
+    border: 0;
+    border-radius: 7px;
+    color: #758196;
+    background: transparent;
+    font-size: 11px;
+    font-weight: 700;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.nl-trash-button:hover {
+    color: #4f6fd1;
+    background: rgba(79, 125, 247, .06);
+}
+
+.nl-trash-button.is-active {
+    border-color: #d9e3fb;
+    color: #315fc7;
+    background: #eef4ff;
+}
+
+/* 범위 라벨, 중요 별, 더보기 메뉴가 서로 겹치지 않도록 우측 액션 공간을 분리한다. */
+.nl-note-card:has(.nl-card-menu-wrap) .nl-card-head-row {
+    padding-right: 62px;
+}
+
+.nl-note-card:has(.nl-card-menu-wrap) .nl-pin-button {
+    right: 38px;
+}
+
+.nl-card-menu-wrap,
+.nl-pin-button + .nl-card-menu-wrap {
+    right: 8px;
+}
+
+.nl-card-menu-button {
+    color: #a4afbf;
+}
+
+@media (max-width: 900px) {
+    .nl-page-header .nl-toolbar {
+        flex-wrap: wrap;
+    }
+
+    .nl-page-header .nl-search {
+        order: 3;
+        flex: 1 1 calc(100% - 94px);
+        width: auto;
+        margin-left: 0;
+    }
+
+    .nl-trash-button {
+        order: 2;
+        margin-left: auto;
+    }
+}
+
+@media (max-width: 760px) {
+    .nl-page-header .nl-scope-tabs {
+        flex: 1 1 100%;
+        overflow-x: auto;
+        scrollbar-width: none;
+    }
+
+    .nl-page-header .nl-scope-tabs::-webkit-scrollbar {
+        display: none;
+    }
+
+    .nl-page-header .nl-search {
+        order: 2;
+        flex: 1 1 0;
+        width: auto;
+    }
+
+    .nl-trash-button {
+        order: 2;
+    }
+}
+
+/* 3차: 중요는 범위 탭이 아닌 현재 범위용 아이콘 필터 */
+.nl-important-filter {
+    flex: 0 0 30px;
+    width: 30px;
+    height: 30px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 0;
+    border-radius: 7px;
+    color: #8f9bb2;
+    text-decoration: none;
+    white-space: nowrap;
+    margin-left: -3px;
+    background: transparent;
+    transition: color .16s ease, transform .16s ease;
+}
+
+.nl-important-filter:hover {
+    background: transparent;
+    color: #3b82f6;
+    transform: translateY(-1px);
+}
+
+.nl-important-filter.is-active {
+    background: transparent;
+    color: #2563eb;
+}
+
+.nl-important-filter i {
+    font-size: 14px;
+}
+
+@media (max-width: 980px) {
+    .nl-important-filter {
+        order: 2;
+    }
+}
+
+/* note list bulk select ui v2 */
+.nl-list-head-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 0 0 auto;
+}
+
+.nl-select-mode-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    height: 32px;
+    padding: 0 11px;
+    border: 1px solid #dfe6ef;
+    border-radius: 8px;
+    background: #fff;
+    color: #5f6f84;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.nl-select-mode-button:hover {
+    border-color: #cbd7e8;
+    background: #f8fafc;
+    color: #315fc7;
+}
+
+
+.nl-select-mode-button.is-active {
+    color: #2563eb;
+    background: #eff6ff;
+}
+
+.nl-select-mode-button.is-active:hover {
+    background: #e8f1ff;
+}
+
+.nl-bulk-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 38px;
+    margin: -2px 0 10px;
+    padding: 3px 2px;
+    border: 0;
+    border-bottom: 1px solid #e7edf5;
+    border-radius: 0;
+    background: transparent;
+}
+
+.nl-bulk-bar[hidden] {
+    display: none;
+}
+
+.nl-bulk-select-all {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    color: #46566c;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.nl-bulk-select-all input {
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    accent-color: #4f7df7;
+}
+
+.nl-bulk-count {
+    color: #69778a;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.nl-bulk-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-left: auto;
+}
+
+.nl-bulk-actions button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    height: 30px;
+    padding: 0 9px;
+    border: 1px solid transparent;
+    border-radius: 7px;
+    background: transparent;
+    color: #536277;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.nl-bulk-actions button:hover:not(:disabled) {
+    border-color: #dce7f8;
+    color: #315fc7;
+    background: #f5f8ff;
+}
+
+.nl-bulk-actions button.is-danger {
+    color: #d94f62;
+}
+
+.nl-bulk-actions button.is-danger:hover:not(:disabled) {
+    border-color: #f4d6db;
+    background: #fff7f8;
+    color: #c93f53;
+}
+
+.nl-bulk-actions button.is-cancel {
+    margin-left: 2px;
+    color: #7b8798;
+}
+
+.nl-bulk-actions button:disabled {
+    opacity: .34;
+    cursor: default;
+}
+
+.nl-card-select {
+    position: absolute;
+    top: 13px;
+    left: 12px;
+    z-index: 10;
+    display: none;
+    width: 24px;
+    height: 24px;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.nl-card-select input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.nl-card-select span {
+    display: block;
+    width: 17px;
+    height: 17px;
+    border: 1.5px solid #b9c5d6;
+    border-radius: 5px;
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, .08);
+}
+
+.nl-card-select input:checked + span {
+    border-color: #4f7df7;
+    background: #4f7df7;
+}
+
+.nl-card-select input:checked + span::after {
+    display: block;
+    width: 8px;
+    height: 4px;
+    margin: 4px 0 0 3px;
+    border-left: 2px solid #fff;
+    border-bottom: 2px solid #fff;
+    transform: rotate(-45deg);
+    content: "";
+}
+
+.nl-selection-mode .nl-card-select {
+    display: flex;
+}
+
+.nl-card-select.is-disabled {
+    cursor: help;
+}
+
+.nl-card-select input:disabled + span {
+    border-color: #d8e0eb;
+    background: #f5f7fa;
+    box-shadow: none;
+}
+
+.nl-card-select.is-disabled:hover input:disabled + span {
+    border-color: #c7d1df;
+    background: #f1f4f8;
+}
+
+.nl-selection-mode .nl-note-card[data-can-manage="false"],
+.nl-selection-mode .nl-note-card[data-can-manage="0"] {
+    cursor: default;
+}
+
+.nl-selection-mode .nl-note-card .nl-note-link {
+    padding-left: 43px;
+}
+
+.nl-selection-mode .nl-note-card[data-can-manage="true"],
+.nl-selection-mode .nl-note-card[data-can-manage="1"] {
+    cursor: pointer;
+}
+
+.nl-selection-mode .nl-note-card[data-can-manage="true"] .nl-card-menu-wrap,
+.nl-selection-mode .nl-note-card[data-can-manage="1"] .nl-card-menu-wrap {
+    display: none;
+}
+
+.nl-selection-mode .nl-note-card.is-selected {
+    border-color: #7fa3ff;
+    background: #f7faff;
+    box-shadow: 0 0 0 2px rgba(79, 125, 247, .10), 0 6px 16px rgba(31, 45, 73, .05);
+}
+
+@media (max-width: 760px) {
+    .nl-section-head {
+        align-items: flex-start;
+    }
+
+    .nl-list-head-actions {
+        gap: 6px;
+    }
+
+    .nl-select-mode-button span {
+        display: none;
+    }
+
+    .nl-select-mode-button {
+        width: 32px;
+        padding: 0;
+    }
+
+    .nl-bulk-bar {
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 7px 10px;
+        padding-bottom: 7px;
+    }
+
+    .nl-bulk-actions {
+        width: 100%;
+        margin-left: 0;
+        overflow-x: auto;
+    }
+}
+
+/* drag selection */
+.nl-drag-select-box {
+    position: fixed;
+    z-index: 9998;
+    border: 1px solid rgba(79, 125, 247, .72);
+    border-radius: 4px;
+    background: rgba(79, 125, 247, .12);
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, .35) inset;
+    pointer-events: none;
+}
+
+body.nl-drag-selecting,
+body.nl-drag-selecting * {
+    user-select: none !important;
+}
+
+.nl-selection-mode .nl-note-grid {
+    cursor: crosshair;
+}
+
+.nl-selection-mode .nl-note-card[data-can-manage="false"],
+.nl-selection-mode .nl-note-card[data-can-manage="0"] {
+    cursor: not-allowed;
+}
+
+.nl-card-select input:disabled:checked + span {
+    border-color: #d8e0eb;
+    background: #f5f7fa;
+}
+
+.nl-card-select input:disabled:checked + span::after {
+    display: none;
+}
+
+/* selected note cards can be dragged to a folder chip or the note trash */
+.nl-selection-mode .nl-note-card[draggable="true"] {
+    cursor: grab;
+}
+
+.nl-selection-mode .nl-note-card[draggable="true"]:active {
+    cursor: grabbing;
+}
+
+.nl-note-card.is-dragging {
+    opacity: .48;
+}
+
+.nl-card-drag-ghost {
+    position: fixed;
+    left: -9999px;
+    top: -9999px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 38px;
+    padding: 0 13px;
+    border: 1px solid #b8cdfd;
+    border-radius: 10px;
+    background: #fff;
+    color: #2563eb;
+    box-shadow: 0 10px 24px rgba(37, 99, 235, .18);
+    font-size: 13px;
+    white-space: nowrap;
+    z-index: 99999;
+}
+
+.nl-card-drag-ghost strong {
+    font-weight: 700;
+}
+
+.nl-selection-mode [data-note-folder-drop],
+.nl-selection-mode [data-note-trash-drop] {
+    transition: background-color .15s ease, color .15s ease, box-shadow .15s ease, transform .15s ease;
+}
+
+[data-note-folder-drop].nl-drop-target-active {
+    color: #2563eb !important;
+    background: #eaf2ff !important;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, .28);
+    transform: translateY(-1px);
+}
+
+[data-note-trash-drop].nl-drop-target-active {
+    color: #ef4444 !important;
+    background: #fff1f2 !important;
+    box-shadow: 0 0 0 2px rgba(239, 68, 68, .2);
+    border-radius: 8px;
+}
+
+.nl-drop-target-invalid {
+    cursor: not-allowed !important;
+    opacity: .5;
+}
+
+body.nl-card-dragging {
+    user-select: none;
+}
+
+
+/* bulk action drop targets */
+.nl-selection-mode .nl-note-card.is-selected { cursor: grab; }
+.nl-selection-mode .nl-note-card.is-selected:active { cursor: grabbing; }
+[data-note-bulk-move-drop].nl-drop-target-active,
+[data-note-bulk-trash-drop].nl-drop-target-active {
+    background: rgba(59, 130, 246, .10) !important;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, .22);
+}
+[data-note-bulk-move-drop].nl-drop-target-invalid,
+[data-note-bulk-trash-drop].nl-drop-target-invalid {
+    opacity: .45;
+}
+
+/* Folder management */
+.nl-folder-head {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 10px;
+}
+
+.nl-folder-head > div:first-child {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 6px;
+}
+
+.nl-folder-create-button,
+.nl-modal-folder-create {
+    appearance: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    min-width: 0;
+    height: 28px;
+    margin: 0;
+    padding: 0 7px;
+    border: 0;
+    border-radius: 7px;
+    outline: 0;
+    color: #3b82f6;
+    background: transparent;
+    box-shadow: none;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.nl-folder-create-button:hover,
+.nl-modal-folder-create:hover {
+    color: #2563eb;
+    background: #eef5ff;
+}
+
+.nl-folder-item-wrap {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    flex: 0 0 auto;
+}
+
+.nl-folder-item-wrap .nl-folder-item {
+    padding-right: 12px;
+    transition: padding-right .15s ease;
+}
+
+.nl-folder-item-wrap:hover .nl-folder-item,
+.nl-folder-item-wrap:focus-within .nl-folder-item {
+    padding-right: 57px;
+}
+
+.nl-folder-inline-actions {
+    position: absolute;
+    top: 50%;
+    right: 5px;
+    z-index: 2;
+    display: inline-flex;
+    align-items: center;
+    gap: 1px;
+    margin: 0;
+    padding: 0;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translateY(-50%);
+}
+
+.nl-folder-item-wrap:hover .nl-folder-inline-actions,
+.nl-folder-item-wrap:focus-within .nl-folder-inline-actions {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+}
+
+.nl-folder-inline-actions button,
+.nl-modal-folder-actions button {
+    appearance: none;
+    display: inline-grid;
+    place-items: center;
+    width: 23px;
+    min-width: 23px;
+    height: 23px;
+    min-height: 23px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 6px;
+    outline: 0;
+    color: #8a96a8;
+    background: transparent;
+    box-shadow: none;
+    font: inherit;
+    font-size: 11px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.nl-folder-inline-actions button:hover,
+.nl-modal-folder-actions button:hover {
+    color: #2563eb;
+    background: #edf4ff;
+}
+
+.nl-folder-inline-actions button[data-folder-delete]:hover,
+.nl-modal-folder-actions button[data-modal-folder-delete]:hover {
+    color: #ef476f;
+    background: #fff0f2;
+}
+
+.nl-move-folder-tools {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    min-height: 38px;
+    padding: 5px 18px;
+    border-bottom: 1px solid #edf1f6;
+}
+
+.nl-move-folder-tools[hidden] {
+    display: none;
+}
+
+.nl-folder-choice-row {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    min-height: 42px;
+    margin: 0 10px;
+    padding: 0 6px 0 0;
+    border-radius: 9px;
+}
+
+.nl-folder-choice-row:hover {
+    background: #f7f9fc;
+}
+
+.nl-folder-choice-row .nl-folder-choice {
+    flex: 1 1 auto;
+    min-width: 0;
+    margin: 0;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+}
+
+.nl-folder-choice-row .nl-folder-choice:hover:not(:disabled) {
+    background: transparent;
+}
+
+.nl-folder-choice-row .nl-folder-choice:disabled {
+    cursor: default;
+}
+
+.nl-modal-folder-actions {
+    display: inline-flex;
+    align-items: center;
+    flex: 0 0 auto;
+    gap: 2px;
+    margin: 0;
+    padding: 0;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity .15s ease, visibility .15s ease;
+}
+
+.nl-folder-choice-row:hover .nl-modal-folder-actions,
+.nl-folder-choice-row:focus-within .nl-modal-folder-actions {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+}
+
+.nl-folder-choice-row:has(.nl-folder-choice:disabled) {
+    background: #fafbfc;
+}
+
+.nl-folder-choice-row:has(.nl-folder-choice:disabled) .nl-modal-folder-actions {
+    margin-left: 4px;
+    padding-left: 7px;
+    border-left: 1px solid #edf1f6;
+}
+
+/* Bulk action buttons */
+.nl-bulk-actions button {
+    appearance: none;
+    min-width: 0;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    box-shadow: none;
+}
+
+.nl-bulk-actions button:focus,
+.nl-bulk-actions button:focus-visible {
+    outline: 0;
+    box-shadow: none;
+}
+
+.nl-bulk-actions button:hover:not(:disabled),
+.nl-bulk-actions button.nl-drop-target-active {
+    border: 0;
+    color: #315fc7;
+    background: #f2f6ff;
+    box-shadow: none;
+}
+
+.nl-bulk-actions button.is-danger:hover:not(:disabled),
+.nl-bulk-actions button.is-danger.nl-drop-target-active {
+    border: 0;
+    color: #d94f62;
+    background: #fff4f6;
+    box-shadow: none;
+}
+
+@media (max-width: 720px) {
+    .nl-folder-create-button span {
+        display: none;
+    }
+}
+
+/* selected note cards -> top folder chip direct drop */
+body.nl-card-dragging [data-note-folder-drop] {
+    transition: border-color .14s ease, background-color .14s ease, box-shadow .14s ease, transform .14s ease;
+}
+body.nl-card-dragging [data-note-folder-drop].nl-drop-target-active {
+    border-color: #3b82f6 !important;
+    background: #eff6ff !important;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, .12);
+    transform: translateY(-1px);
+}
+body.nl-card-dragging [data-note-folder-drop].nl-drop-target-invalid {
+    border-color: #cbd5e1 !important;
+    background: #f8fafc !important;
+    cursor: not-allowed;
+}
+
+/* Friend tab: friend -> folder -> note navigation */
+.nl-space-picker-friend {
+    margin: 0;
+    padding-top: 6px;
+    padding-bottom: 0;
+}
+
+.nl-space-picker-friend .nl-space-picker-head {
+    margin-bottom: 9px;
+}
+
+.nl-friend-scroller .nl-space-option {
+    width: clamp(205px, 23vw, 300px);
+    flex: 0 0 clamp(205px, 23vw, 300px);
+    min-height: 46px;
+}
+
+.nl-friend-option {
+    border-color: rgba(245, 158, 11, .16);
+}
+
+.nl-friend-option:hover {
+    border-color: rgba(245, 158, 11, .32);
+    background: rgba(245, 158, 11, .035);
+}
+
+.nl-space-picker-friend .nl-space-option.is-selected {
+    color: #b46b00;
+    border-color: rgba(245, 158, 11, .38);
+    background: rgba(245, 158, 11, .075);
+    box-shadow: inset 0 0 0 1px rgba(245, 158, 11, .035);
+}
+
+.nl-friend-avatar {
+    border-color: rgba(245, 158, 11, .22);
+    background: #fff7e6;
+}
+
+.nl-friend-avatar .nl-space-avatar-fallback,
+.nl-friend-avatar-all {
+    background: linear-gradient(135deg, #f7b63d, #f59e0b 58%, #ef7d22);
+}
+
+.nl-friend-name-wrap {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.nl-friend-name-wrap small {
+    overflow: hidden;
+    color: #9a7b4e;
+    font-size: 9px;
+    line-height: 1.2;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.nl-space-picker-friend + .nl-folder-explorer {
+    margin-top: 14px;
+}
+
+@media (max-width: 760px) {
+    .nl-friend-scroller .nl-space-option {
+        width: min(76vw, 270px);
+        flex-basis: min(76vw, 270px);
+    }
+
+    .nl-space-picker-friend + .nl-folder-explorer {
+        margin-top: 11px;
+    }
+}
+
+
+/* Friend profile image and read-only shared folders */
+.nl-friend-avatar img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.nl-folder-item-wrap.is-readonly:hover .nl-folder-item,
+.nl-folder-item-wrap.is-readonly:focus-within .nl-folder-item {
+    padding-right: 12px;
+}
+
+.nl-folder-item-wrap.is-readonly .nl-folder-inline-actions {
+    display: none !important;
+}
+
+/* Infinite note loading */
+.nl-infinite-status {
+    display: flex;
+    min-height: 42px;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    color: #8b96a7;
+    font-size: 11px;
+}
+
+.nl-infinite-spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid #dbe5f4;
+    border-top-color: var(--nl-blue);
+    border-radius: 50%;
+    animation: nl-infinite-spin .7s linear infinite;
+}
+
+.nl-infinite-sentinel {
+    width: 100%;
+    height: 1px;
+}
+
+@keyframes nl-infinite-spin {
+    to { transform: rotate(360deg); }
+}
+
+
+/* Friend picker avatar normalization: keep profile image first, fallback as MOYO round avatar */
+.nl-friend-option .nl-friend-avatar {
+    width: 32px;
+    height: 32px;
+    flex: 0 0 32px;
+    border-radius: 50%;
+    border-color: rgba(245, 158, 11, .20);
+    background: #fff7e6;
+    color: #fff;
+    box-shadow: 0 3px 10px rgba(31, 45, 73, .08), inset 0 0 0 1px rgba(255,255,255,.58);
+}
+
+.nl-friend-option .nl-friend-avatar img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: inherit;
+}
+
+.nl-friend-option .nl-friend-avatar .nl-space-avatar-fallback,
+.nl-friend-option .nl-friend-avatar-all {
+    color: #fff;
+    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 58%, #ef7d22 100%);
+}
+
+.nl-friend-option .nl-friend-avatar .nl-space-avatar-fallback {
+    font-size: 12px;
+    font-weight: 900;
+    letter-spacing: -.02em;
+}
+
+.nl-friend-option .nl-friend-avatar-all i {
+    color: #fff;
+    font-size: 13px;
+}
+
+
+
+/* Final card header alignment: keep scope label on the title line. */
+.nl-note-card .nl-card-head-row {
+    align-items: center;
+    height: 26px;
+    gap: 8px;
+    padding-right: 28px;
+}
+
+.nl-note-card .nl-card-title {
+    align-items: center;
+    min-height: 24px;
+    height: 24px;
+    line-height: 24px;
+}
+
+.nl-note-card .nl-title-icon,
+.nl-note-card .nl-title-text,
+.nl-note-card .nl-title-permission {
+    align-self: center;
+}
+
+.nl-note-card .nl-title-text {
+    line-height: 24px;
+}
+
+.nl-note-card .nl-card-head-actions {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex: 0 0 auto;
+    height: 24px;
+    margin-left: auto;
+    gap: 6px;
+    white-space: nowrap;
+}
+
+.nl-note-card .nl-scope-badge,
+.nl-note-card .nl-title-scope {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 20px;
+    margin: 0;
+    padding: 0 8px;
+    line-height: 1;
+    vertical-align: middle;
+}
+
+
+/* ========================================================================== 
+   Card title line micro alignment
+   현재 카드 구조는 유지하고 제목 줄의 범위 라벨만 시각 기준선에 맞춘다.
+   ========================================================================== */
+.nl-note-card .nl-card-head-row {
+    align-items: flex-start;
+    height: 26px;
+}
+
+.nl-note-card .nl-card-title {
+    height: 22px;
+    min-height: 22px;
+    align-items: flex-start;
+    line-height: 22px;
+}
+
+.nl-note-card .nl-title-icon {
+    margin-top: 2px;
+}
+
+.nl-note-card .nl-title-text {
+    line-height: 22px;
+}
+
+.nl-note-card .nl-title-permission {
+    align-self: flex-start;
+    margin-top: 1px;
+}
+
+.nl-note-card .nl-card-head-actions {
+    height: 22px;
+    align-items: flex-start;
+    padding-top: 0;
+}
+
+.nl-note-card .nl-title-scope,
+.nl-note-card .nl-card-head-actions .nl-scope-badge,
+.nl-note-card .nl-card-head-row > .nl-scope-badge {
+    align-self: flex-start;
+    margin-top: 1px;
+}
+
+/* ========================================================================== 
+   Note list readable density
+   브라우저 zoom 대신 노트 리스트 본문만 110%에 가깝게 보이도록 토큰으로 관리한다.
+   헤더/사이드바/모달 좌표계는 건드리지 않는다.
+   ========================================================================== */
+:root {
+    --nl-readable-shell-max: 1580px;
+    --nl-readable-shell-gutter: 32px;
+    --nl-readable-card-gap: 16px;
+    --nl-readable-card-height: 184px;
+    --nl-readable-card-padding-y: 17px;
+    --nl-readable-card-padding-x: 18px;
+    --nl-readable-section-title: 15px;
+    --nl-readable-section-meta: 11px;
+    --nl-readable-title: 16px;
+    --nl-readable-title-icon: 17px;
+    --nl-readable-badge: 10px;
+    --nl-readable-meta: 11px;
+    --nl-readable-author: 11px;
+    --nl-readable-preview: 13px;
+    --nl-readable-footer: 12px;
+    --nl-readable-control: 12px;
+}
+
+.nl-shell {
+    width: min(var(--nl-readable-shell-max), calc(100% - var(--nl-readable-shell-gutter)));
+}
+
+.nl-section-head {
+    margin-bottom: 14px;
+}
+
+.nl-section-head h2 {
+    font-size: var(--nl-readable-section-title);
+}
+
+.nl-section-head span,
+.nl-folder-head span,
+.nl-space-picker-head > span,
+.nl-space-picker-ws .nl-space-picker-head > span {
+    font-size: var(--nl-readable-section-meta);
+}
+
+.nl-note-grid {
+    gap: var(--nl-readable-card-gap);
+}
+
+.nl-note-link {
+    height: var(--nl-readable-card-height);
+    padding: var(--nl-readable-card-padding-y) var(--nl-readable-card-padding-x) 14px;
+}
+
+.nl-note-card .nl-card-head-row,
+.nl-card-head-row {
+    height: 28px;
+    gap: 9px;
+    padding-right: 31px;
+}
+
+.nl-note-card .nl-card-title,
+.nl-card-title {
+    height: 24px;
+    min-height: 24px;
+    gap: 7px;
+    font-size: var(--nl-readable-title);
+    line-height: 24px;
+}
+
+.nl-note-card .nl-title-icon,
+.nl-title-icon {
+    font-size: var(--nl-readable-title-icon);
+}
+
+.nl-note-card .nl-title-text,
+.nl-title-text {
+    line-height: 24px;
+}
+
+.nl-note-card .nl-title-permission,
+.nl-title-permission,
+.nl-scope-badge,
+.nl-note-card .nl-scope-badge,
+.nl-note-card .nl-title-scope {
+    height: 21px;
+    padding: 0 8px;
+    font-size: var(--nl-readable-badge);
+}
+
+.nl-pin-button {
+    top: 12px;
+    right: 10px;
+    width: 29px;
+    height: 29px;
+    font-size: 17px;
+}
+
+.nl-card-meta-row {
+    height: 29px;
+    margin-top: 5px;
+    font-size: var(--nl-readable-meta);
+}
+
+.nl-author-label,
+.nl-card-author strong,
+.nl-card-count {
+    font-size: var(--nl-readable-author);
+}
+
+.nl-card-counts {
+    gap: 8px;
+}
+
+.nl-card-preview {
+    height: 49px;
+    min-height: 49px;
+    margin: 8px 0 10px;
+    font-size: var(--nl-readable-preview);
+    line-height: 1.68;
+}
+
+.nl-card-foot-row {
+    height: 29px;
+    padding-top: 8px;
+    font-size: var(--nl-readable-footer);
+}
+
+.nl-card-update-meta,
+.nl-card-updater,
+.nl-card-update-meta time,
+.nl-card-update-dot {
+    font-size: var(--nl-readable-footer);
+}
+
+.nl-scope-tab,
+.nl-search input[type="search"],
+.nl-create-button,
+.nl-folder-chip,
+.nl-sort,
+.nl-select-button,
+.nl-trash-link {
+    font-size: var(--nl-readable-control);
+}
+
+.nl-toolbar {
+    gap: 9px;
+    padding: 7px 8px;
+}
+
+.nl-scope-tab,
+.nl-search,
+.nl-search input[type="search"],
+.nl-folder-chip,
+.nl-sort,
+.nl-select-button {
+    min-height: 34px;
+}
+
+@media (max-width: 1200px) {
+    :root {
+        --nl-readable-shell-gutter: 28px;
+        --nl-readable-card-gap: 14px;
+    }
+}
+
+@media (max-width: 760px) {
+    :root {
+        --nl-readable-shell-gutter: 26px;
+        --nl-readable-card-height: 176px;
+        --nl-readable-card-padding-y: 15px;
+        --nl-readable-card-padding-x: 15px;
+    }
+}
+
+/* toolbar divider / right aligned search v1 */
+.nl-page-header .nl-toolbar {
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(148, 163, 184, .16);
+}
+
+.nl-page-header .nl-search {
+    flex: 0 1 286px;
+    width: 286px;
+    margin-left: auto;
+}
+
+.nl-trash-button {
+    width: 30px;
+    height: 30px;
+    margin-left: -3px;
+    padding: 0;
+    gap: 0;
+    border-radius: 7px;
+    color: #8f9bb2;
+    background: transparent;
+}
+
+.nl-trash-button i {
+    font-size: 14px;
+}
+
+.nl-trash-button:hover {
+    color: #3b82f6;
+    background: transparent;
+    transform: translateY(-1px);
+}
+
+.nl-trash-button.is-active {
+    color: #2563eb;
+    background: transparent;
+}
+
+@media (max-width: 900px) {
+    .nl-page-header .nl-search {
+        order: 3;
+        flex: 1 1 100%;
+        width: auto;
+        margin-left: 0;
+    }
+
+    .nl-trash-button {
+        order: 2;
+        margin-left: -3px;
+    }
+}
+
+@media (max-width: 760px) {
+    .nl-page-header .nl-search {
+        order: 3;
+        flex: 1 1 100%;
+        width: auto;
+    }
+
+    .nl-trash-button {
+        order: 2;
+    }
+}
+
+
+
+/* note page header separator consistency v1 */
+.nl-page-header .nl-toolbar {
+    border-top: 0;
+}
+
+/* note page header background cut at tab divider v1
+   히어로 그라데이션이 탭 하단 구분선 아래로 번지지 않도록
+   페이지 헤더의 하단 여백을 제거하고, 탭 줄의 border-bottom을 실제 종료선으로 사용한다. */
+.nl-page-header {
+    padding-bottom: 0 !important;
+    overflow: hidden;
+}
+
+.nl-page-header .nl-toolbar {
+    margin-bottom: 0 !important;
+    padding-bottom: 8px !important;
+    border-bottom: 1px solid rgba(148, 163, 184, .16) !important;
+}
+
+.nl-folder-explorer,
+.nl-space-picker {
+    position: relative;
+    background: var(--nl-page);
+}
+
+@media (max-width: 760px) {
+    .nl-page-header {
+        padding-bottom: 0 !important;
+    }
+
+    .nl-page-header .nl-toolbar {
+        padding-bottom: 7px !important;
+    }
+}
+
+
+/* note trash bulk actions */
+.nl-trash-bulk-actions{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    margin-left:8px;
+}
+.nl-trash-bulk-actions[hidden]{
+    display:none!important;
+}
+.nl-trash-bulk-button{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:6px;
+    height:30px;
+    padding:0 10px;
+    border:1px solid #bfdbfe;
+    border-radius:999px;
+    background:#eff6ff;
+    color:#2563eb;
+    font-size:12px;
+    font-weight:700;
+    cursor:pointer;
+    white-space:nowrap;
+}
+.nl-trash-bulk-button:hover{
+    border-color:#93c5fd;
+    background:#dbeafe;
+}
+.nl-trash-bulk-button.is-danger{
+    border-color:#fecaca;
+    background:#fff1f2;
+    color:#b91c1c;
+}
+.nl-trash-bulk-button.is-danger:hover{
+    border-color:#fca5a5;
+    background:#ffe4e6;
+}
+.nl-trash-bulk-button:disabled{
+    opacity:.55;
+    cursor:default;
+}
+@media (max-width:720px){
+    .nl-section-title-wrap{
+        flex-wrap:wrap;
+    }
+    .nl-trash-bulk-actions{
+        flex-basis:100%;
+        margin-left:0;
+    }
+}

@@ -14,6 +14,12 @@ public class contentShareDTO {
     private Date createdAt;
     private Date expiresAt;
     private String activeYn;
+    private String shareStatus;
+    private Long respondedBy;
+    private Date respondedAt;
+    private String contentTitle;
+    private String requesterName;
+    private String requesterEmail;
     private String targetName;
     private String targetSubtext;
 
@@ -39,6 +45,18 @@ public class contentShareDTO {
     public void setExpiresAt(Date expiresAt) { this.expiresAt = expiresAt; }
     public String getActiveYn() { return activeYn; }
     public void setActiveYn(String activeYn) { this.activeYn = activeYn; }
+    public String getShareStatus() { return shareStatus; }
+    public void setShareStatus(String shareStatus) { this.shareStatus = shareStatus; }
+    public Long getRespondedBy() { return respondedBy; }
+    public void setRespondedBy(Long respondedBy) { this.respondedBy = respondedBy; }
+    public Date getRespondedAt() { return respondedAt; }
+    public void setRespondedAt(Date respondedAt) { this.respondedAt = respondedAt; }
+    public String getContentTitle() { return contentTitle; }
+    public void setContentTitle(String contentTitle) { this.contentTitle = contentTitle; }
+    public String getRequesterName() { return requesterName; }
+    public void setRequesterName(String requesterName) { this.requesterName = requesterName; }
+    public String getRequesterEmail() { return requesterEmail; }
+    public void setRequesterEmail(String requesterEmail) { this.requesterEmail = requesterEmail; }
     public String getTargetName() { return targetName; }
     public void setTargetName(String targetName) { this.targetName = targetName; }
     public String getTargetSubtext() { return targetSubtext; }

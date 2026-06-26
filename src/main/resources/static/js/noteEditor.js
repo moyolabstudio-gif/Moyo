@@ -148,6 +148,56 @@
             if (event.key === 'Escape') closeDialog();
         });
     }
+
+
+    function initNoteFolderPicker() {
+        const openButton = document.getElementById('noteFolderPickerButton');
+        const label = document.getElementById('noteFolderPickerLabel');
+        if (!openButton || !folder) return;
+
+        const syncLabel = function () {
+            const option = folder.options[folder.selectedIndex] || folder.options[0];
+            if (label) label.textContent = option ? option.textContent.trim() : '미분류';
+        };
+
+        const currentContext = function () {
+            return {
+                scope: scopeInput ? (scopeInput.value || 'PRIVATE') : 'PRIVATE',
+                wsId: wsIdInput ? (wsIdInput.value || '') : '',
+                projId: projIdInput ? (projIdInput.value || '') : ''
+            };
+        };
+
+        openButton.addEventListener('click', function (event) {
+            event.preventDefault();
+            event.stopPropagation();
+
+            if (!window.CommonFolderModal || !window.NoteFolderAdapter) {
+                window.alert('폴더 모달 스크립트가 아직 로드되지 않았습니다.');
+                return;
+            }
+
+            window.CommonFolderModal.openSelect({
+                selectElement: folder,
+                trigger: openButton,
+                label: label,
+                adapter: window.NoteFolderAdapter,
+                context: currentContext(),
+                title: '폴더 선택',
+                description: '노트 저장 위치를 선택합니다.',
+                createPrompt: '현재 노트 영역의 최상위에 새 폴더를 만듭니다.\n새 폴더 이름을 입력해 주세요.',
+                unclassifiedLabel: '미분류',
+                onSelect: function () {
+                    syncLabel();
+                    if (typeof markDirty === 'function') markDirty();
+                }
+            });
+        });
+
+        folder.addEventListener('change', syncLabel);
+        syncLabel();
+    }
+
     const templates = {
         meeting: '<h2>회의 개요</h2><ul><li><strong>일시:</strong>&nbsp;</li><li><strong>참석자:</strong>&nbsp;</li></ul><h2>논의 내용</h2><ul><li>&nbsp;</li></ul><h2>결정 사항</h2><ul><li>&nbsp;</li></ul><h2>다음 할 일</h2><ul><li>☐ 담당자 / 기한 / 할 일</li></ul>',
         checklist: '<h2>체크리스트</h2><ul><li>☐ 할 일 1</li><li>☐ 할 일 2</li><li>☐ 할 일 3</li></ul><h2>참고</h2><ul><li>&nbsp;</li></ul>',
@@ -262,6 +312,7 @@
 
     renderCustomTemplates();
     initTemplateSaveDialog();
+    initNoteFolderPicker();
     ensurePrivateNoteContext();
 
     [title, category, folder].forEach(function (el) {

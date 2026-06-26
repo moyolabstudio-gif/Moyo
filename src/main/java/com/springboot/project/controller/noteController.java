@@ -63,7 +63,10 @@ public class noteController {
             @RequestParam(value = "scopeType", required = false) String scopeType,
             @RequestParam(value = "wsId", required = false) Long wsId,
             @RequestParam(value = "projId", required = false) Long projId,
+            @RequestParam(value = "folderId", required = false) Long folderId,
+            @RequestParam(value = "friendUserId", required = false) Long friendUserId,
             @RequestParam(value = "keyword", required = false) String keyword,
+            @RequestParam(value = "importantOnly", required = false, defaultValue = "false") boolean importantOnly,
             Model model,
             HttpSession session) {
 
@@ -73,14 +76,56 @@ public class noteController {
         // 리스트는 완전 초기화: 개인/워크스페이스/프로젝트 탐색기를 붙이지 않고,
         // 권한이 있는 최근 노트만 noteList 하나로 렌더링한다.
         String normalizedScope = normalizeScope(scope, scopeType, wsId, projId);
-        if ("WS".equals(normalizedScope) && wsId == null) normalizedScope = "PRIVATE";
-        if ("PROJ".equals(normalizedScope) && (wsId == null || projId == null)) normalizedScope = "PRIVATE";
+        // 그룹/프로젝트 탭은 서로 섞지 않는다.
+        // 선택 ID가 없으면 참여 중인 전체 그룹 또는 전체 프로젝트 노트를 보여준다.
 
-        List<noteDTO> noteList = inoteService.getNoteList(normalizedScope, wsId, projId, loginUser.getUserId(), keyword);
+        final int pageSize = 20;
+
+        // 친구 선택 영역은 작성자 전체 목록이 필요하므로 별도로 조회한다.
+        List<noteDTO> friendSource = "FRIEND".equals(normalizedScope)
+                ? inoteService.getNoteList(normalizedScope, wsId, projId, loginUser.getUserId(), keyword)
+                : new ArrayList<noteDTO>();
+        List<Map<String, Object>> friendList = "FRIEND".equals(normalizedScope)
+                ? buildSharedFriendList(friendSource)
+                : new ArrayList<Map<String, Object>>();
+
+        List<noteDTO> fetchedNotes = inoteService.getNoteListPage(
+                normalizedScope, wsId, projId, loginUser.getUserId(), keyword,
+                importantOnly, friendUserId, folderId, 0, pageSize + 1);
+        boolean hasMore = fetchedNotes.size() > pageSize;
+        List<noteDTO> noteList = hasMore
+                ? new ArrayList<>(fetchedNotes.subList(0, pageSize))
+                : fetchedNotes;
+
+        List<noteFolderDTO> friendFolderList = "FRIEND".equals(normalizedScope) && friendUserId != null
+                ? buildSharedFolderList(friendSource.stream()
+                        .filter(note -> friendUserId.equals(note.getUserId()))
+                        .collect(java.util.stream.Collectors.toList()))
+                : new ArrayList<noteFolderDTO>();
+
         addScopeModel(model, normalizedScope, wsId, projId);
+        addNoteNavigationModel(model, loginUser.getUserId());
+        if ("PRIVATE".equals(normalizedScope)) {
+            model.addAttribute("folderList", getFolderList("PRIVATE", null, null, loginUser.getUserId()));
+        } else if ("FRIEND".equals(normalizedScope)) {
+            model.addAttribute("folderList", friendFolderList);
+        } else if ("WS".equals(normalizedScope) && wsId != null) {
+            model.addAttribute("folderList", getFolderList("WS", wsId, null, loginUser.getUserId()));
+        } else if ("PROJ".equals(normalizedScope) && projId != null) {
+            model.addAttribute("folderList", getFolderList("PROJ", wsId, projId, loginUser.getUserId()));
+        } else {
+            model.addAttribute("folderList", new ArrayList<noteFolderDTO>());
+        }
+        model.addAttribute("selectedFolderId", folderId);
+        model.addAttribute("friendUserId", friendUserId);
+        model.addAttribute("friendList", friendList);
+        model.addAttribute("importantOnly", importantOnly);
         model.addAttribute("noteList", noteList);
         model.addAttribute("keyword", keyword == null ? "" : keyword.trim());
         model.addAttribute("loginUserId", loginUser.getUserId());
+        model.addAttribute("hasMore", hasMore);
+        model.addAttribute("nextPage", 1);
+        model.addAttribute("pageSize", pageSize);
 
         return "note/noteList";
     }
@@ -170,6 +215,7 @@ public class noteController {
         if (note == null) {
             return "redirect:/note/list?" + buildScopeQuery(normalizedScope, wsId, projId);
         }
+
 
         normalizedScope = note.getScopeType() == null ? normalizedScope : note.getScopeType();
         wsId = note.getWsId();
@@ -342,6 +388,7 @@ public class noteController {
         note.setIcon(icon);
         note.setFolderId(folderId);
         note.setDoneContent(memo); // 기존 컬럼 호환용
+        note.setUpdatedBy(loginUser.getUserId());
         inoteService.modifyNote(note);
 
         List<noteFileDTO> fileList = saveNoteFiles(files);
@@ -469,10 +516,7 @@ public class noteController {
             return "redirect:/note/detail?noteId=" + noteId + "&" + buildScopeQuery(note.getScopeType(), note.getWsId(), note.getProjId()) + "&authError=delete";
         }
 
-        if (note.getFileList() != null) {
-            for (noteFileDTO file : note.getFileList()) deletePhysicalFile(file.getFilePath());
-        }
-        inoteService.removeNote(noteId);
+        inoteService.moveNoteToTrash(noteId, loginUser.getUserId());
         return "redirect:/note/list?" + buildScopeQuery(note.getScopeType(), note.getWsId(), note.getProjId());
     }
 
@@ -554,18 +598,45 @@ public class noteController {
     }
 
     @GetMapping("/api/list")
-    @ResponseBody
-    public List<noteDTO> noteListApi(
+    public String noteListApi(
             @RequestParam(value = "scope", required = false) String scope,
             @RequestParam(value = "scopeType", required = false) String scopeType,
             @RequestParam(value = "wsId", required = false) Long wsId,
             @RequestParam(value = "projId", required = false) Long projId,
+            @RequestParam(value = "folderId", required = false) Long folderId,
+            @RequestParam(value = "friendUserId", required = false) Long friendUserId,
             @RequestParam(value = "keyword", required = false) String keyword,
+            @RequestParam(value = "importantOnly", defaultValue = "false") boolean importantOnly,
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "20") int size,
+            Model model,
+            jakarta.servlet.http.HttpServletResponse response,
             HttpSession session) {
         usersDto loginUser = getLoginUser(session);
-        if (loginUser == null) return new ArrayList<>();
+        if (loginUser == null) {
+            response.setStatus(401);
+            return "note/noteListCards";
+        }
+
         String normalizedScope = normalizeScope(scope, scopeType, wsId, projId);
-        return inoteService.getNoteList(normalizedScope, wsId, projId, loginUser.getUserId(), keyword);
+        int safePage = Math.max(page, 0);
+        int safeSize = Math.min(Math.max(size, 1), 50);
+        int offset = safePage * safeSize;
+
+        List<noteDTO> fetchedNotes = inoteService.getNoteListPage(
+                normalizedScope, wsId, projId, loginUser.getUserId(), keyword,
+                importantOnly, friendUserId, folderId, offset, safeSize + 1);
+        boolean hasMore = fetchedNotes.size() > safeSize;
+        List<noteDTO> noteList = hasMore
+                ? new ArrayList<>(fetchedNotes.subList(0, safeSize))
+                : fetchedNotes;
+
+        model.addAttribute("noteList", noteList);
+        model.addAttribute("scope", normalizedScope);
+        model.addAttribute("scopeQuery", buildScopeQuery(normalizedScope, wsId, projId));
+        response.setHeader("X-Has-More", String.valueOf(hasMore));
+        response.setHeader("X-Next-Page", String.valueOf(safePage + 1));
+        return "note/noteListCards";
     }
 
     @PostMapping("/reply/add")
@@ -732,10 +803,7 @@ public class noteController {
             response.put("message", "작성자 또는 해당 공간의 관리자만 노트를 삭제할 수 있습니다.");
             return response;
         }
-        if (note.getFileList() != null) {
-            for (noteFileDTO file : note.getFileList()) deletePhysicalFile(file.getFilePath());
-        }
-        response.put("success", inoteService.removeNote(noteId));
+        response.put("success", inoteService.moveNoteToTrash(noteId, loginUser.getUserId()));
         return response;
     }
 
@@ -790,6 +858,56 @@ public class noteController {
         r.put("success",u!=null&&noteFolderDAO.moveNote(noteId,folderId,u.getUserId())>0);return r;
     }
 
+    @PostMapping("/api/note/trash")
+    @ResponseBody
+    public Map<String,Object> moveNoteToTrash(
+            @RequestParam(name = "noteId") Long noteId,
+            HttpSession session) {
+        Map<String,Object> result = new HashMap<>();
+        usersDto user = getLoginUser(session);
+        if (user == null) { result.put("success", false); result.put("message", "로그인이 필요합니다."); return result; }
+        boolean success = inoteService.moveNoteToTrash(noteId, user.getUserId());
+        result.put("success", success);
+        if (!success) result.put("message", "휴지통으로 이동할 권한이 없거나 노트를 찾을 수 없습니다.");
+        return result;
+    }
+
+    @PostMapping("/api/note/restore")
+    @ResponseBody
+    public Map<String,Object> restoreNote(
+            @RequestParam(name = "noteId") Long noteId,
+            HttpSession session) {
+        Map<String,Object> result = new HashMap<>();
+        usersDto user = getLoginUser(session);
+        if (user == null) { result.put("success", false); result.put("message", "로그인이 필요합니다."); return result; }
+        boolean success = inoteService.restoreNoteFromTrash(noteId, user.getUserId());
+        result.put("success", success);
+        if (!success) result.put("message", "복원할 노트를 찾을 수 없습니다.");
+        return result;
+    }
+
+    @PostMapping("/api/note/permanent-delete")
+    @ResponseBody
+    public Map<String,Object> permanentlyDeleteNote(
+            @RequestParam(name = "noteId") Long noteId,
+            HttpSession session) {
+        Map<String,Object> result = new HashMap<>();
+        usersDto user = getLoginUser(session);
+        if (user == null) { result.put("success", false); result.put("message", "로그인이 필요합니다."); return result; }
+        if (!inoteService.canPermanentlyDeleteNote(noteId, user.getUserId())) {
+            result.put("success", false); result.put("message", "영구 삭제할 권한이 없습니다."); return result;
+        }
+        noteDTO note = inoteService.getNoteDetail(noteId, user.getUserId());
+        if (note != null && note.getFileList() != null) {
+            for (noteFileDTO file : note.getFileList()) deletePhysicalFile(file.getFilePath());
+        }
+        boolean success = inoteService.removeNote(noteId);
+        result.put("success", success);
+        if (!success) result.put("message", "노트를 영구 삭제하지 못했습니다.");
+        return result;
+    }
+
+
 
     private void saveInitialShares(Long noteId,
                                    Long loginUserId,
@@ -819,6 +937,52 @@ public class noteController {
                 // 상세 화면의 공유 관리에서 다시 설정할 수 있습니다.
             }
         }
+    }
+
+    private List<Map<String, Object>> buildSharedFriendList(List<noteDTO> notes) {
+        Map<Long, Map<String, Object>> uniqueFriends = new java.util.LinkedHashMap<>();
+        if (notes == null) return new ArrayList<>();
+
+        for (noteDTO note : notes) {
+            if (note == null || note.getUserId() == null) continue;
+            Map<String, Object> friend = uniqueFriends.computeIfAbsent(note.getUserId(), key -> {
+                Map<String, Object> item = new HashMap<>();
+                item.put("userId", key);
+                item.put("userName", note.getUserName() == null || note.getUserName().trim().isEmpty() ? "이름 없음" : note.getUserName().trim());
+                item.put("profileImagePath", note.getProfileImagePath());
+                item.put("noteCount", 0);
+                return item;
+            });
+            Number count = (Number) friend.get("noteCount");
+            friend.put("noteCount", count == null ? 1 : count.intValue() + 1);
+        }
+        return new ArrayList<>(uniqueFriends.values());
+    }
+
+    private List<noteFolderDTO> buildSharedFolderList(List<noteDTO> notes) {
+        Map<Long, noteFolderDTO> uniqueFolders = new java.util.LinkedHashMap<>();
+        if (notes == null) return new ArrayList<>();
+
+        for (noteDTO note : notes) {
+            if (note == null || note.getFolderId() == null) continue;
+            noteFolderDTO folder = new noteFolderDTO();
+            folder.setFolderId(note.getFolderId());
+            folder.setScopeType("FRIEND");
+            folder.setDepth(0);
+            folder.setFolderPath(note.getFolderPath());
+
+            String folderName = note.getFolderName();
+            if (folderName == null || folderName.trim().isEmpty()) {
+                String path = note.getFolderPath();
+                if (path != null && !path.trim().isEmpty()) {
+                    String[] parts = path.split("\\s*/\\s*");
+                    folderName = parts.length == 0 ? path : parts[parts.length - 1];
+                }
+            }
+            folder.setFolderName(folderName == null || folderName.trim().isEmpty() ? "공유 폴더" : folderName.trim());
+            uniqueFolders.putIfAbsent(folder.getFolderId(), folder);
+        }
+        return new ArrayList<>(uniqueFolders.values());
     }
 
     private List<noteFolderDTO> getFolderList(String scopeType,Long wsId,Long projId,Long userId){
@@ -976,13 +1140,13 @@ public class noteController {
         value = value.trim().toUpperCase();
         if ("PROJECT".equals(value)) return "PROJ";
         if ("WORKSPACE".equals(value)) return "WS";
-        if (!"ALL".equals(value) && !"PRIVATE".equals(value) && !"WS".equals(value) && !"PROJ".equals(value)) return "PRIVATE";
+        if (!"ALL".equals(value) && !"IMPORTANT".equals(value) && !"PRIVATE".equals(value) && !"FRIEND".equals(value) && !"WS".equals(value) && !"PROJ".equals(value) && !"TRASH".equals(value)) return "PRIVATE";
         return value;
     }
 
     private boolean isValidScopeContext(String scopeType, Long wsId, Long projId) {
-        if ("ALL".equals(scopeType)) return true;
-        if ("PRIVATE".equals(scopeType)) return true;
+        if ("ALL".equals(scopeType) || "IMPORTANT".equals(scopeType) || "TRASH".equals(scopeType)) return true;
+        if ("PRIVATE".equals(scopeType) || "FRIEND".equals(scopeType)) return true;
         if ("WS".equals(scopeType)) return wsId != null;
         if ("PROJ".equals(scopeType)) return wsId != null && projId != null;
         return false;
@@ -997,8 +1161,11 @@ public class noteController {
 
     private String getScopeLabel(String scopeType) {
         if ("ALL".equals(scopeType)) return "전체 노트";
-        if ("PROJ".equals(scopeType)) return "프로젝트 공유 노트";
-        if ("WS".equals(scopeType)) return "워크스페이스 공유 노트";
+        if ("IMPORTANT".equals(scopeType)) return "중요 노트";
+        if ("TRASH".equals(scopeType)) return "휴지통";
+        if ("FRIEND".equals(scopeType)) return "친구 노트";
+        if ("PROJ".equals(scopeType)) return "프로젝트 노트";
+        if ("WS".equals(scopeType)) return "그룹 노트";
         return "개인 노트";
     }
 

@@ -7,19 +7,22 @@
 <head>
     <meta charset="UTF-8">
     <title>노트 수정</title>
-    <link rel="stylesheet" href="/css/note.css?v=note-edit-share-header-v3-20260619">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="stylesheet" href="/css/note.css?v=note-ckeditor-media-table-v41">
+<link rel="stylesheet" href="/css/commonFolderModal.css?v=common-folder-modal-final-v15">
     <script src="https://cdn.ckeditor.com/ckeditor5/41.1.0/super-build/ckeditor.js"></script>
     <script src="https://cdn.ckeditor.com/ckeditor5/41.1.0/super-build/translations/ko.js"></script>
-    <script src="/js/commonCkeditor.js?v=moyo-editor-v1"></script>
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/commonRichContent.css?v=rich-content-v3">
-    <link rel="stylesheet" href="/css/commonShareModal.css?v=common-share-v14">
+    <script src="/js/commonCkeditor.js?v=moyo-editor-media-preview-v3"></script>
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/commonRichContent.css?v=rich-content-v4-20260619">
+    <link rel="stylesheet" href="/css/commonShareModal.css?v=common-share-stable-v40">
 </head>
 <body class="note-page-body">
 <jsp:include page="/WEB-INF/views/common/header.jsp" />
 
 <c:choose>
-    <c:when test="${scope eq 'WORKSPACE' or scope eq 'WS' or (empty scope and not empty wsId)}"><c:set var="noteScopeClass" value="note-scope-workspace" /></c:when>
     <c:when test="${scope eq 'PROJECT' or scope eq 'PROJ' or (empty scope and not empty projId)}"><c:set var="noteScopeClass" value="note-scope-project" /></c:when>
+    <c:when test="${scope eq 'WORKSPACE' or scope eq 'WS' or (empty scope and not empty wsId)}"><c:set var="noteScopeClass" value="note-scope-workspace" /></c:when>
+    <c:when test="${not empty note.userId and note.userId ne sessionScope.user.userId}"><c:set var="noteScopeClass" value="note-scope-friend" /></c:when>
     <c:otherwise><c:set var="noteScopeClass" value="note-scope-private" /></c:otherwise>
 </c:choose>
 
@@ -39,6 +42,29 @@
             </c:if>
         </c:if>
     </c:forEach>
+    <c:set var="notePathScopeDisplay" value="개인 노트" />
+    <c:choose>
+        <c:when test="${note.scopeType eq 'PROJ' or scope eq 'PROJ' or scope eq 'PROJECT' or (empty scope and not empty projId)}">
+            <c:choose>
+                <c:when test="${not empty note.projectName}"><c:set var="notePathScopeDisplay" value="${note.projectName} · 프로젝트" /></c:when>
+                <c:when test="${not empty notePathProjectName}"><c:set var="notePathScopeDisplay" value="${notePathProjectName} · 프로젝트" /></c:when>
+                <c:otherwise><c:set var="notePathScopeDisplay" value="프로젝트" /></c:otherwise>
+            </c:choose>
+        </c:when>
+        <c:when test="${note.scopeType eq 'WS' or scope eq 'WS' or scope eq 'WORKSPACE' or (empty scope and not empty wsId)}">
+            <c:choose>
+                <c:when test="${not empty note.workspaceName}"><c:set var="notePathScopeDisplay" value="${note.workspaceName} · 그룹" /></c:when>
+                <c:when test="${not empty notePathWorkspaceName}"><c:set var="notePathScopeDisplay" value="${notePathWorkspaceName} · 그룹" /></c:when>
+                <c:otherwise><c:set var="notePathScopeDisplay" value="그룹" /></c:otherwise>
+            </c:choose>
+        </c:when>
+        <c:when test="${not empty note.userId and note.userId ne sessionScope.user.userId}">
+            <c:choose>
+                <c:when test="${not empty note.userName}"><c:set var="notePathScopeDisplay" value="${note.userName} · 노트" /></c:when>
+                <c:otherwise><c:set var="notePathScopeDisplay" value="친구 노트" /></c:otherwise>
+            </c:choose>
+        </c:when>
+    </c:choose>
     <c:set var="currentFolderName" value="폴더 선택" />
     <c:forEach var="folder" items="${folderList}">
         <c:if test="${not empty note.folderId and note.folderId eq folder.folderId}">
@@ -101,31 +127,22 @@
                     <div class="note-edit-meta-left">
                         <div class="note-meta-text note-meta-scope">
                             <span class="note-scope-dot" aria-hidden="true"></span>
-                            <span class="note-meta-value"><c:out value="${empty scopeLabel ? '개인 노트' : scopeLabel}" /></span>
+                            <span class="note-meta-value"><c:out value="${notePathScopeDisplay}" /></span>
                         </div>
-                        <label class="note-meta-text note-meta-folder" for="noteFolder">
-                            <span class="note-meta-icon" aria-hidden="true">📁</span>
-                            <select id="noteFolder" name="folderId" class="note-folder-select note-meta-select" aria-label="폴더 선택">
+                        <div class="note-meta-text note-meta-folder note-folder-picker-field">
+                            <span class="note-path-separator" aria-hidden="true">/</span>
+                            <select id="noteFolder" name="folderId" class="note-folder-select note-meta-select note-folder-native-select" aria-label="폴더 선택">
                                 <option value="">미분류</option>
                                 <c:forEach var="folder" items="${folderList}">
-                                    <option value="${folder.folderId}" <c:if test="${note.folderId eq folder.folderId}">selected</c:if>>${folder.folderName}</option>
+                                    <option value="${folder.folderId}" data-depth="${empty folder.depth ? 0 : folder.depth}" <c:if test="${note.folderId eq folder.folderId}">selected</c:if>>${folder.folderName}</option>
                                 </c:forEach>
                             </select>
-                        </label>
-                        <div class="note-edit-meta-actions" aria-label="공유와 권한 설정">
-                            <button type="button" id="openNoteEditShareModal" class="note-meta-text note-meta-share"
-                                    data-share-content-type="NOTE" data-share-content-id="${note.noteId}">
-                                <span class="note-meta-icon" aria-hidden="true">🔗</span>
-                                <span class="note-meta-value">공유</span>
-                                <span id="noteEditShareCount" class="note-share-count" hidden>0</span>
-                            </button>
-                            <button type="button" id="openNoteEditPermissionModal" class="note-meta-text note-meta-permission"
-                                    data-share-content-type="NOTE" data-share-content-id="${note.noteId}" data-share-mode="PERMISSION">
-                                <span class="note-meta-icon" aria-hidden="true">👤</span>
-                                <span class="note-meta-value">권한</span>
-                                <span id="noteEditPermissionCount" class="note-share-count" hidden>0</span>
+                            <button type="button" id="noteFolderPickerButton" class="note-folder-picker-trigger" aria-haspopup="dialog" aria-expanded="false">
+                                <span id="noteFolderPickerLabel">미분류</span>
+                                <i class="fa-solid fa-angle-down" aria-hidden="true"></i>
                             </button>
                         </div>
+                        
                     </div>
                 </div>
             </div>
@@ -140,9 +157,23 @@
                             <button type="button" class="note-template-btn" data-template="checklist">체크리스트</button>
                             <button type="button" class="note-template-btn" data-template="issue">오류 정리</button>
                             <span id="customTemplateButtons" class="note-custom-template-buttons"></span>
-                            <button type="button" id="saveAsTemplateButton" class="note-template-save-btn">+ 저장</button>
+                            <button type="button" id="saveAsTemplateButton" class="note-template-save-btn">+ 내 템플릿</button>
                         </div>
                     </div>
+                    <div class="note-template-actions note-edit-meta-actions" aria-label="공유와 권한 설정">
+                            <button type="button" id="openNoteEditShareModal" class="note-meta-text note-meta-share"
+                                    data-share-content-type="NOTE" data-share-content-id="${note.noteId}">
+                                <span class="note-meta-icon" aria-hidden="true">🔗</span>
+                                <span class="note-meta-value">공유</span>
+                                <span id="noteEditShareCount" class="note-share-count" hidden>0</span>
+                            </button>
+                            <button type="button" id="openNoteEditPermissionModal" class="note-meta-text note-meta-permission"
+                                    data-share-content-type="NOTE" data-share-content-id="${note.noteId}" data-share-mode="PERMISSION">
+                                <span class="note-meta-icon" aria-hidden="true">👤</span>
+                                <span class="note-meta-value">권한</span>
+                                <span id="noteEditPermissionCount" class="note-share-count" hidden>0</span>
+                            </button>
+                        </div>
                 </div>
             </div>
 
@@ -243,12 +274,13 @@
                  data-target-type="${share.targetType}"
                  data-target-id="${share.targetId}"
                  data-permission-type="${share.permissionType}"
+                 data-share-status="${share.shareStatus}"
                  data-target-name="${fn:escapeXml(share.targetName)}"
                  data-target-subtext="${fn:escapeXml(share.targetSubtext)}"></div>
         </c:forEach>
     </div>
 
-    <div id="noteEditShareModal" class="note-write-share-modal note-edit-share-modal" data-current-user-id="${sessionScope.user.userId}" hidden>
+    <div id="noteEditShareModal" class="note-write-share-modal moyo-share-modal note-edit-share-modal" data-current-user-id="${sessionScope.user.userId}" hidden>
         <div class="note-write-share-backdrop" data-note-share-close></div>
         <section class="note-write-share-panel" role="dialog" aria-modal="true" aria-labelledby="noteEditShareModalTitle">
             <div class="note-write-share-modal-head">
@@ -287,7 +319,7 @@
     </div>
 
 
-<script src="/js/commonShareModal.js?v=common-share-v14"></script>
+<script src="/js/commonShareModal.js?v=244"></script>
 <script>
 (function () {
     function initNoteEditShare() {
@@ -327,7 +359,8 @@
 })();
 </script>
 
-<script src="/js/noteEditor.js?v=note-editor-edit-initialdata-v2"></script>
-
+<script src="/js/commonFolderModal.js?v=common-folder-modal-v13"></script>
+<script src="/js/noteFolderAdapter.js?v=note-folder-adapter-v10"></script>
+<script src="/js/noteEditor.js?v=note-editor-folder-common-v10"></script>
 </body>
 </html>

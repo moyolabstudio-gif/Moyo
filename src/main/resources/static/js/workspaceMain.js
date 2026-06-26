@@ -1207,9 +1207,13 @@ document.addEventListener('keydown', function(event) {
 
         function getWorkspaceNoteQuery() {
             var target = document.getElementById('workspaceRecentNoteList');
-            var wsId = target && target.dataset ? target.dataset.wsId : '';
-            if (!wsId && typeof WORKSPACE_CONFIG !== 'undefined') wsId = WORKSPACE_CONFIG.wsId || '';
-            return 'scope=WS&wsId=' + encodeURIComponent(wsId);
+            var wsId = '';
+            if (target && target.dataset) wsId = target.dataset.wsId || '';
+            if (!wsId && typeof WORKSPACE_CONFIG !== 'undefined') wsId = WORKSPACE_CONFIG.wsId || WORKSPACE_CONFIG.workspaceId || '';
+            var params = new URLSearchParams();
+            params.set('scope', 'WS');
+            if (wsId) params.set('wsId', wsId);
+            return params.toString();
         }
 
         function getWorkspaceNoteListUrl() {

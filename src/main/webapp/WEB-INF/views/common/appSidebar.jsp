@@ -45,7 +45,7 @@
 
         <section class="moyo-app-sidebar-section">
             <div class="moyo-app-sidebar-section-heading">
-                <span class="moyo-app-sidebar-section-title">워크스페이스</span>
+                <span class="moyo-app-sidebar-section-title">그룹</span>
                 <a href="/workspace/create" class="moyo-app-sidebar-section-action">+ 만들기</a>
             </div>
 
@@ -78,7 +78,7 @@
                                    class="moyo-app-workspace-home"
                                    data-ws-id="${workspace.wsId}">
                                     <span class="moyo-app-project-dot home"></span>
-                                    <span>워크스페이스 홈</span>
+                                    <span>그룹 홈</span>
                                 </a>
 
                                 <c:set var="hasGroupProject" value="false" />
@@ -110,7 +110,7 @@
                 </c:when>
                 <c:otherwise>
                     <div class="moyo-app-sidebar-empty workspace-empty">
-                        참여 중인 워크스페이스가 없습니다.
+                        참여 중인 그룹이 없습니다.
                     </div>
                 </c:otherwise>
             </c:choose>
@@ -118,7 +118,7 @@
     </div>
 
     <div class="moyo-app-sidebar-bottom">
-        <a href="/workspace/create" class="moyo-app-sidebar-bottom-link">＋ 워크스페이스 만들기</a>
+        <a href="/workspace/create" class="moyo-app-sidebar-bottom-link">＋ 그룹 만들기</a>
         <a href="/workspace/invitations" class="moyo-app-sidebar-bottom-link">✉ 초대함</a>
     </div>
 </aside>

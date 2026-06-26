@@ -1,0 +1,338 @@
+/* Common folder modal shared by note now, reusable by photo/file adapters later.
+   This file intentionally does not depend on moyoModal.css. */
+
+.note-folder-native-select {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    margin: -1px !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    clip: rect(0 0 0 0) !important;
+    white-space: nowrap !important;
+    border: 0 !important;
+}
+
+.note-folder-picker-field {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.note-folder-picker-trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    max-width: 190px;
+    height: 24px;
+    padding: 0 8px;
+    border: 1px solid #dbe6f3;
+    border-radius: 999px;
+    color: #475569;
+    background: #fff;
+    font: inherit;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.note-folder-picker-trigger:hover {
+    border-color: #bcd0ee;
+    background: #f8fbff;
+}
+
+.note-folder-picker-trigger span {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.nl-modal-backdrop[hidden],
+.common-folder-modal[hidden] {
+    display: none !important;
+}
+
+.nl-modal-backdrop,
+.common-folder-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 1600;
+    display: grid;
+    place-items: center;
+    padding: 24px;
+    background: rgba(15, 23, 42, .36);
+    backdrop-filter: blur(2px);
+}
+
+.nl-move-modal {
+    display: flex;
+    width: min(432px, calc(100vw - 48px));
+    max-height: min(620px, calc(100vh - 48px));
+    flex-direction: column;
+    overflow: hidden;
+    border: 1px solid #dfe7f1;
+    border-radius: 18px;
+    background: #fff;
+    box-shadow: 0 24px 70px rgba(30, 41, 59, .22);
+}
+
+.nl-modal-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 20px 20px 15px;
+    border-bottom: 1px solid #edf1f6;
+}
+
+.nl-modal-head h2 {
+    margin: 0;
+    color: #0f172a;
+    font-size: 18px;
+    font-weight: 800;
+    line-height: 1.25;
+    letter-spacing: -.03em;
+}
+
+.nl-modal-head p {
+    margin: 7px 0 0;
+    color: #8a98ac;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.45;
+}
+
+.nl-modal-head-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    flex: 0 0 auto;
+}
+
+.nl-modal-close {
+    display: inline-grid;
+    width: 34px;
+    height: 34px;
+    place-items: center;
+    flex: 0 0 auto;
+    border: 0;
+    border-radius: 10px;
+    color: #64748b;
+    background: #f3f6fa;
+    font-size: 20px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.nl-modal-close:hover {
+    color: #334155;
+    background: #e9eef5;
+}
+
+.nl-modal-folder-create {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    height: 32px;
+    padding: 0 11px;
+    border: 0;
+    border-radius: 8px;
+    color: #2563eb;
+    background: #eef4ff;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 800;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.nl-modal-folder-create:hover {
+    color: #1d4ed8;
+    background: #e5efff;
+}
+
+/* kept for old inline list modal markup; hidden because create action lives in the header. */
+.nl-move-folder-tools,
+.nl-modal-actions {
+    display: none !important;
+}
+
+.nl-folder-choice-list {
+    flex: 1 1 auto;
+    min-height: 150px;
+    max-height: 360px;
+    overflow: auto;
+    padding: 14px 18px 16px;
+}
+
+.nl-folder-choice-row {
+    position: relative;
+    display: flex;
+    align-items: center;
+    min-height: 42px;
+    padding-right: 68px;
+    border-radius: 10px;
+}
+
+.nl-folder-choice-row + .nl-folder-choice-row {
+    margin-top: 2px;
+}
+
+.nl-folder-choice-row:hover,
+.nl-folder-choice-row:focus-within {
+    background: #f8fafc;
+}
+
+.nl-folder-choice-row.is-current {
+    background: transparent;
+}
+
+.nl-folder-choice {
+    display: flex;
+    width: 100%;
+    min-width: 0;
+    min-height: 42px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 0 10px;
+    border: 0;
+    border-radius: 10px;
+    color: #334155;
+    background: transparent;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    text-align: left;
+    cursor: pointer;
+}
+
+.nl-folder-choice-main {
+    display: inline-flex;
+    align-items: center;
+    min-width: 0;
+    flex: 1 1 auto;
+    gap: 9px;
+    padding-left: calc(var(--folder-depth, 0) * 14px);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.nl-folder-choice-name {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.nl-folder-choice i.fa-folder,
+.nl-folder-choice i.fa-regular.fa-folder,
+.nl-folder-choice i.fa-solid.fa-folder {
+    display: inline-block !important;
+    width: 15px;
+    flex: 0 0 15px;
+    color: #8b99ad !important;
+    font-size: 13px;
+}
+
+.nl-folder-choice:disabled {
+    color: #334155;
+    background: transparent;
+    opacity: 1;
+    cursor: default;
+}
+
+.nl-folder-choice:disabled .nl-folder-choice-main,
+.nl-folder-choice:disabled .nl-folder-choice-name {
+    color: #334155;
+}
+
+.nl-folder-choice:disabled i.fa-folder,
+.nl-folder-choice:disabled i.fa-regular.fa-folder,
+.nl-folder-choice:disabled i.fa-solid.fa-folder {
+    color: #9aa7b8 !important;
+}
+
+.nl-folder-choice-badge,
+.nl-folder-choice em {
+    display: inline-flex;
+    align-items: center;
+    height: 22px;
+    padding: 0 8px;
+    flex: 0 0 auto;
+    border-radius: 999px;
+    color: #94a3b8;
+    background: #f4f7fb;
+    font-size: 11px;
+    font-style: normal;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.nl-modal-folder-actions {
+    position: absolute;
+    top: 50%;
+    right: 9px;
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translateY(-50%);
+    transition: opacity .12s ease, visibility .12s ease;
+}
+
+.nl-folder-choice-row:hover .nl-modal-folder-actions,
+.nl-folder-choice-row:focus-within .nl-modal-folder-actions,
+.nl-folder-choice-row.is-current:hover .nl-modal-folder-actions,
+.nl-folder-choice-row.is-current:focus-within .nl-modal-folder-actions,
+.nl-folder-choice-row:has(.nl-folder-choice:disabled):hover .nl-modal-folder-actions,
+.nl-folder-choice-row:has(.nl-folder-choice:disabled):focus-within .nl-modal-folder-actions {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+}
+
+.nl-modal-folder-actions button {
+    display: inline-grid;
+    width: 28px;
+    height: 28px;
+    place-items: center;
+    border: 0;
+    border-radius: 8px;
+    color: #8b97a9;
+    background: transparent;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.nl-modal-folder-actions button:hover {
+    color: #2563eb;
+    background: #eaf2ff;
+}
+
+.nl-modal-folder-actions button[data-modal-folder-delete]:hover {
+    color: #dc4c64;
+    background: #fff0f3;
+}
+
+body.nl-modal-open {
+    overflow: hidden;
+}
+
+@media (max-width: 520px) {
+    .nl-modal-backdrop,
+    .common-folder-modal {
+        padding: 14px;
+    }
+
+    .nl-move-modal {
+        width: 100%;
+        max-height: calc(100vh - 28px);
+    }
+}

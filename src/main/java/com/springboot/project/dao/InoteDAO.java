@@ -39,6 +39,12 @@ public interface InoteDAO {
 
     int deleteNote(@Param("noteId") Long noteId);
 
+    int moveNoteToTrash(@Param("noteId") Long noteId, @Param("userId") Long userId);
+
+    int restoreNoteFromTrash(@Param("noteId") Long noteId, @Param("userId") Long userId);
+
+    int countTrashOwner(@Param("noteId") Long noteId, @Param("userId") Long userId);
+
     int insertNoteFile(noteFileDTO file);
 
     List<noteFileDTO> selectNoteFileList(@Param("noteId") Long noteId);

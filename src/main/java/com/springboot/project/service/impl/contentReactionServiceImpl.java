@@ -12,7 +12,7 @@ import com.springboot.project.service.IcontentReactionService;
 @Service
 public class contentReactionServiceImpl implements IcontentReactionService {
 
-    private static final Set<String> CONTENT_TYPES = Set.of("PHOTO_POST", "NOTE", "BOARD", "NOTICE");
+    private static final Set<String> CONTENT_TYPES = Set.of("PHOTO_POST", "PHOTO_COMMENT", "NOTE", "BOARD", "NOTICE");
     private static final Set<String> REACTION_TYPES = Set.of("LIKE", "HELPFUL", "CHECK");
 
     private final IcontentReactionDAO contentReactionDAO;

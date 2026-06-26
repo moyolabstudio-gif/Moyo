@@ -792,7 +792,22 @@
 
         const BoardClassicEditor = window.CKEDITOR && window.CKEDITOR.ClassicEditor ? window.CKEDITOR.ClassicEditor : window.ClassicEditor;
 
-        const boardEditorConfig = {
+        const MOYO_EDITOR_COLORS = [
+            { color: 'hsl(0, 0%, 0%)', label: 'Black' },
+            { color: 'hsl(0, 0%, 30%)', label: 'Dim gray' },
+            { color: 'hsl(0, 0%, 60%)', label: 'Gray' },
+            { color: 'hsl(0, 0%, 90%)', label: 'Light gray' },
+            { color: 'hsl(0, 75%, 60%)', label: 'Red' },
+            { color: 'hsl(25, 90%, 55%)', label: 'Orange' },
+            { color: 'hsl(45, 95%, 55%)', label: 'Yellow' },
+            { color: 'hsl(145, 65%, 42%)', label: 'Green' },
+            { color: 'hsl(200, 85%, 50%)', label: 'Sky blue' },
+            { color: 'hsl(221, 83%, 53%)', label: 'Blue' },
+            { color: 'hsl(260, 85%, 62%)', label: 'Purple' },
+            { color: 'hsl(330, 80%, 60%)', label: 'Pink' }
+        ];
+
+                const boardEditorConfig = {
             language: 'ko',
             placeholder: '내용을 입력하세요.',
             toolbar: {
@@ -809,11 +824,15 @@
             },
             fontColor: {
                 columns: 6,
-                documentColors: 12
+                colors: MOYO_EDITOR_COLORS,
+                documentColors: 0,
+                colorPicker: false
             },
             fontBackgroundColor: {
                 columns: 6,
-                documentColors: 12
+                colors: MOYO_EDITOR_COLORS,
+                documentColors: 0,
+                colorPicker: false
             },
             image: {
                 upload: { types: ['jpeg', 'jpg', 'png', 'gif', 'webp'] },

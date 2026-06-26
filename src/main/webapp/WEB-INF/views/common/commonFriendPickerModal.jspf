@@ -1,0 +1,27 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<div class="common-friend-picker-backdrop" id="commonFriendPickerModal" hidden>
+    <div class="common-friend-picker" role="dialog" aria-modal="true" aria-labelledby="commonFriendPickerTitle">
+        <div class="common-friend-picker-header">
+            <div>
+                <h2 id="commonFriendPickerTitle">친구 목록</h2>
+                <p id="commonFriendPickerDescription">친구를 클릭하면 해당 친구의 피드로 이동합니다.</p>
+            </div>
+            <button type="button" class="common-friend-picker-close" id="commonFriendPickerCloseButton" aria-label="닫기"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <label class="common-friend-picker-search">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="commonFriendPickerSearchInput" autocomplete="off" placeholder="친구 이름 또는 이메일 검색">
+        </label>
+        <div class="common-friend-picker-body" id="commonFriendPickerList" role="listbox" aria-label="친구 목록"></div>
+        <div class="common-friend-picker-footer">
+            <div class="common-friend-picker-footer-left">
+                <span id="commonFriendPickerSummary">선택 없음</span>
+                <a href="#" id="commonFriendPickerManageLink" hidden>친구 관리로 이동</a>
+            </div>
+            <div class="common-friend-picker-actions">
+                <button type="button" class="common-friend-picker-secondary" id="commonFriendPickerCancelButton">취소</button>
+                <button type="button" class="common-friend-picker-primary" id="commonFriendPickerConfirmButton">확인</button>
+            </div>
+        </div>
+    </div>
+</div>

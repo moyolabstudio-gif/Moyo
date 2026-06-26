@@ -13,8 +13,17 @@ public interface IcontentShareDAO {
                               @Param("contentId") Long contentId,
                               @Param("userId") Long userId);
 
+    int countReadPermission(@Param("contentType") String contentType,
+                            @Param("contentId") Long contentId,
+                            @Param("userId") Long userId);
+
     Long selectContentOwnerId(@Param("contentType") String contentType,
                               @Param("contentId") Long contentId);
+
+
+    int countMoyoFeedSharePermission(@Param("contentType") String contentType,
+                                     @Param("contentId") Long contentId,
+                                     @Param("userId") Long userId);
 
     List<contentShareDTO> selectShares(@Param("contentType") String contentType,
                                        @Param("contentId") Long contentId);
@@ -23,6 +32,21 @@ public interface IcontentShareDAO {
 
     int deleteShare(@Param("shareId") Long shareId,
                     @Param("userId") Long userId);
+
+    contentShareDTO selectShareById(@Param("shareId") Long shareId);
+
+    List<contentShareDTO> selectReceivedShareRequests(@Param("userId") Long userId);
+
+    List<contentShareDTO> selectSentShareRequests(@Param("userId") Long userId);
+
+    int countPendingShareRequests(@Param("userId") Long userId);
+
+    int updateShareStatus(@Param("shareId") Long shareId,
+                          @Param("status") String status,
+                          @Param("userId") Long userId);
+
+    int countShareResponderPermission(@Param("shareId") Long shareId,
+                                      @Param("userId") Long userId);
 
     int deleteSharesByContent(@Param("contentType") String contentType,
                               @Param("contentId") Long contentId);
