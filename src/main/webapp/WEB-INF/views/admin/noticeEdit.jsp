@@ -5,7 +5,7 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>공지사항 작성</title>
+    <title>공지사항 수정</title>
     <link rel="stylesheet" href="/css/moyoUi.css?v=moyo-ui-scope-20260617">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/commonRichContent.css?v=rich-content-v3">
     <script src="https://cdn.ckeditor.com/ckeditor5/41.1.0/super-build/ckeditor.js"></script>
@@ -38,41 +38,40 @@
 </header>
 
 <div class="write-container">
-    <h2>공지사항 작성</h2>
-    <form action="/admin/notice/save" method="post">
-        <div class="form-group">
-            <label>제목</label>
-            <input type="text" name="title" placeholder="제목을 입력하세요" required>
-        </div>
-        
-        <div class="form-group">
-            <label>내용</label>
-            <textarea id="memo" name="content"></textarea>
-        </div>
-        
-        <div class="form-group">
-            <label>
-                <input type="checkbox" name="isPinned" value="Y"> 상단 고정 여부
-            </label>
-            <label>
-                <input type="checkbox" name="isPush" value="Y" checked> 
-                사용자에게 알림 보내기
-            </label>
-        </div>
-        
-        <button type="submit" class="btn-submit">공지 등록하기</button>
-    </form>
-</div>
+    <h2>공지사항 수정</h2>
 
+<form action="/admin/notice/noticeUpdate" method="post">
+    
+    <input type="hidden" name="noticeId" value="${notice.noticeId}">
+    
+    <div class="form-group">
+        <label>제목</label>
+        <input type="text" name="title" value="${notice.title}" required>
+    </div>
+    
+    <div class="form-group">
+        <label>내용</label>
+        <textarea id="memo" name="content">${notice.content}</textarea>
+    </div>
+    
+    <div class="form-group">
+        <label>
+            <input type="checkbox" name="isPinned" value="Y" 
+            <c:if test="${notice.isPinned eq 'Y'}">checked</c:if>> 상단 고정 여부
+        </label>
+    </div>
+    
+    <button type="submit" class="btn-submit">공지 수정하기</button>
+</form>
+</div>
 <script>
     document.addEventListener("DOMContentLoaded", function() {
-        // MoyoCkeditor를 이용한 간편 초기화
         MoyoCkeditor.create('#memo', {
-            uploadUrl: '/admin/notice/image-upload', // 1) 이미지 업로드 경로 설정
-            placeholder: '공지 내용을 입력하세요.',     // 2) 원하는 플레이스홀더
-            onReady: function(editor) {
-                console.log('에디터가 준비되었습니다!');
-            }
+            uploadUrl: '/admin/notice/image-upload'
+        }).then(editor => {
+            // 서버에서 넘어온 기존 데이터를 에디터에 로드
+            const existingContent = `${notice.content}`; 
+            editor.setData(existingContent);
         }).catch(error => {
             console.error('에디터 초기화 실패:', error);
         });

@@ -61,6 +61,16 @@
                     <div class="notice-body" style="display: none; margin-top: 15px; padding-top: 15px; border-top: 1px solid #f0f0f0; color: #667085; line-height: 1.6;">
                         ${notice.content}
                     </div>
+                    <c:if test="${sessionScope.user.userRole == 'ADMIN'}">
+                        <div class="notice-admin-actions" style="margin-top: 10px;">
+                            <a href="/admin/notice/noticeEdit?noticeId=${notice.noticeId}" 
+                             style="font-size: 12px; color: #2878d0; margin-right: 10px; text-decoration: none;">수정</a>
+                            <button type="button" onclick="deleteNotice(${notice.noticeId}, event)" 
+                                    style="font-size: 12px; color: #e71d36; border: none; background: none; cursor: pointer;">삭제</button>
+                        </div>
+                    </c:if>
+                    
+                    
                 </div>
             </li>
         </c:forEach>
@@ -95,4 +105,18 @@ $(document).ready(function() {
         }
     }
 });
+//클릭시 열고 닫기 함수 유지
+function toggleNotice(element) {
+    $(element).find('.notice-body').slideToggle(300);
+}
+
+// 삭제 함수 추가
+function deleteNotice(noticeId, event) {
+    event.stopPropagation(); // 중요: 부모의 toggleNotice가 실행되지 않게 막음
+    
+    if (confirm("정말 이 공지사항을 삭제하시겠습니까?")) {
+        // 폼을 동적으로 생성하거나, 간단하게 location 이동 방식으로 처리
+        window.location.href = "/admin/notice/delete?noticeId=" + noticeId;
+    }
+}
 </script>

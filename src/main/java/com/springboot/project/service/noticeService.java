@@ -47,4 +47,19 @@ public class noticeService {
         public List<com.springboot.project.dto.userNoticeDTO> getMyNotices(Long userId) {
         return userNoticeDAO.selectMyNotices(userId);
     }
+        
+     // 1. 수정용 상세 조회 (단건 조회)
+        public noticeDTO getNoticeById(Long noticeId) {
+            return noticeDAO.selectNoticeById(noticeId);
+        }
+
+        // 2. 수정 처리
+        public void updateNotice(noticeDTO notice) {
+            noticeDAO.updateNotice(notice);
+        }
+
+        // 3. 삭제 처리
+        public void deleteNotice(Long noticeId) {
+            noticeDAO.deleteNotice(noticeId);
+        }
 }

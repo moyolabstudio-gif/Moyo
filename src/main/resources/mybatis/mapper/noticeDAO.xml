@@ -29,17 +29,17 @@
     )
 </insert>
     
-    <update id="updateNotice" parameterType="com.springboot.project.dto.noticeDTO">
-        UPDATE SYSTEM_NOTICES 
-        SET TITLE = #{title}, 
-            CONTENT = #{content}, 
-            IS_PINNED = #{isPinned},
-            UPD_DT = SYSDATE
-        WHERE NOTICE_ID = #{noticeId}
-    </update>
+<update id="updateNotice" parameterType="com.springboot.project.dto.noticeDTO">
+    UPDATE SYSTEM_NOTICES 
+    SET TITLE = #{title, jdbcType=VARCHAR}, 
+        CONTENT = #{content, jdbcType=VARCHAR}, 
+        IS_PINNED = #{isPinned, jdbcType=VARCHAR},
+        UPD_DT = SYSDATE
+    WHERE NOTICE_ID = #{noticeId, jdbcType=BIGINT}
+</update>
 
-    <delete id="deleteNotice" parameterType="long">
-        DELETE FROM SYSTEM_NOTICES WHERE NOTICE_ID = #{noticeId}
-    </delete>
+<delete id="deleteNotice" parameterType="long">
+    DELETE FROM SYSTEM_NOTICES WHERE NOTICE_ID = #{noticeId}
+</delete>
 
 </mapper>

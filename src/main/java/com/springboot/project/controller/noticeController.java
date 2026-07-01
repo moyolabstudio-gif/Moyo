@@ -5,6 +5,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import com.springboot.project.dto.noticeDTO;
 import com.springboot.project.dto.usersDto;
@@ -50,5 +51,24 @@ public class noticeController {
         noticeService.writeNotice(notice);
         return "redirect:/common/noticeList";
     }
-    
+ // 수정 페이지 진입
+    @GetMapping("/admin/notice/noticeEdit")
+    public String noticeEdit(@RequestParam("noticeId") Long noticeId, Model model) {
+        model.addAttribute("notice", noticeService.getNoticeById(noticeId));
+        return "admin/noticeEdit"; // 파일명이 noticeEdit.jsp 라고 하셨죠!
+    }
+
+    // 수정 처리
+    @PostMapping("/admin/notice/noticeUpdate")
+    public String noticeUpdate(noticeDTO notice) {
+        noticeService.updateNotice(notice);
+        return "redirect:/common/noticeList";
+    }
+
+    // 삭제 처리
+    @GetMapping("/admin/notice/delete")
+    public String deleteNotice(@RequestParam("noticeId") Long noticeId) {
+        noticeService.deleteNotice(noticeId);
+        return "redirect:/common/noticeList";
+    }
 }
