@@ -3874,9 +3874,14 @@ function updateBoardCounts(oldStatus, newStatus) {
 
         function getProjectNoteScopeQuery() {
             const params = new URLSearchParams(window.location.search);
-            const wsId = params.get('wsId') || (window.PROJECT_MAIN_CONFIG && (window.PROJECT_MAIN_CONFIG.paramWsId || window.PROJECT_MAIN_CONFIG.wsId)) || '';
-            const projId = params.get('projId') || (window.PROJECT_MAIN_CONFIG && (window.PROJECT_MAIN_CONFIG.paramProjId || window.PROJECT_MAIN_CONFIG.projectId)) || '';
-            return 'scope=PROJ&wsId=' + encodeURIComponent(wsId) + '&projId=' + encodeURIComponent(projId);
+            const config = window.PROJECT_MAIN_CONFIG || {};
+            const wsId = config.wsId || config.paramWsId || params.get('wsId') || '';
+            const projId = config.projectId || config.paramProjId || params.get('projId') || '';
+            const query = new URLSearchParams();
+            query.set('scope', 'PROJ');
+            if (wsId) query.set('wsId', wsId);
+            if (projId) query.set('projId', projId);
+            return query.toString();
         }
 
         function getProjectNoteWriteUrl() {

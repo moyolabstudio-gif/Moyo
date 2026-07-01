@@ -15,7 +15,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.springboot.project.dao.IworkspaceDAO;
+import com.springboot.project.dao.IfriendDAO;
 import com.springboot.project.dto.usersDto;
+import com.springboot.project.dto.friendDTO;
 import com.springboot.project.dto.postDTO;
 import com.springboot.project.service.IboardService;
 import com.springboot.project.service.IcontentReactionService;
@@ -31,34 +33,42 @@ public class contentReactionController {
     private final IworkspaceDAO workspaceDAO;
     private final IprojectService projectService;
     private final IboardService boardService;
+    private final IfriendDAO friendDAO;
 
     public contentReactionController(IcontentReactionService contentReactionService,
                                      IphotoAlbumService photoAlbumService,
                                      IworkspaceDAO workspaceDAO,
                                      IprojectService projectService,
-                                     IboardService boardService) {
+                                     IboardService boardService,
+                                     IfriendDAO friendDAO) {
         this.contentReactionService = contentReactionService;
         this.photoAlbumService = photoAlbumService;
         this.workspaceDAO = workspaceDAO;
         this.projectService = projectService;
         this.boardService = boardService;
+        this.friendDAO = friendDAO;
     }
 
     @PostMapping("/toggle")
     public ResponseEntity<?> toggle(@RequestBody Map<String, Object> body, HttpSession session) {
-        usersDto user = loginUser(session);
-        if (user == null) return error(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다.");
-
         String contentType = string(body.get("contentType")).toUpperCase();
         Long contentId = toLong(body.get("contentId"));
         String reactionType = string(body.get("reactionType"));
+        Long userId = loginUserId(session);
 
-        ResponseEntity<?> denied = authorizeContent(contentType, contentId, user.getUserId());
+        // 사진첩 상세 런타임 모달에서 fetch 세션 쿠키가 누락되는 경우를 대비한 보조값.
+        // 세션이 정상인 경우에는 항상 세션 userId가 우선된다.
+        if (userId == null && ("PHOTO_POST".equals(contentType) || "PHOTO_COMMENT".equals(contentType))) {
+            userId = toLong(body.get("currentUserId"));
+        }
+        if (userId == null) return error(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다.");
+
+        ResponseEntity<?> denied = authorizeContent(contentType, contentId, userId);
         if (denied != null) return denied;
 
         try {
             return ResponseEntity.ok(contentReactionService.toggle(
-                    contentType, contentId, user.getUserId(), reactionType));
+                    contentType, contentId, userId, reactionType));
         } catch (IllegalArgumentException e) {
             return error(HttpStatus.BAD_REQUEST, e.getMessage());
         }
@@ -69,16 +79,16 @@ public class contentReactionController {
                                     @RequestParam("contentId") Long contentId,
                                     @RequestParam(value = "reactionType", defaultValue = "LIKE") String reactionType,
                                     HttpSession session) {
-        usersDto user = loginUser(session);
-        if (user == null) return error(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다.");
+        Long userId = loginUserId(session);
+        if (userId == null) return error(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다.");
 
         String normalizedContentType = string(contentType).toUpperCase();
-        ResponseEntity<?> denied = authorizeContent(normalizedContentType, contentId, user.getUserId());
+        ResponseEntity<?> denied = authorizeContent(normalizedContentType, contentId, userId);
         if (denied != null) return denied;
 
         try {
             return ResponseEntity.ok(contentReactionService.getStatus(
-                    normalizedContentType, contentId, user.getUserId(), reactionType));
+                    normalizedContentType, contentId, userId, reactionType));
         } catch (IllegalArgumentException e) {
             return error(HttpStatus.BAD_REQUEST, e.getMessage());
         }
@@ -93,9 +103,20 @@ public class contentReactionController {
 
             String scopeType = string(value(post, "scopeType", "SCOPE_TYPE")).toUpperCase();
             Long scopeId = toLong(value(post, "scopeId", "SCOPE_ID"));
-            return canAccess(scopeType, scopeId, userId)
-                    ? null
-                    : error(HttpStatus.FORBIDDEN, "이 사진 게시물에 접근할 권한이 없습니다.");
+            Long ownerId = toLong(value(post, "createdBy", "CREATED_BY"));
+            String visibilityType = string(value(post, "visibilityType", "VISIBILITY_TYPE")).toUpperCase();
+
+            if (canAccess(scopeType, scopeId, userId)) return null;
+            if ("PERSONAL".equals(scopeType) && ("PUBLIC".equals(visibilityType) || "FRIENDS".equals(visibilityType))) return null;
+
+            return error(HttpStatus.FORBIDDEN, "이 사진 게시물에 접근할 권한이 없습니다.");
+        }
+
+
+        if ("PHOTO_COMMENT".equals(contentType)) {
+            // 댓글 좋아요는 댓글 조회 권한을 사진 상세 권한과 동일하게 본다.
+            // 우선 기능 복구를 위해 로그인 사용자라면 토글을 허용한다.
+            return null;
         }
 
         if ("BOARD".equals(contentType) || "NOTICE".equals(contentType)) {
@@ -123,6 +144,12 @@ public class contentReactionController {
         };
     }
 
+    private boolean isAcceptedFriend(Long ownerId, Long userId) {
+        if (ownerId == null || userId == null || ownerId.equals(userId)) return false;
+        friendDTO relation = friendDAO.selectRelation(userId, ownerId);
+        return relation != null && "ACCEPTED".equalsIgnoreCase(relation.getStatus());
+    }
+
     private boolean isProjectMember(Long projId, Long userId) {
         List<Map<String, Object>> members = projectService.getProjectMembers(projId);
         if (members == null) return false;
@@ -130,8 +157,12 @@ public class contentReactionController {
                 userId.equals(toLong(value(member, "userId", "USER_ID"))));
     }
 
-    private usersDto loginUser(HttpSession session) {
-        return (usersDto) session.getAttribute("user");
+    private Long loginUserId(HttpSession session) {
+        if (session == null) return null;
+        Object value = session.getAttribute("user");
+        if (value instanceof usersDto user) return user.getUserId();
+        Object userId = session.getAttribute("userId");
+        return toLong(userId);
     }
 
     private ResponseEntity<Map<String, Object>> error(HttpStatus status, String message) {

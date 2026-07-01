@@ -28,8 +28,25 @@ public interface IphotoAlbumDAO {
     int insertPost(Map<String, Object> params);
     int updatePost(Map<String, Object> params);
     int updatePostAlbum(@Param("postId") Long postId, @Param("albumId") Long albumId);
+    int updatePostVisibility(@Param("postId") Long postId, @Param("visibilityType") String visibilityType);
     int updatePhotoAlbumByPost(@Param("postId") Long postId, @Param("albumId") Long albumId);
+    List<Map<String, Object>> selectTrashPosts(@Param("userId") Long userId);
+    Map<String, Object> selectTrashPost(@Param("postId") Long postId, @Param("userId") Long userId);
+    int movePostToTrash(@Param("postId") Long postId, @Param("userId") Long userId);
+    int restorePostFromTrash(@Param("postId") Long postId, @Param("userId") Long userId);
+    int countTrashOwner(@Param("postId") Long postId, @Param("userId") Long userId);
     int deletePost(@Param("postId") Long postId);
+    int countPostCollect(@Param("postId") Long postId, @Param("userId") Long userId);
+    int insertPostCollect(@Param("postId") Long postId, @Param("userId") Long userId);
+    int insertCollectedPostLink(@Param("collectedPostId") Long collectedPostId,
+                                @Param("sourcePostId") Long sourcePostId,
+                                @Param("userId") Long userId);
+    Long selectCollectedSourcePostId(@Param("collectedPostId") Long collectedPostId,
+                                     @Param("userId") Long userId);
+    Long selectCollectedPostIdBySource(@Param("sourcePostId") Long sourcePostId,
+                                      @Param("userId") Long userId);
+    int deletePostCollect(@Param("postId") Long postId, @Param("userId") Long userId);
+    int deleteCollectedPostLink(@Param("collectedPostId") Long collectedPostId);
 
     int insertPhoto(Map<String, Object> params);
     Map<String, Object> selectPhoto(@Param("photoId") Long photoId);
@@ -39,4 +56,18 @@ public interface IphotoAlbumDAO {
                          @Param("coverPhotoId") Long coverPhotoId);
     int clearAlbumCover(@Param("photoId") Long photoId);
     Long selectFirstAlbumPhotoId(@Param("albumId") Long albumId);
+
+    List<Map<String, Object>> selectPostComments(@Param("postId") Long postId,
+                                            @Param("userId") Long userId);
+    int countActivePostComment(@Param("postId") Long postId, @Param("commentId") Long commentId);
+    int insertPostComment(Map<String, Object> params);
+    int updatePostComment(@Param("commentId") Long commentId,
+                          @Param("postId") Long postId,
+                          @Param("userId") Long userId,
+                          @Param("content") String content);
+    int deletePostComment(@Param("commentId") Long commentId,
+                          @Param("postId") Long postId,
+                          @Param("userId") Long userId,
+                          @Param("canManage") int canManage);
 }
+

@@ -23,6 +23,7 @@ import com.springboot.project.dto.usersDto;
 import com.springboot.project.dto.workspaceDTO;
 import com.springboot.project.service.IprojectService;
 import com.springboot.project.service.IworkspaceService;
+import com.springboot.project.service.IcontentShareService;
 import com.springboot.project.service.fileUploadService;
 
 import jakarta.servlet.http.HttpSession;
@@ -38,6 +39,8 @@ public class workspaceController {
     private fileUploadService fileUploadService;
     @Autowired
     private IprojectService projectService;
+    @Autowired
+    private IcontentShareService contentShareService;
     
     @Autowired
     private com.springboot.project.dao.IusersDao usersDao; // 유저 검색용
@@ -75,7 +78,7 @@ public class workspaceController {
         if ("N".equals(useAccountProfile)
                 && (displayName == null || displayName.trim().isEmpty())) {
             response.put("status", "fail");
-            response.put("message", "워크스페이스 표시 이름을 입력해주세요.");
+            response.put("message", "그룹 표시 이름을 입력해주세요.");
             return response;
         }
 
@@ -111,7 +114,7 @@ public class workspaceController {
         } catch (Exception e) {
             e.printStackTrace();
             response.put("status", "fail");
-            response.put("message", "워크스페이스 생성 중 오류가 발생했습니다.");
+            response.put("message", "그룹 생성 중 오류가 발생했습니다.");
         }
 
         return response;
@@ -378,7 +381,7 @@ public class workspaceController {
         usersDto loginUser = (usersDto) session.getAttribute("user");
         if (loginUser == null) return "login_required";
 
-        // 팀장과 관리자 모두 워크스페이스 역할을 부여·수정할 수 있다.
+        // 팀장과 관리자 모두 그룹 역할을 부여·수정할 수 있다.
         if (workspaceDAO.isWorkspaceAdmin(wsId, loginUser.getUserId()) < 1) {
             return "forbidden";
         }
@@ -523,18 +526,13 @@ public class workspaceController {
     }
 
     @GetMapping("/invitations")
-    public String invitationsPage(HttpSession session, Model model) {
+    public String invitationsPage(HttpSession session) {
         usersDto user = (usersDto) session.getAttribute("user");
         if (user == null) return "redirect:/login";
 
-        List<Map<String, Object>> inviteList = workspaceService.getPendingInvitations(user.getUserId());
-        model.addAttribute("inviteList", inviteList);
-        model.addAttribute("accountDisplayName",
-                user.getUSER_NAME() == null ? "" : user.getUSER_NAME());
-        model.addAttribute("accountEmail",
-                user.getEMAIL() == null ? "" : user.getEMAIL());
-
-        return "workspace/invitations";
+        // 초대함은 더 이상 독립 화면으로 사용하지 않는다.
+        // 그룹 초대도 통합 요청함(/requests)의 한 요청 타입으로 처리한다.
+        return "redirect:/requests";
     }
 
     @GetMapping("/api/invitations")

@@ -86,6 +86,242 @@
         font-size:10px; font-weight:900; line-height:16px; text-align:center;
         box-shadow:0 0 0 2px #fff;
     }
+    #alarmDropdown.moyo-alarm-dropdown {
+        display:none;
+        position:absolute;
+        top:38px;
+        right:-18px;
+        width:360px;
+        padding:0;
+        overflow:hidden;
+        border:1px solid #e7edf6;
+        border-radius:14px;
+        background:#fff;
+        box-shadow:0 14px 34px rgba(15,23,42,.12);
+        z-index:2200;
+        color:#273142;
+        cursor:default;
+    }
+    #alarmDropdown.moyo-alarm-dropdown::before {
+        content:"";
+        position:absolute;
+        top:-7px;
+        right:34px;
+        width:14px;
+        height:14px;
+        background:#fff;
+        border-left:1px solid #e7edf6;
+        border-top:1px solid #e7edf6;
+        transform:rotate(45deg);
+    }
+    .moyo-alarm-head {
+        position:relative;
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+        gap:12px;
+        padding:14px 16px 12px;
+        border-bottom:1px solid #eef3f8;
+    }
+    .moyo-alarm-title {
+        font-size:13px;
+        font-weight:900;
+        color:#172033;
+    }
+    .moyo-alarm-title-icon { display:none; }
+    .moyo-alarm-summary {
+        color:#8a96a8;
+        font-size:11px;
+        font-weight:800;
+        white-space:nowrap;
+    }
+    .moyo-alarm-list {
+        list-style:none;
+        padding:8px;
+        margin:0;
+        max-height:390px;
+        overflow-y:auto;
+    }
+    .moyo-alarm-list::-webkit-scrollbar { width:8px; }
+    .moyo-alarm-list::-webkit-scrollbar-thumb { background:#dbe5f1; border-radius:999px; }
+    .moyo-alarm-empty {
+        padding:26px 12px;
+        text-align:center;
+        color:#8b96a6;
+        font-size:13px;
+        font-weight:800;
+    }
+    .moyo-alarm-section-label {
+        padding:8px 8px 6px;
+        color:#8a96a8;
+        font-size:11px;
+        font-weight:900;
+    }
+    .moyo-alarm-request-card {
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+        gap:10px;
+        padding:10px 10px;
+        border:1px solid #e7eef7;
+        border-radius:12px;
+        background:#fff;
+    }
+    .moyo-alarm-request-card + .moyo-alarm-request-card { margin-top:6px; }
+    .moyo-alarm-request-main { min-width:0; flex:1; }
+    .moyo-alarm-request-title {
+        display:flex;
+        align-items:center;
+        gap:6px;
+        min-width:0;
+        margin-bottom:3px;
+        color:#263247;
+        font-size:12px;
+        font-weight:800;
+    }
+    .moyo-alarm-request-type {
+        flex:0 0 auto;
+        display:inline-flex;
+        align-items:center;
+        height:19px;
+        padding:0 6px;
+        border-radius:999px;
+        background:#f1f6ff;
+        color:#4a7fea;
+        font-size:10px;
+        font-weight:800;
+    }
+    .moyo-alarm-request-name {
+        min-width:0;
+        overflow:hidden;
+        text-overflow:ellipsis;
+        white-space:nowrap;
+        font-weight:800;
+    }
+    .moyo-alarm-request-desc {
+        overflow:hidden;
+        text-overflow:ellipsis;
+        white-space:nowrap;
+        color:#8a96a8;
+        font-size:11px;
+        font-weight:600;
+    }
+    .moyo-alarm-actions {
+        display:flex;
+        align-items:center;
+        gap:5px;
+        flex:0 0 auto;
+    }
+    .moyo-alarm-action-btn {
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        height:28px;
+        padding:0 10px;
+        border-radius:999px;
+        border:1px solid #e0e8f2;
+        background:#fff;
+        color:#66748a;
+        font-size:11px;
+        font-weight:800;
+        cursor:pointer;
+    }
+    .moyo-alarm-action-btn:hover { background:#f7faff; }
+    .moyo-alarm-action-btn.is-primary {
+        min-width:52px;
+        border-color:transparent;
+        background:linear-gradient(135deg,#57d5df 0%,#5b7cff 60%,#8b6cff 100%);
+        color:#fff;
+        box-shadow:0 6px 14px rgba(77,124,255,.22);
+    }
+    .moyo-alarm-action-btn.is-primary:hover {
+        filter:brightness(.98);
+        box-shadow:0 7px 16px rgba(77,124,255,.26);
+    }
+    .moyo-alarm-action-btn:disabled { opacity:.55; cursor:default; box-shadow:none; }
+    .moyo-alarm-more {
+        margin:8px 0 2px;
+        padding:0 8px;
+    }
+    .moyo-alarm-more a {
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        height:34px;
+        border-radius:10px;
+        background:#f7faff;
+        color:#397be8;
+        text-decoration:none;
+        font-size:12px;
+        font-weight:900;
+    }
+    .moyo-alarm-item {
+        display:flex;
+        align-items:center;
+        gap:9px;
+        min-height:44px;
+        padding:9px 10px;
+        border-radius:11px;
+        color:#334155;
+        cursor:pointer;
+    }
+    .moyo-alarm-item:hover { background:#f7fbff; }
+    .moyo-alarm-item + .moyo-alarm-item { margin-top:3px; }
+    .moyo-alarm-item-icon {
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        flex:0 0 28px;
+        width:28px;
+        height:28px;
+        border-radius:10px;
+        background:#eef5ff;
+        color:#397be8;
+        font-size:13px;
+    }
+    .moyo-alarm-item-main {
+        min-width:0;
+        flex:1;
+        display:flex;
+        flex-direction:column;
+        gap:2px;
+    }
+    .moyo-alarm-item-title {
+        overflow:hidden;
+        text-overflow:ellipsis;
+        white-space:nowrap;
+        color:#233044;
+        font-size:12px;
+        font-weight:900;
+        line-height:1.25;
+    }
+    .moyo-alarm-item-desc {
+        color:#8a96a8;
+        font-size:11px;
+        font-weight:800;
+        line-height:1.2;
+    }
+    .moyo-alarm-foot {
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        padding:8px;
+        border-top:1px solid #eef3f8;
+        background:#fff;
+    }
+    .moyo-alarm-foot-link {
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        width:100%;
+        height:34px;
+        border-radius:10px;
+        color:#397be8;
+        text-decoration:none;
+        font-size:12px;
+        font-weight:900;
+    }
+    .moyo-alarm-foot-link:hover { background:#eef6ff; color:#286bcb; }
     @media(max-width:1180px) {
         .nav-menu { gap:16px; }
         .moyo-main-nav { gap:14px; }
@@ -145,15 +381,25 @@
                             <span class="moyo-nav-icon">🖼️</span>
                             <span class="moyo-nav-label">사진</span>
                         </a>
-                        <div class="moyo-nav-link" id="alarmContainer" style="cursor:pointer;">
+                        <div class="moyo-nav-link" id="alarmContainer" style="cursor:pointer;"
+                             data-account-name="<c:out value='${sessionScope.user.userName}'/>"
+                             data-account-email="<c:out value='${sessionScope.user.EMAIL}'/>">
                             <span class="moyo-nav-icon">🔔</span>
                             <span class="moyo-nav-label">알림</span>
                             <span id="alarmBadge">0</span>
 
-                            <div id="alarmDropdown" style="display:none; position:absolute; top:40px; right:0; width:300px; background:#fff; border:1px solid #e9eef4; border-radius:12px; box-shadow:0 10px 25px rgba(0,0,0,0.1); z-index:1000; padding:10px;">
-                                <div style="font-weight:900; padding:10px; border-bottom:1px solid #eee;">새로운 알림</div>
-                                <ul id="alarmList" style="list-style:none; padding:0; margin:0; max-height:300px; overflow-y:auto;">
-                                    </ul>
+                            <div id="alarmDropdown" class="moyo-alarm-dropdown">
+                                <div class="moyo-alarm-head">
+                                    <div class="moyo-alarm-title">
+                                        <span class="moyo-alarm-title-icon">🔔</span>
+                                        <span>알림</span>
+                                    </div>
+                                    <span id="alarmSummary" class="moyo-alarm-summary">새로운 소식 없음</span>
+                                </div>
+                                <ul id="alarmList" class="moyo-alarm-list"></ul>
+                                <div class="moyo-alarm-foot">
+                                    <a href="${pageContext.request.contextPath}/requests" class="moyo-alarm-foot-link">요청함으로 이동</a>
+                                </div>
                             </div>
                         </div>
                         
@@ -187,104 +433,281 @@
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="${pageContext.request.contextPath}/js/appSidebar.js"></script>
 <script>
-    // 2. 알림 배지 업데이트 함수
+(function() {
+    const isLogin = '${not empty sessionScope.user}' === 'true';
+    const requestPageUrl = '${pageContext.request.contextPath}/requests';
+
+    function normalizeAlarmList(res) {
+        return Array.isArray(res) ? res : [];
+    }
+
+    function normalizePendingList(res) {
+        return res && Array.isArray(res.items) ? res.items : [];
+    }
+
+    function getUnreadCount(alarms) {
+        return alarms.filter(item => item && item.isRead === 'N').length;
+    }
+
+    function getRequestCount(res) {
+        return res && res.count ? Number(res.count) : 0;
+    }
+
+    function setAlarmBadge(count) {
+        const $badge = $('#alarmBadge');
+        if (count > 0) {
+            $badge.text(count > 99 ? '99+' : count).show();
+        } else {
+            $badge.hide();
+        }
+    }
+
+    function setAlarmSummary(alarmCount, requestCount) {
+        const totalCount = alarmCount + requestCount;
+        let text = '새로운 소식 없음';
+        if (totalCount > 0) {
+            const parts = [];
+            if (requestCount > 0) parts.push('요청 ' + requestCount + '건');
+            if (alarmCount > 0) parts.push('알림 ' + alarmCount + '건');
+            text = parts.join(' · ');
+        }
+        $('#alarmSummary').text(text);
+    }
+
     function updateAlarmCount() {
-        $.get('/api/alarm/list', function(data) {
-            const unreadCount = data.filter(item => item.isRead === 'N').length;
-            const $badge = $('#alarmBadge');
-            
-            if (unreadCount > 0) {
-                $badge.text(unreadCount).show();
-            } else {
-                $badge.hide();
+        $.when(
+            $.get('/api/alarm/list'),
+            $.get('/requests/api/count')
+        ).done(function(alarmRes, requestRes) {
+            const alarms = normalizeAlarmList(alarmRes[0]);
+            const unreadCount = getUnreadCount(alarms);
+            const requestCount = getRequestCount(requestRes[0]);
+            setAlarmBadge(unreadCount + requestCount);
+        }).fail(function() {
+            $.get('/api/alarm/list', function(data) {
+                setAlarmBadge(getUnreadCount(normalizeAlarmList(data)));
+            });
+        });
+    }
+
+    function clickAlarm(alarmId, noticeId) {
+        $.ajax({
+            url: '/api/alarm/read',
+            type: 'POST',
+            contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
+            data: $.param({ alarmId: alarmId }),
+            success: function() {
+                location.href = '/common/noticeList?openId=' + noticeId;
+            },
+            error: function(xhr) {
+                alert(xhr.responseText || '알림을 여는 중 문제가 발생했습니다.');
             }
         });
     }
 
-    // 3. 페이지 로드 시 실행
-    $(document).ready(function() {
-        if ('${not empty sessionScope.user}' === 'true') {
-                     updateAlarmCount();
-            
-            setInterval(function() {
-         
+    function getShareTypeName(contentType) {
+        if (contentType === 'PHOTO') return '사진 공유';
+        if (contentType === 'NOTE') return '노트 공유';
+        if (contentType === 'CALENDAR') return '일정 공유';
+        if (contentType === 'BOARD') return '게시글 공유';
+        return '공유 요청';
+    }
+
+    function getPendingTitle(item) {
+        if (!item) return '새 요청';
+        return item.title || item.contentTitle || item.wsName || item.targetName || '새 요청';
+    }
+
+    function getPendingDescription(item) {
+        if (!item) return '';
+        if (item.requestType === 'GROUP_INVITE') {
+            return (item.requesterName || '누군가') + '님이 초대했습니다.';
+        }
+        return (item.requesterName || '누군가') + '님이 공유했습니다.';
+    }
+
+    function processShareAction($card, shareId, status) {
+        const $buttons = $card.find('button');
+        $buttons.prop('disabled', true);
+        $.post('/share/api/requests/' + shareId + '/respond', { status: status }, function(res) {
+            if (!res || !(res.success === true || res.success === 'true')) {
+                alert((res && res.message) ? res.message : '요청 처리 중 오류가 발생했습니다.');
+                $buttons.prop('disabled', false);
+                return;
+            }
+            $card.slideUp(160, function() {
+                $(this).remove();
+                loadAlarmDropdown(true);
                 updateAlarmCount();
-            }, 30000);
-        }
-    });
-    
-    // 4. 알림창 토글 및 기타 기능들
-function clickAlarm(alarmId, noticeId) {
-    console.log("보내는 ID:", alarmId);
-
-    $.ajax({
-        url: '/api/alarm/read',
-        type: 'POST',
-        // 서버에 폼 데이터로 보내겠다고 명시
-        contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
-        // 데이터를 문자열 쿼리 형태로 확실하게 변환
-        data: $.param({ alarmId: alarmId }),
-        success: function(response) {
-            console.log("읽음 처리 성공:", response);
-            location.href = '/common/noticeList?openId=' + noticeId;
-        },
-        error: function(xhr, status, error) {
-            console.error("400 에러 발생:", xhr.responseText);
-        }
-    });
-}
-
-$('#alarmContainer').on('click', function(e) {
-    e.stopPropagation(); 
-    const $dropdown = $('#alarmDropdown');
-    
-    if ($dropdown.is(':visible')) {
-        $dropdown.hide();
-    } else {
-        $.get('/api/alarm/list', function(data) {
-            console.log("받아온 데이터:", data); // 여기서 item.alarm_id 값이 보이는지 확인하세요!
-            const $list = $('#alarmList');
-            $list.empty();
-            
-            if (!data || data.length === 0) {
-                $list.append('<li style="padding:15px; text-align:center; color:#999;">새로운 알림이 없습니다.</li>');
-            } else {
-                data.forEach(item => {
-                
-                	    // 모든 키를 콘솔에 출력해서 눈으로 직접 확인하세요!
-                	    console.log("객체 키 확인:", Object.keys(item)); 
-                	    
-                	    // 이 중에서 숫자가 들어있는 키를 찾으세요.
-                	    // 만약 alarmId로 되어있다면 아래를 item.alarmId로 바꾸면 바로 해결됩니다.
-                	    const alarmId = item.alarm_id || item.alarmId; 
-                	    const noticeId = item.notice_id || item.noticeId;
-                	    const title = item.title;
-
-                	    console.log("최종 확인된 ID:", alarmId);
-                	    
-               
-                    const $li = $('<li>').css({
-                        'padding': '15px',
-                        'cursor': 'pointer',
-                        'border-bottom': '1px solid #eee',
-                        'color': '#333'
-                    }).html('<b>' + title + '</b>');
-
-                    $li.on('click', function() {
-                        // 이제 여기서 올바른 alarmId를 넘겨주게 됩니다.
-                        clickAlarm(alarmId, noticeId);
-                    });
-
-                    $list.append($li);
-                });
-            }
-            $dropdown.show();
+            });
+        }).fail(function() {
+            alert('서버 통신 중 오류가 발생했습니다.');
+            $buttons.prop('disabled', false);
         });
     }
-});
-    $(document).click(function(e) {
-        if (!$(e.target).closest('#alarmContainer').length) {
-            $('#alarmDropdown').hide();
+
+    function processInviteAction($card, inviteId, status) {
+        const $buttons = $card.find('button');
+        const formData = new FormData();
+        const $container = $('#alarmContainer');
+        formData.append('inviteId', inviteId);
+        formData.append('status', status);
+        formData.append('useAccountProfile', 'Y');
+        formData.append('displayName', $container.data('account-name') || '');
+        formData.append('contactEmail', $container.data('account-email') || '');
+        formData.append('showPhone', 'N');
+
+        $buttons.prop('disabled', true);
+        $.ajax({
+            url: '/workspace/api/invitation/process',
+            type: 'POST',
+            processData: false,
+            contentType: false,
+            data: formData,
+            success: function(res) {
+                if (!res || !(res.success === true || res.success === 'true')) {
+                    alert((res && res.message) ? res.message : '요청 처리 중 오류가 발생했습니다.');
+                    $buttons.prop('disabled', false);
+                    return;
+                }
+                $card.slideUp(160, function() {
+                    $(this).remove();
+                    loadAlarmDropdown(true);
+                    updateAlarmCount();
+                });
+            },
+            error: function() {
+                alert('서버 통신 중 오류가 발생했습니다.');
+                $buttons.prop('disabled', false);
+            }
+        });
+    }
+
+    function makePendingRequestItem(item) {
+        const isInvite = item.requestType === 'GROUP_INVITE';
+        const typeLabel = isInvite ? '그룹 초대' : getShareTypeName(item.contentType);
+        const id = item.id || item.shareId || item.inviteId;
+        const $li = $('<li class="moyo-alarm-request-card">');
+        const $main = $('<div class="moyo-alarm-request-main">');
+        const $title = $('<div class="moyo-alarm-request-title">');
+        $('<span class="moyo-alarm-request-type">').text(typeLabel).appendTo($title);
+        $('<span class="moyo-alarm-request-name">').text(getPendingTitle(item)).appendTo($title);
+        $('<div class="moyo-alarm-request-desc">').text(getPendingDescription(item)).appendTo($main);
+        $main.prepend($title);
+
+        const $actions = $('<div class="moyo-alarm-actions">');
+        const $accept = $('<button type="button" class="moyo-alarm-action-btn is-primary">수락</button>');
+        const $reject = $('<button type="button" class="moyo-alarm-action-btn">거절</button>');
+        $accept.on('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            if (isInvite) processInviteAction($li, id, 'ACCEPTED');
+            else processShareAction($li, id, 'ACCEPTED');
+        });
+        $reject.on('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            if (isInvite) processInviteAction($li, id, 'REJECTED');
+            else processShareAction($li, id, 'REJECTED');
+        });
+        $actions.append($accept, $reject);
+        $li.append($main, $actions);
+        return $li;
+    }
+
+    function makeAlarmItem(item) {
+        const alarmId = item.alarm_id || item.alarmId;
+        const noticeId = item.notice_id || item.noticeId;
+        const title = item.title || '새 알림';
+        const $li = $('<li class="moyo-alarm-item">');
+        $li.append('<span class="moyo-alarm-item-icon">📣</span>');
+        $li.append(
+            '<span class="moyo-alarm-item-main">' +
+                '<span class="moyo-alarm-item-title"></span>' +
+                '<span class="moyo-alarm-item-desc">공지 알림</span>' +
+            '</span>'
+        );
+        $li.find('.moyo-alarm-item-title').text(title);
+        $li.on('click', function(e) {
+            e.stopPropagation();
+            clickAlarm(alarmId, noticeId);
+        });
+        return $li;
+    }
+
+    function renderAlarmDropdown(alarms, pendingRequests) {
+        const unreadCount = getUnreadCount(alarms);
+        const requestCount = pendingRequests.length;
+        const $list = $('#alarmList');
+        $list.empty();
+        setAlarmSummary(unreadCount, requestCount);
+        setAlarmBadge(unreadCount + requestCount);
+
+        if (requestCount > 0) {
+            $list.append('<li class="moyo-alarm-section-label">요청</li>');
+            pendingRequests.slice(0, 4).forEach(function(item) {
+                $list.append(makePendingRequestItem(item));
+            });
+            if (requestCount > 4) {
+                $list.append('<li class="moyo-alarm-more"><a href="' + requestPageUrl + '">남은 요청 ' + (requestCount - 4) + '건 보기</a></li>');
+            }
         }
+
+        if (alarms && alarms.length > 0) {
+            $list.append('<li class="moyo-alarm-section-label">알림</li>');
+            alarms.forEach(function(item) {
+                $list.append(makeAlarmItem(item));
+            });
+        }
+
+        if (requestCount === 0 && (!alarms || alarms.length === 0)) {
+            $list.append('<li class="moyo-alarm-empty">새로운 알림이 없습니다.</li>');
+        }
+    }
+
+    function loadAlarmDropdown(keepOpen) {
+        $.when(
+            $.get('/api/alarm/list'),
+            $.get('/requests/api/pending')
+        ).done(function(alarmRes, requestRes) {
+            const alarms = normalizeAlarmList(alarmRes[0]);
+            const pendingRequests = normalizePendingList(requestRes[0]);
+            renderAlarmDropdown(alarms, pendingRequests);
+            $('#alarmDropdown').show();
+        }).fail(function() {
+            $.get('/api/alarm/list', function(data) {
+                const alarms = normalizeAlarmList(data);
+                renderAlarmDropdown(alarms, []);
+                $('#alarmDropdown').show();
+            });
+        });
+    }
+
+    $(document).ready(function() {
+        if (isLogin) {
+            updateAlarmCount();
+            setInterval(updateAlarmCount, 30000);
+        }
+
+        $('#alarmContainer').on('click', function(e) {
+            e.stopPropagation();
+            const $dropdown = $('#alarmDropdown');
+            if ($dropdown.is(':visible')) {
+                $dropdown.hide();
+            } else {
+                loadAlarmDropdown();
+            }
+        });
+
+        $('#alarmDropdown').on('click', function(e) {
+            e.stopPropagation();
+        });
+
+        $(document).on('click', function(e) {
+            if (!$(e.target).closest('#alarmContainer').length) {
+                $('#alarmDropdown').hide();
+            }
+        });
     });
+})();
 </script>

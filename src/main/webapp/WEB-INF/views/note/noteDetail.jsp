@@ -8,8 +8,9 @@
     <meta charset="UTF-8">
     <title>${note.noteTitle}</title>
     <link rel="stylesheet" href="/css/moyoUi.css?v=moyo-ui-scope-20260617">
-    <link rel="stylesheet" href="/css/note.css?v=note-detail-common-share-cleanup-20260619">
-    <link rel="stylesheet" href="/css/commonShareModal.css?v=common-share-v13">
+    <link rel="stylesheet" href="/css/note.css?v=note-toolbar-boundary-v40">
+    <link rel="stylesheet" href="/css/commonFolderModal.css?v=common-folder-modal-final-v15">
+    <link rel="stylesheet" href="/css/commonShareModal.css?v=common-share-stable-v40">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/commonRichContent.css?v=rich-content-v3">
 </head>
 <body class="note-page-body">
@@ -18,6 +19,7 @@
 <c:choose>
     <c:when test="${scope eq 'PROJECT' or scope eq 'PROJ' or (empty scope and not empty projId)}"><c:set var="noteScopeClass" value="note-scope-project" /></c:when>
     <c:when test="${scope eq 'WORKSPACE' or scope eq 'WS' or (empty scope and not empty wsId)}"><c:set var="noteScopeClass" value="note-scope-workspace" /></c:when>
+    <c:when test="${not empty note.userId and note.userId ne sessionScope.user.userId}"><c:set var="noteScopeClass" value="note-scope-friend" /></c:when>
     <c:otherwise><c:set var="noteScopeClass" value="note-scope-private" /></c:otherwise>
 </c:choose>
 
@@ -26,6 +28,25 @@
 <c:set var="detailIcon" value="📄" />
 <c:if test="${not empty note.icon}"><c:set var="detailIcon" value="${note.icon}" /></c:if>
 <c:set var="isDefaultDocIcon" value="${empty note.icon or note.icon eq '📄'}" />
+<c:set var="detailScopeDisplay" value="개인 노트" />
+<c:set var="detailSpaceDisplay" value="" />
+<c:choose>
+    <c:when test="${note.scopeType eq 'PROJ' or scope eq 'PROJ' or scope eq 'PROJECT'}">
+        <c:choose>
+            <c:when test="${not empty note.projectName}"><c:set var="detailScopeDisplay" value="${note.projectName} · 프로젝트" /></c:when>
+            <c:otherwise><c:set var="detailScopeDisplay" value="프로젝트" /></c:otherwise>
+        </c:choose>
+    </c:when>
+    <c:when test="${note.scopeType eq 'WS' or scope eq 'WS' or scope eq 'WORKSPACE'}">
+        <c:choose>
+            <c:when test="${not empty note.workspaceName}"><c:set var="detailScopeDisplay" value="${note.workspaceName} · 그룹" /></c:when>
+            <c:otherwise><c:set var="detailScopeDisplay" value="그룹" /></c:otherwise>
+        </c:choose>
+    </c:when>
+    <c:when test="${not empty note.userName and note.userId ne sessionScope.user.userId}">
+        <c:set var="detailScopeDisplay" value="${note.userName} · 노트" />
+    </c:when>
+</c:choose>
 
 <main class="note-detail-wrap ${noteScopeClass}">
     <div class="note-topbar note-detail-topbar">
@@ -68,50 +89,39 @@
             </div>
 
             <div class="note-write-meta-panel note-write-meta-line note-detail-meta-line note-detail-meta-final" aria-label="노트 정보와 작업">
-                <div class="note-detail-meta-primary">
-                    <span class="note-meta-text note-meta-scope">
-                        <span class="note-scope-dot" aria-hidden="true"></span>
-                        <span class="note-meta-value"><c:out value="${scopeLabel}" /></span>
+                <div class="note-detail-path-row">
+                    <span class="note-meta-text note-meta-scope note-path-scope">
+                        <span class="note-meta-value"><c:out value="${detailScopeDisplay}" /></span>
                     </span>
-                    <span class="note-meta-text note-meta-folder">
-                        <span class="note-meta-icon" aria-hidden="true">📁</span>
-                        <span class="note-meta-value"><c:out value="${detailFolderName}" /></span>
-                    </span>
-                    <c:if test="${canManageShare}">
-                        <button type="button" id="openNoteDetailShareModal" class="note-meta-text note-detail-action-btn note-meta-share note-share-open-btn"
-                                data-share-content-type="NOTE" data-share-content-id="${note.noteId}">
-                            <span class="note-meta-icon" aria-hidden="true">🔗</span>
-                            <span class="note-meta-value">공유</span>
-                            <span id="noteDetailShareCount" class="note-share-count" hidden>0</span>
-                        </button>
-                        <button type="button" id="openNoteDetailPermissionModal" class="note-meta-text note-detail-action-btn note-meta-share note-share-open-btn note-detail-permission-btn"
-                                data-share-content-type="NOTE" data-share-content-id="${note.noteId}" data-share-mode="PERMISSION">
-                            <span class="note-meta-icon" aria-hidden="true">♟</span>
-                            <span class="note-meta-value">권한</span>
-                            <span id="noteDetailPermissionCount" class="note-share-count" hidden>0</span>
-                        </button>
-                    </c:if>
+                    <span class="note-path-separator" aria-hidden="true">/</span>
+                    <c:choose>
+                        <c:when test="${canDelete}">
+                            <button type="button"
+                                    class="note-detail-folder-trigger"
+                                    id="noteDetailFolderMoveBtn"
+                                    title="폴더 위치 변경"
+                                    data-note-id="${note.noteId}"
+                                    data-folder-id="${empty note.folderId ? '' : note.folderId}"
+                                    data-scope="${empty note.scopeType ? scope : note.scopeType}"
+                                    data-ws-id="${empty note.wsId ? wsId : note.wsId}"
+                                    data-proj-id="${empty note.projId ? projId : note.projId}">
+                                <span class="note-meta-value" id="noteDetailFolderName"><c:out value="${detailFolderName}" /></span>
+                                <span class="note-detail-folder-trigger-icon" aria-hidden="true">⌄</span>
+                            </button>
+                        </c:when>
+                        <c:otherwise>
+                            <span class="note-meta-text note-meta-folder">
+                                <span class="note-meta-value" id="noteDetailFolderName"><c:out value="${detailFolderName}" /></span>
+                            </span>
+                        </c:otherwise>
+                    </c:choose>
                 </div>
 
-                <div class="note-detail-meta-secondary">
-                    <div class="note-detail-utility-actions" aria-label="인쇄 중요">
-                        <button type="button" id="noteDetailPrintBtn" class="note-top-action-link note-top-print-btn">
-                            <span aria-hidden="true">🖨</span>
-                            <span>인쇄</span>
-                        </button>
-                        <button type="button"
-                                id="noteDetailPinBtn"
-                                class="note-top-action-link note-top-pin-btn ${note.pinned ? 'is-pinned' : ''}"
-                                data-note-id="${note.noteId}"
-                                data-pinned="${note.pinned}">
-                            <span class="note-pin-icon" aria-hidden="true">${note.pinned ? '★' : '☆'}</span>
-                            <span class="note-pin-label">중요</span>
-                        </button>
-                    </div>
+                <div class="note-detail-info-action-row">
                     <div class="note-detail-audit-info" aria-label="작성 수정 정보">
                         <c:if test="${not empty note.userName}">
                             <span class="note-meta-text note-detail-author">
-                                <span class="note-meta-icon" aria-hidden="true">👤</span>
+                                <span class="note-meta-label">작성자</span>
                                 <span class="note-meta-value"><c:out value="${note.userName}" /></span>
                             </span>
                         </c:if>
@@ -120,11 +130,57 @@
                             <span class="note-meta-value"><fmt:formatDate value="${note.regDt}" pattern="yyyy.MM.dd HH:mm" /></span>
                         </span>
                         <c:if test="${not empty note.updDt}">
-                            <span class="note-meta-text note-detail-date">
-                                <span class="note-meta-label">수정</span>
-                                <span class="note-meta-value"><fmt:formatDate value="${note.updDt}" pattern="yyyy.MM.dd HH:mm" /></span>
+                            <span class="note-meta-text note-detail-date note-detail-updated-info">
+                                <span class="note-meta-label">최근 수정</span>
+                                <span class="note-meta-value">
+                                    <c:choose>
+                                        <c:when test="${not empty note.updatedByName and note.updatedBy ne note.userId}">
+                                            <span class="note-detail-updated-user"><c:out value="${note.updatedByName}" /></span>
+                                            <span class="note-meta-dot" aria-hidden="true">·</span>
+                                            <fmt:formatDate value="${note.updDt}" pattern="yyyy.MM.dd HH:mm" />
+                                        </c:when>
+                                        <c:otherwise>
+                                            <fmt:formatDate value="${note.updDt}" pattern="yyyy.MM.dd HH:mm" />
+                                        </c:otherwise>
+                                    </c:choose>
+                                </span>
                             </span>
                         </c:if>
+                    </div>
+
+                    <div class="note-detail-all-actions" aria-label="공유 권한 인쇄 중요">
+                        <c:if test="${canManageShare}">
+                            <div class="note-detail-share-actions">
+                                <button type="button" id="openNoteDetailShareModal" class="note-meta-text note-detail-action-btn note-meta-share note-share-open-btn"
+                                        data-share-content-type="NOTE" data-share-content-id="${note.noteId}">
+                                    <span class="note-meta-icon" aria-hidden="true">🔗</span>
+                                    <span class="note-meta-value">공유</span>
+                                    <span id="noteDetailShareCount" class="note-share-count" hidden>0</span>
+                                </button>
+                                <button type="button" id="openNoteDetailPermissionModal" class="note-meta-text note-detail-action-btn note-meta-share note-share-open-btn note-detail-permission-btn"
+                                        data-share-content-type="NOTE" data-share-content-id="${note.noteId}" data-share-mode="PERMISSION">
+                                    <span class="note-meta-icon" aria-hidden="true">♟</span>
+                                    <span class="note-meta-value">권한</span>
+                                    <span id="noteDetailPermissionCount" class="note-share-count" hidden>0</span>
+                                </button>
+                            </div>
+                            <span class="note-detail-action-divider" aria-hidden="true"></span>
+                        </c:if>
+
+                        <div class="note-detail-utility-actions" aria-label="인쇄 중요">
+                            <button type="button" id="noteDetailPrintBtn" class="note-top-action-link note-top-print-btn">
+                                <span aria-hidden="true">🖨</span>
+                                <span>인쇄</span>
+                            </button>
+                            <button type="button"
+                                    id="noteDetailPinBtn"
+                                    class="note-top-action-link note-top-pin-btn ${note.pinned ? 'is-pinned' : ''}"
+                                    data-note-id="${note.noteId}"
+                                    data-pinned="${note.pinned}">
+                                <span class="note-pin-icon" aria-hidden="true">${note.pinned ? '★' : '☆'}</span>
+                                <span class="note-pin-label">중요</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -195,7 +251,7 @@
             <c:if test="${not empty wsId}"><input type="hidden" name="wsId" value="${wsId}"></c:if>
             <c:if test="${not empty projId}"><input type="hidden" name="projId" value="${projId}"></c:if>
             <textarea name="replyContent" class="note-reply-input" placeholder="확인한 내용이나 의견을 남겨주세요." required></textarea>
-            <button type="submit" class="note-gradient-btn">등록</button>
+            <button type="submit" class="note-reply-submit-btn">등록</button>
         </form>
 
         <div class="note-reply-list">
@@ -268,11 +324,18 @@
                 <span><c:out value="${note.noteTitle}" /></span>
             </h1>
             <div class="note-print-meta">
-                <span><c:out value="${scopeLabel}" /></span>
+                <span><c:out value="${detailScopeDisplay}" /></span>
+                <c:if test="${not empty detailSpaceDisplay}"><span><c:out value="${detailSpaceDisplay}" /></span></c:if>
                 <span><c:out value="${detailFolderName}" /></span>
                 <c:if test="${not empty note.userName}"><span>작성자 <c:out value="${note.userName}" /></span></c:if>
                 <span>작성 <fmt:formatDate value="${note.regDt}" pattern="yyyy.MM.dd HH:mm" /></span>
-                <c:if test="${not empty note.updDt}"><span>수정 <fmt:formatDate value="${note.updDt}" pattern="yyyy.MM.dd HH:mm" /></span></c:if>
+                <c:if test="${not empty note.updDt}">
+                    <span>
+                        최근 수정
+                        <c:if test="${not empty note.updatedByName and note.updatedBy ne note.userId}"> <c:out value="${note.updatedByName}" /></c:if>
+                        <fmt:formatDate value="${note.updDt}" pattern="yyyy.MM.dd HH:mm" />
+                    </span>
+                </c:if>
             </div>
         </header>
 
@@ -359,12 +422,13 @@
                  data-target-type="${share.targetType}"
                  data-target-id="${share.targetId}"
                  data-permission-type="${share.permissionType}"
+                 data-share-status="${share.shareStatus}"
                  data-target-name="${fn:escapeXml(share.targetName)}"
                  data-target-subtext="${fn:escapeXml(share.targetSubtext)}"></div>
         </c:forEach>
     </div>
 
-    <div id="noteDetailShareModal" class="note-write-share-modal note-detail-share-modal" data-current-user-id="${sessionScope.user.userId}" hidden>
+    <div id="noteDetailShareModal" class="note-write-share-modal moyo-share-modal note-detail-share-modal" data-current-user-id="${sessionScope.user.userId}" hidden>
         <div class="note-write-share-backdrop" data-note-share-close></div>
         <section class="note-write-share-panel" role="dialog" aria-modal="true" aria-labelledby="noteDetailShareModalTitle">
             <div class="note-write-share-modal-head">
@@ -403,7 +467,28 @@
     </div>
 </c:if>
 
-<script src="/js/commonShareModal.js?v=common-share-v14"></script>
+
+<c:if test="${canDelete}">
+<div class="nl-modal-backdrop common-folder-modal note-detail-folder-modal" id="noteDetailMoveModal" hidden>
+    <section class="nl-move-modal" role="dialog" aria-modal="true" aria-labelledby="noteDetailMoveModalTitle">
+        <div class="nl-modal-head">
+            <div>
+                <h2 id="noteDetailMoveModalTitle">폴더 이동</h2>
+                <p id="noteDetailMoveModalDescription">노트가 저장될 위치를 선택합니다.</p>
+            </div>
+            <div class="nl-modal-head-actions">
+                <button type="button" class="nl-modal-folder-create" id="noteDetailModalFolderCreate">
+                    <span aria-hidden="true">＋</span> 새 폴더
+                </button>
+                <button type="button" class="nl-modal-close" id="noteDetailMoveModalClose" aria-label="닫기">×</button>
+            </div>
+        </div>
+        <div class="nl-folder-choice-list" id="noteDetailMoveFolderList"></div>
+    </section>
+</div>
+</c:if>
+
+<script src="/js/commonShareModal.js?v=244"></script>
 <script>
 (function () {
     function initNoteDetailShare() {
@@ -571,9 +656,117 @@ async function printNoteAsPdf(button) {
     }
 }
 
+
+function getMoyoMediaEmbedUrl(rawUrl) {
+    if (!rawUrl) return '';
+    let url = String(rawUrl).trim();
+    if (!url) return '';
+    if (url.indexOf('//') === 0) url = window.location.protocol + url;
+    if (!/^https?:\/\//i.test(url)) return '';
+
+    try {
+        const parsed = new URL(url);
+        const host = parsed.hostname.replace(/^www\./i, '').toLowerCase();
+        let videoId = '';
+
+        if (host === 'youtu.be') {
+            videoId = parsed.pathname.split('/').filter(Boolean)[0] || '';
+        } else if (host === 'youtube.com' || host === 'm.youtube.com' || host === 'youtube-nocookie.com') {
+            if (parsed.pathname.indexOf('/embed/') === 0) {
+                videoId = parsed.pathname.split('/').filter(Boolean)[1] || '';
+            } else if (parsed.pathname.indexOf('/shorts/') === 0) {
+                videoId = parsed.pathname.split('/').filter(Boolean)[1] || '';
+            } else {
+                videoId = parsed.searchParams.get('v') || '';
+            }
+        }
+
+        if (videoId) {
+            const embed = new URL('https://www.youtube.com/embed/' + encodeURIComponent(videoId));
+            const start = parsed.searchParams.get('start') || parsed.searchParams.get('t');
+            if (start) {
+                const seconds = /^\d+$/.test(start) ? start : start.replace(/(?:(\d+)h)?(?:(\d+)m)?(?:(\d+)s)?/, function (_, h, m, sec) {
+                    return String((Number(h || 0) * 3600) + (Number(m || 0) * 60) + Number(sec || 0));
+                });
+                if (/^\d+$/.test(seconds)) embed.searchParams.set('start', seconds);
+            }
+            embed.searchParams.set('rel', '0');
+            return embed.toString();
+        }
+
+        if (host === 'vimeo.com' || host.endsWith('.vimeo.com')) {
+            const id = parsed.pathname.split('/').filter(Boolean).find(function (part) { return /^\d+$/.test(part); });
+            if (id) return 'https://player.vimeo.com/video/' + encodeURIComponent(id);
+        }
+    } catch (e) {
+        return '';
+    }
+    return '';
+}
+
+function createMoyoMediaFrame(embedUrl, sourceUrl) {
+    const figure = document.createElement('figure');
+    figure.className = 'media moyo-media-embed';
+    if (sourceUrl) figure.dataset.oembedUrl = sourceUrl;
+
+    const iframe = document.createElement('iframe');
+    iframe.src = embedUrl;
+    iframe.title = '노트 영상';
+    iframe.loading = 'lazy';
+    iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
+    iframe.allowFullscreen = true;
+    iframe.setAttribute('allowfullscreen', 'allowfullscreen');
+    iframe.setAttribute('referrerpolicy', 'strict-origin-when-cross-origin');
+    iframe.setAttribute('frameborder', '0');
+
+    figure.appendChild(iframe);
+    return figure;
+}
+
+function normalizeNoteMediaEmbeds(root) {
+    if (!root) return;
+
+    root.querySelectorAll('oembed[url]').forEach(function (oembed) {
+        const sourceUrl = oembed.getAttribute('url') || '';
+        const embedUrl = getMoyoMediaEmbedUrl(sourceUrl);
+        if (!embedUrl) return;
+        const media = createMoyoMediaFrame(embedUrl, sourceUrl);
+        const wrapper = oembed.closest('figure.media') || oembed;
+        wrapper.replaceWith(media);
+    });
+
+    root.querySelectorAll('[data-oembed-url]').forEach(function (node) {
+        if (node.querySelector('iframe')) return;
+        const sourceUrl = node.getAttribute('data-oembed-url') || '';
+        const embedUrl = getMoyoMediaEmbedUrl(sourceUrl);
+        if (!embedUrl) return;
+        node.replaceWith(createMoyoMediaFrame(embedUrl, sourceUrl));
+    });
+
+    root.querySelectorAll('iframe').forEach(function (iframe) {
+        const sourceUrl = iframe.getAttribute('src') || iframe.closest('[data-oembed-url]')?.getAttribute('data-oembed-url') || '';
+        const embedUrl = getMoyoMediaEmbedUrl(sourceUrl);
+        if (embedUrl && iframe.getAttribute('src') !== embedUrl) iframe.setAttribute('src', embedUrl);
+        iframe.setAttribute('allow', 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share');
+        iframe.setAttribute('allowfullscreen', 'allowfullscreen');
+        iframe.setAttribute('referrerpolicy', 'strict-origin-when-cross-origin');
+        iframe.setAttribute('frameborder', '0');
+        if (!iframe.closest('figure.media')) {
+            const figure = document.createElement('figure');
+            figure.className = 'media moyo-media-embed';
+            iframe.parentNode.insertBefore(figure, iframe);
+            figure.appendChild(iframe);
+        } else {
+            iframe.closest('figure.media').classList.add('moyo-media-embed');
+        }
+    });
+}
+
 document.addEventListener('DOMContentLoaded', function () {
     const contentBox = document.querySelector('.note-detail-wrap .note-content-box.moyo-rich-content');
     if (!contentBox) return;
+
+    normalizeNoteMediaEmbeds(contentBox);
 
     const isBlankNode = function (node) {
         if (node.nodeType === Node.TEXT_NODE) {
@@ -629,9 +822,191 @@ document.addEventListener('DOMContentLoaded', function () {
                 pinBtn.disabled = false;
             });
         });
+
     }
 
+    initNoteDetailFolderMove();
+
 });
+
+function initNoteDetailFolderMove() {
+    const moveButton = document.getElementById('noteDetailFolderMoveBtn');
+    const modal = document.getElementById('noteDetailMoveModal');
+    const closeButton = document.getElementById('noteDetailMoveModalClose');
+    const folderList = document.getElementById('noteDetailMoveFolderList');
+    const createButton = document.getElementById('noteDetailModalFolderCreate');
+    const folderNameNode = document.getElementById('noteDetailFolderName');
+    if (!moveButton || !modal || !folderList) return;
+
+    const state = {
+        noteId: moveButton.dataset.noteId || '',
+        folderId: moveButton.dataset.folderId || '',
+        scope: moveButton.dataset.scope || 'PRIVATE',
+        wsId: moveButton.dataset.wsId || '',
+        projId: moveButton.dataset.projId || ''
+    };
+    if (state.scope === 'PROJECT') state.scope = 'PROJ';
+    if (state.scope === 'WORKSPACE') state.scope = 'WS';
+
+    const post = function (url, params) {
+        return fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
+            body: new URLSearchParams(params)
+        }).then(function (res) { return res.json(); })
+          .then(function (result) {
+              if (!result || result.success !== true) throw new Error(result && result.message ? result.message : '요청을 처리하지 못했습니다.');
+              return result;
+          });
+    };
+
+    const folderRequestParams = function () {
+        const params = new URLSearchParams({ scope: state.scope });
+        if (state.wsId) params.set('wsId', state.wsId);
+        if (state.projId) params.set('projId', state.projId);
+        return params;
+    };
+
+    const escapeHtml = function (value) {
+        return String(value == null ? '' : value)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    };
+
+    const promptFolderName = function (message, initialValue) {
+        const value = window.prompt(message, initialValue || '');
+        if (value == null) return null;
+        const name = value.trim();
+        if (!name) {
+            window.alert('폴더 이름을 입력해 주세요.');
+            return null;
+        }
+        if (name.length > 100) {
+            window.alert('폴더 이름은 100자 이하로 입력해 주세요.');
+            return null;
+        }
+        return name;
+    };
+
+    const renderChoice = function (id, name, depth) {
+        const folderId = id == null ? '' : String(id);
+        const isCurrent = folderId === String(state.folderId || '');
+        const row = document.createElement('div');
+        row.className = 'nl-folder-choice-row' + (isCurrent ? ' is-current' : '');
+        row.dataset.folderId = folderId;
+        row.dataset.folderName = name || '미분류';
+
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'nl-folder-choice';
+        button.dataset.folderId = folderId;
+        button.disabled = isCurrent;
+        button.innerHTML = '<span class="nl-folder-choice-main" style="--folder-depth:' + Math.max(0, Number(depth || 0)) + '">'
+            + '<span class="nl-folder-choice-icon" aria-hidden="true">' + (id == null ? '▢' : '■') + '</span>'
+            + '<span class="nl-folder-choice-name">' + escapeHtml(name || '미분류') + '</span>'
+            + '</span>'
+            + (isCurrent ? '<em class="nl-folder-choice-badge">현재 위치</em>' : '');
+        row.appendChild(button);
+
+        if (id != null) {
+            const actions = document.createElement('div');
+            actions.className = 'nl-modal-folder-actions';
+            actions.innerHTML = '<button type="button" data-detail-folder-rename title="폴더 이름 수정" aria-label="폴더 이름 수정">✎</button>'
+                + '<button type="button" data-detail-folder-delete title="폴더 삭제" aria-label="폴더 삭제">🗑</button>';
+            row.appendChild(actions);
+        }
+        folderList.appendChild(row);
+    };
+
+    const loadFolders = function () {
+        folderList.innerHTML = '<div class="nl-folder-choice-empty">폴더 목록을 불러오는 중입니다.</div>';
+        return fetch('/note/api/folders?' + folderRequestParams().toString())
+            .then(function (res) { return res.json(); })
+            .then(function (result) {
+                if (!result || result.success !== true) throw new Error(result && result.message ? result.message : '폴더 목록을 불러오지 못했습니다.');
+                folderList.innerHTML = '';
+                renderChoice(null, '미분류', 0);
+                (result.folders || []).forEach(function (folder) {
+                    renderChoice(folder.folderId, folder.folderName, folder.depth || 0);
+                });
+            });
+    };
+
+    const openModal = function () {
+        loadFolders()
+            .then(function () {
+                modal.hidden = false;
+                document.body.classList.add('nl-modal-open');
+            })
+            .catch(function (error) { window.alert(error.message || '폴더 목록을 불러오지 못했습니다.'); });
+    };
+
+    const closeModal = function () {
+        modal.hidden = true;
+        document.body.classList.remove('nl-modal-open');
+    };
+
+    moveButton.addEventListener('click', openModal);
+    if (closeButton) closeButton.addEventListener('click', closeModal);
+    modal.addEventListener('click', function (event) { if (event.target === modal) closeModal(); });
+
+    if (createButton) createButton.addEventListener('click', function () {
+        const folderName = promptFolderName('새 폴더 이름을 입력해 주세요.');
+        if (!folderName) return;
+        const params = { scope: state.scope, folderName: folderName };
+        if (state.wsId) params.wsId = state.wsId;
+        if (state.projId) params.projId = state.projId;
+        post('/note/api/folder/create', params)
+            .then(loadFolders)
+            .catch(function (error) { window.alert(error.message || '폴더를 만들지 못했습니다.'); });
+    });
+
+    folderList.addEventListener('click', function (event) {
+        const row = event.target.closest('.nl-folder-choice-row');
+        if (!row) return;
+
+        const renameButton = event.target.closest('[data-detail-folder-rename]');
+        const deleteButton = event.target.closest('[data-detail-folder-delete]');
+        if (renameButton || deleteButton) {
+            event.preventDefault();
+            event.stopPropagation();
+            const folderId = row.dataset.folderId || '';
+            const currentName = row.dataset.folderName || '';
+            if (!folderId) return;
+            if (renameButton) {
+                const folderName = promptFolderName('수정할 폴더 이름을 입력해 주세요.', currentName);
+                if (!folderName || folderName === currentName) return;
+                post('/note/api/folder/rename', { folderId: folderId, folderName: folderName })
+                    .then(loadFolders)
+                    .catch(function (error) { window.alert(error.message || '폴더 이름을 수정하지 못했습니다.'); });
+            }
+            if (deleteButton) {
+                if (!window.confirm("'" + currentName + "' 폴더를 삭제할까요?\n하위 폴더나 노트가 있으면 삭제할 수 없습니다.")) return;
+                post('/note/api/folder/delete', { folderId: folderId })
+                    .then(loadFolders)
+                    .catch(function (error) { window.alert(error.message || '폴더를 삭제하지 못했습니다.'); });
+            }
+            return;
+        }
+
+        const choice = event.target.closest('.nl-folder-choice');
+        if (!choice || choice.disabled) return;
+        choice.disabled = true;
+        post('/note/api/folder/move-note', { noteId: state.noteId, folderId: choice.dataset.folderId || '' })
+            .then(function () {
+                state.folderId = choice.dataset.folderId || '';
+                if (folderNameNode) folderNameNode.textContent = row.dataset.folderName || '미분류';
+                closeModal();
+            })
+            .catch(function (error) {
+                window.alert(error.message || '폴더를 이동하지 못했습니다.');
+                choice.disabled = false;
+            });
+    });
+}
 
 function toggleReplyEdit(replyId, editing) {
     const item = document.getElementById('reply-' + replyId);

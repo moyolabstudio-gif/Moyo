@@ -77,6 +77,7 @@
             language: 'ko',
             placeholder: options.placeholder || '내용을 입력하세요.',
             toolbar: {
+                // Shared board/note toolbar: never collapse tools into the overflow menu.
                 items: [
                     'heading', '|',
                     'bold', 'italic', 'underline', '|',
@@ -108,6 +109,9 @@
             link: {
                 addTargetToExternalLinks: true,
                 defaultProtocol: 'https://'
+            },
+            mediaEmbed: {
+                previewsInData: true
             },
             extraPlugins: [createUploadAdapterPlugin(options)],
             removePlugins: [

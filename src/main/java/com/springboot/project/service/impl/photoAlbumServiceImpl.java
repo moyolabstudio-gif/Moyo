@@ -102,7 +102,7 @@ public class photoAlbumServiceImpl implements IphotoAlbumService {
     @Override
     @Transactional
     public Long createPost(String scopeType, Long scopeId, Long albumId, String title,
-                           String description, List<MultipartFile> files, Long userId) {
+                           String description, String visibilityType, List<MultipartFile> files, Long userId) {
         if (files == null || files.stream().noneMatch(file -> file != null && !file.isEmpty())) {
             throw new IllegalArgumentException("공유할 사진을 한 장 이상 선택해주세요.");
         }
@@ -113,6 +113,7 @@ public class photoAlbumServiceImpl implements IphotoAlbumService {
         params.put("albumId", albumId);
         params.put("title", cleanOptional(title, 150));
         params.put("description", cleanOptional(description, 1000));
+        params.put("visibilityType", normalizeVisibilityType(scopeType, visibilityType));
         params.put("createdBy", userId);
         photoAlbumDAO.insertPost(params);
         Long postId = ((Number) params.get("postId")).longValue();
@@ -182,6 +183,76 @@ public class photoAlbumServiceImpl implements IphotoAlbumService {
 
     @Override
     @Transactional
+    public boolean updatePostWithPhotos(Long postId, Long albumId, String title, String description,
+                                        List<MultipartFile> files, Long userId) {
+        if (files == null || files.stream().noneMatch(file -> file != null && !file.isEmpty())) {
+            throw new IllegalArgumentException("사진을 한 장 이상 남겨주세요.");
+        }
+
+        Map<String, Object> before = photoAlbumDAO.selectPost(postId, null);
+        if (before == null) return false;
+        Long previousAlbumId = numberToLong(mapValue(before, "albumId", "ALBUM_ID"));
+        List<Map<String, Object>> oldPhotos = photoAlbumDAO.selectPostPhotos(postId);
+        List<Path> savedPaths = new ArrayList<>();
+
+        try {
+            Files.createDirectories(PHOTO_ROOT);
+
+            Map<String, Object> params = new HashMap<>();
+            params.put("postId", postId);
+            params.put("albumId", albumId);
+            params.put("title", cleanOptional(title, 150));
+            params.put("description", cleanOptional(description, 1000));
+            int updated = photoAlbumDAO.updatePost(params);
+            if (updated <= 0) return false;
+
+            int sortOrder = 0;
+            Long firstPhotoId = null;
+            for (MultipartFile file : files) {
+                if (file == null || file.isEmpty()) continue;
+                validateImage(file);
+
+                String originalName = file.getOriginalFilename() == null ? "image" : file.getOriginalFilename();
+                String storedName = UUID.randomUUID().toString().replace("-", "") + extensionOf(originalName);
+                Path destination = PHOTO_ROOT.resolve(storedName).normalize();
+                if (!destination.startsWith(PHOTO_ROOT)) throw new IllegalArgumentException("잘못된 파일명입니다.");
+
+                Files.copy(file.getInputStream(), destination, StandardCopyOption.REPLACE_EXISTING);
+                savedPaths.add(destination);
+
+                Map<String, Object> photo = new HashMap<>();
+                photo.put("postId", postId);
+                photo.put("albumId", albumId);
+                photo.put("filePath", "/uploads/photos/" + storedName);
+                photo.put("originalName", originalName);
+                photo.put("fileSize", file.getSize());
+                photo.put("mimeType", file.getContentType());
+                photo.put("uploadedBy", userId);
+                photo.put("sortOrder", sortOrder++);
+                photoAlbumDAO.insertPhoto(photo);
+                if (firstPhotoId == null) firstPhotoId = ((Number) photo.get("photoId")).longValue();
+            }
+
+            for (Map<String, Object> photo : oldPhotos) {
+                Long photoId = numberToLong(mapValue(photo, "photoId", "PHOTO_ID"));
+                if (photoId != null) {
+                    photoAlbumDAO.clearAlbumCover(photoId);
+                    photoAlbumDAO.deletePhoto(photoId);
+                }
+            }
+            oldPhotos.forEach(photo -> deletePhysicalFile(stringValue(mapValue(photo, "filePath", "FILE_PATH"))));
+
+            refreshMovedAlbumCovers(previousAlbumId, albumId);
+            if (albumId != null && firstPhotoId != null) photoAlbumDAO.updateAlbumCover(albumId, firstPhotoId);
+            return true;
+        } catch (IOException | RuntimeException e) {
+            savedPaths.forEach(this::deletePathQuietly);
+            throw new IllegalStateException(e instanceof IllegalArgumentException ? e.getMessage() : "사진 수정에 실패했습니다.", e);
+        }
+    }
+
+    @Override
+    @Transactional
     public boolean movePostAlbum(Long postId, Long albumId) {
         Map<String, Object> before = photoAlbumDAO.selectPost(postId, null);
         if (before == null) return false;
@@ -201,17 +272,208 @@ public class photoAlbumServiceImpl implements IphotoAlbumService {
 
     @Override
     @Transactional
+    public boolean updatePostVisibility(Long postId, String visibilityType) {
+        Map<String, Object> post = photoAlbumDAO.selectPost(postId, null);
+        if (post == null) return false;
+        String scopeType = stringValue(mapValue(post, "scopeType", "SCOPE_TYPE"));
+        String normalized = normalizeVisibilityType(scopeType, visibilityType);
+        return photoAlbumDAO.updatePostVisibility(postId, normalized) > 0;
+    }
+
+
+
+
+    @Override
+    public List<Map<String, Object>> getTrashPosts(Long userId) {
+        if (userId == null) return List.of();
+        return photoAlbumDAO.selectTrashPosts(userId);
+    }
+
+    @Override
+    @Transactional
+    public boolean movePostToTrash(Long postId, Long userId) {
+        if (postId == null || userId == null) return false;
+        Map<String, Object> before = photoAlbumDAO.selectPost(postId, userId);
+        if (before == null) return false;
+        Long albumId = numberToLong(mapValue(before, "albumId", "ALBUM_ID"));
+        List<Map<String, Object>> photos = photoAlbumDAO.selectPostPhotos(postId);
+        for (Map<String, Object> photo : photos) {
+            Long photoId = numberToLong(mapValue(photo, "photoId", "PHOTO_ID"));
+            if (photoId != null) photoAlbumDAO.clearAlbumCover(photoId);
+        }
+        int updated = photoAlbumDAO.movePostToTrash(postId, userId);
+        if (updated > 0) {
+            photoAlbumDAO.updatePhotoAlbumByPost(postId, null);
+            if (albumId != null) refreshAlbumCover(albumId);
+        }
+        return updated > 0;
+    }
+
+    @Override
+    @Transactional
+    public boolean restorePostFromTrash(Long postId, Long userId) {
+        if (postId == null || userId == null) return false;
+        Map<String, Object> before = photoAlbumDAO.selectTrashPost(postId, userId);
+        if (before == null) return false;
+        Long restoreAlbumId = numberToLong(mapValue(before, "originalAlbumId", "ORIGINAL_ALBUM_ID"));
+        int updated = photoAlbumDAO.restorePostFromTrash(postId, userId);
+        if (updated > 0) {
+            Map<String, Object> restored = photoAlbumDAO.selectPost(postId, userId);
+            Long albumId = numberToLong(mapValue(restored, "albumId", "ALBUM_ID"));
+            photoAlbumDAO.updatePhotoAlbumByPost(postId, albumId);
+            if (albumId != null) refreshAlbumCover(albumId);
+            else if (restoreAlbumId != null) refreshAlbumCover(restoreAlbumId);
+        }
+        return updated > 0;
+    }
+
+    @Override
+    public boolean canPermanentlyDeletePost(Long postId, Long userId) {
+        if (postId == null || userId == null) return false;
+        return photoAlbumDAO.countTrashOwner(postId, userId) > 0;
+    }
+
+    @Override
+    @Transactional
+    public boolean permanentlyDeletePost(Long postId, Long userId) {
+        if (!canPermanentlyDeletePost(postId, userId)) return false;
+        return deletePost(postId);
+    }
+
+
+    @Override
+    @Transactional
+    public Long collectPost(Long sourcePostId, Long targetAlbumId, Long userId) {
+        Map<String, Object> source = photoAlbumDAO.selectPost(sourcePostId, userId);
+        if (source == null) {
+            throw new IllegalArgumentException("담아갈 사진을 찾을 수 없습니다.");
+        }
+
+        Long creatorId = numberToLong(mapValue(source, "userId", "USER_ID"));
+        if (creatorId == null) {
+            throw new IllegalArgumentException("작성자 정보를 확인할 수 없습니다.");
+        }
+        if (creatorId.equals(userId)) {
+            throw new IllegalArgumentException("내가 올린 사진은 이미 내 사진첩에 있습니다.");
+        }
+        if (photoAlbumDAO.countPostCollect(sourcePostId, userId) > 0) {
+            throw new IllegalArgumentException("이미 담아간 사진입니다.");
+        }
+
+        if (targetAlbumId != null) {
+            Map<String, Object> album = photoAlbumDAO.selectAlbum(targetAlbumId);
+            if (album == null
+                    || !"PERSONAL".equalsIgnoreCase(stringValue(mapValue(album, "scopeType", "SCOPE_TYPE")))
+                    || !userId.equals(numberToLong(mapValue(album, "scopeId", "SCOPE_ID")))) {
+                throw new IllegalArgumentException("내 개인 앨범으로만 담아갈 수 있습니다.");
+            }
+        }
+
+        List<Map<String, Object>> sourcePhotos = photoAlbumDAO.selectPostPhotos(sourcePostId);
+        if (sourcePhotos == null || sourcePhotos.isEmpty()) {
+            throw new IllegalArgumentException("담아갈 사진이 없습니다.");
+        }
+
+        Map<String, Object> post = new HashMap<>();
+        post.put("scopeType", "PERSONAL");
+        post.put("scopeId", userId);
+        post.put("albumId", targetAlbumId);
+        post.put("title", cleanOptional(stringValue(mapValue(source, "title", "TITLE")), 150));
+        post.put("description", cleanOptional(stringValue(mapValue(source, "description", "DESCRIPTION")), 1000));
+        post.put("visibilityType", "PRIVATE");
+        post.put("createdBy", userId);
+        photoAlbumDAO.insertPost(post);
+        Long newPostId = ((Number) post.get("postId")).longValue();
+
+        List<Path> copiedPaths = new ArrayList<>();
+        try {
+            Files.createDirectories(PHOTO_ROOT);
+            int sortOrder = 0;
+            Long firstPhotoId = null;
+            for (Map<String, Object> sourcePhoto : sourcePhotos) {
+                String publicPath = stringValue(mapValue(sourcePhoto, "filePath", "FILE_PATH"));
+                Path copied = copyPhotoFile(publicPath);
+                copiedPaths.add(copied);
+
+                String originalName = stringValue(mapValue(sourcePhoto, "originalName", "ORIGINAL_NAME"));
+                Map<String, Object> photo = new HashMap<>();
+                photo.put("postId", newPostId);
+                photo.put("albumId", targetAlbumId);
+                photo.put("filePath", "/uploads/photos/" + copied.getFileName().toString());
+                photo.put("originalName", originalName == null || originalName.isBlank() ? copied.getFileName().toString() : originalName);
+                photo.put("fileSize", Files.size(copied));
+                photo.put("mimeType", stringValue(mapValue(sourcePhoto, "mimeType", "MIME_TYPE")));
+                photo.put("uploadedBy", userId);
+                photo.put("sortOrder", sortOrder++);
+                photoAlbumDAO.insertPhoto(photo);
+                if (firstPhotoId == null) firstPhotoId = ((Number) photo.get("photoId")).longValue();
+            }
+            if (targetAlbumId != null && firstPhotoId != null) {
+                Map<String, Object> album = photoAlbumDAO.selectAlbum(targetAlbumId);
+                if (album != null && mapValue(album, "coverPhotoId", "COVER_PHOTO_ID") == null) {
+                    photoAlbumDAO.updateAlbumCover(targetAlbumId, firstPhotoId);
+                }
+            }
+            photoAlbumDAO.insertPostCollect(sourcePostId, userId);
+            photoAlbumDAO.insertCollectedPostLink(newPostId, sourcePostId, userId);
+            return newPostId;
+        } catch (IOException | RuntimeException e) {
+            copiedPaths.forEach(this::deletePathQuietly);
+            photoAlbumDAO.deletePost(newPostId);
+            throw new IllegalStateException(e instanceof IllegalArgumentException ? e.getMessage() : "사진 담아가기에 실패했습니다.", e);
+        }
+    }
+
+    @Override
+    @Transactional
+    public boolean cancelCollectPost(Long sourcePostId, Long userId) {
+        if (sourcePostId == null || userId == null) return false;
+
+        Long collectedPostId = photoAlbumDAO.selectCollectedPostIdBySource(sourcePostId, userId);
+        if (collectedPostId != null) {
+            return deletePost(collectedPostId);
+        }
+
+        return photoAlbumDAO.deletePostCollect(sourcePostId, userId) > 0;
+    }
+
+    private Path copyPhotoFile(String publicPath) throws IOException {
+        if (publicPath == null || !publicPath.startsWith("/uploads/photos/")) {
+            throw new IllegalArgumentException("원본 사진 경로가 올바르지 않습니다.");
+        }
+        String sourceName = publicPath.substring("/uploads/photos/".length());
+        Path source = PHOTO_ROOT.resolve(sourceName).normalize();
+        if (!source.startsWith(PHOTO_ROOT) || !Files.exists(source)) {
+            throw new IllegalArgumentException("원본 사진 파일을 찾을 수 없습니다.");
+        }
+        String copiedName = UUID.randomUUID().toString().replace("-", "") + extensionOf(sourceName);
+        Path destination = PHOTO_ROOT.resolve(copiedName).normalize();
+        if (!destination.startsWith(PHOTO_ROOT)) throw new IllegalArgumentException("잘못된 파일명입니다.");
+        Files.copy(source, destination, StandardCopyOption.REPLACE_EXISTING);
+        return destination;
+    }
+
+    @Override
+    @Transactional
     public boolean deletePost(Long postId) {
         Map<String, Object> post = photoAlbumDAO.selectPost(postId, null);
+        if (post == null) post = photoAlbumDAO.selectTrashPost(postId, null);
+        if (post == null) return false;
         Long albumId = numberToLong(mapValue(post, "albumId", "ALBUM_ID"));
+        Long postOwnerId = numberToLong(mapValue(post, "userId", "USER_ID"));
+        Long collectedSourcePostId = postOwnerId == null ? null : photoAlbumDAO.selectCollectedSourcePostId(postId, postOwnerId);
         List<Map<String, Object>> photos = photoAlbumDAO.selectPostPhotos(postId);
         for (Map<String, Object> photo : photos) {
             Long photoId = numberToLong(mapValue(photo, "photoId", "PHOTO_ID"));
             if (photoId != null) photoAlbumDAO.clearAlbumCover(photoId);
         }
         contentReactionService.deleteByContent("PHOTO_POST", postId);
+        photoAlbumDAO.deleteCollectedPostLink(postId);
         int deleted = photoAlbumDAO.deletePost(postId);
         if (deleted > 0) {
+            if (collectedSourcePostId != null && postOwnerId != null) {
+                photoAlbumDAO.deletePostCollect(collectedSourcePostId, postOwnerId);
+            }
             photos.forEach(photo -> deletePhysicalFile(stringValue(mapValue(photo, "filePath", "FILE_PATH"))));
             if (albumId != null) refreshAlbumCover(albumId);
         }
@@ -238,6 +500,42 @@ public class photoAlbumServiceImpl implements IphotoAlbumService {
         return deleted > 0;
     }
 
+
+    @Override
+    public List<Map<String, Object>> getPostComments(Long postId, Long userId) {
+        return photoAlbumDAO.selectPostComments(postId, userId);
+    }
+
+    @Override
+    @Transactional
+    public Long createPostComment(Long postId, Long parentCommentId, String content, Long userId) {
+        if (parentCommentId != null
+                && photoAlbumDAO.countActivePostComment(postId, parentCommentId) <= 0) {
+            throw new IllegalArgumentException("답글을 달 댓글을 찾을 수 없습니다.");
+        }
+
+        Map<String, Object> params = new HashMap<>();
+        params.put("postId", postId);
+        params.put("parentCommentId", parentCommentId);
+        params.put("userId", userId);
+        params.put("content", cleanRequired(content, 500, "댓글"));
+        photoAlbumDAO.insertPostComment(params);
+        return ((Number) params.get("commentId")).longValue();
+    }
+
+    @Override
+    @Transactional
+    public boolean updatePostComment(Long postId, Long commentId, String content, Long userId) {
+        return photoAlbumDAO.updatePostComment(commentId, postId, userId, cleanRequired(content, 500, "댓글")) > 0;
+    }
+
+    @Override
+    @Transactional
+    public boolean deletePostComment(Long postId, Long commentId, Long userId, boolean canManage) {
+        return photoAlbumDAO.deletePostComment(commentId, postId, userId, canManage ? 1 : 0) > 0;
+    }
+
+
     private void refreshAlbumCover(Long albumId) {
         Long next = photoAlbumDAO.selectFirstAlbumPhotoId(albumId);
         photoAlbumDAO.updateAlbumCover(albumId, next);
@@ -249,6 +547,16 @@ public class photoAlbumServiceImpl implements IphotoAlbumService {
         if (contentType == null || !contentType.toLowerCase().startsWith("image/")) {
             throw new IllegalArgumentException("이미지 파일만 업로드할 수 있습니다.");
         }
+    }
+
+
+    private String normalizeVisibilityType(String scopeType, String visibilityType) {
+        String normalizedScope = normalizeScopeType(scopeType);
+        if ("WORKSPACE".equals(normalizedScope)) return "WORKSPACE";
+        if ("PROJECT".equals(normalizedScope)) return "PROJECT";
+        String normalized = visibilityType == null ? "PRIVATE" : visibilityType.trim().toUpperCase();
+        if (!List.of("PRIVATE", "FRIENDS").contains(normalized)) return "PRIVATE";
+        return normalized;
     }
 
     private String normalizeScopeType(String scopeType) {

@@ -15,6 +15,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Service
 public class noteServiceImpl implements InoteService {
@@ -30,6 +32,23 @@ public class noteServiceImpl implements InoteService {
         Map<String, Object> paramMap = createScopeParam(scopeType, wsId, projId, userId);
         paramMap.put("keyword", keyword == null || keyword.trim().isEmpty() ? null : keyword.trim());
         List<noteDTO> noteList = inoteDAO.selectNoteList(paramMap);
+        preparePreviewText(noteList);
+        attachEmptyFileList(noteList);
+        return noteList;
+    }
+
+    @Override
+    public List<noteDTO> getNoteListPage(String scopeType, Long wsId, Long projId, Long userId, String keyword,
+                                         boolean importantOnly, Long friendUserId, Long folderId, int offset, int limit) {
+        Map<String, Object> paramMap = createScopeParam(scopeType, wsId, projId, userId);
+        paramMap.put("keyword", keyword == null || keyword.trim().isEmpty() ? null : keyword.trim());
+        paramMap.put("importantOnly", importantOnly);
+        paramMap.put("friendUserId", friendUserId);
+        paramMap.put("folderId", folderId);
+        paramMap.put("startRow", Math.max(offset, 0));
+        paramMap.put("endRow", Math.max(offset, 0) + Math.min(Math.max(limit, 1), 51));
+        List<noteDTO> noteList = inoteDAO.selectNoteList(paramMap);
+        preparePreviewText(noteList);
         attachEmptyFileList(noteList);
         return noteList;
     }
@@ -43,12 +62,13 @@ public class noteServiceImpl implements InoteService {
         return noteList;
     }
 
+
     @Override
     @Transactional
     public boolean pinNote(Long userId, Long noteId) {
         noteDTO note = inoteDAO.selectNoteDetail(noteId, userId);
         if (note == null) throw new IllegalStateException("노트를 찾을 수 없습니다.");
-        String pinScopeKey = buildPinScopeKey(note);
+        String pinScopeKey = buildPinScopeKey("IMPORTANT", null, null, userId);
         Integer pinOrder = inoteDAO.selectNextPinOrder(userId, pinScopeKey);
         if (pinOrder == null) pinOrder = 1;
         return inoteDAO.insertNotePin(userId, pinScopeKey, noteId, pinOrder) > 0;
@@ -94,6 +114,21 @@ public class noteServiceImpl implements InoteService {
     @Override
     public boolean modifyNote(noteDTO note) {
         return inoteDAO.updateNote(note) > 0;
+    }
+
+    @Override
+    public boolean moveNoteToTrash(Long noteId, Long userId) {
+        return inoteDAO.moveNoteToTrash(noteId, userId) > 0;
+    }
+
+    @Override
+    public boolean restoreNoteFromTrash(Long noteId, Long userId) {
+        return inoteDAO.restoreNoteFromTrash(noteId, userId) > 0;
+    }
+
+    @Override
+    public boolean canPermanentlyDeleteNote(Long noteId, Long userId) {
+        return inoteDAO.countTrashOwner(noteId, userId) > 0;
     }
 
     @Override
@@ -166,6 +201,104 @@ public class noteServiceImpl implements InoteService {
         return paramMap;
     }
 
+
+    private void preparePreviewText(List<noteDTO> noteList) {
+        if (noteList == null) return;
+        for (noteDTO note : noteList) {
+            if (note == null) continue;
+            String originalHtml = note.getPreviewContent();
+            // 표·이미지·영상 개수는 목록 쿼리에서 원본 CLOB 전체를 기준으로 계산한다.
+            // PREVIEW_CONTENT는 앞부분만 잘라 오므로 여기서 다시 세면 뒤쪽 미디어가 누락된다.
+            note.setPreviewContent(toPreviewText(originalHtml));
+        }
+    }
+
+    private int countOpeningTags(String html, String tagName) {
+        if (html == null || html.isBlank()) return 0;
+        String decoded = decodeBasicHtmlEntities(html);
+        Pattern pattern = Pattern.compile("(?i)<\\s*" + Pattern.quote(tagName) + "\\b");
+        Matcher matcher = pattern.matcher(decoded);
+        int count = 0;
+        while (matcher.find()) count++;
+        return count;
+    }
+
+    private int countVideoElements(String html) {
+        if (html == null || html.isBlank()) return 0;
+        String decoded = decodeBasicHtmlEntities(html);
+        // CKEditor 영상은 video/iframe/oembed 중 하나로 저장될 수 있다.
+        Pattern pattern = Pattern.compile("(?i)<\\s*(?:video|iframe|oembed)\\b");
+        Matcher matcher = pattern.matcher(decoded);
+        int count = 0;
+        while (matcher.find()) count++;
+        return count;
+    }
+
+    private String decodeBasicHtmlEntities(String html) {
+        return html
+                .replace("&lt;", "<")
+                .replace("&gt;", ">")
+                .replace("&quot;", "\"")
+                .replace("&#39;", "'")
+                .replace("&apos;", "'")
+                .replace("&amp;", "&");
+    }
+
+    private String toPreviewText(String html) {
+        if (html == null || html.isBlank()) return null;
+
+        // 목록 미리보기는 원문 HTML을 보여주는 영역이 아니다.
+        // 문단/띄어쓰기는 유지하되 이미지·스타일·잘린 태그 조각은 완전히 제거한다.
+        String text = decodeBasicHtmlEntities(html)
+                .replaceAll("(?is)<script\\b[^>]*>.*?</script>", " ")
+                .replaceAll("(?is)<table\\b[^>]*>.*?</table>", " ")
+                .replaceAll("(?is)<(?:video|iframe|oembed)\\b[^>]*>.*?</(?:video|iframe|oembed)>", " ")
+                .replaceAll("(?is)<(?:video|iframe|oembed)\\b[^>]*(?:/>|>|$)", " ")
+                .replaceAll("(?is)<style\\b[^>]*>.*?</style>", " ")
+                // include된 style 조각이 잘려서 본문 미리보기로 들어온 경우 제거한다.
+                // 예: .moyo-footer { position: relative; ... }
+                .replaceAll("(?is)@[a-z-]+\\s*[^{}]*\\{[^{}]*\\}", " ")
+                .replaceAll("(?is)\\.[a-z0-9_-]+[^{}\\n]*\\{[^{}]*\\}", " ")
+                .replaceAll("(?is)\\.[a-z0-9_-]+[^{}\\n]*\\{.*$", " ")
+                .replaceAll("(?im)^\\s*(?:position|z-index|width|height|min-height|max-height|margin|padding|box-sizing|border|background|overflow|color|font|display|align-items|justify-content|gap|white-space|text-decoration|transform|content|left|right|top|bottom|flex|flex-direction)\\s*:[^\\n]*$", " ")
+                .replaceAll("(?is)<(?:figure|picture)\\b[^>]*>.*?</(?:figure|picture)>", " ")
+                .replaceAll("(?is)<(?:img|source)\\b[^>]*(?:>|$)", " ")
+                .replaceAll("(?is)data:image/[^\\s\"'>]+", " ")
+                .replaceAll("(?is)<li\\b[^>]*>\\s*(?:&nbsp;|&#160;|&#x0*a0;|<br\s*/?>|<p\b[^>]*>\s*(?:&nbsp;|&#160;|&#x0*a0;|<br\s*/?>)?\s*</p>|\s)*</li>", " ")
+                .replaceAll("(?i)<br\\s*/?>", "\n")
+                .replaceAll("(?i)</?(p|div|li|h[1-6]|tr|blockquote|pre)[^>]*>", "\n")
+                .replaceAll("(?i)</?(td|th)[^>]*>", " ")
+                .replaceAll("(?s)<[^>]+>", " ")
+                // CLOB이 태그 중간에서 잘린 경우 남는 HTML 속성/이미지 조각 제거
+                .replaceAll("(?is)<[a-z][^>]*$", " ")
+                .replaceAll("(?is)(?:img|source|figure|picture)\b[^\n<>]*$", " ")
+                .replaceAll("(?is)\b(?:src|srcset|style|alt|width|height)\s*=\s*[\"'][^\"']*$", " ")
+                .replaceAll("(?i)&nbsp;|&#160;|&#x0*a0;", " ")
+                .replace("\u00A0", " ")
+                .replace("\u200B", "")
+                .replace("\u200C", "")
+                .replace("\u200D", "")
+                .replace("\uFEFF", "")
+                .replace("\uFFFD", "")
+                .replace("\r\n", "\n")
+                .replace("\r", "\n")
+                .replaceAll("[\t\f\u000B ]+", " ")
+                .replaceAll(" *\n *", "\n")
+                .replaceAll("\n{3,}", "\n\n")
+                // 본문이 없는 노트에서 점만 한 줄 남는 현상 제거
+                .replaceAll("(?m)^[.\u2026\s]+$", "")
+                .replaceAll("(?m)^[\\s\u2022\u00B7\u25E6\u2043-]+$", "")
+                // 목록 미리보기는 2줄만 사용하므로 빈 문단이 실제 내용을 밀어내지 않게 한다.
+                // 실제 텍스트 줄바꿈은 유지하고, 연속된 빈 줄만 한 줄로 축소한다.
+                .replaceAll("\n{2,}", "\n")
+                .trim();
+
+        if (text.isBlank()) return null;
+
+        // CSS의 2줄 말줄임이 담당하므로 서버에서 임의의 '...'를 붙이지 않는다.
+        return text.length() > 240 ? text.substring(0, 240).trim() : text;
+    }
+
     private void attachEmptyFileList(List<noteDTO> noteList) {
         if (noteList == null) return;
         for (noteDTO note : noteList) {
@@ -208,7 +341,7 @@ public class noteServiceImpl implements InoteService {
         String value = scopeType.trim().toUpperCase();
         if ("PROJECT".equals(value)) return "PROJ";
         if ("WORKSPACE".equals(value)) return "WS";
-        if (!"ALL".equals(value) && !"PRIVATE".equals(value) && !"WS".equals(value) && !"PROJ".equals(value)) return "PRIVATE";
+        if (!"ALL".equals(value) && !"IMPORTANT".equals(value) && !"PRIVATE".equals(value) && !"FRIEND".equals(value) && !"WS".equals(value) && !"PROJ".equals(value) && !"TRASH".equals(value)) return "PRIVATE";
         return value;
     }
 
@@ -217,10 +350,8 @@ public class noteServiceImpl implements InoteService {
     }
 
     private String buildPinScopeKey(String scopeType, Long wsId, Long projId, Long userId) {
-        String scope = normalizeScope(scopeType);
-        if ("ALL".equals(scope)) return "ALL:" + userId;
-        if ("PROJ".equals(scope)) return "PROJ:" + wsId + ":" + projId;
-        if ("WS".equals(scope)) return "WS:" + wsId;
-        return "PRIVATE:" + userId;
+        // 중요 표시는 탭/범위가 아니라 사용자와 노트 기준으로 하나만 유지한다.
+        // ALL, 개인, 친구, 워크스페이스, 프로젝트 어디에서 보더라도 같은 상태가 보여야 한다.
+        return "NOTE:" + userId;
     }
 }

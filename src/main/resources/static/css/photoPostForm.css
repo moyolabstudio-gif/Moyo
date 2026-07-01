@@ -1,0 +1,1413 @@
+/* =========================================================
+   MOYO Photo Post Form
+   - 사진 등록/수정 페이지 전용 스타일
+   - 모달형 누적 패치 제거 후 최종 편집기 구조 기준으로 정리
+   ========================================================= */
+
+/* ---------- Page layout ---------- */
+.photo-post-form-page{
+    padding:24px 32px 56px;
+    background:#f6f9fd;
+}
+.photo-form-shell{
+    width:100%;
+    max-width:none;
+    margin:0;
+}
+.photo-form-hero{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:20px;
+    margin:0 0 18px;
+    padding:0 0 18px;
+    border-bottom:1px solid #e3ebf5;
+}
+.photo-form-hero h1{
+    margin:4px 0 6px;
+    font-size:28px;
+    line-height:1.18;
+    letter-spacing:-.8px;
+    color:#071a33;
+}
+.photo-form-hero p{
+    margin:0;
+    color:#65758d;
+}
+.photo-form-card{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) minmax(286px,320px);
+    align-items:start;
+    gap:22px;
+    padding:0;
+    border:0;
+    border-radius:0;
+    background:transparent;
+    box-shadow:none;
+}
+.photo-form-main{
+    min-width:0;
+}
+.photo-form-side{
+    position:sticky;
+    top:76px;
+    width:100%;
+    display:grid;
+    align-content:start;
+    gap:16px;
+    padding:0;
+}
+.photo-form-side .photo-field textarea{
+    min-height:132px;
+}
+.photo-form-actions{
+    display:flex;
+    justify-content:flex-end;
+    gap:10px;
+    margin-top:2px;
+}
+.photo-primary-button,
+.photo-secondary-button,
+.photo-back-button,
+.photo-form-actions a,
+.photo-form-hero a{
+    text-decoration:none!important;
+}
+.photo-primary-button:hover,
+.photo-primary-button:focus,
+.photo-secondary-button:hover,
+.photo-secondary-button:focus,
+.photo-back-button:hover,
+.photo-back-button:focus,
+.photo-form-actions a:hover,
+.photo-form-hero a:hover{
+    text-decoration:none!important;
+}
+
+/* ---------- Upload / preview shell ---------- */
+.photo-form-preview{
+    display:flex;
+    flex-direction:column;
+    min-height:0;
+    padding:0;
+    border:0;
+    border-radius:0;
+    background:transparent;
+    box-shadow:none;
+}
+.photo-file-input{
+    position:absolute;
+    width:1px;
+    height:1px;
+    overflow:hidden;
+    clip:rect(0 0 0 0);
+}
+.photo-form-drop{
+    width:100%;
+    min-height:clamp(210px,30vh,320px);
+    display:grid;
+    place-items:center;
+    align-content:center;
+    gap:10px;
+    padding:20px;
+    border:1px dashed #c6d7ee;
+    border-radius:18px;
+    background:rgba(255,255,255,.46);
+    color:#64748b;
+    cursor:pointer;
+    outline:0;
+    box-shadow:none;
+}
+.photo-form-drop i{
+    font-size:38px;
+    background:linear-gradient(135deg,var(--moyo-mint),var(--moyo-blue),var(--moyo-violet));
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:transparent;
+}
+.photo-form-drop strong{
+    font-size:17px;
+    color:#22304a;
+}
+.photo-form-drop span{
+    font-size:12px;
+}
+.photo-form-drop:hover{
+    background:rgba(255,255,255,.58);
+}
+.photo-form-drop:focus,
+.photo-form-drop:focus-visible,
+.photo-form-drop:active{
+    outline:0;
+    box-shadow:none;
+}
+.photo-form-drop.is-dragover{
+    background:#fff;
+    box-shadow:inset 0 0 0 2px rgba(71,120,242,.22);
+}
+.photo-form-preview.has-files .photo-form-drop.has-files{
+    min-height:44px;
+    margin:0 0 14px;
+    padding:8px 12px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:7px;
+    border:1px dashed #cbd8e9;
+    border-radius:14px;
+    background:rgba(255,255,255,.48);
+}
+.photo-form-preview.has-files .photo-form-drop.has-files i{
+    font-size:20px;
+}
+.photo-form-preview.has-files .photo-form-drop.has-files strong{
+    font-size:13px;
+}
+.photo-form-preview.has-files .photo-form-drop.has-files span{
+    display:none;
+}
+
+/* ---------- Editor toolbar ---------- */
+.photo-editor-toolbar{
+    order:1;
+    width:100%;
+    display:grid;
+    grid-template-columns:minmax(0,auto) minmax(220px,1fr);
+    grid-template-areas:"tools filters";
+    align-items:center;
+    gap:10px 16px;
+    margin:8px 0 10px;
+}
+.photo-editor-toolbar[hidden]{
+    display:none!important;
+}
+.photo-editor-tools,
+.photo-editor-filters{
+    display:flex;
+    align-items:center;
+    flex-wrap:wrap;
+    gap:7px;
+    min-width:0;
+}
+.photo-editor-tools{
+    grid-area:tools;
+    justify-content:flex-start;
+}
+.photo-editor-filters{
+    grid-area:filters;
+    justify-content:flex-end;
+    margin-left:auto;
+}
+.photo-editor-tools button,
+.photo-editor-filters button{
+    height:32px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:6px;
+    padding:0 11px;
+    border:1px solid #d7e2f0;
+    border-radius:999px;
+    background:#fff;
+    color:#41516a;
+    font-size:12px;
+    font-weight:800;
+    line-height:1;
+    white-space:nowrap;
+    cursor:pointer;
+    text-decoration:none;
+    box-shadow:none;
+}
+.photo-editor-tools button:hover,
+.photo-editor-filters button:hover{
+    border-color:#b9c9e2;
+    background:#f8fbff;
+}
+.photo-editor-toolbar[data-crop="square"] [data-editor-action="square"],
+.photo-editor-toolbar[data-crop="original"] [data-editor-action="original"],
+.photo-editor-toolbar[data-filter="none"] [data-editor-action="filter-none"],
+.photo-editor-toolbar[data-filter="vivid"] [data-editor-action="filter-vivid"],
+.photo-editor-toolbar[data-filter="warm"] [data-editor-action="filter-warm"],
+.photo-editor-toolbar[data-filter="cool"] [data-editor-action="filter-cool"],
+.photo-editor-toolbar[data-filter="mono"] [data-editor-action="filter-mono"],
+.photo-editor-filters button.is-active{
+    border-color:#8cb1ff;
+    background:#eef5ff;
+    color:#3467df;
+}
+
+/* ---------- Size / position controls ---------- */
+.photo-editor-underbar{
+    order:2;
+    width:100%;
+    max-width:none;
+    margin:10px 0 14px;
+    padding:0;
+    border:0;
+    background:transparent;
+    box-shadow:none;
+}
+.photo-editor-underbar[hidden]{
+    display:none!important;
+}
+.photo-editor-adjust-row{
+    width:100%;
+    display:grid;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    grid-template-areas:"x zoom y";
+    align-items:center;
+    gap:12px;
+}
+.photo-editor-range{
+    width:100%;
+    min-width:0;
+    height:36px;
+    display:grid;
+    grid-template-columns:34px minmax(0,1fr) auto;
+    align-items:center;
+    gap:8px;
+    box-sizing:border-box;
+    padding:0 12px;
+    border:1px solid #dce6f5;
+    border-radius:999px;
+    background:rgba(255,255,255,.94);
+    color:#17314f;
+    font-size:12px;
+    font-weight:800;
+    box-shadow:0 4px 14px rgba(31,51,84,.04);
+}
+.photo-editor-range--pan:first-child{
+    grid-area:x;
+}
+.photo-editor-range--zoom{
+    grid-area:zoom;
+}
+.photo-editor-range--pan:last-child{
+    grid-area:y;
+}
+.photo-editor-range span{
+    white-space:nowrap;
+}
+.photo-editor-range input[type="range"]{
+    width:100%;
+    min-width:0;
+    accent-color:#4f7cf4;
+}
+.photo-editor-range output{
+    display:none;
+}
+.photo-editor-range--zoom output{
+    min-width:40px;
+    display:inline-flex;
+    justify-content:flex-end;
+    color:#17314f;
+    font-size:12px;
+    font-weight:800;
+}
+
+/* ---------- Main editing stage ---------- */
+.photo-form-preview-grid{
+    order:3;
+    width:100%;
+    display:block;
+    margin:0;
+    padding:0;
+    border:0;
+    outline:0;
+    box-shadow:none;
+    background:transparent;
+}
+.photo-form-preview-item{
+    position:relative;
+    width:100%;
+    margin:0;
+    padding:0;
+    border:0;
+    outline:0;
+    border-radius:0;
+    background:transparent;
+    box-shadow:none;
+    overflow:visible;
+}
+.photo-form-image-stage,
+.photo-form-preview-item.is-square-crop .photo-form-image-stage{
+    position:relative;
+    width:100%;
+    height:clamp(360px,calc(100vh - 430px),560px);
+    min-height:0;
+    max-height:none;
+    margin:0;
+    padding:22px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    border:0;
+    outline:0;
+    border-radius:0;
+    box-shadow:none;
+    overflow:visible;
+    cursor:grab;
+    touch-action:none;
+    user-select:none;
+    background:
+        linear-gradient(45deg, rgba(148,163,184,.11) 25%, transparent 25%),
+        linear-gradient(-45deg, rgba(148,163,184,.11) 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, rgba(148,163,184,.11) 75%),
+        linear-gradient(-45deg, transparent 75%, rgba(148,163,184,.11) 75%);
+    background-size:22px 22px;
+    background-position:0 0,0 11px,11px -11px,-11px 0;
+}
+.photo-form-image-stage.is-dragging{
+    cursor:grabbing;
+}
+.photo-form-image-stage::before,
+.photo-form-image-stage::after,
+.photo-form-preview-grid::before,
+.photo-form-preview-grid::after,
+.photo-form-preview-item::before,
+.photo-form-preview-item::after{
+    display:none;
+}
+.photo-crop-frame{
+    position:relative;
+    z-index:2;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    max-width:100%;
+    max-height:100%;
+    overflow:hidden;
+    border:0;
+    outline:0;
+    border-radius:14px;
+    background:#fff;
+    box-shadow:0 0 0 2px #fff,0 0 0 4px rgba(82,132,244,.28),0 14px 34px rgba(31,51,84,.15);
+}
+.photo-crop-frame::before{
+    display:none;
+}
+.photo-crop-frame::after{
+    content:'표시 영역';
+    position:absolute;
+    left:10px;
+    top:10px;
+    z-index:3;
+    height:23px;
+    display:inline-flex;
+    align-items:center;
+    padding:0 8px;
+    border-radius:999px;
+    background:rgba(15,23,42,.58);
+    color:#fff;
+    font-size:11px;
+    font-weight:800;
+    pointer-events:none;
+    opacity:.82;
+}
+.photo-crop-frame img{
+    display:block;
+    width:auto;
+    height:auto;
+    max-width:100%;
+    max-height:100%;
+    min-width:0;
+    min-height:0;
+    object-fit:contain;
+    transform-origin:center center;
+    pointer-events:none;
+    user-select:none;
+    background:transparent;
+    will-change:transform;
+}
+.photo-form-preview-item figcaption{
+    display:none;
+}
+
+/* frame-local controls */
+.photo-crop-frame .photo-editor-side-arrow{
+    position:absolute;
+    top:50%;
+    transform:translateY(-50%);
+    z-index:55;
+    width:34px;
+    height:34px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    border:1px solid #d7e4f7;
+    border-radius:999px;
+    background:rgba(255,255,255,.96);
+    color:#3f5f88;
+    box-shadow:0 8px 22px rgba(31,51,84,.14);
+    cursor:pointer;
+    pointer-events:auto;
+    opacity:.96;
+}
+.photo-crop-frame .photo-editor-side-arrow--prev{
+    left:10px;
+    right:auto;
+}
+.photo-crop-frame .photo-editor-side-arrow--next{
+    right:10px;
+    left:auto;
+}
+.photo-crop-frame .photo-editor-side-arrow:hover{
+    background:#fff;
+    color:#356df3;
+    border-color:#bcd0f4;
+}
+.photo-form-preview:not(.has-files) .photo-editor-side-arrow,
+.photo-form-preview.is-single-file .photo-editor-side-arrow{
+    display:none!important;
+}
+.photo-crop-frame .photo-editor-remove,
+.photo-crop-frame button[data-remove-file]{
+    position:absolute;
+    top:8px;
+    right:8px;
+    left:auto;
+    transform:none;
+    z-index:60;
+    width:32px;
+    height:32px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    border:0;
+    border-radius:999px;
+    background:rgba(15,23,42,.72);
+    color:#fff;
+    box-shadow:0 8px 20px rgba(15,23,42,.18);
+    cursor:pointer;
+}
+.photo-form-preview-item > button[data-remove-file]{
+    display:none!important;
+}
+.photo-editor-drag-hint{
+    position:absolute;
+    left:50%;
+    bottom:12px;
+    z-index:4;
+    transform:translateX(-50%);
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    padding:6px 10px;
+    border-radius:999px;
+    background:rgba(15,23,42,.58);
+    color:#fff;
+    font-size:11px;
+    font-weight:800;
+    line-height:1;
+    white-space:nowrap;
+    opacity:.72;
+    pointer-events:none;
+    transition:opacity .16s ease;
+}
+.photo-crop-frame:hover .photo-editor-drag-hint,
+.photo-form-image-stage.is-dragging .photo-editor-drag-hint{
+    opacity:0;
+}
+
+/* ---------- Footer thumbnails ---------- */
+.photo-editor-footer{
+    order:4;
+    width:min(100%, var(--photo-editor-footer-width, 520px));
+    min-height:86px;
+    margin:12px auto 0;
+    padding:0;
+    border:0;
+    background:transparent;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:flex-start;
+    gap:8px;
+}
+.photo-editor-footer[hidden]{
+    display:none!important;
+}
+.photo-editor-thumb-row{
+    width:100%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+}
+.photo-editor-nav{
+    display:none!important;
+}
+.photo-editor-thumbs{
+    min-height:58px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+    flex-wrap:wrap;
+    padding:0;
+}
+.photo-editor-thumb{
+    position:relative;
+    flex:0 0 auto;
+    width:58px;
+    height:58px;
+    padding:0;
+    border:1px solid #d7e2f0;
+    border-radius:14px;
+    background:#fff;
+    cursor:pointer;
+    overflow:hidden;
+    box-shadow:none;
+}
+.photo-editor-thumb img{
+    width:100%;
+    height:100%;
+    display:block;
+    object-fit:cover;
+    pointer-events:none;
+}
+.photo-editor-thumb-order{
+    position:absolute;
+    left:4px;
+    top:4px;
+    z-index:2;
+    min-width:18px;
+    height:18px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    border-radius:999px;
+    background:rgba(15,23,42,.7);
+    color:#fff;
+    font-size:11px;
+    font-weight:800;
+}
+.photo-editor-thumb-cover{
+    position:absolute;
+    left:50%;
+    bottom:4px;
+    z-index:3;
+    transform:translateX(-50%);
+    min-width:28px;
+    height:16px;
+    padding:0 6px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    border-radius:999px;
+    background:linear-gradient(135deg,#4cc8c1,#4f73f4);
+    color:#fff;
+    font-size:9px;
+    font-weight:900;
+    line-height:1;
+    white-space:nowrap;
+    writing-mode:horizontal-tb;
+    word-break:keep-all;
+    box-shadow:0 4px 10px rgba(53,109,243,.22);
+}
+.photo-editor-thumb.is-active,
+.photo-editor-thumb.is-cover{
+    border-color:#4f7cf4;
+    box-shadow:0 0 0 3px rgba(79,124,244,.18);
+}
+.photo-editor-thumb.is-dragging{
+    opacity:.5;
+}
+.photo-editor-thumb.is-drag-over{
+    border-color:#22c7bd;
+    box-shadow:0 0 0 3px rgba(34,199,189,.18);
+}
+.photo-editor-guide{
+    width:100%;
+    min-height:18px;
+    margin-top:4px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:#7b8aa0;
+    font-size:12px;
+    text-align:center;
+}
+.photo-editor-guide strong{
+    display:none;
+}
+.photo-form-preview.is-single-file .photo-editor-guide{
+    visibility:hidden;
+}
+.photo-form-preview.is-single-file .photo-editor-thumb-cover,
+.photo-form-preview.is-single-file .photo-editor-thumb.is-cover .photo-editor-thumb-cover{
+    display:none;
+}
+.photo-form-preview.is-single-file .photo-editor-thumb{
+    box-shadow:0 0 0 3px rgba(79,124,244,.18);
+}
+
+/* ---------- Existing edit mode preview ---------- */
+.photo-form-preview-item--existing .photo-form-image-stage{
+    height:min(62vh,560px);
+    padding:22px;
+}
+.photo-form-preview-item--existing .photo-crop-frame{
+    width:auto;
+    height:auto;
+}
+.photo-form-preview-item--existing img{
+    max-width:100%;
+    max-height:min(56vh,520px);
+}
+
+/* ---------- Responsive ---------- */
+@media(max-height:820px) and (min-width:901px){
+    .photo-form-image-stage,
+    .photo-form-preview-item.is-square-crop .photo-form-image-stage{
+        height:clamp(300px,calc(100vh - 390px),500px);
+        padding:20px;
+    }
+}
+@media(max-width:1180px){
+    .photo-post-form-page{
+        padding-left:24px;
+        padding-right:24px;
+    }
+    .photo-form-card{
+        grid-template-columns:minmax(0,1fr) 300px;
+        gap:18px;
+    }
+}
+@media(max-width:900px){
+    .photo-post-form-page{
+        padding:16px 14px 44px;
+    }
+    .photo-form-hero{
+        flex-direction:column;
+        gap:14px;
+    }
+    .photo-form-card{
+        grid-template-columns:1fr;
+        gap:18px;
+    }
+    .photo-form-side{
+        position:static;
+    }
+    .photo-form-actions{
+        position:sticky;
+        bottom:10px;
+        z-index:5;
+        padding:8px 0 0;
+        background:linear-gradient(180deg,rgba(246,249,253,0),#f6f9fd 35%);
+    }
+    .photo-editor-toolbar{
+        grid-template-columns:1fr;
+        grid-template-areas:"tools" "filters";
+        gap:8px;
+    }
+    .photo-editor-filters{
+        justify-content:flex-start;
+        margin-left:0;
+    }
+    .photo-editor-adjust-row{
+        grid-template-columns:1fr;
+        grid-template-areas:"x" "zoom" "y";
+        gap:8px;
+    }
+    .photo-form-image-stage,
+    .photo-form-preview-item.is-square-crop .photo-form-image-stage{
+        height:min(62vh,500px);
+        padding:14px;
+    }
+    .photo-crop-frame .photo-editor-side-arrow{
+        width:32px;
+        height:32px;
+    }
+    .photo-crop-frame .photo-editor-side-arrow--prev{
+        left:8px;
+    }
+    .photo-crop-frame .photo-editor-side-arrow--next{
+        right:8px;
+    }
+    .photo-crop-frame .photo-editor-remove,
+    .photo-crop-frame button[data-remove-file]{
+        top:8px;
+        right:8px;
+        width:32px;
+        height:32px;
+    }
+}
+@media(max-width:520px){
+    .photo-post-form-page{
+        padding:12px 10px 38px;
+    }
+    .photo-form-hero h1{
+        font-size:25px;
+    }
+    .photo-form-hero p{
+        font-size:13px;
+    }
+    .photo-form-actions{
+        display:grid;
+        grid-template-columns:1fr 1fr;
+    }
+    .photo-editor-tools,
+    .photo-editor-filters{
+        gap:6px;
+    }
+    .photo-editor-tools button,
+    .photo-editor-filters button{
+        height:34px;
+        padding:0 9px;
+        font-size:11px;
+    }
+    .photo-editor-range{
+        grid-template-columns:34px minmax(0,1fr) 38px;
+        padding:0 9px;
+    }
+    .photo-form-image-stage,
+    .photo-form-preview-item.is-square-crop .photo-form-image-stage{
+        height:min(56vh,420px);
+        padding:10px;
+    }
+    .photo-crop-frame::after,
+    .photo-editor-drag-hint{
+        display:none;
+    }
+    .photo-editor-thumb{
+        width:54px;
+        height:54px;
+    }
+}
+
+/* =========================================================
+   Final layout polish
+   - 사진 등록/수정 최종 구조: 히어로, 우측 작성 패널, 앨범/공유, 썸네일 삭제
+   ========================================================= */
+.photo-post-form-page{
+    padding:0 36px 56px;
+    background:#f6f9fd;
+}
+.photo-form-shell{
+    width:100%;
+    max-width:none;
+    margin:0;
+}
+.photo-form-hero{
+    min-height:104px;
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:22px;
+    margin:0 -36px 20px;
+    padding:14px 36px 16px;
+    border-bottom:1px solid #e1eaf5;
+    background:linear-gradient(135deg,rgba(239,248,255,.82),rgba(248,245,255,.72));
+}
+.photo-form-hero-copy{
+    min-width:0;
+}
+.photo-form-top-link{
+    display:inline-flex;
+    align-items:center;
+    gap:5px;
+    margin:0 0 8px;
+    color:#263851;
+    font-size:13px;
+    font-weight:800;
+    text-decoration:none!important;
+}
+.photo-form-top-link:hover{
+    color:#356df3;
+    text-decoration:none!important;
+}
+.photo-form-title-row{
+    display:flex;
+    align-items:baseline;
+    gap:13px;
+    min-width:0;
+}
+.photo-form-title-row h1,
+.photo-form-hero h1{
+    flex:0 0 auto;
+    margin:0;
+    font-size:28px;
+    line-height:1.18;
+    letter-spacing:-.8px;
+    color:#071a33;
+}
+.photo-form-title-row p,
+.photo-form-hero p{
+    min-width:0;
+    margin:0;
+    color:#65758d;
+    font-size:14px;
+    line-height:1.45;
+    white-space:normal;
+}
+.photo-form-hero-actions{
+    flex:0 0 auto;
+    display:flex;
+    align-items:center;
+    justify-content:flex-end;
+    gap:10px;
+    margin-top:20px;
+}
+.photo-form-hero-actions .photo-primary-button{
+    height:42px;
+    min-width:92px;
+    padding:0 18px;
+    border-radius:13px;
+}
+.photo-form-card{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) minmax(286px,320px);
+    align-items:start;
+    gap:24px;
+    padding:0;
+    border:0;
+    border-radius:0;
+    background:transparent;
+    box-shadow:none;
+}
+.photo-form-actions{
+    display:none!important;
+}
+
+/* right panel */
+.photo-form-side{
+    position:sticky;
+    top:76px;
+    width:100%;
+    display:grid;
+    align-content:start;
+    gap:15px;
+    padding:0;
+}
+.photo-form-side .photo-field,
+.photo-form-side .photo-visibility-field{
+    display:grid;
+    gap:7px;
+    padding:0 0 16px;
+    border-bottom:1px solid rgba(213,226,242,.78);
+}
+.photo-form-side .photo-field:last-child,
+.photo-form-side .photo-visibility-field:last-child{
+    border-bottom:0;
+}
+.photo-form-side .photo-field>span,
+.photo-form-side .photo-visibility-field>span{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    min-height:18px;
+    color:#24364f;
+    font-size:13px;
+    font-weight:800;
+    letter-spacing:-.2px;
+}
+.photo-form-side .photo-field textarea,
+.photo-form-side .photo-field select,
+.photo-form-side .photo-visibility-field select{
+    width:100%;
+    min-height:40px;
+    height:40px;
+    padding:0 13px;
+    border:1px solid #dbe5f2;
+    border-radius:12px;
+    background:rgba(255,255,255,.56);
+    color:#22304a;
+    font-size:13px;
+    box-shadow:none;
+    outline:0;
+}
+.photo-form-side .photo-field textarea:focus,
+.photo-form-side .photo-field select:focus,
+.photo-form-side .photo-visibility-field select:focus{
+    border-color:#9fbaf3;
+    box-shadow:0 0 0 2px rgba(79,124,244,.10);
+}
+.photo-form-side .photo-field--description textarea{
+    min-height:96px;
+    height:96px;
+    max-height:96px;
+    padding:13px 14px;
+    line-height:1.5;
+    resize:none;
+}
+.photo-form-side .photo-field small,
+.photo-form-side .photo-visibility-field small{
+    color:#8a97aa;
+    font-size:12px;
+    line-height:1.45;
+}
+.photo-field-count{
+    justify-self:end;
+}
+.photo-visibility-field[hidden]{
+    display:none!important;
+}
+.photo-feed-public-field select[hidden],
+.photo-feed-public-field #photoFormVisibilityGuide{
+    display:none!important;
+}
+.photo-feed-public-title{
+    justify-content:space-between;
+    gap:8px;
+    width:100%;
+}
+.photo-feed-public-title-chip,
+.photo-feed-public-field .post-visibility-chip.photo-feed-public-title-chip{
+    flex:0 0 auto;
+    display:inline-flex!important;
+    align-items:center;
+    justify-content:center;
+    height:18px;
+    padding:0 8px!important;
+    border:0!important;
+    border-radius:999px!important;
+    background:rgba(71,120,242,.08)!important;
+    color:#3664cf!important;
+    font-size:11px!important;
+    font-weight:800!important;
+    line-height:1!important;
+    letter-spacing:-.02em;
+}
+.photo-moyo-public-check{
+    display:grid;
+    grid-template-columns:18px minmax(0,1fr);
+    align-items:start;
+    gap:9px;
+    padding:0;
+    border:0;
+    border-radius:0;
+    background:transparent;
+    box-shadow:none;
+    cursor:pointer;
+}
+.photo-moyo-public-check input{
+    width:17px!important;
+    height:17px;
+    margin:2px 0 0;
+    accent-color:#4f7cf4;
+}
+.photo-moyo-public-check input:disabled{
+    opacity:.65;
+    cursor:not-allowed;
+}
+.photo-feed-public-copy{
+    display:grid;
+    gap:2px;
+    min-width:0;
+}
+.photo-feed-public-copy strong{
+    display:flex;
+    align-items:center;
+    color:#172842;
+    font-size:13px;
+    font-weight:850;
+    line-height:1.3;
+}
+.photo-moyo-public-check input:checked + .photo-feed-public-copy strong{
+    color:#2146a3;
+}
+.photo-moyo-public-check input:not(:checked) + .photo-feed-public-copy{
+    opacity:.74;
+}
+
+/* album/share compact controls */
+.photo-field--album input[type="hidden"]{
+    display:none!important;
+}
+.photo-field--album .photo-album-select-button{
+    margin-top:0;
+}
+.photo-share-actions{
+    display:flex;
+    align-items:center;
+    gap:8px;
+}
+.photo-share-link-button{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:7px;
+    min-height:38px;
+    padding:0 13px;
+    border:1px solid #cfe0f3;
+    border-radius:12px;
+    background:transparent;
+    color:#16304f;
+    font-size:13px;
+    font-weight:700;
+    cursor:pointer;
+}
+.photo-share-link-button:hover{
+    border-color:#9fc0ee;
+    background:#fff;
+}
+.photo-share-link-button .note-share-count{
+    margin-left:2px;
+}
+.photo-share-field .note-meta-permission{
+    display:none;
+}
+/* one photo / thumbnails */
+.photo-form-preview.is-single-file .photo-editor-footer{
+    display:none!important;
+}
+.photo-editor-thumb{
+    overflow:visible;
+}
+.photo-editor-thumb-remove{
+    position:absolute;
+    top:-7px;
+    right:-7px;
+    z-index:5;
+    width:19px;
+    height:19px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    padding:0;
+    border:1px solid #d7e2f0;
+    border-radius:999px;
+    background:rgba(255,255,255,.96);
+    color:#64748b;
+    font-size:11px;
+    line-height:1;
+    box-shadow:0 4px 10px rgba(31,51,84,.12);
+    cursor:pointer;
+}
+.photo-editor-thumb-remove:hover{
+    border-color:#fecaca;
+    background:#fff5f5;
+    color:#ef4444;
+}
+.photo-editor-thumb.is-cover:not(.is-active){
+    border-color:#d7e2f0;
+    box-shadow:none;
+}
+.photo-editor-thumb.is-active{
+    border-color:#4f7cf4;
+    box-shadow:0 0 0 3px rgba(79,124,244,.18);
+}
+.photo-editor-thumb.is-drag-over{
+    border-color:#22c7bd!important;
+    box-shadow:0 0 0 3px rgba(34,199,189,.18)!important;
+}
+.photo-crop-frame .photo-editor-remove,
+.photo-crop-frame button[data-remove-file]{
+    top:-13px;
+    right:-13px;
+    z-index:70;
+    width:28px;
+    height:28px;
+    border:1px solid #d7e2f0;
+    background:rgba(255,255,255,.96);
+    color:#64748b;
+    font-size:14px;
+    box-shadow:0 6px 16px rgba(31,51,84,.14);
+}
+.photo-crop-frame .photo-editor-remove:hover,
+.photo-crop-frame button[data-remove-file]:hover{
+    border-color:#fecaca;
+    background:#fff5f5;
+    color:#ef4444;
+}
+
+@media(max-width:1180px){
+    .photo-post-form-page{
+        padding-left:28px;
+        padding-right:28px;
+    }
+    .photo-form-hero{
+        margin-left:-28px;
+        margin-right:-28px;
+        padding-left:28px;
+        padding-right:28px;
+    }
+    .photo-form-card{
+        grid-template-columns:minmax(0,1fr) 300px;
+        gap:20px;
+    }
+}
+@media(max-width:900px){
+    .photo-post-form-page{
+        padding:0 16px 44px;
+    }
+    .photo-form-hero{
+        min-height:auto;
+        display:grid;
+        grid-template-columns:1fr;
+        gap:14px;
+        margin:0 -16px 16px;
+        padding:14px 16px 15px;
+    }
+    .photo-form-top-link{
+        margin-bottom:7px;
+    }
+    .photo-form-title-row{
+        display:grid;
+        gap:6px;
+    }
+    .photo-form-title-row h1,
+    .photo-form-hero h1{
+        font-size:26px;
+    }
+    .photo-form-hero-actions{
+        width:100%;
+        justify-content:flex-end;
+        margin-top:0;
+    }
+    .photo-form-hero-actions .photo-primary-button{
+        height:40px;
+        min-width:88px;
+    }
+    .photo-form-card{
+        grid-template-columns:1fr;
+        gap:18px;
+    }
+    .photo-form-side{
+        position:static;
+        gap:13px;
+    }
+    .photo-form-side .photo-field,
+    .photo-form-side .photo-visibility-field{
+        padding-bottom:13px;
+    }
+    .photo-crop-frame .photo-editor-remove,
+    .photo-crop-frame button[data-remove-file]{
+        top:-11px;
+        right:-11px;
+        width:26px;
+        height:26px;
+    }
+}
+@media(max-width:520px){
+    .photo-post-form-page{
+        padding:0 12px 38px;
+    }
+    .photo-form-hero{
+        margin-left:-12px;
+        margin-right:-12px;
+        padding:12px 12px 14px;
+    }
+    .photo-form-title-row h1,
+    .photo-form-hero h1{
+        font-size:25px;
+    }
+    .photo-form-hero p{
+        font-size:13px;
+    }
+    .photo-form-hero-actions .photo-primary-button{
+        width:100%;
+    }
+    .photo-editor-thumb-remove{
+        top:-6px;
+        right:-6px;
+    }
+}
+
+
+/* post form cleanup: 작성/수정 공통 에디터 최종 정리 */
+.photo-form-image-stage{
+    position:relative;
+    overflow:visible!important;
+}
+.photo-form-image-stage > .photo-editor-remove,
+.photo-form-image-stage > button[data-remove-file]{
+    position:absolute!important;
+    left:var(--photo-remove-left, auto)!important;
+    top:var(--photo-remove-top, auto)!important;
+    right:auto!important;
+    bottom:auto!important;
+    transform:translate(-50%,-50%)!important;
+    z-index:80!important;
+    width:28px!important;
+    height:28px!important;
+    display:inline-flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    padding:0!important;
+    border:1px solid #d7e2f0!important;
+    border-radius:999px!important;
+    background:rgba(255,255,255,.98)!important;
+    color:#64748b!important;
+    font-size:13px!important;
+    line-height:1!important;
+    box-shadow:0 8px 18px rgba(31,51,84,.16)!important;
+    cursor:pointer!important;
+}
+.photo-form-image-stage > .photo-editor-remove:hover,
+.photo-form-image-stage > button[data-remove-file]:hover{
+    border-color:#fecaca!important;
+    background:#fff5f5!important;
+    color:#ef4444!important;
+}
+.photo-crop-frame .photo-editor-remove,
+.photo-crop-frame button[data-remove-file]{
+    display:none!important;
+}
+.photo-form-top-link{
+    margin-bottom:13px!important;
+    color:#718197!important;
+    font-weight:750!important;
+}
+.photo-form-top-link i{
+    color:#8c9bb0!important;
+}
+.photo-form-top-link:hover,
+.photo-form-top-link:hover i{
+    color:#356df3!important;
+}
+.photo-form-title-row{
+    gap:15px;
+}
+.photo-form-drop span{
+    color:#65758d;
+}
+.photo-post-form-page[data-mode="edit"] .photo-crop-frame::after{
+    content:'현재 사진';
+}
+.photo-post-form-page[data-mode="edit"] .photo-form-preview.has-files .photo-form-drop.has-files strong{
+    font-size:13px;
+}
+.photo-editor-footer{
+    width:min(100%,760px)!important;
+    max-width:760px!important;
+    margin:12px auto 0!important;
+}
+.photo-editor-thumb-row{
+    width:100%!important;
+    max-width:100%!important;
+    overflow:hidden!important;
+}
+.photo-editor-thumbs{
+    width:100%!important;
+    max-width:100%!important;
+    min-height:70px!important;
+    display:flex!important;
+    flex-wrap:nowrap!important;
+    align-items:center!important;
+    justify-content:center!important;
+    gap:10px!important;
+    padding:8px 12px 10px!important;
+    overflow-x:auto!important;
+    overflow-y:hidden!important;
+    scroll-behavior:smooth!important;
+    scrollbar-width:thin;
+}
+.photo-editor-thumbs:has(.photo-editor-thumb:nth-child(9)){
+    justify-content:flex-start!important;
+}
+.photo-editor-thumb{
+    flex:0 0 58px!important;
+}
+.photo-editor-thumb-remove{
+    top:-5px!important;
+    right:-5px!important;
+}
+.photo-editor-guide{
+    margin-top:0!important;
+}
+.photo-post-form-page[data-mode="edit"] .photo-editor-guide span{
+    font-size:0!important;
+}
+.photo-post-form-page[data-mode="edit"] .photo-editor-guide span::before{
+    content:'기존 사진도 작성 화면처럼 한 줄에서 확인하고 편집 후 저장됩니다.'!important;
+    font-size:12px!important;
+}
+@media(max-width:900px){
+    .photo-form-top-link{
+        margin-bottom:10px!important;
+    }
+    .photo-form-title-row{
+        gap:7px;
+    }
+    .photo-form-image-stage > .photo-editor-remove,
+    .photo-form-image-stage > button[data-remove-file]{
+        width:26px!important;
+        height:26px!important;
+        font-size:12px!important;
+    }
+    .photo-editor-footer{
+        width:100%!important;
+        max-width:100%!important;
+    }
+    .photo-editor-thumbs{
+        justify-content:flex-start!important;
+        padding-left:8px!important;
+        padding-right:8px!important;
+    }
+}
+
+/* ---------- Target scope selector (note-style photo write flow) ---------- */
+.photo-target-field{
+    gap:10px;
+}
+.photo-target-tabs{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:8px;
+}
+.photo-target-tab{
+    height:38px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:7px;
+    border:1px solid #d8e4f4;
+    border-radius:13px;
+    background:#fff;
+    color:#40506a;
+    font-size:13px;
+    font-weight:800;
+    cursor:pointer;
+    transition:background .16s ease,border-color .16s ease,color .16s ease,box-shadow .16s ease,transform .16s ease;
+}
+.photo-target-tab:hover{
+    border-color:#b8cfff;
+    background:#f8fbff;
+    color:#2357d8;
+}
+.photo-target-tab.is-active{
+    border-color:#9ebdff;
+    background:linear-gradient(135deg,#eef6ff,#f4f0ff);
+    color:#2458da;
+    box-shadow:0 6px 15px rgba(74,111,255,.12);
+}
+.photo-target-selects{
+    display:grid;
+    gap:8px;
+}
+.photo-target-select-row{
+    display:grid;
+    grid-template-columns:68px minmax(0,1fr);
+    align-items:center;
+    gap:8px;
+}
+.photo-target-select-row > span{
+    color:#64748b;
+    font-size:12px;
+    font-weight:800;
+}
+.photo-target-select-row select{
+    width:100%;
+    height:36px;
+    padding:0 34px 0 12px;
+    border:1px solid #d8e4f4;
+    border-radius:12px;
+    background:#fff;
+    color:#172033;
+    font-size:13px;
+    font-weight:800;
+    outline:0;
+}
+.photo-target-select-row select:focus{
+    border-color:#8fb0ff;
+    box-shadow:0 0 0 3px rgba(91,124,255,.13);
+}
+#photoFormTargetGuide{
+    color:#74839a;
+    line-height:1.45;
+}
+.photo-post-form-page[data-mode="edit"] .photo-target-field{
+    display:none;
+}

@@ -1,16 +1,22 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<c:set var="effectiveWorkspaceId" value="${workspace.wsId}" />
+<c:if test="${empty effectiveWorkspaceId and not empty wsId}"><c:set var="effectiveWorkspaceId" value="${wsId}" /></c:if>
+<c:if test="${empty effectiveWorkspaceId and not empty param.wsId}"><c:set var="effectiveWorkspaceId" value="${param.wsId}" /></c:if>
+<c:set var="workspaceNoteQuery" value="scope=WS" />
+<c:if test="${not empty effectiveWorkspaceId}"><c:set var="workspaceNoteQuery" value="${workspaceNoteQuery}&amp;wsId=${effectiveWorkspaceId}" /></c:if>
+
 <!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
     <title>${workspace.wsName} 커뮤니티 홈</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/moyoUi.css">
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/workspaceMain.css?v=workspace-note-widget-v5">
-    <script defer src="${pageContext.request.contextPath}/js/workspaceMain.js?v=workspace-note-widget-v5"></script>
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/workspaceMain.css?v=workspace-note-route-context-v2">
+    <script defer src="${pageContext.request.contextPath}/js/workspaceMain.js?v=workspace-note-route-context-v2"></script>
 </head>
 <body class="moyo-app-sidebar-enabled workspace-community-body"
-      data-ws-id="${workspace.wsId}"
+      data-ws-id="${effectiveWorkspaceId}"
       data-context-path="${pageContext.request.contextPath}"
       data-current-user-id="${user.userId}"
       data-workspace-admin="${isWorkspaceAdmin}"
@@ -139,11 +145,11 @@
                     <section class="ws-card workspace-note-card workspace-compact-community-card workspace-feature-card workspace-note-feature-card">
                         <div class="board-title">
                             <span>📝 공유 노트</span>
-                            <a href="${pageContext.request.contextPath}/note/list?scope=WS&amp;wsId=${workspace.wsId}">더보기</a>
+                            <a href="${pageContext.request.contextPath}/note/list?${workspaceNoteQuery}">더보기</a>
                         </div>
                         <div id="workspaceRecentNoteList"
                              class="workspace-note-preview workspace-note-list"
-                             data-ws-id="${workspace.wsId}">
+                             data-ws-id="${effectiveWorkspaceId}">
                             <div class="workspace-note-loading">
                                 <div class="workspace-note-placeholder-icon">📝</div>
                                 <div class="workspace-note-placeholder-copy">

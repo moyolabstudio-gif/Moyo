@@ -1,26 +1,36 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
+<c:set var="effectiveProjectWsId" value="${wsId}" />
+<c:if test="${empty effectiveProjectWsId and not empty param.wsId}"><c:set var="effectiveProjectWsId" value="${param.wsId}" /></c:if>
+<c:if test="${empty effectiveProjectWsId and not empty projectDetail.wsId}"><c:set var="effectiveProjectWsId" value="${projectDetail.wsId}" /></c:if>
+<c:set var="effectiveProjectId" value="${projId}" />
+<c:if test="${empty effectiveProjectId and not empty param.projId}"><c:set var="effectiveProjectId" value="${param.projId}" /></c:if>
+<c:if test="${empty effectiveProjectId and not empty projectDetail.projId}"><c:set var="effectiveProjectId" value="${projectDetail.projId}" /></c:if>
+<c:set var="projectNoteQuery" value="scope=PROJ" />
+<c:if test="${not empty effectiveProjectWsId}"><c:set var="projectNoteQuery" value="${projectNoteQuery}&amp;wsId=${effectiveProjectWsId}" /></c:if>
+<c:if test="${not empty effectiveProjectId}"><c:set var="projectNoteQuery" value="${projectNoteQuery}&amp;projId=${effectiveProjectId}" /></c:if>
+
 <!DOCTYPE html>
 <html>
 <head>
 <meta charset="UTF-8">
 	    <title>🎈 프로젝트 대시보드</title>
-		<link rel="stylesheet" href="${pageContext.request.contextPath}/css/projectMain.css?v=project-note-widget-v10">
+		<link rel="stylesheet" href="${pageContext.request.contextPath}/css/projectMain.css?v=project-note-route-context-v2">
     <script>
         window.PROJECT_MAIN_CONFIG = {
             projectLeaderId: '<c:out value="${projectDetail.leaderId}"/>',
             loginUserId: '<c:out value="${sessionScope.user.userId}"/>',
             projectStartDate: '<c:out value="${projectDetail.startDate}"/>',
             projectEndDate: '<c:out value="${projectDetail.endDate}"/>',
-            projectId: '<c:out value="${projectDetail.projId}"/>',
+            projectId: '<c:out value="${effectiveProjectId}"/>',
             paramProjId: '<c:out value="${param.projId}"/>',
-            wsId: '<c:out value="${wsId}"/>',
+            wsId: '<c:out value="${effectiveProjectWsId}"/>',
             paramWsId: '<c:out value="${param.wsId}"/>',
             canManageProject: <c:choose><c:when test="${canManageProject eq true}">true</c:when><c:otherwise>false</c:otherwise></c:choose>
         };
     </script>
-    <script src="${pageContext.request.contextPath}/js/projectMain.js?v=project-note-widget-v10"></script>
+    <script src="${pageContext.request.contextPath}/js/projectMain.js?v=project-note-route-context-v2"></script>
 
 </head>
 <body data-user-id="${sessionScope.user.userId}">
@@ -169,7 +179,7 @@
                             <p>회의 기록, 작업 메모, 첨부파일을 공유합니다.</p>
                         </div>
                         <div class="note-section-actions">
-                            <a href="/note/list?scope=PROJ&wsId=${param.wsId}&projId=${param.projId}" class="section-more-link">더보기</a>
+                            <a href="${pageContext.request.contextPath}/note/list?${projectNoteQuery}" class="section-more-link">더보기</a>
                         </div>
                     </div>
 
@@ -182,12 +192,12 @@
                                     <span>회의 기록이나 작업 메모를 첫 노트로 남기고<br>프로젝트 메인에서 바로 확인해보세요.</span>
                                 </div>
                             </div>
-                            <a class="empty-note-write-link" href="/note/write?scope=PROJ&wsId=${param.wsId}&projId=${param.projId}">+ 첫 노트 작성</a>
+                            <a class="empty-note-write-link" href="${pageContext.request.contextPath}/note/write?${projectNoteQuery}">+ 첫 노트 작성</a>
                         </div>
                     </div>
                     <div class="note-write-bottom-actions">
                         <button type="button" id="noteWidgetToggle" class="note-widget-toggle" aria-expanded="false">내용 펼치기</button>
-                        <a href="/note/write?scope=PROJ&wsId=${param.wsId}&projId=${param.projId}" class="note-write-link">+ 노트 작성</a>
+                        <a href="${pageContext.request.contextPath}/note/write?${projectNoteQuery}" class="note-write-link">+ 노트 작성</a>
                     </div>
                 </div>
                 <!-- ===== End 노트 섹션 ===== -->

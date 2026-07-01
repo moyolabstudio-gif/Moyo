@@ -17,6 +17,7 @@
         <result property="issueContent" column="ISSUE_CONTENT"/>
         <result property="changeLog" column="CHANGE_LOG"/>
         <result property="memo" column="MEMO"/>
+        <result property="previewContent" column="PREVIEW_CONTENT"/>
         <result property="category" column="CATEGORY"/>
         <result property="icon" column="ICON"/>
         <result property="folderId" column="FOLDER_ID"/>
@@ -28,13 +29,21 @@
         <result property="shareScopeNames" column="SHARE_SCOPE_NAMES"/>
         <result property="regDt" column="REG_DT"/>
         <result property="updDt" column="UPD_DT"/>
+        <result property="updatedBy" column="UPDATED_BY"/>
         <result property="userName" column="USER_NAME"/>
+        <result property="profileImagePath" column="PROFILE_IMAGE_PATH"/>
+        <result property="updatedByName" column="UPDATED_BY_NAME"/>
         <result property="pinned" column="PINNED" javaType="boolean"/>
         <result property="pinOrder" column="PIN_ORDER"/>
         <result property="canManage" column="CAN_MANAGE" javaType="boolean"/>
         <result property="canEdit" column="CAN_EDIT" javaType="boolean"/>
         <result property="canManageSpace" column="CAN_MANAGE_SPACE" javaType="boolean"/>
+        <result property="ownedByMe" column="OWNED_BY_ME" javaType="boolean"/>
         <result property="attachmentCount" column="ATTACHMENT_COUNT"/>
+        <result property="feedbackCount" column="FEEDBACK_COUNT"/>
+        <result property="tableCount" column="TABLE_COUNT"/>
+        <result property="imageCount" column="IMAGE_COUNT"/>
+        <result property="videoCount" column="VIDEO_COUNT"/>
         <result property="firstAttachmentName" column="FIRST_ATTACHMENT_NAME"/>
         <result property="previewImageFileId" column="PREVIEW_IMAGE_FILE_ID"/>
     </resultMap>
@@ -58,6 +67,7 @@
         <result property="regDt" column="REG_DT"/>
         <result property="updDt" column="UPD_DT"/>
         <result property="userName" column="USER_NAME"/>
+        <result property="profileImagePath" column="PROFILE_IMAGE_PATH"/>
     </resultMap>
 
     <sql id="noteReadableScope">
@@ -80,6 +90,8 @@
                 WHERE cs.CONTENT_TYPE = 'NOTE'
                   AND cs.CONTENT_ID = n.NOTE_ID
                   AND cs.ACTIVE_YN = 'Y'
+
+                  AND NVL(cs.SHARE_STATUS, 'ACCEPTED') = 'ACCEPTED'
                   AND (cs.EXPIRES_AT IS NULL OR cs.EXPIRES_AT >= SYSDATE)
                   AND (
                       (cs.TARGET_TYPE = 'USER' AND cs.TARGET_ID = #{userId, jdbcType=NUMERIC})
@@ -115,51 +127,134 @@
 
     <sql id="selectedNoteScope">
         <choose>
-            <!-- 개인 노트 홈: 내 개인 노트 + 친구/사용자에게 직접 공유받은 노트만 표시 -->
+            <!-- 중요: 현재 사용자가 중요 표시한, 읽을 수 있는 모든 노트 -->
+            <when test="scopeType == 'IMPORTANT'">
+                AND EXISTS (
+                    SELECT 1
+                    FROM NOTE_PINS p_important
+                    WHERE p_important.USER_ID = #{userId, jdbcType=NUMERIC}
+                      AND p_important.NOTE_ID = n.NOTE_ID
+                      AND p_important.PIN_SCOPE_KEY = 'NOTE:' || #{userId, jdbcType=NUMERIC}
+                )
+            </when>
+            <!-- 개인: 내가 작성한 개인 노트만 -->
             <when test="scopeType == 'PRIVATE'">
+                AND n.SCOPE_TYPE = 'PRIVATE'
+                AND n.USER_ID = #{userId, jdbcType=NUMERIC}
+            </when>
+            <!-- 친구: 다른 사용자가 나에게 직접 공유한 개인 노트 -->
+            <when test="scopeType == 'FRIEND'">
+                AND n.SCOPE_TYPE = 'PRIVATE'
+                AND n.USER_ID != #{userId, jdbcType=NUMERIC}
+                <if test="friendUserId != null">
+                    AND n.USER_ID = #{friendUserId, jdbcType=NUMERIC}
+                </if>
+                AND EXISTS (
+                    SELECT 1
+                    FROM CONTENT_SHARES cs_friend_scope
+                    WHERE cs_friend_scope.CONTENT_TYPE = 'NOTE'
+                      AND cs_friend_scope.CONTENT_ID = n.NOTE_ID
+                      AND cs_friend_scope.TARGET_TYPE = 'USER'
+                      AND cs_friend_scope.TARGET_ID = #{userId, jdbcType=NUMERIC}
+                      AND cs_friend_scope.ACTIVE_YN = 'Y'
+
+                      AND NVL(cs_friend_scope.SHARE_STATUS, 'ACCEPTED') = 'ACCEPTED'
+                      AND (cs_friend_scope.EXPIRES_AT IS NULL OR cs_friend_scope.EXPIRES_AT >= SYSDATE)
+                )
+            </when>
+            <!-- 그룹 탭: 그룹 범위 노트와 그룹으로 직접 공유된 비프로젝트 노트만 표시 -->
+            <when test="scopeType == 'WS'">
+                AND n.SCOPE_TYPE != 'PROJ'
                 AND (
-                    (n.SCOPE_TYPE = 'PRIVATE' AND n.USER_ID = #{userId, jdbcType=NUMERIC})
-                    OR EXISTS (
+                    (
+                        n.SCOPE_TYPE = 'WS'
+                        <if test="wsId != null">
+                            AND n.WS_ID = #{wsId, jdbcType=NUMERIC}
+                        </if>
+                        AND EXISTS (
+                            SELECT 1
+                            FROM WS_MEMBERS ws_native_member
+                            WHERE ws_native_member.WS_ID = n.WS_ID
+                              AND ws_native_member.USER_ID = #{userId, jdbcType=NUMERIC}
+                        )
+                    )
+                    OR
+                    EXISTS (
                         SELECT 1
-                        FROM CONTENT_SHARES cs_user_scope
-                        WHERE cs_user_scope.CONTENT_TYPE = 'NOTE'
-                          AND cs_user_scope.CONTENT_ID = n.NOTE_ID
-                          AND cs_user_scope.TARGET_TYPE = 'USER'
-                          AND cs_user_scope.TARGET_ID = #{userId, jdbcType=NUMERIC}
-                          AND cs_user_scope.ACTIVE_YN = 'Y'
-                          AND (cs_user_scope.EXPIRES_AT IS NULL OR cs_user_scope.EXPIRES_AT >= SYSDATE)
+                        FROM CONTENT_SHARES cs_ws_scope
+                        WHERE cs_ws_scope.CONTENT_TYPE = 'NOTE'
+                          AND cs_ws_scope.CONTENT_ID = n.NOTE_ID
+                          AND cs_ws_scope.TARGET_TYPE = 'WS'
+                          AND cs_ws_scope.ACTIVE_YN = 'Y'
+
+                          AND NVL(cs_ws_scope.SHARE_STATUS, 'ACCEPTED') = 'ACCEPTED'
+                          AND (cs_ws_scope.EXPIRES_AT IS NULL OR cs_ws_scope.EXPIRES_AT >= SYSDATE)
+                          <if test="wsId != null">
+                              AND cs_ws_scope.TARGET_ID = #{wsId, jdbcType=NUMERIC}
+                          </if>
+                          AND EXISTS (
+                              SELECT 1
+                              FROM WS_MEMBERS ws_shared_member
+                              WHERE ws_shared_member.WS_ID = cs_ws_scope.TARGET_ID
+                                AND ws_shared_member.USER_ID = #{userId, jdbcType=NUMERIC}
+                          )
                     )
                 )
             </when>
-            <!-- 워크스페이스 노트: 해당 워크스페이스로 공유된 노트만 표시 -->
-            <when test="scopeType == 'WS'">
-                AND EXISTS (
-                    SELECT 1
-                    FROM CONTENT_SHARES cs_ws_scope
-                    WHERE cs_ws_scope.CONTENT_TYPE = 'NOTE'
-                      AND cs_ws_scope.CONTENT_ID = n.NOTE_ID
-                      AND cs_ws_scope.TARGET_TYPE = 'WS'
-                      AND cs_ws_scope.TARGET_ID = #{wsId, jdbcType=NUMERIC}
-                      AND cs_ws_scope.ACTIVE_YN = 'Y'
-                      AND (cs_ws_scope.EXPIRES_AT IS NULL OR cs_ws_scope.EXPIRES_AT >= SYSDATE)
-                )
-            </when>
-            <!-- 프로젝트 노트: 해당 프로젝트로 공유된 노트만 표시 -->
+            <!-- 프로젝트 탭: 프로젝트 범위 노트와 프로젝트로 직접 공유된 비그룹 노트만 표시 -->
             <when test="scopeType == 'PROJ'">
-                AND EXISTS (
-                    SELECT 1
-                    FROM CONTENT_SHARES cs_proj_scope
-                    WHERE cs_proj_scope.CONTENT_TYPE = 'NOTE'
-                      AND cs_proj_scope.CONTENT_ID = n.NOTE_ID
-                      AND cs_proj_scope.TARGET_TYPE = 'PROJ'
-                      AND cs_proj_scope.TARGET_ID = #{projId, jdbcType=NUMERIC}
-                      AND cs_proj_scope.ACTIVE_YN = 'Y'
-                      AND (cs_proj_scope.EXPIRES_AT IS NULL OR cs_proj_scope.EXPIRES_AT >= SYSDATE)
+                AND n.SCOPE_TYPE != 'WS'
+                AND (
+                    (
+                        n.SCOPE_TYPE = 'PROJ'
+                        <if test="projId != null">
+                            AND n.PROJ_ID = #{projId, jdbcType=NUMERIC}
+                        </if>
+                        <if test="projId == null and wsId != null">
+                            AND n.WS_ID = #{wsId, jdbcType=NUMERIC}
+                        </if>
+                        AND EXISTS (
+                            SELECT 1
+                            FROM PROJ_MEMBERS proj_native_member
+                            WHERE proj_native_member.PROJ_ID = n.PROJ_ID
+                              AND proj_native_member.USER_ID = #{userId, jdbcType=NUMERIC}
+                        )
+                    )
+                    OR
+                    EXISTS (
+                        SELECT 1
+                        FROM CONTENT_SHARES cs_proj_scope
+                        WHERE cs_proj_scope.CONTENT_TYPE = 'NOTE'
+                          AND cs_proj_scope.CONTENT_ID = n.NOTE_ID
+                          AND cs_proj_scope.TARGET_TYPE = 'PROJ'
+                          AND cs_proj_scope.ACTIVE_YN = 'Y'
+
+                          AND NVL(cs_proj_scope.SHARE_STATUS, 'ACCEPTED') = 'ACCEPTED'
+                          AND (cs_proj_scope.EXPIRES_AT IS NULL OR cs_proj_scope.EXPIRES_AT >= SYSDATE)
+                          <if test="projId != null">
+                              AND cs_proj_scope.TARGET_ID = #{projId, jdbcType=NUMERIC}
+                          </if>
+                          <if test="projId == null and wsId != null">
+                              AND EXISTS (
+                                  SELECT 1 FROM PROJECTS selected_ws_project
+                                  WHERE selected_ws_project.PROJ_ID = cs_proj_scope.TARGET_ID
+                                    AND selected_ws_project.WS_ID = #{wsId, jdbcType=NUMERIC}
+                              )
+                          </if>
+                          AND EXISTS (
+                              SELECT 1
+                              FROM PROJ_MEMBERS proj_shared_member
+                              WHERE proj_shared_member.PROJ_ID = cs_proj_scope.TARGET_ID
+                                AND proj_shared_member.USER_ID = #{userId, jdbcType=NUMERIC}
+                          )
+                    )
                 )
             </when>
             <otherwise></otherwise>
         </choose>
     </sql>
+
+
 
     <select id="selectNoteList" parameterType="map" resultMap="noteResultMap">
         SELECT *
@@ -178,11 +273,15 @@
                     CAST(NULL AS VARCHAR2(1)) AS ISSUE_CONTENT,
                     CAST(NULL AS VARCHAR2(1)) AS CHANGE_LOG,
                     CAST(NULL AS VARCHAR2(1)) AS MEMO,
+                    CAST(DBMS_LOB.SUBSTR(n.MEMO, 600, 1) AS VARCHAR2(2400 BYTE)) AS PREVIEW_CONTENT,
+                    REGEXP_COUNT(n.MEMO, '&lt;[[:space:]]*table([[:space:]>])', 1, 'i') AS TABLE_COUNT,
+                    REGEXP_COUNT(n.MEMO, '&lt;[[:space:]]*img([[:space:]>])', 1, 'i') AS IMAGE_COUNT,
+                    REGEXP_COUNT(n.MEMO, '&lt;[[:space:]]*(video|iframe|oembed)([[:space:]>])', 1, 'i') AS VIDEO_COUNT,
                     n.CATEGORY,
                     n.ICON,
                     n.FOLDER_ID,
-                    NULL AS FOLDER_NAME,
-                    NULL AS FOLDER_PATH,
+                    nf.FOLDER_NAME AS FOLDER_NAME,
+                    NVL(nfp.FOLDER_PATH, nf.FOLDER_NAME) AS FOLDER_PATH,
                     nw.WS_NAME,
                     np.PROJ_NAME,
                     CASE
@@ -199,12 +298,21 @@
                     END AS SHARE_SCOPE_NAMES,
                     n.REG_DT,
                     n.UPD_DT,
+                    n.UPDATED_BY,
                     u.USER_NAME,
-                    0 AS ATTACHMENT_COUNT,
+                    u.PROFILE_IMAGE_PATH AS PROFILE_IMAGE_PATH,
+                    uu.USER_NAME AS UPDATED_BY_NAME,
+                    (SELECT COUNT(*)
+                       FROM NOTE_FILES nfc
+                      WHERE nfc.NOTE_ID = n.NOTE_ID) AS ATTACHMENT_COUNT,
+                    (SELECT COUNT(*)
+                       FROM NOTE_REPLIES nrc
+                      WHERE nrc.NOTE_ID = n.NOTE_ID) AS FEEDBACK_COUNT,
                     NULL AS FIRST_ATTACHMENT_NAME,
                     NULL AS PREVIEW_IMAGE_FILE_ID,
-                    0 AS PINNED,
-                    NULL AS PIN_ORDER,
+                    CASE WHEN n.USER_ID = #{userId, jdbcType=NUMERIC} THEN 1 ELSE 0 END AS OWNED_BY_ME,
+                    CASE WHEN pin.NOTE_ID IS NULL THEN 0 ELSE 1 END AS PINNED,
+                    pin.PIN_ORDER AS PIN_ORDER,
                     CASE
                         WHEN n.USER_ID = #{userId, jdbcType=NUMERIC} THEN 1
                         WHEN n.SCOPE_TYPE = 'WS'
@@ -223,6 +331,8 @@
                             WHERE cs_edit.CONTENT_TYPE = 'NOTE'
                               AND cs_edit.CONTENT_ID = n.NOTE_ID
                               AND cs_edit.ACTIVE_YN = 'Y'
+
+                              AND NVL(cs_edit.SHARE_STATUS, 'ACCEPTED') = 'ACCEPTED'
                               AND cs_edit.PERMISSION_TYPE = 'EDIT'
                               AND cs_edit.TARGET_TYPE = 'USER'
                               AND cs_edit.TARGET_ID = #{userId, jdbcType=NUMERIC}
@@ -242,8 +352,27 @@
                     END AS CAN_MANAGE_SPACE
                 FROM NOTES n
                 JOIN USERS u ON u.USER_ID = n.USER_ID
+                LEFT JOIN USERS uu ON uu.USER_ID = n.UPDATED_BY
                 LEFT JOIN WORKSPACES nw ON nw.WS_ID = n.WS_ID
                 LEFT JOIN PROJECTS np ON np.PROJ_ID = n.PROJ_ID
+                LEFT JOIN NOTE_FOLDERS nf ON nf.FOLDER_ID = n.FOLDER_ID
+                LEFT JOIN (
+                    SELECT
+                        f.FOLDER_ID,
+                        LTRIM(SYS_CONNECT_BY_PATH(f.FOLDER_NAME, ' / '), ' / ') AS FOLDER_PATH
+                    FROM NOTE_FOLDERS f
+                    START WITH f.PARENT_FOLDER_ID IS NULL
+                    CONNECT BY PRIOR f.FOLDER_ID = f.PARENT_FOLDER_ID
+                ) nfp ON nfp.FOLDER_ID = n.FOLDER_ID
+                LEFT JOIN (
+                    SELECT USER_ID, NOTE_ID, MIN(PIN_ORDER) AS PIN_ORDER
+                    FROM NOTE_PINS
+                    WHERE USER_ID = #{userId, jdbcType=NUMERIC}
+                      AND PIN_SCOPE_KEY = 'NOTE:' || #{userId, jdbcType=NUMERIC}
+                    GROUP BY USER_ID, NOTE_ID
+                ) pin
+                  ON pin.NOTE_ID = n.NOTE_ID
+                 AND pin.USER_ID = #{userId, jdbcType=NUMERIC}
                 LEFT JOIN WS_MEMBERS wm_role
                   ON wm_role.WS_ID = n.WS_ID
                  AND wm_role.USER_ID = #{userId, jdbcType=NUMERIC}
@@ -251,7 +380,34 @@
                   ON pm_role.PROJ_ID = n.PROJ_ID
                  AND pm_role.USER_ID = #{userId, jdbcType=NUMERIC}
                 WHERE <include refid="noteReadableScope"/>
+                  <choose>
+                    <when test="scopeType == 'TRASH'">
+                      AND NVL(n.DELETED_YN, 'N') = 'Y'
+                      AND n.DELETED_BY = #{userId, jdbcType=NUMERIC}
+                    </when>
+                    <otherwise>
+                      AND NVL(n.DELETED_YN, 'N') = 'N'
+                    </otherwise>
+                  </choose>
                   <include refid="selectedNoteScope"/>
+                <if test="importantOnly == true">
+                  AND EXISTS (
+                      SELECT 1 FROM NOTE_PINS p_filter
+                      WHERE p_filter.USER_ID = #{userId, jdbcType=NUMERIC}
+                        AND p_filter.NOTE_ID = n.NOTE_ID
+                        AND p_filter.PIN_SCOPE_KEY = 'NOTE:' || #{userId, jdbcType=NUMERIC}
+                  )
+                </if>
+                <if test="folderId != null">
+                  <choose>
+                    <when test="folderId == 0">
+                      AND n.FOLDER_ID IS NULL
+                    </when>
+                    <otherwise>
+                      AND n.FOLDER_ID = #{folderId, jdbcType=NUMERIC}
+                    </otherwise>
+                  </choose>
+                </if>
                 <if test="keyword != null and keyword != ''">
                   AND UPPER(n.NOTE_TITLE) LIKE '%' || UPPER(#{keyword, jdbcType=VARCHAR}) || '%'
                 </if>
@@ -259,8 +415,9 @@
                     NVL(n.UPD_DT, n.REG_DT) DESC,
                     n.NOTE_ID DESC
             ) ordered_notes
-            WHERE ROWNUM <![CDATA[<=]]> 50
+            WHERE ROWNUM <![CDATA[<=]]> NVL(#{endRow, jdbcType=NUMERIC}, 50)
         )
+        WHERE RN <![CDATA[>]]> NVL(#{startRow, jdbcType=NUMERIC}, 0)
     </select>
 
     <select id="selectMainNoteList" parameterType="map" resultMap="noteResultMap">
@@ -270,7 +427,7 @@
                 n.NOTE_ID, n.SCOPE_TYPE, n.WS_ID, n.PROJ_ID, n.USER_ID, n.NOTE_TITLE,
                 n.DONE_CONTENT, n.NEXT_CONTENT, n.ISSUE_CONTENT, n.CHANGE_LOG, n.MEMO, n.CATEGORY, n.ICON, n.FOLDER_ID, nf.FOLDER_NAME, nf.FOLDER_NAME AS FOLDER_PATH, nw.WS_NAME, np.PROJ_NAME,
                 NULL AS SHARE_SCOPE_TYPES, NULL AS SHARE_SCOPE_NAMES,
-                n.REG_DT, n.UPD_DT, u.USER_NAME,
+                n.REG_DT, n.UPD_DT, n.UPDATED_BY, u.USER_NAME, u.PROFILE_IMAGE_PATH AS PROFILE_IMAGE_PATH, uu.USER_NAME AS UPDATED_BY_NAME,
                 CASE WHEN p.NOTE_ID IS NULL THEN 0 ELSE 1 END AS PINNED,
                 p.PIN_ORDER,
                 CASE
@@ -287,6 +444,8 @@
                         WHERE cs_edit_main.CONTENT_TYPE = 'NOTE'
                           AND cs_edit_main.CONTENT_ID = n.NOTE_ID
                           AND cs_edit_main.ACTIVE_YN = 'Y'
+
+                          AND NVL(cs_edit_main.SHARE_STATUS, 'ACCEPTED') = 'ACCEPTED'
                           AND cs_edit_main.PERMISSION_TYPE = 'EDIT'
                           AND (cs_edit_main.EXPIRES_AT IS NULL OR cs_edit_main.EXPIRES_AT >= SYSDATE)
                           AND (
@@ -313,16 +472,23 @@
                 END AS CAN_MANAGE_SPACE
             FROM NOTES n
             JOIN USERS u ON n.USER_ID = u.USER_ID
+        LEFT JOIN USERS uu ON uu.USER_ID = n.UPDATED_BY
         LEFT JOIN NOTE_FOLDERS nf ON nf.FOLDER_ID = n.FOLDER_ID
         LEFT JOIN WORKSPACES nw ON nw.WS_ID = n.WS_ID
         LEFT JOIN PROJECTS np ON np.PROJ_ID = n.PROJ_ID
             LEFT JOIN WS_MEMBERS wm_role ON wm_role.WS_ID = n.WS_ID AND wm_role.USER_ID = #{userId, jdbcType=NUMERIC}
             LEFT JOIN PROJ_MEMBERS pm_role ON pm_role.PROJ_ID = n.PROJ_ID AND pm_role.USER_ID = #{userId, jdbcType=NUMERIC}
-            LEFT JOIN NOTE_PINS p
+            LEFT JOIN (
+                SELECT USER_ID, NOTE_ID, MIN(PIN_ORDER) AS PIN_ORDER
+                FROM NOTE_PINS
+                WHERE USER_ID = #{userId, jdbcType=NUMERIC}
+                  AND PIN_SCOPE_KEY = 'NOTE:' || #{userId, jdbcType=NUMERIC}
+                GROUP BY USER_ID, NOTE_ID
+            ) p
               ON p.NOTE_ID = n.NOTE_ID
-             AND p.PIN_SCOPE_KEY = #{pinScopeKey, jdbcType=VARCHAR}
              AND p.USER_ID = #{userId, jdbcType=NUMERIC}
             WHERE <include refid="noteReadableScope"/>
+              AND NVL(n.DELETED_YN, 'N') = 'N'
               <include refid="selectedNoteScope"/>
               AND (
                     p.NOTE_ID IS NOT NULL
@@ -330,7 +496,7 @@
                         SELECT 1
                         FROM NOTE_PINS px
                         WHERE px.USER_ID = #{userId, jdbcType=NUMERIC}
-                          AND px.PIN_SCOPE_KEY = #{pinScopeKey, jdbcType=VARCHAR}
+                          AND px.PIN_SCOPE_KEY = 'NOTE:' || #{userId, jdbcType=NUMERIC}
                     )
               )
             ORDER BY
@@ -342,11 +508,13 @@
         WHERE ROWNUM <![CDATA[<=]]> #{limit, jdbcType=NUMERIC}
     </select>
 
+
+
     <select id="countPinnedNotes" resultType="int">
         SELECT COUNT(*)
         FROM NOTE_PINS
         WHERE USER_ID = #{userId, jdbcType=NUMERIC}
-          AND PIN_SCOPE_KEY = #{pinScopeKey, jdbcType=VARCHAR}
+          AND PIN_SCOPE_KEY = 'NOTE:' || #{userId, jdbcType=NUMERIC}
     </select>
 
     <select id="selectNextPinOrder" resultType="int">
@@ -407,7 +575,7 @@
             n.NOTE_ID, n.SCOPE_TYPE, n.WS_ID, n.PROJ_ID, n.USER_ID, n.NOTE_TITLE,
             n.DONE_CONTENT, n.NEXT_CONTENT, n.ISSUE_CONTENT, n.CHANGE_LOG, n.MEMO, n.CATEGORY, n.ICON, n.FOLDER_ID, nf.FOLDER_NAME, nf.FOLDER_NAME AS FOLDER_PATH, nw.WS_NAME, np.PROJ_NAME,
             NULL AS SHARE_SCOPE_TYPES, NULL AS SHARE_SCOPE_NAMES,
-            n.REG_DT, n.UPD_DT, u.USER_NAME,
+            n.REG_DT, n.UPD_DT, n.UPDATED_BY, u.USER_NAME, uu.USER_NAME AS UPDATED_BY_NAME,
             (SELECT COUNT(*) FROM NOTE_FILES nfc WHERE nfc.NOTE_ID = n.NOTE_ID) AS ATTACHMENT_COUNT,
             (SELECT MIN(nff.ORIGIN_FILE_NAME) KEEP (DENSE_RANK FIRST ORDER BY nff.FILE_ID)
                FROM NOTE_FILES nff WHERE nff.NOTE_ID = n.NOTE_ID) AS FIRST_ATTACHMENT_NAME,
@@ -435,6 +603,8 @@
                     WHERE cs_edit.CONTENT_TYPE = 'NOTE'
                       AND cs_edit.CONTENT_ID = n.NOTE_ID
                       AND cs_edit.ACTIVE_YN = 'Y'
+
+                      AND NVL(cs_edit.SHARE_STATUS, 'ACCEPTED') = 'ACCEPTED'
                       AND cs_edit.PERMISSION_TYPE = 'EDIT'
                       AND cs_edit.TARGET_TYPE = 'USER'
                       AND cs_edit.TARGET_ID = #{userId, jdbcType=NUMERIC}
@@ -454,6 +624,7 @@
             END AS CAN_MANAGE_SPACE
         FROM NOTES n
         JOIN USERS u ON n.USER_ID = u.USER_ID
+        LEFT JOIN USERS uu ON n.UPDATED_BY = uu.USER_ID
         LEFT JOIN NOTE_FOLDERS nf ON nf.FOLDER_ID = n.FOLDER_ID
         LEFT JOIN WORKSPACES nw ON nw.WS_ID = n.WS_ID
         LEFT JOIN PROJECTS np ON np.PROJ_ID = n.PROJ_ID
@@ -462,6 +633,7 @@
         LEFT JOIN NOTE_PINS p
           ON p.NOTE_ID = n.NOTE_ID
          AND p.USER_ID = #{userId, jdbcType=NUMERIC}
+         AND p.PIN_SCOPE_KEY = 'NOTE:' || #{userId, jdbcType=NUMERIC}
         WHERE n.NOTE_ID = #{noteId, jdbcType=NUMERIC}
           AND <include refid="noteReadableScope"/>
     </select>
@@ -472,7 +644,7 @@
         </selectKey>
         INSERT INTO NOTES (
             NOTE_ID, SCOPE_TYPE, WS_ID, PROJ_ID, USER_ID, NOTE_TITLE,
-            DONE_CONTENT, NEXT_CONTENT, ISSUE_CONTENT, CHANGE_LOG, MEMO, CATEGORY, ICON, FOLDER_ID, REG_DT
+            DONE_CONTENT, NEXT_CONTENT, ISSUE_CONTENT, CHANGE_LOG, MEMO, CATEGORY, ICON, FOLDER_ID, REG_DT, UPDATED_BY
         ) VALUES (
             #{noteId, jdbcType=NUMERIC},
             #{scopeType, jdbcType=VARCHAR},
@@ -488,7 +660,8 @@
             #{category, jdbcType=VARCHAR},
             #{icon, jdbcType=VARCHAR},
             #{folderId, jdbcType=NUMERIC},
-            SYSDATE
+            SYSDATE,
+            #{userId, jdbcType=NUMERIC}
         )
     </insert>
 
@@ -500,9 +673,61 @@
             CATEGORY = #{category, jdbcType=VARCHAR},
             ICON = #{icon, jdbcType=VARCHAR},
             FOLDER_ID = #{folderId, jdbcType=NUMERIC},
-            UPD_DT = SYSDATE
+            UPD_DT = SYSDATE,
+            UPDATED_BY = #{updatedBy, jdbcType=NUMERIC}
         WHERE NOTE_ID = #{noteId, jdbcType=NUMERIC}
     </update>
+
+
+    <update id="moveNoteToTrash">
+        UPDATE NOTES n
+           SET n.ORIGINAL_FOLDER_ID = n.FOLDER_ID,
+               n.FOLDER_ID = NULL,
+               n.DELETED_YN = 'Y',
+               n.DELETED_AT = SYSDATE,
+               n.DELETED_BY = #{userId},
+               n.UPD_DT = SYSDATE,
+               n.UPDATED_BY = #{userId}
+         WHERE n.NOTE_ID = #{noteId}
+           AND NVL(n.DELETED_YN, 'N') = 'N'
+           AND (
+                n.USER_ID = #{userId}
+                OR (n.SCOPE_TYPE = 'WS' AND (
+                    EXISTS (SELECT 1 FROM WORKSPACES w WHERE w.WS_ID=n.WS_ID AND w.OWNER_ID=#{userId})
+                    OR EXISTS (SELECT 1 FROM WS_MEMBERS wm WHERE wm.WS_ID=n.WS_ID AND wm.USER_ID=#{userId} AND UPPER(NVL(wm.WS_ROLE,'MEMBER'))='ADMIN')
+                ))
+                OR (n.SCOPE_TYPE = 'PROJ' AND (
+                    EXISTS (SELECT 1 FROM PROJECTS p WHERE p.PROJ_ID=n.PROJ_ID AND p.LEADER_ID=#{userId})
+                    OR EXISTS (SELECT 1 FROM PROJ_MEMBERS pm WHERE pm.PROJ_ID=n.PROJ_ID AND pm.USER_ID=#{userId} AND UPPER(NVL(pm.PROJ_ROLE,'MEMBER'))='ADMIN')
+                ))
+           )
+    </update>
+
+    <update id="restoreNoteFromTrash">
+        UPDATE NOTES n
+           SET n.FOLDER_ID = CASE
+                                WHEN n.ORIGINAL_FOLDER_ID IS NOT NULL
+                                 AND EXISTS (SELECT 1 FROM NOTE_FOLDERS f WHERE f.FOLDER_ID=n.ORIGINAL_FOLDER_ID)
+                                THEN n.ORIGINAL_FOLDER_ID
+                                ELSE NULL
+                             END,
+               n.ORIGINAL_FOLDER_ID = NULL,
+               n.DELETED_YN = 'N',
+               n.DELETED_AT = NULL,
+               n.DELETED_BY = NULL,
+               n.UPD_DT = SYSDATE,
+               n.UPDATED_BY = #{userId}
+         WHERE n.NOTE_ID = #{noteId}
+           AND NVL(n.DELETED_YN, 'N') = 'Y'
+           AND n.DELETED_BY = #{userId}
+    </update>
+
+    <select id="countTrashOwner" resultType="int">
+        SELECT COUNT(*) FROM NOTES
+         WHERE NOTE_ID = #{noteId}
+           AND NVL(DELETED_YN, 'N') = 'Y'
+           AND DELETED_BY = #{userId}
+    </select>
 
     <delete id="deleteNote">
         DELETE FROM NOTES

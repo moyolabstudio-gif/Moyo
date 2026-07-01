@@ -20,7 +20,13 @@
       AND OWNER_USER_ID=#{userId,jdbcType=NUMERIC}
     </if>
   START WITH PARENT_FOLDER_ID IS NULL
-  CONNECT BY PRIOR FOLDER_ID=PARENT_FOLDER_ID
+    AND SCOPE_TYPE=#{scopeType}
+    AND NVL(WS_ID,-1)=NVL(#{wsId,jdbcType=NUMERIC},-1)
+    AND NVL(PROJ_ID,-1)=NVL(#{projId,jdbcType=NUMERIC},-1)
+    <if test="scopeType == 'PRIVATE'">
+      AND OWNER_USER_ID=#{userId,jdbcType=NUMERIC}
+    </if>
+  CONNECT BY NOCYCLE PRIOR FOLDER_ID=PARENT_FOLDER_ID
   ORDER SIBLINGS BY SORT_ORDER,FOLDER_NAME
  </select>
  <insert id="insertFolder" parameterType="com.springboot.project.dto.noteFolderDTO">
@@ -108,7 +114,11 @@
          CASE WHEN p.LEADER_ID=#{userId} OR EXISTS (SELECT 1 FROM PROJ_MEMBERS pa WHERE pa.PROJ_ID=p.PROJ_ID AND pa.USER_ID=#{userId} AND UPPER(NVL(pa.PROJ_ROLE,'MEMBER'))='ADMIN') THEN 1 ELSE 0 END AS "canManage"
   FROM PROJECTS p
   JOIN WORKSPACES w ON w.WS_ID=p.WS_ID
-  WHERE (p.LEADER_ID = #{userId} OR EXISTS (SELECT 1 FROM PROJ_MEMBERS pm WHERE pm.PROJ_ID=p.PROJ_ID AND pm.USER_ID=#{userId}))
+  WHERE (
+        p.LEADER_ID = #{userId}
+        OR EXISTS (SELECT 1 FROM PROJ_MEMBERS pm WHERE pm.PROJ_ID=p.PROJ_ID AND pm.USER_ID=#{userId})
+        OR w.OWNER_ID = #{userId}
+  )
   ORDER BY w.WS_NAME, p.PROJ_NAME
  </select>
  <select id="selectShareWorkspaceMembers" resultType="map">
