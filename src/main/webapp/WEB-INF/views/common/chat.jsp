@@ -1,43 +1,41 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
-<%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<link rel="stylesheet" href="../css/chat.css">
 
-<div id="chat-floating-btn" onclick="toggleChatWindow()" style="position: fixed; bottom: 96px; right: 30px; width: 60px; height: 60px; background: #4A90E2; border-radius: 50%; box-shadow: 0 4px 15px rgba(74,144,226,0.3); cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 9999; transition: transform 0.2s;">
+<div id="chat-floating-btn" class="chat-btn-floating" onclick="toggleChatWindow()">
     <span style="font-size: 26px; color: white;">💬</span>
 </div>
 
-<div id="chat-main-modal" style="position: fixed; bottom: 171px; right: 30px; width: 350px; height: 480px; background: #ffffff; border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.12); display: none; flex-direction: column; z-index: 9999; overflow: hidden; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; border: 1px solid #e1e8ed;">
-    
-    <div style="background: linear-gradient(135deg, #4A90E2 0%, #357ABD 100%); padding: 12px 15px; display: flex; justify-content: space-between; align-items: center;">
-        <strong style="color: #ffffff; font-size: 15px; font-weight: 600; letter-spacing: -0.5px;">💬 MOYO 톡</strong>
-        <button onclick="closeChatModals()" style="background: none; border: none; font-size: 22px; cursor: pointer; color: #ffffff; opacity: 0.8; line-height: 1;">&times;</button>
+<div id="chat-main-modal" class="chat-modal">
+    <div class="chat-header">
+        <strong class="chat-header-title">💬 MOYO 톡</strong>
+        <button onclick="closeChatModals()" style="background:none; border:none; color:white; font-size:22px; cursor:pointer; opacity:0.8;">&times;</button>
     </div>
 
-    <div style="display: flex; background: #f8f9fa; border-bottom: 1px solid #e1e8ed;">
-        <button id="tab-room-btn" onclick="switchTab('room')" style="flex: 1; padding: 10px; border: none; background: #ffffff; font-weight: bold; color: #4A90E2; border-bottom: 2px solid #4A90E2; cursor: pointer; font-size: 13px;">💬 채팅방</button>
-        <button id="tab-friend-btn" onclick="switchTab('friend')" style="flex: 1; padding: 10px; border: none; background: #f8f9fa; font-weight: 500; color: #657786; border-bottom: 2px solid transparent; cursor: pointer; font-size: 13px;">👥 친구 초대</button>
+    <div class="chat-tab-area">
+        <button id="tab-room-btn" class="chat-tab-btn active" onclick="switchTab('room')">💬 채팅방</button>
+        <button id="tab-friend-btn" class="chat-tab-btn" onclick="switchTab('friend')">👥 친구 초대</button>
     </div>
     
-    <div id="room-list-view" style="flex: 1; padding: 10px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; background: #fafafa;">
+    <div id="room-list-view" class="chat-list-view">
         <div style="text-align: center; color: #657786; font-size: 13px; margin-top: 20px;">채팅방을 불러오는 중...</div>
     </div>
 
-    <div id="friend-list-view" style="flex: 1; display: none; flex-direction: column; background: #fafafa; overflow: hidden;">
-        <div id="member-list-area" style="flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px;">
+    <div id="friend-list-view" class="chat-list-view" style="display: none;">
+        <div id="member-list-area" style="flex: 1; gap: 12px; display: flex; flex-direction: column;">
             <div style="text-align: center; color: #657786; font-size: 13px; margin-top: 20px;">친구 목록을 불러오는 중...</div>
         </div>
-        <div style="background: #ffffff; padding: 12px; display: flex; flex-direction: column; gap: 8px; border-top: 1px solid #eee;">
-            <input type="text" id="newRoomNameInput" style="width: 100%; border: 1px solid #e1e8ed; padding: 8px 12px; border-radius: 6px; font-size: 13px; outline: none; box-sizing: border-box;" placeholder="생성할 채팅방 이름을 입력하세요...">
-            <button onclick="submitCreateRoom()" style="width: 100%; background: #4A90E2; color: white; border: none; padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px;">채팅방 개설하기</button>
+        <div class="chat-input-box">
+            <input type="text" id="newRoomNameInput" class="chat-input-field" placeholder="생성할 채팅방 이름을 입력하세요...">
+            <button onclick="submitCreateRoom()" class="chat-send-btn">채팅방 개설하기</button>
         </div>
     </div>
 </div>
 
-<div id="mini-chat-window" style="position: fixed; bottom: 171px; right: 30px; width: 350px; height: 480px; background: #ffffff; border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.12); display: none; flex-direction: column; z-index: 9999; overflow: hidden; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; border: 1px solid #e1e8ed;">
-    
-    <div style="background: linear-gradient(135deg, #4A90E2 0%, #357ABD 100%); padding: 15px; display: flex; justify-content: space-between; align-items: center;">
-        <button onclick="backToMainModal()" style="background: none; border: none; color: white; font-size: 18px; cursor: pointer; font-weight: bold;">◀</button>
-        <strong id="active-room-name" style="color: #ffffff; font-size: 15px; font-weight: 600; letter-spacing: -0.5px;">💬 실시간 대화</strong>
-        <button onclick="closeChatModals()" style="background: none; border: none; font-size: 22px; cursor: pointer; color: #ffffff; opacity: 0.8; line-height: 1;">&times;</button>
+<div id="mini-chat-window" class="chat-modal">
+    <div class="chat-header">
+        <button onclick="backToMainModal()" style="background:none; border:none; color:white; font-size:18px; cursor:pointer; font-weight:bold;">◀</button>
+        <strong id="active-room-name" class="chat-header-title">💬 실시간 대화</strong>
+        <button onclick="closeChatModals()" style="background:none; border:none; color:white; font-size:22px; cursor:pointer; opacity:0.8;">&times;</button>
     </div>
 
     <div style="display: none;">
@@ -46,13 +44,13 @@
         <input type="text" id="userName" value="${not empty sessionScope.user.userName ? sessionScope.user.userName : (not empty sessionScope.loginUserName ? sessionScope.loginUserName : sessionScope.user.getUSER_NAME())}">
     </div>
 
-    <div id="chatMessageArea" style="flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; background: #f5f8fa;">
+    <div id="chatMessageArea" class="chat-list-view" style="background: #f5f8fa;">
         <div style="align-self: center; background: #e1e8ed; color: #657786; padding: 4px 12px; border-radius: 20px; font-size: 11px;">대화 데이터 정렬 중...</div>
     </div>
 
-    <div style="background: #ffffff; padding: 12px; display: flex; gap: 8px; border-top: 1px solid #eee; align-items: center;">
-        <input type="text" id="miniMessageInput" style="flex: 1; border: 1px solid #e1e8ed; padding: 8px 12px; border-radius: 6px; font-size: 13px; outline: none; background: #fafafa;" placeholder="메시지를 남겨보세요..." onkeypress="if(event.keyCode==13) sendMiniMessage()">
-        <button onclick="sendMiniMessage()" style="background: #4A90E2; color: white; border: none; padding: 8px 14px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px;">보내기</button>
+    <div class="chat-input-box">
+        <input type="text" id="miniMessageInput" class="chat-input-field" placeholder="메시지를 남겨보세요..." onkeypress="if(event.keyCode==13) sendMiniMessage()">
+        <button onclick="sendMiniMessage()" class="chat-send-btn">보내기</button>
     </div>
 </div>
 
@@ -102,23 +100,25 @@
         const friendView = document.getElementById('friend-list-view');
         const roomBtn = document.getElementById('tab-room-btn');
         const friendBtn = document.getElementById('tab-friend-btn');
-
+    
         if(tabName === 'room') {
             roomView.style.display = 'flex';
             friendView.style.display = 'none';
-            // 버튼 스타일 활성화 변경
-            roomBtn.style.cssText = "flex: 1; padding: 10px; border: none; background: #ffffff; font-weight: bold; color: #4A90E2; border-bottom: 2px solid #4A90E2; cursor: pointer; font-size: 13px;";
-            friendBtn.style.cssText = "flex: 1; padding: 10px; border: none; background: #f8f9fa; font-weight: 500; color: #657786; border-bottom: 2px solid transparent; cursor: pointer; font-size: 13px;";
-            loadMyChatRooms(); // 🌟 내 참여 채팅방 비동기 호출 실행
+            
+            // 클래스만 교체!
+            roomBtn.className = "chat-tab-btn active";
+            friendBtn.className = "chat-tab-btn inactive";
+            loadMyChatRooms();
         } else {
             roomView.style.display = 'none';
             friendView.style.display = 'flex';
-            friendBtn.style.cssText = "flex: 1; padding: 10px; border: none; background: #ffffff; font-weight: bold; color: #4A90E2; border-bottom: 2px solid #4A90E2; cursor: pointer; font-size: 13px;";
-            roomBtn.style.cssText = "flex: 1; padding: 10px; border: none; background: #f8f9fa; font-weight: 500; color: #657786; border-bottom: 2px solid transparent; cursor: pointer; font-size: 13px;";
-            loadUserList(); // 회원 목록 비동기 호출 실행
+            
+            // 클래스만 교체!
+            friendBtn.className = "chat-tab-btn active";
+            roomBtn.className = "chat-tab-btn inactive";
+            loadUserList();
         }
     }
-
     // 📋 [비동기] 로그인한 유저가 속한 오라클 채팅방 목록 연동
     function loadMyChatRooms() {
         const area = document.getElementById('room-list-view');

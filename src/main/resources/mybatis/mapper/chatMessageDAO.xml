@@ -4,34 +4,17 @@
 	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.springboot.project.dao.IchatMessageDAO">
 
-    <insert id="insertMessage" parameterType="com.springboot.project.dto.chatMessageDTO">
-        INSERT INTO CHAT_MSGS (
-            MSG_ID,
-            ROOM_ID,
-            SENDER_ID,
-            CONTENT
-        ) VALUES (
-            SEQ_MSG_ID.NEXTVAL,
-            #{roomId},
-            #{senderId},
-            #{message}
-        )
+    <insert id="insertMessage" parameterType="com.springboot.project.dto.chatMsgDTO">
+        INSERT INTO CHAT_MSGS (CR_MSG_ID, ROOM_ID, SENDER_ID, CONTENT, SEND_DATE)
+        VALUES (SEQ_MSG_ID.NEXTVAL, #{roomId}, #{senderId}, #{content}, SYSDATE)
     </insert>
 
-    <select id="selectMessageList" parameterType="Long" resultType="com.springboot.project.dto.chatMessageDTO">
-        SELECT * FROM (
-            SELECT 
-                'TALK' as type,
-                M.ROOM_ID as roomId,
-                M.SENDER_ID as senderId,
-                U.USER_NAME as senderName,
-                M.CONTENT as message
-            FROM CHAT_MSGS M
-            JOIN USERS U ON M.SENDER_ID = U.USER_ID
-            WHERE M.ROOM_ID = #{roomId}
-            ORDER BY M.MSG_ID DESC
-        ) WHERE ROWNUM &lt;= 100
-        ORDER BY roomId ASC
+    <select id="selectMessageList" parameterType="Long" resultType="com.springboot.project.dto.chatMsgDTO">
+        SELECT m.CR_MSG_ID, m.ROOM_ID, m.SENDER_ID, u.USER_NAME as senderName, m.CONTENT, m.SEND_DATE
+        FROM CHAT_MSGS m
+        JOIN USERS u ON m.SENDER_ID = u.USER_ID
+        WHERE m.ROOM_ID = #{roomId}
+        ORDER BY m.SEND_DATE ASC
     </select>
 
 </mapper>

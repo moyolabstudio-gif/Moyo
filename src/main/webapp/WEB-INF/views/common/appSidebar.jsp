@@ -1,6 +1,6 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
-
+<body>
 <c:if test="${not empty sessionScope.user}">
 <aside id="moyoAppSidebar"
        class="moyo-app-sidebar"
@@ -116,7 +116,6 @@
             </c:choose>
         </section>
     </div>
-
     <div class="moyo-app-sidebar-bottom">
         <a href="/workspace/create" class="moyo-app-sidebar-bottom-link">＋ 그룹 만들기</a>
         <a href="/workspace/invitations" class="moyo-app-sidebar-bottom-link">✉ 초대함</a>
@@ -124,3 +123,6 @@
 </aside>
 <div id="moyoAppSidebarBackdrop" class="moyo-app-sidebar-backdrop"></div>
 </c:if>
+</body>
+    
+    <%@ include file="/WEB-INF/views/common/chat.jsp" %>

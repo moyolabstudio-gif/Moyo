@@ -1,0 +1,46 @@
+/* 기본 초기화 */
+* { box-sizing: border-box; }
+
+.chat-container { z-index: 9999; }
+
+.chat-btn-floating {
+    position: fixed; bottom: 96px; right: 30px; width: 60px; height: 60px;
+    background: #4A90E2; border-radius: 50%; box-shadow: 0 4px 15px rgba(74,144,226,0.3);
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: transform 0.2s; z-index: 9999;
+}
+
+.chat-modal {
+    position: fixed; bottom: 171px; right: 30px; width: 350px; height: 480px;
+    background: #ffffff; border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+    display: none; flex-direction: column; overflow: hidden;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    border: 1px solid #e1e8ed; z-index: 9999;
+}
+
+.chat-header {
+    background: linear-gradient(135deg, #4A90E2 0%, #357ABD 100%);
+    padding: 15px; display: flex; justify-content: space-between; align-items: center;
+}
+
+.chat-header-title { color: #ffffff; font-size: 15px; font-weight: 600; letter-spacing: -0.5px; }
+
+.chat-tab-area { display: flex; background: #f8f9fa; border-bottom: 1px solid #e1e8ed; }
+.chat-tab-btn { flex: 1; padding: 10px; border: none; font-weight: bold; cursor: pointer; font-size: 13px; color: #657786; background: #f8f9fa; }
+.chat-tab-btn.active { background: #ffffff !important; color: #4A90E2 !important; border-bottom: 2px solid #4A90E2 !important; }
+
+/* 🌟 여기가 핵심: 메시지 영역이 꽉 차게 설정 */
+.chat-list-view { 
+    flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; background: #f5f8fa; 
+}
+
+.chat-input-box { background: #ffffff; padding: 12px; display: flex; gap: 8px; border-top: 1px solid #eee; align-items: center; }
+.chat-input-field { flex: 1; border: 1px solid #e1e8ed; padding: 8px 12px; border-radius: 6px; font-size: 13px; outline: none; background: #fafafa; }
+.chat-send-btn { background: #4A90E2; color: white; border: none; padding: 8px 14px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; }
+
+/* 🌟 메시지 말풍선 (가로로 안 깨지게) */
+.bubble-msg {
+    max-width: 85%; padding: 8px 12px; border-radius: 10px; font-size: 13px; word-wrap: break-word;
+}
+.bubble-sent { background: #4A90E2; color: white; align-self: flex-end; }
+.bubble-received { background: #ffffff; color: #333; align-self: flex-start; border: 1px solid #ddd; }

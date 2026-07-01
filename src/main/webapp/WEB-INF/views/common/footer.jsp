@@ -148,4 +148,4 @@
     </div>
 </footer>
 
-<%@ include file="/WEB-INF/views/common/chat.jsp" %>
+
