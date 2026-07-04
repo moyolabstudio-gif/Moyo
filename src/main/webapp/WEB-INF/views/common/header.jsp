@@ -468,7 +468,7 @@
         if (totalCount > 0) {
             const parts = [];
             if (requestCount > 0) parts.push('요청 ' + requestCount + '건');
-            if (alarmCount > 0) parts.push('알림 ' + alarmCount + '건');
+            if (alarmCount > 0) parts.push('읽지 않은 알림 ' + alarmCount + '건');
             text = parts.join(' · ');
         }
         $('#alarmSummary').text(text);
@@ -490,14 +490,15 @@
         });
     }
 
-    function clickAlarm(alarmId, noticeId) {
+    function clickAlarm(alarmId, targetUrl) {
         $.ajax({
             url: '/api/alarm/read',
             type: 'POST',
             contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
             data: $.param({ alarmId: alarmId }),
             success: function() {
-                location.href = '/common/noticeList?openId=' + noticeId;
+                if (targetUrl) location.href = targetUrl;
+                else loadAlarmDropdown(true);
             },
             error: function(xhr) {
                 alert(xhr.responseText || '알림을 여는 중 문제가 발생했습니다.');
@@ -505,10 +506,12 @@
         });
     }
 
-    function getShareTypeName(contentType) {
+    function getShareTypeName(contentType, item) {
         if (contentType === 'PHOTO') return '사진 공유';
         if (contentType === 'NOTE') return '노트 공유';
-        if (contentType === 'CALENDAR') return '일정 공유';
+        if (contentType === 'CALENDAR') {
+            return item && item.calendarAttendeeYn === 'Y' ? '일정 참석 · 공유' : '일정 공유';
+        }
         if (contentType === 'BOARD') return '게시글 공유';
         return '공유 요청';
     }
@@ -523,7 +526,19 @@
         if (item.requestType === 'GROUP_INVITE') {
             return (item.requesterName || '누군가') + '님이 초대했습니다.';
         }
-        return (item.requesterName || '누군가') + '님이 공유했습니다.';
+        const requester = item.requesterName || '누군가';
+        if (item.contentType === 'CALENDAR') {
+            if (item.calendarAttendeeYn === 'Y' && item.permissionType === 'EDIT') {
+                return requester + '님이 참석자로 추가하고 편집 권한 공유 요청을 보냈습니다.';
+            }
+            if (item.calendarAttendeeYn === 'Y') {
+                return requester + '님이 참석자로 추가하고 공유 요청을 보냈습니다.';
+            }
+            if (item.permissionType === 'EDIT') {
+                return requester + '님이 편집 권한이 포함된 공유 요청을 보냈습니다.';
+            }
+        }
+        return requester + '님이 공유 요청을 보냈습니다.';
     }
 
     function processShareAction($card, shareId, status) {
@@ -585,7 +600,7 @@
 
     function makePendingRequestItem(item) {
         const isInvite = item.requestType === 'GROUP_INVITE';
-        const typeLabel = isInvite ? '그룹 초대' : getShareTypeName(item.contentType);
+        const typeLabel = isInvite ? '그룹 초대' : getShareTypeName(item.contentType, item);
         const id = item.id || item.shareId || item.inviteId;
         const $li = $('<li class="moyo-alarm-request-card">');
         const $main = $('<div class="moyo-alarm-request-main">');
@@ -615,22 +630,51 @@
         return $li;
     }
 
+    function getAlarmMeta(item) {
+        const alertType = String(item.alertType || item.alert_type || 'NOTICE').toUpperCase();
+        const targetType = String(item.targetType || item.target_type || '').toUpperCase();
+        if (alertType === 'CALENDAR_REMINDER') return { icon: '📅', label: '일정 알림' };
+        if (alertType === 'CALENDAR_ATTENDEE' || targetType === 'CALENDAR') return { icon: '📅', label: '일정 알림' };
+        if (alertType === 'COMMENT') return { icon: '💬', label: '댓글 알림' };
+        if (alertType === 'LIKE') return { icon: '♥', label: '좋아요 알림' };
+        if (alertType === 'SHARE') return { icon: '🔗', label: '공유 알림' };
+        return { icon: '📣', label: '공지 알림' };
+    }
+
+    function getAlarmTargetUrl(item) {
+        const directUrl = item.linkUrl || item.link_url;
+        if (directUrl) return directUrl;
+        const alertType = String(item.alertType || item.alert_type || 'NOTICE').toUpperCase();
+        const targetType = String(item.targetType || item.target_type || '').toUpperCase();
+        const targetId = item.targetId || item.target_id;
+        const noticeId = item.notice_id || item.noticeId;
+        if ((alertType === 'CALENDAR_REMINDER' || alertType === 'CALENDAR_ATTENDEE' || targetType === 'CALENDAR') && targetId) {
+            return '/calendar/event/detail?eventId=' + encodeURIComponent(targetId);
+        }
+        if (noticeId) return '/common/noticeList?openId=' + encodeURIComponent(noticeId);
+        return '';
+    }
+
     function makeAlarmItem(item) {
         const alarmId = item.alarm_id || item.alarmId;
-        const noticeId = item.notice_id || item.noticeId;
         const title = item.title || '새 알림';
+        const content = item.content || item.CONTENT || '';
+        const meta = getAlarmMeta(item);
+        const targetUrl = getAlarmTargetUrl(item);
         const $li = $('<li class="moyo-alarm-item">');
-        $li.append('<span class="moyo-alarm-item-icon">📣</span>');
+        $('<span class="moyo-alarm-item-icon">').text(meta.icon).appendTo($li);
         $li.append(
             '<span class="moyo-alarm-item-main">' +
                 '<span class="moyo-alarm-item-title"></span>' +
-                '<span class="moyo-alarm-item-desc">공지 알림</span>' +
+                '<span class="moyo-alarm-item-desc"></span>' +
             '</span>'
         );
         $li.find('.moyo-alarm-item-title').text(title);
+        $li.find('.moyo-alarm-item-desc').text(content ? content : meta.label);
+        $li.attr('title', meta.label);
         $li.on('click', function(e) {
             e.stopPropagation();
-            clickAlarm(alarmId, noticeId);
+            clickAlarm(alarmId, targetUrl);
         });
         return $li;
     }

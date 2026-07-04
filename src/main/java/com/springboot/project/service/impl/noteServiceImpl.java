@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.File;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -21,6 +22,8 @@ import java.util.regex.Pattern;
 @Service
 public class noteServiceImpl implements InoteService {
 
+    private static final String NOTE_UPLOAD_PATH = "C:/MoyoLab.Studio/note/";
+
     @Autowired
     private InoteDAO inoteDAO;
 
@@ -29,7 +32,9 @@ public class noteServiceImpl implements InoteService {
 
     @Override
     public List<noteDTO> getNoteList(String scopeType, Long wsId, Long projId, Long userId, String keyword) {
-        Map<String, Object> paramMap = createScopeParam(scopeType, wsId, projId, userId);
+        String normalizedScope = normalizeScope(scopeType);
+        if ("TRASH".equals(normalizedScope)) purgeExpiredTrashNotes();
+        Map<String, Object> paramMap = createScopeParam(normalizedScope, wsId, projId, userId);
         paramMap.put("keyword", keyword == null || keyword.trim().isEmpty() ? null : keyword.trim());
         List<noteDTO> noteList = inoteDAO.selectNoteList(paramMap);
         preparePreviewText(noteList);
@@ -40,7 +45,9 @@ public class noteServiceImpl implements InoteService {
     @Override
     public List<noteDTO> getNoteListPage(String scopeType, Long wsId, Long projId, Long userId, String keyword,
                                          boolean importantOnly, Long friendUserId, Long folderId, int offset, int limit) {
-        Map<String, Object> paramMap = createScopeParam(scopeType, wsId, projId, userId);
+        String normalizedScope = normalizeScope(scopeType);
+        if ("TRASH".equals(normalizedScope)) purgeExpiredTrashNotes();
+        Map<String, Object> paramMap = createScopeParam(normalizedScope, wsId, projId, userId);
         paramMap.put("keyword", keyword == null || keyword.trim().isEmpty() ? null : keyword.trim());
         paramMap.put("importantOnly", importantOnly);
         paramMap.put("friendUserId", friendUserId);
@@ -123,12 +130,34 @@ public class noteServiceImpl implements InoteService {
 
     @Override
     public boolean restoreNoteFromTrash(Long noteId, Long userId) {
+        purgeExpiredTrashNotes();
         return inoteDAO.restoreNoteFromTrash(noteId, userId) > 0;
     }
 
     @Override
     public boolean canPermanentlyDeleteNote(Long noteId, Long userId) {
+        purgeExpiredTrashNotes();
         return inoteDAO.countTrashOwner(noteId, userId) > 0;
+    }
+
+    @Override
+    @Transactional
+    public int purgeExpiredTrashNotes() {
+        List<Long> noteIds = inoteDAO.selectExpiredTrashNoteIds();
+        if (noteIds == null || noteIds.isEmpty()) return 0;
+
+        int deletedCount = 0;
+        for (Long noteId : noteIds) {
+            if (noteId == null) continue;
+            List<noteFileDTO> files = inoteDAO.selectNoteFileList(noteId);
+            if (files != null) {
+                for (noteFileDTO file : files) {
+                    if (file != null) deletePhysicalFile(file.getFilePath());
+                }
+            }
+            if (removeNote(noteId)) deletedCount++;
+        }
+        return deletedCount;
     }
 
     @Override
@@ -188,6 +217,18 @@ public class noteServiceImpl implements InoteService {
     @Override
     public boolean removeNoteReply(Long replyId, Long userId) {
         return inoteDAO.deleteNoteReply(replyId, userId) > 0;
+    }
+
+
+    private void deletePhysicalFile(String filePath) {
+        if (filePath == null || filePath.isBlank()) return;
+        try {
+            File file = new File(filePath);
+            if (!file.isAbsolute()) file = new File(NOTE_UPLOAD_PATH, filePath);
+            if (file.exists() && file.isFile()) file.delete();
+        } catch (Exception ignored) {
+            // 파일 삭제 실패가 DB 휴지통 정리를 막으면 안 된다.
+        }
     }
 
     private Map<String, Object> createScopeParam(String scopeType, Long wsId, Long projId, Long userId) {

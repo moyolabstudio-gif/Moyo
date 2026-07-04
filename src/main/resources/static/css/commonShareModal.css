@@ -284,7 +284,7 @@
 .moyo-share-modal .note-write-share-list,
 .moyo-share-modal .moyo-share-list{
     min-height:116px!important;
-    max-height:min(236px, calc(100vh - 430px))!important;
+    max-height:min(198px, calc(100vh - 462px))!important;
 }
 
 .moyo-share-modal .note-write-share-selected,
@@ -962,6 +962,7 @@ body.note-share-modal-open{
 }
 
 /* v239: received-share release view inside common share modal */
+/* v263: release-only action button is centered across photo/note/calendar */
 .moyo-share-modal .photo-share-release-panel{
     width:100%!important;
     display:flex!important;
@@ -999,7 +1000,792 @@ body.note-share-modal-open{
 }
 .moyo-share-modal .photo-share-release-apply{
     width:100%!important;
+    min-width:0!important;
     height:42px!important;
+    padding:0 24px!important;
+    margin:0!important;
     border-radius:12px!important;
     background:linear-gradient(135deg, var(--moyo-share-mint), var(--moyo-share-violet))!important;
+}
+
+/* 선택 대상/편집 권한 chip 표시: 참석자 모달과 같은 확인/제거 흐름 */
+.moyo-share-modal .note-share-chip-list{
+    min-height:46px!important;
+    max-height:124px!important;
+    display:flex!important;
+    flex-direction:row!important;
+    flex-wrap:wrap!important;
+    align-content:flex-start!important;
+    align-items:flex-start!important;
+    justify-content:flex-start!important;
+    gap:7px!important;
+    padding:7px 10px!important;
+    overflow-x:hidden!important;
+    overflow-y:auto!important;
+    border-radius:16px!important;
+    border:1px solid var(--moyo-share-border)!important;
+    background:rgba(248, 251, 255, 0.86)!important;
+    scrollbar-width:thin;
+}
+
+.moyo-share-modal .note-share-chip-list[hidden]{
+    display:none!important;
+}
+
+.moyo-share-modal .note-share-chip{
+    flex:0 0 auto!important;
+    max-width:172px!important;
+    height:30px!important;
+    display:inline-flex!important;
+    align-items:center!important;
+    gap:6px!important;
+    padding:3px 6px 3px 4px!important;
+    border-radius:999px!important;
+    border:1px solid #cfe0ff!important;
+    background:#fff!important;
+    color:#1f2d45!important;
+    box-shadow:none!important;
+}
+
+.moyo-share-modal .note-share-chip.note-share-type-ws{
+    --share-accent:var(--moyo-share-mint);
+    --share-soft:#eafffb;
+    border-color:rgba(89, 210, 194, .48)!important;
+    background:#f8fffd!important;
+}
+
+.moyo-share-modal .note-share-chip.note-share-type-proj{
+    --share-accent:var(--moyo-share-purple);
+    --share-soft:#f2efff;
+    border-color:rgba(125, 107, 255, .36)!important;
+    background:#fbfaff!important;
+}
+
+.moyo-share-modal .note-share-chip .note-write-share-avatar,
+.moyo-share-modal .note-share-chip .note-share-avatar{
+    flex:0 0 24px!important;
+    width:24px!important;
+    height:24px!important;
+    font-size:10px!important;
+}
+
+.moyo-share-modal .note-share-chip.note-share-type-user .note-share-avatar{
+    border-radius:999px!important;
+}
+
+.moyo-share-modal .note-share-chip.note-share-type-ws .note-share-avatar,
+.moyo-share-modal .note-share-chip.note-share-type-proj .note-share-avatar{
+    border-radius:12px!important;
+}
+
+.moyo-share-modal .note-share-chip-name{
+    max-width:108px!important;
+    overflow:hidden!important;
+    text-overflow:ellipsis!important;
+    white-space:nowrap!important;
+    font-size:12px!important;
+    font-weight:800!important;
+    letter-spacing:-.03em!important;
+}
+
+.moyo-share-modal .note-share-chip-remove{
+    width:18px!important;
+    height:18px!important;
+    display:inline-flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    border:0!important;
+    border-radius:999px!important;
+    background:rgba(148, 163, 184, .12)!important;
+    color:#64748b!important;
+    font-size:14px!important;
+    line-height:1!important;
+    cursor:pointer!important;
+}
+
+.moyo-share-modal .note-share-chip-remove:hover{
+    background:rgba(79, 124, 255, .13)!important;
+    color:#3467df!important;
+}
+
+.moyo-share-modal .note-share-chip-list .note-write-share-empty{
+    width:100%!important;
+    min-height:28px!important;
+    padding:0!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+}
+
+/* v246: 선택 chip 3행 확보 - 후보 목록과 선택 영역이 footer에 눌리지 않도록 재조정 */
+.moyo-share-modal[data-share-mode="share"] .note-write-share-panel,
+.moyo-share-modal[data-share-mode="share"] .moyo-share-panel{
+    max-height:min(88vh, 760px)!important;
+}
+
+.moyo-share-modal[data-share-mode="share"] .note-write-share-body,
+.moyo-share-modal[data-share-mode="share"] .moyo-share-body{
+    flex:1 1 auto!important;
+    min-height:0!important;
+    overflow:hidden!important;
+    display:flex!important;
+    flex-direction:column!important;
+    gap:10px!important;
+    padding:10px 20px 0!important;
+}
+
+.moyo-share-modal[data-share-mode="share"] .note-write-share-body > div,
+.moyo-share-modal[data-share-mode="share"] .moyo-share-body > div{
+    min-height:0!important;
+    margin:0!important;
+}
+
+.moyo-share-modal[data-share-mode="share"] .note-write-share-body > div + div,
+.moyo-share-modal[data-share-mode="share"] .moyo-share-body > div + div{
+    margin-top:0!important;
+}
+
+.moyo-share-modal[data-share-mode="share"] .note-write-share-list,
+.moyo-share-modal[data-share-mode="share"] .moyo-share-list{
+    flex:1 1 230px!important;
+    min-height:190px!important;
+    max-height:260px!important;
+}
+
+.moyo-share-modal[data-share-mode="share"] .note-share-chip-list,
+.moyo-share-modal[data-share-mode="share"] .note-write-share-selected,
+.moyo-share-modal[data-share-mode="share"] .moyo-share-selected{
+    flex:0 0 auto!important;
+    min-height:44px!important;
+    max-height:118px!important;
+    padding:7px 10px!important;
+}
+
+.moyo-share-modal[data-share-mode="share"] .note-write-share-modal-actions,
+.moyo-share-modal[data-share-mode="share"] .moyo-share-footer{
+    flex:0 0 auto!important;
+    padding:12px 20px 16px!important;
+}
+
+/* v247: 권한 설정도 공유/참석자와 같은 탭 + 후보 카드 + 선택 chip 흐름 */
+
+.moyo-share-modal[data-share-mode="permission"] .note-write-share-panel,
+.moyo-share-modal[data-share-mode="permission"] .moyo-share-panel{
+    max-height:min(88vh, 760px)!important;
+}
+
+.moyo-share-modal[data-share-mode="permission"] .note-write-share-body,
+.moyo-share-modal[data-share-mode="permission"] .moyo-share-body{
+    flex:1 1 auto!important;
+    min-height:0!important;
+    overflow:hidden!important;
+    display:flex!important;
+    flex-direction:column!important;
+    gap:10px!important;
+    padding:10px 20px 0!important;
+}
+
+.moyo-share-modal[data-share-mode="permission"] .note-write-share-body > div,
+.moyo-share-modal[data-share-mode="permission"] .moyo-share-body > div{
+    min-height:0!important;
+    margin:0!important;
+}
+
+.moyo-share-modal[data-share-mode="permission"] .note-write-share-body > div + div,
+.moyo-share-modal[data-share-mode="permission"] .moyo-share-body > div + div{
+    margin-top:0!important;
+}
+
+.moyo-share-modal[data-share-mode="permission"] .note-write-share-list,
+.moyo-share-modal[data-share-mode="permission"] .moyo-share-list{
+    flex:1 1 230px!important;
+    min-height:190px!important;
+    max-height:260px!important;
+}
+
+.moyo-share-modal[data-share-mode="permission"] .note-share-chip-list,
+.moyo-share-modal[data-share-mode="permission"] .note-write-share-selected,
+.moyo-share-modal[data-share-mode="permission"] .moyo-share-selected{
+    flex:0 0 auto!important;
+    min-height:44px!important;
+    max-height:118px!important;
+    padding:7px 10px!important;
+}
+
+.moyo-share-modal[data-share-mode="permission"] .note-write-share-modal-actions,
+.moyo-share-modal[data-share-mode="permission"] .moyo-share-footer{
+    flex:0 0 auto!important;
+    padding:12px 20px 16px!important;
+}
+
+
+/* v248: 권한 설정 모달도 공유 모달과 동일한 segmented tab/head 디자인으로 고정 */
+.moyo-share-modal .note-write-share-modal-head,
+.moyo-share-modal .moyo-share-head{
+    position:relative!important;
+    justify-content:center!important;
+}
+
+.moyo-share-modal .note-write-share-close,
+.moyo-share-modal .moyo-share-close{
+    position:absolute!important;
+    right:14px!important;
+    top:50%!important;
+    transform:translateY(-50%)!important;
+}
+
+.moyo-share-modal[data-share-mode="permission"] .note-write-share-tabs,
+.moyo-share-modal[data-share-mode="permission"] .moyo-share-tabs{
+    width:calc(100% - 40px)!important;
+    display:flex!important;
+    flex-direction:row!important;
+    align-items:center!important;
+    margin:14px 20px 0!important;
+    padding:0!important;
+    gap:0!important;
+    border:1px solid #dbe5f4!important;
+    border-radius:14px!important;
+    overflow:hidden!important;
+    background:#fff!important;
+}
+
+.moyo-share-modal[data-share-mode="permission"] .note-write-share-tab,
+.moyo-share-modal[data-share-mode="permission"] .moyo-share-tab{
+    position:relative!important;
+    flex:1 1 0!important;
+    width:auto!important;
+    height:42px!important;
+    min-width:0!important;
+    display:inline-flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    gap:6px!important;
+    padding:0 10px!important;
+    border:0!important;
+    border-radius:0!important;
+    background:#fff!important;
+    color:#475569!important;
+    font-size:13px!important;
+    font-weight:900!important;
+    line-height:1!important;
+    white-space:nowrap!important;
+    box-shadow:none!important;
+}
+
+.moyo-share-modal[data-share-mode="permission"] .note-write-share-tab:not(:last-child)::after,
+.moyo-share-modal[data-share-mode="permission"] .moyo-share-tab:not(:last-child)::after{
+    content:""!important;
+    position:absolute!important;
+    right:0!important;
+    top:11px!important;
+    width:1px!important;
+    height:20px!important;
+    background:#e6edf7!important;
+}
+
+.moyo-share-modal[data-share-mode="permission"] .note-write-share-tab.is-active,
+.moyo-share-modal[data-share-mode="permission"] .moyo-share-tab.is-active{
+    background:#f4f8ff!important;
+    color:#3467df!important;
+    box-shadow:inset 0 -2px 0 #6f95ff!important;
+}
+
+.moyo-share-modal[data-share-mode="permission"] .note-write-share-card,
+.moyo-share-modal[data-share-mode="permission"] .moyo-share-card{
+    min-height:56px!important;
+    padding:9px 10px!important;
+    border-left:1px solid var(--moyo-share-border)!important;
+    border-radius:14px!important;
+    background:#fff!important;
+    box-shadow:none!important;
+}
+
+.moyo-share-modal[data-share-mode="permission"] .note-write-share-card:hover,
+.moyo-share-modal[data-share-mode="permission"] .note-write-share-card.is-selected{
+    border-color:#b9cdff!important;
+    background:#fbfdff!important;
+    box-shadow:none!important;
+}
+
+
+/* v252: 권한 설정 후보도 공유 모달처럼 선택 체크 표시 */
+.moyo-share-modal[data-share-mode="permission"] .note-write-share-card .note-write-share-check{
+    flex:0 0 22px!important;
+    width:22px!important;
+    height:22px!important;
+    display:inline-flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    margin-left:4px!important;
+    border:1.5px solid #cbd5e1!important;
+    border-radius:999px!important;
+    background:#fff!important;
+    color:#fff!important;
+    font-size:13px!important;
+    font-weight:900!important;
+    line-height:1!important;
+}
+
+.moyo-share-modal[data-share-mode="permission"] .note-write-share-card.is-selected .note-write-share-check{
+    border-color:#4f7cff!important;
+    background:#4f7cff!important;
+}
+
+.moyo-share-modal[data-share-mode="permission"] .note-write-share-card.is-selected .note-write-share-check::before{
+    content:"✓"!important;
+}
+
+
+/* v249: 권한 설정 하단 버튼을 공유 모달과 같은 단일 선택 완료 버튼으로 통일 */
+.moyo-share-modal[data-share-mode="permission"] .note-write-share-modal-actions,
+.moyo-share-modal[data-share-mode="permission"] .moyo-share-footer{
+    display:flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    gap:0!important;
+    padding:12px 20px 18px!important;
+    border-top:1px solid var(--moyo-share-line)!important;
+    background:#fff!important;
+}
+
+.moyo-share-modal[data-share-mode="permission"] .note-soft-btn,
+.moyo-share-modal[data-share-mode="permission"] .moyo-share-cancel-button{
+    display:none!important;
+}
+
+.moyo-share-modal[data-share-mode="permission"] .note-gradient-btn,
+.moyo-share-modal[data-share-mode="permission"] .moyo-share-apply-button{
+    width:100%!important;
+    min-width:0!important;
+    height:42px!important;
+    border-radius:12px!important;
+    font-size:13px!important;
+    font-weight:900!important;
+}
+
+/* v250: 권한 설정 하단 선택 완료 버튼을 공유 모달과 동일하게 전체 폭으로 고정 */
+.moyo-share-modal[data-share-mode="permission"] .note-write-share-modal-actions > div,
+.moyo-share-modal[data-share-mode="permission"] .moyo-share-footer > div{
+    width:100%!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    gap:0!important;
+    margin:0!important;
+}
+
+.moyo-share-modal[data-share-mode="permission"] .note-write-share-modal-actions .note-gradient-btn,
+.moyo-share-modal[data-share-mode="permission"] .note-write-share-modal-actions .moyo-share-apply-button,
+.moyo-share-modal[data-share-mode="permission"] .moyo-share-footer .note-gradient-btn,
+.moyo-share-modal[data-share-mode="permission"] .moyo-share-footer .moyo-share-apply-button{
+    flex:1 1 auto!important;
+    width:100%!important;
+    max-width:none!important;
+    min-width:0!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+}
+
+
+/* 권한 설정: 그룹/프로젝트 자체와 하위 멤버를 먼저 구분해서 선택 */
+.moyo-share-modal .note-share-permission-scope-toggle{
+    margin-left:auto!important;
+    display:inline-flex!important;
+    align-items:center!important;
+    gap:4px!important;
+    padding:2px!important;
+    border:1px solid #d7e2f0!important;
+    border-radius:999px!important;
+    background:#f8fafc!important;
+}
+
+.moyo-share-modal .note-share-permission-scope-btn{
+    height:24px!important;
+    min-width:54px!important;
+    display:inline-flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    padding:0 10px!important;
+    border:0!important;
+    border-radius:999px!important;
+    background:transparent!important;
+    color:#64748b!important;
+    font-size:11px!important;
+    font-weight:900!important;
+    line-height:1!important;
+    white-space:nowrap!important;
+    cursor:pointer!important;
+    box-shadow:none!important;
+    outline:0!important;
+}
+
+.moyo-share-modal .note-share-permission-scope-btn.is-active{
+    background:#fff!important;
+    color:var(--moyo-share-blue)!important;
+    box-shadow:0 1px 5px rgba(31,51,84,.09)!important;
+}
+
+/* 권한 설정: 개인/친구=블루, 그룹 멤버=민트, 프로젝트 멤버=보라.
+   아바타 모양은 대상 단위 구분용: 개인/멤버는 원형, 그룹/프로젝트 자체는 라운드 사각형. */
+.moyo-share-modal .note-write-share-card.note-share-type-user:not(.note-share-scope-ws-member):not(.note-share-scope-proj-member) .note-share-avatar,
+.moyo-share-modal .note-share-chip.note-share-type-user:not(.note-share-scope-ws-member):not(.note-share-scope-proj-member) .note-share-avatar{
+    --share-accent:var(--moyo-share-blue)!important;
+    --share-soft:#eef4ff!important;
+    border-radius:999px!important;
+}
+
+.moyo-share-modal .note-write-share-card.note-share-type-ws .note-share-avatar,
+.moyo-share-modal .note-write-share-card.note-share-type-proj .note-share-avatar,
+.moyo-share-modal .note-share-chip.note-share-type-ws .note-share-avatar,
+.moyo-share-modal .note-share-chip.note-share-type-proj .note-share-avatar{
+    border-radius:12px!important;
+}
+
+.moyo-share-modal .note-write-share-card.note-share-scope-ws-member,
+.moyo-share-modal .note-share-chip.note-share-scope-ws-member{
+    --share-accent:var(--moyo-share-mint)!important;
+    --share-soft:#eafffb!important;
+    border-color:rgba(89, 210, 194, .48)!important;
+    background:#f8fffd!important;
+}
+
+.moyo-share-modal .note-write-share-card.note-share-scope-proj-member,
+.moyo-share-modal .note-share-chip.note-share-scope-proj-member{
+    --share-accent:var(--moyo-share-violet)!important;
+    --share-soft:#f2efff!important;
+    border-color:rgba(125, 107, 255, .38)!important;
+    background:#fbfaff!important;
+}
+
+.moyo-share-modal .note-write-share-card.note-share-scope-ws-member .note-share-avatar,
+.moyo-share-modal .note-write-share-card.note-share-scope-proj-member .note-share-avatar,
+.moyo-share-modal .note-share-chip.note-share-scope-ws-member .note-share-avatar,
+.moyo-share-modal .note-share-chip.note-share-scope-proj-member .note-share-avatar{
+    border-radius:999px!important;
+    background:var(--share-soft)!important;
+    color:var(--share-accent)!important;
+}
+
+.moyo-share-modal .note-share-chip.note-share-type-proj{
+    --share-accent:var(--moyo-share-violet)!important;
+}
+
+/* 공유받은 콘텐츠: 재공유 방지 / 해지 안내 모드 */
+.note-share-received-panel {
+    min-height: 190px;
+    padding: 34px 24px 28px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 12px;
+    color: #12233d;
+}
+.note-share-received-icon {
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #edf4ff;
+    color: #4f78ff;
+    font-size: 22px;
+    font-weight: 800;
+}
+.note-share-received-panel strong {
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+}
+.note-share-received-panel p {
+    margin: 0;
+    color: #7b8da8;
+    font-size: 13px;
+    line-height: 1.55;
+}
+.note-share-received-action {
+    width: 100%;
+}
+
+/* 공유 모달: 공유 요청과 편집 권한을 한 번에 지정하는 빠른 옵션 */
+.moyo-share-modal .note-share-edit-option{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    min-height:42px;
+    padding:9px 12px;
+    margin-right:auto;
+    border:1px solid rgba(79,120,255,.18);
+    border-radius:14px;
+    background:#f8fbff;
+    color:#183153;
+    cursor:pointer;
+    user-select:none;
+    transition:border-color .16s ease, background .16s ease, box-shadow .16s ease;
+}
+.moyo-share-modal .note-share-edit-option[hidden]{display:none!important;}
+.moyo-share-modal .note-share-edit-option input{
+    width:17px;
+    height:17px;
+    margin:0;
+    accent-color:#4f78ff;
+    flex:0 0 auto;
+}
+.moyo-share-modal .note-share-edit-option-text{
+    display:flex;
+    flex-direction:column;
+    gap:2px;
+    line-height:1.25;
+}
+.moyo-share-modal .note-share-edit-option-text strong{
+    font-size:13px;
+    font-weight:800;
+    letter-spacing:-.02em;
+}
+.moyo-share-modal .note-share-edit-option-text small{
+    font-size:11.5px;
+    color:#7d8da5;
+    font-weight:600;
+}
+.moyo-share-modal .note-share-edit-option.is-active{
+    border-color:rgba(79,120,255,.42);
+    background:#eef4ff;
+    box-shadow:0 8px 18px rgba(79,120,255,.10);
+}
+.moyo-share-modal .note-share-edit-option.is-disabled{
+    opacity:.72;
+}
+.moyo-share-modal .note-share-chip-permission{
+    display:inline-flex;
+    align-items:center;
+    height:20px;
+    padding:0 7px;
+    border-radius:999px;
+    background:#eef4ff;
+    color:#4f78ff;
+    font-size:11px;
+    font-weight:800;
+    letter-spacing:-.02em;
+}
+@media (max-width: 720px){
+    .moyo-share-modal .note-write-share-modal-actions{
+        align-items:stretch;
+    }
+    .moyo-share-modal .note-share-edit-option{
+        width:100%;
+        margin-right:0;
+    }
+}
+
+/* v260: 공유 모달 편집 권한 옵션 추가 후에도 하단 보내기 버튼은 한 행 전체 사용 */
+.moyo-share-modal[data-share-mode="share"] .note-write-share-modal-actions{
+    flex-direction:column!important;
+    align-items:stretch!important;
+    justify-content:center!important;
+    gap:10px!important;
+}
+.moyo-share-modal[data-share-mode="share"] .note-share-edit-option{
+    width:100%!important;
+    margin-right:0!important;
+    box-sizing:border-box!important;
+}
+.moyo-share-modal[data-share-mode="share"] .note-write-share-modal-actions > div{
+    width:100%!important;
+    flex:0 0 auto!important;
+    display:flex!important;
+}
+.moyo-share-modal[data-share-mode="share"] .note-write-share-modal-actions .note-gradient-btn,
+.moyo-share-modal[data-share-mode="share"] .note-write-share-modal-actions .moyo-share-apply-button{
+    width:100%!important;
+}
+
+/* v262: 공유 해지 모드는 사진/노트/캘린더 공통 확인형 레이아웃 */
+.moyo-share-modal.is-received-share-view .note-write-share-tabs,
+.moyo-share-modal.is-received-share-view .moyo-share-tabs,
+.moyo-share-modal.is-received-share-view .note-write-share-toolbar,
+.moyo-share-modal.is-received-share-view .note-write-share-subtitle,
+.moyo-share-modal.is-received-share-view .note-share-edit-option,
+.moyo-share-modal.is-received-share-view .note-write-share-body > div + div{
+    display:none!important;
+}
+
+.moyo-share-modal.is-received-share-view .note-write-share-body,
+.moyo-share-modal .note-write-share-body-received{
+    display:block!important;
+    grid-template-columns:none!important;
+    padding:34px 24px 28px!important;
+    border-top:1px solid #edf2f8!important;
+    background:#fff!important;
+}
+
+.moyo-share-modal.is-received-share-view .note-write-share-body > div:first-child,
+.moyo-share-modal .note-write-share-body-received > div:first-child{
+    display:block!important;
+    width:100%!important;
+    min-width:0!important;
+}
+
+.moyo-share-modal.is-received-share-view .note-write-share-list{
+    width:100%!important;
+    min-height:0!important;
+    max-height:none!important;
+    overflow:visible!important;
+    padding:0!important;
+    border:0!important;
+    border-radius:0!important;
+    background:transparent!important;
+}
+
+.moyo-share-modal.is-received-share-view .note-share-received-panel{
+    min-height:126px!important;
+    padding:0!important;
+    gap:12px!important;
+    display:flex!important;
+    flex-direction:column!important;
+    align-items:center!important;
+    justify-content:center!important;
+    text-align:center!important;
+    border:0!important;
+    background:transparent!important;
+}
+
+.moyo-share-modal.is-received-share-view .note-share-received-icon{
+    width:44px!important;
+    height:44px!important;
+    border-radius:50%!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    background:#eef5ff!important;
+    color:#4f78ff!important;
+}
+
+.moyo-share-modal.is-received-share-view .note-share-received-panel strong{
+    margin-top:2px!important;
+    font-size:15px!important;
+    line-height:1.45!important;
+    font-weight:900!important;
+    color:#12233d!important;
+    letter-spacing:-.03em!important;
+}
+
+.moyo-share-modal.is-received-share-view .note-share-received-panel p{
+    max-width:420px!important;
+    margin:0!important;
+    color:#7b8da8!important;
+    font-size:13px!important;
+    line-height:1.55!important;
+    font-weight:700!important;
+    letter-spacing:-.03em!important;
+}
+
+.moyo-share-modal.is-received-share-view .note-write-share-modal-actions{
+    padding:16px 24px 18px!important;
+    border-top:1px solid #eef2f8!important;
+    display:flex!important;
+    justify-content:stretch!important;
+    align-items:center!important;
+    background:#fff!important;
+}
+
+.moyo-share-modal.is-received-share-view .note-write-share-modal-actions > div{
+    width:100%!important;
+    flex:0 0 100%!important;
+    display:flex!important;
+    justify-content:stretch!important;
+}
+
+.moyo-share-modal.is-received-share-view .note-soft-btn{
+    display:none!important;
+}
+
+.moyo-share-modal.is-received-share-view .note-share-received-action,
+.moyo-share-modal.is-received-share-view .note-gradient-btn{
+    width:100%!important;
+    min-width:0!important;
+    height:42px!important;
+    padding:0 24px!important;
+    margin:0!important;
+    border-radius:12px!important;
+}
+
+/* v264: 공유 해지 모드 아이콘은 공통 종이비행기 라인 아이콘 사용 + 버튼 한 줄 전체 사용 */
+.moyo-share-modal.is-received-share-view .note-share-received-icon svg{
+    width:22px!important;
+    height:22px!important;
+    display:block!important;
+    fill:none!important;
+    stroke:currentColor!important;
+    stroke-width:2.2!important;
+    stroke-linecap:round!important;
+    stroke-linejoin:round!important;
+}
+.moyo-share-modal.is-received-share-view .note-share-received-scope-icon{
+    font-size:13px!important;
+    font-weight:900!important;
+    letter-spacing:-.04em!important;
+}
+
+
+
+/* v266: 사진/노트/캘린더 공유 해지 모달 종이비행기 아이콘 공통 라인형 고정 */
+.moyo-share-modal .photo-share-release-icon svg{
+    width:22px!important;
+    height:22px!important;
+    display:block!important;
+    fill:none!important;
+    stroke:currentColor!important;
+    stroke-width:2.2!important;
+    stroke-linecap:round!important;
+    stroke-linejoin:round!important;
+}
+
+.moyo-share-modal .photo-share-release-icon svg path{
+    fill:none!important;
+    stroke:currentColor!important;
+}
+
+.moyo-share-modal.is-received-share-view .note-share-received-icon svg path{
+    fill:none!important;
+    stroke:currentColor!important;
+}
+
+/* v265: 공유 해지 전용 모달은 사진/노트/캘린더 모두 동일하게 하단 버튼 한 줄 전체 사용 */
+.moyo-share-modal.photo-share-release-only .note-write-share-modal-actions,
+.moyo-share-modal.is-received-share-view .note-write-share-modal-actions{
+    padding:16px 24px 18px!important;
+    border-top:1px solid #eef2f8!important;
+    display:flex!important;
+    justify-content:stretch!important;
+    align-items:center!important;
+    background:#fff!important;
+}
+
+.moyo-share-modal.photo-share-release-only .note-write-share-modal-actions > div,
+.moyo-share-modal.is-received-share-view .note-write-share-modal-actions > div{
+    width:100%!important;
+    flex:0 0 100%!important;
+    display:flex!important;
+    justify-content:stretch!important;
+    align-items:center!important;
+}
+
+.moyo-share-modal.photo-share-release-only .photo-share-release-apply,
+.moyo-share-modal.photo-share-release-only .note-gradient-btn.photo-share-release-apply,
+.moyo-share-modal.is-received-share-view .note-share-received-action,
+.moyo-share-modal.is-received-share-view .note-gradient-btn.note-share-received-action{
+    width:100%!important;
+    min-width:0!important;
+    max-width:none!important;
+    flex:1 1 auto!important;
+    height:42px!important;
+    padding:0 24px!important;
+    margin:0!important;
+    border-radius:12px!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:center!important;
 }

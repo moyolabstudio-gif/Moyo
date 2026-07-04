@@ -36,6 +36,7 @@ public class noteDTO {
 
     private Date regDt;
     private Date updDt;
+    private Date deletedAt;
     private Long updatedBy;
 
     // 화면 표시용
@@ -277,6 +278,27 @@ public class noteDTO {
 
     public void setUpdDt(Date updDt) {
         this.updDt = updDt;
+    }
+
+    public Date getDeletedAt() {
+        return deletedAt;
+    }
+
+    public void setDeletedAt(Date deletedAt) {
+        this.deletedAt = deletedAt;
+    }
+
+    public int getTrashRemainingDays() {
+        if (deletedAt == null) return 30;
+        long expireAt = deletedAt.getTime() + (30L * 24L * 60L * 60L * 1000L);
+        long remaining = expireAt - System.currentTimeMillis();
+        if (remaining <= 0) return 0;
+        return (int) Math.ceil(remaining / (24D * 60D * 60D * 1000D));
+    }
+
+    public String getTrashRemainingLabel() {
+        int days = getTrashRemainingDays();
+        return days <= 0 ? "오늘 영구 삭제 예정" : days + "일 남음";
     }
 
 

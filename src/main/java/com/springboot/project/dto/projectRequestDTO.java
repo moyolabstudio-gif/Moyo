@@ -29,14 +29,16 @@ public class projectRequestDTO {
         }
 
         calendarResponseDTO event = new calendarResponseDTO();
-        event.setTitle(this.projName + " 시작");
+        event.setTitle(this.projName);
         event.setStartDt(this.startDate + "T00:00");
         event.setEndDt(this.endDate + "T23:59");
         event.setProjId(this.projId);
         event.setWsId(this.wsId);
         event.setUserId(this.leaderId);
         event.setItemType("PROJ");
-        event.setColor("#3788d8");
+        event.setColor("#8b63f6");
+        event.setEventType("PROJECT_PERIOD");
+        event.setIsPrivate("Y");
 
         return event;
     }

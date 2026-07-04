@@ -749,3 +749,32 @@ body.moyo-app-sidebar-enabled.poll-page-body > .moyo-footer .moyo-footer-inner{
         padding-bottom:32px !important;
     }
 }
+
+/* ===== Sidebar backdrop safety patch =====
+   데스크톱/닫힌 상태에서 사이드바 백드롭이 화면을 덮는 현상 방지 */
+#moyoAppSidebarBackdrop,
+.moyo-app-sidebar-backdrop {
+    display: none !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+
+@media (max-width: 900px) {
+    body.moyo-app-sidebar-mobile-open #moyoAppSidebarBackdrop,
+    body.moyo-app-sidebar-mobile-open .moyo-app-sidebar-backdrop {
+        display: block !important;
+        opacity: 1 !important;
+        pointer-events: auto !important;
+    }
+}
+
+@media (min-width: 901px) {
+    body.moyo-app-sidebar-enabled #moyoAppSidebarBackdrop,
+    body.moyo-app-sidebar-enabled .moyo-app-sidebar-backdrop,
+    body.moyo-app-sidebar-enabled.moyo-app-sidebar-mobile-open #moyoAppSidebarBackdrop,
+    body.moyo-app-sidebar-enabled.moyo-app-sidebar-mobile-open .moyo-app-sidebar-backdrop {
+        display: none !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+    }
+}

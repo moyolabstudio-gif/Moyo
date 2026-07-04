@@ -16,6 +16,7 @@ public interface IcontentShareService {
     }
 
     boolean saveShare(contentShareDTO share, Long userId, String shareMode);
+    int saveSharesBulk(String contentType, java.util.List<Long> contentIds, java.util.List<String> targetTypes, java.util.List<Long> targetIds, java.util.List<String> permissionTypes, Long userId, String shareMode);
     default boolean saveShare(contentShareDTO share, Long userId) {
         return saveShare(share, userId, null);
     }

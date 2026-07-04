@@ -10,7 +10,8 @@
     <title>노트</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="/css/moyoUi.css?v=moyo-ui-scope-20260617">
-    <link rel="stylesheet" href="/css/noteList.css?v=note-list-header-bg-cut-v1">
+    <link rel="stylesheet" href="/css/noteList.css?v=note-bulk-share-v1">
+<link rel="stylesheet" href="/css/commonShareModal.css?v=note-share-edit-inline-v1">
 <link rel="stylesheet" href="/css/commonFolderModal.css?v=common-folder-modal-final-v15">
 </head>
 <body class="note-list-page">
@@ -37,7 +38,7 @@
 <c:if test="${writeScope eq 'WS' and not empty effectiveWsId}"><c:set var="writeQuery" value="${writeQuery}&amp;wsId=${effectiveWsId}" /></c:if>
 <c:if test="${writeScope eq 'PROJ' and not empty effectiveWsId}"><c:set var="writeQuery" value="${writeQuery}&amp;wsId=${effectiveWsId}" /></c:if>
 <c:if test="${writeScope eq 'PROJ' and not empty effectiveProjId}"><c:set var="writeQuery" value="${writeQuery}&amp;projId=${effectiveProjId}" /></c:if>
-<c:if test="${not empty selectedFolderId}"><c:set var="writeQuery" value="${writeQuery}&amp;folderId=${selectedFolderId}" /></c:if>
+<c:if test="${scope ne 'FRIEND' and not empty selectedFolderId}"><c:set var="writeQuery" value="${writeQuery}&amp;folderId=${selectedFolderId}" /></c:if>
 
 <c:set var="canWriteInCurrentContext" value="true" />
 
@@ -92,7 +93,7 @@
             <c:if test="${not empty effectiveWsId}"><c:set var="importantFilterQuery" value="${importantFilterQuery}&amp;wsId=${effectiveWsId}" /></c:if>
             <c:if test="${not empty effectiveProjId}"><c:set var="importantFilterQuery" value="${importantFilterQuery}&amp;projId=${effectiveProjId}" /></c:if>
             <c:if test="${scope eq 'FRIEND' and not empty effectiveFriendUserId}"><c:set var="importantFilterQuery" value="${importantFilterQuery}&amp;friendUserId=${effectiveFriendUserId}" /></c:if>
-            <c:if test="${not empty selectedFolderId}"><c:set var="importantFilterQuery" value="${importantFilterQuery}&amp;folderId=${selectedFolderId}" /></c:if>
+            <c:if test="${scope ne 'FRIEND' and not empty selectedFolderId}"><c:set var="importantFilterQuery" value="${importantFilterQuery}&amp;folderId=${selectedFolderId}" /></c:if>
             <c:if test="${not empty keyword}"><c:set var="importantFilterQuery" value="${importantFilterQuery}&amp;keyword=${keyword}" /></c:if>
             <c:if test="${not importantOnly}"><c:set var="importantFilterQuery" value="${importantFilterQuery}&amp;importantOnly=true" /></c:if>
             <a class="nl-important-filter ${importantOnly ? 'is-active' : ''}"
@@ -111,7 +112,7 @@
             <c:if test="${not empty effectiveWsId}"><input type="hidden" name="wsId" value="${effectiveWsId}"></c:if>
             <c:if test="${not empty effectiveProjId}"><input type="hidden" name="projId" value="${effectiveProjId}"></c:if>
             <c:if test="${scope eq 'FRIEND' and not empty effectiveFriendUserId}"><input type="hidden" name="friendUserId" value="${effectiveFriendUserId}"></c:if>
-            <c:if test="${not empty selectedFolderId}"><input type="hidden" name="folderId" value="${selectedFolderId}"></c:if>
+            <c:if test="${scope ne 'FRIEND' and not empty selectedFolderId}"><input type="hidden" name="folderId" value="${selectedFolderId}"></c:if>
             <c:if test="${importantOnly}"><input type="hidden" name="importantOnly" value="true"></c:if>
             <span class="nl-search-icon" aria-hidden="true">⌕</span>
             <input type="search" name="keyword" value="${keyword}" placeholder="노트 검색" aria-label="노트 검색">
@@ -332,7 +333,7 @@
         </c:forEach>
     </c:if>
 
-    <c:if test="${scope eq 'PRIVATE' or (scope eq 'FRIEND' and not empty effectiveFriendUserId) or (scope eq 'WS' and not empty effectiveWsId) or (scope eq 'PROJ' and not empty effectiveProjId)}">
+    <c:if test="${scope eq 'PRIVATE' or (scope eq 'WS' and not empty effectiveWsId) or (scope eq 'PROJ' and not empty effectiveProjId)}">
         <c:set var="folderBaseQuery" value="scope=${scope}" />
         <c:if test="${importantOnly}"><c:set var="folderBaseQuery" value="${folderBaseQuery}&amp;importantOnly=true" /></c:if>
         <c:if test="${scope eq 'WS'}"><c:set var="folderBaseQuery" value="${folderBaseQuery}&amp;wsId=${effectiveWsId}" /></c:if>
@@ -351,12 +352,6 @@
                     <strong>폴더</strong>
                     <span>${folderScopeName} 노트를 폴더별로 확인합니다.</span>
                 </div>
-                <c:if test="${canManageFolders}">
-                    <button type="button" class="nl-folder-create-button" data-folder-create>
-                        <i class="fa-solid fa-plus" aria-hidden="true"></i>
-                        새 폴더
-                    </button>
-                </c:if>
             </div>
             <span hidden id="noteFolderManageConfig" data-can-manage="${canManageFolders}" data-scope="${scope}" data-ws-id="${effectiveWsId}" data-proj-id="${effectiveProjId}"></span>
             <div class="nl-horizontal-scroller nl-folder-scroller" data-horizontal-scroller>
@@ -390,6 +385,11 @@
                                 </c:if>
                             </div>
                         </c:forEach>
+                        <c:if test="${canManageFolders}">
+                            <button type="button" class="nl-folder-create-button nl-folder-add-chip" data-folder-create title="새 폴더" aria-label="새 폴더">
+                                <i class="fa-solid fa-folder-plus" aria-hidden="true"></i>
+                            </button>
+                        </c:if>
                     </div>
                 </div>
                 <button type="button" class="nl-scroll-button is-next" data-scroll-next aria-label="다음 폴더">
@@ -410,6 +410,9 @@
             <div class="nl-section-title-wrap">
                 <h2><c:out value="${scopeLabel}" /></h2>
                 <span class="nl-list-count" data-count="${fn:length(noteList)}">${fn:length(noteList)}개의 노트</span>
+                <c:if test="${scope eq 'TRASH'}">
+                    <p class="nl-trash-retention-notice">휴지통의 노트는 30일 후 자동 영구 삭제됩니다.</p>
+                </c:if>
                 <c:if test="${scope eq 'TRASH' and not empty noteList}">
                     <div class="nl-trash-bulk-actions" id="noteTrashBulkActions" aria-label="휴지통 전체 작업">
                         <button type="button" class="nl-trash-bulk-button" id="noteRestoreAllTrash">
@@ -452,6 +455,10 @@
                     <button type="button" id="noteBulkMove" data-note-bulk-move-drop disabled>
                         <i class="fa-regular fa-folder-open" aria-hidden="true"></i>
                         폴더 이동
+                    </button>
+                    <button type="button" id="noteBulkShare" data-note-bulk-share-drop disabled>
+                        <i class="fa-regular fa-paper-plane" aria-hidden="true"></i>
+                        공유
                     </button>
                     <button type="button" class="is-danger" id="noteBulkTrash" data-note-bulk-trash-drop disabled>
                         <i class="fa-regular fa-trash-can" aria-hidden="true"></i>
@@ -539,6 +546,9 @@
                                         </c:if>
                                     </h3>
                                     <div class="nl-card-head-actions">
+                                        <c:if test="${scope eq 'TRASH'}">
+                                            <span class="nl-trash-retention-badge ${note.trashRemainingDays le 1 ? 'is-urgent' : ''}"><c:out value="${note.trashRemainingLabel}" /></span>
+                                        </c:if>
                                         <c:if test="${not (scope eq 'FRIEND' and note.scopeType eq 'PRIVATE' and not note.ownedByMe)}">
                                             <span class="nl-scope-badge ${note.scopeType eq 'PRIVATE' and not note.ownedByMe ? 'nl-scope-FRIEND' : 'nl-scope-'}${note.scopeType eq 'PRIVATE' and not note.ownedByMe ? '' : note.scopeType}">
                                                 <c:choose>
@@ -583,8 +593,6 @@
                                         <c:choose>
                                             <c:when test="${note.scopeType eq 'PRIVATE' and not note.ownedByMe}">
                                                 <strong><c:out value="${empty note.userName ? '알 수 없음' : note.userName}" /></strong>
-                                                <span>/</span>
-                                                <span><c:out value="${empty note.folderPath ? '미분류' : note.folderPath}" /></span>
                                             </c:when>
                                             <c:when test="${note.scopeType eq 'WS'}">
                                                 <strong><c:out value="${empty note.workspaceName ? '그룹' : note.workspaceName}" /></strong>
@@ -629,6 +637,48 @@
 </main>
 
 
+<div id="noteListShareMount"></div>
+<div id="noteListShareHiddenFields" hidden></div>
+<div id="noteListWorkspaceTargetSource" hidden>
+    <c:forEach var="workspace" items="${noteWorkspaceList}">
+        <div data-ws-id="${workspace.wsId}"
+             data-ws-name="${workspace.wsName}"
+             data-ws-image-path="${workspace.wsImagePath}"></div>
+    </c:forEach>
+</div>
+<div id="noteListProjectTargetSource" hidden>
+    <c:forEach var="project" items="${noteProjectList}">
+        <div data-proj-id="${project.projId}"
+             data-proj-name="${project.projName}"
+             data-ws-id="${project.wsId}"
+             data-ws-name="${project.wsName}"></div>
+    </c:forEach>
+</div>
+<div id="noteListWorkspaceMemberSource" hidden>
+    <c:forEach var="member" items="${noteWorkspaceMemberList}">
+        <div data-user-id="${member.userId}"
+             data-user-name="${member.userName}"
+             data-email="${member.email}"
+             data-profile-image-path="${member.profileImagePath}"
+             data-ws-id="${member.wsId}"
+             data-ws-name="${member.wsName}"
+             data-role-name="${member.roleName}"></div>
+    </c:forEach>
+</div>
+<div id="noteListProjectMemberSource" hidden>
+    <c:forEach var="member" items="${noteProjectMemberList}">
+        <div data-user-id="${member.userId}"
+             data-user-name="${member.userName}"
+             data-email="${member.email}"
+             data-profile-image-path="${member.profileImagePath}"
+             data-ws-id="${member.wsId}"
+             data-ws-name="${member.wsName}"
+             data-proj-id="${member.projId}"
+             data-proj-name="${member.projName}"
+             data-role-name="${member.roleName}"></div>
+    </c:forEach>
+</div>
+
 <div class="nl-modal-backdrop common-folder-modal" id="noteMoveModal" hidden>
     <section class="nl-move-modal" role="dialog" aria-modal="true" aria-labelledby="noteMoveModalTitle">
         <div class="nl-modal-head">
@@ -649,6 +699,7 @@
 
 
 <jsp:include page="/WEB-INF/views/common/footer.jsp" />
-<script src="/js/noteList.js?v=note-list-route-context-v3"></script>
+<script src="/js/commonShareModal.js?v=note-share-edit-inline-v1"></script>
+<script src="/js/noteList.js?v=note-bulk-share-v1"></script>
 </body>
 </html>

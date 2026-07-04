@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <link rel="stylesheet" href="/css/note.css?v=note-ckeditor-media-table-v41">
 <link rel="stylesheet" href="/css/commonFolderModal.css?v=common-folder-modal-final-v15">
-    <link rel="stylesheet" href="/css/commonShareModal.css?v=common-share-stable-v40">
+    <link rel="stylesheet" href="/css/commonShareModal.css?v=note-share-edit-inline-v1">
     <script src="https://cdn.ckeditor.com/ckeditor5/41.1.0/super-build/ckeditor.js"></script>
     <script src="https://cdn.ckeditor.com/ckeditor5/41.1.0/super-build/translations/ko.js"></script>
     <script src="/js/commonCkeditor.js?v=moyo-editor-media-preview-v3"></script>
@@ -294,7 +294,7 @@
 <script src="/js/commonFolderModal.js?v=common-folder-modal-v13"></script>
 <script src="/js/noteFolderAdapter.js?v=note-folder-adapter-v10"></script>
 <script src="/js/noteEditor.js?v=note-editor-folder-common-v10"></script>
-<script src="/js/commonShareModal.js?v=244"></script>
+<script src="/js/commonShareModal.js?v=note-share-edit-inline-v1"></script>
 <script>
 (function () {
     function initNoteWriteShare() {

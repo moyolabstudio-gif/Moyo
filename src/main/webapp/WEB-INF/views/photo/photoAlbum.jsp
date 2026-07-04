@@ -9,91 +9,132 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/moyoUi.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/moyoModal.css">
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/photoAlbum.css?v=285-photo-origin-right">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/photoAlbum.css?v=display-file-output-final-1">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/commonShareModal.css?v=246">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/commonFriendPickerModal.css?v=14">
 </head>
-<body>
+<body class="note-list-page">
 <jsp:include page="/WEB-INF/views/common/header.jsp" />
-<main class="photo-page" data-scope-type="${scopeType}" data-scope-id="${scopeId}" data-current-user-id="${currentUserId}" data-current-user-name="<c:out value='${sessionScope.user.userName}'/>" data-admin="${isScopeAdmin}" data-context-path="${pageContext.request.contextPath}">
-    <div class="photo-shell">
-        <header class="photo-page-header">
-            <div class="photo-heading-group">
-                <div><span class="photo-eyebrow" id="photoHeroEyebrow"><c:out value="${scopeLabel}"/></span><h1 id="photoHeroTitle">사진첩</h1><p id="photoHeroDescription"><c:out value="${scopeDescription}"/></p></div>
+<main id="photoAlbumPage" class="photo-ui-shell" data-scope-type="${scopeType}" data-scope-id="${scopeId}" data-current-user-id="${currentUserId}" data-current-user-name="<c:out value='${sessionScope.user.userName}'/>" data-admin="${isScopeAdmin}" data-context-path="${pageContext.request.contextPath}">
+    <div id="photoAlbumContent">
+        <section id="photoTopArea" class="photo-ui-page-header" aria-label="사진첩 상단">
+            <div id="photoHero" class="photo-ui-hero">
+                <div>
+                    <h1 id="photoHeroTitle">사진첩</h1>
+                    <p id="photoHeroDescription"><c:out value="${scopeDescription}"/></p>
+                </div>
+                <a id="openPostModalButton" class="photo-ui-create-button" href="${pageContext.request.contextPath}/photo-post/write?scopeType=${scopeType}&amp;scopeId=${scopeId}">
+                    <span aria-hidden="true">＋</span> 사진 올리기
+                </a>
             </div>
-            <div class="photo-header-actions"><a class="photo-primary-button" id="openPostModalButton" href="${pageContext.request.contextPath}/photo-post/write?scopeType=${scopeType}&scopeId=${scopeId}"><i class="fa-solid fa-plus"></i> 사진 올리기</a></div>
-        </header>
 
-        <div class="photo-tabbar">
-            <div class="photo-view-tabs photo-scope-tabs" role="tablist" aria-label="사진첩 범위">
-                <button class="active photo-moyo-tab" data-view="posts" data-photo-tab="moyo" aria-label="MOYO 피드"><span class="photo-moyo-mark">MOYO</span></button>
-                <button data-view="posts" data-photo-tab="recent"><i class="fa-regular fa-clock"></i> 최근</button>
-                <button data-view="posts" data-photo-tab="personal"><i class="fa-regular fa-user"></i> 개인</button>
-                <button data-view="posts" data-photo-tab="friend"><i class="fa-regular fa-face-smile"></i> 친구</button>
-                <button data-view="posts" data-photo-tab="workspace"><i class="fa-regular fa-building"></i> 그룹</button>
-                <button data-view="posts" data-photo-tab="project"><i class="fa-regular fa-folder"></i> 프로젝트</button>
-                <button class="photo-trash-tab" data-view="posts" data-photo-tab="trash" aria-label="휴지통" title="휴지통"><i class="fa-regular fa-trash-can"></i></button>
-                <button type="button" class="photo-like-filter" data-like-filter="true" aria-pressed="false" aria-label="좋아요 필터" title="현재 범위에서 좋아요한 사진만 보기"><i class="fa-regular fa-heart"></i></button>
+            <div id="photoTopToolbar" class="photo-ui-toolbar" aria-label="사진첩 도구">
+                <nav id="photoViewTabs" class="photo-ui-scope-tabs" role="tablist" aria-label="사진첩 범위">
+                    <button type="button" class="photo-ui-scope-tab active is-active" data-view="posts" data-photo-tab="moyo" aria-label="MOYO 피드">MOYO</button>
+                    <button type="button" class="photo-ui-scope-tab" data-view="posts" data-photo-tab="recent">최근</button>
+                    <button type="button" class="photo-ui-scope-tab" data-view="posts" data-photo-tab="personal">개인</button>
+                    <button type="button" class="photo-ui-scope-tab" data-view="posts" data-photo-tab="friend">친구</button>
+                    <button type="button" class="photo-ui-scope-tab" data-view="posts" data-photo-tab="workspace">그룹</button>
+                    <button type="button" class="photo-ui-scope-tab" data-view="posts" data-photo-tab="project">프로젝트</button>
+                </nav>
+                <button type="button" class="photo-ui-important-filter" data-like-filter="true" aria-pressed="false" aria-label="좋아요한 사진만 보기" title="현재 범위에서 좋아요한 사진만 보기"><i class="fa-regular fa-heart" aria-hidden="true"></i></button>
+                <button type="button" class="photo-ui-trash-button" data-view="posts" data-photo-tab="trash" aria-label="사진 휴지통" title="휴지통"><i class="fa-regular fa-trash-can" aria-hidden="true"></i></button>
+                <label id="photoSearchBox" class="photo-ui-search">
+                    <span class="photo-ui-search-icon" aria-hidden="true">⌕</span>
+                    <input id="postSearchInput" type="search" placeholder="사진 검색" aria-label="사진 검색">
+                </label>
             </div>
-            <label class="photo-search photo-tab-search"><i class="fa-solid fa-magnifying-glass"></i><input id="postSearchInput" type="text" placeholder="사진 검색"></label>
-        </div>
+        </section>
 
-
-        <section class="photo-target-panel photo-target-panel--friend nl-space-picker nl-space-picker-ws" id="photoFriendTargetPanel" hidden aria-label="친구 선택">
-            <div class="photo-target-panel-head nl-space-picker-head"><div class="nl-space-picker-title"><strong>친구</strong><span>공유 요청을 주고받은 친구 기준으로 사진을 확인하세요.</span></div></div>
-            <div class="nl-horizontal-scroller nl-workspace-scroller photo-note-scroller" data-horizontal-scroller>
-                <button type="button" class="nl-scroll-button is-prev" data-scroll-prev aria-label="이전 친구"><i class="fa-solid fa-chevron-left" aria-hidden="true"></i></button>
-                <div class="nl-scroll-viewport" data-scroll-viewport>
-                    <div class="photo-target-scroll nl-space-options" id="photoFriendTargetList">
-                        <button type="button" class="photo-target-card nl-space-option nl-space-option-all is-selected active" data-photo-friend-target="ALL">
-                            <span class="nl-space-avatar nl-space-avatar-all"><i class="fa-solid fa-users"></i></span>
-                            <span class="nl-space-name">전체 친구</span>
+        <section id="photoFriendTargetPanel" class="photo-ui-space-picker photo-ui-space-picker-friend" hidden aria-label="친구 선택">
+            <div class="photo-ui-space-picker-head">
+                <div class="photo-ui-space-picker-title">
+                    <strong>친구</strong>
+                    <span>공유받은 사진을 친구별로 먼저 확인합니다.</span>
+                </div>
+            </div>
+            <div class="photo-ui-horizontal-scroller photo-ui-friend-scroller" data-horizontal-scroller>
+                <button type="button" class="photo-ui-scroll-button is-prev" data-scroll-prev aria-label="이전 친구">
+                    <i class="fa-solid fa-chevron-left" aria-hidden="true"></i>
+                </button>
+                <div class="photo-ui-scroll-viewport" data-scroll-viewport>
+                    <div id="photoFriendTargetList" class="photo-ui-space-options photo-ui-friend-options">
+                        <button type="button" class="photo-ui-space-option photo-ui-friend-option photo-ui-space-option-all active is-selected" data-photo-friend-target="ALL">
+                            <span class="photo-ui-space-avatar photo-ui-friend-avatar photo-ui-friend-avatar-all" aria-hidden="true"><i class="fa-solid fa-users"></i></span>
+                            <span class="photo-ui-friend-name-wrap">
+                                <span class="photo-ui-space-name">전체 친구</span>
+                                <small>공유받은 전체 사진</small>
+                            </span>
                         </button>
                     </div>
                 </div>
-                <button type="button" class="nl-scroll-button is-next" data-scroll-next aria-label="다음 친구"><i class="fa-solid fa-chevron-right" aria-hidden="true"></i></button>
+                <button type="button" class="photo-ui-scroll-button is-next" data-scroll-next aria-label="다음 친구">
+                    <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+                </button>
             </div>
         </section>
 
-        <section class="photo-target-panel photo-target-panel--workspace nl-space-picker nl-space-picker-ws" id="photoWorkspaceTargetPanel" hidden aria-label="그룹 선택">
-            <div class="photo-target-panel-head nl-space-picker-head"><div class="nl-space-picker-title"><strong>그룹</strong><span>사진을 확인할 그룹을 선택하세요.</span></div></div>
-            <div class="nl-horizontal-scroller nl-workspace-scroller photo-note-scroller" data-horizontal-scroller>
-                <button type="button" class="nl-scroll-button is-prev" data-scroll-prev aria-label="이전 그룹"><i class="fa-solid fa-chevron-left" aria-hidden="true"></i></button>
-                <div class="nl-scroll-viewport" data-scroll-viewport><div class="photo-target-scroll nl-space-options" id="photoWorkspaceTargetList"></div></div>
-                <button type="button" class="nl-scroll-button is-next" data-scroll-next aria-label="다음 그룹"><i class="fa-solid fa-chevron-right" aria-hidden="true"></i></button>
+        <section id="photoWorkspaceTargetPanel" class="photo-ui-space-picker photo-ui-space-picker-ws" hidden aria-label="그룹 선택">
+            <div class="photo-ui-space-picker-head"><div class="photo-ui-space-picker-title"><strong>그룹</strong><span>사진을 확인할 그룹을 선택하세요.</span></div></div>
+            <div class="photo-ui-horizontal-scroller photo-ui-workspace-scroller" data-horizontal-scroller>
+                <button type="button" class="photo-ui-scroll-button is-prev" data-scroll-prev aria-label="이전 그룹"><i class="fa-solid fa-chevron-left" aria-hidden="true"></i></button>
+                <div class="photo-ui-scroll-viewport" data-scroll-viewport><div id="photoWorkspaceTargetList" class="photo-ui-space-options"></div></div>
+                <button type="button" class="photo-ui-scroll-button is-next" data-scroll-next aria-label="다음 그룹"><i class="fa-solid fa-chevron-right" aria-hidden="true"></i></button>
             </div>
         </section>
 
-        <section class="photo-target-panel photo-target-panel--project nl-space-picker nl-space-picker-ws nl-project-group-picker" id="photoProjectTargetPanel" hidden aria-label="프로젝트 선택">
-            <div class="photo-target-panel-head nl-space-picker-head"><div class="nl-space-picker-title"><strong>그룹</strong><span>프로젝트를 확인할 그룹을 선택하세요.</span></div></div>
-            <div class="nl-horizontal-scroller nl-workspace-scroller photo-note-scroller" data-horizontal-scroller>
-                <button type="button" class="nl-scroll-button is-prev" data-scroll-prev aria-label="이전 그룹"><i class="fa-solid fa-chevron-left" aria-hidden="true"></i></button>
-                <div class="nl-scroll-viewport" data-scroll-viewport><div class="photo-target-scroll nl-space-options" id="photoProjectWorkspaceTargetList"></div></div>
-                <button type="button" class="nl-scroll-button is-next" data-scroll-next aria-label="다음 그룹"><i class="fa-solid fa-chevron-right" aria-hidden="true"></i></button>
-            </div>
-            <div class="photo-target-project-row nl-space-picker nl-space-picker-project">
-                <div class="photo-target-panel-head photo-target-panel-head--sub nl-space-picker-head"><div class="nl-space-picker-title"><strong>프로젝트</strong><span>선택한 그룹의 프로젝트입니다.</span></div></div>
-                <div class="nl-horizontal-scroller nl-project-scroller photo-note-scroller" data-horizontal-scroller>
-                    <button type="button" class="nl-scroll-button is-prev" data-scroll-prev aria-label="이전 프로젝트"><i class="fa-solid fa-chevron-left" aria-hidden="true"></i></button>
-                    <div class="nl-scroll-viewport" data-scroll-viewport><div class="photo-target-scroll nl-space-options nl-project-options" id="photoProjectTargetList"></div></div>
-                    <button type="button" class="nl-scroll-button is-next" data-scroll-next aria-label="다음 프로젝트"><i class="fa-solid fa-chevron-right" aria-hidden="true"></i></button>
+        <div id="photoProjectTargetPanel" hidden aria-label="프로젝트 선택">
+            <div class="photo-ui-space-picker photo-ui-space-picker-ws photo-ui-project-group-picker">
+                <div class="photo-ui-space-picker-head">
+                    <div class="photo-ui-space-picker-title">
+                        <strong>그룹</strong>
+                        <span>프로젝트를 확인할 그룹을 선택하세요.</span>
+                    </div>
+                </div>
+                <div class="photo-ui-horizontal-scroller photo-ui-workspace-scroller" data-horizontal-scroller>
+                    <button type="button" class="photo-ui-scroll-button is-prev" data-scroll-prev aria-label="이전 그룹"><i class="fa-solid fa-chevron-left" aria-hidden="true"></i></button>
+                    <div class="photo-ui-scroll-viewport" data-scroll-viewport>
+                        <div id="photoProjectWorkspaceTargetList" class="photo-ui-space-options"></div>
+                    </div>
+                    <button type="button" class="photo-ui-scroll-button is-next" data-scroll-next aria-label="다음 그룹"><i class="fa-solid fa-chevron-right" aria-hidden="true"></i></button>
                 </div>
             </div>
-        </section>
 
-        <section class="photo-album-strip nl-folder-explorer" id="photoAlbumStrip" aria-label="앨범">
-            <div class="photo-album-strip-head nl-folder-head">
-                <div><strong>앨범</strong><span>선택한 사진을 앨범별로 확인합니다.</span></div>
+            <div class="photo-ui-space-picker photo-ui-space-picker-project">
+                <div class="photo-ui-space-picker-head">
+                    <div class="photo-ui-space-picker-title">
+                        <strong>프로젝트</strong>
+                        <span>선택한 그룹의 프로젝트입니다.</span>
+                    </div>
+                </div>
+                <div class="photo-ui-horizontal-scroller photo-ui-project-scroller" data-horizontal-scroller>
+                    <button type="button" class="photo-ui-scroll-button is-prev" data-scroll-prev aria-label="이전 프로젝트"><i class="fa-solid fa-chevron-left" aria-hidden="true"></i></button>
+                    <div class="photo-ui-scroll-viewport" data-scroll-viewport>
+                        <div id="photoProjectTargetList" class="photo-ui-space-options photo-ui-project-options"></div>
+                    </div>
+                    <button type="button" class="photo-ui-scroll-button is-next" data-scroll-next aria-label="다음 프로젝트"><i class="fa-solid fa-chevron-right" aria-hidden="true"></i></button>
+                </div>
             </div>
-            <div class="nl-horizontal-scroller nl-folder-scroller photo-note-folder-scroller" data-horizontal-scroller>
-                <button type="button" class="nl-scroll-button is-prev" data-scroll-prev aria-label="이전 앨범"><i class="fa-solid fa-chevron-left" aria-hidden="true"></i></button>
-                <div class="nl-scroll-viewport" data-scroll-viewport><div class="photo-album-chips nl-folder-list" id="photoAlbumChips">
-                    <button type="button" class="photo-album-chip nl-folder-item active is-selected" data-album-filter="ALL"><i class="fa-regular fa-folder-open"></i> 전체</button>
-                    <button type="button" class="photo-album-chip nl-folder-item" data-album-filter="NONE"><i class="fa-regular fa-folder"></i> 미분류</button>
-                    <span class="photo-album-chip-list" id="photoAlbumChipList"></span>
-                    <button type="button" class="nl-folder-create-button photo-album-create" id="openAlbumModalButton"><i class="fa-solid fa-plus" aria-hidden="true"></i> 새 앨범</button>
+        </div>
+
+        <section id="photoAlbumStrip" class="photo-ui-folder-explorer" aria-label="앨범" hidden>
+            <div class="photo-ui-folder-head">
+                <div>
+                    <strong>앨범</strong>
+                    <span>선택한 사진을 앨범별로 확인합니다.</span>
+                </div>
+            </div>
+            <div class="photo-ui-horizontal-scroller photo-ui-folder-scroller" data-horizontal-scroller>
+                <button type="button" class="photo-ui-scroll-button is-prev" data-scroll-prev aria-label="이전 앨범"><i class="fa-solid fa-chevron-left" aria-hidden="true"></i></button>
+                <div class="photo-ui-scroll-viewport" data-scroll-viewport><div id="photoAlbumChips" class="photo-ui-folder-list">
+                    <button type="button" class="photo-ui-folder-item active is-selected" data-album-filter="ALL"><i class="fa-regular fa-folder-open"></i><span>전체</span></button>
+                    <button type="button" class="photo-ui-folder-item" data-album-filter="NONE"><i class="fa-regular fa-folder"></i><span>미분류</span></button>
+                    <span id="photoAlbumChipList"></span>
+                    <button type="button" id="openAlbumModalButton" class="photo-ui-folder-item photo-ui-folder-add-chip" title="새 앨범" aria-label="새 앨범">
+                        <i class="fa-solid fa-folder-plus" aria-hidden="true"></i>
+                    </button>
                 </div></div>
-                <button type="button" class="nl-scroll-button is-next" data-scroll-next aria-label="다음 앨범"><i class="fa-solid fa-chevron-right" aria-hidden="true"></i></button>
+                <button type="button" class="photo-ui-scroll-button is-next" data-scroll-next aria-label="다음 앨범"><i class="fa-solid fa-chevron-right" aria-hidden="true"></i></button>
             </div>
         </section>
 
@@ -107,29 +148,42 @@
                     <option value="WORKSPACE">그룹 공개</option>
                     <option value="PROJECT">프로젝트 공개</option>
                 </select>
-                <div id="photoFriendChips" class="moyo-friend-chips photo-friend-filter" role="group" aria-label="MOYO 최근 업로드 필터">
-                    <button type="button" class="moyo-friend-chip active" data-moyo-friend="ALL">최근</button>
-                </div>
-                <select id="photoOwnerFilter" class="photo-filter-select photo-owner-filter" aria-label="작성자 필터">
+                <select id="photoOwnerFilter" class="photo-filter-select" aria-label="사진 작성자 필터" hidden>
                     <option value="ALL">전체 사진</option>
                     <option value="ME">내가 올린 사진</option>
                 </select>
-                <div class="moyo-friend-actions" aria-label="MOYO 피드 보기 전환">
-                    <button type="button" class="moyo-my-feed-button" id="moyoMyFeedButton"><span class="moyo-mine-label">내 사진</span></button>
-                    <button type="button" class="moyo-friend-find-button" id="openMoyoFriendPickerButton"><i class="fa-solid fa-list-ul"></i> 친구 목록</button>
+                <div id="photoFriendChips" class="moyo-friend-chips photo-friend-filter" role="group" aria-label="MOYO 최근 업로드 필터">
+                    <button type="button" class="moyo-friend-chip active" data-moyo-friend="ALL">최근</button>
                 </div>
-                <select id="photoSortSelect" class="photo-filter-select" aria-label="정렬">
-                    <option value="LATEST">최신순</option>
-                    <option value="POPULAR">인기순</option>
-                </select>
-                <button type="button" class="photo-inline-button photo-share-button" id="openPhotoShareButton" hidden><i class="fa-regular fa-paper-plane"></i> 선택 친구 공유</button>
+                <div class="photo-toolbar-right-cluster" id="photoToolbarRightCluster" aria-label="사진 보기 필터">
+                    <button type="button" class="moyo-my-feed-button" id="moyoMyFeedButton"><span class="moyo-mine-label">내 사진</span></button>
+                    <div class="moyo-friend-actions" aria-label="MOYO 피드 보기 전환">
+                        <button type="button" class="moyo-friend-find-button" id="openMoyoFriendPickerButton"><i class="fa-solid fa-list-ul"></i> 친구 목록</button>
+                    </div>
+                    <div class="photo-layout-toggle" role="group" aria-label="사진첩 보기 방식">
+                        <button type="button" class="active" id="photoGridModeButton" data-photo-layout="grid"><i class="fa-solid fa-table-cells-large"></i> 정리</button>
+                        <button type="button" id="photoFeedModeButton" data-photo-layout="feed"><i class="fa-regular fa-rectangle-list"></i> 피드</button>
+                    </div>
+                    <select id="photoSortSelect" class="photo-filter-select" aria-label="정렬">
+                        <option value="LATEST">최신순</option>
+                        <option value="POPULAR">인기순</option>
+                    </select>
+                    <button type="button" class="photo-inline-button photo-share-button" id="openPhotoShareButton" hidden><i class="fa-regular fa-paper-plane"></i> 선택 친구 공유</button>
+                    <button type="button" class="photo-select-mode-button" id="photoSelectModeButton"><i class="fa-regular fa-square-check" aria-hidden="true"></i><span>선택</span></button>
+                </div>
+                <div class="photo-bulk-bar" id="photoBulkBar" hidden aria-label="사진 선택 작업">
+                    <label class="photo-bulk-select-all"><input type="checkbox" id="photoSelectAll"><span>전체 선택</span></label>
+                    <strong class="photo-bulk-count" id="photoSelectedCount">0개 선택됨</strong>
+                    <div class="photo-bulk-actions">
+                        <button type="button" id="photoBulkMove" data-photo-bulk-move-drop disabled><i class="fa-regular fa-folder-open" aria-hidden="true"></i> 앨범 이동</button>
+                        <button type="button" id="photoBulkShare" data-photo-bulk-share-drop disabled><i class="fa-regular fa-paper-plane" aria-hidden="true"></i> 공유</button>
+                        <button type="button" class="is-danger" id="photoBulkTrash" data-photo-bulk-trash-drop disabled><i class="fa-regular fa-trash-can" aria-hidden="true"></i> 휴지통 이동</button>
+                    </div>
+                </div>
                 <div class="photo-trash-bulk-actions" id="photoTrashBulkActions" hidden aria-label="휴지통 전체 작업">
+                    <span class="photo-trash-retention-guide"><i class="fa-regular fa-clock"></i> 휴지통 사진은 30일 후 자동 영구 삭제됩니다.</span>
                     <button type="button" class="photo-inline-button photo-trash-restore-all" id="restoreAllTrashButton"><i class="fa-solid fa-rotate-left"></i> 전체 복원</button>
                     <button type="button" class="photo-inline-button photo-trash-permanent-all" id="permanentlyDeleteAllTrashButton"><i class="fa-regular fa-trash-can"></i> 전체 영구 삭제</button>
-                </div>
-                <div class="photo-layout-toggle" role="group" aria-label="사진첩 보기 방식">
-                    <button type="button" class="active" id="photoGridModeButton" data-photo-layout="grid"><i class="fa-solid fa-table-cells-large"></i> 정리</button>
-                    <button type="button" id="photoFeedModeButton" data-photo-layout="feed"><i class="fa-regular fa-rectangle-list"></i> 피드</button>
                 </div>
                 <span id="postCountText" class="photo-count-text"></span>
             </div>
@@ -280,8 +334,8 @@
 <jsp:include page="/WEB-INF/views/common/commonFriendPickerModal.jspf" />
 <div id="photoToast" class="photo-toast"></div>
 <jsp:include page="/WEB-INF/views/common/footer.jsp" />
-<script src="${pageContext.request.contextPath}/js/commonShareModal.js?v=246"></script>
+<script src="${pageContext.request.contextPath}/js/commonShareModal.js?v=20260626-photo-bulk-share"></script>
 <script src="${pageContext.request.contextPath}/js/commonFriendPickerModal.js?v=14"></script>
-<script src="${pageContext.request.contextPath}/js/photoAlbum.js?v=277-moyo-recent-line-align"></script>
+<script src="${pageContext.request.contextPath}/js/photoAlbum.js?v=scope-upload-click-fix-1"></script>
 </body>
 </html>

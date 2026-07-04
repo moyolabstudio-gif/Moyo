@@ -2,6 +2,7 @@ package com.springboot.project.service.impl;
 
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
@@ -96,13 +97,14 @@ public class photoAlbumServiceImpl implements IphotoAlbumService {
 
     @Override
     public List<Map<String, Object>> getPostPhotos(Long postId) {
-        return photoAlbumDAO.selectPostPhotos(postId);
+        return enrichPhotoSidecars(photoAlbumDAO.selectPostPhotos(postId));
     }
 
     @Override
     @Transactional
     public Long createPost(String scopeType, Long scopeId, Long albumId, String title,
-                           String description, String visibilityType, List<MultipartFile> files, Long userId) {
+                           String description, String visibilityType, List<MultipartFile> files,
+                           List<MultipartFile> rawFiles, List<String> editMetas, Long userId) {
         if (files == null || files.stream().noneMatch(file -> file != null && !file.isEmpty())) {
             throw new IllegalArgumentException("공유할 사진을 한 장 이상 선택해주세요.");
         }
@@ -134,6 +136,7 @@ public class photoAlbumServiceImpl implements IphotoAlbumService {
 
                 Files.copy(file.getInputStream(), destination, StandardCopyOption.REPLACE_EXISTING);
                 savedPaths.add(destination);
+                savePhotoSidecars(storedName, rawFileAt(rawFiles, sortOrder), editMetaAt(editMetas, sortOrder), savedPaths);
 
                 Map<String, Object> photo = new HashMap<>();
                 photo.put("postId", postId);
@@ -184,7 +187,8 @@ public class photoAlbumServiceImpl implements IphotoAlbumService {
     @Override
     @Transactional
     public boolean updatePostWithPhotos(Long postId, Long albumId, String title, String description,
-                                        List<MultipartFile> files, Long userId) {
+                                        List<MultipartFile> files, List<MultipartFile> rawFiles,
+                                        List<String> editMetas, Long userId) {
         if (files == null || files.stream().noneMatch(file -> file != null && !file.isEmpty())) {
             throw new IllegalArgumentException("사진을 한 장 이상 남겨주세요.");
         }
@@ -219,6 +223,7 @@ public class photoAlbumServiceImpl implements IphotoAlbumService {
 
                 Files.copy(file.getInputStream(), destination, StandardCopyOption.REPLACE_EXISTING);
                 savedPaths.add(destination);
+                savePhotoSidecars(storedName, rawFileAt(rawFiles, sortOrder), editMetaAt(editMetas, sortOrder), savedPaths);
 
                 Map<String, Object> photo = new HashMap<>();
                 photo.put("postId", postId);
@@ -240,7 +245,7 @@ public class photoAlbumServiceImpl implements IphotoAlbumService {
                     photoAlbumDAO.deletePhoto(photoId);
                 }
             }
-            oldPhotos.forEach(photo -> deletePhysicalFile(stringValue(mapValue(photo, "filePath", "FILE_PATH"))));
+            oldPhotos.forEach(photo -> deletePhotoFileAndSidecars(stringValue(mapValue(photo, "filePath", "FILE_PATH"))));
 
             refreshMovedAlbumCovers(previousAlbumId, albumId);
             if (albumId != null && firstPhotoId != null) photoAlbumDAO.updateAlbumCover(albumId, firstPhotoId);
@@ -284,8 +289,10 @@ public class photoAlbumServiceImpl implements IphotoAlbumService {
 
 
     @Override
+    @Transactional
     public List<Map<String, Object>> getTrashPosts(Long userId) {
         if (userId == null) return List.of();
+        purgeExpiredTrashPosts();
         return photoAlbumDAO.selectTrashPosts(userId);
     }
 
@@ -313,6 +320,7 @@ public class photoAlbumServiceImpl implements IphotoAlbumService {
     @Transactional
     public boolean restorePostFromTrash(Long postId, Long userId) {
         if (postId == null || userId == null) return false;
+        purgeExpiredTrashPosts();
         Map<String, Object> before = photoAlbumDAO.selectTrashPost(postId, userId);
         if (before == null) return false;
         Long restoreAlbumId = numberToLong(mapValue(before, "originalAlbumId", "ORIGINAL_ALBUM_ID"));
@@ -330,6 +338,7 @@ public class photoAlbumServiceImpl implements IphotoAlbumService {
     @Override
     public boolean canPermanentlyDeletePost(Long postId, Long userId) {
         if (postId == null || userId == null) return false;
+        purgeExpiredTrashPosts();
         return photoAlbumDAO.countTrashOwner(postId, userId) > 0;
     }
 
@@ -338,6 +347,12 @@ public class photoAlbumServiceImpl implements IphotoAlbumService {
     public boolean permanentlyDeletePost(Long postId, Long userId) {
         if (!canPermanentlyDeletePost(postId, userId)) return false;
         return deletePost(postId);
+    }
+
+    @Override
+    @Transactional
+    public int purgeExpiredTrashPosts() {
+        return photoAlbumDAO.deleteExpiredTrashPosts();
     }
 
 
@@ -394,6 +409,7 @@ public class photoAlbumServiceImpl implements IphotoAlbumService {
                 String publicPath = stringValue(mapValue(sourcePhoto, "filePath", "FILE_PATH"));
                 Path copied = copyPhotoFile(publicPath);
                 copiedPaths.add(copied);
+                copyPhotoSidecars(publicPath, copied.getFileName().toString(), copiedPaths);
 
                 String originalName = stringValue(mapValue(sourcePhoto, "originalName", "ORIGINAL_NAME"));
                 Map<String, Object> photo = new HashMap<>();
@@ -474,7 +490,7 @@ public class photoAlbumServiceImpl implements IphotoAlbumService {
             if (collectedSourcePostId != null && postOwnerId != null) {
                 photoAlbumDAO.deletePostCollect(collectedSourcePostId, postOwnerId);
             }
-            photos.forEach(photo -> deletePhysicalFile(stringValue(mapValue(photo, "filePath", "FILE_PATH"))));
+            photos.forEach(photo -> deletePhotoFileAndSidecars(stringValue(mapValue(photo, "filePath", "FILE_PATH"))));
             if (albumId != null) refreshAlbumCover(albumId);
         }
         return deleted > 0;
@@ -494,7 +510,7 @@ public class photoAlbumServiceImpl implements IphotoAlbumService {
         photoAlbumDAO.clearAlbumCover(photoId);
         int deleted = photoAlbumDAO.deletePhoto(photoId);
         if (deleted > 0) {
-            deletePhysicalFile(stringValue(mapValue(photo, "filePath", "FILE_PATH")));
+            deletePhotoFileAndSidecars(stringValue(mapValue(photo, "filePath", "FILE_PATH")));
             if (albumId != null) refreshAlbumCover(albumId);
         }
         return deleted > 0;
@@ -535,6 +551,121 @@ public class photoAlbumServiceImpl implements IphotoAlbumService {
         return photoAlbumDAO.deletePostComment(commentId, postId, userId, canManage ? 1 : 0) > 0;
     }
 
+
+
+    private List<Map<String, Object>> enrichPhotoSidecars(List<Map<String, Object>> photos) {
+        if (photos == null || photos.isEmpty()) return photos;
+        photos.forEach(photo -> {
+            String filePath = stringValue(mapValue(photo, "filePath", "FILE_PATH"));
+            String storedName = storedNameFromPublicPath(filePath);
+            if (storedName == null) return;
+            Path raw = rawPathFor(storedName);
+            if (Files.exists(raw)) {
+                photo.put("rawFilePath", "/uploads/photos/" + raw.getFileName().toString());
+                photo.put("RAW_FILE_PATH", "/uploads/photos/" + raw.getFileName().toString());
+            }
+            Path meta = metaPathFor(storedName);
+            if (Files.exists(meta)) {
+                try {
+                    String json = Files.readString(meta, StandardCharsets.UTF_8);
+                    photo.put("editMeta", json);
+                    photo.put("EDIT_META", json);
+                } catch (IOException ignored) { }
+            }
+        });
+        return photos;
+    }
+
+    private MultipartFile rawFileAt(List<MultipartFile> rawFiles, int index) {
+        if (rawFiles == null || index < 0 || index >= rawFiles.size()) return null;
+        MultipartFile file = rawFiles.get(index);
+        return file == null || file.isEmpty() ? null : file;
+    }
+
+    private String editMetaAt(List<String> editMetas, int index) {
+        if (editMetas == null || index < 0 || index >= editMetas.size()) return null;
+        String value = editMetas.get(index);
+        return value == null || value.isBlank() ? null : value.trim();
+    }
+
+    private void savePhotoSidecars(String displayStoredName, MultipartFile rawFile, String editMeta, List<Path> savedPaths) throws IOException {
+        if (displayStoredName == null || displayStoredName.isBlank()) return;
+        if (rawFile != null && !rawFile.isEmpty()) {
+            validateImage(rawFile);
+            Path rawDestination = rawPathFor(displayStoredName, rawFile.getOriginalFilename()).normalize();
+            if (!rawDestination.startsWith(PHOTO_ROOT)) throw new IllegalArgumentException("잘못된 파일명입니다.");
+            Files.copy(rawFile.getInputStream(), rawDestination, StandardCopyOption.REPLACE_EXISTING);
+            if (savedPaths != null) savedPaths.add(rawDestination);
+        }
+        if (editMeta != null && !editMeta.isBlank()) {
+            Path metaDestination = metaPathFor(displayStoredName).normalize();
+            if (!metaDestination.startsWith(PHOTO_ROOT)) throw new IllegalArgumentException("잘못된 파일명입니다.");
+            Files.writeString(metaDestination, editMeta, StandardCharsets.UTF_8);
+            if (savedPaths != null) savedPaths.add(metaDestination);
+        }
+    }
+
+    private void copyPhotoSidecars(String sourcePublicPath, String copiedStoredName, List<Path> copiedPaths) throws IOException {
+        String sourceStoredName = storedNameFromPublicPath(sourcePublicPath);
+        if (sourceStoredName == null || copiedStoredName == null || copiedStoredName.isBlank()) return;
+        Path sourceRaw = rawPathFor(sourceStoredName);
+        if (Files.exists(sourceRaw)) {
+            Path targetRaw = rawPathFor(copiedStoredName, sourceRaw.getFileName().toString()).normalize();
+            if (targetRaw.startsWith(PHOTO_ROOT)) {
+                Files.copy(sourceRaw, targetRaw, StandardCopyOption.REPLACE_EXISTING);
+                if (copiedPaths != null) copiedPaths.add(targetRaw);
+            }
+        }
+        Path sourceMeta = metaPathFor(sourceStoredName);
+        if (Files.exists(sourceMeta)) {
+            Path targetMeta = metaPathFor(copiedStoredName).normalize();
+            if (targetMeta.startsWith(PHOTO_ROOT)) {
+                Files.copy(sourceMeta, targetMeta, StandardCopyOption.REPLACE_EXISTING);
+                if (copiedPaths != null) copiedPaths.add(targetMeta);
+            }
+        }
+    }
+
+    private void deletePhotoFileAndSidecars(String publicPath) {
+        String storedName = storedNameFromPublicPath(publicPath);
+        if (storedName != null) {
+            deletePathQuietly(rawPathFor(storedName));
+            deletePathQuietly(metaPathFor(storedName));
+        }
+        deletePhysicalFile(publicPath);
+    }
+
+    private String storedNameFromPublicPath(String publicPath) {
+        if (publicPath == null || !publicPath.startsWith("/uploads/photos/")) return null;
+        String storedName = publicPath.substring("/uploads/photos/".length());
+        return storedName.contains("..") || storedName.contains("/") || storedName.contains("\\") ? null : storedName;
+    }
+
+    private Path rawPathFor(String displayStoredName) {
+        Path legacy = PHOTO_ROOT.resolve("raw_" + displayStoredName).normalize();
+        if (Files.exists(legacy)) return legacy;
+        String base = baseName(displayStoredName);
+        try (var stream = Files.newDirectoryStream(PHOTO_ROOT, "raw_" + base + ".*")) {
+            for (Path candidate : stream) {
+                if (candidate.normalize().startsWith(PHOTO_ROOT)) return candidate.normalize();
+            }
+        } catch (IOException ignored) { }
+        return legacy;
+    }
+
+    private Path rawPathFor(String displayStoredName, String originalName) {
+        return PHOTO_ROOT.resolve("raw_" + baseName(displayStoredName) + extensionOf(originalName == null ? displayStoredName : originalName)).normalize();
+    }
+
+    private String baseName(String name) {
+        String value = name == null ? "photo" : name;
+        int dot = value.lastIndexOf('.');
+        return dot > 0 ? value.substring(0, dot) : value;
+    }
+
+    private Path metaPathFor(String displayStoredName) {
+        return PHOTO_ROOT.resolve("meta_" + displayStoredName + ".json").normalize();
+    }
 
     private void refreshAlbumCover(Long albumId) {
         Long next = photoAlbumDAO.selectFirstAlbumPhotoId(albumId);

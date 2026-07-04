@@ -5,83 +5,8 @@
    ========================================================= */
 
 /* ---------- Page layout ---------- */
-.photo-post-form-page{
-    padding:24px 32px 56px;
-    background:#f6f9fd;
-}
-.photo-form-shell{
-    width:100%;
-    max-width:none;
-    margin:0;
-}
-.photo-form-hero{
-    display:flex;
-    align-items:flex-start;
-    justify-content:space-between;
-    gap:20px;
-    margin:0 0 18px;
-    padding:0 0 18px;
-    border-bottom:1px solid #e3ebf5;
-}
-.photo-form-hero h1{
-    margin:4px 0 6px;
-    font-size:28px;
-    line-height:1.18;
-    letter-spacing:-.8px;
-    color:#071a33;
-}
-.photo-form-hero p{
-    margin:0;
-    color:#65758d;
-}
-.photo-form-card{
-    display:grid;
-    grid-template-columns:minmax(0,1fr) minmax(286px,320px);
-    align-items:start;
-    gap:22px;
-    padding:0;
-    border:0;
-    border-radius:0;
-    background:transparent;
-    box-shadow:none;
-}
 .photo-form-main{
     min-width:0;
-}
-.photo-form-side{
-    position:sticky;
-    top:76px;
-    width:100%;
-    display:grid;
-    align-content:start;
-    gap:16px;
-    padding:0;
-}
-.photo-form-side .photo-field textarea{
-    min-height:132px;
-}
-.photo-form-actions{
-    display:flex;
-    justify-content:flex-end;
-    gap:10px;
-    margin-top:2px;
-}
-.photo-primary-button,
-.photo-secondary-button,
-.photo-back-button,
-.photo-form-actions a,
-.photo-form-hero a{
-    text-decoration:none!important;
-}
-.photo-primary-button:hover,
-.photo-primary-button:focus,
-.photo-secondary-button:hover,
-.photo-secondary-button:focus,
-.photo-back-button:hover,
-.photo-back-button:focus,
-.photo-form-actions a:hover,
-.photo-form-hero a:hover{
-    text-decoration:none!important;
 }
 
 /* ---------- Upload / preview shell ---------- */
@@ -460,29 +385,6 @@
 .photo-form-preview.is-single-file .photo-editor-side-arrow{
     display:none!important;
 }
-.photo-crop-frame .photo-editor-remove,
-.photo-crop-frame button[data-remove-file]{
-    position:absolute;
-    top:8px;
-    right:8px;
-    left:auto;
-    transform:none;
-    z-index:60;
-    width:32px;
-    height:32px;
-    display:inline-flex;
-    align-items:center;
-    justify-content:center;
-    border:0;
-    border-radius:999px;
-    background:rgba(15,23,42,.72);
-    color:#fff;
-    box-shadow:0 8px 20px rgba(15,23,42,.18);
-    cursor:pointer;
-}
-.photo-form-preview-item > button[data-remove-file]{
-    display:none!important;
-}
 .photo-editor-drag-hint{
     position:absolute;
     left:50%;
@@ -642,20 +544,6 @@
     box-shadow:0 0 0 3px rgba(79,124,244,.18);
 }
 
-/* ---------- Existing edit mode preview ---------- */
-.photo-form-preview-item--existing .photo-form-image-stage{
-    height:min(62vh,560px);
-    padding:22px;
-}
-.photo-form-preview-item--existing .photo-crop-frame{
-    width:auto;
-    height:auto;
-}
-.photo-form-preview-item--existing img{
-    max-width:100%;
-    max-height:min(56vh,520px);
-}
-
 /* ---------- Responsive ---------- */
 @media(max-height:820px) and (min-width:901px){
     .photo-form-image-stage,
@@ -689,13 +577,6 @@
     .photo-form-side{
         position:static;
     }
-    .photo-form-actions{
-        position:sticky;
-        bottom:10px;
-        z-index:5;
-        padding:8px 0 0;
-        background:linear-gradient(180deg,rgba(246,249,253,0),#f6f9fd 35%);
-    }
     .photo-editor-toolbar{
         grid-template-columns:1fr;
         grid-template-areas:"tools" "filters";
@@ -725,13 +606,6 @@
     .photo-crop-frame .photo-editor-side-arrow--next{
         right:8px;
     }
-    .photo-crop-frame .photo-editor-remove,
-    .photo-crop-frame button[data-remove-file]{
-        top:8px;
-        right:8px;
-        width:32px;
-        height:32px;
-    }
 }
 @media(max-width:520px){
     .photo-post-form-page{
@@ -742,10 +616,6 @@
     }
     .photo-form-hero p{
         font-size:13px;
-    }
-    .photo-form-actions{
-        display:grid;
-        grid-template-columns:1fr 1fr;
     }
     .photo-editor-tools,
     .photo-editor-filters{
@@ -778,11 +648,17 @@
 
 /* =========================================================
    Final layout polish
-   - 사진 등록/수정 최종 구조: 히어로, 우측 작성 패널, 앨범/공유, 썸네일 삭제
+   - 사진 등록/수정 최종 구조: 전역 배경, 페이지 여백, 히어로, 우측 작성 패널
    ========================================================= */
+body.photo-post-form-body{
+    margin:0;
+    background:#f6f8fb;
+}
 .photo-post-form-page{
-    padding:0 36px 56px;
-    background:#f6f9fd;
+    min-height:calc(100vh - var(--moyo-header-height,64px));
+    box-sizing:border-box;
+    padding:18px 36px 64px;
+    background:#f6f8fb;
 }
 .photo-form-shell{
     width:100%;
@@ -795,10 +671,13 @@
     align-items:flex-start;
     justify-content:space-between;
     gap:22px;
-    margin:0 -36px 20px;
-    padding:14px 36px 16px;
+    margin:-18px -36px 20px;
+    padding:18px 36px 18px;
+    border:0;
     border-bottom:1px solid #e1eaf5;
-    background:linear-gradient(135deg,rgba(239,248,255,.82),rgba(248,245,255,.72));
+    border-radius:0;
+    background:linear-gradient(135deg,rgba(239,248,255,.92),rgba(248,245,255,.86));
+    box-shadow:none;
 }
 .photo-form-hero-copy{
     min-width:0;
@@ -865,9 +744,6 @@
     border-radius:0;
     background:transparent;
     box-shadow:none;
-}
-.photo-form-actions{
-    display:none!important;
 }
 
 /* right panel */
@@ -1045,9 +921,6 @@
 .photo-share-link-button .note-share-count{
     margin-left:2px;
 }
-.photo-share-field .note-meta-permission{
-    display:none;
-}
 /* one photo / thumbnails */
 .photo-form-preview.is-single-file .photo-editor-footer{
     display:none!important;
@@ -1092,25 +965,6 @@
     border-color:#22c7bd!important;
     box-shadow:0 0 0 3px rgba(34,199,189,.18)!important;
 }
-.photo-crop-frame .photo-editor-remove,
-.photo-crop-frame button[data-remove-file]{
-    top:-13px;
-    right:-13px;
-    z-index:70;
-    width:28px;
-    height:28px;
-    border:1px solid #d7e2f0;
-    background:rgba(255,255,255,.96);
-    color:#64748b;
-    font-size:14px;
-    box-shadow:0 6px 16px rgba(31,51,84,.14);
-}
-.photo-crop-frame .photo-editor-remove:hover,
-.photo-crop-frame button[data-remove-file]:hover{
-    border-color:#fecaca;
-    background:#fff5f5;
-    color:#ef4444;
-}
 
 @media(max-width:1180px){
     .photo-post-form-page{
@@ -1130,14 +984,14 @@
 }
 @media(max-width:900px){
     .photo-post-form-page{
-        padding:0 16px 44px;
+        padding:14px 16px 48px;
     }
     .photo-form-hero{
         min-height:auto;
         display:grid;
         grid-template-columns:1fr;
         gap:14px;
-        margin:0 -16px 16px;
+        margin:-14px -16px 16px;
         padding:14px 16px 15px;
     }
     .photo-form-top-link{
@@ -1172,21 +1026,13 @@
     .photo-form-side .photo-visibility-field{
         padding-bottom:13px;
     }
-    .photo-crop-frame .photo-editor-remove,
-    .photo-crop-frame button[data-remove-file]{
-        top:-11px;
-        right:-11px;
-        width:26px;
-        height:26px;
-    }
 }
 @media(max-width:520px){
     .photo-post-form-page{
-        padding:0 12px 38px;
+        padding:12px 12px 42px;
     }
     .photo-form-hero{
-        margin-left:-12px;
-        margin-right:-12px;
+        margin:-12px -12px 14px;
         padding:12px 12px 14px;
     }
     .photo-form-title-row h1,
@@ -1204,7 +1050,6 @@
         right:-6px;
     }
 }
-
 
 /* post form cleanup: 작성/수정 공통 에디터 최종 정리 */
 .photo-form-image-stage{
@@ -1240,10 +1085,6 @@
     border-color:#fecaca!important;
     background:#fff5f5!important;
     color:#ef4444!important;
-}
-.photo-crop-frame .photo-editor-remove,
-.photo-crop-frame button[data-remove-file]{
-    display:none!important;
 }
 .photo-form-top-link{
     margin-bottom:13px!important;
@@ -1338,76 +1179,176 @@
     }
 }
 
-/* ---------- Target scope selector (note-style photo write flow) ---------- */
-.photo-target-field{
-    gap:10px;
+
+/* =========================================================
+   photoPostForm layout lock - latest scoped guard
+   기능 수정 중 과거 레이아웃이 덮이는 것을 막기 위한 등록/수정 페이지 전용 보정
+   ========================================================= */
+body.photo-post-form-body{
+    margin:0;
+    background:#f6f8fb;
 }
-.photo-target-tabs{
-    display:grid;
-    grid-template-columns:repeat(2,minmax(0,1fr));
-    gap:8px;
+body.photo-post-form-body .photo-post-form-page{
+    min-height:calc(100vh - var(--moyo-header-height,64px));
+    box-sizing:border-box;
+    padding:18px 36px 64px;
+    background:#f6f8fb;
 }
-.photo-target-tab{
-    height:38px;
-    display:inline-flex;
-    align-items:center;
-    justify-content:center;
-    gap:7px;
-    border:1px solid #d8e4f4;
-    border-radius:13px;
-    background:#fff;
-    color:#40506a;
-    font-size:13px;
-    font-weight:800;
-    cursor:pointer;
-    transition:background .16s ease,border-color .16s ease,color .16s ease,box-shadow .16s ease,transform .16s ease;
-}
-.photo-target-tab:hover{
-    border-color:#b8cfff;
-    background:#f8fbff;
-    color:#2357d8;
-}
-.photo-target-tab.is-active{
-    border-color:#9ebdff;
-    background:linear-gradient(135deg,#eef6ff,#f4f0ff);
-    color:#2458da;
-    box-shadow:0 6px 15px rgba(74,111,255,.12);
-}
-.photo-target-selects{
-    display:grid;
-    gap:8px;
-}
-.photo-target-select-row{
-    display:grid;
-    grid-template-columns:68px minmax(0,1fr);
-    align-items:center;
-    gap:8px;
-}
-.photo-target-select-row > span{
-    color:#64748b;
-    font-size:12px;
-    font-weight:800;
-}
-.photo-target-select-row select{
+body.photo-post-form-body .photo-form-shell{
     width:100%;
-    height:36px;
-    padding:0 34px 0 12px;
-    border:1px solid #d8e4f4;
-    border-radius:12px;
-    background:#fff;
-    color:#172033;
-    font-size:13px;
-    font-weight:800;
-    outline:0;
+    max-width:none;
+    margin:0;
 }
-.photo-target-select-row select:focus{
-    border-color:#8fb0ff;
-    box-shadow:0 0 0 3px rgba(91,124,255,.13);
+body.photo-post-form-body .photo-form-hero{
+    min-height:104px;
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:22px;
+    margin:-18px -36px 20px;
+    padding:18px 36px;
+    border:0;
+    border-bottom:1px solid #e1eaf5;
+    border-radius:0;
+    background:linear-gradient(135deg,rgba(239,248,255,.92),rgba(248,245,255,.86));
+    box-shadow:none;
 }
-#photoFormTargetGuide{
-    color:#74839a;
-    line-height:1.45;
+body.photo-post-form-body .photo-form-card{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) minmax(286px,320px);
+    align-items:start;
+    gap:24px;
+    padding:0;
+    border:0;
+    border-radius:0;
+    background:transparent;
+    box-shadow:none;
 }
-.photo-post-form-page[data-mode="edit"] .photo-target-field{
-    display:none;
+body.photo-post-form-body .photo-form-side{
+    position:sticky;
+    top:76px;
+    width:100%;
+    display:grid;
+    align-content:start;
+    gap:15px;
+    padding:0;
+}
+body.photo-post-form-body .photo-feed-public-field #photoFormVisibility[hidden],
+body.photo-post-form-body .photo-feed-public-field #photoFormVisibilityGuide[hidden]{
+    display:none!important;
+}
+@media(max-width:1180px){
+    body.photo-post-form-body .photo-post-form-page{
+        padding-left:28px;
+        padding-right:28px;
+    }
+    body.photo-post-form-body .photo-form-hero{
+        margin-left:-28px;
+        margin-right:-28px;
+        padding-left:28px;
+        padding-right:28px;
+    }
+}
+@media(max-width:900px){
+    body.photo-post-form-body .photo-post-form-page{
+        padding:14px 16px 48px;
+    }
+    body.photo-post-form-body .photo-form-hero{
+        min-height:auto;
+        display:grid;
+        grid-template-columns:1fr;
+        gap:14px;
+        margin:-14px -16px 16px;
+        padding:14px 16px 15px;
+    }
+    body.photo-post-form-body .photo-form-card{
+        grid-template-columns:1fr;
+        gap:18px;
+    }
+    body.photo-post-form-body .photo-form-side{
+        position:static;
+    }
+}
+@media(max-width:520px){
+    body.photo-post-form-body .photo-post-form-page{
+        padding:12px 12px 42px;
+    }
+    body.photo-post-form-body .photo-form-hero{
+        margin:-12px -12px 14px;
+        padding:12px 12px 14px;
+    }
+}
+
+
+/* =========================================================
+   2026-06-28 final responsive polish
+   - 창이 좁아지는 구간(사이드 패널이 붙어있는 900~1180px)에서
+     에디터 툴바/슬라이더가 세로로 깨지지 않도록 먼저 한 줄 폭을 확보
+   - 그룹/프로젝트 등록에서는 '등록 범위' 블록을 화면에서 제거
+   ========================================================= */
+.photo-form-side .photo-visibility-field.is-scope-fixed,
+.photo-form-side .photo-visibility-field[data-fixed-scope="true"]{
+    display:none!important;
+}
+
+@media(max-width:1180px){
+    .photo-editor-toolbar{
+        grid-template-columns:1fr!important;
+        grid-template-areas:"tools" "filters"!important;
+        gap:8px!important;
+    }
+    .photo-editor-tools,
+    .photo-editor-filters{
+        width:100%!important;
+        justify-content:flex-start!important;
+        margin-left:0!important;
+    }
+    .photo-editor-adjust-row{
+        grid-template-columns:1fr!important;
+        grid-template-areas:"x" "zoom" "y"!important;
+        gap:8px!important;
+    }
+}
+
+@media(max-width:1100px){
+    .photo-form-card{
+        grid-template-columns:1fr!important;
+        gap:18px!important;
+    }
+    .photo-form-side{
+        position:static!important;
+        width:100%!important;
+        max-width:none!important;
+        display:grid!important;
+        grid-template-columns:1fr 1fr!important;
+        gap:14px 18px!important;
+        align-items:start!important;
+    }
+    .photo-form-side .photo-field--description{
+        grid-column:1 / -1!important;
+    }
+}
+
+@media(max-width:720px){
+    .photo-form-side{
+        grid-template-columns:1fr!important;
+    }
+    .photo-editor-tools,
+    .photo-editor-filters{
+        display:grid!important;
+        grid-template-columns:repeat(2,minmax(0,1fr))!important;
+        gap:7px!important;
+    }
+    .photo-editor-tools button,
+    .photo-editor-filters button{
+        width:100%!important;
+        padding:0 8px!important;
+    }
+}
+
+@media(max-width:420px){
+    .photo-editor-tools,
+    .photo-editor-filters{
+        grid-template-columns:1fr!important;
+    }
 }

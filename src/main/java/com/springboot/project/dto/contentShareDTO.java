@@ -22,6 +22,14 @@ public class contentShareDTO {
     private String requesterEmail;
     private String targetName;
     private String targetSubtext;
+    private Integer contentCount;
+    private String shareIds;
+    private String releaseableYn;
+    private String calendarStartDt;
+    private String calendarEndDt;
+    private String calendarLocationText;
+    private String calendarLocationAddress;
+    private String calendarAttendeeYn;
 
     public Long getShareId() { return shareId; }
     public void setShareId(Long shareId) { this.shareId = shareId; }
@@ -61,4 +69,20 @@ public class contentShareDTO {
     public void setTargetName(String targetName) { this.targetName = targetName; }
     public String getTargetSubtext() { return targetSubtext; }
     public void setTargetSubtext(String targetSubtext) { this.targetSubtext = targetSubtext; }
+    public Integer getContentCount() { return contentCount; }
+    public void setContentCount(Integer contentCount) { this.contentCount = contentCount; }
+    public String getShareIds() { return shareIds; }
+    public void setShareIds(String shareIds) { this.shareIds = shareIds; }
+    public String getReleaseableYn() { return releaseableYn; }
+    public void setReleaseableYn(String releaseableYn) { this.releaseableYn = releaseableYn; }
+    public String getCalendarStartDt() { return calendarStartDt; }
+    public void setCalendarStartDt(String calendarStartDt) { this.calendarStartDt = calendarStartDt; }
+    public String getCalendarEndDt() { return calendarEndDt; }
+    public void setCalendarEndDt(String calendarEndDt) { this.calendarEndDt = calendarEndDt; }
+    public String getCalendarLocationText() { return calendarLocationText; }
+    public void setCalendarLocationText(String calendarLocationText) { this.calendarLocationText = calendarLocationText; }
+    public String getCalendarLocationAddress() { return calendarLocationAddress; }
+    public void setCalendarLocationAddress(String calendarLocationAddress) { this.calendarLocationAddress = calendarLocationAddress; }
+    public String getCalendarAttendeeYn() { return calendarAttendeeYn; }
+    public void setCalendarAttendeeYn(String calendarAttendeeYn) { this.calendarAttendeeYn = calendarAttendeeYn; }
 }

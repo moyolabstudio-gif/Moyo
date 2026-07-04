@@ -4,65 +4,185 @@
 
 <mapper namespace="com.springboot.project.dao.IcalendarResponseDAO">
 
+    <update id="ensureCalendarEventTypeColumn">
+        DECLARE
+            v_count NUMBER;
+        BEGIN
+            SELECT COUNT(*)
+              INTO v_count
+              FROM USER_TAB_COLUMNS
+             WHERE TABLE_NAME = 'EVENTS'
+               AND COLUMN_NAME = 'EVENT_TYPE';
+
+            IF v_count = 0 THEN
+                EXECUTE IMMEDIATE 'ALTER TABLE EVENTS ADD (EVENT_TYPE VARCHAR2(30) DEFAULT ''APPOINTMENT'' NOT NULL)';
+            END IF;
+        END;
+    </update>
+
+
+
+    <update id="ensureCalendarAttendeeTable">
+        DECLARE
+            v_count NUMBER;
+        BEGIN
+            SELECT COUNT(*) INTO v_count FROM USER_TABLES WHERE TABLE_NAME = 'EVENT_ATTENDEES';
+            IF v_count = 0 THEN
+                EXECUTE IMMEDIATE 'CREATE TABLE EVENT_ATTENDEES (EA_ID NUMBER(20) NOT NULL, EVENT_ID NUMBER(10) NOT NULL, USER_ID NUMBER(10) NOT NULL, ST_CODE VARCHAR2(10) DEFAULT ''WT'' NOT NULL, CREATED_AT DATE DEFAULT SYSDATE NOT NULL, CONSTRAINT PK_EVENT_ATTENDEES PRIMARY KEY (EA_ID), CONSTRAINT UK_EVENT_ATTENDEE_USER UNIQUE (EVENT_ID, USER_ID), CONSTRAINT FK_EA_EVENT FOREIGN KEY (EVENT_ID) REFERENCES EVENTS(EVENT_ID) ON DELETE CASCADE, CONSTRAINT FK_EA_USER FOREIGN KEY (USER_ID) REFERENCES USERS(USER_ID))';
+            END IF;
+
+            SELECT COUNT(*) INTO v_count FROM USER_SEQUENCES WHERE SEQUENCE_NAME = 'SEQ_EA_ID';
+            IF v_count = 0 THEN
+                EXECUTE IMMEDIATE 'CREATE SEQUENCE SEQ_EA_ID START WITH 1 INCREMENT BY 1 NOCACHE';
+            END IF;
+        END;
+    </update>
+
     <select id="getMonthlyEvents" resultType="com.springboot.project.dto.calendarResponseDTO">
         SELECT 
-            id, title, startDt, endDt, itemType, color, wsId, projId,
-            isRecurring, recurType, recurInterval, untilDt, recurGroupId,
-            isLunar, lunarMonth, lunarDay
+            id, title, startDt, endDt, itemType, color, eventType, status, startTimeSlot, endTimeSlot, wsId, projId, userId, isPrivate, wsName, projName, projectWorkspaceName, wsImagePath,
+            CASE WHEN itemType = 'PRIVATE' AND isPrivate = 'N' THEN 'MOYO' ELSE 'PRIVATE' END as visibilityType,
+            CASE WHEN itemType = 'PRIVATE' AND isPrivate = 'N' THEN 'Y' ELSE 'N' END as moyoPublicYn,
+            isRecurring, recurType, recurInterval, untilDt, recurGroupId, recurDays, exceptionDateList,
+            isLunar, lunarMonth, lunarDay, timezone, reminderYn, reminderMinutes
         FROM (
             SELECT 
-                EVENT_ID as id, 
-                TITLE as title, 
-                TO_CHAR(START_DT, 'YYYY-MM-DD HH24:MI:SS') as startDt, 
+                e.EVENT_ID as id, 
+                e.TITLE as title, 
+                TO_CHAR(e.START_DT, 'YYYY-MM-DD HH24:MI:SS') as startDt, 
                 /* DB에는 +1일 되어 저장되므로, 조회 시에는 원래 날짜로 복구하여 표시 */
-                TO_CHAR(END_DT, 'YYYY-MM-DD HH24:MI:SS') as endDt, 
-                ITEM_TYPE as itemType, 
-                EVENT_COLOR as color,
-				USER_ID,
-				WS_ID as wsId,
-				PROJ_ID as projId,
-				TRUNC(START_DT) as RAW_START,
+                TO_CHAR(e.END_DT, 'YYYY-MM-DD HH24:MI:SS') as endDt, 
+                e.ITEM_TYPE as itemType, 
+                e.EVENT_COLOR as color,
+                NVL(e.EVENT_TYPE, 'NONE') as eventType,
+                e.STATUS as status,
+                e.START_TIME_SLOT as startTimeSlot,
+                e.END_TIME_SLOT as endTimeSlot,
+                e.IS_PRIVATE as isPrivate,
+				e.USER_ID as userId,
+				e.WS_ID as wsId,
+				e.PROJ_ID as projId,
+                COALESCE(w.WS_NAME, pw.WS_NAME) as wsName,
+                p.PROJ_NAME as projName,
+                pw.WS_NAME as projectWorkspaceName,
+                COALESCE(w.WS_IMAGE_PATH, pw.WS_IMAGE_PATH) as wsImagePath,
+				TRUNC(e.START_DT) as RAW_START,
                 /* FullCalendar 렌더링을 위해 +1일 된 상태 그대로 사용 (31일 -> 6/1) */
-                TRUNC(END_DT) as RAW_END,
-                IS_RECURRING as isRecurring,
-                RECUR_TYPE as recurType,
-                RECUR_INTERVAL as recurInterval,
-                TO_CHAR(RECUR_END_DT, 'YYYY-MM-DD') as untilDt,
-                RECUR_GROUP_ID as recurGroupId,
-                IS_LUNAR as isLunar,
-                LUNAR_MONTH as lunarMonth,
-                LUNAR_DAY as lunarDay
-            FROM EVENTS
+                TRUNC(e.END_DT) as RAW_END,
+                e.IS_RECURRING as isRecurring,
+                e.RECUR_TYPE as recurType,
+                e.RECUR_INTERVAL as recurInterval,
+                TO_CHAR(e.RECUR_END_DT, 'YYYY-MM-DD') as untilDt,
+                e.RECUR_GROUP_ID as recurGroupId,
+                e.RECUR_DAYS as recurDays,
+                (SELECT LISTAGG(TO_CHAR(EXCEPTION_DATE, 'YYYY-MM-DD'), ',') WITHIN GROUP (ORDER BY EXCEPTION_DATE)
+                   FROM CALENDAR_EVENT_EXCEPTIONS x
+                  WHERE x.EVENT_ID = e.EVENT_ID
+                    AND x.EXCEPTION_TYPE = 'DELETED') as exceptionDateList,
+                e.IS_LUNAR as isLunar,
+                e.LUNAR_MONTH as lunarMonth,
+                e.LUNAR_DAY as lunarDay,
+                NVL(e.TIMEZONE_ID, 'Asia/Seoul') as timezone,
+                NVL(e.REMINDER_YN, 'N') as reminderYn,
+                e.REMINDER_MINUTES as reminderMinutes
+            FROM EVENTS e
+            LEFT JOIN WORKSPACES w ON w.WS_ID = e.WS_ID
+            LEFT JOIN PROJECTS p ON p.PROJ_ID = e.PROJ_ID
+            LEFT JOIN WORKSPACES pw ON pw.WS_ID = p.WS_ID
             UNION ALL
             SELECT 
-                HLD_ID as id, 
-                HLD_NAME as title, 
-                TO_CHAR(HLD_DATE, 'YYYY-MM-DD" 00:00:00"') as startDt, 
-                TO_CHAR(HLD_DATE, 'YYYY-MM-DD" 23:59:59"') as endDt, 
+                h.HLD_ID as id, 
+                h.HLD_NAME as title, 
+                TO_CHAR(h.HLD_DATE, 'YYYY-MM-DD" 00:00:00"') as startDt, 
+                TO_CHAR(h.HLD_DATE, 'YYYY-MM-DD" 23:59:59"') as endDt, 
                 'HOLIDAY' as itemType, 
-                NULL as color, 
-                NULL as USER_ID,
+                NULL as color,
+                'NONE' as eventType,
+                NULL as status,
+                NULL as startTimeSlot,
+                NULL as endTimeSlot,
+                'N' as isPrivate,
+                NULL as userId,
 				NULL as wsId,
 				NULL as projId,
-                HLD_DATE as RAW_START, 
-                HLD_DATE as RAW_END,
-                'N', NULL, 1, NULL, NULL,
-                'N', NULL, NULL
-            FROM NATIONAL_HOLIDAYS
+                NULL as wsName,
+                NULL as projName,
+                NULL as projectWorkspaceName,
+                NULL as wsImagePath,
+                h.HLD_DATE as RAW_START, 
+                h.HLD_DATE as RAW_END,
+                'N', NULL, 1, NULL, NULL, NULL, NULL,
+                'N', NULL, NULL, 'Asia/Seoul', 'N', NULL
+            FROM NATIONAL_HOLIDAYS h
         )
         WHERE (
             <choose>
                 <when test="types != null and types.size() > 0">
                     <foreach collection="types" item="type" open="(" close=")" separator=" OR ">
                         <choose>
-                            <when test="type == 'PRIVATE'">(itemType = 'PRIVATE' AND USER_ID = #{userId, jdbcType=NUMERIC})</when>
-                           <when test="type == 'WS'">
-(itemType = 'WS'
- AND wsId IN (
-    SELECT WS_ID
-    FROM WS_MEMBERS
-    WHERE USER_ID = #{userId}
+                            <when test="type == 'PRIVATE'">
+(
+    (itemType = 'PRIVATE' AND userId = #{userId, jdbcType=NUMERIC})
+    OR EXISTS (
+        SELECT 1
+          FROM CONTENT_SHARES cs
+         WHERE cs.CONTENT_TYPE = 'CALENDAR'
+           AND cs.CONTENT_ID = id
+           AND cs.ACTIVE_YN = 'Y'
+           AND NVL(cs.SHARE_STATUS, 'ACCEPTED') = 'ACCEPTED'
+           AND (cs.EXPIRES_AT IS NULL OR cs.EXPIRES_AT &gt;= SYSDATE)
+           AND cs.TARGET_TYPE = 'USER'
+           AND cs.TARGET_ID = #{userId, jdbcType=NUMERIC}
+    )
+    OR EXISTS (
+        SELECT 1
+          FROM EVENT_ATTENDEES ea
+         WHERE ea.EVENT_ID = id
+           AND ea.USER_ID = #{userId, jdbcType=NUMERIC}
+    )
+)
+</when>
+                            <when test="type == 'MOYO'">
+(itemType = 'PRIVATE'
+ AND isPrivate = 'N'
+ AND (
+    userId = #{userId, jdbcType=NUMERIC}
+    OR userId IN (
+        SELECT CASE
+                   WHEN REQUESTER_ID = #{userId, jdbcType=NUMERIC} THEN ADDRESSEE_ID
+                   ELSE REQUESTER_ID
+               END
+        FROM USER_FRIENDS
+        WHERE STATUS = 'ACCEPTED'
+          AND (REQUESTER_ID = #{userId, jdbcType=NUMERIC} OR ADDRESSEE_ID = #{userId, jdbcType=NUMERIC})
+    )
  ))
+</when>
+                           <when test="type == 'WS'">
+(
+    (itemType = 'WS'
+     AND wsId IN (
+        SELECT WS_ID
+        FROM WS_MEMBERS
+        WHERE USER_ID = #{userId}
+     ))
+    OR EXISTS (
+        SELECT 1
+          FROM CONTENT_SHARES cs
+         WHERE cs.CONTENT_TYPE = 'CALENDAR'
+           AND cs.CONTENT_ID = id
+           AND cs.ACTIVE_YN = 'Y'
+           AND NVL(cs.SHARE_STATUS, 'ACCEPTED') = 'ACCEPTED'
+           AND (cs.EXPIRES_AT IS NULL OR cs.EXPIRES_AT &gt;= SYSDATE)
+           AND cs.TARGET_TYPE = 'WS'
+           AND EXISTS (
+                SELECT 1
+                  FROM WS_MEMBERS wm
+                 WHERE wm.WS_ID = cs.TARGET_ID
+                   AND wm.USER_ID = #{userId, jdbcType=NUMERIC}
+           )
+    )
+)
 </when>
                           <when test="type == 'PROJ'">
 (
@@ -79,15 +199,49 @@
       FROM PROJ_MEMBERS
       WHERE USER_ID = #{userId}
   ))
+ OR EXISTS (
+    SELECT 1
+      FROM CONTENT_SHARES cs
+     WHERE cs.CONTENT_TYPE = 'CALENDAR'
+       AND cs.CONTENT_ID = id
+       AND cs.ACTIVE_YN = 'Y'
+       AND NVL(cs.SHARE_STATUS, 'ACCEPTED') = 'ACCEPTED'
+       AND (cs.EXPIRES_AT IS NULL OR cs.EXPIRES_AT &gt;= SYSDATE)
+       AND cs.TARGET_TYPE = 'PROJ'
+       AND EXISTS (
+            SELECT 1
+              FROM PROJ_MEMBERS pm
+             WHERE pm.PROJ_ID = cs.TARGET_ID
+               AND pm.USER_ID = #{userId, jdbcType=NUMERIC}
+       )
+ )
 )
 </when>
                             <when test="type == 'TASK'">
-(itemType = 'TASK'
- AND projId IN (
-    SELECT PROJ_ID
-    FROM PROJ_MEMBERS
-    WHERE USER_ID = #{userId}
- ))
+(
+    (itemType = 'TASK'
+     AND projId IN (
+        SELECT PROJ_ID
+        FROM PROJ_MEMBERS
+        WHERE USER_ID = #{userId}
+     ))
+    OR EXISTS (
+        SELECT 1
+          FROM CONTENT_SHARES cs
+         WHERE cs.CONTENT_TYPE = 'CALENDAR'
+           AND cs.CONTENT_ID = id
+           AND cs.ACTIVE_YN = 'Y'
+           AND NVL(cs.SHARE_STATUS, 'ACCEPTED') = 'ACCEPTED'
+           AND (cs.EXPIRES_AT IS NULL OR cs.EXPIRES_AT &gt;= SYSDATE)
+           AND cs.TARGET_TYPE = 'PROJ'
+           AND EXISTS (
+                SELECT 1
+                  FROM PROJ_MEMBERS pm
+                 WHERE pm.PROJ_ID = cs.TARGET_ID
+                   AND pm.USER_ID = #{userId, jdbcType=NUMERIC}
+           )
+    )
+)
 </when>
                             <when test="type == 'HOLIDAY'">(itemType = 'HOLIDAY')</when>
                             <otherwise>1=0</otherwise> 
@@ -124,34 +278,121 @@
     </select>
     
     <insert id="registerEvent">
+        <selectKey keyProperty="id" resultType="long" order="BEFORE">
+            SELECT SEQ_EVENT_ID.NEXTVAL FROM DUAL
+        </selectKey>
         INSERT INTO EVENTS (
             EVENT_ID, TITLE, START_DT, END_DT, 
-            PROJ_ID, WS_ID, USER_ID, ITEM_TYPE, EVENT_COLOR,
-            IS_RECURRING, RECUR_TYPE, RECUR_INTERVAL, RECUR_END_DT, RECUR_GROUP_ID,
-            IS_LUNAR, LUNAR_MONTH, LUNAR_DAY
+            PROJ_ID, WS_ID, USER_ID, ITEM_TYPE, EVENT_COLOR, EVENT_TYPE, IS_PRIVATE,
+            LOCATION_TEXT, LOCATION_ADDRESS, LOCATION_LAT, LOCATION_LNG, LOCATION_PLACE_ID, DESCRIPTION_TEXT,
+            REMINDER_YN, REMINDER_MINUTES,
+            IS_RECURRING, RECUR_TYPE, RECUR_INTERVAL, RECUR_END_DT, RECUR_GROUP_ID, RECUR_DAYS,
+            IS_LUNAR, LUNAR_MONTH, LUNAR_DAY, TIMEZONE_ID
         ) VALUES (
-            SEQ_EVENT_ID.NEXTVAL, #{title}, 
+            #{id}, #{title}, 
             TO_DATE(#{startDt}, 'YYYY-MM-DD"T"HH24:MI'), 
-            TO_DATE(#{endDt}, 'YYYY-MM-DD"T"HH24:MI') + 1,
+            TO_DATE(#{endDt}, 'YYYY-MM-DD"T"HH24:MI'),
             #{projId, jdbcType=NUMERIC}, 
             #{wsId, jdbcType=NUMERIC},   
             #{userId, jdbcType=NUMERIC},
             #{itemType},
             #{color, jdbcType=VARCHAR},
+            #{eventType, jdbcType=VARCHAR},
+            #{isPrivate, jdbcType=CHAR},
+            #{locationText, jdbcType=VARCHAR},
+            #{locationAddress, jdbcType=VARCHAR},
+            #{locationLat, jdbcType=NUMERIC},
+            #{locationLng, jdbcType=NUMERIC},
+            #{locationPlaceId, jdbcType=VARCHAR},
+            #{descriptionText, jdbcType=VARCHAR},
+            #{reminderYn, jdbcType=CHAR},
+            #{reminderMinutes, jdbcType=NUMERIC},
             #{isRecurring, jdbcType=CHAR},
             #{recurType, jdbcType=VARCHAR},
             #{recurInterval, jdbcType=NUMERIC},
             <choose>
-                <when test="untilDt != null">TO_DATE(#{untilDt}, 'YYYY-MM-DD')</when>
+                <when test="untilDt != null">TO_DATE(#{untilDt, jdbcType=VARCHAR}, 'YYYY-MM-DD')</when>
                 <otherwise>NULL</otherwise>
             </choose>,
             #{recurGroupId, jdbcType=VARCHAR},
+            #{recurDays, jdbcType=VARCHAR},
             #{isLunar, jdbcType=CHAR},
             #{lunarMonth, jdbcType=NUMERIC},
-            #{lunarDay, jdbcType=NUMERIC}
+            #{lunarDay, jdbcType=NUMERIC},
+            #{timezone, jdbcType=VARCHAR}
         )
     </insert>
     
+
+    <select id="countCalendarEditPermission" resultType="int">
+        SELECT COUNT(1)
+          FROM EVENTS e
+         WHERE e.EVENT_ID = #{eventId}
+           AND (
+                e.USER_ID = #{userId}
+             OR EXISTS (
+                    SELECT 1
+                      FROM CONTENT_SHARES s
+                     WHERE s.CONTENT_TYPE = 'CALENDAR'
+                       AND s.CONTENT_ID = e.EVENT_ID
+                       AND s.ACTIVE_YN = 'Y'
+                       AND NVL(s.SHARE_STATUS, 'ACCEPTED') = 'ACCEPTED'
+                       AND UPPER(NVL(s.PERMISSION_TYPE, 'VIEW')) = 'EDIT'
+                       AND (s.EXPIRES_AT IS NULL OR s.EXPIRES_AT &gt;= SYSDATE)
+                       AND (
+                            (s.TARGET_TYPE = 'USER' AND s.TARGET_ID = #{userId})
+                         OR (s.TARGET_TYPE = 'WS' AND EXISTS (
+                                SELECT 1 FROM WS_MEMBERS wm
+                                 WHERE wm.WS_ID = s.TARGET_ID
+                                   AND wm.USER_ID = #{userId}
+                            ))
+                         OR (s.TARGET_TYPE = 'PROJ' AND EXISTS (
+                                SELECT 1 FROM PROJ_MEMBERS pm
+                                 WHERE pm.PROJ_ID = s.TARGET_ID
+                                   AND pm.USER_ID = #{userId}
+                            ))
+                       )
+                )
+             OR (NVL(e.ITEM_TYPE, 'PRIVATE') = 'WS' AND e.WS_ID IS NOT NULL AND (
+                    EXISTS (SELECT 1 FROM WORKSPACES w WHERE w.WS_ID = e.WS_ID AND w.OWNER_ID = #{userId})
+                 OR EXISTS (SELECT 1 FROM WS_MEMBERS wm2
+                              WHERE wm2.WS_ID = e.WS_ID
+                                AND wm2.USER_ID = #{userId}
+                                AND UPPER(NVL(wm2.WS_ROLE, 'MEMBER')) IN ('ADMIN','OWNER','LEADER','MANAGER'))
+                ))
+             OR (NVL(e.ITEM_TYPE, 'PRIVATE') = 'PROJ' AND e.PROJ_ID IS NOT NULL AND (
+                    EXISTS (SELECT 1 FROM PROJECTS p WHERE p.PROJ_ID = e.PROJ_ID AND p.LEADER_ID = #{userId})
+                 OR EXISTS (SELECT 1 FROM PROJ_MEMBERS pm2
+                              WHERE pm2.PROJ_ID = e.PROJ_ID
+                                AND pm2.USER_ID = #{userId}
+                                AND UPPER(NVL(pm2.PROJ_ROLE, 'MEMBER')) IN ('ADMIN','OWNER','LEADER','MANAGER','PM'))
+                ))
+           )
+    </select>
+
+    <select id="countCalendarDeletePermission" resultType="int">
+        SELECT COUNT(1)
+          FROM EVENTS e
+         WHERE e.EVENT_ID = #{eventId}
+           AND (
+                e.USER_ID = #{userId}
+             OR (NVL(e.ITEM_TYPE, 'PRIVATE') = 'WS' AND e.WS_ID IS NOT NULL AND (
+                    EXISTS (SELECT 1 FROM WORKSPACES w WHERE w.WS_ID = e.WS_ID AND w.OWNER_ID = #{userId})
+                 OR EXISTS (SELECT 1 FROM WS_MEMBERS wm
+                              WHERE wm.WS_ID = e.WS_ID
+                                AND wm.USER_ID = #{userId}
+                                AND UPPER(NVL(wm.WS_ROLE, 'MEMBER')) IN ('ADMIN','OWNER','LEADER','MANAGER'))
+                ))
+             OR (NVL(e.ITEM_TYPE, 'PRIVATE') = 'PROJ' AND e.PROJ_ID IS NOT NULL AND (
+                    EXISTS (SELECT 1 FROM PROJECTS p WHERE p.PROJ_ID = e.PROJ_ID AND p.LEADER_ID = #{userId})
+                 OR EXISTS (SELECT 1 FROM PROJ_MEMBERS pm
+                              WHERE pm.PROJ_ID = e.PROJ_ID
+                                AND pm.USER_ID = #{userId}
+                                AND UPPER(NVL(pm.PROJ_ROLE, 'MEMBER')) IN ('ADMIN','OWNER','LEADER','MANAGER','PM'))
+                ))
+           )
+    </select>
+
     <select id="getSharedEvents" resultType="map">
         SELECT e.*, u.USER_NAME FROM EVENTS e JOIN USERS u ON e.USER_ID = u.USER_ID WHERE e.PROJ_ID = #{projId} AND (e.IS_PRIVATE = 'N' OR e.USER_ID = #{userId})
     </select>
@@ -160,6 +401,36 @@
         DELETE FROM PROJ_MEMBERS WHERE PROJ_ID = #{projId} AND USER_ID = #{userId}
     </delete>
     
+    <select id="selectEventIdsForDelete" parameterType="map" resultType="long">
+        SELECT EVENT_ID
+          FROM EVENTS
+         WHERE USER_ID = #{userId}
+        <choose>
+            <when test="deleteSeries == 'Y'.toString() and recurGroupId != null and recurGroupId != ''">
+               AND RECUR_GROUP_ID = #{recurGroupId}
+            </when>
+            <otherwise>
+               AND EVENT_ID = #{eventId}
+            </otherwise>
+        </choose>
+    </select>
+
+    <delete id="deleteEventAttendeesByEventIds" parameterType="map">
+        DELETE FROM EVENT_ATTENDEES
+         WHERE EVENT_ID IN
+        <foreach collection="eventIds" item="eventId" open="(" separator="," close=")">
+            #{eventId}
+        </foreach>
+    </delete>
+
+    <delete id="deleteEventExceptionsByEventIds" parameterType="map">
+        DELETE FROM CALENDAR_EVENT_EXCEPTIONS
+         WHERE EVENT_ID IN
+        <foreach collection="eventIds" item="eventId" open="(" separator="," close=")">
+            #{eventId}
+        </foreach>
+    </delete>
+
     <delete id="deleteEvent" parameterType="map">
         DELETE FROM EVENTS WHERE USER_ID = #{userId}
         <choose>
@@ -171,17 +442,60 @@
             </otherwise>
         </choose>
     </delete>
+
+    <insert id="insertEventException" parameterType="map">
+        INSERT INTO CALENDAR_EVENT_EXCEPTIONS (
+            EXCEPTION_ID, EVENT_ID, RECUR_GROUP_ID, EXCEPTION_DATE, EXCEPTION_TYPE, USER_ID, CREATED_AT
+        ) VALUES (
+            SEQ_CAL_EVENT_EXCEPTIONS.NEXTVAL,
+            #{eventId},
+            #{recurGroupId, jdbcType=VARCHAR},
+            TO_DATE(#{occurrenceDate}, 'YYYY-MM-DD'),
+            'DELETED',
+            #{userId},
+            SYSDATE
+        )
+    </insert>
+
+    <update id="endRecurringEventsBefore" parameterType="map">
+        UPDATE EVENTS
+           SET RECUR_END_DT = TO_DATE(#{occurrenceDate}, 'YYYY-MM-DD') - 1
+         WHERE USER_ID = #{userId}
+           AND RECUR_GROUP_ID = #{recurGroupId}
+    </update>
     
     <update id="updateEventDate">
-        UPDATE EVENTS SET START_DT = TO_DATE(#{startDt}, 'YYYY-MM-DD"T"HH24:MI'), END_DT = TO_DATE(#{endDt}, 'YYYY-MM-DD"T"HH24:MI') + 1
+        UPDATE EVENTS SET START_DT = TO_DATE(#{startDt}, 'YYYY-MM-DD"T"HH24:MI'),
+            END_DT = TO_DATE(#{endDt}, 'YYYY-MM-DD"T"HH24:MI'),
+            TIMEZONE_ID = #{timezone, jdbcType=VARCHAR},
+            REMINDER_SENT_YN = 'N',
+            REMINDER_SENT_AT = NULL
         WHERE EVENT_ID = #{id}
     </update>
     
     <update id="updateEventAll">
         UPDATE EVENTS SET TITLE = #{title},
             START_DT = TO_DATE(#{startDt}, 'YYYY-MM-DD"T"HH24:MI'),
-            END_DT = TO_DATE(#{endDt}, 'YYYY-MM-DD"T"HH24:MI') + 1,
-            EVENT_COLOR = #{color},
+            END_DT = TO_DATE(#{endDt}, 'YYYY-MM-DD"T"HH24:MI'),
+            EVENT_COLOR = #{color, jdbcType=VARCHAR},
+            EVENT_TYPE = #{eventType, jdbcType=VARCHAR},
+            IS_PRIVATE = #{isPrivate, jdbcType=CHAR},
+            LOCATION_TEXT = #{locationText, jdbcType=VARCHAR},
+            LOCATION_ADDRESS = #{locationAddress, jdbcType=VARCHAR},
+            LOCATION_LAT = #{locationLat, jdbcType=NUMERIC},
+            LOCATION_LNG = #{locationLng, jdbcType=NUMERIC},
+            LOCATION_PLACE_ID = #{locationPlaceId, jdbcType=VARCHAR},
+            DESCRIPTION_TEXT = #{descriptionText, jdbcType=VARCHAR},
+            REMINDER_YN = #{reminderYn, jdbcType=CHAR},
+            REMINDER_MINUTES = #{reminderMinutes, jdbcType=NUMERIC},
+            REMINDER_SENT_YN = 'N',
+            REMINDER_SENT_AT = NULL,
+            IS_RECURRING = #{isRecurring, jdbcType=CHAR},
+            RECUR_TYPE = #{recurType, jdbcType=VARCHAR},
+            RECUR_INTERVAL = #{recurInterval, jdbcType=NUMERIC},
+            RECUR_END_DT = CASE WHEN #{untilDt, jdbcType=VARCHAR} IS NOT NULL THEN TO_DATE(#{untilDt, jdbcType=VARCHAR}, 'YYYY-MM-DD') ELSE NULL END,
+            RECUR_DAYS = #{recurDays, jdbcType=VARCHAR},
+            TIMEZONE_ID = #{timezone, jdbcType=VARCHAR},
             IS_LUNAR = #{isLunar, jdbcType=CHAR}, 
             LUNAR_MONTH = #{lunarMonth, jdbcType=NUMERIC}, 
             LUNAR_DAY = #{lunarDay, jdbcType=NUMERIC}     
@@ -192,23 +506,409 @@
         UPDATE EVENTS 
         SET TITLE = #{title},
             START_DT = TO_DATE(#{startDt}, 'YYYY-MM-DD"T"HH24:MI'),
-            END_DT = TO_DATE(#{endDt}, 'YYYY-MM-DD"T"HH24:MI') + 1,
-            EVENT_COLOR = #{color},
-            RECUR_TYPE = #{recurType},
-            RECUR_INTERVAL = #{recurInterval},
-            RECUR_END_DT = TO_DATE(#{untilDt}, 'YYYY-MM-DD'),
+            END_DT = TO_DATE(#{endDt}, 'YYYY-MM-DD"T"HH24:MI'),
+            EVENT_COLOR = #{color, jdbcType=VARCHAR},
+            EVENT_TYPE = #{eventType, jdbcType=VARCHAR},
+            IS_PRIVATE = #{isPrivate, jdbcType=CHAR},
+            LOCATION_TEXT = #{locationText, jdbcType=VARCHAR},
+            LOCATION_ADDRESS = #{locationAddress, jdbcType=VARCHAR},
+            LOCATION_LAT = #{locationLat, jdbcType=NUMERIC},
+            LOCATION_LNG = #{locationLng, jdbcType=NUMERIC},
+            LOCATION_PLACE_ID = #{locationPlaceId, jdbcType=VARCHAR},
+            DESCRIPTION_TEXT = #{descriptionText, jdbcType=VARCHAR},
+            REMINDER_YN = #{reminderYn, jdbcType=CHAR},
+            REMINDER_MINUTES = #{reminderMinutes, jdbcType=NUMERIC},
+            REMINDER_SENT_YN = 'N',
+            REMINDER_SENT_AT = NULL,
+            RECUR_TYPE = #{recurType, jdbcType=VARCHAR},
+            RECUR_INTERVAL = #{recurInterval, jdbcType=NUMERIC},
+            RECUR_END_DT = CASE WHEN #{untilDt, jdbcType=VARCHAR} IS NOT NULL THEN TO_DATE(#{untilDt, jdbcType=VARCHAR}, 'YYYY-MM-DD') ELSE NULL END,
+            RECUR_DAYS = #{recurDays, jdbcType=VARCHAR},
+            TIMEZONE_ID = #{timezone, jdbcType=VARCHAR},
             IS_LUNAR = #{isLunar, jdbcType=CHAR},
             LUNAR_MONTH = #{lunarMonth, jdbcType=NUMERIC},
             LUNAR_DAY = #{lunarDay, jdbcType=NUMERIC}
-        WHERE RECUR_GROUP_ID = #{recurGroupId} AND USER_ID = #{userId}
+        WHERE RECUR_GROUP_ID = #{recurGroupId, jdbcType=VARCHAR} AND USER_ID = #{userId, jdbcType=NUMERIC}
     </update>
 
     <select id="selectUserWorkspaces" resultType="map">
-        SELECT w.WS_ID as "wsId", w.WS_NAME as "wsName", wm.WS_ROLE as "wsRole" FROM WORKSPACES w JOIN WS_MEMBERS wm ON w.WS_ID = wm.WS_ID WHERE wm.USER_ID = #{userId}
+        SELECT
+            w.WS_ID as "wsId",
+            w.WS_NAME as "wsName",
+            w.WS_IMAGE_PATH as "wsImagePath",
+            w.OWNER_ID as "ownerId",
+            CASE
+                WHEN w.OWNER_ID = #{userId} THEN 'ADMIN'
+                ELSE NVL(wm.WS_ROLE, 'MEMBER')
+            END as "wsRole"
+        FROM WORKSPACES w
+        JOIN WS_MEMBERS wm ON w.WS_ID = wm.WS_ID
+        WHERE wm.USER_ID = #{userId}
     </select>
     
     <select id="selectUserProjects" resultType="map">
-        SELECT p.PROJ_ID as "projId", p.PROJ_NAME as "projName" FROM PROJECTS p JOIN PROJ_MEMBERS pm ON p.PROJ_ID = pm.PROJ_ID WHERE pm.USER_ID = #{userId}
+        SELECT 
+            p.PROJ_ID as "projId",
+            p.PROJ_NAME as "projName",
+            p.WS_ID as "wsId",
+            w.WS_NAME as "wsName",
+            p.LEADER_ID as "leaderId",
+            CASE
+                WHEN p.LEADER_ID = #{userId} THEN 'LEADER'
+                ELSE NVL(pm.PROJ_ROLE, 'MEMBER')
+            END as "projRole"
+        FROM PROJECTS p
+        JOIN PROJ_MEMBERS pm ON p.PROJ_ID = pm.PROJ_ID
+        LEFT JOIN WORKSPACES w ON p.WS_ID = w.WS_ID
+        WHERE pm.USER_ID = #{userId}
     </select>
+
+
+    <select id="selectEventAttendeeIds" resultType="long">
+        SELECT USER_ID
+          FROM EVENT_ATTENDEES
+         WHERE EVENT_ID = #{eventId}
+    </select>
+
+    <delete id="deleteEventAttendees">
+        DELETE FROM EVENT_ATTENDEES WHERE EVENT_ID = #{eventId}
+    </delete>
+
+    <insert id="insertEventAttendee">
+        INSERT INTO EVENT_ATTENDEES (EA_ID, EVENT_ID, USER_ID, ST_CODE)
+        SELECT SEQ_EA_ID.NEXTVAL, #{eventId}, #{userId}, 'WT'
+          FROM DUAL
+         WHERE #{eventId} IS NOT NULL
+           AND #{userId} IS NOT NULL
+           AND NOT EXISTS (
+                SELECT 1 FROM EVENT_ATTENDEES
+                 WHERE EVENT_ID = #{eventId}
+                   AND USER_ID = #{userId}
+           )
+    </insert>
+
+    <select id="selectEventAttendeesForView" resultType="map">
+        SELECT
+            ea.USER_ID AS "userId",
+            u.USER_NAME AS "userName",
+            u.EMAIL AS "email",
+            u.PROFILE_IMAGE_PATH AS "profileImagePath"
+          FROM EVENT_ATTENDEES ea
+          JOIN USERS u ON u.USER_ID = ea.USER_ID
+         WHERE ea.EVENT_ID = #{eventId}
+         ORDER BY u.USER_NAME
+    </select>
+
+    <select id="countEventAttendee" resultType="int">
+        SELECT COUNT(1)
+          FROM EVENT_ATTENDEES
+         WHERE EVENT_ID = #{eventId}
+           AND USER_ID = #{userId}
+    </select>
+
+    <delete id="deleteEventAttendee">
+        DELETE FROM EVENT_ATTENDEES
+         WHERE EVENT_ID = #{eventId}
+           AND USER_ID = #{userId}
+    </delete>
+
+
+
+    <!-- calendarDetailDAO.xml 통합 영역 -->
+<update id="ensureCalendarDetailColumns">
+        DECLARE
+            v_count NUMBER;
+        BEGIN
+            SELECT COUNT(*) INTO v_count FROM USER_TAB_COLUMNS WHERE TABLE_NAME = 'EVENTS' AND COLUMN_NAME = 'LOCATION_TEXT';
+            IF v_count = 0 THEN EXECUTE IMMEDIATE 'ALTER TABLE EVENTS ADD (LOCATION_TEXT VARCHAR2(500))'; END IF;
+
+            SELECT COUNT(*) INTO v_count FROM USER_TAB_COLUMNS WHERE TABLE_NAME = 'EVENTS' AND COLUMN_NAME = 'LOCATION_ADDRESS';
+            IF v_count = 0 THEN EXECUTE IMMEDIATE 'ALTER TABLE EVENTS ADD (LOCATION_ADDRESS VARCHAR2(700))'; END IF;
+
+            SELECT COUNT(*) INTO v_count FROM USER_TAB_COLUMNS WHERE TABLE_NAME = 'EVENTS' AND COLUMN_NAME = 'LOCATION_LAT';
+            IF v_count = 0 THEN EXECUTE IMMEDIATE 'ALTER TABLE EVENTS ADD (LOCATION_LAT NUMBER(15,10))'; END IF;
+
+            SELECT COUNT(*) INTO v_count FROM USER_TAB_COLUMNS WHERE TABLE_NAME = 'EVENTS' AND COLUMN_NAME = 'LOCATION_LNG';
+            IF v_count = 0 THEN EXECUTE IMMEDIATE 'ALTER TABLE EVENTS ADD (LOCATION_LNG NUMBER(15,10))'; END IF;
+
+            SELECT COUNT(*) INTO v_count FROM USER_TAB_COLUMNS WHERE TABLE_NAME = 'EVENTS' AND COLUMN_NAME = 'LOCATION_PLACE_ID';
+            IF v_count = 0 THEN EXECUTE IMMEDIATE 'ALTER TABLE EVENTS ADD (LOCATION_PLACE_ID VARCHAR2(200))'; END IF;
+
+            SELECT COUNT(*) INTO v_count FROM USER_TAB_COLUMNS WHERE TABLE_NAME = 'EVENTS' AND COLUMN_NAME = 'DESCRIPTION_TEXT';
+            IF v_count = 0 THEN EXECUTE IMMEDIATE 'ALTER TABLE EVENTS ADD (DESCRIPTION_TEXT VARCHAR2(4000))'; END IF;
+
+            SELECT COUNT(*) INTO v_count FROM USER_TAB_COLUMNS WHERE TABLE_NAME = 'EVENTS' AND COLUMN_NAME = 'TIMEZONE_ID';
+            IF v_count = 0 THEN EXECUTE IMMEDIATE 'ALTER TABLE EVENTS ADD (TIMEZONE_ID VARCHAR2(50) DEFAULT ''Asia/Seoul'')'; END IF;
+
+            SELECT COUNT(*) INTO v_count FROM USER_TAB_COLUMNS WHERE TABLE_NAME = 'EVENTS' AND COLUMN_NAME = 'REMINDER_YN';
+            IF v_count = 0 THEN EXECUTE IMMEDIATE 'ALTER TABLE EVENTS ADD (REMINDER_YN CHAR(1) DEFAULT ''N'' NOT NULL)'; END IF;
+
+            SELECT COUNT(*) INTO v_count FROM USER_TAB_COLUMNS WHERE TABLE_NAME = 'EVENTS' AND COLUMN_NAME = 'REMINDER_MINUTES';
+            IF v_count = 0 THEN EXECUTE IMMEDIATE 'ALTER TABLE EVENTS ADD (REMINDER_MINUTES NUMBER(10))'; END IF;
+
+            /* 프로젝트 업무/간트에서 쓰는 컬럼이 없는 DB에서도 월간 캘린더 조회가 500으로 죽지 않게 보강 */
+            SELECT COUNT(*) INTO v_count FROM USER_TAB_COLUMNS WHERE TABLE_NAME = 'EVENTS' AND COLUMN_NAME = 'STATUS';
+            IF v_count = 0 THEN EXECUTE IMMEDIATE 'ALTER TABLE EVENTS ADD (STATUS VARCHAR2(30) DEFAULT ''TODO'')'; END IF;
+
+            SELECT COUNT(*) INTO v_count FROM USER_TAB_COLUMNS WHERE TABLE_NAME = 'EVENTS' AND COLUMN_NAME = 'START_TIME_SLOT';
+            IF v_count = 0 THEN EXECUTE IMMEDIATE 'ALTER TABLE EVENTS ADD (START_TIME_SLOT VARCHAR2(20))'; END IF;
+
+            SELECT COUNT(*) INTO v_count FROM USER_TAB_COLUMNS WHERE TABLE_NAME = 'EVENTS' AND COLUMN_NAME = 'END_TIME_SLOT';
+            IF v_count = 0 THEN EXECUTE IMMEDIATE 'ALTER TABLE EVENTS ADD (END_TIME_SLOT VARCHAR2(20))'; END IF;
+        END;
+    </update>
+
+    <sql id="calendarAcceptedShareTargetCondition">
+        (
+            (s.TARGET_TYPE = 'USER' AND s.TARGET_ID = #{userId})
+         OR (s.TARGET_TYPE = 'WS' AND EXISTS (
+                SELECT 1 FROM WS_MEMBERS wm
+                 WHERE wm.WS_ID = s.TARGET_ID
+                   AND wm.USER_ID = #{userId}
+            ))
+         OR (s.TARGET_TYPE = 'PROJ' AND EXISTS (
+                SELECT 1 FROM PROJ_MEMBERS pm
+                 WHERE pm.PROJ_ID = s.TARGET_ID
+                   AND pm.USER_ID = #{userId}
+            ))
+        )
+    </sql>
+
+    <sql id="calendarViewCondition">
+        (
+            e.USER_ID = #{userId}
+         OR (e.ITEM_TYPE = 'WS' AND EXISTS (
+                SELECT 1 FROM WS_MEMBERS wm
+                 WHERE wm.WS_ID = e.WS_ID
+                   AND wm.USER_ID = #{userId}
+            ))
+         OR (e.ITEM_TYPE IN ('PROJ', 'TASK') AND EXISTS (
+                SELECT 1 FROM PROJ_MEMBERS pm
+                 WHERE pm.PROJ_ID = e.PROJ_ID
+                   AND pm.USER_ID = #{userId}
+            ))
+         OR EXISTS (
+                SELECT 1
+                  FROM CONTENT_SHARES s
+                 WHERE s.CONTENT_TYPE = 'CALENDAR'
+                   AND s.CONTENT_ID = e.EVENT_ID
+                   AND s.ACTIVE_YN = 'Y'
+                   AND NVL(s.SHARE_STATUS, 'ACCEPTED') = 'ACCEPTED'
+                   AND (s.EXPIRES_AT IS NULL OR s.EXPIRES_AT &gt;= SYSDATE)
+                   AND <include refid="calendarAcceptedShareTargetCondition"/>
+            )
+         OR EXISTS (
+                SELECT 1
+                  FROM EVENT_ATTENDEES ea
+                 WHERE ea.EVENT_ID = e.EVENT_ID
+                   AND ea.USER_ID = #{userId}
+            )
+         OR (e.ITEM_TYPE = 'PRIVATE' AND e.IS_PRIVATE = 'N')
+        )
+    </sql>
+
+    <sql id="calendarManagerCondition">
+        (
+            e.USER_ID = #{userId}
+         OR (e.ITEM_TYPE = 'WS' AND EXISTS (
+                SELECT 1
+                  FROM WORKSPACES w
+                  LEFT JOIN WS_MEMBERS wm ON wm.WS_ID = w.WS_ID AND wm.USER_ID = #{userId}
+                 WHERE w.WS_ID = e.WS_ID
+                   AND (w.OWNER_ID = #{userId} OR UPPER(NVL(wm.WS_ROLE, 'MEMBER')) = 'ADMIN')
+            ))
+         OR (e.ITEM_TYPE IN ('PROJ', 'TASK') AND EXISTS (
+                SELECT 1
+                  FROM PROJECTS p
+                  LEFT JOIN PROJ_MEMBERS pm ON pm.PROJ_ID = p.PROJ_ID AND pm.USER_ID = #{userId}
+                 WHERE p.PROJ_ID = e.PROJ_ID
+                   AND (p.LEADER_ID = #{userId} OR UPPER(NVL(pm.PROJ_ROLE, 'MEMBER')) IN ('ADMIN', 'LEADER', 'OWNER', 'PM'))
+            ))
+        )
+    </sql>
+
+    <sql id="calendarEditShareCondition">
+        EXISTS (
+            SELECT 1
+              FROM CONTENT_SHARES s
+             WHERE s.CONTENT_TYPE = 'CALENDAR'
+               AND s.CONTENT_ID = e.EVENT_ID
+               AND s.ACTIVE_YN = 'Y'
+               AND NVL(s.SHARE_STATUS, 'ACCEPTED') = 'ACCEPTED'
+               AND UPPER(NVL(s.PERMISSION_TYPE, 'VIEW')) = 'EDIT'
+               AND (s.EXPIRES_AT IS NULL OR s.EXPIRES_AT &gt;= SYSDATE)
+               AND <include refid="calendarAcceptedShareTargetCondition"/>
+        )
+    </sql>
+
+    <select id="countEventEditPermission" resultType="int">
+        SELECT COUNT(1)
+          FROM EVENTS e
+         WHERE e.EVENT_ID = #{eventId}
+           AND (<include refid="calendarManagerCondition"/> OR <include refid="calendarEditShareCondition"/>)
+    </select>
+
+    <select id="selectEventDetailForView" resultType="map">
+        SELECT
+            e.EVENT_ID AS "eventId",
+            e.TITLE AS "title",
+            TO_CHAR(e.START_DT, 'YYYY-MM-DD HH24:MI:SS') AS "startDt",
+            TO_CHAR(e.END_DT, 'YYYY-MM-DD HH24:MI:SS') AS "endDt",
+            e.ITEM_TYPE AS "itemType",
+            NVL(e.EVENT_TYPE, 'NONE') AS "eventType",
+            e.EVENT_COLOR AS "color",
+            e.USER_ID AS "ownerId",
+            u.USER_NAME AS "ownerName",
+            u.PROFILE_IMAGE_PATH AS "ownerProfileImagePath",
+            u.PROFILE_IMAGE_PATH AS "profileImagePath",
+            e.WS_ID AS "wsId",
+            w.WS_NAME AS "wsName",
+            e.PROJ_ID AS "projId",
+            p.PROJ_NAME AS "projName",
+            w2.WS_NAME AS "projectWorkspaceName",
+            e.IS_PRIVATE AS "isPrivate",
+            CASE WHEN e.ITEM_TYPE = 'PRIVATE' AND e.IS_PRIVATE = 'N' THEN 'MOYO' ELSE 'PRIVATE' END AS "visibilityType",
+            e.LOCATION_TEXT AS "locationText",
+            e.LOCATION_ADDRESS AS "locationAddress",
+            e.LOCATION_LAT AS "locationLat",
+            e.LOCATION_LNG AS "locationLng",
+            e.LOCATION_PLACE_ID AS "locationPlaceId",
+            e.DESCRIPTION_TEXT AS "descriptionText",
+            NVL(e.REMINDER_YN, 'N') AS "reminderYn",
+            e.REMINDER_MINUTES AS "reminderMinutes",
+            NVL(e.IS_RECURRING, 'N') AS "isRecurring",
+            e.RECUR_TYPE AS "recurType",
+            e.RECUR_INTERVAL AS "recurInterval",
+            TO_CHAR(e.RECUR_END_DT, 'YYYY-MM-DD') AS "untilDt",
+            e.RECUR_DAYS AS "recurDays",
+            e.RECUR_GROUP_ID AS "recurGroupId",
+            NVL(e.IS_LUNAR, 'N') AS "isLunar",
+            e.LUNAR_MONTH AS "lunarMonth",
+            e.LUNAR_DAY AS "lunarDay",
+            NVL(e.TIMEZONE_ID, 'Asia/Seoul') AS "timezone",
+            CASE WHEN e.USER_ID = #{userId} THEN 'Y' ELSE 'N' END AS "ownerYn",
+            CASE WHEN EXISTS (
+                SELECT 1 FROM EVENT_ATTENDEES ea
+                 WHERE ea.EVENT_ID = e.EVENT_ID
+                   AND ea.USER_ID = #{userId}
+            ) THEN 'Y' ELSE 'N' END AS "attendeeYn",
+            CASE WHEN (<include refid="calendarManagerCondition"/> OR <include refid="calendarEditShareCondition"/>) THEN 'Y' ELSE 'N' END AS "canEditYn",
+            CASE WHEN <include refid="calendarManagerCondition"/> THEN 'Y' ELSE 'N' END AS "canDeleteYn",
+            CASE
+                WHEN e.USER_ID = #{userId} THEN 'OWNER'
+                WHEN EXISTS (
+                    SELECT 1 FROM CONTENT_SHARES s
+                     WHERE s.CONTENT_TYPE = 'CALENDAR'
+                       AND s.CONTENT_ID = e.EVENT_ID
+                       AND s.ACTIVE_YN = 'Y'
+                       AND NVL(s.SHARE_STATUS, 'ACCEPTED') = 'ACCEPTED'
+                       AND s.TARGET_TYPE = 'USER'
+                       AND s.TARGET_ID = #{userId}
+                       AND (s.EXPIRES_AT IS NULL OR s.EXPIRES_AT &gt;= SYSDATE)
+                ) THEN 'DIRECT_RECEIVED'
+                WHEN EXISTS (
+                    SELECT 1 FROM CONTENT_SHARES s
+                     WHERE s.CONTENT_TYPE = 'CALENDAR'
+                       AND s.CONTENT_ID = e.EVENT_ID
+                       AND s.ACTIVE_YN = 'Y'
+                       AND NVL(s.SHARE_STATUS, 'ACCEPTED') = 'ACCEPTED'
+                       AND s.TARGET_TYPE IN ('WS', 'PROJ')
+                       AND (s.EXPIRES_AT IS NULL OR s.EXPIRES_AT &gt;= SYSDATE)
+                       AND <include refid="calendarAcceptedShareTargetCondition"/>
+                ) THEN 'SCOPE_RECEIVED'
+                ELSE 'NORMAL'
+            END AS "shareRelation"
+        FROM EVENTS e
+        LEFT JOIN USERS u ON u.USER_ID = e.USER_ID
+        LEFT JOIN WORKSPACES w ON w.WS_ID = e.WS_ID
+        LEFT JOIN PROJECTS p ON p.PROJ_ID = e.PROJ_ID
+        LEFT JOIN WORKSPACES w2 ON w2.WS_ID = p.WS_ID
+        WHERE e.EVENT_ID = #{eventId}
+          AND <include refid="calendarViewCondition"/>
+    </select>
+
+
+    <update id="ensureCalendarReminderColumns">
+        DECLARE
+            v_count NUMBER;
+        BEGIN
+            SELECT COUNT(*) INTO v_count FROM USER_TAB_COLUMNS WHERE TABLE_NAME = 'EVENTS' AND COLUMN_NAME = 'TIMEZONE_ID';
+            IF v_count = 0 THEN EXECUTE IMMEDIATE 'ALTER TABLE EVENTS ADD (TIMEZONE_ID VARCHAR2(50) DEFAULT ''Asia/Seoul'')'; END IF;
+
+            SELECT COUNT(*) INTO v_count FROM USER_TAB_COLUMNS WHERE TABLE_NAME = 'EVENTS' AND COLUMN_NAME = 'REMINDER_YN';
+            IF v_count = 0 THEN EXECUTE IMMEDIATE 'ALTER TABLE EVENTS ADD (REMINDER_YN CHAR(1) DEFAULT ''N'' NOT NULL)'; END IF;
+
+            SELECT COUNT(*) INTO v_count FROM USER_TAB_COLUMNS WHERE TABLE_NAME = 'EVENTS' AND COLUMN_NAME = 'REMINDER_MINUTES';
+            IF v_count = 0 THEN EXECUTE IMMEDIATE 'ALTER TABLE EVENTS ADD (REMINDER_MINUTES NUMBER)'; END IF;
+
+            SELECT COUNT(*) INTO v_count FROM USER_TAB_COLUMNS WHERE TABLE_NAME = 'EVENTS' AND COLUMN_NAME = 'REMINDER_SENT_YN';
+            IF v_count = 0 THEN EXECUTE IMMEDIATE 'ALTER TABLE EVENTS ADD (REMINDER_SENT_YN CHAR(1) DEFAULT ''N'' NOT NULL)'; END IF;
+
+            SELECT COUNT(*) INTO v_count FROM USER_TAB_COLUMNS WHERE TABLE_NAME = 'EVENTS' AND COLUMN_NAME = 'REMINDER_SENT_AT';
+            IF v_count = 0 THEN EXECUTE IMMEDIATE 'ALTER TABLE EVENTS ADD (REMINDER_SENT_AT DATE)'; END IF;
+        END;
+    </update>
+
+    <select id="selectDueCalendarReminders" resultType="map">
+        SELECT
+            e.EVENT_ID AS "eventId",
+            e.USER_ID AS "ownerId",
+            e.TITLE AS "title",
+            TO_CHAR(e.START_DT, 'YYYY-MM-DD"T"HH24:MI:SS') AS "startDt",
+            TO_CHAR(e.START_DT, 'YYYY-MM-DD HH24:MI') AS "startText",
+            NVL(e.TIMEZONE_ID, 'Asia/Seoul') AS "timezone",
+            e.REMINDER_MINUTES AS "reminderMinutes"
+        FROM EVENTS e
+        WHERE NVL(e.REMINDER_YN, 'N') = 'Y'
+          AND e.REMINDER_MINUTES IS NOT NULL
+          AND NVL(e.REMINDER_SENT_YN, 'N') = 'N'
+          /* 시간대별 계산은 스케줄러(Java)에서 처리한다.
+             DB에서는 넉넉한 후보만 가져와서 SYSDATE 기준 오차를 피한다. */
+          AND e.START_DT &gt;= SYSDATE - 2
+          AND e.START_DT &lt;= SYSDATE + 2
+        ORDER BY e.START_DT ASC
+    </select>
+
+    <insert id="insertCalendarReminderAlarms" parameterType="map">
+        INSERT INTO USER_NOTICES (
+            ALARM_ID, USER_ID, NOTICE_ID, ALERT_TYPE, TARGET_TYPE, TARGET_ID,
+            TITLE, CONTENT, LINK_URL, IS_READ, REG_DT
+        )
+        SELECT
+            SEQ_ALARM_ID.NEXTVAL,
+            r.USER_ID,
+            NULL,
+            'CALENDAR_REMINDER',
+            'CALENDAR',
+            #{eventId, jdbcType=NUMERIC},
+            #{title, jdbcType=VARCHAR},
+            #{content, jdbcType=VARCHAR},
+            #{linkUrl, jdbcType=VARCHAR},
+            'N',
+            SYSDATE
+        FROM (
+            SELECT #{ownerId, jdbcType=NUMERIC} AS USER_ID FROM DUAL
+            UNION
+            SELECT ea.USER_ID
+              FROM EVENT_ATTENDEES ea
+             WHERE ea.EVENT_ID = #{eventId, jdbcType=NUMERIC}
+        ) r
+        WHERE r.USER_ID IS NOT NULL
+          AND NOT EXISTS (
+                SELECT 1
+                  FROM USER_NOTICES un
+                 WHERE un.USER_ID = r.USER_ID
+                   AND un.ALERT_TYPE = 'CALENDAR_REMINDER'
+                   AND un.TARGET_TYPE = 'CALENDAR'
+                   AND un.TARGET_ID = #{eventId, jdbcType=NUMERIC}
+          )
+    </insert>
+
+    <update id="markCalendarReminderSent">
+        UPDATE EVENTS
+           SET REMINDER_SENT_YN = 'Y',
+               REMINDER_SENT_AT = SYSDATE
+         WHERE EVENT_ID = #{eventId}
+    </update>
 
 </mapper>

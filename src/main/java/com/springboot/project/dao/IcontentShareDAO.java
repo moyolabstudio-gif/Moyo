@@ -28,6 +28,12 @@ public interface IcontentShareDAO {
     List<contentShareDTO> selectShares(@Param("contentType") String contentType,
                                        @Param("contentId") Long contentId);
 
+    List<contentShareDTO> selectSharesForUser(@Param("contentType") String contentType,
+                                              @Param("contentId") Long contentId,
+                                              @Param("userId") Long userId);
+
+    int ensureContentShareContentConstraint();
+
     int mergeShare(contentShareDTO share);
 
     int deleteShare(@Param("shareId") Long shareId,

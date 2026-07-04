@@ -36,7 +36,6 @@
         descriptionCount: $('photoFormDescriptionCount'),
         formTitle: $('photoFormTitle'),
         formHeroDescription: $('photoFormHeroDescription'),
-        targetField: $('photoFormTargetField'),
         targetButtons: Array.from(document.querySelectorAll('[data-photo-target]')),
         targetGuide: $('photoFormTargetGuide'),
         workspaceTargetRow: $('photoWorkspaceTargetRow'),
@@ -135,6 +134,46 @@
         })).filter(item => item.id);
     }
 
+
+    function getActiveWorkspace() {
+        const id = String(activeScopeId || initialScopeId || '');
+        const selected = el.workspaceTargetSelect && el.workspaceTargetSelect.selectedOptions && el.workspaceTargetSelect.selectedOptions[0]
+            ? { id: el.workspaceTargetSelect.value || '', name: el.workspaceTargetSelect.selectedOptions[0].textContent.trim() }
+            : null;
+        return state.workspaces.find(item => String(item.id) === id)
+            || (selected && selected.id ? selected : null)
+            || null;
+    }
+
+    function getActiveProject() {
+        const id = String(activeScopeId || initialScopeId || '');
+        const selected = el.projectTargetSelect && el.projectTargetSelect.selectedOptions && el.projectTargetSelect.selectedOptions[0]
+            ? { id: el.projectTargetSelect.value || '', name: el.projectTargetSelect.selectedOptions[0].textContent.trim(), wsName: '' }
+            : null;
+        const project = state.projects.find(item => String(item.id) === id) || (selected && selected.id ? selected : null);
+        if (!project) return null;
+        if (!project.wsName && el.projectWorkspaceTargetSelect && el.projectWorkspaceTargetSelect.selectedOptions && el.projectWorkspaceTargetSelect.selectedOptions[0]) {
+            project.wsName = el.projectWorkspaceTargetSelect.selectedOptions[0].textContent.trim();
+        }
+        return project;
+    }
+
+    function activeScopeDisplayName() {
+        const scope = String(activeScopeType || state.targetMode || initialScopeType || '').toUpperCase();
+        if (scope === 'WORKSPACE' || scope === 'GROUP' || scope === 'WS') {
+            const workspace = getActiveWorkspace();
+            return workspace && workspace.name ? `${workspace.name} 그룹` : '선택한 그룹';
+        }
+        if (scope === 'PROJECT' || scope === 'PROJ') {
+            const project = getActiveProject();
+            if (project && project.name) {
+                return project.wsName ? `${project.wsName} · ${project.name} 프로젝트` : `${project.name} 프로젝트`;
+            }
+            return '선택한 프로젝트';
+        }
+        return '개인 공간';
+    }
+
     function renderTargetOptions() {
         state.workspaces = collectWorkspaces();
         state.projects = collectProjects();
@@ -208,13 +247,13 @@
 
 
     function updateFormCopy() {
-        if (mode === 'edit') return;
-        const action = '등록';
+        const action = mode === 'edit' ? '수정' : '등록';
+        const scopeName = activeScopeDisplayName();
         const copy = {
             PERSONAL: ['개인 사진', '큰 화면에서 사진을 확인하면서 설명과 앨범, MOYO 공개 여부를 정리합니다.'],
             FRIEND: ['개인 사진', '친구 탭에서 시작한 사진도 개인 사진으로 등록합니다.'],
-            WORKSPACE: ['그룹 사진', '현재 선택한 그룹 공간에 사진을 등록합니다.'],
-            PROJECT: ['프로젝트 사진', '현재 선택한 프로젝트 공간에 사진을 등록합니다.']
+            WORKSPACE: ['그룹 사진', `${scopeName} 공간에 사진을 ${action}합니다.`],
+            PROJECT: ['프로젝트 사진', `${scopeName} 공간에 사진을 ${action}합니다.`]
         }[state.targetMode] || ['개인 사진', '큰 화면에서 사진을 확인하면서 설명과 앨범을 정리합니다.'];
         if (el.formTitle) el.formTitle.textContent = `${copy[0]} ${action}`;
         if (el.formHeroDescription) el.formHeroDescription.textContent = copy[1];
@@ -289,39 +328,74 @@
 
     function fillVisibility() {
         if (!el.visibility) return;
-        if (el.visibilityField) el.visibilityField.hidden = false;
+        if (el.visibilityField) {
+            el.visibilityField.hidden = false;
+            el.visibilityField.classList.remove('is-scope-fixed');
+            delete el.visibilityField.dataset.fixedScope;
+        }
         if (state.targetMode === 'FRIEND') {
             if (el.visibilityField) el.visibilityField.hidden = true;
             if (el.moyoPublic) el.moyoPublic.checked = false;
             return;
         }
         if (mode === 'edit') {
-            el.visibility.disabled = true;
             const label = pick(state.post, 'visibilityType', 'VISIBILITY_TYPE') || (activeScopeType === 'WORKSPACE' ? 'WORKSPACE' : activeScopeType === 'PROJECT' ? 'PROJECT' : 'PRIVATE');
-            el.visibility.innerHTML = `<option>${esc(visibilityText(label))}</option>`;
+            if (activeScopeType === 'PERSONAL') {
+                setVisibilityTitle('피드 공개', 'MOYO');
+                el.visibility.innerHTML = '<option value="PRIVATE">나만 보기</option>';
+                el.visibility.hidden = true;
+                el.visibility.disabled = false;
+                if (el.moyoBox) el.moyoBox.hidden = false;
+                if (el.moyoPublic) el.moyoPublic.checked = String(label).toUpperCase() === 'FRIENDS';
+                if (el.visibilityGuide) el.visibilityGuide.textContent = '체크하면 친구들의 MOYO 피드에도 함께 표시됩니다.';
+                return;
+            }
+            el.visibility.innerHTML = `<option value="${esc(String(label).toUpperCase())}">${esc(visibilityText(label))}</option>`;
+            el.visibility.hidden = true;
+            el.visibility.disabled = false;
+            if (el.visibilityField) {
+                el.visibilityField.hidden = true;
+                el.visibilityField.classList.add('is-scope-fixed');
+                el.visibilityField.dataset.fixedScope = 'true';
+            }
             if (el.moyoBox) el.moyoBox.hidden = true;
-            if (el.visibilityGuide) el.visibilityGuide.textContent = '공개 범위 변경은 다음 단계에서 공유/권한 모달과 함께 정리합니다.';
+            if (el.visibilityGuide) el.visibilityGuide.textContent = `${activeScopeDisplayName()} 구성원이 함께 볼 수 있습니다.`;
             return;
         }
         if (activeScopeType === 'WORKSPACE') {
             setVisibilityTitle('등록 범위', '그룹');
             el.visibility.innerHTML = '<option value="WORKSPACE">그룹 공개</option>';
-            el.visibility.hidden = false;
+            el.visibility.value = 'WORKSPACE';
+            el.visibility.hidden = true;
+            el.visibility.disabled = false;
+            if (el.visibilityField) {
+                el.visibilityField.hidden = true;
+                el.visibilityField.classList.add('is-scope-fixed');
+                el.visibilityField.dataset.fixedScope = 'true';
+            }
             if (el.moyoBox) el.moyoBox.hidden = true;
-            if (el.visibilityGuide) el.visibilityGuide.textContent = '현재 그룹 구성원이 함께 볼 수 있습니다.';
+            if (el.visibilityGuide) el.visibilityGuide.textContent = `${activeScopeDisplayName()} 구성원이 함께 볼 수 있습니다.`;
             return;
         }
         if (activeScopeType === 'PROJECT') {
             setVisibilityTitle('등록 범위', '프로젝트');
             el.visibility.innerHTML = '<option value="PROJECT">프로젝트 공개</option>';
-            el.visibility.hidden = false;
+            el.visibility.value = 'PROJECT';
+            el.visibility.hidden = true;
+            el.visibility.disabled = false;
+            if (el.visibilityField) {
+                el.visibilityField.hidden = true;
+                el.visibilityField.classList.add('is-scope-fixed');
+                el.visibilityField.dataset.fixedScope = 'true';
+            }
             if (el.moyoBox) el.moyoBox.hidden = true;
-            if (el.visibilityGuide) el.visibilityGuide.textContent = '현재 프로젝트 팀원이 함께 볼 수 있습니다.';
+            if (el.visibilityGuide) el.visibilityGuide.textContent = `${activeScopeDisplayName()} 팀원이 함께 볼 수 있습니다.`;
             return;
         }
         setVisibilityTitle('피드 공개', 'MOYO');
         el.visibility.innerHTML = '<option value="PRIVATE">나만 보기</option>';
         el.visibility.hidden = true;
+        el.visibility.disabled = false;
         const friendTarget = state.targetMode === 'FRIEND';
         if (el.moyoBox) el.moyoBox.hidden = friendTarget;
         if (el.moyoPublic) el.moyoPublic.checked = friendTarget ? false : defaultMoyoPublic;
@@ -442,14 +516,17 @@
             return;
         }
         try {
-            const files = await Promise.all(photos.slice(0, MAX_PHOTO_COUNT).map((photo, index) => imageUrlToFile(
-                pick(photo, 'filePath', 'FILE_PATH'),
+            const targets = photos.slice(0, MAX_PHOTO_COUNT);
+            const files = await Promise.all(targets.map((photo, index) => imageUrlToFile(
+                pick(photo, 'rawFilePath', 'RAW_FILE_PATH') || pick(photo, 'filePath', 'FILE_PATH'),
                 index,
                 pick(photo, 'originalName', 'ORIGINAL_NAME') || ''
             )));
-            files.filter(Boolean).forEach(file => {
+            files.forEach((file, index) => {
+                if (!file) return;
+                const photo = targets[index] || {};
                 state.files.push(file);
-                state.edits.push(defaultEdit());
+                state.edits.push(normalizeEditMeta(pick(photo, 'editMeta', 'EDIT_META', 'edit_meta', 'photoEditMeta', 'PHOTO_EDIT_META', 'photo_edit_meta'), index));
             });
             renderSelectedFiles();
         } catch (error) {
@@ -470,6 +547,54 @@
 
     function defaultEdit() {
         return { rotation: 0, crop: 'original', scale: 1, offsetX: 0, offsetY: 0, filter: 'none' };
+    }
+
+    function normalizeEditMeta(meta, index) {
+        const base = defaultEdit();
+        let source = meta;
+        if (typeof source === 'string') {
+            const trimmed = source.trim();
+            try { source = trimmed ? JSON.parse(trimmed) : {}; } catch (e) { source = {}; }
+        }
+        if (Array.isArray(source)) {
+            const safeIndex = Number.isFinite(Number(index)) ? Number(index) : 0;
+            source = source[safeIndex] || source[0] || {};
+        }
+        if (!source || typeof source !== 'object') source = {};
+
+        const rawCrop = source.crop ?? source.cropType ?? source.ratioType ?? source.mode ?? base.crop;
+        const cropText = String(rawCrop || '').toLowerCase();
+        const crop = (cropText === 'square' || cropText === '1:1' || cropText === 'crop_square') ? 'square' : 'original';
+
+        let scale = source.scale ?? source.zoomScale ?? source.editorScale;
+        if (scale == null && source.zoom != null) scale = Number(source.zoom) > 10 ? Number(source.zoom) / 100 : Number(source.zoom);
+        if (scale == null && source.zoomPercent != null) scale = Number(source.zoomPercent) / 100;
+        if (scale == null && source.scalePercent != null) scale = Number(source.scalePercent) / 100;
+
+        const offsetX = source.offsetX ?? source.positionX ?? source.posX ?? source.x ?? source.translateX ?? 0;
+        const offsetY = source.offsetY ?? source.positionY ?? source.posY ?? source.y ?? source.translateY ?? 0;
+        const rotation = source.rotation ?? source.rotate ?? source.angle ?? 0;
+
+        return {
+            rotation: normalRotation(Number(rotation || 0)),
+            crop,
+            scale: clamp(Number(scale == null ? 1 : scale), 1, 2.2),
+            offsetX: clamp(Number(offsetX || 0), -50, 50),
+            offsetY: clamp(Number(offsetY || 0), -50, 50),
+            filter: String(source.filter || source.filterType || 'none')
+        };
+    }
+
+    function editMetaForSubmit(index) {
+        return JSON.stringify(normalizeEditMeta(currentEdit(index)));
+    }
+
+    function encodeEditMetaBase64(json) {
+        try {
+            return btoa(unescape(encodeURIComponent(json || '{}')));
+        } catch (e) {
+            return btoa(json || '{}');
+        }
     }
 
     function normalRotation(value) {
@@ -739,7 +864,10 @@
         if (action === 'rotate-left') edit.rotation = normalRotation(edit.rotation - 90);
         if (action === 'rotate-right') edit.rotation = normalRotation(edit.rotation + 90);
         if (action === 'square') edit.crop = 'square';
-        if (action === 'original') edit.crop = 'original';
+        if (action === 'original') {
+            state.edits[state.activeIndex] = defaultEdit();
+            return renderSelectedFiles();
+        }
         if (action === 'zoom-out') edit.scale = clamp((edit.scale || 1) - 0.1, 1, 2.2);
         if (action === 'zoom-in') edit.scale = clamp((edit.scale || 1) + 0.1, 1, 2.2);
         if (action && action.startsWith('filter-')) edit.filter = action.replace('filter-', '') || 'none';
@@ -781,17 +909,20 @@
         return canvas;
     }
 
-    function cropEditedCanvas(source, edit) {
-        const scale = clamp(edit.scale || 1, 1, 2.2);
-        const targetAspect = edit.crop === 'square' ? 1 : source.width / source.height;
+    function cropEditedCanvas(image, edit) {
+        const safeEdit = normalizeEditMeta(edit);
+        const rotation = normalRotation(safeEdit.rotation);
+        const swap = rotation === 90 || rotation === 270;
+        const rotatedWidth = swap ? image.naturalHeight : image.naturalWidth;
+        const rotatedHeight = swap ? image.naturalWidth : image.naturalHeight;
+        const targetAspect = safeEdit.crop === 'square' ? 1 : Math.max(.2, rotatedWidth / Math.max(1, rotatedHeight));
         const maxOutput = 1600;
         const canvas = document.createElement('canvas');
-
         if (targetAspect >= 1) {
-            canvas.width = Math.min(maxOutput, Math.max(1, Math.round(source.width)));
+            canvas.width = Math.min(maxOutput, Math.max(1, Math.round(rotatedWidth)));
             canvas.height = Math.max(1, Math.round(canvas.width / targetAspect));
         } else {
-            canvas.height = Math.min(maxOutput, Math.max(1, Math.round(source.height)));
+            canvas.height = Math.min(maxOutput, Math.max(1, Math.round(rotatedHeight)));
             canvas.width = Math.max(1, Math.round(canvas.height * targetAspect));
         }
 
@@ -799,51 +930,50 @@
         ctx.save();
         ctx.fillStyle = '#fff';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.filter = editorFilter(edit.filter);
+        ctx.filter = editorFilter(safeEdit.filter);
 
-        const fitScale = Math.min(canvas.width / source.width, canvas.height / source.height) * scale;
-        const drawWidth = source.width * fitScale;
-        const drawHeight = source.height * fitScale;
-        const offsetX = clamp(edit.offsetX || 0, -50, 50) / 100 * drawWidth;
-        const offsetY = clamp(edit.offsetY || 0, -50, 50) / 100 * drawHeight;
-        const dx = (canvas.width - drawWidth) / 2 + offsetX;
-        const dy = (canvas.height - drawHeight) / 2 + offsetY;
+        // The editor preview fits the original image inside the crop frame and then applies
+        // translate(%) + rotate + scale from the image center. Save with the same coordinate basis.
+        const baseScale = Math.min(canvas.width / image.naturalWidth, canvas.height / image.naturalHeight);
+        const drawWidth = image.naturalWidth * baseScale;
+        const drawHeight = image.naturalHeight * baseScale;
+        const translateX = (safeEdit.offsetX / 100) * drawWidth;
+        const translateY = (safeEdit.offsetY / 100) * drawHeight;
 
-        ctx.drawImage(source, dx, dy, drawWidth, drawHeight);
+        ctx.translate(canvas.width / 2 + translateX, canvas.height / 2 + translateY);
+        ctx.rotate(rotation * Math.PI / 180);
+        ctx.scale(safeEdit.scale, safeEdit.scale);
+        ctx.drawImage(image, -drawWidth / 2, -drawHeight / 2, drawWidth, drawHeight);
         ctx.restore();
         return canvas;
     }
 
     async function buildUploadFile(file, edit) {
-        const safeEdit = edit || defaultEdit();
-        const changed = normalRotation(safeEdit.rotation) !== 0 || safeEdit.crop === 'square' || (safeEdit.scale || 1) !== 1 || (safeEdit.offsetX || 0) !== 0 || (safeEdit.offsetY || 0) !== 0 || (safeEdit.filter || 'none') !== 'none';
-        if (!changed) return file;
+        const safeEdit = normalizeEditMeta(edit);
         if (/image\/gif/i.test(file.type)) {
             toast('GIF는 애니메이션 보존을 위해 원본으로 등록합니다.', true);
             return file;
         }
         const image = await loadImageFromFile(file);
-        const rotatedCanvas = drawRotatedImage(image, safeEdit.rotation);
-        const canvas = cropEditedCanvas(rotatedCanvas, safeEdit);
+        const canvas = cropEditedCanvas(image, safeEdit);
         const type = file.type === 'image/png' ? 'image/png' : 'image/jpeg';
         const blob = await canvasToBlob(canvas, type, .92);
         if (!blob) return file;
         const ext = type === 'image/png' ? '.png' : '.jpg';
         const baseName = file.name.replace(/\.[^.]+$/, '') || 'photo';
-        return new File([blob], `${baseName}_edited${ext}`, { type, lastModified: Date.now() });
+        return new File([blob], `${baseName}_display${ext}`, { type, lastModified: Date.now() });
     }
 
     function appendShareFields(fd) {
         if (!fd || !el.shareHiddenFields) return;
         const types = Array.from(el.shareHiddenFields.querySelectorAll('input[name="shareTargetType"]')).map(input => input.value);
         const ids = Array.from(el.shareHiddenFields.querySelectorAll('input[name="shareTargetId"]')).map(input => input.value);
-        const permissions = Array.from(el.shareHiddenFields.querySelectorAll('input[name="sharePermissionType"]')).map(input => input.value || 'VIEW');
         types.forEach((type, index) => {
             if (!type || !ids[index]) return;
             if (state.targetMode === 'FRIEND' && String(type).toUpperCase() !== 'FRIEND') return;
             fd.append('shareTargetType', type);
             fd.append('shareTargetId', ids[index]);
-            fd.append('sharePermissionType', permissions[index] || 'VIEW');
+            fd.append('sharePermissionType', 'VIEW');
         });
     }
 
@@ -852,6 +982,7 @@
         if (!document.getElementById('photoPostShareModal')) return;
         window.MoyoShareModal.init({
             contentType: 'PHOTO',
+            enablePermission: false,
             contentId: postId,
             persist: mode === 'edit' && !!postId,
             reloadOnPersist: false,
@@ -859,7 +990,6 @@
             currentUserId: document.getElementById('photoPostShareModal')?.dataset.currentUserId || document.body?.dataset.userId || '',
             ids: {
                 openButton: 'openPhotoPostShareModal',
-                permissionButton: 'openPhotoPostPermissionModal',
                 modal: 'photoPostShareModal',
                 keyword: 'photoPostShareKeyword',
                 applyButton: 'applyPhotoPostShareModal',
@@ -869,7 +999,6 @@
                 selected: 'photoPostShareSelected',
                 hiddenFields: 'photoPostShareHiddenFields',
                 count: 'photoPostShareCount',
-                permissionCount: 'photoPostPermissionCount',
                 modalCount: 'photoPostShareModalCount',
                 initialSharesSource: 'photoPostShareInitialSource',
                 workspaceMemberSource: 'photoPostWorkspaceMemberSource',
@@ -892,9 +1021,20 @@
                 const fd = new FormData();
                 fd.append('title', '');
                 fd.append('description', el.description.value.trim());
+                if (activeScopeType === 'PERSONAL' && el.moyoPublic) {
+                    fd.append('visibilityType', el.moyoPublic.checked ? 'FRIENDS' : 'PRIVATE');
+                }
                 if (el.album.value) fd.append('albumId', el.album.value);
                 const uploadFiles = await Promise.all(state.files.map((file, index) => buildUploadFile(file, currentEdit(index))));
-                uploadFiles.forEach(file => fd.append('files', file));
+                uploadFiles.forEach((file, index) => {
+                    fd.append('files', file);
+                    fd.append('rawFiles', state.files[index]);
+                    const metaJson = editMetaForSubmit(index);
+                    fd.append('editMetaB64', encodeEditMetaBase64(metaJson));
+                    fd.append('editMetas', metaJson);
+                    fd.append('editMeta', metaJson);
+                    fd.append('photoEditMetas', metaJson);
+                });
                 await request(`/api/photo-posts/${postId}/edit`, { method: 'POST', body: fd });
                 toast('사진을 수정했습니다.');
                 setTimeout(goBack, 350);
@@ -915,7 +1055,15 @@
             if (el.album.value) fd.append('albumId', el.album.value);
             appendShareFields(fd);
             const uploadFiles = await Promise.all(state.files.map((file, index) => buildUploadFile(file, currentEdit(index))));
-            uploadFiles.forEach(file => fd.append('files', file));
+            uploadFiles.forEach((file, index) => {
+                fd.append('files', file);
+                fd.append('rawFiles', state.files[index]);
+                const metaJson = editMetaForSubmit(index);
+                    fd.append('editMetaB64', encodeEditMetaBase64(metaJson));
+                    fd.append('editMetas', metaJson);
+                    fd.append('editMeta', metaJson);
+                    fd.append('photoEditMetas', metaJson);
+            });
             await request('/api/photo-posts', { method: 'POST', body: fd });
             toast('사진을 등록했습니다.');
             setTimeout(goBack, 350);

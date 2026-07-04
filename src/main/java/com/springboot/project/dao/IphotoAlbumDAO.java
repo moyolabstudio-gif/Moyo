@@ -36,6 +36,7 @@ public interface IphotoAlbumDAO {
     int restorePostFromTrash(@Param("postId") Long postId, @Param("userId") Long userId);
     int countTrashOwner(@Param("postId") Long postId, @Param("userId") Long userId);
     int deletePost(@Param("postId") Long postId);
+    int deleteExpiredTrashPosts();
     int countPostCollect(@Param("postId") Long postId, @Param("userId") Long userId);
     int insertPostCollect(@Param("postId") Long postId, @Param("userId") Long userId);
     int insertCollectedPostLink(@Param("collectedPostId") Long collectedPostId,

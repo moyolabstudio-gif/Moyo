@@ -184,6 +184,7 @@
     const selectedCount = document.getElementById('noteSelectedCount');
     const bulkMove = document.getElementById('noteBulkMove');
     const bulkTrash = document.getElementById('noteBulkTrash');
+    const bulkShare = document.getElementById('noteBulkShare');
     const restoreAllTrash = document.getElementById('noteRestoreAllTrash');
     const permanentDeleteAllTrash = document.getElementById('notePermanentDeleteAllTrash');
     const folderManageConfig = document.getElementById('noteFolderManageConfig');
@@ -242,6 +243,7 @@
 
         selectedCount.textContent = `${selected.length}개 선택됨`;
         bulkTrash.disabled = selected.length === 0;
+        if (bulkShare) bulkShare.disabled = selected.length === 0;
         bulkMove.disabled = selected.length === 0 || scopeKeys.size !== 1;
         bulkMove.title = scopeKeys.size > 1 ? '같은 영역의 노트만 함께 이동할 수 있습니다.' : '';
 
@@ -528,11 +530,13 @@
         const folderTarget = event.target.closest('[data-note-folder-drop]');
         const moveTarget = event.target.closest('[data-note-bulk-move-drop]');
         const trashTarget = event.target.closest('[data-note-bulk-trash-drop]');
-        const target = folderTarget || moveTarget || trashTarget;
+        const shareTarget = event.target.closest('[data-note-bulk-share-drop]');
+        const target = folderTarget || moveTarget || trashTarget || shareTarget;
         if (!target) return;
 
         const scopeKeys = new Set(cardDragState.cards.map(card => card.dataset.scopeKey || ''));
         const valid = Boolean(trashTarget)
+            || Boolean(shareTarget)
             || (Boolean(folderTarget) && canDropToFolder(folderTarget, cardDragState.cards))
             || (Boolean(moveTarget) && scopeKeys.size === 1);
         clearDropTargets();
@@ -544,7 +548,7 @@
     });
 
     document.addEventListener('dragleave', event => {
-        const target = event.target.closest('[data-note-folder-drop], [data-note-bulk-move-drop], [data-note-bulk-trash-drop]');
+        const target = event.target.closest('[data-note-folder-drop], [data-note-bulk-move-drop], [data-note-bulk-trash-drop], [data-note-bulk-share-drop]');
         if (!target || target.contains(event.relatedTarget)) return;
         target.classList.remove('nl-drop-target-active', 'nl-drop-target-invalid');
     });
@@ -554,7 +558,8 @@
         const folderTarget = event.target.closest('[data-note-folder-drop]');
         const moveTarget = event.target.closest('[data-note-bulk-move-drop]');
         const trashTarget = event.target.closest('[data-note-bulk-trash-drop]');
-        if (!folderTarget && !moveTarget && !trashTarget) return;
+        const shareTarget = event.target.closest('[data-note-bulk-share-drop]');
+        if (!folderTarget && !moveTarget && !trashTarget && !shareTarget) return;
 
         event.preventDefault();
         const cards = [...cardDragState.cards];
@@ -587,9 +592,17 @@
             } else if (trashTarget) {
                 if (!window.confirm(`선택한 ${cards.length}개 노트를 휴지통으로 이동할까요?`)) return;
                 await moveCardsToTrash(cards);
+            } else if (shareTarget) {
+                clearCardSelection();
+                cards.forEach(card => {
+                    const input = card.querySelector('.nl-card-select-input:not(:disabled)');
+                    if (input) input.checked = true;
+                });
+                updateBulkState();
+                await openSelectedNotesShareModal();
             }
         } catch (error) {
-            window.alert(error.message || '노트를 이동하지 못했습니다.');
+            window.alert(error.message || '노트 작업을 처리하지 못했습니다.');
             updateBulkState();
         }
     });
@@ -856,6 +869,121 @@
         }
     });
 
+    const noteEscapeHtml = (value) => String(value == null ? '' : value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+
+    const currentUserId = () => String(
+        document.body?.dataset.userId
+        || document.getElementById('userId')?.value
+        || document.querySelector('[data-current-user-id]')?.dataset.currentUserId
+        || ''
+    ).trim();
+
+    const selectedNoteIds = () => selectedCards()
+        .map(card => String(card.dataset.noteId || '').trim())
+        .filter(Boolean);
+
+    const noteShareModalMarkup = (uid) => `
+        <button type="button" id="${noteEscapeHtml(uid)}Open" hidden>공유 열기</button>
+        <button type="button" id="${noteEscapeHtml(uid)}PermissionDummy" hidden></button>
+        <div id="${noteEscapeHtml(uid)}InitialSource" hidden></div>
+        <div id="${noteEscapeHtml(uid)}Modal" class="note-write-share-modal moyo-share-modal" data-current-user-id="${noteEscapeHtml(currentUserId())}" data-share-mode-type="PERMISSION" hidden>
+            <div class="note-write-share-backdrop" data-note-share-close></div>
+            <section class="note-write-share-panel" role="dialog" aria-modal="true" aria-labelledby="${noteEscapeHtml(uid)}Title">
+                <div class="note-write-share-modal-head">
+                    <div>
+                        <h3 id="${noteEscapeHtml(uid)}Title">공유</h3>
+                        <p>선택한 노트를 받을 사람에게 공유 요청을 보냅니다.</p>
+                    </div>
+                    <button type="button" class="note-write-share-close" data-note-share-close aria-label="닫기">×</button>
+                </div>
+                <div class="note-write-share-tabs" role="tablist" aria-label="공유 대상 유형">
+                    <button type="button" class="note-write-share-tab is-active" data-share-tab="FRIEND">친구</button>
+                    <button type="button" class="note-write-share-tab" data-share-tab="WORKSPACE">그룹</button>
+                    <button type="button" class="note-write-share-tab" data-share-tab="PROJECT">프로젝트</button>
+                </div>
+                <div class="note-write-share-toolbar">
+                    <select id="${noteEscapeHtml(uid)}Context" class="note-write-share-select" aria-label="공유 범위 선택" hidden></select>
+                    <input type="text" id="${noteEscapeHtml(uid)}Keyword" class="note-write-share-input" placeholder="친구 이름 또는 이메일 검색">
+                </div>
+                <div class="note-write-share-body note-write-share-body-simple">
+                    <div>
+                        <div class="note-write-share-subtitle">받는 대상</div>
+                        <div id="${noteEscapeHtml(uid)}Candidates" class="note-write-share-list"></div>
+                    </div>
+                    <div>
+                        <div class="note-write-share-subtitle" hidden>공유 목록 <span id="${noteEscapeHtml(uid)}ModalCount" class="note-share-modal-count" hidden>0</span></div>
+                        <div id="${noteEscapeHtml(uid)}Selected" class="note-write-share-selected"></div>
+                    </div>
+                </div>
+                <div class="note-write-share-modal-actions">
+                    <div>
+                        <button type="button" class="note-soft-btn" data-note-share-close>취소</button>
+                        <button type="button" id="${noteEscapeHtml(uid)}Apply" class="note-gradient-btn">보내기</button>
+                    </div>
+                </div>
+            </section>
+        </div>`;
+
+    const openSelectedNotesShareModal = async () => {
+        const cards = selectedCards();
+        const noteIds = cards.map(card => String(card.dataset.noteId || '').trim()).filter(Boolean);
+        if (!noteIds.length) return;
+        if (!window.MoyoShareModal || typeof window.MoyoShareModal.init !== 'function') {
+            window.alert('공유 모달 스크립트를 불러오지 못했습니다.');
+            return;
+        }
+        const mount = document.getElementById('noteListShareMount') || document.body.appendChild(Object.assign(document.createElement('div'), { id: 'noteListShareMount' }));
+        const uid = `noteListShare${noteIds[0]}_${Date.now()}`;
+        mount.innerHTML = noteShareModalMarkup(uid);
+        const openButton = document.getElementById(`${uid}Open`);
+        window.MoyoShareModal.init({
+            contentType: 'NOTE',
+            contentId: noteIds[0],
+            contentIds: noteIds,
+            shareMode: 'PERMISSION',
+            persist: true,
+            reloadOnPersist: false,
+            bodyOpenClass: 'note-share-modal-open',
+            currentUserId: currentUserId(),
+            ids: {
+                openButton: `${uid}Open`,
+                permissionButton: `${uid}PermissionDummy`,
+                modal: `${uid}Modal`,
+                keyword: `${uid}Keyword`,
+                applyButton: `${uid}Apply`,
+                title: `${uid}Title`,
+                context: `${uid}Context`,
+                candidates: `${uid}Candidates`,
+                selected: `${uid}Selected`,
+                hiddenFields: 'noteListShareHiddenFields',
+                modalCount: `${uid}ModalCount`,
+                initialSharesSource: `${uid}InitialSource`,
+                workspaceMemberSource: 'noteListWorkspaceMemberSource',
+                projectMemberSource: 'noteListProjectMemberSource',
+                workspaceTargetSource: 'noteListWorkspaceTargetSource',
+                projectTargetSource: 'noteListProjectTargetSource'
+            },
+            onPersistSuccess: () => {
+                window.alert(noteIds.length > 1 ? `노트 ${noteIds.length}개 공유 요청을 보냈습니다.` : '공유 요청을 보냈습니다.');
+                setSelectionMode(false);
+            }
+        });
+        setTimeout(() => openButton?.dispatchEvent(new MouseEvent('click', { bubbles: false, cancelable: true })), 0);
+    };
+
+    bulkShare?.addEventListener('click', async () => {
+        try {
+            await openSelectedNotesShareModal();
+        } catch (error) {
+            window.alert(error.message || '공유 모달을 열지 못했습니다.');
+        }
+    });
+
     bulkMove?.addEventListener('click', async () => {
         try {
             await openMoveModal(selectedCards());
@@ -870,6 +998,7 @@
         if (!window.confirm(`선택한 ${cards.length}개 노트를 휴지통으로 이동할까요?`)) return;
         bulkTrash.disabled = true;
         bulkMove.disabled = true;
+        if (bulkShare) bulkShare.disabled = true;
         try {
             await moveCardsToTrash(cards);
         } catch (error) {

@@ -36,4 +36,8 @@ public interface IcalendarResponseService {
     
     List<Map<String, Object>> getProjectsByUserId(long userId);
     String checkUserRole(Long wsId, Long userId);
+
+    Map<String, Object> getEventDetailForView(Long eventId, Long userId);
+
+    boolean canEditEvent(Long eventId, Long userId);
 }

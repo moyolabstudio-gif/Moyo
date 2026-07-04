@@ -32,16 +32,19 @@
 
     <insert id="insertProjectEvent" parameterType="com.springboot.project.dto.projectRequestDTO">
         INSERT INTO EVENTS (
-            EVENT_ID, TITLE, START_DT, END_DT, PROJ_ID, ITEM_TYPE, USER_ID, EVENT_COLOR
+            EVENT_ID, TITLE, START_DT, END_DT, PROJ_ID, WS_ID, ITEM_TYPE, USER_ID, EVENT_COLOR, EVENT_TYPE, IS_PRIVATE
         ) VALUES (
             SEQ_EVENT_ID.NEXTVAL,
-            #{projName} || ' 시작',
+            #{projName},
             TO_DATE(#{startDate}, 'YYYY-MM-DD'),
             TO_DATE(#{endDate}, 'YYYY-MM-DD'),
             #{projId},
+            #{wsId, jdbcType=NUMERIC},
             'PROJ',
             #{leaderId},
-            '#3788d8'
+            '#8b63f6',
+            'PROJECT_PERIOD',
+            'Y'
         )
     </insert>
 
@@ -99,8 +102,13 @@
             CASE
                 WHEN NVL(wp.USE_ACCOUNT_PROFILE, 'Y') = 'N'
                     THEN wp.PROFILE_IMAGE_PATH
-                ELSE NULL
+                ELSE u.PROFILE_IMAGE_PATH
             END AS "PROFILE_IMAGE_PATH",
+            CASE
+                WHEN NVL(wp.USE_ACCOUNT_PROFILE, 'Y') = 'N'
+                    THEN wp.PROFILE_IMAGE_PATH
+                ELSE u.PROFILE_IMAGE_PATH
+            END AS "profileImagePath",
             wp.POSITION_NAME AS "WS_POSITION",
             pm.PROJ_ROLE,
             pm.PROJ_POSITION AS "PROJ_POSITION",

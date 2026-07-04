@@ -3,22 +3,98 @@
 
 <mapper namespace="com.springboot.project.dao.IuserNoticeDAO">
 
+    <update id="ensureUserNoticeCommonColumns">
+        DECLARE
+            v_count NUMBER;
+            v_nullable VARCHAR2(1);
+        BEGIN
+            SELECT COUNT(*) INTO v_count FROM USER_TAB_COLUMNS WHERE TABLE_NAME = 'USER_NOTICES' AND COLUMN_NAME = 'ALERT_TYPE';
+            IF v_count = 0 THEN
+                EXECUTE IMMEDIATE 'ALTER TABLE USER_NOTICES ADD (ALERT_TYPE VARCHAR2(50) DEFAULT ''NOTICE'' NOT NULL)';
+            END IF;
+
+            SELECT COUNT(*) INTO v_count FROM USER_TAB_COLUMNS WHERE TABLE_NAME = 'USER_NOTICES' AND COLUMN_NAME = 'TARGET_TYPE';
+            IF v_count = 0 THEN
+                EXECUTE IMMEDIATE 'ALTER TABLE USER_NOTICES ADD (TARGET_TYPE VARCHAR2(50))';
+            END IF;
+
+            SELECT COUNT(*) INTO v_count FROM USER_TAB_COLUMNS WHERE TABLE_NAME = 'USER_NOTICES' AND COLUMN_NAME = 'TARGET_ID';
+            IF v_count = 0 THEN
+                EXECUTE IMMEDIATE 'ALTER TABLE USER_NOTICES ADD (TARGET_ID NUMBER)';
+            END IF;
+
+            SELECT COUNT(*) INTO v_count FROM USER_TAB_COLUMNS WHERE TABLE_NAME = 'USER_NOTICES' AND COLUMN_NAME = 'TITLE';
+            IF v_count = 0 THEN
+                EXECUTE IMMEDIATE 'ALTER TABLE USER_NOTICES ADD (TITLE VARCHAR2(300))';
+            END IF;
+
+            SELECT COUNT(*) INTO v_count FROM USER_TAB_COLUMNS WHERE TABLE_NAME = 'USER_NOTICES' AND COLUMN_NAME = 'CONTENT';
+            IF v_count = 0 THEN
+                EXECUTE IMMEDIATE 'ALTER TABLE USER_NOTICES ADD (CONTENT VARCHAR2(1000))';
+            END IF;
+
+            SELECT COUNT(*) INTO v_count FROM USER_TAB_COLUMNS WHERE TABLE_NAME = 'USER_NOTICES' AND COLUMN_NAME = 'LINK_URL';
+            IF v_count = 0 THEN
+                EXECUTE IMMEDIATE 'ALTER TABLE USER_NOTICES ADD (LINK_URL VARCHAR2(500))';
+            END IF;
+
+            SELECT NULLABLE INTO v_nullable
+              FROM USER_TAB_COLUMNS
+             WHERE TABLE_NAME = 'USER_NOTICES'
+               AND COLUMN_NAME = 'NOTICE_ID';
+
+            IF v_nullable = 'N' THEN
+                EXECUTE IMMEDIATE 'ALTER TABLE USER_NOTICES MODIFY (NOTICE_ID NULL)';
+            END IF;
+        END;
+    </update>
+
     <insert id="insertAlarm">
-        INSERT INTO USER_NOTICES (ALARM_ID, USER_ID, NOTICE_ID, IS_READ)
-        VALUES (SEQ_ALARM_ID.NEXTVAL, #{userId}, #{noticeId}, 'N')
+        INSERT INTO USER_NOTICES (ALARM_ID, USER_ID, NOTICE_ID, ALERT_TYPE, TARGET_TYPE, TARGET_ID, IS_READ, REG_DT)
+        VALUES (SEQ_ALARM_ID.NEXTVAL, #{userId}, #{noticeId}, 'NOTICE', 'NOTICE', #{noticeId}, 'N', SYSDATE)
+    </insert>
+
+    <insert id="insertCalendarAttendeeAlarm">
+        INSERT INTO USER_NOTICES (
+            ALARM_ID, USER_ID, NOTICE_ID, ALERT_TYPE, TARGET_TYPE, TARGET_ID,
+            TITLE, CONTENT, LINK_URL, IS_READ, REG_DT
+        ) VALUES (
+            SEQ_ALARM_ID.NEXTVAL,
+            #{userId, jdbcType=NUMERIC},
+            NULL,
+            'CALENDAR_ATTENDEE',
+            'CALENDAR',
+            #{targetId, jdbcType=NUMERIC},
+            #{title, jdbcType=VARCHAR},
+            #{content, jdbcType=VARCHAR},
+            #{linkUrl, jdbcType=VARCHAR},
+            'N',
+            SYSDATE
+        )
     </insert>
 
     <select id="selectMyNotices" resultType="com.springboot.project.dto.userNoticeDTO">
-        SELECT A.ALARM_ID, A.USER_ID, A.NOTICE_ID, A.IS_READ, A.REG_DT, N.TITLE 
+        SELECT
+            A.ALARM_ID AS alarmId,
+            A.USER_ID AS userId,
+            A.NOTICE_ID AS noticeId,
+            NVL(A.ALERT_TYPE, 'NOTICE') AS alertType,
+            NVL(A.TARGET_TYPE, CASE WHEN A.NOTICE_ID IS NOT NULL THEN 'NOTICE' ELSE NULL END) AS targetType,
+            NVL(A.TARGET_ID, A.NOTICE_ID) AS targetId,
+            COALESCE(A.TITLE, N.TITLE, '새 알림') AS title,
+            COALESCE(A.CONTENT, DBMS_LOB.SUBSTR(N.CONTENT, 1000, 1)) AS content,
+            A.LINK_URL AS linkUrl,
+            A.IS_READ AS isRead,
+            A.REG_DT AS regDt
         FROM USER_NOTICES A
-        JOIN SYSTEM_NOTICES N ON A.NOTICE_ID = N.NOTICE_ID
+        LEFT JOIN SYSTEM_NOTICES N ON A.NOTICE_ID = N.NOTICE_ID
         WHERE A.USER_ID = #{userId}
         ORDER BY A.REG_DT DESC
     </select>
 
     <update id="updateAlarmRead" parameterType="Long">
-        UPDATE USER_NOTICES 
-        SET IS_READ = 'Y' 
-        WHERE ALARM_ID = #{alarmId}
+        UPDATE USER_NOTICES
+           SET IS_READ = 'Y'
+         WHERE ALARM_ID = #{alarmId}
     </update>
 </mapper>

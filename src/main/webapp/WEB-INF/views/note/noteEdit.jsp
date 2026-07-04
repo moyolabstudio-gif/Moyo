@@ -14,7 +14,7 @@
     <script src="https://cdn.ckeditor.com/ckeditor5/41.1.0/super-build/translations/ko.js"></script>
     <script src="/js/commonCkeditor.js?v=moyo-editor-media-preview-v3"></script>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/commonRichContent.css?v=rich-content-v4-20260619">
-    <link rel="stylesheet" href="/css/commonShareModal.css?v=common-share-stable-v40">
+    <link rel="stylesheet" href="/css/commonShareModal.css?v=note-share-edit-inline-v1">
 </head>
 <body class="note-page-body">
 <jsp:include page="/WEB-INF/views/common/header.jsp" />
@@ -319,7 +319,7 @@
     </div>
 
 
-<script src="/js/commonShareModal.js?v=244"></script>
+<script src="/js/commonShareModal.js?v=note-share-edit-inline-v1"></script>
 <script>
 (function () {
     function initNoteEditShare() {

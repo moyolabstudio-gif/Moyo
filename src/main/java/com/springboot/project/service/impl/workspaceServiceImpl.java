@@ -251,11 +251,20 @@ public class workspaceServiceImpl implements IworkspaceService {
 
         if ("ACCEPTED".equals(status)) {
             Long wsId = Long.valueOf(inviteInfo.get("WS_ID").toString());
-            workspaceDao.insertWorkspaceMember(wsId, userId, "MEMBER");
+            if (workspaceDao.isWorkspaceMember(wsId, userId) < 1) {
+                workspaceDao.insertWorkspaceMember(wsId, userId, "MEMBER");
+            }
 
             Map<String, Object> profileParams =
                     buildWorkspaceProfileParams(wsId, userId, profile);
-            workspaceDao.insertWorkspaceMemberProfile(profileParams);
+            int profileUpdated = workspaceDao.updateWorkspaceMemberProfile(profileParams);
+            if (profileUpdated < 1) {
+                try {
+                    workspaceDao.insertWorkspaceMemberProfile(profileParams);
+                } catch (org.springframework.dao.DuplicateKeyException duplicate) {
+                    workspaceDao.updateWorkspaceMemberProfile(profileParams);
+                }
+            }
         }
 
         return true;

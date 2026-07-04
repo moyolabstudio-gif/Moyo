@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.springboot.project.dto.calendarResponseDTO;
 import com.springboot.project.dto.usersDto;
 import com.springboot.project.service.IcalendarResponseService;
+import com.springboot.project.util.LunarUtil;
 
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
@@ -61,29 +62,39 @@ public class calendarResponseController {
     // 3. 일정 등록 API (권한 검증 포함)
     @PostMapping("/register")
     @ResponseBody
-    public String registerEvent(@RequestBody calendarResponseDTO dto, HttpSession session) {
+    public ResponseEntity<Map<String, Object>> registerEvent(@RequestBody calendarResponseDTO dto, HttpSession session) {
         usersDto loginUser = (usersDto) session.getAttribute("user");
+        Map<String, Object> result = new HashMap<>();
 
-        if (loginUser != null) {
-            dto.setUserId(loginUser.getUserId());
-            
-            // WS 일정일 경우 관리자 권한 체크
-            if ("WS".equals(dto.getItemType())) {
-                String role = calendarService.checkUserRole(dto.getWsId(), loginUser.getUserId());
-                if (!"ADMIN".equals(role)) {
-                    return "FAIL: NO_ADMIN_PRIVILEGE";
-                }
-            }
+        if (loginUser == null) {
+            result.put("success", false);
+            result.put("message", "로그인이 필요합니다.");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(result);
+        }
 
-            try {
-                calendarService.registerEvent(dto);
-                return "SUCCESS";
-            } catch (Exception e) {
-                e.printStackTrace();
-                return "FAIL: SERVER_ERROR";
+        dto.setUserId(loginUser.getUserId());
+
+        if ("WS".equals(dto.getItemType())) {
+            String role = calendarService.checkUserRole(dto.getWsId(), loginUser.getUserId());
+            if (!"ADMIN".equals(role)) {
+                result.put("success", false);
+                result.put("message", "그룹 일정 등록 권한이 없습니다.");
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(result);
             }
         }
-        return "FAIL: LOGIN_REQUIRED"; 
+
+        try {
+            calendarService.registerEvent(dto);
+            result.put("success", true);
+            result.put("eventId", dto.getId());
+            result.put("message", "SUCCESS");
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            e.printStackTrace();
+            result.put("success", false);
+            result.put("message", "일정 저장 중 서버 오류가 발생했습니다.");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(result);
+        }
     }
     
     // 4. 팀 공유 일정 조회
@@ -100,29 +111,33 @@ public class calendarResponseController {
             @RequestParam("eventId") int eventId,
             @RequestParam(value = "recurGroupId", required = false) String recurGroupId,
             @RequestParam(value = "deleteSeries", defaultValue = "N") String deleteSeries,
+            @RequestParam(value = "deleteScope", defaultValue = "ONE") String deleteScope,
+            @RequestParam(value = "occurrenceDate", required = false) String occurrenceDate,
             HttpSession session) {
-        
+
         usersDto loginUser = (usersDto) session.getAttribute("user");
         if (loginUser == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인 필요");
 
-        // 💡 로그 추가: 무엇이 넘어오는지 확인
-        System.out.println("삭제 요청 - eventId: " + eventId + ", recurGroupId: " + recurGroupId + ", deleteSeries: " + deleteSeries);
-
         Map<String, Object> params = new HashMap<>();
         params.put("eventId", eventId);
-        // null 체크 후 put
-        params.put("recurGroupId", (recurGroupId != null && !recurGroupId.equals("undefined")) ? recurGroupId : null);
+        params.put("recurGroupId", (recurGroupId != null && !recurGroupId.equals("undefined") && !recurGroupId.isBlank()) ? recurGroupId : null);
         params.put("deleteSeries", deleteSeries);
+        params.put("deleteScope", deleteScope);
+        params.put("occurrenceDate", occurrenceDate);
         params.put("userId", loginUser.getUserId());
 
         try {
             if (calendarService.deleteEvent(params)) {
-                return ResponseEntity.ok("삭제 성공");
-            } else {
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("삭제 실패");
+                if ("ONE".equalsIgnoreCase(deleteScope) && params.get("recurGroupId") != null) return ResponseEntity.ok("선택한 반복 일정만 삭제했습니다.");
+                if ("FUTURE".equalsIgnoreCase(deleteScope)) return ResponseEntity.ok("선택한 날짜 이후 반복 일정을 삭제했습니다.");
+                if ("ALL".equalsIgnoreCase(deleteScope) || "Y".equalsIgnoreCase(deleteSeries)) return ResponseEntity.ok("반복 일정 전체를 삭제했습니다.");
+                return ResponseEntity.ok("삭제되었습니다.");
             }
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("삭제 실패");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
         } catch (Exception e) {
-            e.printStackTrace(); // 💡 여기서 찍히는 로그를 알려주세요!
+            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("서버 에러 발생");
         }
     }
@@ -183,4 +198,43 @@ public class calendarResponseController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("데이터 로드 실패");
         }
     }
+    // 10. 음력 날짜를 양력 표시 날짜로 변환
+    @GetMapping("/lunar-to-solar")
+    public ResponseEntity<Map<String, Object>> convertLunarToSolar(
+            @RequestParam("year") int year,
+            @RequestParam("month") int month,
+            @RequestParam("day") int day) {
+        Map<String, Object> result = new HashMap<>();
+        try {
+            String solarDate = LunarUtil.convertLunarToSolar(year, month, day);
+            result.put("success", true);
+            result.put("solarDate", solarDate);
+            result.put("year", year);
+            result.put("month", month);
+            result.put("day", day);
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            result.put("success", false);
+            result.put("message", "음력 날짜를 양력으로 변환하지 못했습니다.");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result);
+        }
+    }
+
+    // 11. 일정 상세 조회 API
+    @GetMapping("/detail")
+    public ResponseEntity<?> getEventDetail(
+            @RequestParam("eventId") Long eventId,
+            HttpSession session) {
+        usersDto loginUser = (usersDto) session.getAttribute("user");
+        if (loginUser == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인이 필요합니다.");
+        }
+
+        Map<String, Object> detail = calendarService.getEventDetailForView(eventId, loginUser.getUserId());
+        if (detail == null) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("일정을 볼 권한이 없습니다.");
+        }
+        return ResponseEntity.ok(detail);
+    }
+
 }

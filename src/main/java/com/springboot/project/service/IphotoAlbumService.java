@@ -18,10 +18,12 @@ public interface IphotoAlbumService {
     Map<String, Object> getPost(Long postId, Long userId);
     List<Map<String, Object>> getPostPhotos(Long postId);
     Long createPost(String scopeType, Long scopeId, Long albumId, String title,
-                    String description, String visibilityType, List<MultipartFile> files, Long userId);
+                    String description, String visibilityType, List<MultipartFile> files,
+                    List<MultipartFile> rawFiles, List<String> editMetas, Long userId);
     boolean updatePost(Long postId, Long albumId, String title, String description);
     boolean updatePostWithPhotos(Long postId, Long albumId, String title, String description,
-                                 List<MultipartFile> files, Long userId);
+                                 List<MultipartFile> files, List<MultipartFile> rawFiles,
+                                 List<String> editMetas, Long userId);
     boolean movePostAlbum(Long postId, Long albumId);
     boolean updatePostVisibility(Long postId, String visibilityType);
     List<Map<String, Object>> getTrashPosts(Long userId);
@@ -29,6 +31,7 @@ public interface IphotoAlbumService {
     boolean restorePostFromTrash(Long postId, Long userId);
     boolean canPermanentlyDeletePost(Long postId, Long userId);
     boolean permanentlyDeletePost(Long postId, Long userId);
+    int purgeExpiredTrashPosts();
     Long collectPost(Long sourcePostId, Long targetAlbumId, Long userId);
     boolean cancelCollectPost(Long sourcePostId, Long userId);
     boolean deletePost(Long postId);

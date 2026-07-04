@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="/css/moyoUi.css?v=moyo-ui-scope-20260617">
     <link rel="stylesheet" href="/css/note.css?v=note-toolbar-boundary-v40">
     <link rel="stylesheet" href="/css/commonFolderModal.css?v=common-folder-modal-final-v15">
-    <link rel="stylesheet" href="/css/commonShareModal.css?v=common-share-stable-v40">
+    <link rel="stylesheet" href="/css/commonShareModal.css?v=note-share-edit-inline-v1">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/commonRichContent.css?v=rich-content-v3">
 </head>
 <body class="note-page-body">
@@ -488,7 +488,7 @@
 </div>
 </c:if>
 
-<script src="/js/commonShareModal.js?v=244"></script>
+<script src="/js/commonShareModal.js?v=note-share-edit-inline-v1"></script>
 <script>
 (function () {
     function initNoteDetailShare() {

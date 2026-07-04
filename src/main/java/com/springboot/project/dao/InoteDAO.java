@@ -45,6 +45,8 @@ public interface InoteDAO {
 
     int countTrashOwner(@Param("noteId") Long noteId, @Param("userId") Long userId);
 
+    List<Long> selectExpiredTrashNoteIds();
+
     int insertNoteFile(noteFileDTO file);
 
     List<noteFileDTO> selectNoteFileList(@Param("noteId") Long noteId);

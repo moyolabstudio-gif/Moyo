@@ -78,6 +78,11 @@ public class commonRequestController {
                 item.put("targetName", share.getTargetName());
                 item.put("targetType", share.getTargetType());
                 item.put("permissionType", share.getPermissionType());
+                item.put("calendarStartDt", share.getCalendarStartDt());
+                item.put("calendarEndDt", share.getCalendarEndDt());
+                item.put("calendarLocationText", share.getCalendarLocationText());
+                item.put("calendarLocationAddress", share.getCalendarLocationAddress());
+                item.put("calendarAttendeeYn", share.getCalendarAttendeeYn());
                 item.put("createdAt", share.getCreatedAt());
                 items.add(item);
             }

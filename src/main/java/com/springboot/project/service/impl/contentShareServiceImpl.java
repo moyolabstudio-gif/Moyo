@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -15,7 +16,7 @@ import java.util.Set;
 
 @Service
 public class contentShareServiceImpl implements IcontentShareService {
-    private static final Set<String> CONTENT_TYPES = Set.of("NOTE", "PHOTO", "ALBUM", "BOARD", "EVENT", "POLL", "FILE");
+    private static final Set<String> CONTENT_TYPES = Set.of("NOTE", "PHOTO", "CALENDAR", "ALBUM", "BOARD", "EVENT", "POLL", "FILE");
     private static final Set<String> TARGET_TYPES = Set.of("USER", "WS", "PROJ");
     private static final Set<String> PERMISSIONS = Set.of("VIEW", "EDIT");
     private static final Set<String> RESPONSE_STATUS = Set.of("ACCEPTED", "REJECTED");
@@ -49,21 +50,32 @@ public class contentShareServiceImpl implements IcontentShareService {
         boolean feedMode = isFeedShareMode(shareMode);
         boolean manageable = canManage(normalizedContentType, contentId, userId);
         boolean feedShareable = feedMode && canSendMoyoFeedShare(normalizedContentType, contentId, userId);
-        if (!manageable && !feedShareable) throw new IllegalStateException("공유할 권한이 없습니다.");
+        boolean readable = canRead(normalizedContentType, contentId, userId);
+        if (!manageable && !feedShareable && !readable) throw new IllegalStateException("공유할 권한이 없습니다.");
 
         Map<String, Object> result = new HashMap<>();
         String searchKeyword = keyword == null || keyword.trim().isEmpty() ? null : keyword.trim();
-        result.put("users", contentShareDAO.selectUserTargets(userId, searchKeyword));
-        result.put("workspaces", contentShareDAO.selectWorkspaceTargets(userId));
-        result.put("projects", contentShareDAO.selectProjectTargets(userId));
-        List<contentShareDTO> shares = contentShareDAO.selectShares(normalizedContentType, contentId);
-        if (!manageable) {
+        if (manageable || feedShareable) {
+            result.put("users", contentShareDAO.selectUserTargets(userId, searchKeyword));
+            result.put("workspaces", contentShareDAO.selectWorkspaceTargets(userId));
+            result.put("projects", contentShareDAO.selectProjectTargets(userId));
+        } else {
+            result.put("users", List.of());
+            result.put("workspaces", List.of());
+            result.put("projects", List.of());
+        }
+
+        List<contentShareDTO> shares = manageable
+                ? contentShareDAO.selectShares(normalizedContentType, contentId)
+                : contentShareDAO.selectSharesForUser(normalizedContentType, contentId, userId);
+        if (feedShareable && !manageable) {
             shares = shares.stream()
                     .filter(item -> item != null && userId.equals(item.getSharedBy()))
                     .toList();
         }
         result.put("shares", shares);
         result.put("shareMode", feedMode ? "FEED" : "PERMISSION");
+        result.put("readonlyShare", !manageable && !feedShareable);
         return result;
     }
 
@@ -88,6 +100,10 @@ public class contentShareServiceImpl implements IcontentShareService {
             throw new IllegalArgumentException("본인에게는 보낼 수 없습니다.");
         }
 
+        if ("CALENDAR".equals(contentType)) {
+            contentShareDAO.ensureContentShareContentConstraint();
+        }
+
         share.setContentType(contentType);
         share.setTargetType(targetType);
         share.setPermissionType(permission);
@@ -96,6 +112,47 @@ public class contentShareServiceImpl implements IcontentShareService {
         share.setActiveYn("Y");
         share.setShareStatus("PENDING");
         return contentShareDAO.mergeShare(share) > 0;
+    }
+
+
+    @Override
+    @Transactional
+    public int saveSharesBulk(String contentType, List<Long> contentIds, List<String> targetTypes, List<Long> targetIds, List<String> permissionTypes, Long userId, String shareMode) {
+        String normalizedContentType = normalizeContentType(contentType);
+        if (userId == null) return 0;
+        if (contentIds == null || contentIds.isEmpty()) throw new IllegalArgumentException("공유할 콘텐츠를 선택해 주세요.");
+        if (targetTypes == null || targetIds == null || targetTypes.isEmpty() || targetIds.isEmpty()) {
+            throw new IllegalArgumentException("공유할 대상을 선택해 주세요.");
+        }
+        if (targetTypes.size() != targetIds.size()) {
+            throw new IllegalArgumentException("공유 대상 정보가 올바르지 않습니다.");
+        }
+
+        List<Long> cleanContentIds = contentIds.stream()
+                .filter(id -> id != null && id > 0)
+                .distinct()
+                .toList();
+        if (cleanContentIds.isEmpty()) throw new IllegalArgumentException("공유할 콘텐츠를 선택해 주세요.");
+
+        Date bulkCreatedAt = new Date();
+        int saved = 0;
+        for (Long contentId : cleanContentIds) {
+            for (int i = 0; i < targetIds.size(); i++) {
+                Long targetId = targetIds.get(i);
+                if (targetId == null || targetId <= 0) continue;
+                String targetType = i < targetTypes.size() ? targetTypes.get(i) : "USER";
+                String permission = permissionTypes != null && i < permissionTypes.size() ? permissionTypes.get(i) : "VIEW";
+                contentShareDTO share = new contentShareDTO();
+                share.setContentType(normalizedContentType);
+                share.setContentId(contentId);
+                share.setTargetType(targetType);
+                share.setTargetId(targetId);
+                share.setPermissionType(permission);
+                share.setCreatedAt(bulkCreatedAt);
+                if (saveShare(share, userId, shareMode)) saved++;
+            }
+        }
+        return saved;
     }
 
     @Override

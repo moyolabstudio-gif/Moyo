@@ -22,19 +22,23 @@
     };
 
     function initShareModal(userOptions) {
-        const options = Object.assign({ contentType: 'NOTE', shareMode: 'PERMISSION' }, userOptions || {});
+        const options = Object.assign({ contentType: 'NOTE', shareMode: 'PERMISSION', enablePermission: true }, userOptions || {});
         const ids = Object.assign({}, DEFAULT_IDS, options.ids || {});
         const el = (name) => document.getElementById(ids[name]);
         const cssId = (id) => '#' + String(id).replace(/([ #;?%&,.+*~\':"!^$[\]()=>|/@])/g, '\\$1');
         const modalSelector = () => cssId(ids.modal);
         const selected = new Map();       // 공유 대상: USER / WS / PROJ, 기본 VIEW
-        const editors = new Map();        // 편집 권한: USER만 EDIT
+        const editors = new Map();        // 편집 권한: 공유 대상 단위 EDIT
         const originalShares = new Map(); // 상세 화면 저장 비교용
         const groupMemberCache = new Map();
         const groupMemberLoading = new Set();
         let cachedCandidates = [];
         let activeTab = 'FRIEND';
         let mode = 'SHARE';
+        let permissionDetailMode = 'TARGET'; // TARGET: 그룹/프로젝트 자체, MEMBER: 하위 멤버
+        let shareWithEditPermission = false; // 공유 모달에서 선택 대상에 편집 권한을 함께 포함할지 여부
+        let readonlyShare = false;
+        let readonlyShareLoaded = false;
         let mounted = false;
 
         function isDraftShareMode() {
@@ -42,14 +46,89 @@
         }
 
         function shareApplyLabel() {
-            if (mode !== 'SHARE') return '적용';
+            if (mode === 'PERMISSION') return editors.size > 0 ? `선택 완료 ${editors.size}` : '선택 완료';
+            if (mode !== 'SHARE') return '선택 완료';
             if (isDraftShareMode()) return selected.size > 0 ? `선택 완료 ${selected.size}` : '선택 완료';
             return selected.size > 0 ? `보내기 ${selected.size}` : '보내기';
         }
 
         function shareApplyProgressLabel() {
-            if (mode !== 'SHARE') return '저장 중';
+            if (mode === 'PERMISSION') return '적용 중';
+            if (mode !== 'SHARE') return '적용 중';
             return isDraftShareMode() ? '적용 중' : '보내는 중';
+        }
+
+        function canUseShareEditShortcut() {
+            if (options.enablePermission === false) return false;
+            if (mode !== 'SHARE') return false;
+            if (isReceivedShareView()) return false;
+            if (currentShareMode() !== 'PERMISSION') return false;
+            const type = String(firstValue(options.contentType, '') || '').trim().toUpperCase();
+            // 공유 모달에서 '편집 권한 포함'은 노트뿐 아니라 캘린더 일정 공유에서도 사용한다.
+            // contentType이 CALENDAR인 경우에도 같은 선택 UI를 노출해야 sharePermissionType=EDIT로 저장된다.
+            return !type || type === 'NOTE' || type === 'CALENDAR';
+        }
+
+        function shareEditOptionId() {
+            return String(ids.modal || 'noteWriteShareModal') + 'EditOption';
+        }
+
+        function getShareEditOption() {
+            return document.getElementById(shareEditOptionId());
+        }
+
+        function getShareEditCheckbox() {
+            return document.getElementById(shareEditOptionId() + 'Check');
+        }
+
+        function ensureShareEditOption() {
+            const modal = el('modal');
+            if (!modal || getShareEditOption()) return;
+            const actions = modal.querySelector('.note-write-share-modal-actions');
+            if (!actions) return;
+            const option = document.createElement('label');
+            option.id = shareEditOptionId();
+            option.className = 'note-share-edit-option';
+            option.innerHTML = '<input type="checkbox" id="' + escapeHtml(shareEditOptionId() + 'Check') + '">'
+                + '<span class="note-share-edit-option-text"><strong>선택한 대상에게 편집 권한 포함</strong><small>체크하지 않으면 공유 요청만 전송됩니다.</small></span>';
+            actions.insertBefore(option, actions.firstChild);
+            option.querySelector('input')?.addEventListener('change', (event) => {
+                shareWithEditPermission = event.currentTarget.checked === true;
+                syncShareEditShortcutEditors();
+                renderCandidatesFromCache();
+                renderSelected();
+            });
+        }
+
+        function updateShareEditOption() {
+            ensureShareEditOption();
+            const option = getShareEditOption();
+            const checkbox = getShareEditCheckbox();
+            if (!option || !checkbox) return;
+            const visible = canUseShareEditShortcut();
+            option.hidden = !visible;
+            option.classList.toggle('is-active', visible && shareWithEditPermission);
+            checkbox.checked = visible && shareWithEditPermission;
+            checkbox.disabled = !visible;
+            if (!visible) return;
+            const selectedCount = selected.size;
+            option.classList.toggle('is-disabled', selectedCount === 0);
+        }
+
+        function syncShareEditShortcutEditors() {
+            if (!canUseShareEditShortcut()) return;
+            selected.forEach((item, key) => {
+                if (!shareWithEditPermission) {
+                    const old = originalShares.get(key);
+                    const oldPermission = String(firstValue(old && old.permission, old && old.permissionType, 'VIEW')).toUpperCase();
+                    if (!old || oldPermission !== 'EDIT') editors.delete(key);
+                    return;
+                }
+                const type = normalizeType(item && item.type) || 'USER';
+                if (type === 'WS' || type === 'PROJ') removeCoveredChildEditors({ ...item, type });
+                else removeSameUserTargets(editors, item);
+                editors.set(key, { ...item, type, permission: 'EDIT', permissionTab: item.permissionTab || activeTab });
+            });
         }
 
         function currentShareMode() {
@@ -102,18 +181,20 @@
             const keyword = el('keyword');
             if (!openButton || !modal || !keyword) return;
             lockCommonShareNamespace(modal);
+            ensureShareEditOption();
             mounted = true;
 
             normalizeModalText();
             ensurePermissionButton(openButton);
             loadInitialShares();
+            primePersistedShareState();
 
             openButton.addEventListener('click', (event) => {
                 event.preventDefault();
                 event.stopPropagation();
                 openModal('SHARE');
             });
-            el('permissionButton')?.addEventListener('click', (event) => {
+            if (options.enablePermission !== false) el('permissionButton')?.addEventListener('click', (event) => {
                 event.preventDefault();
                 event.stopPropagation();
                 openModal('PERMISSION');
@@ -122,6 +203,10 @@
             el('applyButton')?.addEventListener('click', (event) => {
                 event.preventDefault();
                 event.stopPropagation();
+                if (isReceivedShareView()) {
+                    handleReceivedShareAction(event.currentTarget);
+                    return;
+                }
                 if (options.persist) syncShareChanges();
                 else closeModal();
             });
@@ -132,8 +217,9 @@
 
             document.querySelectorAll(modalSelector() + ' [data-share-tab]').forEach((tab) => {
                 tab.addEventListener('click', () => {
-                    if (mode !== 'SHARE') return;
+                    if (mode !== 'SHARE' && mode !== 'PERMISSION') return;
                     activeTab = tab.dataset.shareTab || 'FRIEND';
+                    permissionDetailMode = 'TARGET';
                     keyword.value = '';
                     document.querySelectorAll(modalSelector() + ' [data-share-tab]').forEach((item) => item.classList.toggle('is-active', item === tab));
                     updateShareTabCounts();
@@ -180,7 +266,12 @@
         function selectedCountByTab(tabValue) {
             const value = String(tabValue || '').toUpperCase();
             let count = 0;
-            selected.forEach((item) => {
+            const source = mode === 'PERMISSION' ? editors : selected;
+            source.forEach((item) => {
+                if (item.permissionTab) {
+                    if (String(item.permissionTab).toUpperCase() === value) count += 1;
+                    return;
+                }
                 const type = normalizeType(item.type);
                 if (value === 'FRIEND' && type === 'USER') count += 1;
                 if (value === 'WORKSPACE' && type === 'WS') count += 1;
@@ -203,26 +294,31 @@
             if (title) title.textContent = '공유';
             const desc = title?.closest('.note-write-share-modal-head')?.querySelector('p');
             if (desc) desc.textContent = isDraftShareMode()
-                ? '받는 사람을 선택해 두면 등록 완료 시 공유 요청이 함께 전송됩니다.'
-                : (currentShareMode() === 'FEED' ? '받는 사람에게 MOYO 피드 게시물을 보냅니다.' : '받는 사람을 선택해 공유 요청을 보냅니다.');
+                ? '받는 대상을 선택해 두면 등록 완료 시 공유 요청이 함께 전송됩니다.'
+                : (currentShareMode() === 'FEED' ? '받는 대상에게 MOYO 피드 게시물을 보냅니다.' : '받는 대상을 선택해 공유 요청을 보냅니다.');
             const subtitles = document.querySelectorAll(modalSelector() + ' .note-write-share-subtitle');
-            if (subtitles[0]) subtitles[0].textContent = '받는 사람';
+            if (subtitles[0]) subtitles[0].textContent = '받는 대상';
             if (subtitles[1]) {
-                subtitles[1].hidden = true;
-                subtitles[1].innerHTML = '<span id="' + escapeHtml(ids.modalCount) + '" class="note-share-modal-count" hidden>(0)</span>';
+                subtitles[1].hidden = false;
+                subtitles[1].innerHTML = '선택 대상 <span id="' + escapeHtml(ids.modalCount) + '" class="note-share-modal-count" hidden>(0)</span>';
+                subtitles[1].classList.add('note-write-share-subtitle-with-count');
             }
             const friendLink = el('friendManageLink');
             if (friendLink) friendLink.remove();
             el('context')?.setAttribute('hidden', 'hidden');
             document.querySelector(modalSelector() + ' .note-write-share-body')?.classList.add('note-write-share-body-simple', 'note-write-share-body-feed');
+            updatePermissionModeSwitcher();
             const selectedBox = el('selected');
             if (selectedBox) {
-                selectedBox.hidden = true;
-                if (selectedBox.parentElement) selectedBox.parentElement.hidden = true;
+                selectedBox.hidden = false;
+                if (selectedBox.parentElement) selectedBox.parentElement.hidden = false;
+                selectedBox.classList.add('note-share-chip-list');
             }
+            updateShareEditOption();
         }
 
         function ensurePermissionButton(openButton) {
+            if (options.enablePermission === false) return;
             if (el('permissionButton')) return;
             const button = document.createElement('button');
             button.type = 'button';
@@ -231,6 +327,60 @@
             button.classList.add('note-meta-permission');
             button.innerHTML = '<span class="note-meta-label">편집 권한</span><span id="' + escapeHtml(ids.permissionCount) + '" class="note-share-count" hidden>0</span>';
             openButton.insertAdjacentElement('afterend', button);
+        }
+
+
+        function primePersistedShareState() {
+            if (!options.persist) {
+                updatePersistedShareCounters();
+                return;
+            }
+            refreshCurrentShares().then(() => {
+                renderSelected();
+                updateShareTabCounts();
+            });
+        }
+
+        function editorTabFromItem(item) {
+            const type = normalizeType(item && item.type);
+            const parentType = normalizeType(item && item.parentType);
+            if (type === 'WS' || parentType === 'WS') return 'WORKSPACE';
+            if (type === 'PROJ' || parentType === 'PROJ') return 'PROJECT';
+            return 'FRIEND';
+        }
+
+        function syncEditorsFromPersistedShares() {
+            const persistedEditKeys = new Set();
+            originalShares.forEach((item, key) => {
+                const status = normalizeShareStatus(item && item.shareStatus);
+                const permission = String(firstValue(item && item.permission, item && item.permissionType, 'VIEW')).toUpperCase();
+                if ((status === 'PENDING' || status === 'ACCEPTED') && permission === 'EDIT') {
+                    const type = normalizeType(item && item.type);
+                    const id = String(item && item.id || '').trim();
+                    if (!type || !id) return;
+                    const editorKey = scopedKey({ ...item, type, id });
+                    persistedEditKeys.add(editorKey);
+                    editors.set(editorKey, {
+                        ...item,
+                        type,
+                        id,
+                        permission: 'EDIT',
+                        permissionTab: item.permissionTab || editorTabFromItem(item)
+                    });
+                }
+            });
+
+            Array.from(editors.entries()).forEach(([key, item]) => {
+                const old = originalShares.get(scopedKey(item)) || originalShares.get(makeKey(item.type, item.id));
+                if (!old) return;
+                const status = normalizeShareStatus(old.shareStatus);
+                const permission = String(firstValue(old.permission, old.permissionType, 'VIEW')).toUpperCase();
+                if ((status === 'PENDING' || status === 'ACCEPTED') && permission !== 'EDIT' && !selected.has(key)) {
+                    editors.delete(key);
+                }
+            });
+            removeOrphanEditors();
+            updatePersistedShareCounters();
         }
 
         function loadInitialShares() {
@@ -255,22 +405,24 @@
                     shareId: String(firstValue(node.dataset.shareId, '')).trim(),
                     ownerId: String(firstValue(node.dataset.ownerId, '')).trim(),
                     sharedBy: String(firstValue(node.dataset.sharedBy, '')).trim(),
-                    shareStatus: normalizeShareStatus(firstValue(node.dataset.shareStatus, node.dataset.status, 'PENDING'))
+                    requesterName: firstValue(node.dataset.requesterName, node.dataset.sharedByName, ''),
+                    requesterEmail: firstValue(node.dataset.requesterEmail, ''),
+                    shareStatus: normalizeShareStatus(firstValue(node.dataset.shareStatus, node.dataset.status, 'PENDING')),
+                    releaseableYn: String(firstValue(node.dataset.releaseableYn, node.dataset.releaseable, '') || '').trim().toUpperCase()
                 };
                 originalShares.set(key, { ...item, permission: 'VIEW' });
-                if (type === 'USER' && permission === 'EDIT') {
-                    editors.set(key, { ...item, type: 'USER', permission: 'EDIT' });
+                if (permission === 'EDIT') {
+                    editors.set(key, { ...item, type, permission: 'EDIT' });
                 }
             });
-            removeOrphanEditors();
-            updatePersistedShareCounters();
+            syncEditorsFromPersistedShares();
         }
 
 
         function refreshCurrentShares() {
             if (!options.persist) return Promise.resolve(false);
             const contentType = String(firstValue(options.contentType, '') || '').trim().toUpperCase();
-            const contentId = String(firstValue(options.contentId, '') || '').trim();
+            const contentId = String(firstValue(options.contentId, el('openButton')?.dataset.shareContentId, el('modal')?.dataset.contentId, '') || '').trim();
             if (!contentType || !contentId || contentId === '0') return Promise.resolve(false);
 
             const params = new URLSearchParams({ contentType, contentId, shareMode: currentShareMode() });
@@ -278,6 +430,8 @@
                 .then((res) => res.json())
                 .then((data) => {
                     if (!data || data.success === false || !Array.isArray(data.shares)) return false;
+                    readonlyShare = data.readonlyShare === true || String(data.readonlyShare || '').toUpperCase() === 'TRUE';
+                    readonlyShareLoaded = true;
                     const next = new Map();
                     data.shares.forEach((share) => {
                         const item = shareDtoToItem(share);
@@ -302,8 +456,7 @@
                         const status = normalizeShareStatus(originalShares.get(key)?.shareStatus);
                         if (status === 'PENDING' || status === 'ACCEPTED') selected.delete(key);
                     });
-                    removeOrphanEditors();
-                    updatePersistedShareCounters();
+                    syncEditorsFromPersistedShares();
                     return changed;
                 })
                 .catch(() => false);
@@ -328,7 +481,10 @@
                 shareId: String(firstValue(share.shareId, share.SHARE_ID, '')).trim(),
                 ownerId: String(firstValue(share.ownerId, share.OWNER_ID, '')).trim(),
                 sharedBy: String(firstValue(share.sharedBy, share.SHARED_BY, '')).trim(),
-                shareStatus: normalizeShareStatus(firstValue(share.shareStatus, share.SHARE_STATUS, share.status, share.STATUS, 'PENDING'))
+                requesterName: firstValue(share.requesterName, share.REQUESTER_NAME, share.sharedByName, share.SHARED_BY_NAME, ''),
+                requesterEmail: firstValue(share.requesterEmail, share.REQUESTER_EMAIL, ''),
+                shareStatus: normalizeShareStatus(firstValue(share.shareStatus, share.SHARE_STATUS, share.status, share.STATUS, 'PENDING')),
+                releaseableYn: String(firstValue(share.releaseableYn, share.RELEASEABLE_YN, share.releaseable, share.RELEASEABLE, '') || '').trim().toUpperCase()
             };
         }
 
@@ -348,6 +504,179 @@
                 if (isActiveShareStatus(item && item.shareStatus)) count += 1;
             });
             return count;
+        }
+
+
+        function isReceivedShareView() {
+            return mode === 'SHARE' && options.persist && readonlyShare === true;
+        }
+
+        function contentLabel() {
+            const type = String(firstValue(options.contentType, '') || '').trim().toUpperCase();
+            if (type === 'PHOTO') return '사진';
+            if (type === 'CALENDAR') return '일정';
+            if (type === 'NOTE') return '노트';
+            return '콘텐츠';
+        }
+
+        function receivedActiveShares() {
+            const rows = [];
+            originalShares.forEach((item, key) => {
+                if (isActiveShareStatus(item && item.shareStatus)) rows.push([key, item]);
+            });
+            return rows;
+        }
+
+        function directReceivedShare() {
+            return receivedActiveShares()
+                .map(([, item]) => item)
+                .find((item) => normalizeType(item.type) === 'USER' && isCurrentUserId(item.id)) || null;
+        }
+
+        function releaseableReceivedShare() {
+            return receivedActiveShares()
+                .map(([, item]) => item)
+                .find((item) => canReleaseShare(item)) || null;
+        }
+
+        function receivedScopeShare() {
+            return receivedActiveShares()
+                .map(([, item]) => item)
+                .find((item) => normalizeType(item.type) === 'WS' || normalizeType(item.type) === 'PROJ') || null;
+        }
+
+        function receivedRequesterName(item) {
+            return firstValue(item && item.requesterName, item && item.sharedByName, '작성자');
+        }
+
+        function receivedScopeLabel(item) {
+            const type = normalizeType(item && item.type);
+            if (type === 'WS') return `${firstValue(item.name, '그룹')} 그룹`;
+            if (type === 'PROJ') return `${firstValue(item.name, '프로젝트')} 프로젝트`;
+            return '공유 대상';
+        }
+
+        function receivedShareIconHtml(kind) {
+            if (kind === 'scope-project') {
+                return '<span class="note-share-received-scope-icon">P</span>';
+            }
+            if (kind === 'scope-workspace') {
+                return '<span class="note-share-received-scope-icon">G</span>';
+            }
+            return '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M21 3 10.6 13.4"></path><path d="M21 3 14.4 21 10.6 13.4 3 9.6 21 3Z"></path></svg>';
+        }
+
+        function receivedShareMessageHtml() {
+            const label = contentLabel();
+            const direct = directReceivedShare();
+            const releasable = releaseableReceivedShare();
+            const scope = receivedScopeShare();
+            const primary = direct || scope || releasable || (receivedActiveShares()[0] && receivedActiveShares()[0][1]);
+            const requester = receivedRequesterName(primary);
+            let title;
+            let description;
+            let iconKind = 'share';
+            if (direct) {
+                title = `${requester}님에게 공유받은 ${label}입니다.`;
+                description = `이 공유를 해지하면 내 ${label === '일정' ? '캘린더' : '목록'}에서 더 이상 보이지 않습니다.`;
+            } else if (scope) {
+                title = `${receivedScopeLabel(scope)}에 공유된 ${label}입니다.`;
+                description = canReleaseShare(scope)
+                    ? '공유 관리를 할 수 있는 권한이 있습니다. 해지하면 해당 공유 대상에서 더 이상 보이지 않습니다.'
+                    : '공유 관리는 작성자 또는 해당 그룹/프로젝트 관리자만 할 수 있습니다.';
+                iconKind = normalizeType(scope.type) === 'PROJ' ? 'scope-project' : 'scope-workspace';
+            } else {
+                title = `공유받은 ${label}입니다.`;
+                description = releasable ? '공유 해지가 가능합니다.' : '공유 관리는 작성자만 할 수 있습니다.';
+            }
+            return `
+                <div class="note-share-received-panel">
+                    <div class="note-share-received-icon" aria-hidden="true">${receivedShareIconHtml(iconKind)}</div>
+                    <strong>${escapeHtml(title)}</strong>
+                    <p>${escapeHtml(description)}</p>
+                </div>
+            `;
+        }
+
+        function handleReceivedShareAction(trigger) {
+            const target = releaseableReceivedShare();
+            if (!target || !target.shareId) {
+                closeModal();
+                return;
+            }
+            releaseExistingShare(target.shareId, trigger);
+        }
+
+        function setShareNodeHidden(node, hidden) {
+            if (!node) return;
+            node.hidden = hidden;
+            if (hidden) node.style.setProperty('display', 'none', 'important');
+            else node.style.removeProperty('display');
+        }
+
+        function setReceivedShareLayout(active) {
+            const modal = el('modal');
+            if (modal) modal.classList.toggle('is-received-share-view', !!active);
+            const body = modal?.querySelector('.note-write-share-body');
+            if (body) body.classList.toggle('note-write-share-body-received', !!active);
+        }
+
+        function renderReceivedShareView() {
+            setReceivedShareLayout(true);
+            const tabs = document.querySelector(modalSelector() + ' .note-write-share-tabs');
+            setShareNodeHidden(tabs, true);
+            const toolbar = document.querySelector(modalSelector() + ' .note-write-share-toolbar');
+            setShareNodeHidden(toolbar, true);
+            const keyword = el('keyword');
+            setShareNodeHidden(keyword, true);
+            const subtitles = document.querySelectorAll(modalSelector() + ' .note-write-share-subtitle');
+            setShareNodeHidden(subtitles[0], true);
+            setShareNodeHidden(subtitles[1], true);
+            const candidates = el('candidates');
+            if (candidates) {
+                setShareNodeHidden(candidates.parentElement, false);
+                candidates.innerHTML = receivedShareMessageHtml();
+            }
+            const selectedBox = el('selected');
+            if (selectedBox) {
+                setShareNodeHidden(selectedBox, true);
+                setShareNodeHidden(selectedBox.parentElement, true);
+            }
+            const editOption = getShareEditOption();
+            setShareNodeHidden(editOption, true);
+            const applyButton = el('applyButton');
+            if (applyButton) {
+                const releaseable = !!releaseableReceivedShare();
+                applyButton.hidden = false;
+                applyButton.style.removeProperty('display');
+                applyButton.textContent = releaseable ? '공유 해지' : '확인';
+                applyButton.disabled = false;
+                applyButton.classList.add('note-share-received-action');
+            }
+        }
+
+        function restoreShareManageView() {
+            setReceivedShareLayout(false);
+            const tabs = document.querySelector(modalSelector() + ' .note-write-share-tabs');
+            setShareNodeHidden(tabs, false);
+            const toolbar = document.querySelector(modalSelector() + ' .note-write-share-toolbar');
+            setShareNodeHidden(toolbar, false);
+            const keyword = el('keyword');
+            setShareNodeHidden(keyword, false);
+            const subtitles = document.querySelectorAll(modalSelector() + ' .note-write-share-subtitle');
+            setShareNodeHidden(subtitles[0], false);
+            setShareNodeHidden(subtitles[1], false);
+            const selectedBox = el('selected');
+            if (selectedBox) {
+                setShareNodeHidden(selectedBox, false);
+                setShareNodeHidden(selectedBox.parentElement, false);
+            }
+            const candidates = el('candidates');
+            if (candidates) setShareNodeHidden(candidates.parentElement, false);
+            const editOption = getShareEditOption();
+            if (editOption) editOption.style.removeProperty('display');
+            const applyButton = el('applyButton');
+            if (applyButton) applyButton.classList.remove('note-share-received-action');
         }
 
         function updatePersistedShareCounters() {
@@ -380,6 +709,8 @@
             if (!item) return false;
             const me = currentUserId();
             if (!me) return false;
+            const releaseable = String(firstValue(item.releaseableYn, item.releaseable, '') || '').trim().toUpperCase();
+            if (releaseable === 'Y' || releaseable === 'TRUE') return true;
             const ownerId = String(firstValue(item.ownerId, '')).trim();
             const sharedBy = String(firstValue(item.sharedBy, '')).trim();
             const targetType = normalizeType(item.type);
@@ -425,10 +756,11 @@
             selected.forEach((item) => {
                 const type = normalizeType(item.type);
                 const key = makeKey(type, item.id);
+                const editKey = scopedKey({ ...item, type, id: item.id });
                 rows.set(key, {
                     type,
                     id: item.id,
-                    permission: type === 'USER' && editors.has(makeKey('USER', item.id)) ? 'EDIT' : 'VIEW'
+                    permission: options.enablePermission !== false && (editors.has(key) || editors.has(editKey)) ? 'EDIT' : 'VIEW'
                 });
             });
             return rows;
@@ -444,7 +776,7 @@
                 rows.set(key, {
                     type,
                     id: item.id,
-                    permission: type === 'USER' && editors.has(makeKey('USER', item.id)) ? 'EDIT' : 'VIEW'
+                    permission: options.enablePermission !== false && editors.has(key) ? 'EDIT' : 'VIEW'
                 });
             });
             selected.forEach((item) => {
@@ -453,21 +785,44 @@
                 rows.set(key, {
                     type,
                     id: item.id,
-                    permission: type === 'USER' && editors.has(makeKey('USER', item.id)) ? 'EDIT' : 'VIEW'
+                    permission: options.enablePermission !== false && editors.has(key) ? 'EDIT' : 'VIEW'
                 });
             });
             editors.forEach((item) => {
-                const key = makeKey('USER', item.id);
+                const type = normalizeType(item.type) || 'USER';
+                const key = makeKey(type, item.id);
                 if (!rows.has(key)) {
-                    rows.set(key, { type: 'USER', id: item.id, permission: 'EDIT' });
+                    rows.set(key, { type, id: item.id, permission: 'EDIT' });
+                } else {
+                    rows.set(key, { type, id: item.id, permission: 'EDIT' });
                 }
             });
             return rows;
         }
 
+        function selectedContentIds() {
+            const values = [];
+            if (Array.isArray(options.contentIds)) values.push(...options.contentIds);
+            else if (options.contentIds != null) values.push(options.contentIds);
+            const contentId = firstValue(options.contentId, el('openButton')?.dataset.shareContentId, '');
+            values.push(contentId);
+            return Array.from(new Set(values
+                .map((value) => String(value == null ? '' : value).trim())
+                .filter((value) => value && value !== '0')));
+        }
+
+        function appendShareRowsToBody(body, rows) {
+            rows.forEach((row) => {
+                body.append('targetType', row.type);
+                body.append('targetId', row.id);
+                body.append('permissionType', row.permission || 'VIEW');
+            });
+        }
+
         function syncShareChanges() {
             const contentType = String(options.contentType || 'NOTE');
-            const contentId = String(firstValue(options.contentId, el('openButton')?.dataset.shareContentId, '')).trim();
+            const contentIds = selectedContentIds();
+            const contentId = contentIds[0] || '';
             if (!contentId) {
                 renderSelected();
                 closeModal();
@@ -486,6 +841,8 @@
                 }
                 return;
             }
+
+            if (mode === 'SHARE') syncShareEditShortcutEditors();
 
             if (mode === 'PERMISSION') {
                 const rows = permissionRowsMap();
@@ -510,30 +867,42 @@
                     }
                 });
             } else {
-                const currentRows = currentRowsMap();
-                currentRows.forEach((row) => {
-                    const body = new URLSearchParams({
-                        contentType,
-                        contentId,
-                        targetType: row.type,
-                        targetId: row.id,
-                        permissionType: row.permission,
-                        shareMode: currentShareMode()
-                    });
-                    tasks.push(fetch('/share/api/save', {
+                const currentRows = Array.from(currentRowsMap().values());
+                if (contentIds.length > 1) {
+                    const body = new URLSearchParams({ contentType, shareMode: currentShareMode() });
+                    contentIds.forEach((id) => body.append('contentIds', id));
+                    appendShareRowsToBody(body, currentRows);
+                    tasks.push(fetch('/share/api/save-bulk', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
                         credentials: 'same-origin',
                         body: body.toString()
                     }).then(assertShareResponse));
-                });
+                } else {
+                    currentRows.forEach((row) => {
+                        const body = new URLSearchParams({
+                            contentType,
+                            contentId,
+                            targetType: row.type,
+                            targetId: row.id,
+                            permissionType: row.permission,
+                            shareMode: currentShareMode()
+                        });
+                        tasks.push(fetch('/share/api/save', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
+                            credentials: 'same-origin',
+                            body: body.toString()
+                        }).then(assertShareResponse));
+                    });
+                }
             }
 
             Promise.all(tasks).then(() => refreshCurrentShares()).then(() => {
                 const persistedCount = activeShareCount();
                 closeModal();
                 if (typeof options.onPersistSuccess === 'function') {
-                    options.onPersistSuccess({ mode, selectedCount: selected.size, editorCount: editors.size, shareCount: persistedCount });
+                    options.onPersistSuccess({ mode, selectedCount: selected.size, editorCount: editors.size, shareCount: persistedCount, contentCount: contentIds.length });
                 }
                 selected.clear();
                 renderSelected();
@@ -552,25 +921,64 @@
             });
         }
 
+        function truthyDataset(value) {
+            const text = String(value || '').trim().toUpperCase();
+            return text === 'Y' || text === 'TRUE' || text === '1';
+        }
+
+        function presetReadonlyShare() {
+            return truthyDataset(firstValue(
+                options.readonlyShare,
+                el('openButton')?.dataset.readonlyShare,
+                el('modal')?.dataset.readonlyShare,
+                ''
+            ));
+        }
+
         function openModal(nextMode) {
-            mode = nextMode === 'PERMISSION' ? 'PERMISSION' : 'SHARE';
-            if (mode === 'SHARE' && !isDraftShareMode()) selected.clear();
+            mode = nextMode === 'PERMISSION' && options.enablePermission !== false ? 'PERMISSION' : 'SHARE';
+            permissionDetailMode = 'TARGET';
+            if (mode === 'SHARE' && !isDraftShareMode()) {
+                selected.clear();
+                shareWithEditPermission = false;
+            }
             const modal = el('modal');
             if (!modal) return;
-            modal.hidden = false;
             modal.dataset.shareMode = mode.toLowerCase();
             document.body.classList.add(options.bodyOpenClass || 'note-share-modal-open');
-            applyModeText();
-            updatePlaceholder();
-            loadCandidates();
-            renderSelected();
-            refreshCurrentShares().then((changed) => {
-                if (!changed || modal.hidden) return;
+
+            const openAfterShareStateLoaded = () => {
+                if (modal.hidden) modal.hidden = false;
+                applyModeText();
+                if (isReceivedShareView()) {
+                    renderReceivedShareView();
+                    return;
+                }
+                updatePlaceholder();
                 loadCandidates();
                 renderSelected();
                 updateShareTabCounts();
-            });
-            setTimeout(() => el('keyword')?.focus(), 30);
+                setTimeout(() => el('keyword')?.focus(), 30);
+            };
+
+            if (options.persist && mode === 'SHARE') {
+                readonlyShare = presetReadonlyShare();
+                if (readonlyShare) {
+                    modal.hidden = false;
+                    applyModeText();
+                }
+                refreshCurrentShares().then(() => {
+                    if (modal.hidden && readonlyShare) return;
+                    openAfterShareStateLoaded();
+                }).catch(() => {
+                    if (modal.hidden) modal.hidden = false;
+                    openAfterShareStateLoaded();
+                });
+                return;
+            }
+
+            modal.hidden = false;
+            openAfterShareStateLoaded();
         }
 
         function closeModal() {
@@ -586,11 +994,19 @@
             const desc = title?.closest('.note-write-share-modal-head')?.querySelector('p');
             const tabs = document.querySelector(modalSelector() + ' .note-write-share-tabs');
             const subtitles = document.querySelectorAll(modalSelector() + ' .note-write-share-subtitle');
+            if (isReceivedShareView()) {
+                if (title) title.textContent = '공유';
+                if (desc) desc.textContent = '';
+                renderReceivedShareView();
+                return;
+            }
+            restoreShareManageView();
             if (mode === 'PERMISSION') {
                 if (title) title.textContent = '권한 설정';
-                if (desc) desc.textContent = '공유된 사람 중 편집 가능한 멤버만 따로 지정합니다.';
-                if (tabs) tabs.hidden = true;
-                if (subtitles[0]) subtitles[0].textContent = '편집 권한을 줄 멤버';
+                if (desc) desc.textContent = '';
+                if (tabs) tabs.hidden = false;
+                updateShareTabCounts();
+                if (subtitles[0]) subtitles[0].textContent = '편집 권한 대상';
                 if (subtitles[1]) {
                     subtitles[1].hidden = false;
                     subtitles[1].innerHTML = '편집 가능 <span id="' + escapeHtml(ids.modalCount) + '" class="note-share-modal-count" hidden>(0)</span>';
@@ -599,41 +1015,89 @@
             } else {
                 if (title) title.textContent = '공유';
                 if (desc) desc.textContent = isDraftShareMode()
-                    ? '받는 사람을 선택해 두면 등록 완료 시 공유 요청이 함께 전송됩니다.'
-                    : (currentShareMode() === 'FEED' ? '받는 사람에게 MOYO 피드 게시물을 보냅니다.' : '받는 사람을 선택해 공유 요청을 보냅니다.');
+                    ? '받는 대상을 선택해 두면 등록 완료 시 공유 요청이 함께 전송됩니다.'
+                    : (currentShareMode() === 'FEED' ? '받는 대상에게 MOYO 피드 게시물을 보냅니다.' : '받는 대상을 선택해 공유 요청을 보냅니다.');
                 if (tabs) tabs.hidden = false;
                 updateShareTabCounts();
-                if (subtitles[0]) subtitles[0].textContent = '받는 사람';
+                if (subtitles[0]) subtitles[0].textContent = '받는 대상';
                 if (subtitles[1]) {
-                    subtitles[1].hidden = true;
-                    subtitles[1].innerHTML = '<span id="' + escapeHtml(ids.modalCount) + '" class="note-share-modal-count" hidden>(0)</span>';
+                    subtitles[1].hidden = false;
+                    subtitles[1].innerHTML = '선택 대상 <span id="' + escapeHtml(ids.modalCount) + '" class="note-share-modal-count" hidden>(0)</span>';
+                    subtitles[1].classList.add('note-write-share-subtitle-with-count');
                 }
             }
+            updatePermissionModeSwitcher();
             const selectedBox = el('selected');
             if (selectedBox) {
-                selectedBox.hidden = mode === 'SHARE';
-                if (selectedBox.parentElement) selectedBox.parentElement.hidden = mode === 'SHARE';
+                selectedBox.hidden = false;
+                if (selectedBox.parentElement) selectedBox.parentElement.hidden = false;
+                selectedBox.classList.add('note-share-chip-list');
             }
             const applyButton = el('applyButton');
             if (applyButton) applyButton.textContent = shareApplyLabel();
+            updateShareEditOption();
+        }
+
+
+        function updatePermissionModeSwitcher() {
+            const subtitles = document.querySelectorAll(modalSelector() + ' .note-write-share-subtitle');
+            const subtitle = subtitles[0];
+            if (!subtitle) return;
+            let switcher = subtitle.querySelector('.note-share-permission-scope-toggle');
+            const tab = String(activeTab || 'FRIEND').toUpperCase();
+            const shouldShow = (mode === 'PERMISSION' || mode === 'SHARE') && (tab === 'WORKSPACE' || tab === 'PROJECT');
+            if (!shouldShow) {
+                if (switcher) switcher.remove();
+                return;
+            }
+            if (!switcher) {
+                switcher = document.createElement('span');
+                switcher.className = 'note-share-permission-scope-toggle';
+                subtitle.appendChild(switcher);
+            }
+            const targetLabel = tab === 'PROJECT' ? '프로젝트별' : '그룹별';
+            switcher.innerHTML = `
+                <button type="button" class="note-share-permission-scope-btn ${permissionDetailMode === 'TARGET' ? 'is-active' : ''}" data-permission-scope="TARGET">${escapeHtml(targetLabel)}</button>
+                <button type="button" class="note-share-permission-scope-btn ${permissionDetailMode === 'MEMBER' ? 'is-active' : ''}" data-permission-scope="MEMBER">멤버별</button>
+            `;
+            switcher.querySelectorAll('[data-permission-scope]').forEach((button) => {
+                button.addEventListener('click', (event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    const next = String(button.dataset.permissionScope || 'TARGET').toUpperCase() === 'MEMBER' ? 'MEMBER' : 'TARGET';
+                    if (permissionDetailMode === next) return;
+                    permissionDetailMode = next;
+                    const keyword = el('keyword');
+                    if (keyword) keyword.value = '';
+                    updatePlaceholder();
+                    loadCandidates();
+                });
+            });
         }
 
         function updatePlaceholder() {
             const keyword = el('keyword');
             if (!keyword) return;
             if (mode === 'PERMISSION') {
-                keyword.placeholder = '편집 권한을 줄 멤버 검색';
+                if (activeTab === 'FRIEND') keyword.placeholder = '친구 검색';
+                else if (activeTab === 'WORKSPACE') keyword.placeholder = permissionDetailMode === 'MEMBER' ? '그룹 멤버 검색' : '그룹 검색';
+                else keyword.placeholder = permissionDetailMode === 'MEMBER' ? '프로젝트 멤버 검색' : '프로젝트 검색';
             } else if (activeTab === 'FRIEND') {
                 keyword.placeholder = '친구 이름 또는 이메일 검색';
             } else if (activeTab === 'WORKSPACE') {
-                keyword.placeholder = '그룹 검색';
+                keyword.placeholder = permissionDetailMode === 'MEMBER' ? '그룹 멤버 검색' : '그룹 검색';
             } else {
-                keyword.placeholder = '프로젝트 검색';
+                keyword.placeholder = permissionDetailMode === 'MEMBER' ? '프로젝트 멤버 검색' : '프로젝트 검색';
             }
         }
 
         // 후보 데이터 로딩
         function loadCandidates() {
+            if (isReceivedShareView()) {
+                renderReceivedShareView();
+                return;
+            }
+            updatePermissionModeSwitcher();
             if (mode === 'PERMISSION') {
                 loadPermissionCandidates();
                 return;
@@ -643,10 +1107,74 @@
                 return;
             }
             const keyword = getKeyword();
-            const source = activeTab === 'WORKSPACE' ? getWorkspaceTargets() : getProjectTargets();
+            const pendingLoads = ensureShareScopeMembersLoaded();
+            const source = getShareCandidatesForTab(activeTab);
             cachedCandidates = source
+                .filter((item) => !isCoveredByParentSelection(item))
                 .filter((item) => matchKeyword(item, keyword));
-            renderCandidatesFromCache();
+            let message = '선택할 대상이 없습니다.';
+            if (pendingLoads > 0 && permissionDetailMode === 'MEMBER') {
+                message = activeTab === 'PROJECT' ? '프로젝트 멤버를 불러오는 중입니다.' : '그룹 멤버를 불러오는 중입니다.';
+            } else if (permissionDetailMode === 'MEMBER') {
+                message = activeTab === 'PROJECT' ? '선택 가능한 프로젝트 멤버가 없습니다.' : '선택 가능한 그룹 멤버가 없습니다.';
+            }
+            renderCandidates(cachedCandidates, message);
+        }
+
+
+        function ensureShareScopeMembersLoaded() {
+            if (activeTab !== 'WORKSPACE' && activeTab !== 'PROJECT') return 0;
+            if (permissionDetailMode !== 'MEMBER') return 0;
+            const parents = activeTab === 'WORKSPACE' ? getWorkspaceTargets() : getProjectTargets();
+            let pending = 0;
+            parents.forEach((item) => {
+                const type = activeTab === 'WORKSPACE' ? 'WS' : 'PROJ';
+                const key = makeKey(type, item.id);
+                if (groupMemberCache.has(key)) return;
+                const localMembers = type === 'WS' ? getWorkspaceMembersFromDom(item.id) : getProjectMembersFromDom(item.id);
+                if (localMembers.length > 0) {
+                    groupMemberCache.set(key, localMembers);
+                    return;
+                }
+                pending += 1;
+                fetchGroupMembers({ ...item, type });
+            });
+            return pending;
+        }
+
+        function getShareCandidatesForTab(tabValue) {
+            const tab = String(tabValue || 'FRIEND').toUpperCase();
+            if (tab === 'WORKSPACE') {
+                const groups = getWorkspaceTargets();
+                if (permissionDetailMode === 'TARGET') return groups.map((item) => ({ ...item, permissionTab: 'WORKSPACE' }));
+                ensureAllScopeMembersLoaded(groups, 'WS');
+                return flattenScopeMembers(groups, 'WS', 'WORKSPACE');
+            }
+            if (tab === 'PROJECT') {
+                const projects = getProjectTargets();
+                if (permissionDetailMode === 'TARGET') return projects.map((item) => ({ ...item, permissionTab: 'PROJECT' }));
+                ensureAllScopeMembersLoaded(projects, 'PROJ');
+                return flattenScopeMembers(projects, 'PROJ', 'PROJECT');
+            }
+            return cachedCandidates;
+        }
+
+        function ensureAllScopeMembersLoaded(items, type) {
+            (items || []).forEach((item) => fetchGroupMembers({ ...item, type }));
+        }
+
+        function flattenScopeMembers(parents, parentType, tabValue) {
+            const map = new Map();
+            (parents || []).forEach((parent) => {
+                const members = parentType === 'WS' ? getWorkspaceMembers(parent.id) : getProjectMembers(parent.id);
+                members.forEach((member) => {
+                    const item = memberToPermissionCandidate(member, { ...parent, type: parentType }, tabValue);
+                    if (!item || !item.id || isCurrentUserId(item.id)) return;
+                    const key = scopedKey(item);
+                    if (!map.has(key)) map.set(key, item);
+                });
+            });
+            return Array.from(map.values()).sort((a, b) => `${a.subText || ''} ${a.name || ''}`.localeCompare(`${b.subText || ''} ${b.name || ''}`, 'ko'));
         }
 
         function loadFriendCandidates() {
@@ -679,22 +1207,255 @@
         }
 
         function loadPermissionCandidates() {
+            updatePermissionModeSwitcher();
             const keyword = getKeyword();
             const pendingLoads = ensureSharedGroupMembersLoaded();
-            const accessUsers = getAccessUsers();
-            cachedCandidates = accessUsers
-                .filter((item) => !editors.has(makeKey('USER', item.id)))
+            const accessTargets = getSharedAccessTargets();
+            cachedCandidates = getPermissionCandidatesForTab(activeTab)
+                .filter((item) => !isCoveredByParentEditor(item) || editors.has(scopedKey(item)))
                 .filter((item) => matchKeyword(item, keyword));
 
             let message;
-            if (selected.size === 0) {
-                message = '먼저 요청 대상에서 친구/그룹/프로젝트를 추가하세요.';
-            } else if (pendingLoads > 0) {
-                message = '공유된 그룹 멤버를 불러오는 중입니다.';
+            if (accessTargets.length === 0) {
+                message = '먼저 공유에서 친구/그룹/프로젝트를 추가하세요.';
+            } else if (pendingLoads > 0 && permissionDetailMode === 'MEMBER') {
+                message = '공유된 그룹/프로젝트 멤버를 불러오는 중입니다.';
+            } else if (mode === 'PERMISSION' && activeTab !== 'FRIEND' && permissionDetailMode === 'MEMBER') {
+                message = '선택한 공유 대상에 멤버가 없습니다.';
             } else {
-                message = '공유된 대상 중 추가할 편집 후보가 없습니다.';
+                message = '추가할 편집 권한 대상이 없습니다.';
             }
             renderCandidates(cachedCandidates, message);
+        }
+
+        function getSharedAccessTargets() {
+            const map = new Map();
+            originalShares.forEach((item, key) => {
+                const status = normalizeShareStatus(item.shareStatus);
+                if (status !== 'PENDING' && status !== 'ACCEPTED') return;
+                const type = normalizeType(item.type);
+                const id = String(item.id || '').trim();
+                if (!type || !id) return;
+                map.set(scopedKey({ ...item, type, id }), { ...item, type, id, permission: 'VIEW' });
+            });
+            selected.forEach((item, key) => {
+                const type = normalizeType(item.type);
+                const id = String(item.id || '').trim();
+                if (!type || !id) return;
+                map.set(scopedKey({ ...item, type, id }), { ...item, type, id, permission: 'VIEW' });
+            });
+            return Array.from(map.values()).sort((a, b) => {
+                const ax = `${typeSortValue(a.type)} ${a.subText || ''} ${a.name || ''}`;
+                const bx = `${typeSortValue(b.type)} ${b.subText || ''} ${b.name || ''}`;
+                return ax.localeCompare(bx, 'ko');
+            });
+        }
+
+
+        function getPermissionCandidatesForTab(tabValue) {
+            const tab = String(tabValue || 'FRIEND').toUpperCase();
+            const map = new Map();
+            getSharedAccessTargets().forEach((item) => {
+                const type = normalizeType(item.type);
+                const parentType = normalizeType(item.parentType);
+                if (tab === 'FRIEND') {
+                    if (type === 'USER' && !parentType) addPermissionCandidate(map, { ...item, type: 'USER', permissionTab: 'FRIEND' });
+                    return;
+                }
+                if (tab === 'WORKSPACE') {
+                    if (type === 'WS') {
+                        if (permissionDetailMode === 'TARGET') {
+                            addPermissionCandidate(map, { ...item, type: 'WS', permissionTab: 'WORKSPACE', subText: '그룹' });
+                        } else {
+                            getWorkspaceMembers(item.id).forEach((member) => {
+                                addPermissionCandidate(map, memberToPermissionCandidate(member, item, 'WORKSPACE'));
+                            });
+                        }
+                        return;
+                    }
+                    if (type === 'USER' && parentType === 'WS' && permissionDetailMode === 'MEMBER') {
+                        addPermissionCandidate(map, { ...item, type: 'USER', permissionTab: 'WORKSPACE' });
+                    }
+                    return;
+                }
+                if (tab === 'PROJECT') {
+                    if (type === 'PROJ') {
+                        if (permissionDetailMode === 'TARGET') {
+                            addPermissionCandidate(map, { ...item, type: 'PROJ', permissionTab: 'PROJECT', subText: item.wsName ? `${item.wsName} · 프로젝트` : '프로젝트' });
+                        } else {
+                            getProjectMembers(item.id).forEach((member) => {
+                                addPermissionCandidate(map, memberToPermissionCandidate(member, item, 'PROJECT'));
+                            });
+                        }
+                        return;
+                    }
+                    if (type === 'USER' && parentType === 'PROJ' && permissionDetailMode === 'MEMBER') {
+                        addPermissionCandidate(map, { ...item, type: 'USER', permissionTab: 'PROJECT' });
+                    }
+                }
+            });
+            return Array.from(map.values()).sort((a, b) => {
+                const ax = `${permissionSortValue(a)} ${a.subText || ''} ${a.name || ''}`;
+                const bx = `${permissionSortValue(b)} ${b.subText || ''} ${b.name || ''}`;
+                return ax.localeCompare(bx, 'ko');
+            });
+        }
+
+        function addPermissionCandidate(map, item) {
+            const type = normalizeType(item.type) || 'USER';
+            const id = String(item.id || '').trim();
+            if (!id) return;
+            if (type === 'USER' && isCurrentUserId(id)) return;
+            if (isCoveredByParentEditor(item)) return;
+            const key = scopedKey({ ...item, type, id });
+            if (map.has(key)) {
+                const old = map.get(key);
+                if (!old.permissionTab && item.permissionTab) old.permissionTab = item.permissionTab;
+                if (!old.parentType && item.parentType) old.parentType = item.parentType;
+                if (!old.parentId && item.parentId) old.parentId = item.parentId;
+                return;
+            }
+            map.set(key, { ...item, type, id, permission: 'EDIT' });
+        }
+
+        function permissionScopeClass(item) {
+            const type = normalizeType(item && item.type);
+            const parentType = normalizeType(item && item.parentType);
+            const tab = String(item && item.permissionTab || '').toUpperCase();
+            if (type === 'USER' && (parentType === 'WS' || tab === 'WORKSPACE')) return 'note-share-scope-ws-member';
+            if (type === 'USER' && (parentType === 'PROJ' || tab === 'PROJECT')) return 'note-share-scope-proj-member';
+            return '';
+        }
+
+        function parentEditorKeyFor(item) {
+            const parentType = normalizeType(item && item.parentType);
+            const parentId = String(item && item.parentId || '').trim();
+            if (!parentType || !parentId) return '';
+            return makeKey(parentType, parentId);
+        }
+
+        function isCoveredByParentEditor(item) {
+            const key = parentEditorKeyFor(item);
+            return !!key && editors.has(key);
+        }
+        function isCoveredByParentSelection(item) {
+            const key = parentEditorKeyFor(item);
+            return !!key && selected.has(key);
+        }
+
+        function removeCoveredChildSelections(parentItem) {
+            const parentType = normalizeType(parentItem && parentItem.type);
+            const parentId = String(parentItem && parentItem.id || '').trim();
+            if (!parentType || !parentId || (parentType !== 'WS' && parentType !== 'PROJ')) return;
+            const members = parentType === 'WS' ? getWorkspaceMembers(parentId) : getProjectMembers(parentId);
+            const memberIds = new Set(members.map((member) => String(member.id || '').trim()).filter(Boolean));
+            Array.from(selected.entries()).forEach(([selectedKey, item]) => {
+                const itemType = normalizeType(item && item.type);
+                const itemId = String(item && item.id || '').trim();
+                const itemParentType = normalizeType(item && item.parentType);
+                const itemParentId = String(item && item.parentId || '').trim();
+                const sameParent = itemParentType === parentType && itemParentId === parentId;
+                const sameMember = itemType === 'USER' && memberIds.has(itemId);
+                if (sameParent || sameMember) selected.delete(selectedKey);
+            });
+        }
+
+
+        function removeCoveredChildEditors(parentItem) {
+            const parentType = normalizeType(parentItem && parentItem.type);
+            const parentId = String(parentItem && parentItem.id || '').trim();
+            if (!parentType || !parentId || (parentType !== 'WS' && parentType !== 'PROJ')) return;
+            const members = parentType === 'WS' ? getWorkspaceMembers(parentId) : getProjectMembers(parentId);
+            const memberIds = new Set(members.map((member) => String(member.id || '').trim()).filter(Boolean));
+            Array.from(editors.entries()).forEach(([editorKey, editor]) => {
+                const editorType = normalizeType(editor && editor.type);
+                const editorId = String(editor && editor.id || '').trim();
+                const editorParentType = normalizeType(editor && editor.parentType);
+                const editorParentId = String(editor && editor.parentId || '').trim();
+                const sameParent = editorParentType === parentType && editorParentId === parentId;
+                const sameMember = editorType === 'USER' && memberIds.has(editorId);
+                if (sameParent || sameMember) editors.delete(editorKey);
+            });
+        }
+
+        function memberToPermissionCandidate(member, parent, tabValue) {
+            const parentType = normalizeType(parent.type);
+            const parentName = parent.name || (parentType === 'WS' ? '그룹' : '프로젝트');
+            const parentLabel = parentType === 'WS' ? `${parentName} · 그룹 멤버` : `${parentName} · 프로젝트 멤버`;
+            const sourceTag = normalizeSourceTag({
+                type: parentType,
+                id: parent.id,
+                label: parent.name || (parentType === 'WS' ? '그룹' : '프로젝트'),
+                parent: parent.wsName || ''
+            });
+            return {
+                ...member,
+                type: 'USER',
+                id: String(member.id || '').trim(),
+                name: member.name || member.userName || member.email || '이름 없음',
+                email: member.email || '',
+                imagePath: member.imagePath || member.profileImagePath || '',
+                subText: parentLabel,
+                contextName: parentName,
+                permissionTab: tabValue,
+                parentType,
+                parentId: String(parent.id || '').trim(),
+                sourceTags: sourceTag ? [sourceTag] : [],
+                sourceTagKeys: sourceTag ? new Set([sourceTag.key]) : new Set()
+            };
+        }
+
+        function permissionSortValue(item) {
+            const type = normalizeType(item.type);
+            if (type === 'WS' || type === 'PROJ') return '0';
+            return '1';
+        }
+
+        function typeSortValue(type) {
+            const t = normalizeType(type);
+            if (t === 'USER') return '1';
+            if (t === 'WS') return '2';
+            if (t === 'PROJ') return '3';
+            return '9';
+        }
+
+        function targetTypeForTab(tab) {
+            if (tab === 'WORKSPACE') return 'WS';
+            if (tab === 'PROJECT') return 'PROJ';
+            return 'USER';
+        }
+
+        function scopedKey(item) {
+            const type = normalizeType(item && item.type) || 'USER';
+            const id = String(item && item.id || '').trim();
+            const parentType = normalizeType(item && item.parentType);
+            const parentId = String(item && item.parentId || '').trim();
+            if (type === 'USER' && parentType && parentId) {
+                return makeKey(type, id) + '@' + makeKey(parentType, parentId);
+            }
+            return makeKey(type, id);
+        }
+
+        function removeSameUserTargets(store, item) {
+            const type = normalizeType(item && item.type);
+            const id = String(item && item.id || '').trim();
+            if (type !== 'USER' || !id) return;
+            Array.from(store.entries()).forEach(([key, value]) => {
+                if (normalizeType(value && value.type) === 'USER' && String(value && value.id || '').trim() === id) {
+                    store.delete(key);
+                }
+            });
+        }
+
+        function hasAccessForEditor(item) {
+            const type = normalizeType(item && item.type);
+            const id = String(item && item.id || '').trim();
+            if (!type || !id) return false;
+            const directKey = makeKey(type, id);
+            const accessKeys = permissionAccessKeys();
+            if (accessKeys.has(directKey)) return true;
+            if (type === 'USER') return accessKeys.has(makeKey('USER', id));
+            return false;
         }
 
         function renderCandidatesFromCache() {
@@ -711,22 +1472,45 @@
             }
 
             if (mode === 'PERMISSION') {
-                box.innerHTML = `<div class="note-write-share-picked-list note-share-permission-member-list">
-                    ${items.map((item) => permissionMemberLineHtml(item, 'add')).join('')}
-                </div>`;
-                box.querySelectorAll('[data-permission-add]').forEach((button) => {
-                    const addEditor = () => {
-                        const item = cachedCandidates.find((candidate) => String(candidate.id) === String(button.dataset.permissionAdd));
+                box.innerHTML = items.map((item) => {
+                    const type = normalizeType(item.type) || 'USER';
+                    const key = scopedKey(item);
+                    const checked = editors.has(key);
+                    const scopeClass = permissionScopeClass(item);
+                    return `
+                        <div class="note-share-target-block note-share-type-${escapeHtml(type.toLowerCase())} ${escapeHtml(scopeClass)}">
+                            <div class="note-write-share-card note-share-type-${escapeHtml(type.toLowerCase())} ${escapeHtml(scopeClass)} ${checked ? 'is-selected' : ''}" data-type="${escapeHtml(type)}" data-id="${escapeHtml(item.id)}" data-key="${escapeHtml(key)}" role="button" tabindex="0">
+                                ${avatarHtml(item)}
+                                <span class="note-write-share-main">
+                                    <strong>${escapeHtml(item.name || '이름 없음')}</strong>
+                                    <small>${escapeHtml(item.subText || item.contextName || '')}</small>
+                                </span>
+                                <span class="note-write-share-check" aria-hidden="true"></span>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+                box.querySelectorAll('.note-write-share-card').forEach((row) => {
+                    const toggleEditor = () => {
+                        const type = normalizeType(row.dataset.type) || 'USER';
+                        const key = row.dataset.key || makeKey(type, row.dataset.id);
+                        const item = cachedCandidates.find((candidate) => scopedKey(candidate) === key);
                         if (!item) return;
-                        editors.set(makeKey('USER', item.id), { ...item, type: 'USER', permission: 'EDIT' });
+                        if (editors.has(key)) {
+                            editors.delete(key);
+                        } else {
+                            if (type === 'WS' || type === 'PROJ') removeCoveredChildEditors({ ...item, type });
+                            else removeSameUserTargets(editors, item);
+                            editors.set(key, { ...item, type, permission: 'EDIT', permissionTab: item.permissionTab || activeTab });
+                        }
                         loadCandidates();
                         renderSelected();
                     };
-                    button.addEventListener('click', addEditor);
-                    button.addEventListener('keydown', (event) => {
+                    row.addEventListener('click', toggleEditor);
+                    row.addEventListener('keydown', (event) => {
                         if (event.key === 'Enter' || event.key === ' ') {
                             event.preventDefault();
-                            addEditor();
+                            toggleEditor();
                         }
                     });
                 });
@@ -734,7 +1518,8 @@
             }
 
             box.innerHTML = items.map((item) => {
-                const key = makeKey(item.type, item.id);
+                const key = scopedKey(item);
+                const scopeClass = permissionScopeClass(item);
                 const existing = getExistingShare(item);
                 const status = existing ? normalizeShareStatus(existing.shareStatus) : 'NONE';
                 const blockedReason = blockedCandidateReason(item);
@@ -744,8 +1529,8 @@
                     ? '<span class="note-share-status-badge note-share-status-blocked" title="작성자 본인에게는 보낼 수 없습니다.">' + escapeHtml(blockedReason) + '</span>'
                     : (sendable ? '' : shareStatusBadgeHtml(existing || item) + shareReleaseButtonHtml(existing || item));
                 return `
-                    <div class="note-share-target-block note-share-type-${escapeHtml(item.type.toLowerCase())}">
-                        <div class="note-write-share-card note-share-type-${escapeHtml(item.type.toLowerCase())} ${checked ? 'is-selected' : ''} ${sendable ? '' : 'is-share-disabled'}" data-type="${escapeHtml(item.type)}" data-id="${escapeHtml(item.id)}" role="button" tabindex="${sendable ? '0' : '-1'}" aria-disabled="${sendable ? 'false' : 'true'}">
+                    <div class="note-share-target-block note-share-type-${escapeHtml(item.type.toLowerCase())} ${escapeHtml(scopeClass)}">
+                        <div class="note-write-share-card note-share-type-${escapeHtml(item.type.toLowerCase())} ${escapeHtml(scopeClass)} ${checked ? 'is-selected' : ''} ${sendable ? '' : 'is-share-disabled'}" data-type="${escapeHtml(item.type)}" data-id="${escapeHtml(item.id)}" data-key="${escapeHtml(key)}" role="button" tabindex="${sendable ? '0' : '-1'}" aria-disabled="${sendable ? 'false' : 'true'}">
                             ${avatarHtml(item)}
                             <span class="note-write-share-main">
                                 <strong>${escapeHtml(item.name)}</strong>
@@ -770,11 +1555,29 @@
 
             box.querySelectorAll('.note-write-share-card').forEach((row) => {
                 const toggle = () => {
-                    const key = makeKey(row.dataset.type, row.dataset.id);
-                    const item = cachedCandidates.find((candidate) => makeKey(candidate.type, candidate.id) === key);
+                    const key = row.dataset.key || makeKey(row.dataset.type, row.dataset.id);
+                    const item = cachedCandidates.find((candidate) => scopedKey(candidate) === key);
                     if (!item || !isCandidateSendable(item)) return;
-                    if (selected.has(key)) selected.delete(key);
-                    else selected.set(key, { ...item, permission: 'VIEW' });
+                    if (selected.has(key)) {
+                        selected.delete(key);
+                        const old = originalShares.get(key);
+                        const oldPermission = String(firstValue(old && old.permission, old && old.permissionType, 'VIEW')).toUpperCase();
+                        if (!old || oldPermission !== 'EDIT') editors.delete(key);
+                    } else {
+                        const type = normalizeType(item.type);
+                        if (type === 'WS' || type === 'PROJ') {
+                            removeCoveredChildSelections({ ...item, type });
+                            if (shareWithEditPermission) removeCoveredChildEditors({ ...item, type });
+                        } else {
+                            removeSameUserTargets(selected, item);
+                            if (shareWithEditPermission) removeSameUserTargets(editors, item);
+                        }
+                        const nextItem = { ...item, permission: shareWithEditPermission ? 'EDIT' : 'VIEW', permissionTab: item.permissionTab || activeTab };
+                        selected.set(key, nextItem);
+                        if (shareWithEditPermission && options.enablePermission !== false) {
+                            editors.set(key, { ...nextItem, permission: 'EDIT' });
+                        }
+                    }
                     renderCandidatesFromCache();
                     renderSelected();
                 };
@@ -789,6 +1592,10 @@
         }
 
         function renderSelected() {
+            if (isReceivedShareView()) {
+                renderReceivedShareView();
+                return;
+            }
             const box = el('selected');
             const count = el('count');
             const modalCount = el('modalCount');
@@ -799,7 +1606,7 @@
                 modalCount.textContent = '(' + String(displayCount) + ')';
                 modalCount.hidden = displayCount === 0;
             }
-            if (mode === 'SHARE') updateShareTabCounts();
+            updateShareTabCounts();
             const permissionCount = el('permissionCount');
             if (permissionCount) {
                 permissionCount.textContent = String(editors.size);
@@ -813,26 +1620,51 @@
             }
 
             if (box) {
-                box.hidden = mode === 'SHARE';
-                if (box.parentElement) box.parentElement.hidden = mode === 'SHARE';
+                box.hidden = false;
+                if (box.parentElement) box.parentElement.hidden = false;
+                box.classList.add('note-share-chip-list');
                 if (mode === 'PERMISSION') {
                     const rows = Array.from(editors.entries());
                     if (!rows.length) {
                         box.innerHTML = '<div class="note-write-share-empty note-write-share-empty-compact">아직 편집 가능한 멤버가 없습니다.</div>';
                     } else {
-                        box.innerHTML = `<div class="note-write-share-picked-list note-share-permission-member-list note-share-permission-editor-list">
-                            ${rows.map(([key, item]) => permissionMemberLineHtml(item, 'remove', key)).join('')}
-                        </div>`;
+                        box.innerHTML = rows.map(([key, item]) => selectedChipHtml(key, item, 'editor')).join('');
                         box.querySelectorAll('[data-remove-share]').forEach((button) => {
                             button.addEventListener('click', (event) => {
                                 event.stopPropagation();
                                 const key = button.dataset.removeShare;
-                                const item = editors.get(key);
                                 editors.delete(key);
-                                if (item && !selected.has(key)) {
-                                    selected.set(key, { ...item, type: 'USER', permission: 'VIEW' });
-                                }
                                 loadCandidates();
+                                renderSelected();
+                            });
+                        });
+                    }
+                } else {
+                    const activeRows = [];
+                    originalShares.forEach((item, key) => {
+                        if (isActiveShareStatus(item && item.shareStatus)) activeRows.push([key, { ...item, existingShare: true }]);
+                    });
+                    const rows = activeRows.concat(Array.from(selected.entries()).filter(([key]) => !originalShares.has(key)));
+                    if (!rows.length) {
+                        box.innerHTML = '<div class="note-write-share-empty note-write-share-empty-compact">아직 선택된 대상이 없습니다.</div>';
+                    } else {
+                        box.innerHTML = rows.map(([key, item]) => selectedChipHtml(key, item, 'share')).join('');
+                        box.querySelectorAll('[data-share-release]').forEach((button) => {
+                            button.addEventListener('click', (event) => {
+                                event.preventDefault();
+                                event.stopPropagation();
+                                releaseExistingShare(button.dataset.shareRelease, button);
+                            });
+                        });
+                        box.querySelectorAll('[data-remove-share]').forEach((button) => {
+                            button.addEventListener('click', (event) => {
+                                event.stopPropagation();
+                                const removeKey = button.dataset.removeShare || '';
+                                selected.delete(removeKey);
+                                const old = originalShares.get(removeKey);
+                                const oldPermission = String(firstValue(old && old.permission, old && old.permissionType, 'VIEW')).toUpperCase();
+                                if (!old || oldPermission !== 'EDIT') editors.delete(removeKey);
+                                renderCandidatesFromCache();
                                 renderSelected();
                             });
                         });
@@ -840,6 +1672,7 @@
                 }
             }
 
+            updateShareEditOption();
             renderHiddenFields();
         }
 
@@ -882,6 +1715,10 @@
                 if (typeof options.onPersistSuccess === 'function') {
                     options.onPersistSuccess({ mode: 'SHARE_RELEASE', selectedCount: selected.size, editorCount: editors.size });
                 }
+                if (isReceivedShareView()) {
+                    closeModal();
+                    if (options.reloadOnPersist !== false) window.location.reload();
+                }
             }).catch((error) => {
                 alert(error && error.message ? error.message : '공유를 해지하지 못했습니다.');
                 if (trigger) {
@@ -889,6 +1726,35 @@
                     trigger.textContent = originalText || (status === 'PENDING' ? '취소' : '해지');
                 }
             });
+        }
+
+        function selectedChipHtml(key, item, kind) {
+            const type = normalizeType(item.type) || 'USER';
+            const scopeClass = permissionScopeClass(item);
+            const chipClass = 'note-share-chip note-share-type-' + escapeHtml(type.toLowerCase()) + (scopeClass ? ' ' + escapeHtml(scopeClass) : '');
+            const source = String(item.contextName || item.subText || '').trim();
+            const rawTitle = source && normalizeType(item.type) === 'USER' && (item.parentType || item.permissionTab === 'WORKSPACE' || item.permissionTab === 'PROJECT')
+                ? (item.name || '이름 없음') + ' · ' + source.replace(/ · (그룹|프로젝트) 멤버$/, '')
+                : (item.name || '이름 없음');
+            const title = escapeHtml(rawTitle);
+            const status = normalizeShareStatus(item && item.shareStatus);
+            const shareId = String(firstValue(item && item.shareId, '')).trim();
+            const existingActive = kind === 'share' && shareId && isActiveShareStatus(status);
+            const releaseable = existingActive && canReleaseShare(item);
+            const removeLabel = kind === 'editor' ? '편집 권한 제거' : (existingActive ? (status === 'PENDING' ? '공유 요청 취소' : '공유 해지') : '선택 대상 제거');
+            const removeButton = releaseable
+                ? `<button type="button" class="note-share-chip-remove" data-share-release="${escapeHtml(shareId)}" aria-label="${title} ${escapeHtml(removeLabel)}">×</button>`
+                : (existingActive
+                    ? ''
+                    : `<button type="button" class="note-share-chip-remove" data-remove-share="${escapeHtml(key)}" aria-label="${title} ${escapeHtml(removeLabel)}">×</button>`);
+            return `
+                <span class="${chipClass}" title="${title}">
+                    ${avatarHtml(item)}
+                    <span class="note-share-chip-name">${title}</span>
+                    ${kind === 'share' && (editors.has(key) || String(firstValue(item && item.permission, item && item.permissionType, '')).toUpperCase() === 'EDIT') ? '<span class="note-share-chip-permission">편집</span>' : ''}
+                    ${removeButton}
+                </span>
+            `;
         }
 
         function permissionMemberLineHtml(item, action, key) {
@@ -937,16 +1803,38 @@
             hidden.innerHTML = Array.from(rows.values()).map((item) => `
                 <input type="hidden" name="shareTargetType" value="${escapeHtml(item.type)}">
                 <input type="hidden" name="shareTargetId" value="${escapeHtml(item.id)}">
-                <input type="hidden" name="sharePermissionType" value="${escapeHtml(item.permission)}">
+                <input type="hidden" name="sharePermissionType" value="${escapeHtml(options.enablePermission === false ? 'VIEW' : item.permission)}">
             `).join('');
         }
 
         function removeOrphanEditors() {
-            const accessIds = new Set(getAccessUsers().map((item) => String(item.id)));
-            Array.from(editors.keys()).forEach((key) => {
-                const item = editors.get(key);
-                if (!item || !accessIds.has(String(item.id))) editors.delete(key);
+            Array.from(editors.entries()).forEach(([key, item]) => {
+                if (!hasAccessForEditor(item)) {
+                    editors.delete(key);
+                    return;
+                }
+                if (isCoveredByParentEditor(item)) editors.delete(key);
             });
+        }
+
+        function permissionAccessKeys() {
+            const keys = new Set();
+            getSharedAccessTargets().forEach((item) => {
+                const type = normalizeType(item.type);
+                const id = String(item.id || '').trim();
+                if (!type || !id) return;
+                keys.add(makeKey(type, id));
+                if (type === 'WS') {
+                    getWorkspaceMembers(id).forEach((member) => {
+                        if (member.id && !isCurrentUserId(member.id)) keys.add(makeKey('USER', member.id));
+                    });
+                } else if (type === 'PROJ') {
+                    getProjectMembers(id).forEach((member) => {
+                        if (member.id && !isCurrentUserId(member.id)) keys.add(makeKey('USER', member.id));
+                    });
+                }
+            });
+            return keys;
         }
 
         function getAccessUsers() {
@@ -1074,12 +1962,13 @@
 
         function ensureSharedGroupMembersLoaded() {
             let pending = 0;
-            selected.forEach((item) => {
-                if (item.type !== 'WS' && item.type !== 'PROJ') return;
-                const key = makeKey(item.type, item.id);
+            getSharedAccessTargets().forEach((item) => {
+                const type = normalizeType(item.type);
+                if (type !== 'WS' && type !== 'PROJ') return;
+                const key = makeKey(type, item.id);
                 if (groupMemberCache.has(key)) return;
 
-                const localMembers = item.type === 'WS'
+                const localMembers = type === 'WS'
                     ? getWorkspaceMembersFromDom(item.id)
                     : getProjectMembersFromDom(item.id);
                 if (localMembers.length > 0) {
@@ -1088,7 +1977,7 @@
                 }
 
                 pending += 1;
-                fetchGroupMembers(item);
+                fetchGroupMembers({ ...item, type });
             });
             return pending;
         }
@@ -1118,6 +2007,9 @@
                     groupMemberLoading.delete(key);
                     if (mode === 'PERMISSION') {
                         loadPermissionCandidates();
+                        renderSelected();
+                    } else if (mode === 'SHARE' && permissionDetailMode === 'MEMBER' && (activeTab === 'WORKSPACE' || activeTab === 'PROJECT')) {
+                        loadCandidates();
                         renderSelected();
                     }
                 });
@@ -1150,14 +2042,22 @@
         }
 
         function memberFromDataset(node) {
+            const wsId = String(firstValue(node.dataset.wsId, node.dataset.WS_ID, '')).trim();
+            const projId = String(firstValue(node.dataset.projId, node.dataset.PROJ_ID, '')).trim();
+            const parentType = wsId ? 'WS' : (projId ? 'PROJ' : '');
+            const parentId = wsId || projId;
+            const parentName = firstValue(node.dataset.wsName, node.dataset.projName, '');
             return {
                 type: 'USER',
                 id: String(firstValue(node.dataset.userId, node.dataset.USER_ID, '')).trim(),
                 name: firstValue(node.dataset.userName, node.dataset.displayName, node.dataset.USER_NAME, node.dataset.DISPLAY_NAME, node.dataset.email, node.dataset.EMAIL, '이름 없음'),
                 email: firstValue(node.dataset.email, node.dataset.EMAIL, ''),
                 imagePath: firstValue(node.dataset.profileImagePath, node.dataset.PROFILE_IMAGE_PATH, node.dataset.profileImage, node.dataset.imagePath),
-                subText: firstValue(node.dataset.wsName, node.dataset.projName, '멤버'),
-                contextName: [node.dataset.wsName, node.dataset.projName].filter(Boolean).join(' / ')
+                subText: parentName ? parentName + (parentType === 'PROJ' ? ' · 프로젝트 멤버' : ' · 그룹 멤버') : '멤버',
+                contextName: parentName,
+                parentType,
+                parentId,
+                permissionTab: parentType === 'WS' ? 'WORKSPACE' : (parentType === 'PROJ' ? 'PROJECT' : '')
             };
         }
 
@@ -1167,9 +2067,10 @@
             const email = firstValue(row.email, row.EMAIL, row.contactEmail, row.CONTACT_EMAIL, '');
             const imagePath = firstValue(row.profileImagePath, row.PROFILE_IMAGE_PATH, row.profileImage, row.imagePath, row.IMAGE_PATH, '');
             const roleName = firstValue(row.roleName, row.WS_ROLE, row.PROJ_ROLE, row.role, row.ROLE, '멤버');
-            const groupText = group.type === 'WS'
-                ? `${group.name} · 그룹`
-                : `${group.wsName ? group.wsName + ' · ' : ''}${group.name} · 프로젝트`;
+            const groupType = normalizeType(group.type);
+            const groupText = groupType === 'WS'
+                ? `${group.name} · 그룹 멤버`
+                : `${group.wsName ? group.wsName + ' · ' : ''}${group.name} · 프로젝트 멤버`;
             return {
                 type: 'USER',
                 id,
@@ -1177,7 +2078,10 @@
                 email,
                 imagePath,
                 subText: groupText,
-                contextName: roleName
+                contextName: group.name || roleName,
+                parentType: groupType,
+                parentId: String(group.id || '').trim(),
+                permissionTab: groupType === 'WS' ? 'WORKSPACE' : (groupType === 'PROJ' ? 'PROJECT' : '')
             };
         }
 

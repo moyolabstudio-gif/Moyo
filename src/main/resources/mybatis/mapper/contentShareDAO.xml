@@ -22,6 +22,14 @@
         <result property="requesterEmail" column="REQUESTER_EMAIL"/>
         <result property="targetName" column="TARGET_NAME"/>
         <result property="targetSubtext" column="TARGET_SUBTEXT"/>
+        <result property="contentCount" column="CONTENT_COUNT"/>
+        <result property="shareIds" column="SHARE_IDS"/>
+        <result property="releaseableYn" column="RELEASEABLE_YN"/>
+        <result property="calendarStartDt" column="CALENDAR_START_DT"/>
+        <result property="calendarEndDt" column="CALENDAR_END_DT"/>
+        <result property="calendarLocationText" column="CALENDAR_LOCATION_TEXT"/>
+        <result property="calendarLocationAddress" column="CALENDAR_LOCATION_ADDRESS"/>
+        <result property="calendarAttendeeYn" column="CALENDAR_ATTENDEE_YN"/>
     </resultMap>
 
     <select id="countManagePermission" resultType="int">
@@ -36,6 +44,11 @@
               FROM PHOTO_POSTS p
              WHERE #{contentType} = 'PHOTO'
                AND p.POST_ID = #{contentId}
+            UNION ALL
+            SELECT e.USER_ID AS OWNER_ID
+              FROM EVENTS e
+             WHERE #{contentType} = 'CALENDAR'
+               AND e.EVENT_ID = #{contentId}
         ) x
         WHERE x.OWNER_ID = #{userId}
     </select>
@@ -68,6 +81,11 @@
               FROM PHOTO_POSTS p
              WHERE #{contentType} = 'PHOTO'
                AND p.POST_ID = #{contentId}
+            UNION ALL
+            SELECT e.USER_ID AS OWNER_ID
+              FROM EVENTS e
+             WHERE #{contentType} = 'CALENDAR'
+               AND e.EVENT_ID = #{contentId}
         )
         WHERE ROWNUM = 1
     </select>
@@ -87,6 +105,7 @@
                s.TARGET_TYPE, s.TARGET_ID, s.PERMISSION_TYPE, s.SHARED_BY,
                s.CREATED_AT, s.EXPIRES_AT, s.ACTIVE_YN,
                NVL(s.SHARE_STATUS, 'ACCEPTED') AS SHARE_STATUS, s.RESPONDED_BY, s.RESPONDED_AT,
+               ru.USER_NAME AS REQUESTER_NAME, ru.EMAIL AS REQUESTER_EMAIL,
                CASE s.TARGET_TYPE
                    WHEN 'USER' THEN u.USER_NAME
                    WHEN 'WS' THEN w.WS_NAME
@@ -98,6 +117,7 @@
                    WHEN 'PROJ' THEN w2.WS_NAME
                END AS TARGET_SUBTEXT
         FROM CONTENT_SHARES s
+        LEFT JOIN USERS ru ON ru.USER_ID = s.SHARED_BY
         LEFT JOIN USERS u ON s.TARGET_TYPE = 'USER' AND u.USER_ID = s.TARGET_ID
         LEFT JOIN WORKSPACES w ON s.TARGET_TYPE = 'WS' AND w.WS_ID = s.TARGET_ID
         LEFT JOIN PROJECTS p ON s.TARGET_TYPE = 'PROJ' AND p.PROJ_ID = s.TARGET_ID
@@ -109,6 +129,77 @@
           AND (s.EXPIRES_AT IS NULL OR s.EXPIRES_AT >= SYSDATE)
         ORDER BY s.CREATED_AT DESC, s.SHARE_ID DESC
     </select>
+
+
+    <select id="selectSharesForUser" resultMap="shareResultMap">
+        SELECT s.SHARE_ID, s.CONTENT_TYPE, s.CONTENT_ID, s.OWNER_ID,
+               s.TARGET_TYPE, s.TARGET_ID, s.PERMISSION_TYPE, s.SHARED_BY,
+               s.CREATED_AT, s.EXPIRES_AT, s.ACTIVE_YN,
+               NVL(s.SHARE_STATUS, 'ACCEPTED') AS SHARE_STATUS, s.RESPONDED_BY, s.RESPONDED_AT,
+               ru.USER_NAME AS REQUESTER_NAME, ru.EMAIL AS REQUESTER_EMAIL,
+               CASE s.TARGET_TYPE
+                   WHEN 'USER' THEN u.USER_NAME
+                   WHEN 'WS' THEN w.WS_NAME
+                   WHEN 'PROJ' THEN p.PROJ_NAME
+               END AS TARGET_NAME,
+               CASE s.TARGET_TYPE
+                   WHEN 'USER' THEN u.EMAIL
+                   WHEN 'WS' THEN '그룹'
+                   WHEN 'PROJ' THEN w2.WS_NAME
+               END AS TARGET_SUBTEXT,
+               CASE
+                   WHEN s.OWNER_ID = #{userId} OR s.SHARED_BY = #{userId} THEN 'Y'
+                   WHEN s.TARGET_TYPE = 'USER' AND s.TARGET_ID = #{userId} THEN 'Y'
+                   WHEN s.TARGET_TYPE = 'WS' AND EXISTS (SELECT 1 FROM WORKSPACES wown WHERE wown.WS_ID = s.TARGET_ID AND wown.OWNER_ID = #{userId}) THEN 'Y'
+                   WHEN s.TARGET_TYPE = 'WS' AND EXISTS (SELECT 1 FROM WS_MEMBERS wm2 WHERE wm2.WS_ID = s.TARGET_ID AND wm2.USER_ID = #{userId} AND UPPER(NVL(wm2.WS_ROLE, 'MEMBER')) = 'ADMIN') THEN 'Y'
+                   WHEN s.TARGET_TYPE = 'PROJ' AND EXISTS (SELECT 1 FROM PROJECTS pr WHERE pr.PROJ_ID = s.TARGET_ID AND pr.LEADER_ID = #{userId}) THEN 'Y'
+                   WHEN s.TARGET_TYPE = 'PROJ' AND EXISTS (SELECT 1 FROM PROJ_MEMBERS pm2 WHERE pm2.PROJ_ID = s.TARGET_ID AND pm2.USER_ID = #{userId} AND UPPER(NVL(pm2.PROJ_ROLE, 'MEMBER')) IN ('ADMIN','LEADER','OWNER','PM')) THEN 'Y'
+                   ELSE 'N'
+               END AS RELEASEABLE_YN
+        FROM CONTENT_SHARES s
+        LEFT JOIN USERS ru ON ru.USER_ID = s.SHARED_BY
+        LEFT JOIN USERS u ON s.TARGET_TYPE = 'USER' AND u.USER_ID = s.TARGET_ID
+        LEFT JOIN WORKSPACES w ON s.TARGET_TYPE = 'WS' AND w.WS_ID = s.TARGET_ID
+        LEFT JOIN PROJECTS p ON s.TARGET_TYPE = 'PROJ' AND p.PROJ_ID = s.TARGET_ID
+        LEFT JOIN WORKSPACES w2 ON p.WS_ID = w2.WS_ID
+        WHERE s.CONTENT_TYPE = #{contentType}
+          AND s.CONTENT_ID = #{contentId}
+          AND s.ACTIVE_YN = 'Y'
+          AND NVL(s.SHARE_STATUS, 'ACCEPTED') = 'ACCEPTED'
+          AND (s.EXPIRES_AT IS NULL OR s.EXPIRES_AT >= SYSDATE)
+          AND (
+                (s.TARGET_TYPE = 'USER' AND s.TARGET_ID = #{userId})
+             OR (s.TARGET_TYPE = 'WS' AND EXISTS (SELECT 1 FROM WS_MEMBERS wm WHERE wm.WS_ID = s.TARGET_ID AND wm.USER_ID = #{userId}))
+             OR (s.TARGET_TYPE = 'PROJ' AND EXISTS (SELECT 1 FROM PROJ_MEMBERS pm WHERE pm.PROJ_ID = s.TARGET_ID AND pm.USER_ID = #{userId}))
+          )
+        ORDER BY s.CREATED_AT DESC, s.SHARE_ID DESC
+    </select>
+
+    <update id="ensureContentShareContentConstraint" statementType="CALLABLE">
+        DECLARE
+            v_table_count NUMBER := 0;
+            v_constraint_count NUMBER := 0;
+        BEGIN
+            SELECT COUNT(*)
+              INTO v_table_count
+              FROM USER_TABLES
+             WHERE TABLE_NAME = 'CONTENT_SHARES';
+
+            IF v_table_count &gt; 0 THEN
+                SELECT COUNT(*)
+                  INTO v_constraint_count
+                  FROM USER_CONSTRAINTS
+                 WHERE TABLE_NAME = 'CONTENT_SHARES'
+                   AND CONSTRAINT_NAME = 'CK_CONTENT_SHARE_CONTENT';
+
+                IF v_constraint_count &gt; 0 THEN
+                    EXECUTE IMMEDIATE 'ALTER TABLE CONTENT_SHARES DROP CONSTRAINT CK_CONTENT_SHARE_CONTENT';
+                END IF;
+
+                EXECUTE IMMEDIATE 'ALTER TABLE CONTENT_SHARES ADD CONSTRAINT CK_CONTENT_SHARE_CONTENT CHECK (CONTENT_TYPE IN (''NOTE'',''PHOTO'',''ALBUM'',''BOARD'',''EVENT'',''CALENDAR'',''POLL'',''FILE''))';
+            END IF;
+        END;
+    </update>
 
     <insert id="mergeShare" parameterType="com.springboot.project.dto.contentShareDTO">
         MERGE INTO CONTENT_SHARES s
@@ -125,12 +216,28 @@
             AND s.TARGET_ID = x.TARGET_ID)
         WHEN MATCHED THEN UPDATE SET
             s.PERMISSION_TYPE = #{permissionType},
-            s.SHARED_BY = #{sharedBy},
+            s.SHARED_BY = CASE
+                WHEN s.ACTIVE_YN = 'Y' AND NVL(s.SHARE_STATUS, 'ACCEPTED') IN ('PENDING', 'ACCEPTED') THEN s.SHARED_BY
+                ELSE #{sharedBy}
+            END,
             s.OWNER_ID = #{ownerId},
             s.ACTIVE_YN = 'Y',
-            s.SHARE_STATUS = 'PENDING',
-            s.RESPONDED_BY = NULL,
-            s.RESPONDED_AT = NULL,
+            s.SHARE_STATUS = CASE
+                WHEN s.ACTIVE_YN = 'Y' AND NVL(s.SHARE_STATUS, 'ACCEPTED') IN ('PENDING', 'ACCEPTED') THEN s.SHARE_STATUS
+                ELSE 'PENDING'
+            END,
+            s.CREATED_AT = CASE
+                WHEN s.ACTIVE_YN = 'Y' AND NVL(s.SHARE_STATUS, 'ACCEPTED') IN ('PENDING', 'ACCEPTED') THEN s.CREATED_AT
+                ELSE NVL(#{createdAt,jdbcType=TIMESTAMP}, SYSDATE)
+            END,
+            s.RESPONDED_BY = CASE
+                WHEN s.ACTIVE_YN = 'Y' AND NVL(s.SHARE_STATUS, 'ACCEPTED') IN ('PENDING', 'ACCEPTED') THEN s.RESPONDED_BY
+                ELSE NULL
+            END,
+            s.RESPONDED_AT = CASE
+                WHEN s.ACTIVE_YN = 'Y' AND NVL(s.SHARE_STATUS, 'ACCEPTED') IN ('PENDING', 'ACCEPTED') THEN s.RESPONDED_AT
+                ELSE NULL
+            END,
             s.EXPIRES_AT = #{expiresAt,jdbcType=TIMESTAMP},
             s.UPDATED_AT = SYSDATE
         WHEN NOT MATCHED THEN INSERT (
@@ -140,7 +247,7 @@
         ) VALUES (
             SEQ_CONTENT_SHARE_ID.NEXTVAL, #{contentType}, #{contentId}, #{ownerId},
             #{targetType}, #{targetId}, #{permissionType}, #{sharedBy},
-            SYSDATE, SYSDATE, #{expiresAt,jdbcType=TIMESTAMP}, 'Y',
+            NVL(#{createdAt,jdbcType=TIMESTAMP}, SYSDATE), SYSDATE, #{expiresAt,jdbcType=TIMESTAMP}, 'Y',
             'PENDING', NULL, NULL
         )
     </insert>
@@ -163,6 +270,7 @@
                CASE s.CONTENT_TYPE
                    WHEN 'PHOTO' THEN NVL(pp.TITLE, '사진 게시물')
                    WHEN 'NOTE' THEN NVL(n.NOTE_TITLE, '노트')
+                   WHEN 'CALENDAR' THEN NVL(e.TITLE, '일정')
                    ELSE s.CONTENT_TYPE
                END AS CONTENT_TITLE,
                ru.USER_NAME AS REQUESTER_NAME, ru.EMAIL AS REQUESTER_EMAIL,
@@ -175,10 +283,16 @@
                    WHEN 'USER' THEN tu.EMAIL
                    WHEN 'WS' THEN '그룹'
                    WHEN 'PROJ' THEN tw2.WS_NAME
-               END AS TARGET_SUBTEXT
+               END AS TARGET_SUBTEXT,
+               CASE WHEN s.CONTENT_TYPE = 'CALENDAR' THEN TO_CHAR(e.START_DT, 'YYYY-MM-DD HH24:MI') END AS CALENDAR_START_DT,
+               CASE WHEN s.CONTENT_TYPE = 'CALENDAR' THEN TO_CHAR(e.END_DT, 'YYYY-MM-DD HH24:MI') END AS CALENDAR_END_DT,
+               CASE WHEN s.CONTENT_TYPE = 'CALENDAR' THEN e.LOCATION_TEXT END AS CALENDAR_LOCATION_TEXT,
+               CASE WHEN s.CONTENT_TYPE = 'CALENDAR' THEN e.LOCATION_ADDRESS END AS CALENDAR_LOCATION_ADDRESS,
+'N' AS CALENDAR_ATTENDEE_YN
           FROM CONTENT_SHARES s
           LEFT JOIN PHOTO_POSTS pp ON s.CONTENT_TYPE = 'PHOTO' AND pp.POST_ID = s.CONTENT_ID
           LEFT JOIN NOTES n ON s.CONTENT_TYPE = 'NOTE' AND n.NOTE_ID = s.CONTENT_ID
+          LEFT JOIN EVENTS e ON s.CONTENT_TYPE = 'CALENDAR' AND e.EVENT_ID = s.CONTENT_ID
           LEFT JOIN USERS ru ON ru.USER_ID = s.SHARED_BY
           LEFT JOIN USERS tu ON s.TARGET_TYPE = 'USER' AND tu.USER_ID = s.TARGET_ID
           LEFT JOIN WORKSPACES tw ON s.TARGET_TYPE = 'WS' AND tw.WS_ID = s.TARGET_ID
@@ -187,7 +301,7 @@
          WHERE s.SHARE_ID = #{shareId}
     </select>
 
-    <sql id="shareRequestBaseSelect">
+    <sql id="shareRequestJoinedRows">
         SELECT s.SHARE_ID, s.CONTENT_TYPE, s.CONTENT_ID, s.OWNER_ID,
                s.TARGET_TYPE, s.TARGET_ID, s.PERMISSION_TYPE, s.SHARED_BY,
                s.CREATED_AT, s.EXPIRES_AT, s.ACTIVE_YN,
@@ -195,8 +309,9 @@
                CASE s.CONTENT_TYPE
                    WHEN 'PHOTO' THEN NVL(pp.TITLE, '사진 게시물')
                    WHEN 'NOTE' THEN NVL(n.NOTE_TITLE, '노트')
+                   WHEN 'CALENDAR' THEN NVL(e.TITLE, '일정')
                    ELSE s.CONTENT_TYPE
-               END AS CONTENT_TITLE,
+               END AS RAW_CONTENT_TITLE,
                ru.USER_NAME AS REQUESTER_NAME, ru.EMAIL AS REQUESTER_EMAIL,
                CASE s.TARGET_TYPE
                    WHEN 'USER' THEN tu.USER_NAME
@@ -207,10 +322,25 @@
                    WHEN 'USER' THEN tu.EMAIL
                    WHEN 'WS' THEN '그룹'
                    WHEN 'PROJ' THEN tw2.WS_NAME
-               END AS TARGET_SUBTEXT
+               END AS TARGET_SUBTEXT,
+               CASE WHEN s.CONTENT_TYPE = 'CALENDAR' THEN TO_CHAR(e.START_DT, 'YYYY-MM-DD HH24:MI') END AS CALENDAR_START_DT,
+               CASE WHEN s.CONTENT_TYPE = 'CALENDAR' THEN TO_CHAR(e.END_DT, 'YYYY-MM-DD HH24:MI') END AS CALENDAR_END_DT,
+               CASE WHEN s.CONTENT_TYPE = 'CALENDAR' THEN e.LOCATION_TEXT END AS CALENDAR_LOCATION_TEXT,
+               CASE WHEN s.CONTENT_TYPE = 'CALENDAR' THEN e.LOCATION_ADDRESS END AS CALENDAR_LOCATION_ADDRESS,
+               CASE
+                   WHEN s.CONTENT_TYPE = 'CALENDAR'
+                    AND EXISTS (
+                        SELECT 1
+                          FROM EVENT_ATTENDEES ea
+                         WHERE ea.EVENT_ID = s.CONTENT_ID
+                           AND ea.USER_ID = #{userId}
+                    ) THEN 'Y'
+                   ELSE 'N'
+               END AS CALENDAR_ATTENDEE_YN
           FROM CONTENT_SHARES s
           LEFT JOIN PHOTO_POSTS pp ON s.CONTENT_TYPE = 'PHOTO' AND pp.POST_ID = s.CONTENT_ID
           LEFT JOIN NOTES n ON s.CONTENT_TYPE = 'NOTE' AND n.NOTE_ID = s.CONTENT_ID
+          LEFT JOIN EVENTS e ON s.CONTENT_TYPE = 'CALENDAR' AND e.EVENT_ID = s.CONTENT_ID
           LEFT JOIN USERS ru ON ru.USER_ID = s.SHARED_BY
           LEFT JOIN USERS tu ON s.TARGET_TYPE = 'USER' AND tu.USER_ID = s.TARGET_ID
           LEFT JOIN WORKSPACES tw ON s.TARGET_TYPE = 'WS' AND tw.WS_ID = s.TARGET_ID
@@ -220,54 +350,107 @@
            AND (s.EXPIRES_AT IS NULL OR s.EXPIRES_AT >= SYSDATE)
     </sql>
 
+    <sql id="shareRequestGroupedSelect">
+        SELECT MIN(x.SHARE_ID) AS SHARE_ID,
+               x.CONTENT_TYPE,
+               MIN(x.CONTENT_ID) KEEP (DENSE_RANK FIRST ORDER BY x.SHARE_ID) AS CONTENT_ID,
+               MIN(x.OWNER_ID) KEEP (DENSE_RANK FIRST ORDER BY x.SHARE_ID) AS OWNER_ID,
+               x.TARGET_TYPE,
+               x.TARGET_ID,
+               x.PERMISSION_TYPE,
+               x.SHARED_BY,
+               x.CREATED_AT,
+               MAX(x.EXPIRES_AT) AS EXPIRES_AT,
+               'Y' AS ACTIVE_YN,
+               x.SHARE_STATUS,
+               MAX(x.RESPONDED_BY) AS RESPONDED_BY,
+               MAX(x.RESPONDED_AT) AS RESPONDED_AT,
+               CASE
+                   WHEN COUNT(*) > 1 THEN
+                       CASE x.CONTENT_TYPE
+                           WHEN 'PHOTO' THEN '사진 게시물 '
+                           WHEN 'NOTE' THEN '노트 '
+                           WHEN 'CALENDAR' THEN '일정 '
+                           ELSE x.CONTENT_TYPE || ' '
+                       END || COUNT(*) || '건'
+                   ELSE MIN(x.RAW_CONTENT_TITLE) KEEP (DENSE_RANK FIRST ORDER BY x.SHARE_ID)
+               END AS CONTENT_TITLE,
+               MAX(x.REQUESTER_NAME) AS REQUESTER_NAME,
+               MAX(x.REQUESTER_EMAIL) AS REQUESTER_EMAIL,
+               MAX(x.TARGET_NAME) AS TARGET_NAME,
+               MAX(x.TARGET_SUBTEXT) AS TARGET_SUBTEXT,
+               MIN(x.CALENDAR_START_DT) KEEP (DENSE_RANK FIRST ORDER BY x.SHARE_ID) AS CALENDAR_START_DT,
+               MIN(x.CALENDAR_END_DT) KEEP (DENSE_RANK FIRST ORDER BY x.SHARE_ID) AS CALENDAR_END_DT,
+               MIN(x.CALENDAR_LOCATION_TEXT) KEEP (DENSE_RANK FIRST ORDER BY x.SHARE_ID) AS CALENDAR_LOCATION_TEXT,
+               MIN(x.CALENDAR_LOCATION_ADDRESS) KEEP (DENSE_RANK FIRST ORDER BY x.SHARE_ID) AS CALENDAR_LOCATION_ADDRESS,
+               MAX(x.CALENDAR_ATTENDEE_YN) AS CALENDAR_ATTENDEE_YN,
+               COUNT(*) AS CONTENT_COUNT,
+               LISTAGG(x.SHARE_ID, ',') WITHIN GROUP (ORDER BY x.SHARE_ID) AS SHARE_IDS
+          FROM (
+              <include refid="shareRequestJoinedRows"/>
+              ${shareRequestFilter}
+          ) x
+         GROUP BY x.CONTENT_TYPE, x.TARGET_TYPE, x.TARGET_ID, x.PERMISSION_TYPE,
+                  x.SHARED_BY, x.CREATED_AT, x.SHARE_STATUS
+    </sql>
+
     <select id="selectReceivedShareRequests" resultMap="shareResultMap">
-        <include refid="shareRequestBaseSelect"/>
-           AND (
-                (s.TARGET_TYPE = 'USER' AND s.TARGET_ID = #{userId})
-             OR (s.TARGET_TYPE = 'WS' AND EXISTS (
-                    SELECT 1 FROM WORKSPACES wown
-                     WHERE wown.WS_ID = s.TARGET_ID AND wown.OWNER_ID = #{userId}
-                ))
-             OR (s.TARGET_TYPE = 'WS' AND EXISTS (
-                    SELECT 1 FROM WS_MEMBERS wm
-                     WHERE wm.WS_ID = s.TARGET_ID
-                       AND wm.USER_ID = #{userId}
-                       AND UPPER(NVL(wm.WS_ROLE, 'MEMBER')) = 'ADMIN'
-                ))
-             OR (s.TARGET_TYPE = 'PROJ' AND EXISTS (
-                    SELECT 1 FROM PROJECTS pr
-                     WHERE pr.PROJ_ID = s.TARGET_ID AND pr.LEADER_ID = #{userId}
-                ))
-             OR (s.TARGET_TYPE = 'PROJ' AND EXISTS (
-                    SELECT 1 FROM PROJ_MEMBERS pm
-                     WHERE pm.PROJ_ID = s.TARGET_ID
-                       AND pm.USER_ID = #{userId}
-                       AND UPPER(NVL(pm.PROJ_ROLE, 'MEMBER')) IN ('ADMIN', 'LEADER', 'OWNER', 'PM')
-                ))
-           )
-         ORDER BY CASE NVL(s.SHARE_STATUS, 'ACCEPTED') WHEN 'PENDING' THEN 1 ELSE 2 END,
-                  s.CREATED_AT DESC, s.SHARE_ID DESC
+        <include refid="shareRequestGroupedSelect">
+            <property name="shareRequestFilter" value="
+                AND (
+                    (s.TARGET_TYPE = 'USER' AND s.TARGET_ID = #{userId})
+                 OR (s.TARGET_TYPE = 'WS' AND EXISTS (
+                        SELECT 1 FROM WORKSPACES wown
+                         WHERE wown.WS_ID = s.TARGET_ID AND wown.OWNER_ID = #{userId}
+                    ))
+                 OR (s.TARGET_TYPE = 'WS' AND EXISTS (
+                        SELECT 1 FROM WS_MEMBERS wm
+                         WHERE wm.WS_ID = s.TARGET_ID
+                           AND wm.USER_ID = #{userId}
+                           AND UPPER(NVL(wm.WS_ROLE, 'MEMBER')) = 'ADMIN'
+                    ))
+                 OR (s.TARGET_TYPE = 'PROJ' AND EXISTS (
+                        SELECT 1 FROM PROJECTS pr
+                         WHERE pr.PROJ_ID = s.TARGET_ID AND pr.LEADER_ID = #{userId}
+                    ))
+                 OR (s.TARGET_TYPE = 'PROJ' AND EXISTS (
+                        SELECT 1 FROM PROJ_MEMBERS pm
+                         WHERE pm.PROJ_ID = s.TARGET_ID
+                           AND pm.USER_ID = #{userId}
+                           AND UPPER(NVL(pm.PROJ_ROLE, 'MEMBER')) IN ('ADMIN', 'LEADER', 'OWNER', 'PM')
+                    ))
+                )"/>
+        </include>
+         ORDER BY CASE SHARE_STATUS WHEN 'PENDING' THEN 1 ELSE 2 END,
+                  CREATED_AT DESC, SHARE_ID DESC
     </select>
 
     <select id="selectSentShareRequests" resultMap="shareResultMap">
-        <include refid="shareRequestBaseSelect"/>
-           AND s.SHARED_BY = #{userId}
-         ORDER BY s.CREATED_AT DESC, s.SHARE_ID DESC
+        <include refid="shareRequestGroupedSelect">
+            <property name="shareRequestFilter" value="AND s.SHARED_BY = #{userId}"/>
+        </include>
+         ORDER BY CREATED_AT DESC, SHARE_ID DESC
     </select>
 
     <select id="countPendingShareRequests" resultType="int">
         SELECT COUNT(1)
-          FROM CONTENT_SHARES s
-         WHERE s.ACTIVE_YN = 'Y'
-           AND NVL(s.SHARE_STATUS, 'ACCEPTED') = 'PENDING'
-           AND (s.EXPIRES_AT IS NULL OR s.EXPIRES_AT >= SYSDATE)
-           AND (
-                (s.TARGET_TYPE = 'USER' AND s.TARGET_ID = #{userId})
-             OR (s.TARGET_TYPE = 'WS' AND EXISTS (SELECT 1 FROM WORKSPACES wown WHERE wown.WS_ID = s.TARGET_ID AND wown.OWNER_ID = #{userId}))
-             OR (s.TARGET_TYPE = 'WS' AND EXISTS (SELECT 1 FROM WS_MEMBERS wm WHERE wm.WS_ID = s.TARGET_ID AND wm.USER_ID = #{userId} AND UPPER(NVL(wm.WS_ROLE, 'MEMBER')) = 'ADMIN'))
-             OR (s.TARGET_TYPE = 'PROJ' AND EXISTS (SELECT 1 FROM PROJECTS pr WHERE pr.PROJ_ID = s.TARGET_ID AND pr.LEADER_ID = #{userId}))
-             OR (s.TARGET_TYPE = 'PROJ' AND EXISTS (SELECT 1 FROM PROJ_MEMBERS pm WHERE pm.PROJ_ID = s.TARGET_ID AND pm.USER_ID = #{userId} AND UPPER(NVL(pm.PROJ_ROLE, 'MEMBER')) IN ('ADMIN','LEADER','OWNER','PM')))
-           )
+          FROM (
+              SELECT s.CONTENT_TYPE, s.TARGET_TYPE, s.TARGET_ID, s.PERMISSION_TYPE,
+                     s.SHARED_BY, s.CREATED_AT, NVL(s.SHARE_STATUS, 'ACCEPTED') AS SHARE_STATUS
+                FROM CONTENT_SHARES s
+               WHERE s.ACTIVE_YN = 'Y'
+                 AND NVL(s.SHARE_STATUS, 'ACCEPTED') = 'PENDING'
+                 AND (s.EXPIRES_AT IS NULL OR s.EXPIRES_AT >= SYSDATE)
+                 AND (
+                      (s.TARGET_TYPE = 'USER' AND s.TARGET_ID = #{userId})
+                   OR (s.TARGET_TYPE = 'WS' AND EXISTS (SELECT 1 FROM WORKSPACES wown WHERE wown.WS_ID = s.TARGET_ID AND wown.OWNER_ID = #{userId}))
+                   OR (s.TARGET_TYPE = 'WS' AND EXISTS (SELECT 1 FROM WS_MEMBERS wm WHERE wm.WS_ID = s.TARGET_ID AND wm.USER_ID = #{userId} AND UPPER(NVL(wm.WS_ROLE, 'MEMBER')) = 'ADMIN'))
+                   OR (s.TARGET_TYPE = 'PROJ' AND EXISTS (SELECT 1 FROM PROJECTS pr WHERE pr.PROJ_ID = s.TARGET_ID AND pr.LEADER_ID = #{userId}))
+                   OR (s.TARGET_TYPE = 'PROJ' AND EXISTS (SELECT 1 FROM PROJ_MEMBERS pm WHERE pm.PROJ_ID = s.TARGET_ID AND pm.USER_ID = #{userId} AND UPPER(NVL(pm.PROJ_ROLE, 'MEMBER')) IN ('ADMIN','LEADER','OWNER','PM')))
+                 )
+               GROUP BY s.CONTENT_TYPE, s.TARGET_TYPE, s.TARGET_ID, s.PERMISSION_TYPE,
+                        s.SHARED_BY, s.CREATED_AT, NVL(s.SHARE_STATUS, 'ACCEPTED')
+          ) grouped_requests
     </select>
 
     <select id="countShareResponderPermission" resultType="int">
@@ -285,13 +468,25 @@
     </select>
 
     <update id="updateShareStatus">
-        UPDATE CONTENT_SHARES
-           SET SHARE_STATUS = #{status},
-               RESPONDED_BY = #{userId},
-               RESPONDED_AT = SYSDATE,
-               UPDATED_AT = SYSDATE
-         WHERE SHARE_ID = #{shareId}
-           AND ACTIVE_YN = 'Y'
+        UPDATE CONTENT_SHARES s
+           SET s.SHARE_STATUS = #{status},
+               s.RESPONDED_BY = #{userId},
+               s.RESPONDED_AT = SYSDATE,
+               s.UPDATED_AT = SYSDATE
+         WHERE s.ACTIVE_YN = 'Y'
+           AND EXISTS (
+                SELECT 1
+                  FROM CONTENT_SHARES seed
+                 WHERE seed.SHARE_ID = #{shareId}
+                   AND seed.ACTIVE_YN = 'Y'
+                   AND seed.CONTENT_TYPE = s.CONTENT_TYPE
+                   AND seed.TARGET_TYPE = s.TARGET_TYPE
+                   AND seed.TARGET_ID = s.TARGET_ID
+                   AND seed.PERMISSION_TYPE = s.PERMISSION_TYPE
+                   AND seed.SHARED_BY = s.SHARED_BY
+                   AND NVL(seed.SHARE_STATUS, 'ACCEPTED') = NVL(s.SHARE_STATUS, 'ACCEPTED')
+                   AND seed.CREATED_AT = s.CREATED_AT
+           )
     </update>
 
     <delete id="deleteSharesByContent">

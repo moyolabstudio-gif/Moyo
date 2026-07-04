@@ -3663,3 +3663,161 @@ body.nl-card-dragging [data-note-folder-drop].nl-drop-target-invalid {
         margin-left:0;
     }
 }
+
+/* note trash retention: 30-day automatic permanent delete notice */
+.nl-trash-retention-notice{
+    margin: 4px 0 0;
+    font-size: 12px;
+    line-height: 1.4;
+    color: #8a94a6;
+}
+.nl-trash-retention-badge{
+    display: inline-flex;
+    align-items: center;
+    min-height: 24px;
+    padding: 0 9px;
+    border-radius: 999px;
+    background: #f1f5f9;
+    color: #64748b;
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+.nl-trash-retention-badge.is-urgent{
+    background: #fff1f2;
+    color: #e11d48;
+}
+
+
+/* folder add button as chip */
+.nl-folder-list .nl-folder-add-chip {
+    width: 34px;
+    min-width: 34px;
+    height: 32px;
+    flex: 0 0 34px;
+    padding: 0;
+    border: 1px solid #e8edf5;
+    border-radius: 9px;
+    color: #3b82f6;
+    background: #fff;
+    box-shadow: none;
+}
+.nl-folder-list .nl-folder-add-chip i {
+    font-size: 13px;
+    color: inherit;
+}
+.nl-folder-list .nl-folder-add-chip:hover {
+    border-color: #bde9e3;
+    color: #2563eb;
+    background: #f8fffd;
+}
+
+
+
+/* folder add chip at the end of folder list */
+.nl-folder-list .nl-folder-add-chip {
+    flex: 0 0 auto;
+    width: 36px;
+    min-width: 36px;
+    height: 32px;
+    min-height: 32px;
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    padding: 0;
+    border: 1px solid rgba(71, 120, 242, .22);
+    border-radius: 10px;
+    background: #fff;
+    color: #2563eb;
+    box-shadow: none;
+}
+.nl-folder-list .nl-folder-add-chip i { font-size: 13px; }
+.nl-folder-list .nl-folder-add-chip:hover {
+    border-color: rgba(71, 120, 242, .38);
+    background: rgba(71, 120, 242, .06);
+    color: #1d4ed8;
+}
+.nl-folder-list .nl-folder-add-chip span { display: none !important; }
+
+
+
+/* scope color for folder add chip */
+.nl-shell[data-scope="PRIVATE"] .nl-folder-list .nl-folder-add-chip,
+.nl-shell[data-scope="ALL"] .nl-folder-list .nl-folder-add-chip {
+    border-color: rgba(63, 115, 244, .24) !important;
+    color: var(--nl-blue) !important;
+    background: #fff !important;
+}
+.nl-shell[data-scope="PRIVATE"] .nl-folder-list .nl-folder-add-chip:hover,
+.nl-shell[data-scope="ALL"] .nl-folder-list .nl-folder-add-chip:hover {
+    border-color: rgba(63, 115, 244, .40) !important;
+    color: var(--nl-blue-deep) !important;
+    background: rgba(63, 115, 244, .07) !important;
+}
+
+.nl-shell[data-scope="FRIEND"] .nl-folder-list .nl-folder-add-chip {
+    border-color: rgba(245, 158, 11, .28) !important;
+    color: var(--nl-friend) !important;
+    background: #fff !important;
+}
+.nl-shell[data-scope="FRIEND"] .nl-folder-list .nl-folder-add-chip:hover {
+    border-color: rgba(245, 158, 11, .46) !important;
+    color: #d97706 !important;
+    background: rgba(245, 158, 11, .08) !important;
+}
+
+.nl-shell[data-scope="WS"] .nl-folder-list .nl-folder-add-chip,
+.nl-shell[data-scope="WORKSPACE"] .nl-folder-list .nl-folder-add-chip {
+    border-color: rgba(36, 191, 174, .28) !important;
+    color: var(--nl-mint) !important;
+    background: #fff !important;
+}
+.nl-shell[data-scope="WS"] .nl-folder-list .nl-folder-add-chip:hover,
+.nl-shell[data-scope="WORKSPACE"] .nl-folder-list .nl-folder-add-chip:hover {
+    border-color: rgba(36, 191, 174, .46) !important;
+    color: #128f81 !important;
+    background: rgba(36, 191, 174, .08) !important;
+}
+
+.nl-shell[data-scope="PROJ"] .nl-folder-list .nl-folder-add-chip,
+.nl-shell[data-scope="PROJECT"] .nl-folder-list .nl-folder-add-chip {
+    border-color: rgba(139, 92, 246, .30) !important;
+    color: var(--nl-violet) !important;
+    background: #fff !important;
+}
+.nl-shell[data-scope="PROJ"] .nl-folder-list .nl-folder-add-chip:hover,
+.nl-shell[data-scope="PROJECT"] .nl-folder-list .nl-folder-add-chip:hover {
+    border-color: rgba(139, 92, 246, .48) !important;
+    color: #7c3aed !important;
+    background: rgba(139, 92, 246, .08) !important;
+}
+
+
+/* ========================================================================== 
+   MOYO 페이지 타이틀 포인트 통일
+   캘린더 첫 화면의 얇은 브랜드 포인트를 노트 리스트 제목에도 적용한다.
+   ========================================================================== */
+.nl-page-header .nl-hero h1 {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 700;
+}
+
+.nl-page-header .nl-hero h1::before {
+    content: "";
+    display: inline-block;
+    width: 3px;
+    height: 17px;
+    border-radius: 999px;
+    background: linear-gradient(180deg, #48d5c8 0%, #4f7df7 100%);
+    box-shadow: 0 5px 14px rgba(72, 213, 200, .18);
+    flex: 0 0 auto;
+}
+
+@media (max-width: 760px) {
+    .nl-page-header .nl-hero h1::before {
+        height: 15px;
+    }
+}

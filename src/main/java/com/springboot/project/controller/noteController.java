@@ -76,6 +76,9 @@ public class noteController {
         // 리스트는 완전 초기화: 개인/워크스페이스/프로젝트 탐색기를 붙이지 않고,
         // 권한이 있는 최근 노트만 noteList 하나로 렌더링한다.
         String normalizedScope = normalizeScope(scope, scopeType, wsId, projId);
+        if ("FRIEND".equals(normalizedScope)) {
+            folderId = null;
+        }
         // 그룹/프로젝트 탭은 서로 섞지 않는다.
         // 선택 ID가 없으면 참여 중인 전체 그룹 또는 전체 프로젝트 노트를 보여준다.
 
@@ -97,18 +100,12 @@ public class noteController {
                 ? new ArrayList<>(fetchedNotes.subList(0, pageSize))
                 : fetchedNotes;
 
-        List<noteFolderDTO> friendFolderList = "FRIEND".equals(normalizedScope) && friendUserId != null
-                ? buildSharedFolderList(friendSource.stream()
-                        .filter(note -> friendUserId.equals(note.getUserId()))
-                        .collect(java.util.stream.Collectors.toList()))
-                : new ArrayList<noteFolderDTO>();
-
         addScopeModel(model, normalizedScope, wsId, projId);
         addNoteNavigationModel(model, loginUser.getUserId());
         if ("PRIVATE".equals(normalizedScope)) {
             model.addAttribute("folderList", getFolderList("PRIVATE", null, null, loginUser.getUserId()));
         } else if ("FRIEND".equals(normalizedScope)) {
-            model.addAttribute("folderList", friendFolderList);
+            model.addAttribute("folderList", new ArrayList<noteFolderDTO>());
         } else if ("WS".equals(normalizedScope) && wsId != null) {
             model.addAttribute("folderList", getFolderList("WS", wsId, null, loginUser.getUserId()));
         } else if ("PROJ".equals(normalizedScope) && projId != null) {
@@ -619,6 +616,9 @@ public class noteController {
         }
 
         String normalizedScope = normalizeScope(scope, scopeType, wsId, projId);
+        if ("FRIEND".equals(normalizedScope)) {
+            folderId = null;
+        }
         int safePage = Math.max(page, 0);
         int safeSize = Math.min(Math.max(size, 1), 50);
         int offset = safePage * safeSize;

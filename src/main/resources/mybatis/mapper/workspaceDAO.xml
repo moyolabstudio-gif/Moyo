@@ -171,18 +171,41 @@
 	    SELECT 
 	        m.USER_ID AS "USER_ID",
 	        m.USER_ID AS "userId",
-	        u.USER_NAME AS "USER_NAME",
-	        u.USER_NAME AS "userName",
-	        u.EMAIL AS "EMAIL",
-	        u.EMAIL AS "email",
+	        CASE
+	            WHEN NVL(wp.USE_ACCOUNT_PROFILE, 'Y') = 'N'
+	                THEN NVL(wp.DISPLAY_NAME, u.USER_NAME)
+	            ELSE u.USER_NAME
+	        END AS "USER_NAME",
+	        CASE
+	            WHEN NVL(wp.USE_ACCOUNT_PROFILE, 'Y') = 'N'
+	                THEN NVL(wp.DISPLAY_NAME, u.USER_NAME)
+	            ELSE u.USER_NAME
+	        END AS "userName",
+	        NVL(wp.CONTACT_EMAIL, u.EMAIL) AS "EMAIL",
+	        NVL(wp.CONTACT_EMAIL, u.EMAIL) AS "email",
+	        CASE
+	            WHEN NVL(wp.USE_ACCOUNT_PROFILE, 'Y') = 'N'
+	                THEN wp.PROFILE_IMAGE_PATH
+	            ELSE u.PROFILE_IMAGE_PATH
+	        END AS "PROFILE_IMAGE_PATH",
+	        CASE
+	            WHEN NVL(wp.USE_ACCOUNT_PROFILE, 'Y') = 'N'
+	                THEN wp.PROFILE_IMAGE_PATH
+	            ELSE u.PROFILE_IMAGE_PATH
+	        END AS "profileImagePath",
 	        m.WS_ROLE AS "WS_ROLE",
 	        m.WS_ROLE AS "wsRole",
+	        wp.POSITION_NAME AS "WS_POSITION",
+	        wp.POSITION_NAME AS "wsPosition",
 	        TO_CHAR(m.JOINED_AT, 'YYYY-MM-DD') AS "JOINED_AT",
 	        TO_CHAR(m.JOINED_AT, 'YYYY-MM-DD') AS "joinedAt"
 	    FROM WS_MEMBERS m
 	    JOIN USERS u ON m.USER_ID = u.USER_ID
+	    LEFT JOIN WS_MEMBER_PROFILES wp
+	      ON wp.WS_ID = m.WS_ID
+	     AND wp.USER_ID = m.USER_ID
 	    WHERE m.WS_ID = #{wsId}
-	    ORDER BY CASE WHEN m.WS_ROLE = 'ADMIN' THEN 1 ELSE 2 END, u.USER_NAME
+	    ORDER BY CASE WHEN m.WS_ROLE = 'ADMIN' THEN 1 ELSE 2 END, "USER_NAME"
 	</select>
 	<delete id="deleteWorkspaceAllMembers">
 	    DELETE FROM WS_MEMBERS 

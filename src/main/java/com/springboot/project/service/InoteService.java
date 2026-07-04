@@ -38,6 +38,8 @@ public interface InoteService {
 
     boolean canPermanentlyDeleteNote(Long noteId, Long userId);
 
+    int purgeExpiredTrashNotes();
+
     boolean registerNoteFile(noteFileDTO file);
 
     List<noteFileDTO> getNoteFileList(Long noteId);

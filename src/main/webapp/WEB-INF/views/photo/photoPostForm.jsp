@@ -9,11 +9,11 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/moyoUi.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/photoAlbum.css?v=70">
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/photoPostForm.css?v=68-area-upload">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/photoPostForm.css?v=71-form-final">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/commonShareModal.css?v=common-share-stable-v40">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/commonPhotoAlbumModal.css?v=4">
 </head>
-<body>
+<body class="photo-post-form-body">
 <jsp:include page="/WEB-INF/views/common/header.jsp" />
 <main class="photo-page photo-post-form-page"
       data-context-path="${pageContext.request.contextPath}"
@@ -202,13 +202,13 @@
         <div class="note-write-share-modal-head">
             <div>
                 <h3 id="photoPostShareModalTitle">공유하기</h3>
-                <p>공유는 보기 범위만 정하고, 편집은 권한에서 따로 지정합니다.</p>
+                <p>사진 공유는 보기 권한만 전달합니다.</p>
             </div>
             <button type="button" class="note-write-share-close" data-note-share-close aria-label="닫기">×</button>
         </div>
         <div class="note-write-share-tabs" role="tablist" aria-label="공유 대상 유형">
             <button type="button" class="note-write-share-tab is-active" data-share-tab="FRIEND">친구</button>
-            <button type="button" class="note-write-share-tab" data-share-tab="WORKSPACE">워크스페이스</button>
+            <button type="button" class="note-write-share-tab" data-share-tab="WORKSPACE">그룹</button>
             <button type="button" class="note-write-share-tab" data-share-tab="PROJECT">프로젝트</button>
         </div>
         <div class="note-write-share-toolbar">
@@ -274,6 +274,6 @@
 <jsp:include page="/WEB-INF/views/common/footer.jsp" />
 <script src="${pageContext.request.contextPath}/js/commonShareModal.js?v=common-share-stable-v40"></script>
 <script src="${pageContext.request.contextPath}/js/commonPhotoAlbumModal.js?v=4-target-scope"></script>
-<script src="${pageContext.request.contextPath}/js/photoPostForm.js?v=68-area-upload"></script>
+<script src="${pageContext.request.contextPath}/js/photoPostForm.js?v=100-form-restore"></script>
 </body>
 </html>

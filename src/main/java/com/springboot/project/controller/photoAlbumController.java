@@ -1,11 +1,14 @@
 package com.springboot.project.controller;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 
 import org.springframework.http.HttpStatus;
@@ -24,6 +27,10 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import com.springboot.project.dao.IworkspaceDAO;
 import com.springboot.project.dao.IfriendDAO;
 import com.springboot.project.dao.InoteFolderDAO;
@@ -39,6 +46,8 @@ import com.springboot.project.service.IworkspaceService;
 
 @Controller
 public class photoAlbumController {
+
+    private static final ObjectMapper PHOTO_EDIT_META_MAPPER = new ObjectMapper();
 
     private final IphotoAlbumService photoAlbumService;
     private final IworkspaceService workspaceService;
@@ -320,6 +329,8 @@ public class photoAlbumController {
                                         @RequestParam(value = "shareTargetId", required = false) List<Long> shareTargetIds,
                                         @RequestParam(value = "sharePermissionType", required = false) List<String> sharePermissionTypes,
                                         @RequestPart("files") List<MultipartFile> files,
+                                        @RequestPart(value = "rawFiles", required = false) List<MultipartFile> rawFiles,
+                                        HttpServletRequest request,
                                         HttpSession session) {
         ResponseEntity<?> denied = authorizeScope(scopeType, scopeId, session);
         if (denied != null) return denied;
@@ -332,7 +343,7 @@ public class photoAlbumController {
             }
         }
         try {
-            Long postId = photoAlbumService.createPost(scopeType, scopeId, albumId, title, description, visibilityType, files, user.getUserId());
+            Long postId = photoAlbumService.createPost(scopeType, scopeId, albumId, title, description, visibilityType, files, rawFiles, normalizeEditMetas(request), user.getUserId());
             savePendingPhotoShares(postId, shareTargetTypes, shareTargetIds, sharePermissionTypes, user.getUserId());
             return ResponseEntity.ok(Map.of("status", "SUCCESS", "postId", postId));
         } catch (RuntimeException e) {
@@ -362,7 +373,10 @@ public class photoAlbumController {
                                                   @RequestParam(value = "albumId", required = false) Long albumId,
                                                   @RequestParam(value = "title", required = false) String title,
                                                   @RequestParam(value = "description", required = false) String description,
+                                                  @RequestParam(value = "visibilityType", required = false) String visibilityType,
                                                   @RequestPart(value = "files", required = false) List<MultipartFile> files,
+                                                  @RequestPart(value = "rawFiles", required = false) List<MultipartFile> rawFiles,
+                                                  HttpServletRequest request,
                                                   HttpSession session) {
         usersDto user = loginUser(session);
         if (user == null) return error(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다.");
@@ -373,7 +387,13 @@ public class photoAlbumController {
             return error(HttpStatus.BAD_REQUEST, "현재 공간의 앨범만 선택할 수 있습니다.");
         }
         try {
-            boolean success = photoAlbumService.updatePostWithPhotos(postId, albumId, title, description, files, user.getUserId());
+            boolean success = photoAlbumService.updatePostWithPhotos(postId, albumId, title, description, files, rawFiles, normalizeEditMetas(request), user.getUserId());
+            if (success && "PERSONAL".equalsIgnoreCase(string(value(post, "scopeType", "SCOPE_TYPE")))) {
+                String normalizedVisibility = visibilityType == null ? null : visibilityType.trim().toUpperCase();
+                if ("FRIENDS".equals(normalizedVisibility) || "PRIVATE".equals(normalizedVisibility)) {
+                    photoAlbumService.updatePostVisibility(postId, normalizedVisibility);
+                }
+            }
             return ResponseEntity.ok(Map.of("status", success ? "SUCCESS" : "FAIL"));
         } catch (RuntimeException e) {
             return error(HttpStatus.BAD_REQUEST, e.getMessage());
@@ -654,7 +674,7 @@ public class photoAlbumController {
             share.setContentId(postId);
             share.setTargetType(targetType);
             share.setTargetId(targetId);
-            share.setPermissionType(permissionTypes != null && permissionTypes.size() > i ? permissionTypes.get(i) : "VIEW");
+            share.setPermissionType("VIEW");
             contentShareService.saveShare(share, userId);
         }
     }
@@ -898,6 +918,65 @@ public class photoAlbumController {
         return new ScopeViewData(project.getProjName(), "프로젝트 사진첩",
                 "프로젝트 진행 과정과 결과물을 사진으로 남기고 팀원과 함께 관리하세요.",
                 "/project/main?projId=" + projId + "&wsId=" + project.getWsId());
+    }
+
+    private List<String> normalizeEditMetas(HttpServletRequest request) {
+        if (request == null) return List.of();
+
+        // 가장 안전한 경로: JSON 문자열을 Base64로 받아 콤마/따옴표/중괄호가
+        // Spring 파라미터 바인딩 과정에서 잘리는 문제를 원천 차단한다.
+        List<String> encodedValues = collectDecodedBase64Values(request, "editMetaB64");
+        if (!encodedValues.isEmpty()) return encodedValues;
+
+        List<String> values = new ArrayList<>();
+        collectRequestValues(request, values, "editMetas");
+        if (values.isEmpty()) collectRequestValues(request, values, "editMeta");
+        if (values.isEmpty()) collectRequestValues(request, values, "photoEditMetas");
+        if (values.isEmpty()) collectRequestValues(request, values, "photoEditMeta");
+
+        if (values.size() == 1 && values.get(0).trim().startsWith("[")) {
+            List<String> flattened = flattenEditMetaArray(values.get(0));
+            if (!flattened.isEmpty()) return flattened;
+        }
+        return values;
+    }
+
+    private List<String> collectDecodedBase64Values(HttpServletRequest request, String name) {
+        List<String> values = new ArrayList<>();
+        String[] found = request.getParameterValues(name);
+        if (found == null) return values;
+        for (String value : found) {
+            if (value == null || value.isBlank()) continue;
+            try {
+                String decoded = new String(Base64.getDecoder().decode(value.trim()), StandardCharsets.UTF_8);
+                if (!decoded.isBlank()) values.add(decoded);
+            } catch (IllegalArgumentException ignored) {
+                // 잘못된 값은 무시하고 기존 fallback 파라미터로 넘어간다.
+            }
+        }
+        return values;
+    }
+
+    private void collectRequestValues(HttpServletRequest request, List<String> values, String name) {
+        String[] found = request.getParameterValues(name);
+        if (found == null) return;
+        for (String value : found) {
+            if (value != null && !value.isBlank()) values.add(value);
+        }
+    }
+
+    private List<String> flattenEditMetaArray(String json) {
+        try {
+            List<Object> items = PHOTO_EDIT_META_MAPPER.readValue(json, new TypeReference<List<Object>>() {});
+            List<String> result = new ArrayList<>();
+            for (Object item : items) {
+                if (item == null) continue;
+                result.add(PHOTO_EDIT_META_MAPPER.writeValueAsString(item));
+            }
+            return result;
+        } catch (JsonProcessingException e) {
+            return List.of();
+        }
     }
 
     private String normalizeScopeType(String scopeType) {

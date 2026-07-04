@@ -29,6 +29,7 @@
         <result property="shareScopeNames" column="SHARE_SCOPE_NAMES"/>
         <result property="regDt" column="REG_DT"/>
         <result property="updDt" column="UPD_DT"/>
+        <result property="deletedAt" column="DELETED_AT"/>
         <result property="updatedBy" column="UPDATED_BY"/>
         <result property="userName" column="USER_NAME"/>
         <result property="profileImagePath" column="PROFILE_IMAGE_PATH"/>
@@ -298,6 +299,7 @@
                     END AS SHARE_SCOPE_NAMES,
                     n.REG_DT,
                     n.UPD_DT,
+                    n.DELETED_AT,
                     n.UPDATED_BY,
                     u.USER_NAME,
                     u.PROFILE_IMAGE_PATH AS PROFILE_IMAGE_PATH,
@@ -575,7 +577,7 @@
             n.NOTE_ID, n.SCOPE_TYPE, n.WS_ID, n.PROJ_ID, n.USER_ID, n.NOTE_TITLE,
             n.DONE_CONTENT, n.NEXT_CONTENT, n.ISSUE_CONTENT, n.CHANGE_LOG, n.MEMO, n.CATEGORY, n.ICON, n.FOLDER_ID, nf.FOLDER_NAME, nf.FOLDER_NAME AS FOLDER_PATH, nw.WS_NAME, np.PROJ_NAME,
             NULL AS SHARE_SCOPE_TYPES, NULL AS SHARE_SCOPE_NAMES,
-            n.REG_DT, n.UPD_DT, n.UPDATED_BY, u.USER_NAME, uu.USER_NAME AS UPDATED_BY_NAME,
+            n.REG_DT, n.UPD_DT, n.DELETED_AT, n.UPDATED_BY, u.USER_NAME, uu.USER_NAME AS UPDATED_BY_NAME,
             (SELECT COUNT(*) FROM NOTE_FILES nfc WHERE nfc.NOTE_ID = n.NOTE_ID) AS ATTACHMENT_COUNT,
             (SELECT MIN(nff.ORIGIN_FILE_NAME) KEEP (DENSE_RANK FIRST ORDER BY nff.FILE_ID)
                FROM NOTE_FILES nff WHERE nff.NOTE_ID = n.NOTE_ID) AS FIRST_ATTACHMENT_NAME,
@@ -727,6 +729,14 @@
          WHERE NOTE_ID = #{noteId}
            AND NVL(DELETED_YN, 'N') = 'Y'
            AND DELETED_BY = #{userId}
+    </select>
+
+    <select id="selectExpiredTrashNoteIds" resultType="long">
+        SELECT NOTE_ID
+          FROM NOTES
+         WHERE NVL(DELETED_YN, 'N') = 'Y'
+           AND DELETED_AT IS NOT NULL
+           AND DELETED_AT + 30 &lt;= SYSDATE
     </select>
 
     <delete id="deleteNote">

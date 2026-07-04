@@ -17,11 +17,21 @@ public class userNoticeServiceImpl implements userNoticeService {
 
     @Override
     public List<userNoticeDTO> getMyNotices(Long userId) {
+        ensureUserNoticeCommonColumns();
         return userNoticeDAO.selectMyNotices(userId);
     }
 
     @Override
     public void markAsRead(Long alarmId) {
+        ensureUserNoticeCommonColumns();
         userNoticeDAO.updateAlarmRead(alarmId);
+    }
+
+    private void ensureUserNoticeCommonColumns() {
+        try {
+            userNoticeDAO.ensureUserNoticeCommonColumns();
+        } catch (Exception e) {
+            System.err.println("공통 사용자 알림 컬럼 확인 중 오류: " + e.getMessage());
+        }
     }
 }

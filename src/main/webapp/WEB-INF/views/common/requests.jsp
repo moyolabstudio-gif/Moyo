@@ -47,6 +47,14 @@
         .request-chip.is-accepted { background:#ecfdf5; color:#168257; }
         .request-chip.is-rejected, .request-chip.is-canceled { background:#fef2f2; color:#d14343; }
 
+        .request-detail-lines { display:grid; gap:5px; margin-top:10px; color:#526173; font-size:12px; }
+        .request-detail-line { display:flex; gap:8px; align-items:flex-start; line-height:1.45; }
+        .request-detail-label { flex:0 0 auto; min-width:34px; color:#8491a3; font-weight:900; }
+        .request-detail-value { min-width:0; color:#475569; }
+        .request-guide { margin-top:9px !important; color:#718096 !important; font-size:12px !important; }
+        .request-chip.is-attendee { background:#eefcf7; color:#168257; }
+        .request-chip.is-edit { background:#eef6ff; color:#2878d0; }
+
         .profile-overlay {
             display:none; position:fixed; inset:0; z-index:3000;
             background:rgba(15,23,42,.46);
@@ -134,7 +142,7 @@
     <div class="request-summary">
         <div>
             <h2>요청함</h2>
-            <p class="request-subtitle">그룹 초대와 사진/노트 공유 요청을 한 곳에서 확인합니다.</p>
+            <p class="request-subtitle">그룹 초대와 사진/노트/일정 공유 요청을 한 곳에서 확인합니다.</p>
         </div>
         <div class="request-counts">
             <span class="request-chip is-pending">전체 대기 ${totalPendingRequestCount}</span>
@@ -161,19 +169,78 @@
                         <div class="request-title-line">
                             <span class="request-type-badge">
                                 <c:choose>
-                                    <c:when test="${share.contentType == 'PHOTO'}">사진 공유</c:when>
-                                    <c:when test="${share.contentType == 'NOTE'}">노트 공유</c:when>
-                                    <c:otherwise>${share.contentType} 공유</c:otherwise>
+                                    <c:when test="${share.contentType == 'PHOTO'}">사진 공유 요청</c:when>
+                                    <c:when test="${share.contentType == 'NOTE'}">노트 공유 요청</c:when>
+                                    <c:when test="${share.contentType == 'CALENDAR' && share.calendarAttendeeYn == 'Y'}">일정 참석 · 공유 요청</c:when>
+                                    <c:when test="${share.contentType == 'CALENDAR'}">일정 공유 요청</c:when>
+                                    <c:otherwise>${share.contentType} 공유 요청</c:otherwise>
                                 </c:choose>
                             </span>
                             <h3><c:out value="${share.contentTitle}"/></h3>
                         </div>
-                        <p><strong><c:out value="${share.requesterName}"/></strong>님이 <strong><c:out value="${share.targetName}"/></strong>에게 공유 요청을 보냈습니다.</p>
+                        <p>
+                            <c:choose>
+                                <c:when test="${share.contentType == 'CALENDAR' && share.calendarAttendeeYn == 'Y' && share.permissionType == 'EDIT'}">
+                                    <strong><c:out value="${share.requesterName}"/></strong>님이 이 일정에 참석자로 추가하고, 편집 권한이 포함된 공유 요청을 보냈습니다.
+                                </c:when>
+                                <c:when test="${share.contentType == 'CALENDAR' && share.calendarAttendeeYn == 'Y'}">
+                                    <strong><c:out value="${share.requesterName}"/></strong>님이 이 일정에 참석자로 추가하고, 공유 요청을 보냈습니다.
+                                </c:when>
+                                <c:when test="${share.contentType == 'CALENDAR' && share.permissionType == 'EDIT'}">
+                                    <strong><c:out value="${share.requesterName}"/></strong>님이 편집 권한이 포함된 일정 공유 요청을 보냈습니다.
+                                </c:when>
+                                <c:otherwise>
+                                    <strong><c:out value="${share.requesterName}"/></strong>님이 공유 요청을 보냈습니다.
+                                </c:otherwise>
+                            </c:choose>
+                        </p>
+                        <c:if test="${share.contentType == 'CALENDAR'}">
+                            <div class="request-detail-lines">
+                                <div class="request-detail-line">
+                                    <span class="request-detail-label">일시</span>
+                                    <span class="request-detail-value">
+                                        <c:choose>
+                                            <c:when test="${not empty share.calendarStartDt}">
+                                                <c:out value="${share.calendarStartDt}"/>
+                                                <c:if test="${not empty share.calendarEndDt}"> - <c:out value="${share.calendarEndDt}"/></c:if>
+                                            </c:when>
+                                            <c:otherwise>일시 정보 없음</c:otherwise>
+                                        </c:choose>
+                                    </span>
+                                </div>
+                                <div class="request-detail-line">
+                                    <span class="request-detail-label">장소</span>
+                                    <span class="request-detail-value">
+                                        <c:choose>
+                                            <c:when test="${not empty share.calendarLocationText}"><c:out value="${share.calendarLocationText}"/></c:when>
+                                            <c:when test="${not empty share.calendarLocationAddress}"><c:out value="${share.calendarLocationAddress}"/></c:when>
+                                            <c:otherwise>장소 없음</c:otherwise>
+                                        </c:choose>
+                                    </span>
+                                </div>
+                            </div>
+                        </c:if>
                         <div class="request-meta">
-                            <span class="request-chip"><c:out value="${share.targetType}"/></span>
-                            <span class="request-chip">${share.permissionType == 'EDIT' ? '편집 가능' : '보기'}</span>
-                            <span class="request-chip is-pending">대기중</span>
+                            <c:if test="${share.calendarAttendeeYn == 'Y'}"><span class="request-chip is-attendee">참석자</span></c:if>
+                            <span class="request-chip">
+                                <c:choose>
+                                    <c:when test="${share.targetType == 'USER'}">친구</c:when>
+                                    <c:when test="${share.targetType == 'WS'}">그룹</c:when>
+                                    <c:when test="${share.targetType == 'PROJ'}">프로젝트</c:when>
+                                    <c:otherwise><c:out value="${share.targetType}"/></c:otherwise>
+                                </c:choose>
+                            </span>
+                            <c:if test="${share.permissionType == 'EDIT'}"><span class="request-chip is-edit">편집 가능</span></c:if>
+                            <span class="request-chip is-pending">수락 대기</span>
                         </div>
+                        <c:if test="${share.contentType == 'CALENDAR'}">
+                            <p class="request-guide">
+                                <c:choose>
+                                    <c:when test="${share.permissionType == 'EDIT'}">공유 요청을 수락하면 이 일정을 편집할 수 있습니다.</c:when>
+                                    <c:otherwise>공유 요청을 수락하면 이 일정을 내 캘린더에서 확인할 수 있습니다.</c:otherwise>
+                                </c:choose>
+                            </p>
+                        </c:if>
                     </div>
                     <div class="btn-group">
                         <button type="button" class="btn btn-accept" onclick="respondShareRequest(${share.shareId}, 'ACCEPTED')">수락</button>
@@ -223,15 +290,31 @@
                                 <c:choose>
                                     <c:when test="${share.contentType == 'PHOTO'}">사진 공유</c:when>
                                     <c:when test="${share.contentType == 'NOTE'}">노트 공유</c:when>
+                                    <c:when test="${share.contentType == 'CALENDAR'}">일정 공유</c:when>
                                     <c:otherwise>${share.contentType} 공유</c:otherwise>
                                 </c:choose>
                             </span>
                             <h3><c:out value="${share.contentTitle}"/></h3>
                         </div>
-                        <p><strong><c:out value="${share.targetName}"/></strong>에게 공유 요청을 보냈습니다.</p>
+                        <p>
+                            <strong><c:out value="${share.targetName}"/></strong>에게
+                            <c:choose>
+                                <c:when test="${share.contentType == 'CALENDAR' && share.calendarAttendeeYn == 'Y' && share.permissionType == 'EDIT'}">참석자 추가와 편집 권한이 포함된 공유 요청을 보냈습니다.</c:when>
+                                <c:when test="${share.contentType == 'CALENDAR' && share.calendarAttendeeYn == 'Y'}">참석자 추가와 공유 요청을 보냈습니다.</c:when>
+                                <c:when test="${share.permissionType == 'EDIT'}">편집 권한이 포함된 공유 요청을 보냈습니다.</c:when>
+                                <c:otherwise>공유 요청을 보냈습니다.</c:otherwise>
+                            </c:choose>
+                        </p>
+                        <c:if test="${share.contentType == 'CALENDAR'}">
+                            <div class="request-detail-lines">
+                                <div class="request-detail-line"><span class="request-detail-label">일시</span><span class="request-detail-value"><c:out value="${empty share.calendarStartDt ? '일시 정보 없음' : share.calendarStartDt}"/><c:if test="${not empty share.calendarEndDt}"> - <c:out value="${share.calendarEndDt}"/></c:if></span></div>
+                                <div class="request-detail-line"><span class="request-detail-label">장소</span><span class="request-detail-value"><c:choose><c:when test="${not empty share.calendarLocationText}"><c:out value="${share.calendarLocationText}"/></c:when><c:when test="${not empty share.calendarLocationAddress}"><c:out value="${share.calendarLocationAddress}"/></c:when><c:otherwise>장소 없음</c:otherwise></c:choose></span></div>
+                            </div>
+                        </c:if>
                         <div class="request-meta">
-                            <span class="request-chip"><c:out value="${share.targetType}"/></span>
-                            <span class="request-chip">${share.permissionType == 'EDIT' ? '편집 가능' : '보기'}</span>
+                            <c:if test="${share.calendarAttendeeYn == 'Y'}"><span class="request-chip is-attendee">참석자</span></c:if>
+                            <span class="request-chip"><c:choose><c:when test="${share.targetType == 'USER'}">친구</c:when><c:when test="${share.targetType == 'WS'}">그룹</c:when><c:when test="${share.targetType == 'PROJ'}">프로젝트</c:when><c:otherwise><c:out value="${share.targetType}"/></c:otherwise></c:choose></span>
+                            <c:if test="${share.permissionType == 'EDIT'}"><span class="request-chip is-edit">편집 가능</span></c:if>
                             <c:choose>
                                 <c:when test="${share.shareStatus == 'PENDING'}"><span class="request-chip is-pending">대기중</span></c:when>
                                 <c:when test="${share.shareStatus == 'ACCEPTED'}"><span class="request-chip is-accepted">공유됨</span></c:when>
@@ -263,15 +346,30 @@
                                 <c:choose>
                                     <c:when test="${share.contentType == 'PHOTO'}">사진 공유</c:when>
                                     <c:when test="${share.contentType == 'NOTE'}">노트 공유</c:when>
+                                    <c:when test="${share.contentType == 'CALENDAR'}">일정 공유</c:when>
                                     <c:otherwise>${share.contentType} 공유</c:otherwise>
                                 </c:choose>
                             </span>
                             <h3><c:out value="${share.contentTitle}"/></h3>
                         </div>
-                        <p><strong><c:out value="${share.requesterName}"/></strong>님의 공유 요청입니다.</p>
+                        <p>
+                            <c:choose>
+                                <c:when test="${share.contentType == 'CALENDAR' && share.calendarAttendeeYn == 'Y' && share.permissionType == 'EDIT'}"><strong><c:out value="${share.requesterName}"/></strong>님의 참석자 추가와 편집 권한 공유 요청입니다.</c:when>
+                                <c:when test="${share.contentType == 'CALENDAR' && share.calendarAttendeeYn == 'Y'}"><strong><c:out value="${share.requesterName}"/></strong>님의 참석자 추가와 공유 요청입니다.</c:when>
+                                <c:when test="${share.permissionType == 'EDIT'}"><strong><c:out value="${share.requesterName}"/></strong>님의 편집 권한 공유 요청입니다.</c:when>
+                                <c:otherwise><strong><c:out value="${share.requesterName}"/></strong>님의 공유 요청입니다.</c:otherwise>
+                            </c:choose>
+                        </p>
+                        <c:if test="${share.contentType == 'CALENDAR'}">
+                            <div class="request-detail-lines">
+                                <div class="request-detail-line"><span class="request-detail-label">일시</span><span class="request-detail-value"><c:out value="${empty share.calendarStartDt ? '일시 정보 없음' : share.calendarStartDt}"/><c:if test="${not empty share.calendarEndDt}"> - <c:out value="${share.calendarEndDt}"/></c:if></span></div>
+                                <div class="request-detail-line"><span class="request-detail-label">장소</span><span class="request-detail-value"><c:choose><c:when test="${not empty share.calendarLocationText}"><c:out value="${share.calendarLocationText}"/></c:when><c:when test="${not empty share.calendarLocationAddress}"><c:out value="${share.calendarLocationAddress}"/></c:when><c:otherwise>장소 없음</c:otherwise></c:choose></span></div>
+                            </div>
+                        </c:if>
                         <div class="request-meta">
-                            <span class="request-chip"><c:out value="${share.targetType}"/></span>
-                            <span class="request-chip">${share.permissionType == 'EDIT' ? '편집 가능' : '보기'}</span>
+                            <c:if test="${share.calendarAttendeeYn == 'Y'}"><span class="request-chip is-attendee">참석자</span></c:if>
+                            <span class="request-chip"><c:choose><c:when test="${share.targetType == 'USER'}">친구</c:when><c:when test="${share.targetType == 'WS'}">그룹</c:when><c:when test="${share.targetType == 'PROJ'}">프로젝트</c:when><c:otherwise><c:out value="${share.targetType}"/></c:otherwise></c:choose></span>
+                            <c:if test="${share.permissionType == 'EDIT'}"><span class="request-chip is-edit">편집 가능</span></c:if>
                             <c:choose>
                                 <c:when test="${share.shareStatus == 'ACCEPTED'}"><span class="request-chip is-accepted">공유됨</span></c:when>
                                 <c:when test="${share.shareStatus == 'REJECTED'}"><span class="request-chip is-rejected">거절됨</span></c:when>

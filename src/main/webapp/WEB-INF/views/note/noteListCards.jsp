@@ -56,6 +56,9 @@
                                     <h3 class="nl-card-title">
                                         <span class="nl-title-icon" aria-hidden="true"><c:out value="${empty note.icon ? '📝' : note.icon}" /></span>
                                         <span class="nl-title-text"><c:out value="${empty note.noteTitle ? '제목 없음' : note.noteTitle}" /></span>
+                                        <c:if test="${scope eq 'TRASH'}">
+                                            <span class="nl-trash-retention-badge ${note.trashRemainingDays le 1 ? 'is-urgent' : ''}"><c:out value="${note.trashRemainingLabel}" /></span>
+                                        </c:if>
                                         <c:if test="${not (scope eq 'FRIEND' and note.scopeType eq 'PRIVATE' and not note.ownedByMe)}">
                                             <span class="nl-scope-badge nl-title-scope ${note.scopeType eq 'PRIVATE' and not note.ownedByMe ? 'nl-scope-FRIEND' : 'nl-scope-'}${note.scopeType eq 'PRIVATE' and not note.ownedByMe ? '' : note.scopeType}">
                                                 <c:choose>
@@ -105,8 +108,6 @@
                                         <c:choose>
                                             <c:when test="${note.scopeType eq 'PRIVATE' and not note.ownedByMe}">
                                                 <strong><c:out value="${empty note.userName ? '알 수 없음' : note.userName}" /></strong>
-                                                <span>/</span>
-                                                <span><c:out value="${empty note.folderPath ? '미분류' : note.folderPath}" /></span>
                                             </c:when>
                                             <c:when test="${note.scopeType eq 'WS'}">
                                                 <strong><c:out value="${empty note.workspaceName ? '그룹' : note.workspaceName}" /></strong>

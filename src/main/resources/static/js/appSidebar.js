@@ -32,6 +32,27 @@
 
     function closeMobileSidebar() {
         document.body.classList.remove('moyo-app-sidebar-mobile-open');
+        const backdrop = document.getElementById('moyoAppSidebarBackdrop');
+        if (backdrop) {
+            backdrop.style.display = '';
+            backdrop.style.opacity = '';
+            backdrop.style.pointerEvents = '';
+        }
+    }
+
+    function normalizeSidebarBackdrop() {
+        const isMobile = window.innerWidth <= 900;
+        const isOpen = document.body.classList.contains('moyo-app-sidebar-mobile-open');
+        const backdrop = document.getElementById('moyoAppSidebarBackdrop');
+
+        if (!isMobile || !isOpen) {
+            document.body.classList.remove('moyo-app-sidebar-mobile-open');
+            if (backdrop) {
+                backdrop.style.display = '';
+                backdrop.style.opacity = '';
+                backdrop.style.pointerEvents = '';
+            }
+        }
     }
 
     function init() {
@@ -39,6 +60,7 @@
         if (!sidebar) return;
 
         document.body.classList.add('moyo-app-sidebar-enabled');
+        normalizeSidebarBackdrop();
 
         const params = new URLSearchParams(window.location.search);
         const currentPath = window.location.pathname;
@@ -125,7 +147,10 @@
             });
         });
 
+        window.addEventListener('pageshow', normalizeSidebarBackdrop);
+
         window.addEventListener('resize', function() {
+            normalizeSidebarBackdrop();
             if (window.innerWidth > 900) {
                 closeMobileSidebar();
                 setDesktopCollapsed(localStorage.getItem(STORAGE_COLLAPSED) === 'true');

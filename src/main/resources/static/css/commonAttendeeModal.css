@@ -1,0 +1,274 @@
+/* MOYO common attendee selector
+   - Shares the same visual language as commonShareModal
+   - Used by calendar now, reusable for vote/meeting/task later
+*/
+.moyo-event-selected-tags {
+    width: 100%;
+    min-width: 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 7px;
+    margin-top: 8px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    overflow: visible;
+    box-sizing: border-box;
+}
+
+.moyo-event-selected-tags[hidden] {
+    display: none !important;
+}
+
+.moyo-event-selected-tags .note-share-chip,
+.moyo-attendee-selected-tags .note-share-chip,
+.moyo-attendee-chip {
+    flex: 0 0 auto;
+    max-width: 172px;
+    height: 30px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 6px 3px 4px;
+    border-radius: 999px;
+    border: 1px solid #cfe0ff;
+    background: #fff;
+    color: #1f2d45;
+    box-shadow: none;
+}
+
+.moyo-event-selected-tags .note-share-chip.note-share-type-ws,
+.moyo-attendee-selected-tags .note-share-chip.note-share-type-ws,
+.moyo-attendee-chip.note-share-type-ws {
+    --share-accent: #59d2c2;
+    --share-soft: #eafffb;
+    border-color: rgba(89, 210, 194, .48);
+    background: #f8fffd;
+}
+
+.moyo-event-selected-tags .note-share-chip.note-share-type-proj,
+.moyo-attendee-selected-tags .note-share-chip.note-share-type-proj,
+.moyo-attendee-chip.note-share-type-proj {
+    --share-accent: #7d6bff;
+    --share-soft: #f2efff;
+    border-color: rgba(125, 107, 255, .36);
+    background: #fbfaff;
+}
+
+.moyo-event-selected-tags .note-share-chip .note-write-share-avatar,
+.moyo-event-selected-tags .note-share-chip .note-share-avatar,
+.moyo-attendee-selected-tags .note-share-chip .note-write-share-avatar,
+.moyo-attendee-selected-tags .note-share-chip .note-share-avatar,
+.moyo-attendee-chip .note-write-share-avatar,
+.moyo-attendee-chip .note-share-avatar {
+    flex: 0 0 24px;
+    width: 24px;
+    height: 24px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border-radius: 12px;
+    background: var(--share-soft, #eef4ff);
+    color: var(--share-accent, #4f7cff);
+    font-size: 10px;
+    font-weight: 900;
+    line-height: 1;
+    box-shadow: none;
+}
+
+.moyo-event-selected-tags .note-share-chip.note-share-type-user .note-share-avatar,
+.moyo-attendee-selected-tags .note-share-chip.note-share-type-user .note-share-avatar,
+.moyo-attendee-chip.note-share-type-user .note-share-avatar,
+.note-write-share-card.note-share-type-user .note-share-avatar {
+    border-radius: 999px;
+}
+
+.moyo-event-selected-tags .note-share-chip.note-share-type-ws .note-share-avatar,
+.moyo-event-selected-tags .note-share-chip.note-share-type-proj .note-share-avatar,
+.moyo-attendee-selected-tags .note-share-chip.note-share-type-ws .note-share-avatar,
+.moyo-attendee-selected-tags .note-share-chip.note-share-type-proj .note-share-avatar,
+.moyo-attendee-chip.note-share-type-ws .note-share-avatar,
+.moyo-attendee-chip.note-share-type-proj .note-share-avatar,
+.note-write-share-card.note-share-type-ws .note-share-avatar,
+.note-write-share-card.note-share-type-proj .note-share-avatar {
+    border-radius: 12px;
+}
+
+.moyo-event-selected-tags .note-share-chip .note-write-share-avatar img,
+.moyo-event-selected-tags .note-share-chip .note-share-avatar img,
+.moyo-attendee-selected-tags .note-share-chip .note-write-share-avatar img,
+.moyo-attendee-selected-tags .note-share-chip .note-share-avatar img,
+.moyo-attendee-chip .note-write-share-avatar img,
+.moyo-attendee-chip .note-share-avatar img {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+    border-radius: inherit;
+}
+
+.moyo-event-selected-tags .note-share-chip-name,
+.moyo-attendee-selected-tags .note-share-chip-name,
+.moyo-attendee-chip-name {
+    max-width: 108px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+}
+
+.moyo-event-selected-tags .note-share-chip-remove,
+.moyo-attendee-selected-tags .note-share-chip-remove,
+.moyo-attendee-chip-remove {
+    flex: 0 0 18px;
+    width: 18px;
+    height: 18px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    border-radius: 999px;
+    background: rgba(148, 163, 184, 0.12);
+    color: #64748b;
+    font-size: 14px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.moyo-event-selected-tags .note-share-chip-remove:hover,
+.moyo-attendee-selected-tags .note-share-chip-remove:hover,
+.moyo-attendee-chip-remove:hover {
+    background: rgba(79, 124, 255, 0.13);
+    color: #3467df;
+}
+
+#calendarAttendeeModal .note-write-share-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+#calendarAttendeeModal .note-write-share-body > div {
+    min-height: 0;
+    margin: 0;
+}
+
+#calendarAttendeeModal .note-write-share-body > div + div {
+    margin-top: 0;
+}
+
+#calendarAttendeeModal .note-write-share-list {
+    flex: 1 1 220px;
+    min-height: 180px;
+    max-height: 250px;
+}
+
+#calendarAttendeeModal .moyo-attendee-selected-tags {
+    flex: 0 0 auto;
+    min-height: 44px;
+    max-height: 118px;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-content: flex-start;
+    align-items: flex-start;
+    justify-content: flex-start;
+    gap: 7px;
+    padding: 7px 10px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    border-radius: 16px;
+    border: 1px solid #dbe8ff;
+    background: rgba(248, 251, 255, 0.86);
+    scrollbar-width: thin;
+}
+
+#calendarAttendeeModal .note-share-permission-scope-toggle {
+    margin-left: auto;
+}
+
+#calendarAttendeeModal .moyo-attendee-selected-tags .note-write-share-empty {
+    width: 100%;
+    min-height: 28px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#calendarAttendeeModal .note-write-share-card.note-share-type-ws,
+#calendarAttendeeModal .note-write-share-card.note-share-scope-ws-member {
+    --share-accent: #59d2c2;
+    --share-soft: #eafffb;
+}
+
+#calendarAttendeeModal .note-write-share-card.note-share-type-proj,
+#calendarAttendeeModal .note-write-share-card.note-share-scope-proj-member {
+    --share-accent: #7d6bff;
+    --share-soft: #f2efff;
+}
+
+/* v2 cleanup: 참석자 공통화 후 선택 태그/작성폼 표시 보정 */
+#calendarAttendeeModal .note-write-share-list {
+    min-height: 190px;
+    max-height: 250px;
+}
+
+#calendarAttendeeModal .moyo-attendee-selected-tags {
+    min-height: 48px;
+    max-height: 112px;
+    padding: 8px 10px;
+    display: flex;
+    flex-wrap: wrap;
+    align-content: flex-start;
+    align-items: flex-start;
+    justify-content: flex-start;
+    gap: 7px;
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
+.moyo-event-selected-tags.moyo-attendee-form-tags {
+    margin-top: 8px;
+    padding: 0;
+    min-height: 0;
+    max-height: none;
+    border: 0 !important;
+    background: transparent !important;
+    overflow: visible !important;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 7px;
+}
+
+.moyo-event-selected-tags.moyo-attendee-form-tags .note-share-chip {
+    max-width: 180px;
+}
+
+.moyo-event-selected-tags.moyo-attendee-form-tags .note-share-chip-name,
+#calendarAttendeeModal .moyo-attendee-selected-tags .note-share-chip-name {
+    max-width: 116px;
+}
+
+#calendarAttendeeModal .note-write-share-card.note-share-scope-ws-member,
+#calendarAttendeeModal .note-write-share-card.note-share-scope-proj-member {
+    border-radius: 16px;
+}
+
+#calendarAttendeeModal .note-write-share-card.note-share-scope-ws-member .note-share-avatar,
+#calendarAttendeeModal .note-write-share-card.note-share-scope-proj-member .note-share-avatar {
+    border-radius: 999px;
+}
+
+#calendarAttendeeModal .note-write-share-card.note-share-type-ws .note-share-avatar,
+#calendarAttendeeModal .note-write-share-card.note-share-type-proj .note-share-avatar {
+    border-radius: 12px;
+}

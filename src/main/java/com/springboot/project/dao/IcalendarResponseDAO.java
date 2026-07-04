@@ -10,6 +10,7 @@ import com.springboot.project.dto.calendarResponseDTO;
 
 @Mapper
 public interface IcalendarResponseDAO {
+    void ensureCalendarEventTypeColumn();
 	List<calendarResponseDTO> getMonthlyEvents(
 	        @Param("userId") Long userId,
 	        @Param("wsId") Long wsId,
@@ -26,7 +27,12 @@ public interface IcalendarResponseDAO {
     int checkHolidayExists(String hldDate);
     
     void registerEvent(calendarResponseDTO dto);
+    List<Long> selectEventIdsForDelete(Map<String, Object> params);
     int deleteEvent(Map<String, Object> params);
+    int deleteEventAttendeesByEventIds(@Param("eventIds") List<Long> eventIds);
+    int deleteEventExceptionsByEventIds(@Param("eventIds") List<Long> eventIds);
+    int insertEventException(Map<String, Object> params);
+    int endRecurringEventsBefore(Map<String, Object> params);
     int deleteEventWithOption(Map<String, Object> params);
     String getRecurGroupStartDate(String recurGroupId);
     int updateEventDate(Map<String, Object> params);
@@ -38,4 +44,25 @@ public interface IcalendarResponseDAO {
     List<Map<String, Object>> selectUserWorkspaces(long userId); // int -> long
     List<Map<String, Object>> selectUserProjects(long userId);
     String checkUserRole(Long wsId, Long userId);
+
+    void ensureCalendarDetailColumns();
+
+    Map<String, Object> selectEventDetailForView(@Param("eventId") Long eventId, @Param("userId") Long userId);
+
+    int countEventEditPermission(@Param("eventId") Long eventId, @Param("userId") Long userId);
+
+    void ensureCalendarAttendeeTable();
+
+    List<Long> selectEventAttendeeIds(@Param("eventId") Long eventId);
+
+    void deleteEventAttendees(@Param("eventId") Long eventId);
+
+    int insertEventAttendee(@Param("eventId") Long eventId, @Param("userId") Long userId);
+
+    List<Map<String, Object>> selectEventAttendeesForView(@Param("eventId") Long eventId);
+
+    void ensureCalendarReminderColumns();
+    List<Map<String, Object>> selectDueCalendarReminders();
+    int insertCalendarReminderAlarms(Map<String, Object> params);
+    int markCalendarReminderSent(@Param("eventId") Long eventId);
 }

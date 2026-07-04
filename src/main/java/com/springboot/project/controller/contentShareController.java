@@ -67,6 +67,30 @@ public class contentShareController {
         }
     }
 
+
+    @PostMapping("/save-bulk")
+    public Map<String, Object> saveBulk(@RequestParam("contentType") String contentType,
+                                        @RequestParam("contentIds") List<Long> contentIds,
+                                        @RequestParam("targetType") List<String> targetTypes,
+                                        @RequestParam("targetId") List<Long> targetIds,
+                                        @RequestParam(value = "permissionType", required = false) List<String> permissionTypes,
+                                        @RequestParam(value = "shareMode", required = false) String shareMode,
+                                        HttpSession session) {
+        usersDto user = getLoginUser(session);
+        if (user == null) return fail("로그인이 필요합니다.");
+        try {
+            int saved = contentShareService.saveSharesBulk(contentType, contentIds, targetTypes, targetIds, permissionTypes, user.getUserId(), shareMode);
+            Map<String, Object> result = new HashMap<>();
+            result.put("success", true);
+            result.put("savedCount", saved);
+            result.put("contentCount", contentIds == null ? 0 : contentIds.size());
+            result.put("targetCount", targetIds == null ? 0 : targetIds.size());
+            return result;
+        } catch (RuntimeException e) {
+            return fail(e.getMessage());
+        }
+    }
+
     @PostMapping("/delete")
     public Map<String, Object> delete(@RequestParam("shareId") Long shareId, HttpSession session) {
         usersDto user = getLoginUser(session);
