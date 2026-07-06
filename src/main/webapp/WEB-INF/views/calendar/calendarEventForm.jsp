@@ -1896,7 +1896,7 @@ button:disabled{cursor:not-allowed;opacity:.55;}
                                 <div class="moyo-public-setting">
                                     <label class="moyo-public-check" for="moyoPublicCheckbox">
                                         <input type="checkbox" id="moyoPublicCheckbox" aria-label="MOYO 공개 여부">
-                                        <img class="moyo-public-mascot" src="${pageContext.request.contextPath}/brand/moyo_feed_mark.png" alt="" aria-hidden="true" onerror="this.style.display='none';">
+                                        <img class="moyo-public-mascot" src="${pageContext.request.contextPath}/brand/moyo_mark.png?v=moyo-mark-v34" alt="" aria-hidden="true" onerror="this.style.display='none';">
                                         <span>MOYO 공개</span>
                                     </label>
                                     <div class="moyo-public-setting-copy">

@@ -210,7 +210,7 @@
     }
 
     function moyoMascotPath() {
-        return `${contextPath}/brand/moyo_feed_mark.png`;
+        return `${contextPath}/brand/moyo_mark.png?v=moyo-mark-v34`;
     }
 
     function visibilityBadgeMarkup(post) {

@@ -2,7 +2,7 @@ let sessionUserId, calendar;
 
     document.addEventListener('DOMContentLoaded', function() {
         const contextPath = window.MOYO_CALENDAR_CONTEXT_PATH || '';
-        const moyoMascotPath = contextPath + '/brand/moyo_feed_mark.png';
+        const moyoMascotPath = contextPath + '/brand/moyo_mark.png?v=moyo-mark-v34';
         sessionUserId = window.MOYO_CALENDAR_SESSION_USER_ID || '';
         const currentUserMeta = {
             id: sessionUserId,

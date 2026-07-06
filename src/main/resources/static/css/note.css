@@ -3844,3 +3844,24 @@ body.note-page-body .note-editor-canvas .ck-content figure.table {
   max-width: 100% !important;
   overflow-x: auto !important;
 }
+
+
+/* MOYO brand mascot on note share actions */
+body.note-page-body .note-meta-icon--moyo {
+  width: 21px;
+  height: 21px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  line-height: 1;
+}
+body.note-page-body .note-meta-icon--moyo img {
+  width: 21px;
+  height: 21px;
+  display: block;
+  object-fit: contain;
+}
+body.note-page-body .note-detail-action-btn .note-meta-icon--moyo {
+  transform: translateY(-1px);
+}

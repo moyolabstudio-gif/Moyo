@@ -109,6 +109,7 @@
                     <select id="photoFormVisibility"></select>
                     <label class="photo-moyo-public-check" id="photoFormMoyoBox">
                         <input type="checkbox" id="photoFormMoyoPublic">
+                        <img class="photo-moyo-public-mascot" src="${pageContext.request.contextPath}/brand/moyo_mark.png?v=moyo-mark-v34" alt="" aria-hidden="true" onerror="this.style.display='none';">
                         <span class="photo-feed-public-copy">
                             <strong><span class="photo-feed-public-text">MOYO 공개</span></strong>
                             <small>체크하면 친구들의 MOYO 피드에도 함께 표시됩니다.</small>

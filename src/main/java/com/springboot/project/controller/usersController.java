@@ -56,7 +56,7 @@ public class usersController {
 
 	@PostMapping("/users/join")
 	public String join(usersDto user, HttpSession session) {
-		String email = user.getEmail() == null ? "" : user.getEmail().trim();
+		String email = user.getEmail() == null ? "" : user.getEmail().trim().toLowerCase();
 		String password = user.getPwdHash() == null ? "" : user.getPwdHash().trim();
 
 		if (email.isEmpty() || password.isEmpty()) {
@@ -83,7 +83,14 @@ public class usersController {
 	@PostMapping("/users/completeJoin")
 	public String completeJoin(
 			@org.springframework.web.bind.annotation.RequestParam("userName") String userName,
+			@org.springframework.web.bind.annotation.RequestParam(value = "birthDate", required = false) String birthDate,
+			@org.springframework.web.bind.annotation.RequestParam(value = "birthCalendarType", required = false) String birthCalendarType,
 			@org.springframework.web.bind.annotation.RequestParam(value = "profileImageData", required = false) String profileImageData,
+			@org.springframework.web.bind.annotation.RequestParam(value = "profileOriginalImageData", required = false) String profileOriginalImageData,
+			@org.springframework.web.bind.annotation.RequestParam(value = "profileCropScale", required = false) String profileCropScale,
+			@org.springframework.web.bind.annotation.RequestParam(value = "profileCropX", required = false) String profileCropX,
+			@org.springframework.web.bind.annotation.RequestParam(value = "profileCropY", required = false) String profileCropY,
+			@org.springframework.web.bind.annotation.RequestParam(value = "profileAvatarType", required = false) String profileAvatarType,
 			HttpSession session) {
 		usersDto pendingUser = (usersDto) session.getAttribute("pendingJoinUser");
 		if (pendingUser == null) {
@@ -95,14 +102,40 @@ public class usersController {
 			return "redirect:/users/step2?error=name";
 		}
 
+		String normalizedBirthDate = normalizeBirthDate(birthDate);
+		String normalizedBirthCalendarType = normalizeBirthCalendarType(birthCalendarType);
+		String normalizedAvatarType = normalizeProfileAvatarType(profileAvatarType, profileImageData);
+
 		try {
 			pendingUser.setUserName(trimmedName);
 			pendingUser.setStatus("ACTIVE");
 			pendingUser.setUserRole("USER");
-			pendingUser.setProfileImagePath(accountProfileImageService.saveCroppedImage(profileImageData));
+			pendingUser.setBirthDate(normalizedBirthDate);
+			pendingUser.setBirthCalendarType(normalizedBirthCalendarType);
+			pendingUser.setBirthPublicYn("Y");
+			pendingUser.setProfileAvatarType(normalizedAvatarType);
+			pendingUser.setProfileCropScale(normalizeDouble(profileCropScale));
+			pendingUser.setProfileCropX(normalizeDouble(profileCropX));
+			pendingUser.setProfileCropY(normalizeDouble(profileCropY));
+
+			if ("IMAGE".equals(normalizedAvatarType)) {
+				String originalImageData = hasText(profileOriginalImageData) ? profileOriginalImageData : profileImageData;
+				pendingUser.setProfileOriginalImagePath(accountProfileImageService.saveOriginalImage(originalImageData));
+				pendingUser.setProfileImagePath(accountProfileImageService.saveCroppedImage(profileImageData));
+			} else {
+				pendingUser.setProfileOriginalImagePath(null);
+				pendingUser.setProfileImagePath(null);
+				pendingUser.setProfileCropScale(null);
+				pendingUser.setProfileCropX(null);
+				pendingUser.setProfileCropY(null);
+			}
+
 			userService.registerUser(pendingUser);
 
-			usersDto fullUserInfo = userService.login(pendingUser);
+			usersDto fullUserInfo = userService.findById(pendingUser.getUserId());
+			if (fullUserInfo == null) {
+				fullUserInfo = userService.login(pendingUser);
+			}
 			session.removeAttribute("pendingJoinUser");
 			session.setAttribute("user", fullUserInfo);
 			return "redirect:/calendar";
@@ -161,8 +194,40 @@ public class usersController {
 	        // 2. 서비스 호출 (DB 수정)
 	        userService.updateProfile(updateDto);
 	        
-	        // 3. 세션 갱신 (변경된 이름 반영)
-	        currentUser.setUserName(updateDto.getUserName());
+	        // 3. 세션 갱신 (전달된 값만 반영)
+	        if (updateDto.getUserName() != null) {
+	            currentUser.setUserName(updateDto.getUserName());
+	        }
+	        if (updateDto.getProfileImagePath() != null) {
+	            currentUser.setProfileImagePath(updateDto.getProfileImagePath());
+	        }
+	        if (updateDto.getProfileOriginalImagePath() != null) {
+	            currentUser.setProfileOriginalImagePath(updateDto.getProfileOriginalImagePath());
+	        }
+	        if (updateDto.getProfileCropScale() != null) {
+	            currentUser.setProfileCropScale(updateDto.getProfileCropScale());
+	        }
+	        if (updateDto.getProfileCropX() != null) {
+	            currentUser.setProfileCropX(updateDto.getProfileCropX());
+	        }
+	        if (updateDto.getProfileCropY() != null) {
+	            currentUser.setProfileCropY(updateDto.getProfileCropY());
+	        }
+	        if (updateDto.getProfileAvatarType() != null) {
+	            currentUser.setProfileAvatarType(updateDto.getProfileAvatarType());
+	        }
+	        if (updateDto.getBirthDate() != null) {
+	            currentUser.setBirthDate(updateDto.getBirthDate());
+	        }
+	        if (updateDto.getBirthCalendarType() != null) {
+	            currentUser.setBirthCalendarType(updateDto.getBirthCalendarType());
+	        }
+	        if (updateDto.getBirthPublicYn() != null) {
+	            currentUser.setBirthPublicYn(updateDto.getBirthPublicYn());
+	        }
+	        if (updateDto.getStatus() != null) {
+	            currentUser.setStatus(updateDto.getStatus());
+	        }
 	        session.setAttribute("user", currentUser); 
 	        
 	        map.put("status", "success");
@@ -195,7 +260,41 @@ public class usersController {
 	    return map;
 	}
 	
-	
+	private String normalizeBirthDate(String birthDate) {
+		if (birthDate == null) {
+			return null;
+		}
+		String value = birthDate.trim();
+		if (value.isEmpty()) {
+			return null;
+		}
+		return value.matches("\\d{4}-\\d{2}-\\d{2}") ? value : null;
+	}
+
+	private String normalizeBirthCalendarType(String birthCalendarType) {
+		String value = birthCalendarType == null ? "" : birthCalendarType.trim().toUpperCase();
+		return "LUNAR".equals(value) ? "LUNAR" : "SOLAR";
+	}
+
+	private String normalizeProfileAvatarType(String profileAvatarType, String profileImageData) {
+		return hasText(profileImageData) ? "IMAGE" : "DEFAULT";
+	}
+
+	private boolean hasText(String value) {
+		return value != null && !value.trim().isEmpty();
+	}
+
+	private Double normalizeDouble(String value) {
+		if (value == null || value.trim().isEmpty()) {
+			return null;
+		}
+		try {
+			return Double.valueOf(value.trim());
+		} catch (NumberFormatException e) {
+			return null;
+		}
+	}
+
 	// 예시: UserController에 추가할 가짜/진짜 유저 API 리스트업
 	@GetMapping("/users/api/list")
 	@ResponseBody

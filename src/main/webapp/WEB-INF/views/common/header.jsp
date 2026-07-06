@@ -1,11 +1,12 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
 
-<link rel="icon" type="image/png" href="${pageContext.request.contextPath}/brand/moyo_logo.png">
+<link rel="icon" type="image/png" href="${pageContext.request.contextPath}/brand/moyo_logo.png?v=moyo-logo-clear">
 
 <link rel="stylesheet" href="${pageContext.request.contextPath}/css/moyoModal.css">
 
-<link rel="stylesheet" href="${pageContext.request.contextPath}/css/appSidebar.css?v=poll-layout-shell-v3">
+<link rel="stylesheet" href="${pageContext.request.contextPath}/css/appSidebar.css?v=header-profile-safe-20260706">
 
 <style>
     .moyo-header {
@@ -17,6 +18,27 @@
     .moyo-header-inner {
         width:100%; padding:0 18px 0 12px; margin:0;
         display:flex; align-items:center; justify-content:space-between; gap:22px; box-sizing:border-box;
+    }
+    .moyo-header.moyo-header-guest {
+        border-bottom:1px solid rgba(231,238,246,.92);
+        box-shadow:0 8px 22px rgba(24,40,72,.035);
+    }
+    .moyo-header.moyo-header-guest .moyo-header-inner {
+        width:min(1320px, calc(100% - 56px));
+        margin:0 auto;
+        padding:0;
+    }
+    .moyo-header.moyo-header-guest .moyo-logo-img {
+        height:46px;
+        max-width:126px;
+    }
+    .moyo-header.moyo-header-guest .guest-menu {
+        gap:12px;
+    }
+    .moyo-header.moyo-header-guest .guest-menu a {
+        min-height:40px;
+        padding:0 17px;
+        border-radius:13px;
     }
     .moyo-header-left { display:flex; align-items:center; gap:13px; min-width:0; height:100%; }
     .moyo-logo { display:flex; align-items:center; justify-content:center; flex-shrink:0; height:100%; }
@@ -30,34 +52,75 @@
         overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
         transform:translateY(1px);
     }
-    .moyo-main-nav { display:flex; align-items:center; gap:20px; min-width:0; }
-    .nav-menu { display:flex; align-items:center; gap:22px; }
+    .moyo-main-nav { display:flex; align-items:center; gap:18px; min-width:0; }
+    .nav-menu { display:flex; align-items:center; gap:6px; }
     .moyo-nav-link {
-        position:relative; display:inline-flex; align-items:center; gap:7px;
-        color:#344054; text-decoration:none; font-size:13px; font-weight:800;
-        white-space:nowrap; transition:color .18s ease;
+        position:relative; display:inline-flex; align-items:center; justify-content:center; gap:7px;
+        min-height:36px; padding:0 12px; border-radius:999px;
+        color:#344054; text-decoration:none; font-size:13px; font-weight:850;
+        border:1px solid transparent;
+        white-space:nowrap;
+        transition:background .18s ease, color .18s ease, border-color .18s ease, box-shadow .18s ease, transform .18s ease;
     }
-    .moyo-nav-link:hover { color:#2878d0; }
-    .moyo-nav-icon { font-size:15px; line-height:1; }
+    .moyo-nav-link:hover {
+        background:#f7fbff;
+        color:#2878d0;
+        border-color:#e2eefc;
+    }
+    .moyo-nav-link.is-active {
+        background:linear-gradient(180deg, #f7fbff 0%, #eef7ff 100%);
+        color:#2563eb;
+        border-color:#cfe3ff;
+        box-shadow:0 2px 8px rgba(74, 144, 226, .08), inset 0 1px 0 rgba(255,255,255,.88);
+        font-weight:900;
+    }
+    .moyo-nav-link.is-active:hover {
+        background:linear-gradient(180deg, #f4faff 0%, #eaf4ff 100%);
+        color:#1d4ed8;
+        border-color:#bfdbfe;
+    }
+    .moyo-nav-link.is-active .moyo-nav-icon {
+        transform:none;
+        filter:saturate(1.08);
+    }
+    .moyo-nav-icon { font-size:15px; line-height:1; transition:transform .18s ease, filter .18s ease; }
     .user-status {
-        display:flex; align-items:center; gap:24px; padding-left:24px; border-left:1px solid #e7ecf2;
+        display:flex; align-items:center; gap:14px; padding-left:18px; border-left:1px solid #e7ecf2;
     }
     .user-link {
         display:flex; align-items:center; gap:9px; min-width:0;
-        color:#243041; text-decoration:none; transition:color .18s ease;
+        min-height:38px; padding:0 8px 0 4px; border-radius:999px;
+        color:#243041; text-decoration:none; transition:background .18s ease, color .18s ease;
     }
-    .user-link:hover { color:#2878d0; }
+    .user-link:hover { background:#f4f8ff; color:#2878d0; }
     .moyo-header .user-avatar {
         width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+        overflow:hidden;
         background:linear-gradient(135deg, #397BE8 0%, #4A90E2 45%, #39CDB5 100%) !important;
         background-color:transparent !important;
         color:#fff; font-size:14px; font-weight:900; flex-shrink:0;
         box-shadow:0 4px 12px rgba(57,145,216,.24);
     }
+    .moyo-header .user-avatar img {
+        display:block;
+        width:100%;
+        height:100%;
+        object-fit:cover;
+        border-radius:50%;
+    }
+    .moyo-header .user-avatar .user-avatar-fallback {
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        width:100%;
+        height:100%;
+    }
+    .moyo-header .user-avatar.has-profile .user-avatar-fallback { display:none; }
+    .moyo-header .user-avatar.has-profile.no-image .user-avatar-fallback { display:inline-flex; }
     .user-name { max-width:120px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:900; }
     .logout-link {
         display:inline-flex; align-items:center; justify-content:center;
-        margin-left:4px; color:#8a94a3; font-size:12px; font-weight:800; text-decoration:none; white-space:nowrap;
+        min-height:34px; padding:0 4px; color:#9aa4b2; font-size:12px; font-weight:800; text-decoration:none; white-space:nowrap;
     }
     .logout-link:hover { color:#e5484d; }
     .guest-menu { display:flex; align-items:center; gap:10px; }
@@ -81,23 +144,24 @@
         box-shadow:0 12px 24px rgba(67,104,222,.26);
     }
     #alarmBadge {
-        display:none; position:absolute; top:-10px; right:-13px; min-width:16px; height:16px;
+        display:none; position:absolute; top:5px; right:3px; min-width:14px; height:14px;
         padding:0 4px; border-radius:999px; background:#FF4D4F; color:#fff;
-        font-size:10px; font-weight:900; line-height:16px; text-align:center;
-        box-shadow:0 0 0 2px #fff;
+        font-size:9px; font-weight:900; line-height:14px; text-align:center;
+        box-shadow:0 0 0 2px #fff; transform:translate(50%, -30%);
+        pointer-events:none;
     }
     #alarmDropdown.moyo-alarm-dropdown {
         display:none;
         position:absolute;
-        top:38px;
-        right:-18px;
-        width:360px;
+        top:42px;
+        right:2px;
+        width:332px;
         padding:0;
         overflow:hidden;
         border:1px solid #e7edf6;
         border-radius:14px;
         background:#fff;
-        box-shadow:0 14px 34px rgba(15,23,42,.12);
+        box-shadow:0 18px 42px rgba(15,23,42,.15);
         z-index:2200;
         color:#273142;
         cursor:default;
@@ -106,7 +170,7 @@
         content:"";
         position:absolute;
         top:-7px;
-        right:34px;
+        right:16px;
         width:14px;
         height:14px;
         background:#fff;
@@ -120,7 +184,7 @@
         align-items:center;
         justify-content:space-between;
         gap:12px;
-        padding:14px 16px 12px;
+        padding:13px 15px 11px;
         border-bottom:1px solid #eef3f8;
     }
     .moyo-alarm-title {
@@ -130,16 +194,16 @@
     }
     .moyo-alarm-title-icon { display:none; }
     .moyo-alarm-summary {
-        color:#8a96a8;
+        color:#6f7d91;
         font-size:11px;
         font-weight:800;
         white-space:nowrap;
     }
     .moyo-alarm-list {
         list-style:none;
-        padding:8px;
+        padding:6px 7px;
         margin:0;
-        max-height:390px;
+        max-height:340px;
         overflow-y:auto;
     }
     .moyo-alarm-list::-webkit-scrollbar { width:8px; }
@@ -152,9 +216,9 @@
         font-weight:800;
     }
     .moyo-alarm-section-label {
-        padding:8px 8px 6px;
+        padding:8px 8px 5px;
         color:#8a96a8;
-        font-size:11px;
+        font-size:10px;
         font-weight:900;
     }
     .moyo-alarm-request-card {
@@ -162,7 +226,7 @@
         align-items:center;
         justify-content:space-between;
         gap:10px;
-        padding:10px 10px;
+        padding:9px 9px;
         border:1px solid #e7eef7;
         border-radius:12px;
         background:#fff;
@@ -240,8 +304,8 @@
     }
     .moyo-alarm-action-btn:disabled { opacity:.55; cursor:default; box-shadow:none; }
     .moyo-alarm-more {
-        margin:8px 0 2px;
-        padding:0 8px;
+        margin:6px 0 2px;
+        padding:0 7px;
     }
     .moyo-alarm-more a {
         display:flex;
@@ -258,9 +322,9 @@
     .moyo-alarm-item {
         display:flex;
         align-items:center;
-        gap:9px;
-        min-height:44px;
-        padding:9px 10px;
+        gap:8px;
+        min-height:42px;
+        padding:8px 9px;
         border-radius:11px;
         color:#334155;
         cursor:pointer;
@@ -271,9 +335,9 @@
         display:inline-flex;
         align-items:center;
         justify-content:center;
-        flex:0 0 28px;
-        width:28px;
-        height:28px;
+        flex:0 0 27px;
+        width:27px;
+        height:27px;
         border-radius:10px;
         background:#eef5ff;
         color:#397be8;
@@ -296,7 +360,7 @@
         line-height:1.25;
     }
     .moyo-alarm-item-desc {
-        color:#8a96a8;
+        color:#6f7d91;
         font-size:11px;
         font-weight:800;
         line-height:1.2;
@@ -305,7 +369,7 @@
         display:flex;
         align-items:center;
         justify-content:center;
-        padding:8px;
+        padding:7px;
         border-top:1px solid #eef3f8;
         background:#fff;
     }
@@ -323,23 +387,37 @@
     }
     .moyo-alarm-foot-link:hover { background:#eef6ff; color:#286bcb; }
     @media(max-width:1180px) {
-        .nav-menu { gap:16px; }
-        .moyo-main-nav { gap:14px; }
-        .user-status { gap:14px; padding-left:16px; }
+        .nav-menu { gap:4px; }
+        .moyo-main-nav { gap:12px; }
+        .moyo-nav-link { padding:0 9px; }
+        .user-status { gap:10px; padding-left:14px; }
     }
     @media(max-width:980px) {
         .moyo-header-location { display:none; }
         .moyo-header-inner { padding-right:12px; }
+        .moyo-header.moyo-header-guest .moyo-header-inner {
+            width:calc(100% - 40px);
+            padding:0;
+        }
     }
     @media(max-width:720px) {
         .moyo-logo-img { height:40px; max-width:98px; }
         .moyo-nav-link .moyo-nav-label { display:none; }
         .user-name, .logout-link { display:none; }
         .user-status { padding-left:12px; gap:10px; }
+        .moyo-header.moyo-header-guest .moyo-header-inner { width:calc(100% - 28px); }
+        .moyo-header.moyo-header-guest .guest-menu { gap:6px; }
+        .moyo-header.moyo-header-guest .guest-menu a {
+            min-height:36px;
+            padding:0 11px;
+            border-radius:11px;
+            font-size:13px;
+        }
+        .moyo-header.moyo-header-guest .moyo-logo-img { height:41px; max-width:106px; }
     }
 </style>
 
-<header class="moyo-header">
+<header class="moyo-header ${empty sessionScope.user ? 'moyo-header-guest' : 'moyo-header-app'}">
     <div class="moyo-header-inner">
         <div class="moyo-header-left">
             <c:if test="${not empty sessionScope.user}">
@@ -354,14 +432,14 @@
 
             <div class="moyo-logo">
                 <a href="/">
-                    <img src="/brand/moyo_logo.png" alt="MOYO" class="moyo-logo-img"
+                    <img src="${pageContext.request.contextPath}/brand/moyo_logo.png?v=moyo-logo-clear" alt="MOYO" class="moyo-logo-img"
                          onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
                     <span class="moyo-logo-text-fallback">MOYO</span>
                 </a>
             </div>
 
             <c:if test="${not empty sessionScope.user}">
-                <div class="moyo-header-location">일정부터 협업까지, 우리 모두의 공간을 한곳에</div>
+                <div class="moyo-header-location">모이면 더 쉬워지는 일정과 기록</div>
             </c:if>
         </div>
 
@@ -369,19 +447,19 @@
             <c:choose>
                 <c:when test="${not empty sessionScope.user}">
                     <div class="nav-menu">
-                        <a href="/calendar" class="moyo-nav-link">
+                        <a href="/calendar" class="moyo-nav-link" data-nav-key="calendar">
                             <span class="moyo-nav-icon">📅</span>
-                            <span class="moyo-nav-label">내 캘린더</span>
+                            <span class="moyo-nav-label">캘린더</span>
                         </a>
-                        <a href="${pageContext.request.contextPath}/note/list?scope=PRIVATE" class="moyo-nav-link">
+                        <a href="${pageContext.request.contextPath}/note/list?scope=PRIVATE" class="moyo-nav-link" data-nav-key="note">
                             <span class="moyo-nav-icon">📝</span>
                             <span class="moyo-nav-label">노트</span>
                         </a>
-                        <a href="${pageContext.request.contextPath}/photo-album?scopeType=PERSONAL&amp;scopeId=${sessionScope.user.userId}" class="moyo-nav-link">
+                        <a href="${pageContext.request.contextPath}/photo-album?scopeType=PERSONAL&amp;scopeId=${sessionScope.user.userId}" class="moyo-nav-link" data-nav-key="photo">
                             <span class="moyo-nav-icon">🖼️</span>
                             <span class="moyo-nav-label">사진</span>
                         </a>
-                        <div class="moyo-nav-link" id="alarmContainer" style="cursor:pointer;"
+                        <div class="moyo-nav-link" id="alarmContainer" data-nav-key="alarm" style="cursor:pointer;"
                              data-account-name="<c:out value='${sessionScope.user.userName}'/>"
                              data-account-email="<c:out value='${sessionScope.user.EMAIL}'/>">
                             <span class="moyo-nav-icon">🔔</span>
@@ -402,17 +480,31 @@
                                 </div>
                             </div>
                         </div>
-                        
-                        <a href="/common/noticeList" class="moyo-nav-link">
-                            <span class="moyo-nav-icon">⚠️</span>
-                            <span class="moyo-nav-label">공지</span>
-                        </a>
-                        
+
                     </div>
                     <div class="user-status">
+                        <c:set var="headerProfileImage" value="${sessionScope.user.profileImagePath}" />
+                        <c:if test="${empty headerProfileImage}"><c:set var="headerProfileImage" value="${sessionScope.user.PROFILE_IMAGE_PATH}" /></c:if>
+                        <c:set var="headerUserName" value="${empty sessionScope.user.userName ? '사용자' : sessionScope.user.userName}" />
+                        <c:set var="headerProfileInitial" value="${fn:substring(headerUserName,0,1)}" />
+                        <c:if test="${not empty headerProfileImage and not fn:startsWith(headerProfileImage, 'http') and not fn:startsWith(headerProfileImage, '/')}">
+                            <c:set var="headerProfileImage" value="/${headerProfileImage}" />
+                        </c:if>
                         <a href="/users/mypage" class="user-link" aria-label="내 정보로 이동">
-                            <span class="user-avatar">${sessionScope.user.userName.substring(0,1)}</span>
-                            <span class="user-name">${sessionScope.user.userName}</span>
+                            <span class="user-avatar ${not empty headerProfileImage ? 'has-profile' : ''}">
+                                <c:if test="${not empty headerProfileImage}">
+                                    <c:choose>
+                                        <c:when test="${fn:startsWith(headerProfileImage, 'http')}">
+                                            <img src="${headerProfileImage}" alt="${headerUserName}" onerror="this.parentElement.classList.add('no-image'); this.remove();">
+                                        </c:when>
+                                        <c:otherwise>
+                                            <img src="${pageContext.request.contextPath}${headerProfileImage}" alt="${headerUserName}" onerror="this.parentElement.classList.add('no-image'); this.remove();">
+                                        </c:otherwise>
+                                    </c:choose>
+                                </c:if>
+                                <span class="user-avatar-fallback"><c:out value="${headerProfileInitial}" /></span>
+                            </span>
+                            <span class="user-name"><c:out value="${headerUserName}" /></span>
                         </a>
                         <a href="/users/logout" class="logout-link">로그아웃</a>
                     </div>
@@ -430,8 +522,34 @@
 
 <jsp:include page="/WEB-INF/views/common/appSidebar.jsp" />
 
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="${pageContext.request.contextPath}/js/appSidebar.js"></script>
+<c:if test="${not empty sessionScope.user}">
+    <script src="${pageContext.request.contextPath}/js/appSidebar.js?v=header-profile-safe-20260706"></script>
+</c:if>
+
+<script>
+(function() {
+    const isLogin = '${not empty sessionScope.user}' === 'true';
+    if (!isLogin) return;
+
+    const path = window.location.pathname || '';
+    let activeKey = '';
+
+    if (path === '/calendar' || path.indexOf('/calendar') === 0) {
+        activeKey = 'calendar';
+    } else if (path.indexOf('/note') === 0) {
+        activeKey = 'note';
+    } else if (path.indexOf('/photo') === 0 || path.indexOf('/photo-album') === 0) {
+        activeKey = 'photo';
+    } else if (path.indexOf('/requests') === 0 || path.indexOf('/alarms') === 0) {
+        activeKey = 'alarm';
+    }
+
+    if (activeKey) {
+        const activeNav = document.querySelector('.moyo-nav-link[data-nav-key="' + activeKey + '"]');
+        if (activeNav) activeNav.classList.add('is-active');
+    }
+})();
+</script>
 <script>
 (function() {
     const isLogin = '${not empty sessionScope.user}' === 'true';
@@ -698,7 +816,6 @@
         }
 
         if (alarms && alarms.length > 0) {
-            $list.append('<li class="moyo-alarm-section-label">알림</li>');
             alarms.forEach(function(item) {
                 $list.append(makeAlarmItem(item));
             });

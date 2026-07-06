@@ -6,21 +6,24 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MOYO 로그인</title>
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/signup.css?v=20260609-login1">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/signup.css?v=20260706-auth-ui63">
 </head>
 <body class="signup-body">
     <main class="signup-shell">
         <section class="signup-brand-panel" aria-label="MOYO 소개">
             <div class="signup-brand-copy">
-                <span class="signup-eyebrow">함께 모여 완성하는 협업</span>
-                <h1>다시 만나서<br>반가워요</h1>
-                <p>MOYO에 로그인하고,<br>팀원과 함께하던 업무를 이어가세요.</p>
+                <span class="signup-eyebrow">MOYO에 모여</span>
+                <h1>함께하던 순간을<br>다시 이어가요</h1>
+                <p>일정부터 기록과 사진까지<br>MOYO에서 계속 확인하세요.</p>
             </div>
 
             <div class="signup-feature-row" aria-hidden="true">
-                <span>워크스페이스</span>
+                <span>친구</span>
+                <span>그룹</span>
                 <span>프로젝트</span>
-                <span>캘린더</span>
+                <span>일정</span>
+                <span>기록</span>
+                <span>사진</span>
             </div>
         </section>
 
@@ -32,9 +35,9 @@
             </a>
 
             <div class="login-heading">
-                <span class="signup-section-label">WELCOME BACK</span>
+                <span class="signup-section-label">WELCOME</span>
                 <h2>MOYO에 로그인하세요</h2>
-                <p>등록한 이메일과 비밀번호를 입력해주세요.</p>
+                <p>이메일과 비밀번호로 MOYO를 이어서 이용하세요.</p>
             </div>
 
             <c:if test="${not empty param.error}">

@@ -27,7 +27,20 @@ public class UserService {
         if (user.getUserRole() == null || user.getUserRole().trim().isEmpty()) {
             user.setUserRole("USER");
         }
+        if (user.getBirthCalendarType() == null || user.getBirthCalendarType().trim().isEmpty()) {
+            user.setBirthCalendarType("SOLAR");
+        }
+        if (user.getBirthPublicYn() == null || user.getBirthPublicYn().trim().isEmpty()) {
+            user.setBirthPublicYn("Y");
+        }
+        if (user.getProfileAvatarType() == null || user.getProfileAvatarType().trim().isEmpty()) {
+            user.setProfileAvatarType(user.getProfileImagePath() == null ? "DEFAULT" : "IMAGE");
+        }
         usersDao.insertUser(user);
+        if ("IMAGE".equals(user.getProfileAvatarType()) && user.getProfileImagePath() != null) {
+            usersDao.clearCurrentProfileImages(user.getUserId());
+            usersDao.insertProfileImageHistory(user);
+        }
     }
 
     public boolean isEmailDuplicated(String email) {
@@ -41,8 +54,19 @@ public class UserService {
         return usersDao.login(user);
     }
 
+    public usersDto findById(Long userId) {
+        if (userId == null) {
+            return null;
+        }
+        return usersDao.findById(userId);
+    }
+
     public void updateProfile(usersDto user) {
         usersDao.updateUser(user);
+        if ("IMAGE".equals(user.getProfileAvatarType()) && user.getProfileImagePath() != null) {
+            usersDao.clearCurrentProfileImages(user.getUserId());
+            usersDao.insertProfileImageHistory(user);
+        }
     }
 
     public usersDto completeJoinProcess(usersDto user) {

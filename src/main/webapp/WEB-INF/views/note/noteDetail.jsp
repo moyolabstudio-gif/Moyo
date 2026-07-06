@@ -153,7 +153,7 @@
                             <div class="note-detail-share-actions">
                                 <button type="button" id="openNoteDetailShareModal" class="note-meta-text note-detail-action-btn note-meta-share note-share-open-btn"
                                         data-share-content-type="NOTE" data-share-content-id="${note.noteId}">
-                                    <span class="note-meta-icon" aria-hidden="true">🔗</span>
+                                    <span class="note-meta-icon note-meta-icon--moyo" aria-hidden="true"><img src="${pageContext.request.contextPath}/brand/moyo_mark.png?v=moyo-mark-v34" alt=""></span>
                                     <span class="note-meta-value">공유</span>
                                     <span id="noteDetailShareCount" class="note-share-count" hidden>0</span>
                                 </button>

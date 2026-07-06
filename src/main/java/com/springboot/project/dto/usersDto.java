@@ -10,6 +10,14 @@ public class usersDto {
     private String status;
     private String userRole;
     private String profileImagePath;
+    private String profileOriginalImagePath;
+    private Double profileCropScale;
+    private Double profileCropX;
+    private Double profileCropY;
+    private String profileAvatarType;
+    private String birthDate;
+    private String birthCalendarType;
+    private String birthPublicYn;
 
     public Long getUserId() { return userId; }
     public void setUserId(Long userId) { this.userId = userId; }
@@ -25,6 +33,22 @@ public class usersDto {
     public void setUserRole(String userRole) { this.userRole = userRole; }
     public String getProfileImagePath() { return profileImagePath; }
     public void setProfileImagePath(String profileImagePath) { this.profileImagePath = profileImagePath; }
+    public String getProfileOriginalImagePath() { return profileOriginalImagePath; }
+    public void setProfileOriginalImagePath(String profileOriginalImagePath) { this.profileOriginalImagePath = profileOriginalImagePath; }
+    public Double getProfileCropScale() { return profileCropScale; }
+    public void setProfileCropScale(Double profileCropScale) { this.profileCropScale = profileCropScale; }
+    public Double getProfileCropX() { return profileCropX; }
+    public void setProfileCropX(Double profileCropX) { this.profileCropX = profileCropX; }
+    public Double getProfileCropY() { return profileCropY; }
+    public void setProfileCropY(Double profileCropY) { this.profileCropY = profileCropY; }
+    public String getProfileAvatarType() { return profileAvatarType; }
+    public void setProfileAvatarType(String profileAvatarType) { this.profileAvatarType = profileAvatarType; }
+    public String getBirthDate() { return birthDate; }
+    public void setBirthDate(String birthDate) { this.birthDate = birthDate; }
+    public String getBirthCalendarType() { return birthCalendarType; }
+    public void setBirthCalendarType(String birthCalendarType) { this.birthCalendarType = birthCalendarType; }
+    public String getBirthPublicYn() { return birthPublicYn; }
+    public void setBirthPublicYn(String birthPublicYn) { this.birthPublicYn = birthPublicYn; }
 
     // 기존 JSP/Map 호환용
     @JsonIgnore
@@ -35,4 +59,31 @@ public class usersDto {
 
     @JsonIgnore
     public String getEMAIL() { return email; }
+
+    @JsonIgnore
+    public String getPROFILE_IMAGE_PATH() { return profileImagePath; }
+
+    @JsonIgnore
+    public String getPROFILE_ORIGINAL_IMAGE_PATH() { return profileOriginalImagePath; }
+
+    @JsonIgnore
+    public Double getPROFILE_CROP_SCALE() { return profileCropScale; }
+
+    @JsonIgnore
+    public Double getPROFILE_CROP_X() { return profileCropX; }
+
+    @JsonIgnore
+    public Double getPROFILE_CROP_Y() { return profileCropY; }
+
+    @JsonIgnore
+    public String getPROFILE_AVATAR_TYPE() { return profileAvatarType; }
+
+    @JsonIgnore
+    public String getBIRTH_DATE() { return birthDate; }
+
+    @JsonIgnore
+    public String getBIRTH_CALENDAR_TYPE() { return birthCalendarType; }
+
+    @JsonIgnore
+    public String getBIRTH_PUBLIC_YN() { return birthPublicYn; }
 }

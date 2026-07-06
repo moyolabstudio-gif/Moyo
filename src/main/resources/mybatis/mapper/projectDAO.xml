@@ -164,6 +164,32 @@
         ORDER BY PROJ_ID DESC
     </select>
 
+
+    <select id="selectSidebarActiveProjectsByWsId" parameterType="long" resultType="com.springboot.project.dto.projectRequestDTO">
+        SELECT
+            p.PROJ_ID AS "projId",
+            p.PROJ_NAME AS "projName",
+            p.WS_ID AS "wsId",
+            TO_CHAR(pd.START_DT, 'YYYY-MM-DD') AS "startDate",
+            TO_CHAR(pd.END_DT - 1, 'YYYY-MM-DD') AS "endDate"
+        FROM PROJECTS p
+        LEFT JOIN (
+            SELECT
+                PROJ_ID,
+                MIN(START_DT) AS START_DT,
+                MAX(END_DT) AS END_DT
+            FROM EVENTS
+            WHERE ITEM_TYPE = 'PROJ'
+            GROUP BY PROJ_ID
+        ) pd ON pd.PROJ_ID = p.PROJ_ID
+        WHERE p.WS_ID = #{wsId}
+          AND (pd.START_DT IS NULL OR TRUNC(pd.START_DT) &lt;= TRUNC(SYSDATE))
+          AND (pd.END_DT IS NULL OR TRUNC(pd.END_DT) &gt; TRUNC(SYSDATE))
+        ORDER BY
+            pd.END_DT ASC NULLS LAST,
+            p.PROJ_ID DESC
+    </select>
+
     <select id="selectProjectListByWorkspaceId" parameterType="long" resultType="map">
         SELECT
             p.PROJ_ID AS "PROJ_ID",

@@ -20,7 +20,7 @@
 <main class="moyo-calendar-page">
     <section class="moyo-calendar-hero">
         <div class="moyo-calendar-heading">
-            <h1 class="moyo-calendar-title"><span class="moyo-calendar-mark" aria-hidden="true"></span>MOYO 캘린더</h1>
+            <h1 class="moyo-calendar-title"><span class="moyo-calendar-mark" aria-hidden="true"></span>캘린더</h1>
             <p class="moyo-calendar-desc">개인부터 프로젝트까지, 일정을 한 곳에서 정리합니다.</p>
         </div>
         <button type="button" class="moyo-calendar-primary" id="openCreateEvent"><i class="fa-solid fa-plus"></i> 일정 등록</button>
@@ -160,7 +160,7 @@
                 </div>
                 <div class="moyo-quick-public-row" id="quickCreatePublicRow">
                     <button type="button" class="moyo-quick-public-toggle" id="quickCreateMoyoToggle" aria-pressed="false">
-                        <img src="${pageContext.request.contextPath}/brand/moyo_feed_mark.png" alt="" aria-hidden="true"><span>MOYO 공개</span>
+                        <img src="${pageContext.request.contextPath}/brand/moyo_mark.png?v=moyo-mark-v34" alt="" aria-hidden="true"><span>MOYO 공개</span>
                     </button>
                     <span class="moyo-quick-help">MOYO 피드에 공개하면 친구들이 이 일정을 함께 볼 수 있습니다.</span>
                 </div>

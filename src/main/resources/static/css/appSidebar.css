@@ -1,11 +1,20 @@
 :root {
     --moyo-header-height: 70px;
     --moyo-app-sidebar-width: 272px;
+    --moyo-blue: #4A90E2;
+    --moyo-blue-strong: #2563eb;
+    --moyo-mint: #39CDB5;
+    --moyo-purple: #8b5cf6;
+    --moyo-text: #243041;
+    --moyo-muted: #667085;
+    --moyo-line: #e8edf3;
 }
 
 html { overflow-x: hidden; }
 
+/* 로그인 후 앱 shell 전용 보정: 비로그인 홈/랜딩에는 적용하지 않는다. */
 body.moyo-app-sidebar-enabled {
+    padding-top: var(--moyo-header-height);
     padding-left: var(--moyo-app-sidebar-width);
     transition: padding-left .22s ease;
 }
@@ -15,16 +24,15 @@ body.moyo-app-sidebar-enabled.moyo-app-sidebar-collapsed {
 }
 
 body.moyo-app-sidebar-enabled > .moyo-header {
-    width: calc(100% + var(--moyo-app-sidebar-width));
-    margin-left: calc(var(--moyo-app-sidebar-width) * -1);
-    transition: width .22s ease, margin-left .22s ease;
-}
-
-body.moyo-app-sidebar-enabled.moyo-app-sidebar-collapsed > .moyo-header {
     width: 100%;
     margin-left: 0;
 }
 
+body.moyo-app-sidebar-enabled > .moyo-header .moyo-header-inner {
+    padding-left: 14px;
+}
+
+/* ===== App sidebar ===== */
 .moyo-app-sidebar {
     position: fixed;
     top: var(--moyo-header-height);
@@ -36,7 +44,7 @@ body.moyo-app-sidebar-enabled.moyo-app-sidebar-collapsed > .moyo-header {
     flex-direction: column;
     box-sizing: border-box;
     background: #fff;
-    border-right: 1px solid #e8edf3;
+    border-right: 1px solid var(--moyo-line);
     box-shadow: 8px 0 28px rgba(15, 23, 42, .035);
     transform: translateX(0);
     transition: transform .22s ease;
@@ -47,24 +55,38 @@ body.moyo-app-sidebar-collapsed .moyo-app-sidebar {
     transform: translateX(-100%);
 }
 
+.moyo-app-sidebar-layout {
+    min-height: 0;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
 .moyo-app-sidebar-scroll {
     min-height: 0;
     flex: 1;
     overflow-y: auto;
-    padding: 18px 14px 20px;
+    padding: 18px 14px 14px;
 }
+
+.moyo-app-sidebar-fixed { display: none; }
+.moyo-app-sidebar-friends-section { margin-top: 0; }
 
 .moyo-app-sidebar-scroll::-webkit-scrollbar { width: 6px; }
 .moyo-app-sidebar-scroll::-webkit-scrollbar-thumb { background: #d7e1ea; border-radius: 999px; }
 .moyo-app-sidebar-scroll::-webkit-scrollbar-track { background: transparent; }
 
-.moyo-app-sidebar-section + .moyo-app-sidebar-section { margin-top: 22px; }
+.moyo-app-sidebar-section + .moyo-app-sidebar-section { margin-top: 18px; }
+.moyo-app-sidebar-groups-section { margin-top: 0; }
+.moyo-app-sidebar-friends-top + .moyo-app-sidebar-groups-section { margin-top: 16px; }
+
 .moyo-app-sidebar-section-heading {
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding: 0 8px 8px;
 }
+
 .moyo-app-sidebar-section-title {
     color: #98a2b3;
     font-size: 11px;
@@ -72,18 +94,36 @@ body.moyo-app-sidebar-collapsed .moyo-app-sidebar {
     letter-spacing: .06em;
     text-transform: uppercase;
 }
+
 .moyo-app-sidebar-section-action {
-    color: #8a96a3;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 26px;
+    padding: 0 10px;
+    border-radius: 999px;
+    color: var(--moyo-blue-strong);
+    background: #f8fbff;
+    border: 1px solid #dbeafe;
+    box-shadow: 0 3px 10px rgba(74, 144, 226, .08);
     font-size: 11px;
-    font-weight: 800;
+    font-weight: 900;
+    line-height: 1;
     text-decoration: none;
+    white-space: nowrap;
+    transition: background .16s ease, border-color .16s ease, box-shadow .16s ease, transform .16s ease;
 }
-.moyo-app-sidebar-section-action:hover { color: #4A90E2; }
+.moyo-app-sidebar-section-action:hover {
+    color: #1d4ed8;
+    background: #eef6ff;
+    border-color: #bfdbfe;
+    box-shadow: 0 6px 14px rgba(74, 144, 226, .12);
+    transform: translateY(-1px);
+}
 
 .moyo-app-sidebar-main-link,
 .moyo-app-project-link,
 .moyo-app-workspace-home,
-.moyo-app-create-project,
 .moyo-app-sidebar-bottom-link { text-decoration: none; }
 
 .moyo-app-sidebar-main-link {
@@ -97,11 +137,15 @@ body.moyo-app-sidebar-collapsed .moyo-app-sidebar {
     font-size: 13px;
     font-weight: 800;
 }
-.moyo-app-sidebar-main-link:hover,
-.moyo-app-sidebar-main-link.active { background: #eef6ff; color: #2563eb; }
-.moyo-app-sidebar-link-icon { width: 20px; text-align: center; }
 
-.moyo-app-personal-projects { margin-top: 6px; }
+.moyo-app-sidebar-main-link:hover,
+.moyo-app-sidebar-main-link.active {
+    background: #eef6ff;
+    color: var(--moyo-blue-strong);
+}
+
+
+.moyo-app-sidebar-link-icon { width: 20px; text-align: center; }
 .moyo-app-workspace + .moyo-app-workspace { margin-top: 5px; }
 
 .moyo-app-workspace-toggle {
@@ -119,6 +163,7 @@ body.moyo-app-sidebar-collapsed .moyo-app-sidebar {
     cursor: pointer;
     text-align: left;
 }
+
 .moyo-app-workspace-toggle:hover,
 .moyo-app-workspace.current > .moyo-app-workspace-toggle { background: #f5f8fb; }
 
@@ -128,6 +173,7 @@ body.moyo-app-sidebar-collapsed .moyo-app-sidebar {
     height: 31px;
     flex-shrink: 0;
 }
+
 .moyo-app-workspace-avatar img,
 .moyo-app-workspace-avatar-fallback {
     width: 31px;
@@ -137,17 +183,20 @@ body.moyo-app-sidebar-collapsed .moyo-app-sidebar {
     border: 1px solid #e5ebf1;
     box-sizing: border-box;
 }
+
 .moyo-app-workspace-avatar img { display: block; }
+
 .moyo-app-workspace-avatar-fallback {
     display: none;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(135deg, #4A90E2, #39CDB5);
+    background: linear-gradient(135deg, var(--moyo-blue), var(--moyo-mint));
     color: #fff;
     font-size: 12px;
     font-weight: 900;
 }
 .moyo-app-workspace-avatar-fallback.show { display: flex; }
+
 .moyo-app-workspace-name {
     min-width: 0;
     flex: 1;
@@ -157,6 +206,7 @@ body.moyo-app-sidebar-collapsed .moyo-app-sidebar {
     font-size: 13px;
     font-weight: 900;
 }
+
 .moyo-app-workspace-chevron {
     color: #98a2b3;
     font-size: 15px;
@@ -173,8 +223,7 @@ body.moyo-app-sidebar-collapsed .moyo-app-sidebar {
 .moyo-app-workspace.open .moyo-app-workspace-menu { display: block; }
 
 .moyo-app-project-link,
-.moyo-app-workspace-home,
-.moyo-app-create-project {
+.moyo-app-workspace-home {
     display: flex;
     align-items: center;
     gap: 9px;
@@ -182,37 +231,48 @@ body.moyo-app-sidebar-collapsed .moyo-app-sidebar {
     padding: 0 10px;
     margin: 2px 0;
     border-radius: 9px;
-    color: #667085;
+    color: var(--moyo-muted);
     font-size: 12px;
     font-weight: 700;
 }
+
 .moyo-app-project-link:hover,
 .moyo-app-workspace-home:hover,
 .moyo-app-project-link.active,
 .moyo-app-workspace-home.active {
-    background: #eef6ff;
-    color: #2563eb;
+    background: #f4f0ff;
+    color: #6d45d8;
 }
+
+.moyo-app-workspace-home:hover,
+.moyo-app-workspace-home.active {
+    background: #ecfbf8;
+    color: #119c8c;
+}
+
 .moyo-app-project-link.active,
 .moyo-app-workspace-home.active { font-weight: 900; }
+
 .moyo-app-project-name {
     min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
+
 .moyo-app-project-dot {
     width: 7px;
     height: 7px;
     flex-shrink: 0;
     border-radius: 50%;
-    background: #b8c3ce;
+    background: var(--moyo-purple);
 }
-.moyo-app-project-dot.personal { background: #8b5cf6; }
-.moyo-app-project-dot.home { background: #39CDB5; }
-.moyo-app-project-link.active .moyo-app-project-dot { background: #4A90E2; }
-.moyo-app-create-project { color: #4A90E2; }
-.moyo-app-create-project:hover { background: #f5faff; }
+.moyo-app-project-dot.personal { background: var(--moyo-blue); }
+.moyo-app-project-dot.home { background: var(--moyo-mint); }
+.moyo-app-project-link.active .moyo-app-project-dot { background: var(--moyo-purple); }
+.moyo-app-project-link.active .moyo-app-project-dot.personal { background: var(--moyo-blue); }
+.moyo-app-workspace-home.active .moyo-app-project-dot.home { background: var(--moyo-mint); }
+
 
 .moyo-app-sidebar-empty {
     padding: 9px 12px;
@@ -223,6 +283,28 @@ body.moyo-app-sidebar-collapsed .moyo-app-sidebar {
 .moyo-app-sidebar-empty.nested { padding-left: 10px; }
 .moyo-app-sidebar-empty.workspace-empty { padding: 16px 10px; }
 
+
+.moyo-app-sidebar-friends-section {
+    padding-bottom: 12px;
+    border-bottom: 1px solid #f1f4f8;
+}
+
+.moyo-app-sidebar-friends-section .moyo-app-sidebar-section-heading {
+    padding: 0 8px 6px;
+}
+
+.moyo-app-sidebar-friends-section .moyo-app-sidebar-section-title {
+    color: #7b8794;
+}
+
+.moyo-app-sidebar-friends-section .moyo-app-sidebar-main-link {
+    min-height: 36px;
+}
+
+.moyo-app-sidebar-friends-section .moyo-app-sidebar-main-link + .moyo-app-sidebar-main-link {
+    margin-top: 2px;
+}
+
 .moyo-app-sidebar-bottom {
     display: grid;
     gap: 7px;
@@ -230,17 +312,18 @@ body.moyo-app-sidebar-collapsed .moyo-app-sidebar {
     border-top: 1px solid #edf1f5;
     background: #fbfcfd;
 }
+
 .moyo-app-sidebar-bottom-link {
     display: flex;
     align-items: center;
     min-height: 36px;
     padding: 0 12px;
     border-radius: 10px;
-    color: #667085;
+    color: var(--moyo-muted);
     font-size: 12px;
     font-weight: 800;
 }
-.moyo-app-sidebar-bottom-link:hover { background: #eef6ff; color: #2563eb; }
+.moyo-app-sidebar-bottom-link:hover { background: #eef6ff; color: var(--moyo-blue-strong); }
 
 .moyo-app-sidebar-toggle-btn {
     display: inline-flex;
@@ -251,530 +334,857 @@ body.moyo-app-sidebar-collapsed .moyo-app-sidebar {
     border: 1px solid #e5ebf1;
     border-radius: 11px;
     background: #fff;
-    color: #667085;
+    color: var(--moyo-muted);
     cursor: pointer;
     font-size: 18px;
     transition: background .18s ease, color .18s ease, border-color .18s ease;
 }
-.moyo-app-sidebar-toggle-btn:hover { background: #f5f9fd; color: #4A90E2; border-color: #cfe1f4; }
+.moyo-app-sidebar-toggle-btn:hover { background: #f5f9fd; color: var(--moyo-blue); border-color: #cfe1f4; }
 
-.moyo-app-sidebar-backdrop { display: none; }
-
-body.moyo-app-sidebar-enabled > .moyo-footer {
-    width: 100%;
-    box-sizing: border-box;
-}
-
-@media (max-width: 900px) {
-    body.moyo-app-sidebar-enabled,
-    body.moyo-app-sidebar-enabled.moyo-app-sidebar-collapsed { padding-left: 0; }
-
-    body.moyo-app-sidebar-enabled > .moyo-header,
-    body.moyo-app-sidebar-enabled.moyo-app-sidebar-collapsed > .moyo-header {
-        width: 100%;
-        margin-left: 0;
-    }
-
-    .moyo-app-sidebar {
-        top: 0;
-        z-index: 1300;
-        width: min(86vw, 310px);
-        transform: translateX(-100%);
-        padding-top: 14px;
-    }
-    body.moyo-app-sidebar-mobile-open .moyo-app-sidebar { transform: translateX(0); }
-    .moyo-app-sidebar-backdrop {
-        position: fixed;
-        inset: 0;
-        z-index: 1250;
-        background: rgba(15,23,42,.36);
-    }
-    body.moyo-app-sidebar-mobile-open .moyo-app-sidebar-backdrop { display: block; }
-}
-
-
-/* ===== Global wide app layout ===== */
-body.moyo-app-sidebar-enabled {
-    width: auto;
-    min-width: 0;
-}
-
-body.moyo-app-sidebar-enabled > .moyo-header {
-    width: 100%;
-    margin-left: 0;
-}
-
-body.moyo-app-sidebar-enabled > .moyo-header .moyo-header-inner {
-    max-width: none !important;
-    margin: 0 !important;
-    padding-left: 28px !important;
-    padding-right: 28px !important;
-}
-
-/* 로그인 후 공통 페이지는 남은 화면 폭을 최대한 사용 */
-body.moyo-app-sidebar-enabled > .container,
-body.moyo-app-sidebar-enabled > main,
-body.moyo-app-sidebar-enabled > .moyo-wrapper,
-body.moyo-app-sidebar-enabled > .workspace-page,
-body.moyo-app-sidebar-enabled > .project-page,
-body.moyo-app-sidebar-enabled > .note-page,
-body.moyo-app-sidebar-enabled > .write-page,
-body.moyo-app-sidebar-enabled > .settings-page,
-body.moyo-app-sidebar-enabled > .poll-page,
-body.moyo-app-sidebar-enabled > .worklist-page,
-body.moyo-app-sidebar-enabled > .mypage-container {
-    width: 100% !important;
-    max-width: none !important;
-    margin-left: 0 !important;
-    margin-right: 0 !important;
-    box-sizing: border-box !important;
-}
-
-/* 페이지 내부에서 반복적으로 사용하는 최상위 폭 제한 완화 */
-body.moyo-app-sidebar-enabled .container {
-    max-width: none !important;
-}
-
-body.moyo-app-sidebar-enabled > .moyo-footer .moyo-footer-inner {
-    width: 100% !important;
-    max-width: none !important;
-    margin: 0 !important;
-}
-
-/* 헤더 안이 아니라 사이드바 경계에 붙는 접기 버튼 */
-.moyo-app-sidebar-edge-toggle {
+.moyo-app-sidebar-backdrop {
+    display: none;
     position: fixed;
-    top: calc(var(--moyo-header-height) + 18px);
-    left: calc(var(--moyo-app-sidebar-width) - 15px);
-    z-index: 1100;
-    width: 30px;
-    height: 46px;
+    inset: var(--moyo-header-height) 0 0 0;
+    z-index: 900;
+    background: rgba(15, 23, 42, .25);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .18s ease;
+}
+
+/* ===== Footer 공통 ===== */
+.moyo-footer {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    margin: 48px 0 0;
+    padding: 0;
+    box-sizing: border-box;
+    border-top: 0;
+    background: transparent;
+    overflow: visible;
+    color: #7b8491;
+    font-family: 'Pretendard', sans-serif;
+}
+
+.moyo-footer::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: 100vw;
+    height: 1px;
+    transform: translateX(-50%);
+    background: linear-gradient(90deg, transparent 0%, rgba(226, 232, 240, .78) 12%, rgba(226, 232, 240, .78) 88%, transparent 100%);
+    pointer-events: none;
+}
+
+.moyo-footer-inner {
+    width: 100%;
+    min-height: 76px;
+    margin: 0;
+    padding: 0 28px;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+}
+
+.moyo-footer-message {
+    min-width: 0;
+    color: #667085;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.5;
+    white-space: nowrap;
+}
+
+.moyo-footer-right {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 18px;
+    flex-shrink: 0;
+}
+
+.moyo-footer-links {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 14px;
+    flex-wrap: wrap;
+}
+
+.moyo-footer-links a {
     display: inline-flex;
     align-items: center;
-    justify-content: center;
-    padding: 0;
-    border: 1px solid #dfe7ef;
-    border-radius: 0 12px 12px 0;
-    background: #fff;
-    color: #667085;
-    box-shadow: 5px 4px 16px rgba(15,23,42,.08);
-    cursor: pointer;
-    transition: left .22s ease, color .18s ease, background .18s ease;
-}
-.moyo-app-sidebar-edge-toggle:hover {
-    background: #f6faff;
-    color: #2563eb;
-}
-.moyo-app-sidebar-edge-toggle-icon {
-    display: block;
-    font-size: 25px;
-    line-height: 1;
-    transform: translateY(-1px);
-    transition: transform .22s ease;
-}
-body.moyo-app-sidebar-collapsed .moyo-app-sidebar-edge-toggle {
-    left: 0;
-}
-body.moyo-app-sidebar-collapsed .moyo-app-sidebar-edge-toggle-icon {
-    transform: rotate(180deg) translateY(1px);
+    min-height: 26px;
+    padding: 0 6px;
+    border-radius: 999px;
+    color: #7b8491;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.5;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: color .16s ease, background .16s ease;
 }
 
-/* 이전 헤더용 토글은 사용하지 않음 */
-.moyo-app-sidebar-toggle-btn { display:none !important; }
+.moyo-footer-links a:hover {
+    color: #2878d0;
+    background: rgba(74, 144, 226, .08);
+    text-decoration: none;
+}
+
+.moyo-footer-copy {
+    color: #a0a8b3;
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+}
 
 @media (max-width: 900px) {
-    body.moyo-app-sidebar-enabled > .moyo-header .moyo-header-inner {
-        padding-left: 16px !important;
-        padding-right: 16px !important;
-    }
-    .moyo-app-sidebar-edge-toggle {
-        top: 12px;
-        left: 12px;
-        width: 38px;
-        height: 38px;
-        border-radius: 11px;
-        z-index: 1400;
-    }
-    body.moyo-app-sidebar-mobile-open .moyo-app-sidebar-edge-toggle {
-        left: calc(min(86vw, 310px) - 48px);
-        background:#fff;
-    }
-    body.moyo-app-sidebar-mobile-open .moyo-app-sidebar-edge-toggle-icon {
-        transform:none;
-    }
-}
-
-
-/* ===== Fixed global shell + header toggle restoration ===== */
-:root {
-    --moyo-header-height: 70px;
-    --moyo-footer-height: 74px;
-    --moyo-app-sidebar-width: 272px;
-}
-
-html, body { min-height:100%; }
-
-body.moyo-app-sidebar-enabled {
-    padding-top: var(--moyo-header-height) !important;
-    padding-left: var(--moyo-app-sidebar-width) !important;
-    box-sizing: border-box;
-    transition: padding-left .22s ease;
-}
-body.moyo-app-sidebar-enabled.moyo-app-sidebar-collapsed {
-    padding-left:0 !important;
-}
-
-body.moyo-app-sidebar-enabled > .moyo-header {
-    position:fixed !important;
-    top:0 !important;
-    left:0 !important;
-    right:0 !important;
-    width:100% !important;
-    height:var(--moyo-header-height) !important;
-    margin:0 !important;
-    z-index:1200 !important;
-}
-body.moyo-app-sidebar-enabled > .moyo-header .moyo-header-inner {
-    max-width:none !important;
-    width:100% !important;
-    padding:0 28px !important;
-}
-
-body.moyo-app-sidebar-enabled > .moyo-footer {
-    position:relative !important;
-    left:auto !important;
-    right:auto !important;
-    bottom:auto !important;
-    width:100% !important;
-    height:auto !important;
-    margin-top:40px !important;
-    z-index:1 !important;
-}
-
-.moyo-app-sidebar {
-    top:var(--moyo-header-height) !important;
-    bottom:0 !important;
-    z-index:1100 !important;
-}
-
-/* 목록 버튼은 최초 시안처럼 헤더 로고 왼쪽에 배치 */
-.moyo-app-sidebar-toggle-btn {
-    display:inline-flex !important;
-    align-items:center;
-    justify-content:center;
-    width:38px;
-    height:38px;
-    flex-shrink:0;
-    padding:0;
-    border:1px solid #dfe7ef;
-    border-radius:11px;
-    background:#fff;
-    color:#667085;
-    font-size:18px;
-    cursor:pointer;
-}
-.moyo-app-sidebar-toggle-btn:hover {
-    background:#f5f9fd;
-    border-color:#cfe1f4;
-    color:#2563eb;
-}
-.moyo-app-sidebar-toggle-icon { line-height:1; }
-.moyo-app-sidebar-edge-toggle { display:none !important; }
-
-/* 고정 헤더/푸터 사이에서 본문만 자연스럽게 스크롤 */
-body.moyo-app-sidebar-enabled > .container,
-body.moyo-app-sidebar-enabled > main,
-body.moyo-app-sidebar-enabled > .moyo-wrapper,
-body.moyo-app-sidebar-enabled > .workspace-page,
-body.moyo-app-sidebar-enabled > .project-page,
-body.moyo-app-sidebar-enabled > .note-page,
-body.moyo-app-sidebar-enabled > .write-page,
-body.moyo-app-sidebar-enabled > .settings-page,
-body.moyo-app-sidebar-enabled > .poll-page,
-body.moyo-app-sidebar-enabled > .worklist-page,
-body.moyo-app-sidebar-enabled > .mypage-container {
-    max-width:none !important;
-    width:100% !important;
-    margin-left:0 !important;
-    margin-right:0 !important;
-    box-sizing:border-box !important;
-}
-
-@media(max-width:900px) {
     body.moyo-app-sidebar-enabled,
     body.moyo-app-sidebar-enabled.moyo-app-sidebar-collapsed {
-        padding-left:0 !important;
-        padding-top:var(--moyo-header-height) !important;
+        padding-left: 0;
     }
+
     .moyo-app-sidebar {
-        top:var(--moyo-header-height) !important;
-        bottom:0 !important;
-        padding-top:0 !important;
-        z-index:1300 !important;
-    }
-    body.moyo-app-sidebar-enabled > .moyo-header .moyo-header-inner {
-        padding:0 14px !important;
-    }
-    body.moyo-app-sidebar-enabled > .moyo-footer {
-        min-height:68px !important;
-    }
-}
-
-/* ===== 로그인 후 프로젝트 관련 페이지 공통 레이아웃 ===== */
-body.moyo-app-sidebar-enabled {
-    --moyo-content-gutter: clamp(18px, 2.2vw, 36px);
-}
-
-/* 프로젝트/워크스페이스 하위 화면은 사이드바를 제외한 폭을 전부 사용 */
-body.moyo-app-sidebar-enabled :is(
-    .dashboard-container,
-    .project-container,
-    .project-main-container,
-    .project-page,
-    .page-wrap,
-    .settings-page,
-    .settings-layout,
-    .work-page,
-    .worklist-page,
-    .note-page,
-    .detail-container,
-    .write-page,
-    .poll-page,
-    .poll-container,
-    .board-container,
-    .board-page,
-    .file-page,
-    .workspace-page,
-    .calendar-page,
-    .moyo-wrapper
-) {
-    max-width: none !important;
-    width: 100% !important;
-    box-sizing: border-box !important;
-}
-
-/* 페이지 최상위 영역의 중앙 고정 폭과 과도한 좌우 여백 제거 */
-body.moyo-app-sidebar-enabled > :is(
-    .dashboard-container,
-    .project-container,
-    .project-main-container,
-    .project-page,
-    .page-wrap,
-    .settings-page,
-    .work-page,
-    .worklist-page,
-    .note-page,
-    .detail-container,
-    .write-page,
-    .poll-page,
-    .poll-container,
-    .board-container,
-    .board-page,
-    .file-page,
-    .workspace-page,
-    .calendar-page,
-    .moyo-wrapper
-) {
-    margin-left: 0 !important;
-    margin-right: 0 !important;
-    padding-left: var(--moyo-content-gutter) !important;
-    padding-right: var(--moyo-content-gutter) !important;
-}
-
-/* 프로젝트 생성 화면 내부 container도 남은 폭을 활용 */
-body.moyo-app-sidebar-enabled .page-wrap > .container,
-body.moyo-app-sidebar-enabled .page-wrap .container,
-body.moyo-app-sidebar-enabled .settings-page > .container,
-body.moyo-app-sidebar-enabled .write-page > .container,
-body.moyo-app-sidebar-enabled .detail-container > .container {
-    width: 100% !important;
-    max-width: none !important;
-    margin-left: auto !important;
-    margin-right: auto !important;
-    box-sizing: border-box !important;
-}
-
-/* 메인/설정/노트/업무목록의 기존 1280px 제한 해제 */
-body.moyo-app-sidebar-enabled :is(
-    .main-container,
-    .content-container,
-    .project-content,
-    .settings-container,
-    .work-container,
-    .note-container,
-    .board-content,
-    .poll-content
-) {
-    width: 100% !important;
-    max-width: none !important;
-    box-sizing: border-box !important;
-}
-
-/* 푸터는 사이드바를 제외한 현재 본문 폭을 그대로 사용 */
-body.moyo-app-sidebar-enabled > .moyo-footer,
-body.moyo-app-sidebar-enabled .moyo-footer {
-    width: 100% !important;
-    max-width: none !important;
-    margin-left: 0 !important;
-    margin-right: 0 !important;
-    box-sizing: border-box !important;
-}
-
-/* 고정 헤더 아래에 페이지 내용이 가려지는 구형 JSP 보정 */
-body.moyo-app-sidebar-enabled > header:not(.moyo-header) {
-    height: 0 !important;
-    margin: 0 !important;
-    padding: 0 !important;
-}
-
-@media (max-width: 900px) {
-    body.moyo-app-sidebar-enabled {
-        --moyo-content-gutter: 14px;
+        transform: translateX(-100%);
+        box-shadow: 14px 0 32px rgba(15, 23, 42, .12);
     }
 
-    body.moyo-app-sidebar-enabled > :is(
-        .dashboard-container,
-        .project-container,
-        .project-main-container,
-        .project-page,
-        .page-wrap,
-        .settings-page,
-        .work-page,
-        .worklist-page,
-        .note-page,
-        .detail-container,
-        .write-page,
-        .poll-page,
-        .poll-container,
-        .board-container,
-        .board-page,
-        .file-page,
-        .workspace-page,
-        .calendar-page,
-        .moyo-wrapper
-    ) {
-        padding-left: var(--moyo-content-gutter) !important;
-        padding-right: var(--moyo-content-gutter) !important;
-    }
-}
-
-
-/* ===== Poll page bounded shell + sticky footer (2026-06-10) =====
-   The generic wide-layout rule above intentionally expands most pages.
-   Poll list is an exception: keep its content readable when the sidebar closes. */
-body.moyo-app-sidebar-enabled.poll-page-body {
-    min-height: 100dvh;
-    display: flex;
-    flex-direction: column;
-}
-
-body.moyo-app-sidebar-enabled.poll-page-body > .poll-page {
-    flex: 1 0 auto;
-    width: calc(100% - 48px) !important;
-    max-width: 1280px !important;
-    margin: 34px auto 0 !important;
-    padding-left: 0 !important;
-    padding-right: 0 !important;
-    padding-bottom: 56px !important;
-    box-sizing: border-box !important;
-}
-
-/* Override the common footer's fixed top margin only on the poll page. */
-body.moyo-app-sidebar-enabled.poll-page-body > .poll-page + .moyo-footer {
-    flex: 0 0 auto;
-    margin-top: auto !important;
-}
-
-body.moyo-app-sidebar-enabled.poll-page-body > .poll-page + .moyo-footer .moyo-footer-inner {
-    width: min(1280px, calc(100% - 48px)) !important;
-    max-width: 1280px !important;
-    margin: 0 auto !important;
-    padding-left: 0 !important;
-    padding-right: 0 !important;
-}
-
-@media (max-width: 700px) {
-    body.moyo-app-sidebar-enabled.poll-page-body > .poll-page {
-        width: calc(100% - 24px) !important;
-        margin-top: 20px !important;
-        padding-bottom: 36px !important;
+    body.moyo-app-sidebar-mobile-open .moyo-app-sidebar {
+        transform: translateX(0);
     }
 
-    body.moyo-app-sidebar-enabled.poll-page-body > .poll-page + .moyo-footer .moyo-footer-inner {
-        width: calc(100% - 24px) !important;
-    }
-}
-
-
-/* ===== Poll page bounded layout + footer at viewport bottom (2026-06-10 v3) ===== */
-/* 사이드바 접힘 여부와 관계없이 투표 화면의 읽기 폭을 동일하게 유지한다. */
-body.moyo-app-sidebar-enabled.poll-page-body{
-    min-height:100dvh !important;
-    display:flex !important;
-    flex-direction:column !important;
-}
-
-body.moyo-app-sidebar-enabled.poll-page-body > .poll-page{
-    flex:1 0 auto !important;
-    width:min(1280px, calc(100% - 48px)) !important;
-    max-width:1280px !important;
-    margin:34px auto 0 !important;
-    padding-left:0 !important;
-    padding-right:0 !important;
-    padding-bottom:44px !important;
-    box-sizing:border-box !important;
-}
-
-/* 푸터는 내용이 짧으면 화면 하단, 길면 본문 다음에 배치한다. */
-body.moyo-app-sidebar-enabled.poll-page-body > .moyo-footer{
-    flex:0 0 auto !important;
-    width:100% !important;
-    margin-top:auto !important;
-}
-body.moyo-app-sidebar-enabled.poll-page-body > .moyo-footer .moyo-footer-inner{
-    width:min(1280px, calc(100% - 48px)) !important;
-    max-width:1280px !important;
-    margin:0 auto !important;
-    padding-left:0 !important;
-    padding-right:0 !important;
-}
-
-@media (max-width:700px){
-    body.moyo-app-sidebar-enabled.poll-page-body > .poll-page,
-    body.moyo-app-sidebar-enabled.poll-page-body > .moyo-footer .moyo-footer-inner{
-        width:calc(100% - 24px) !important;
-    }
-    body.moyo-app-sidebar-enabled.poll-page-body > .poll-page{
-        margin-top:20px !important;
-        padding-bottom:32px !important;
-    }
-}
-
-/* ===== Sidebar backdrop safety patch =====
-   데스크톱/닫힌 상태에서 사이드바 백드롭이 화면을 덮는 현상 방지 */
-#moyoAppSidebarBackdrop,
-.moyo-app-sidebar-backdrop {
-    display: none !important;
-    opacity: 0 !important;
-    pointer-events: none !important;
-}
-
-@media (max-width: 900px) {
-    body.moyo-app-sidebar-mobile-open #moyoAppSidebarBackdrop,
     body.moyo-app-sidebar-mobile-open .moyo-app-sidebar-backdrop {
-        display: block !important;
-        opacity: 1 !important;
-        pointer-events: auto !important;
+        display: block;
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    body.moyo-app-sidebar-enabled > .moyo-header .moyo-header-inner {
+        padding-left: 12px;
     }
 }
 
 @media (min-width: 901px) {
-    body.moyo-app-sidebar-enabled #moyoAppSidebarBackdrop,
     body.moyo-app-sidebar-enabled .moyo-app-sidebar-backdrop,
-    body.moyo-app-sidebar-enabled.moyo-app-sidebar-mobile-open #moyoAppSidebarBackdrop,
     body.moyo-app-sidebar-enabled.moyo-app-sidebar-mobile-open .moyo-app-sidebar-backdrop {
-        display: none !important;
-        opacity: 0 !important;
-        pointer-events: none !important;
+        display: none;
+        opacity: 0;
+        pointer-events: none;
     }
+}
+
+@media (max-width: 820px) {
+    .moyo-footer-inner {
+        min-height: 92px;
+        padding: 18px;
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: center;
+        gap: 10px;
+    }
+
+    .moyo-footer-message { white-space: normal; }
+
+    .moyo-footer-right {
+        width: 100%;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 14px;
+    }
+}
+
+@media (max-width: 720px) {
+    body.moyo-app-sidebar-enabled {
+        padding-top: var(--moyo-header-height);
+    }
+}
+
+@media (max-width: 520px) {
+    .moyo-footer-right {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .moyo-footer-links {
+        justify-content: flex-start;
+        gap: 8px 10px;
+        flex-wrap: wrap;
+    }
+}
+
+/* ===== Sidebar friend modal + group list entry ===== */
+.moyo-app-sidebar-modal-link {
+    width: 100%;
+    border: 0;
+    background: transparent;
+    font-family: inherit;
+    cursor: pointer;
+    text-align: left;
+}
+
+.moyo-app-sidebar-modal-link:focus-visible,
+.moyo-app-sidebar-section-action:focus-visible,
+.moyo-app-sidebar-main-link:focus-visible {
+    outline: 3px solid rgba(74, 144, 226, .22);
+    outline-offset: 2px;
+}
+
+.moyo-app-sidebar-workspace-list-link {
+    margin-bottom: 7px;
+}
+
+.moyo-app-sidebar-workspace-list-link.active {
+    background: #eef6ff;
+    color: var(--moyo-blue-strong);
+}
+
+.moyo-friend-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 1300;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    font-family: 'Pretendard', sans-serif;
+}
+
+.moyo-friend-modal.open { display: flex; }
+
+.moyo-friend-modal-dim {
+    position: absolute;
+    inset: 0;
+    background: rgba(15, 23, 42, .34);
+    backdrop-filter: blur(3px);
+}
+
+.moyo-friend-modal-panel {
+    position: relative;
+    z-index: 1;
+    width: min(720px, calc(100vw - 48px));
+    max-height: min(760px, calc(100vh - 48px));
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border: 1px solid #e5ebf3;
+    border-radius: 24px;
+    background: #fff;
+    box-shadow: 0 28px 80px rgba(15, 23, 42, .20);
+    color: var(--moyo-text);
+}
+
+.moyo-friend-modal-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 22px 24px 14px;
+    border-bottom: 1px solid #edf1f6;
+    background: linear-gradient(135deg, #f8fbff 0%, #f4fffc 100%);
+}
+
+.moyo-friend-modal-eyebrow {
+    display: block;
+    margin-bottom: 5px;
+    color: var(--moyo-blue-strong);
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: .06em;
+}
+
+.moyo-friend-modal-head h2 {
+    margin: 0;
+    color: #172033;
+    font-size: 22px;
+    line-height: 1.2;
+    letter-spacing: -.045em;
+}
+
+.moyo-friend-modal-head p {
+    margin: 5px 0 0;
+    color: #667085;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.moyo-friend-modal-close {
+    width: 34px;
+    height: 34px;
+    border: 1px solid #dde7f2;
+    border-radius: 12px;
+    background: #fff;
+    color: #64748b;
+    font-size: 22px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.moyo-friend-modal-close:hover {
+    background: #f5faff;
+    color: var(--moyo-blue-strong);
+}
+
+.moyo-friend-modal-summary {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 24px 0;
+}
+
+.moyo-friend-modal-summary span {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    min-height: 30px;
+    padding: 0 11px;
+    border: 1px solid #e0e8f2;
+    border-radius: 999px;
+    background: #fbfdff;
+    color: #718099;
+    font-size: 11px;
+    font-weight: 800;
+}
+
+.moyo-friend-modal-summary strong {
+    color: #172033;
+    font-size: 14px;
+}
+
+.moyo-friend-modal-tabs {
+    display: flex;
+    gap: 7px;
+    padding: 12px 24px 10px;
+    border-bottom: 1px solid #edf1f6;
+}
+
+.moyo-friend-modal-tabs button {
+    min-height: 34px;
+    padding: 0 13px;
+    border: 1px solid #dde7f2;
+    border-radius: 999px;
+    background: #fff;
+    color: #667085;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 900;
+    cursor: pointer;
+}
+
+.moyo-friend-modal-tabs button.active {
+    border-color: #bfdbfe;
+    background: #eef6ff;
+    color: var(--moyo-blue-strong);
+}
+
+.moyo-friend-modal-body {
+    min-height: 0;
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px 24px 22px;
+}
+
+.moyo-friend-panel { display: none; }
+.moyo-friend-panel.active { display: block; }
+
+.moyo-friend-panel-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 9px;
+}
+
+.moyo-friend-panel-head strong {
+    color: #253044;
+    font-size: 14px;
+    font-weight: 900;
+}
+
+.moyo-friend-ghost-btn,
+.moyo-friend-row-actions button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 30px;
+    padding: 0 10px;
+    border: 1px solid #dbe7f4;
+    border-radius: 10px;
+    background: #fff;
+    color: var(--moyo-blue-strong);
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 900;
+    cursor: pointer;
+}
+
+.moyo-friend-row-actions button.primary {
+    border-color: transparent;
+    background: linear-gradient(135deg, #4f8df7 0%, #52c7d9 100%);
+    color: #fff;
+}
+
+.moyo-friend-row-actions button.danger {
+    color: #ef4444;
+    border-color: #fee2e2;
+    background: #fff7f7;
+}
+
+.moyo-friend-row-actions button:hover,
+.moyo-friend-ghost-btn:hover {
+    background: #f5faff;
+}
+
+.moyo-friend-search-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.moyo-friend-search-row input {
+    flex: 1;
+    min-width: 0;
+    height: 38px;
+    border: 1px solid #dde5ef;
+    border-radius: 12px;
+    padding: 0 12px;
+    background: #fbfcfe;
+    color: #263247;
+    font-family: inherit;
+    font-size: 12px;
+    outline: none;
+}
+
+.moyo-friend-search-row input:focus {
+    border-color: #4f8df7;
+    background: #fff;
+    box-shadow: 0 0 0 4px rgba(79, 141, 247, .10);
+}
+
+.moyo-friend-search-row button {
+    min-width: 72px;
+    border: 0;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #4f8df7 0%, #52c7d9 100%);
+    color: #fff;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 900;
+    cursor: pointer;
+}
+
+.moyo-friend-modal-list {
+    display: grid;
+    gap: 8px;
+}
+
+.moyo-friend-modal-list.compact { gap: 7px; }
+
+.moyo-friend-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 58px;
+    padding: 10px 12px;
+    border: 1px solid #e5ebf3;
+    border-radius: 15px;
+    background: #fff;
+}
+
+.moyo-friend-avatar {
+    width: 36px;
+    height: 36px;
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--moyo-blue), var(--moyo-mint));
+    color: #fff;
+    font-size: 13px;
+    font-weight: 900;
+}
+
+
+.moyo-friend-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    border-radius: 50%;
+}
+
+.moyo-friend-info {
+    min-width: 0;
+    flex: 1;
+}
+
+.moyo-friend-info strong {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: #253044;
+    font-size: 13px;
+    font-weight: 900;
+}
+
+.moyo-friend-info span {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    margin-top: 2px;
+    color: #7b8794;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.moyo-friend-row-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex: 0 0 auto;
+}
+
+.moyo-friend-status-chip {
+    display: inline-flex;
+    align-items: center;
+    min-height: 28px;
+    padding: 0 9px;
+    border-radius: 999px;
+    background: #f1f5f9;
+    color: #64748b;
+    font-size: 11px;
+    font-weight: 900;
+}
+
+.moyo-friend-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 90px;
+    border: 1px dashed #dbe4ee;
+    border-radius: 15px;
+    background: #fbfdff;
+    color: #98a2b3;
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.moyo-friend-request-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+}
+
+@media (max-width: 720px) {
+    .moyo-friend-modal {
+        align-items: flex-end;
+        padding: 0;
+    }
+
+    .moyo-friend-modal-panel {
+        width: 100%;
+        max-height: calc(100vh - 24px);
+        border-radius: 22px 22px 0 0;
+    }
+
+    .moyo-friend-request-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+
+/* ===== Sidebar relation/group tune ===== */
+.moyo-app-sidebar-section-heading {
+    padding: 0 6px 7px;
+}
+
+.moyo-app-sidebar-text-action {
+    min-height: auto;
+    height: auto;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    color: #7b8aa0;
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 900;
+    cursor: pointer;
+}
+
+.moyo-app-sidebar-text-action:hover,
+.moyo-app-sidebar-text-action.active {
+    color: var(--moyo-blue-strong);
+    background: transparent;
+    border-color: transparent;
+    box-shadow: none;
+    transform: none;
+    text-decoration: none;
+}
+
+.moyo-app-sidebar-friends-section {
+    padding-bottom: 11px;
+    border-bottom: 1px solid #f4f7fa;
+}
+
+.moyo-app-sidebar-friend-preview {
+    display: grid;
+    gap: 7px;
+}
+
+.moyo-app-sidebar-friend-block[hidden] {
+    display: none !important;
+}
+
+.moyo-app-sidebar-friend-section-label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 0 0 4px;
+    padding: 0 8px;
+    color: #7f8da1;
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: -.01em;
+}
+
+.moyo-app-sidebar-friend-avatar-strip {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    padding: 0 6px 1px;
+    overflow: hidden;
+}
+
+.moyo-app-sidebar-friend-chip {
+    width: 34px;
+    min-width: 34px;
+    display: grid;
+    justify-items: center;
+    gap: 2px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: #344054;
+    font-family: inherit;
+    cursor: pointer;
+}
+
+.moyo-app-sidebar-friend-chip .moyo-app-sidebar-friend-avatar {
+    width: 28px;
+    height: 28px;
+    flex-basis: 28px;
+}
+
+.moyo-app-sidebar-friend-chip span:last-child {
+    max-width: 34px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: #344054;
+    font-size: 9px;
+    font-weight: 900;
+    line-height: 1.1;
+}
+
+.moyo-app-sidebar-friend-chip:hover .moyo-app-sidebar-friend-avatar {
+    border-color: #bfdbfe;
+    box-shadow: 0 4px 10px rgba(74, 144, 226, .13);
+}
+
+.moyo-app-sidebar-friend-chip.skeleton {
+    width: auto;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    color: #98a2b3;
+    cursor: default;
+}
+
+.moyo-app-sidebar-friend-chip.skeleton span:last-child {
+    max-width: none;
+    color: #98a2b3;
+    font-size: 10px;
+}
+
+.moyo-app-sidebar-friend-mini-list {
+    display: grid;
+    gap: 2px;
+}
+
+.moyo-app-sidebar-friend-birthday {
+    padding: 7px 0;
+    border-top: 1px solid #f6f8fb;
+    border-bottom: 1px solid #f6f8fb;
+}
+
+.moyo-app-sidebar-birthday-note {
+    margin-left: auto;
+    color: #98a2b3;
+    font-size: 9.5px;
+    font-weight: 800;
+}
+
+.moyo-app-sidebar-friend-item {
+    width: 100%;
+    min-height: 35px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 8px;
+    border: 0;
+    border-radius: 12px;
+    background: transparent;
+    color: #344054;
+    font-family: inherit;
+    text-align: left;
+    cursor: pointer;
+    box-sizing: border-box;
+    transition: background .16s ease, color .16s ease, transform .16s ease;
+}
+
+.moyo-app-sidebar-friend-item:hover {
+    background: #f5f8fb;
+    color: var(--moyo-blue-strong);
+}
+
+.moyo-app-sidebar-friend-item:active {
+    transform: translateY(1px);
+}
+
+.moyo-app-sidebar-friend-item.skeleton {
+    color: #98a2b3;
+    cursor: default;
+}
+
+.moyo-app-sidebar-friend-item.skeleton:hover {
+    background: transparent;
+    color: #98a2b3;
+}
+
+.moyo-app-sidebar-friend-avatar {
+    width: 26px;
+    height: 26px;
+    flex: 0 0 26px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    background: linear-gradient(135deg, #eef6ff, #edfbf8);
+    color: #2563eb;
+    font-size: 12px;
+    font-weight: 900;
+    border: 1px solid #e8eef6;
+    box-sizing: border-box;
+}
+
+.moyo-app-sidebar-friend-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    border-radius: 50%;
+}
+
+.moyo-app-sidebar-friend-text {
+    min-width: 0;
+    display: grid;
+    gap: 0;
+    line-height: 1.22;
+}
+
+.moyo-app-sidebar-friend-text strong,
+.moyo-app-sidebar-friend-text em {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-style: normal;
+}
+
+.moyo-app-sidebar-friend-text strong {
+    color: #344054;
+    font-size: 11.5px;
+    font-weight: 900;
+}
+
+.moyo-app-sidebar-friend-item:hover .moyo-app-sidebar-friend-text strong {
+    color: var(--moyo-blue-strong);
+}
+
+.moyo-app-sidebar-friend-text em {
+    color: #b3bcc8;
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: -.01em;
+}
+
+
+/* ===== Sidebar group/project hierarchy tone ===== */
+.moyo-app-workspace-menu {
+    border-left-color: #e8edf3;
+}
+
+.moyo-app-workspace-home {
+    color: #3f6f69;
+    font-weight: 800;
+}
+
+.moyo-app-workspace-home .moyo-app-project-dot.home {
+    width: 8px;
+    height: 8px;
+    background: var(--moyo-mint);
+    box-shadow: 0 0 0 3px rgba(57, 205, 181, .12);
+}
+
+.moyo-app-workspace-home:hover,
+.moyo-app-workspace-home.active {
+    background: #ecfbf8;
+    color: #119c8c;
+}
+
+.moyo-app-project-link {
+    color: #6b5f7f;
+    font-weight: 750;
+}
+
+.moyo-app-project-link .moyo-app-project-dot {
+    width: 7px;
+    height: 7px;
+    background: var(--moyo-purple);
+    box-shadow: 0 0 0 3px rgba(139, 92, 246, .10);
+}
+
+.moyo-app-project-link:hover,
+.moyo-app-project-link.active {
+    background: #f4f0ff;
+    color: #6d45d8;
+}
+
+.moyo-app-project-link.active .moyo-app-project-dot {
+    background: var(--moyo-purple);
+    box-shadow: 0 0 0 3px rgba(139, 92, 246, .16);
+}
+
+/* ===== App content flush correction =====
+   사이드바가 붙은 앱 화면에서는 각 페이지 shell이 추가 좌우 gutter/max-width로
+   다시 중앙 정렬되지 않게 한다. 사이드바가 확보한 본문 영역을 그대로 사용한다. */
+body.moyo-app-sidebar-enabled .moyo-calendar-page,
+body.moyo-app-sidebar-enabled .nl-shell,
+body.moyo-app-sidebar-enabled .photo-ui-shell {
+    width: 100% !important;
+    max-width: none !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    box-sizing: border-box;
 }

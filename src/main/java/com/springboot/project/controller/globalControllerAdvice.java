@@ -51,7 +51,7 @@ public class globalControllerAdvice {
 
         Map<Long, List<projectRequestDTO>> result = new LinkedHashMap<>();
         for (workspaceDTO workspace : workspaces) {
-            List<projectRequestDTO> projects = projectDAO.selectProjectsByWsId(workspace.getWsId());
+            List<projectRequestDTO> projects = projectDAO.selectSidebarActiveProjectsByWsId(workspace.getWsId());
             result.put(workspace.getWsId(), projects == null ? Collections.emptyList() : projects);
         }
         return result;

@@ -6,20 +6,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MOYO 회원가입</title>
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/signup.css?v=20260609-final3">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/signup.css?v=20260706-auth-ui63">
 </head>
 <body class="signup-body" data-context-path="${pageContext.request.contextPath}">
     <main class="signup-shell">
         <section class="signup-brand-panel" aria-label="MOYO 소개">
             <div class="signup-brand-copy">
-                <span class="signup-eyebrow">함께 모여 완성하는 협업</span>
-                <h1>워크스페이스부터<br>프로젝트까지 한곳에서</h1>
-                <p>MOYO에서 팀원과 일정을 공유하고,<br>업무와 소통을 자연스럽게 연결하세요.</p>
+                <span class="signup-eyebrow">MOYO에 모여</span>
+                <h1>친구와 그룹,<br>프로젝트까지<br>함께하는 순간을<br>한 곳에서</h1>
+                <p>일정부터 기록과 사진까지<br>MOYO에서 함께 모아보세요.</p>
             </div>
             <div class="signup-feature-row" aria-hidden="true">
-                <span>워크스페이스</span>
+                <span>친구</span>
+                <span>그룹</span>
                 <span>프로젝트</span>
-                <span>캘린더</span>
+                <span>일정</span>
+                <span>기록</span>
+                <span>사진</span>
             </div>
         </section>
 
@@ -84,15 +87,32 @@
     let checkedEmail = '';
     let emailAvailable = false;
 
+    const setEmailState = (type) => {
+        emailInput.classList.remove('is-error', 'is-success');
+        emailInput.removeAttribute('aria-invalid');
+        if (type === 'error') {
+            emailInput.classList.add('is-error');
+            emailInput.setAttribute('aria-invalid', 'true');
+        } else if (type === 'success') {
+            emailInput.classList.add('is-success');
+        }
+    };
+
     const setMessage = (text, type) => {
         message.textContent = text;
         message.className = 'signup-field-message' + (type ? ' is-' + type : '');
+        setEmailState(type === 'error' || type === 'success' ? type : '');
     };
 
     emailInput.addEventListener('input', () => {
         checkedEmail = '';
         emailAvailable = false;
         setMessage('', '');
+    });
+
+    passwordInput.addEventListener('input', () => {
+        passwordInput.classList.remove('is-error');
+        passwordInput.removeAttribute('aria-invalid');
     });
 
     checkButton.addEventListener('click', async () => {
@@ -134,15 +154,20 @@
             emailInput.focus();
             return;
         }
+        passwordInput.classList.remove('is-error');
+        passwordInput.removeAttribute('aria-invalid');
         if (passwordInput.value.trim().length < 4) {
             event.preventDefault();
+            passwordInput.classList.add('is-error');
+            passwordInput.setAttribute('aria-invalid', 'true');
             passwordInput.focus();
             return;
         }
-        if (!emailAvailable || checkedEmail !== email) {
+        if (checkedEmail === email && !emailAvailable) {
             event.preventDefault();
-            setMessage('이메일 중복 확인을 먼저 진행해주세요.', 'error');
-            checkButton.focus();
+            setMessage('이미 가입된 이메일입니다.', 'error');
+            emailInput.focus();
+            return;
         }
     });
 })();
