@@ -3,8 +3,13 @@
 	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-
 <mapper namespace="com.springboot.project.dao.IcsDAO">
+
+    <select id="getCategoryList" resultType="com.springboot.project.dto.csInquiryDTO">
+        SELECT CATEGORY_ID AS categoryId, CATEGORY_NAME AS categoryName 
+        FROM CS_CATEGORIES 
+        ORDER BY CATEGORY_ID ASC
+    </select>
 
     <select id="findCsByUserId" resultType="com.springboot.project.dto.csDTO">
         SELECT 
@@ -15,6 +20,49 @@
         FROM CS_LOGS
         WHERE USER_ID = #{userId}
         ORDER BY CS_ID DESC
+    </select>
+
+    <insert id="insertCsLog" parameterType="com.springboot.project.dto.csDTO">
+        <selectKey keyProperty="csId" resultType="long" order="BEFORE">
+            SELECT SEQ_CS_ID.NEXTVAL FROM DUAL
+        </selectKey>
+        INSERT INTO CS_LOGS (CS_ID, USER_ID, EXT_KEY, CS_STATUS) 
+        VALUES (#{csId}, #{userId}, 'NONE', 'OPEN')
+    </insert>
+
+    <insert id="insertCsMessage" parameterType="com.springboot.project.dto.csInquiryDTO">
+       INSERT INTO CS_MESSAGES (MSG_ID, CS_ID, SENDER_ID, CATEGORY_ID, TITLE, CONTENT, CREATED_AT)
+       VALUES (
+           SEQ_CS_MSG_ID.NEXTVAL, 
+           #{csId, jdbcType=BIGINT}, 
+           #{senderId, jdbcType=BIGINT}, 
+           #{categoryId, jdbcType=BIGINT}, 
+           #{title, jdbcType=VARCHAR}, 
+           #{content, jdbcType=VARCHAR}, 
+           SYSDATE
+       )
+    </insert>
+    <select id="findMessagesByCsId" resultType="com.springboot.project.dto.csInquiryDTO">
+        SELECT 
+            MSG_ID AS msgId,
+            CS_ID AS csId,
+            SENDER_ID AS senderId,
+            CATEGORY_ID AS categoryId,
+            TITLE AS title,
+            CONTENT AS content,
+            CREATED_AT AS createdAt
+        FROM CS_MESSAGES
+        WHERE CS_ID = #{csId}
+        ORDER BY CREATED_AT ASC
+    </select>
+    
+    <select id="findActiveLogByUserId" resultType="com.springboot.project.dto.csDTO">
+        SELECT * FROM (
+            SELECT CS_ID AS csId, USER_ID AS userId 
+            FROM CS_LOGS 
+            WHERE USER_ID = #{userId} AND CS_STATUS = 'OPEN'
+            ORDER BY CS_ID DESC
+        ) WHERE ROWNUM = 1
     </select>
 
 </mapper>
