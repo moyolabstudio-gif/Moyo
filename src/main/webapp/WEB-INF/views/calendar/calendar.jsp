@@ -11,7 +11,9 @@
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/commonShareModal.css?v=calendar-share-release-plane-v1">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/calendar.css?v=project-period-v2">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/commonScopeSelector.css?v=common-scope-selector-v2">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/calendar.css?v=calendar-common-scope-v2">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/commonCalendarEventPreview.css?v=calendar-preview-common-v7">
 
 </head>
 <body>
@@ -41,13 +43,77 @@
         </div>
     </section>
 
-    <section class="moyo-calendar-targetbar" id="calendarTargetBar" hidden aria-label="상세 선택 필터">
-        <span class="moyo-calendar-target-label" id="calendarTargetLabel">선택</span>
-        <button type="button" class="moyo-target-nav" id="targetFilterPrev" aria-label="이전 선택 항목"><i class="fa-solid fa-chevron-left"></i></button>
-        <div class="moyo-calendar-target-viewport">
-            <div class="moyo-calendar-target-list" id="calendarTargetList"></div>
-        </div>
-        <button type="button" class="moyo-target-nav" id="targetFilterNext" aria-label="다음 선택 항목"><i class="fa-solid fa-chevron-right"></i></button>
+    <section class="moyo-calendar-context" id="calendarContextArea" aria-label="캘린더 상세 범위">
+        <section class="moyo-calendar-targetbar" id="calendarTargetBar" hidden aria-label="현재 선택 대상">
+                <div class="moyo-calendar-target-current">
+                    <span class="moyo-calendar-target-label" id="calendarTargetLabel">현재 선택</span>
+                    <strong class="moyo-calendar-target-name" id="calendarTargetCurrent">전체</strong>
+                </div>
+                <button type="button" class="moyo-target-select-open" id="calendarTargetSelectOpen">
+                    <i class="fa-solid fa-sliders" aria-hidden="true"></i><span>대상 변경</span>
+                </button>
+            </section>
+
+        <section class="moyo-project-summary" id="calendarProjectSummary" hidden aria-label="프로젝트 업무 요약">
+                <article class="moyo-project-summary-card is-todo">
+                    <span class="moyo-project-summary-label">해야 할 일</span>
+                    <strong class="moyo-project-summary-value" id="projectSummaryTodo">0</strong>
+                </article>
+                <article class="moyo-project-summary-card is-progress">
+                    <span class="moyo-project-summary-label">진행 중</span>
+                    <strong class="moyo-project-summary-value" id="projectSummaryProgress">0</strong>
+                </article>
+                <article class="moyo-project-summary-card is-done">
+                    <span class="moyo-project-summary-label">완료</span>
+                    <strong class="moyo-project-summary-value" id="projectSummaryDone">0</strong>
+                </article>
+                <article class="moyo-project-summary-card is-delayed">
+                    <span class="moyo-project-summary-label">지연</span>
+                    <strong class="moyo-project-summary-value" id="projectSummaryDelayed">0</strong>
+                </article>
+                <article class="moyo-project-summary-card is-rate">
+                    <div class="moyo-project-summary-rate-head">
+                        <span class="moyo-project-summary-label">진행률</span>
+                        <strong class="moyo-project-summary-percent" id="projectSummaryRate">0%</strong>
+                    </div>
+                    <div class="moyo-project-summary-progress" aria-hidden="true">
+                        <span id="projectSummaryRateBar" style="width:0%"></span>
+                    </div>
+                </article>
+            </section>
+
+        <section class="moyo-project-task-filter" id="calendarProjectTaskFilter" hidden aria-label="프로젝트 업무 필터">
+                <div class="moyo-project-filter-group">
+                    <span class="moyo-project-filter-label">업무 범위</span>
+                    <div class="moyo-project-filter-options">
+                        <button type="button" class="moyo-project-filter-chip is-active" data-project-assignee-mode="ALL">전체 업무</button>
+                        <button type="button" class="moyo-project-filter-chip" data-project-assignee-mode="MINE">내 업무</button>
+                        <button type="button" class="moyo-project-filter-chip" data-project-assignee-mode="ASSIGNEE">담당자별</button>
+                        <select class="moyo-project-filter-select" id="calendarProjectAssigneeSelect" hidden aria-label="담당자 선택">
+                            <option value="ALL">담당자 전체</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="moyo-project-filter-group">
+                    <span class="moyo-project-filter-label">상태</span>
+                    <div class="moyo-project-filter-options">
+                        <button type="button" class="moyo-project-filter-chip is-active" data-project-status="ALL">전체</button>
+                        <button type="button" class="moyo-project-filter-chip" data-project-status="TODO">할 일</button>
+                        <button type="button" class="moyo-project-filter-chip" data-project-status="IN_PROGRESS">진행 중</button>
+                        <button type="button" class="moyo-project-filter-chip" data-project-status="DONE">완료</button>
+                        <button type="button" class="moyo-project-filter-chip is-delay" data-project-status="DELAYED">지연</button>
+                    </div>
+                </div>
+                <div class="moyo-project-filter-group is-display">
+                    <span class="moyo-project-filter-label">표시</span>
+                    <div class="moyo-project-filter-options">
+                        <button type="button" class="moyo-project-filter-chip is-active" data-project-display-kind="SCHEDULE" aria-pressed="true">일정</button>
+                        <button type="button" class="moyo-project-filter-chip is-active" data-project-display-kind="TASK" aria-pressed="true">업무</button>
+                    </div>
+                </div>
+                <button type="button" class="moyo-project-filter-reset" id="calendarProjectFilterReset">초기화</button>
+            </section>
+
     </section>
 
     <section class="moyo-calendar-stage">
@@ -267,96 +333,9 @@
     </section>
 </div>
 
-<div class="moyo-event-view-overlay" id="calendarViewModal" hidden>
-    <article class="moyo-event-view-card" role="dialog" aria-modal="true" aria-labelledby="calendarViewTitle">
-        <header class="moyo-event-view-head">
-            <div class="moyo-event-view-head-main">
-                <div class="moyo-event-view-kicker"><span class="moyo-event-view-dot" id="calendarViewTypeDot"></span><span id="calendarViewMeta">일정</span></div>
-                <div class="moyo-event-view-title-row">
-                    <h2 class="moyo-event-view-title" id="calendarViewTitle">일정</h2>
-                    <span class="moyo-event-view-type-icon" id="calendarViewTypeIcon" aria-hidden="true"><i class="fa-regular fa-calendar"></i></span>
-                    <span class="moyo-event-view-public-badge" id="calendarViewMoyoBadge" title="MOYO 공개" hidden>
-                        <img id="calendarViewMascot" src="" alt="" aria-hidden="true">
-                    </span>
-                </div>
-            </div>
-            <div class="moyo-event-view-head-actions">
-                <button type="button" class="moyo-event-view-head-btn moyo-event-view-edit" id="calendarViewEdit" aria-label="수정" title="수정" hidden>
-                    <i class="fa-solid fa-pencil" aria-hidden="true"></i>
-                </button>
-                <button type="button" class="moyo-event-view-head-btn moyo-event-view-delete" id="calendarViewDelete" aria-label="삭제" title="삭제" hidden>
-                    <i class="fa-regular fa-trash-can" aria-hidden="true"></i>
-                </button>
-                <button type="button" class="moyo-event-view-head-btn moyo-event-view-share" id="calendarViewShareBtn" aria-label="공유" title="공유" hidden>
-                    <i class="fa-regular fa-paper-plane" aria-hidden="true"></i>
-                </button>
-                <button type="button" class="moyo-event-view-head-btn moyo-event-view-close" id="calendarViewClose" aria-label="닫기" title="닫기">
-                    <i class="fa-solid fa-xmark" aria-hidden="true"></i>
-                </button>
-            </div>
-        </header>
-        <div class="moyo-event-view-author" id="calendarViewAuthorRow" hidden>
-            <div class="moyo-event-view-author-main">
-                <span class="moyo-event-view-author-avatar" id="calendarViewAuthorAvatar" aria-hidden="true"></span>
-                <span class="moyo-event-view-author-name" id="calendarViewAuthorName"></span>
-            </div>
-            <span class="moyo-event-view-author-scope" id="calendarViewAuthorScope"></span>
-        </div>
-        <div class="moyo-event-view-body">
-            <section class="moyo-event-view-section time">
-                <div class="moyo-event-view-row-icon" aria-hidden="true"><i class="fa-regular fa-clock"></i></div>
-                <div class="moyo-event-view-content" id="calendarViewTimeInfo"></div>
-            </section>
-            <section class="moyo-event-view-section location" id="calendarViewLocationSection">
-                <div class="moyo-event-view-row-icon" aria-hidden="true"><i class="fa-solid fa-location-dot"></i></div>
-                <div class="moyo-event-view-content moyo-event-view-textbox" id="calendarViewLocation"></div>
-            </section>
-            <section class="moyo-event-view-section attendees" id="calendarViewAttendeesSection">
-                <div class="moyo-event-view-row-icon" aria-hidden="true"><i class="fa-solid fa-users"></i></div>
-                <div class="moyo-event-view-content moyo-event-view-people" id="calendarViewAttendees"></div>
-            </section>
-            <section class="moyo-event-view-section description" id="calendarViewDescriptionSection">
-                <div class="moyo-event-view-row-icon" aria-hidden="true"><i class="fa-regular fa-note-sticky"></i></div>
-                <div class="moyo-event-view-content moyo-event-view-textbox" id="calendarViewDescription"></div>
-            </section>
-        </div>
+<%@ include file="../common/commonScopeSelector.jspf"%>
 
-    </article>
-</div>
-
-<div class="moyo-event-view-delete-modal" id="calendarViewDeleteModal" hidden>
-    <section class="moyo-event-view-delete-panel" role="dialog" aria-modal="true" aria-labelledby="calendarViewDeleteTitle">
-        <div class="moyo-event-view-delete-head">
-            <div>
-                <h3 id="calendarViewDeleteTitle">일정 삭제</h3>
-                <p id="calendarViewDeleteMessage">이 일정을 정말 삭제하시겠습니까?</p>
-            </div>
-            <button type="button" class="moyo-event-view-delete-close" data-calendar-view-delete-close aria-label="닫기">
-                <i class="fa-solid fa-xmark" aria-hidden="true"></i>
-            </button>
-        </div>
-        <div class="moyo-event-view-delete-body" id="calendarViewDeleteRepeatBody" hidden>
-            <div class="moyo-event-view-delete-options" role="radiogroup" aria-label="반복 일정 삭제 범위">
-                <label class="moyo-event-view-delete-option">
-                    <input type="radio" name="calendarViewDeleteScope" value="ONE" checked>
-                    <span><strong>이 일정만 삭제</strong><span>선택한 날짜의 일정만 삭제합니다.</span></span>
-                </label>
-                <label class="moyo-event-view-delete-option">
-                    <input type="radio" name="calendarViewDeleteScope" value="FUTURE">
-                    <span><strong>이 날짜 이후 삭제</strong><span>선택한 날짜부터 이후 반복 일정을 삭제합니다.</span></span>
-                </label>
-                <label class="moyo-event-view-delete-option">
-                    <input type="radio" name="calendarViewDeleteScope" value="ALL">
-                    <span><strong>전체 반복 삭제</strong><span>이 반복 일정 전체를 삭제합니다.</span></span>
-                </label>
-            </div>
-        </div>
-        <div class="moyo-event-view-delete-actions">
-            <button type="button" class="moyo-event-view-delete-btn" data-calendar-view-delete-close>취소</button>
-            <button type="button" class="moyo-event-view-delete-btn danger" id="calendarViewDeleteConfirm">삭제</button>
-        </div>
-    </section>
-</div>
+<%@ include file="../common/commonCalendarEventPreview.jspf"%>
 
 <button type="button" id="calendarViewShareOpenHidden" data-share-content-id="" hidden>공유</button>
 <span id="calendarViewShareCount" hidden>0</span>
@@ -411,6 +390,8 @@
     window.MOYO_CALENDAR_CONTEXT_PATH = '${pageContext.request.contextPath}';
     window.MOYO_CALENDAR_SESSION_USER_ID = '${sessionScope.user.userId}';
 </script>
-<script src="${pageContext.request.contextPath}/js/calendar.js?v=project-period-v2"></script>
+<script src="${pageContext.request.contextPath}/js/commonCalendarEventPreview.js?v=calendar-preview-common-v6"></script>
+<script src="${pageContext.request.contextPath}/js/commonScopeSelector.js?v=common-scope-selector-v2"></script>
+<script src="${pageContext.request.contextPath}/js/calendar.js?v=calendar-common-scope-v2"></script>
 </body>
 </html>

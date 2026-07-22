@@ -86,6 +86,18 @@ public class photoAlbumServiceImpl implements IphotoAlbumService {
     }
 
     @Override
+    public List<Map<String, Object>> getProfilePublicPosts(Long profileUserId, Long viewerUserId) {
+        if (profileUserId == null) return List.of();
+        return photoAlbumDAO.selectProfilePublicPosts(profileUserId, viewerUserId);
+    }
+
+    @Override
+    public int countProfilePublicPosts(Long profileUserId) {
+        if (profileUserId == null) return 0;
+        return photoAlbumDAO.countProfilePublicPosts(profileUserId);
+    }
+
+    @Override
     public Map<String, Object> getPost(Long postId) {
         return photoAlbumDAO.selectPost(postId, null);
     }

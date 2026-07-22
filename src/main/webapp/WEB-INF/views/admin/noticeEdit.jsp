@@ -2,80 +2,97 @@
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 
 <!DOCTYPE html>
-<html>
+<html lang="ko">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>공지사항 수정</title>
-    <link rel="stylesheet" href="/css/moyoUi.css?v=moyo-ui-scope-20260617">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/moyoUi.css?v=moyo-ui-scope-20260617">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/commonRichContent.css?v=rich-content-v3">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/noticeForm.css?v=notice-form-v3">
     <script src="https://cdn.ckeditor.com/ckeditor5/41.1.0/super-build/ckeditor.js"></script>
     <script src="https://cdn.ckeditor.com/ckeditor5/41.1.0/super-build/translations/ko.js"></script>
-    <script src="/js/commonCkeditor.js?v=moyo-editor-v1"></script>
-
-    <style>
-        .write-container { max-width: 800px; margin: 120px auto 50px; padding: 20px; }
-        .form-group { margin-bottom: 20px; }
-        label { display: block; margin-bottom: 8px; font-weight: 800; color: #344054; }
-        input[type="text"] { 
-            width: 100%; padding: 15px; border: 1px solid #e9eef4; 
-            border-radius: 12px; box-sizing: border-box; font-size: 14px;
-        }
-        /* 에디터가 적용될 공간을 위해 스타일 조정 */
-        .ck-editor__editable { min-height: 300px; }
-        
-        .btn-submit { 
-            background: #2878d0; color: #fff; padding: 15px 30px; 
-            border: none; border-radius: 12px; font-weight: 900; cursor: pointer;
-            float: right; transition: background 0.2s;
-        }
-        .btn-submit:hover { background: #1f65b5; }
-    </style>
+    <script src="${pageContext.request.contextPath}/js/commonCkeditor.js?v=moyo-editor-v1"></script>
 </head>
 <body>
 
-<header>
-    <%@ include file="../common/header.jsp"%>
-</header>
+<%@ include file="../common/header.jsp"%>
 
-<div class="write-container">
-    <h2>공지사항 수정</h2>
+<main class="notice-form-page">
+    <div class="notice-form-shell">
+        <section class="notice-form-hero">
+            <div class="notice-form-eyebrow">MOYO 안내</div>
+            <h1 class="notice-form-title">공지사항 수정</h1>
+            <p class="notice-form-subtitle">등록된 공지의 내용과 중요도 설정을 수정하세요.</p>
+        </section>
 
-<form action="/admin/notice/noticeUpdate" method="post">
-    
-    <input type="hidden" name="noticeId" value="${notice.noticeId}">
-    
-    <div class="form-group">
-        <label>제목</label>
-        <input type="text" name="title" value="${notice.title}" required>
+        <form class="notice-form-card" action="${pageContext.request.contextPath}/admin/notice/noticeUpdate" method="post">
+            <input type="hidden" name="noticeId" value="${notice.noticeId}">
+
+            <section class="notice-form-section">
+                <div class="notice-form-section-head">
+                    <div>
+                        <h2 class="notice-form-section-title">공지 내용</h2>
+                    </div>
+                </div>
+
+                <div class="notice-form-field">
+                    <label class="notice-form-label" for="noticeTitle">제목<span class="notice-form-required">*</span></label>
+                    <input
+                        id="noticeTitle"
+                        class="notice-form-input"
+                        type="text"
+                        name="title"
+                        value="${notice.title}"
+                        placeholder="공지 제목을 입력하세요"
+                        maxlength="200"
+                        required>
+                </div>
+
+                <div class="notice-form-field">
+                    <label class="notice-form-label" for="memo">내용<span class="notice-form-required">*</span></label>
+                    <textarea id="memo" name="content" required><c:out value="${notice.content}"/></textarea>
+                </div>
+            </section>
+
+            <section class="notice-form-section">
+                <div class="notice-form-settings notice-form-settings-single">
+                    <label class="notice-setting-row" for="noticePinned">
+                        <span class="notice-setting-copy">
+                            <span class="notice-setting-title">상단 고정</span>
+                            <span class="notice-setting-desc">중요 공지를 목록 최상단에 고정합니다.</span>
+                        </span>
+                        <input
+                            id="noticePinned"
+                            class="notice-setting-check"
+                            type="checkbox"
+                            name="isPinned"
+                            value="Y"
+                            <c:if test="${notice.isPinned eq 'Y'}">checked</c:if>>
+                        <span class="notice-setting-switch" aria-hidden="true"></span>
+                    </label>
+                </div>
+            </section>
+
+            <div class="notice-form-actions">
+                <a class="notice-form-button notice-form-button-secondary" href="${pageContext.request.contextPath}/common/noticeList">목록으로</a>
+                <button class="notice-form-button notice-form-button-primary" type="submit">수정 완료</button>
+            </div>
+        </form>
     </div>
-    
-    <div class="form-group">
-        <label>내용</label>
-        <textarea id="memo" name="content">${notice.content}</textarea>
-    </div>
-    
-    <div class="form-group">
-        <label>
-            <input type="checkbox" name="isPinned" value="Y" 
-            <c:if test="${notice.isPinned eq 'Y'}">checked</c:if>> 상단 고정 여부
-        </label>
-    </div>
-    
-    <button type="submit" class="btn-submit">공지 수정하기</button>
-</form>
-</div>
+</main>
+
+<%@ include file="../common/footer.jsp"%>
+
 <script>
-    document.addEventListener("DOMContentLoaded", function() {
-        MoyoCkeditor.create('#memo', {
-            uploadUrl: '/admin/notice/image-upload'
-        }).then(editor => {
-            // 서버에서 넘어온 기존 데이터를 에디터에 로드
-            const existingContent = `${notice.content}`; 
-            editor.setData(existingContent);
-        }).catch(error => {
-            console.error('에디터 초기화 실패:', error);
-        });
+document.addEventListener('DOMContentLoaded', function () {
+    MoyoCkeditor.create('#memo', {
+        uploadUrl: '${pageContext.request.contextPath}/admin/notice/image-upload',
+        placeholder: '공지 내용을 입력하세요.'
+    }).catch(function (error) {
+        console.error('에디터 초기화 실패:', error);
     });
+});
 </script>
 </body>
 </html>

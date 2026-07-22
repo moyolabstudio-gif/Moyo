@@ -33,7 +33,7 @@
       AND p.BOARD_TYPE = #{boardType}
       AND p.PROJ_ID IS NULL
     ORDER BY CASE WHEN p.IS_PINNED = 'Y' AND (p.PIN_START_DT IS NULL OR p.PIN_START_DT &lt;= SYSDATE) AND (p.PIN_END_DT IS NULL OR p.PIN_END_DT >= TRUNC(SYSDATE)) THEN 0 ELSE 1 END, p.REG_DT DESC
-    FETCH FIRST 5 ROWS ONLY
+    FETCH FIRST 3 ROWS ONLY
     </select>
 
     <select id="selectBoardList" resultType="com.springboot.project.dto.postDTO">

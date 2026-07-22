@@ -172,6 +172,9 @@ body.moyo-app-sidebar-collapsed .moyo-app-sidebar {
     width: 31px;
     height: 31px;
     flex-shrink: 0;
+    overflow: hidden;
+    border-radius: 10px;
+    background: transparent;
 }
 
 .moyo-app-workspace-avatar img,
@@ -184,16 +187,17 @@ body.moyo-app-sidebar-collapsed .moyo-app-sidebar {
     box-sizing: border-box;
 }
 
-.moyo-app-workspace-avatar img { display: block; }
+.moyo-app-workspace-avatar img { display: block; background: transparent; }
 
 .moyo-app-workspace-avatar-fallback {
     display: none;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(135deg, var(--moyo-blue), var(--moyo-mint));
+    background: linear-gradient(135deg, #45d6c8 0%, #4a90e2 52%, #7868f8 100%);
     color: #fff;
     font-size: 12px;
     font-weight: 900;
+    text-transform: uppercase;
 }
 .moyo-app-workspace-avatar-fallback.show { display: flex; }
 
@@ -804,7 +808,7 @@ body.moyo-app-sidebar-collapsed .moyo-app-sidebar {
     align-items: center;
     justify-content: center;
     border-radius: 50%;
-    background: linear-gradient(135deg, var(--moyo-blue), var(--moyo-mint));
+    background: linear-gradient(135deg, #45d6c8 0%, #4a90e2 52%, #7868f8 100%);
     color: #fff;
     font-size: 13px;
     font-weight: 900;
@@ -1187,4 +1191,86 @@ body.moyo-app-sidebar-enabled .photo-ui-shell {
     margin-left: 0 !important;
     margin-right: 0 !important;
     box-sizing: border-box;
+}
+
+/* ===== Sidebar project entry points ===== */
+.moyo-app-sidebar-projects-section {
+    margin-top: 16px;
+}
+
+.moyo-app-sidebar-projects-section + .moyo-app-sidebar-groups-section {
+    margin-top: 16px;
+}
+
+.moyo-app-sidebar-project-nav {
+    display: grid;
+    gap: 4px;
+}
+
+.moyo-app-sidebar-project-entry {
+    position: relative;
+}
+
+.moyo-app-sidebar-project-entry.personal:hover,
+.moyo-app-sidebar-project-entry.personal.active {
+    color: var(--moyo-blue-strong);
+    background: #eef6ff;
+}
+
+.moyo-app-sidebar-project-entry.manage:hover,
+.moyo-app-sidebar-project-entry.manage.active {
+    color: #6d4ed1;
+    background: #f5f1ff;
+}
+
+.moyo-app-sidebar-project-icon {
+    position: relative;
+    display: inline-block;
+    width: 18px;
+    height: 18px;
+    flex: 0 0 18px;
+}
+
+.moyo-app-sidebar-project-icon.personal::before {
+    content: '';
+    position: absolute;
+    inset: 3px;
+    border-radius: 50%;
+    border: 2px solid var(--moyo-blue);
+    background: #fff;
+}
+
+.moyo-app-sidebar-project-icon.personal::after {
+    content: '';
+    position: absolute;
+    left: 2px;
+    right: 2px;
+    bottom: 0;
+    height: 7px;
+    border: 2px solid var(--moyo-blue);
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    border-bottom: 0;
+}
+
+.moyo-app-sidebar-project-icon.manage::before,
+.moyo-app-sidebar-project-icon.manage::after {
+    content: '';
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    border-radius: 3px;
+    background: linear-gradient(135deg, var(--moyo-mint), var(--moyo-purple));
+}
+
+.moyo-app-sidebar-project-icon.manage::before {
+    left: 1px;
+    top: 1px;
+    box-shadow: 9px 0 0 rgba(118, 87, 219, .72), 0 9px 0 rgba(78, 205, 196, .72);
+}
+
+.moyo-app-sidebar-project-icon.manage::after {
+    right: 0;
+    bottom: 0;
+    background: var(--moyo-purple);
 }

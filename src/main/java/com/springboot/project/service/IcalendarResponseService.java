@@ -37,6 +37,10 @@ public interface IcalendarResponseService {
     List<Map<String, Object>> getProjectsByUserId(long userId);
     String checkUserRole(Long wsId, Long userId);
 
+    List<calendarResponseDTO> getProfilePublicEvents(Long profileUserId, int limit);
+
+    int countProfilePublicEvents(Long profileUserId);
+
     Map<String, Object> getEventDetailForView(Long eventId, Long userId);
 
     boolean canEditEvent(Long eventId, Long userId);

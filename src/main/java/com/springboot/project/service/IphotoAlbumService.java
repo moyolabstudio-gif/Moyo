@@ -14,6 +14,8 @@ public interface IphotoAlbumService {
 
     List<Map<String, Object>> getPosts(String scopeType, Long scopeId, Long albumId, Long userId);
     List<Map<String, Object>> getRecentPosts(String scopeType, Long scopeId, int limit, Long userId);
+    List<Map<String, Object>> getProfilePublicPosts(Long profileUserId, Long viewerUserId);
+    int countProfilePublicPosts(Long profileUserId);
     Map<String, Object> getPost(Long postId);
     Map<String, Object> getPost(Long postId, Long userId);
     List<Map<String, Object>> getPostPhotos(Long postId);

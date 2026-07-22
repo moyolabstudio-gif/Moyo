@@ -14,6 +14,7 @@ let sessionUserId, calendar;
         const state = {
             scope: 'ALL',
             targetId: 'ALL',
+            selection: createCalendarSelection('ALL'),
             selectedDate: new Date(),
             userSpaces: { workspaces: [], projects: [] },
             friends: [],
@@ -29,12 +30,192 @@ let sessionUserId, calendar;
                 PROJECT_PERIOD: true,
                 PROJECT_EVENT: true,
                 MILESTONE: true,
-                TASK_DUE: false,
-                TASK_ASSIGNED: false
+                TASK_DUE: true,
+                TASK_ASSIGNED: true
+            },
+            projectTaskFilter: {
+                assigneeMode: 'ALL',
+                assigneeId: 'ALL',
+                status: 'ALL',
+                showSchedule: true,
+                showTask: true
             },
             searchKeyword: '',
             calendarSourceEvents: []
         };
+
+
+        function createCalendarSelection(scope) {
+            return {
+                scope: String(scope || 'ALL').toUpperCase(),
+                friendId: null,
+                wsId: null,
+                projectScope: null,
+                projId: null,
+                label: ''
+            };
+        }
+
+        function setCalendarSelectionScope(scope) {
+            const nextScope = String(scope || 'ALL').toUpperCase();
+            state.selection = createCalendarSelection(nextScope);
+            state.scope = nextScope;
+            state.targetId = 'ALL';
+        }
+
+        function normalizeSelectionId(value) {
+            if (value == null || value === '' || String(value).toUpperCase() === 'ALL') return null;
+            return String(value);
+        }
+
+        function normalizeProjectScope(value) {
+            const scope = String(value || '').toUpperCase();
+            return scope === 'PERSONAL' || scope === 'GROUP' ? scope : null;
+        }
+
+        function getLegacyTargetId(selection) {
+            const current = selection || state.selection || createCalendarSelection(state.scope);
+            if (current.scope === 'FRIEND') return current.friendId || 'ALL';
+            if (current.scope === 'WS') return current.wsId || 'ALL';
+            if (current.scope === 'PROJ') return current.projId || 'ALL';
+            return 'ALL';
+        }
+
+        function getSelectedTargetId() {
+            return getLegacyTargetId(state.selection);
+        }
+
+        function setCalendarSelectionTarget(target) {
+            const current = state.selection || createCalendarSelection(state.scope);
+            const next = Object.assign(createCalendarSelection(state.scope), current, target || {});
+            next.scope = String(state.scope || next.scope || 'ALL').toUpperCase();
+
+            if (next.scope === 'FRIEND') {
+                next.friendId = normalizeSelectionId(next.friendId);
+            } else if (next.scope === 'WS') {
+                next.wsId = normalizeSelectionId(next.wsId);
+            } else if (next.scope === 'PROJ') {
+                next.projectScope = normalizeProjectScope(next.projectScope);
+                next.wsId = normalizeSelectionId(next.wsId);
+                next.projId = normalizeSelectionId(next.projId);
+                if (next.projectScope === 'PERSONAL') next.wsId = null;
+            }
+
+            state.selection = next;
+            state.targetId = getLegacyTargetId(next);
+        }
+
+        function inferProjectScope(project) {
+            if (!project) return null;
+            const explicit = normalizeProjectScope(project.projectScope || project.PROJECT_SCOPE || project.projScope || project.PROJ_SCOPE);
+            if (explicit) return explicit;
+            const wsId = project.wsId || project.WS_ID || project.workspaceId || project.WORKSPACE_ID;
+            return wsId ? 'GROUP' : 'PERSONAL';
+        }
+
+        function syncSelectionFromLegacyTarget(targetId, item) {
+            const normalized = normalizeSelectionId(targetId);
+            if (state.scope === 'FRIEND') {
+                setCalendarSelectionTarget({ friendId: normalized, label: item ? item.name || '' : '' });
+                return;
+            }
+            if (state.scope === 'WS') {
+                setCalendarSelectionTarget({ wsId: normalized, label: item ? item.name || '' : '' });
+                return;
+            }
+            if (state.scope === 'PROJ') {
+                const project = item && item.raw ? item.raw : findProjectMetaById(normalized);
+                setCalendarSelectionTarget({
+                    projectScope: project ? inferProjectScope(project) : null,
+                    wsId: project ? (project.wsId || project.WS_ID || project.workspaceId || project.WORKSPACE_ID || null) : null,
+                    projId: normalized,
+                    label: item ? item.name || '' : ''
+                });
+                return;
+            }
+            setCalendarSelectionTarget({});
+        }
+
+
+        function getCalendarScopeSelectorFriends() {
+            return (state.friends || []).map(function(friend) {
+                const name = friend.userName || friend.friendName || friend.name || friend.email || '이름 없음';
+                return {
+                    id: friend.friendId || friend.userId || friend.id || friend.USER_ID,
+                    name: name,
+                    image: friend.profileImagePath || friend.PROFILE_IMAGE_PATH || friend.profileImage || friend.avatarUrl || '',
+                    meta: friend.email || ''
+                };
+            }).filter(function(item) { return item.id && friendHasVisibleCalendarEvent(item.id); });
+        }
+
+        function getCalendarScopeSelectorWorkspaces() {
+            return (state.userSpaces.workspaces || []).map(function(item) {
+                return {
+                    id: item.wsId || item.WS_ID || item.workspaceId || item.WORKSPACE_ID || item.groupId || item.GROUP_ID || item.id || item.ID,
+                    name: item.wsName || item.WS_NAME || item.workspaceName || item.WORKSPACE_NAME || item.groupName || item.GROUP_NAME || item.name || item.NAME || '이름 없음',
+                    image: item.wsImagePath || item.WS_IMAGE_PATH || item.workspaceImagePath || item.WORKSPACE_IMAGE_PATH || item.imagePath || item.IMAGE_PATH || item.profileImagePath || item.PROFILE_IMAGE_PATH || ''
+                };
+            }).filter(function(item) { return item.id; });
+        }
+
+        function getCalendarScopeSelectorProjects() {
+            return (state.userSpaces.projects || []).map(function(item) {
+                return {
+                    id: item.projId || item.PROJ_ID || item.projectId || item.PROJECT_ID || item.id || item.ID,
+                    name: item.projName || item.PROJ_NAME || item.projectName || item.PROJECT_NAME || item.name || item.NAME || '이름 없음',
+                    wsId: item.wsId || item.WS_ID || item.workspaceId || item.WORKSPACE_ID || item.groupId || item.GROUP_ID || null,
+                    projectScope: inferProjectScope(item),
+                    status: item.projStatus || item.PROJ_STATUS || item.projectStatus || item.PROJECT_STATUS || item.status || item.STATUS || '',
+                    completed: item.completed === true || item.isCompleted === true,
+                    completedYn: item.completedYn || item.COMPLETED_YN || item.completeYn || item.COMPLETE_YN || ''
+                };
+            }).filter(function(item) { return item.id; });
+        }
+
+        function applyCalendarScopeSelection(selection) {
+            setCalendarSelectionTarget(selection || {});
+            renderTargetFilters();
+            renderProjectSummary();
+            renderProjectTaskFilter();
+            renderAllProjectOverview();
+            calendar.refetchEvents();
+            renderSelectedDatePanel();
+        }
+
+        function openCalendarTargetModal() {
+            if (state.scope === 'ALL' || state.scope === 'PRIVATE') return;
+            if (!window.MoyoScopeSelector || typeof window.MoyoScopeSelector.open !== 'function') {
+                console.error('공통 대상 선택 모달 스크립트를 불러오지 못했습니다.');
+                return;
+            }
+            window.MoyoScopeSelector.open({
+                scope: state.scope,
+                selection: Object.assign({}, state.selection),
+                friends: getCalendarScopeSelectorFriends(),
+                workspaces: getCalendarScopeSelectorWorkspaces(),
+                projects: getCalendarScopeSelectorProjects(),
+                contextLabel: '일정',
+                imageResolver: normalizeImagePath,
+                onSelect: applyCalendarScopeSelection
+            });
+        }
+
+        function matchesProjectSelection(props) {
+            const selection = state.selection || {};
+            if (selection.projId) return String(props.projId || props.PROJ_ID || '') === String(selection.projId);
+            if (selection.projectScope === 'PERSONAL') return !String(props.wsId || props.WS_ID || '').trim();
+            if (selection.projectScope === 'GROUP') {
+                const eventWsId = props.wsId || props.WS_ID || props.workspaceId || props.WORKSPACE_ID;
+                if (selection.wsId) return String(eventWsId || '') === String(selection.wsId);
+                return !!eventWsId;
+            }
+            return true;
+        }
+
+        function isSpecificProjectSelection() {
+            return state.scope === 'PROJ' && !!(state.selection && state.selection.projId);
+        }
 
         function resolveCurrentUserMetaFromPage() {
             const nameCandidates = [
@@ -110,6 +291,7 @@ let sessionUserId, calendar;
             },
             dayCellDidMount: function() {
                 renderProjectPeriodStatusSoon();
+                renderAllProjectOverview();
             },
             eventClassNames: function(arg) {
                 const props = arg.event.extendedProps || {};
@@ -131,22 +313,17 @@ let sessionUserId, calendar;
                 const safeTitle = escapeHtml(displayTitle);
                 const projectKind = getProjectCalendarKind(props);
                 if (projectKind === 'PROJECT_PERIOD') {
-                    const groupName = getCalendarGroupName(props);
-                    const groupImage = getCalendarGroupImage(props);
                     const fullPath = getProjectCalendarPathText(props);
-                    const avatar = renderCalendarEventAvatarMarkup({
-                        name: groupName || displayTitle,
-                        image: groupImage,
-                        title: fullPath || groupName || displayTitle,
-                        extraClass: 'is-group-avatar is-project-period-avatar'
-                    });
-                    return { html: '<div class="moyo-fc-event moyo-fc-project-period" title="' + escapeHtml(fullPath || displayTitle) + '">' + avatar + '<span class="moyo-fc-event-title">' + safeTitle + '</span><span class="moyo-project-period-tail" aria-hidden="true"></span></div>' };
+                    return { html: '<div class="moyo-fc-event moyo-fc-project-period" title="' + escapeHtml(fullPath || displayTitle) + '"><span class="moyo-fc-event-title">' + safeTitle + '</span></div>' };
                 }
                 if (projectKind === 'MILESTONE') {
                     return { html: '<div class="moyo-fc-event moyo-fc-project-marker"><span class="moyo-project-marker-icon" aria-hidden="true">◆</span><span class="moyo-fc-event-title">' + safeTitle + '</span></div>' };
                 }
                 if (projectKind === 'TASK_DUE' || projectKind === 'TASK_ASSIGNED') {
-                    return { html: '<div class="moyo-fc-event moyo-fc-task-due"><span class="moyo-project-task-icon" aria-hidden="true">✓</span><span class="moyo-fc-event-title">' + safeTitle + '</span></div>' };
+                    const statusInfo = getProjectTaskStatusInfo(props);
+                    const assignee = props.assigneeName ? '<span class="moyo-project-task-assignee">' + escapeHtml(props.assigneeName) + '</span>' : '';
+                    const delayed = isProjectTaskDelayed(props) ? '<span class="moyo-project-task-delay">지연</span>' : '';
+                    return { html: '<div class="moyo-fc-event moyo-fc-task-due is-' + statusInfo.key.toLowerCase() + (isProjectTaskDelayed(props) ? ' is-delayed' : '') + '"><span class="moyo-project-task-status-dot" aria-hidden="true"></span><span class="moyo-fc-event-title">' + safeTitle + '</span>' + assignee + delayed + '</div>' };
                 }
                 const timePrefix = getCalendarEventTimePrefix(arg.event);
                 const eventAvatar = renderCalendarEventAvatar(props, type);
@@ -159,13 +336,25 @@ let sessionUserId, calendar;
                 const props = info.event.extendedProps || {};
                 const projectKind = getProjectCalendarKind(props);
                 if (projectKind === 'PROJECT_PERIOD') {
-                    info.el.classList.add('moyo-project-period-event-hidden');
-                    const periodHarness = info.el.closest('.fc-daygrid-event-harness');
-                    if (periodHarness) periodHarness.classList.add('moyo-project-period-event-hidden');
-                    renderProjectPeriodStatusSoon();
+                    const periodText = projectPeriodText(info.event);
+                    const pathText = getProjectCalendarPathText(props) || getCalendarDisplayTitle(info.event);
+                    info.el.setAttribute('title', pathText + (periodText ? '\n프로젝트 기간 · ' + periodText : ''));
                     return;
                 }
                 const type = props.displayType || getDisplayType(props.type, props);
+                if (projectKind === 'TASK_DUE' || projectKind === 'TASK_ASSIGNED') {
+                    const statusInfo = getProjectTaskStatusInfo(props);
+                    const tooltip = [
+                        getCalendarDisplayTitle(info.event),
+                        '상태 · ' + statusInfo.label,
+                        '담당자 · ' + (props.assigneeName || '미지정'),
+                        '예정 · ' + getProjectTaskPeriodText(info.event),
+                        '실제 시작 · ' + formatProjectTaskDate(props.actualStartDt),
+                        '실제 완료 · ' + formatProjectTaskDate(props.actualDoneDt)
+                    ];
+                    if (isProjectTaskDelayed(props)) tooltip.push('지연 · ' + Math.max(0, Number(props.delayedDays || 0)) + '일');
+                    info.el.setAttribute('title', tooltip.join('\n'));
+                }
                 if (type === 'HOLIDAY') {
                     info.el.classList.add('moyo-holiday-hidden');
                     const harness = info.el.closest('.fc-daygrid-event-harness');
@@ -206,9 +395,7 @@ let sessionUserId, calendar;
                     success: function(data) {
                         const sourceEvents = (data || []).map(mapServerEvent);
                         state.calendarSourceEvents = sourceEvents;
-                        const events = sourceEvents.filter(matchesCalendarDisplayFilter).filter(function(event) {
-                            return getProjectCalendarKind((event && event.extendedProps) || {}) !== 'PROJECT_PERIOD';
-                        });
+                        const events = sourceEvents.filter(matchesCalendarDisplayFilter);
                         successCallback(events);
                         setTimeout(function() {
                             renderTargetFilters();
@@ -217,6 +404,9 @@ let sessionUserId, calendar;
                             renderSelectedDatePanel();
                             renderHolidayBadgesSoon();
                             renderProjectPeriodStatusSoon();
+                            renderProjectSummary();
+                            renderProjectTaskFilter();
+                            renderAllProjectOverview();
                         }, 0);
                     },
                     error: function(xhr, status, error) {
@@ -233,6 +423,9 @@ let sessionUserId, calendar;
         loadFriends();
         renderTargetFilters();
         updateAllFilterButtonVisibility();
+        renderProjectSummary();
+        renderProjectTaskFilter();
+        bindProjectTaskFilter();
         renderSelectedDateHeader();
         bindCalendarViewModal();
         bindCalendarViewDeleteModal();
@@ -248,7 +441,6 @@ let sessionUserId, calendar;
 
         window.addEventListener('resize', function() {
             stabilizeCalendarWidth();
-            updateTargetFilterScroll();
         });
 
         let calendarWheelLocked = false;
@@ -286,39 +478,17 @@ let sessionUserId, calendar;
         });
 
         $('.moyo-chip[data-scope]').on('click', function() {
-            state.scope = $(this).data('scope');
-            state.targetId = 'ALL';
+            setCalendarSelectionScope($(this).data('scope'));
             $('.moyo-chip[data-scope]').removeClass('is-active');
             $(this).addClass('is-active');
             renderTargetFilters();
             updateAllFilterButtonVisibility();
+            renderProjectSummary();
+            renderProjectTaskFilter();
             calendar.refetchEvents();
         });
 
-        $('#calendarTargetList').on('click', '.moyo-target-chip:not(.is-empty)', function() {
-            const allFilterKey = $(this).attr('data-all-filter');
-            if (state.scope === 'ALL' && allFilterKey) {
-                const currentValue = !!state.allScopeFilters[allFilterKey];
-                state.allScopeFilters[allFilterKey] = !currentValue;
-                $(this).toggleClass('is-active', state.allScopeFilters[allFilterKey]);
-                this.scrollIntoView({ behavior: 'smooth', inline: 'nearest', block: 'nearest' });
-                updateTargetFilterScroll();
-                calendar.refetchEvents();
-                return;
-            }
-
-            state.targetId = String($(this).data('targetId') || 'ALL');
-            $('#calendarTargetList .moyo-target-chip').removeClass('is-active');
-            $(this).addClass('is-active');
-            this.scrollIntoView({ behavior: 'smooth', inline: 'nearest', block: 'nearest' });
-            updateTargetFilterScroll();
-            calendar.refetchEvents();
-        });
-
-        $('#calendarTargetList').on('scroll', updateTargetFilterScroll);
-        $('#targetFilterPrev').on('click', function() { scrollTargetFilters(-1); });
-        $('#targetFilterNext').on('click', function() { scrollTargetFilters(1); });
-
+        $('#calendarTargetSelectOpen').on('click', openCalendarTargetModal);
 
         $('#openCreateEvent').on('click', function() {
             window.location.href = buildEventFormUrl();
@@ -1458,22 +1628,209 @@ let sessionUserId, calendar;
         }
 
         function getCreateScopeInfo() {
-            if (state.scope === 'WS' && state.targetId !== 'ALL') {
-                return { scopeType: 'WS', wsId: state.targetId };
+            if (state.scope === 'WS' && getSelectedTargetId() !== 'ALL') {
+                return { scopeType: 'WS', wsId: getSelectedTargetId() };
             }
 
-            if (state.scope === 'PROJ' && state.targetId !== 'ALL') {
+            if (state.scope === 'PROJ' && getSelectedTargetId() !== 'ALL') {
                 const project = (state.userSpaces.projects || []).find(function(item) {
-                    return String(item.projId || item.PROJ_ID || '') === String(state.targetId);
+                    return String(item.projId || item.PROJ_ID || '') === String(getSelectedTargetId());
                 });
                 return {
                     scopeType: 'PROJ',
-                    projId: state.targetId,
+                    projId: getSelectedTargetId(),
                     wsId: project ? (project.wsId || project.WS_ID || '') : ''
                 };
             }
 
             return { scopeType: 'PRIVATE' };
+        }
+
+        function normalizeProjectTaskStatus(value) {
+            const status = String(value || '').trim().toUpperCase();
+            if (status === 'IN_PROGRESS' || status === 'PROGRESS' || status === 'DOING') return 'IN_PROGRESS';
+            if (status === 'DONE' || status === 'COMPLETED' || status === 'COMPLETE') return 'DONE';
+            return 'TODO';
+        }
+
+        function isTruthyCalendarFlag(value) {
+            const normalized = String(value == null ? '' : value).trim().toUpperCase();
+            return normalized === 'Y' || normalized === 'TRUE' || normalized === '1';
+        }
+
+        function getProjectSummaryTasks() {
+            const taskMap = new Map();
+            (state.calendarSourceEvents || []).forEach(function(event) {
+                if (!event) return;
+                const props = event.extendedProps || {};
+                const itemType = String(props.itemType || props.type || '').toUpperCase();
+                if (itemType !== 'TASK' || !(props.projId || props.PROJ_ID)) return;
+                if (getSelectedTargetId() !== 'ALL' && String(props.projId || props.PROJ_ID || '') !== String(getSelectedTargetId())) return;
+                if (!matchesProjectTaskFilter(event)) return;
+
+                const key = String(props.taskId || props.TASK_ID || event.id || [
+                    props.projId || props.PROJ_ID || '',
+                    props.rawTitle || event.title || '',
+                    props.originalStartDt || '',
+                    props.originalEndDt || ''
+                ].join('|'));
+                if (!taskMap.has(key)) taskMap.set(key, event);
+            });
+            return Array.from(taskMap.values());
+        }
+
+        function renderProjectSummary() {
+            const summary = document.getElementById('calendarProjectSummary');
+            if (!summary) return;
+
+            const isProjectScope = state.scope === 'PROJ';
+            const contextArea = document.getElementById('calendarContextArea');
+            if (contextArea) contextArea.classList.toggle('is-project-mode', isProjectScope);
+            summary.hidden = !isProjectScope;
+            if (!isProjectScope) return;
+
+            const counts = { TODO: 0, IN_PROGRESS: 0, DONE: 0, DELAYED: 0 };
+            const tasks = getProjectSummaryTasks();
+            tasks.forEach(function(event) {
+                const props = event.extendedProps || {};
+                const status = normalizeProjectTaskStatus(props.status);
+                counts[status] += 1;
+                if (isTruthyCalendarFlag(props.delayedYn) || isTruthyCalendarFlag(props.delayedCompletedYn)) {
+                    counts.DELAYED += 1;
+                }
+            });
+
+            const total = counts.TODO + counts.IN_PROGRESS + counts.DONE;
+            const rate = total > 0 ? Math.round((counts.DONE / total) * 100) : 0;
+            $('#projectSummaryTodo').text(counts.TODO);
+            $('#projectSummaryProgress').text(counts.IN_PROGRESS);
+            $('#projectSummaryDone').text(counts.DONE);
+            $('#projectSummaryDelayed').text(counts.DELAYED);
+            $('#projectSummaryRate').text(rate + '%');
+            $('#projectSummaryRateBar').css('width', rate + '%');
+            summary.setAttribute('data-empty', total === 0 ? 'true' : 'false');
+        }
+
+
+        function getProjectFilterAssignees() {
+            const assigneeMap = new Map();
+            (state.calendarSourceEvents || []).forEach(function(event) {
+                const props = (event && event.extendedProps) || {};
+                if (String(props.itemType || props.type || '').toUpperCase() !== 'TASK') return;
+                if (getSelectedTargetId() !== 'ALL' && String(props.projId || '') !== String(getSelectedTargetId())) return;
+                const id = String(props.assigneeUserId || '').trim();
+                if (!id || assigneeMap.has(id)) return;
+                assigneeMap.set(id, {
+                    id: id,
+                    name: String(props.assigneeName || props.assigneeEmail || '이름 없음'),
+                    email: String(props.assigneeEmail || '')
+                });
+            });
+            return Array.from(assigneeMap.values()).sort(function(a, b) {
+                return a.name.localeCompare(b.name, 'ko');
+            });
+        }
+
+        function renderProjectTaskFilter() {
+            const section = document.getElementById('calendarProjectTaskFilter');
+            if (!section) return;
+            const visible = isSpecificProjectSelection();
+            section.hidden = !visible;
+            if (!visible) return;
+
+            const filter = state.projectTaskFilter || {};
+            section.querySelectorAll('[data-project-assignee-mode]').forEach(function(button) {
+                button.classList.toggle('is-active', button.getAttribute('data-project-assignee-mode') === filter.assigneeMode);
+            });
+            section.querySelectorAll('[data-project-status]').forEach(function(button) {
+                button.classList.toggle('is-active', button.getAttribute('data-project-status') === filter.status);
+            });
+            section.querySelectorAll('[data-project-display-kind]').forEach(function(button) {
+                const kind = button.getAttribute('data-project-display-kind');
+                const active = kind === 'TASK' ? filter.showTask !== false : filter.showSchedule !== false;
+                button.classList.toggle('is-active', active);
+                button.setAttribute('aria-pressed', active ? 'true' : 'false');
+            });
+
+            const select = document.getElementById('calendarProjectAssigneeSelect');
+            if (select) {
+                const assignees = getProjectFilterAssignees();
+                const previous = String(filter.assigneeId || 'ALL');
+                select.innerHTML = '<option value="ALL">담당자 전체</option>' + assignees.map(function(item) {
+                    const label = item.email ? item.name + ' · ' + item.email : item.name;
+                    return '<option value="' + escapeHtml(item.id) + '">' + escapeHtml(label) + '</option>';
+                }).join('');
+                const exists = previous === 'ALL' || assignees.some(function(item) { return item.id === previous; });
+                filter.assigneeId = exists ? previous : 'ALL';
+                select.value = filter.assigneeId;
+                select.hidden = filter.assigneeMode !== 'ASSIGNEE';
+            }
+        }
+
+        function bindProjectTaskFilter() {
+            const section = document.getElementById('calendarProjectTaskFilter');
+            if (!section || section.dataset.bound === 'true') return;
+            section.dataset.bound = 'true';
+
+            section.addEventListener('click', function(event) {
+                const assigneeModeButton = event.target.closest('[data-project-assignee-mode]');
+                const statusButton = event.target.closest('[data-project-status]');
+                const displayButton = event.target.closest('[data-project-display-kind]');
+                const resetButton = event.target.closest('#calendarProjectFilterReset');
+                const filter = state.projectTaskFilter;
+
+                if (assigneeModeButton) {
+                    filter.assigneeMode = assigneeModeButton.getAttribute('data-project-assignee-mode') || 'ALL';
+                    if (filter.assigneeMode !== 'ASSIGNEE') filter.assigneeId = 'ALL';
+                } else if (statusButton) {
+                    filter.status = statusButton.getAttribute('data-project-status') || 'ALL';
+                } else if (displayButton) {
+                    const kind = displayButton.getAttribute('data-project-display-kind');
+                    if (kind === 'TASK') filter.showTask = !filter.showTask;
+                    else filter.showSchedule = !filter.showSchedule;
+                } else if (resetButton) {
+                    filter.assigneeMode = 'ALL';
+                    filter.assigneeId = 'ALL';
+                    filter.status = 'ALL';
+                    filter.showSchedule = true;
+                    filter.showTask = true;
+                } else {
+                    return;
+                }
+                renderProjectTaskFilter();
+                renderProjectSummary();
+                calendar.refetchEvents();
+                renderSelectedDatePanel();
+            });
+
+            $('#calendarProjectAssigneeSelect').on('change', function() {
+                state.projectTaskFilter.assigneeId = String(this.value || 'ALL');
+                renderProjectSummary();
+                calendar.refetchEvents();
+                renderSelectedDatePanel();
+            });
+        }
+
+        function matchesProjectTaskFilter(eventObj) {
+            if (state.scope !== 'PROJ') return true;
+            const props = (eventObj && eventObj.extendedProps) || {};
+            const kind = getProjectCalendarKind(props);
+            const isTask = kind === 'TASK_DUE' || kind === 'TASK_ASSIGNED' || String(props.itemType || props.type || '').toUpperCase() === 'TASK';
+            const filter = state.projectTaskFilter || {};
+
+            if (isTask) {
+                if (filter.showTask === false) return false;
+                const assigneeId = String(props.assigneeUserId || '').trim();
+                if (filter.assigneeMode === 'MINE' && assigneeId !== String(sessionUserId || '')) return false;
+                if (filter.assigneeMode === 'ASSIGNEE' && filter.assigneeId !== 'ALL' && assigneeId !== String(filter.assigneeId || '')) return false;
+
+                const status = normalizeProjectTaskStatus(props.status);
+                if (filter.status === 'DELAYED') return isProjectTaskDelayed(props);
+                if (filter.status && filter.status !== 'ALL' && status !== filter.status) return false;
+                return true;
+            }
+
+            return filter.showSchedule !== false;
         }
 
         function getCalendarRequestData(info) {
@@ -1484,8 +1841,8 @@ let sessionUserId, calendar;
                 userId: getRequestUserId()
             };
 
-            if (state.scope === 'WS' && state.targetId !== 'ALL') data.wsId = state.targetId;
-            if (state.scope === 'PROJ' && state.targetId !== 'ALL') data.projId = state.targetId;
+            if (state.scope === 'WS' && getSelectedTargetId() !== 'ALL') data.wsId = getSelectedTargetId();
+            if (state.scope === 'PROJ' && getSelectedTargetId() !== 'ALL') data.projId = getSelectedTargetId();
             return data;
         }
 
@@ -1527,8 +1884,65 @@ let sessionUserId, calendar;
         function isProjectCalendarDisplayAllowed(props) {
             const kind = getProjectDisplayFilterKey(props);
             if (!kind) return true;
+
+            // 전체 탭에서는 일반 일정은 유지하고, 프로젝트 업무와 개별 기간 바는 숨긴다.
+            // 프로젝트 기간은 달력 헤더의 축약 정보로만 안내한다.
+            if (state.scope === 'ALL' && (kind === 'TASK_DUE' || kind === 'TASK_ASSIGNED' || kind === 'PROJECT_PERIOD')) return false;
+
+            // 프로젝트 전체/개인 프로젝트 전체/그룹 프로젝트 전체는 기간만 보여준다.
+            if (state.scope === 'PROJ' && !isSpecificProjectSelection()) {
+                return kind === 'PROJECT_PERIOD';
+            }
+
             const filters = state.projectDisplayFilters || {};
             return filters[kind] !== false;
+        }
+
+        function getProjectTaskStatusInfo(props) {
+            const status = String((props && props.status) || 'TODO').trim().toUpperCase();
+            if (status === 'IN_PROGRESS') return { key: 'IN_PROGRESS', label: '진행 중' };
+            if (status === 'DONE') return { key: 'DONE', label: '완료' };
+            return { key: 'TODO', label: '할 일' };
+        }
+
+        function isProjectTaskDelayed(props) {
+            return isTruthyCalendarFlag(props && props.delayedYn) || isTruthyCalendarFlag(props && props.delayedCompletedYn);
+        }
+
+        function formatProjectTaskDate(value) {
+            if (!value) return '-';
+            const text = String(value).replace('T', ' ');
+            const match = text.match(/^(\d{4})-(\d{2})-(\d{2})/);
+            return match ? match[1] + '.' + match[2] + '.' + match[3] : text;
+        }
+
+        function getProjectTaskPeriodText(event) {
+            const props = (event && event.extendedProps) || {};
+            const start = formatProjectTaskDate(props.originalStartDt || (event && event.start));
+            const end = formatProjectTaskDate(props.originalEndDt || (event && event.end) || props.originalStartDt);
+            if (start === '-' && end === '-') return '-';
+            if (start === end || end === '-') return start;
+            return start + ' ~ ' + end;
+        }
+
+        function buildProjectTaskDetailMarkup(event) {
+            const props = (event && event.extendedProps) || {};
+            const statusInfo = getProjectTaskStatusInfo(props);
+            const delayed = isProjectTaskDelayed(props);
+            const delayedDays = Math.max(0, Number(props.delayedDays || 0));
+            const actualStart = formatProjectTaskDate(props.actualStartDt);
+            const actualDone = formatProjectTaskDate(props.actualDoneDt);
+            let html = '<div class="moyo-project-task-detail">';
+            html += '<div class="moyo-project-task-detail-head"><span class="moyo-project-task-status is-' + statusInfo.key.toLowerCase() + '">' + statusInfo.label + '</span>';
+            if (delayed) html += '<span class="moyo-project-task-status is-delayed">지연' + (delayedDays ? ' ' + delayedDays + '일' : '') + '</span>';
+            html += '</div>';
+            html += '<dl class="moyo-project-task-detail-grid">';
+            html += '<div><dt>담당자</dt><dd>' + escapeHtml(props.assigneeName || '미지정') + '</dd></div>';
+            html += '<div><dt>예정 기간</dt><dd>' + escapeHtml(getProjectTaskPeriodText(event)) + '</dd></div>';
+            html += '<div><dt>실제 시작</dt><dd>' + escapeHtml(actualStart) + '</dd></div>';
+            html += '<div><dt>실제 완료</dt><dd>' + escapeHtml(actualDone) + '</dd></div>';
+            html += '</dl></div>';
+            return html;
         }
 
         function getCalendarDisplayTitle(event) {
@@ -1572,6 +1986,10 @@ let sessionUserId, calendar;
                 props.projectName,
                 props.projectWorkspaceName,
                 props.projectCalendarKind,
+                props.projectScope,
+                props.projectItemKind,
+                props.assigneeName,
+                props.assigneeEmail,
                 props.status,
                 props.albumName,
                 props.eventType,
@@ -1585,6 +2003,7 @@ let sessionUserId, calendar;
             const type = props.displayType || props.type;
             if (type === 'HOLIDAY') return true;
             if (!isProjectCalendarDisplayAllowed(props)) return false;
+            if (!matchesProjectTaskFilter(eventObj)) return false;
 
             const typeFilterKey = getEventTypeFilterKey(props);
             if (state.allTypeFilters && state.allTypeFilters[typeFilterKey] === false) return false;
@@ -1605,9 +2024,9 @@ let sessionUserId, calendar;
                 return matchesFriendCalendarScope(props, type);
             }
 
-            if (state.targetId === 'ALL') return true;
-            if (state.scope === 'WS') return String(props.wsId || '') === String(state.targetId);
-            if (state.scope === 'PROJ') return String(props.projId || '') === String(state.targetId);
+            if (state.scope === 'PROJ') return matchesProjectSelection(props);
+            if (getSelectedTargetId() === 'ALL') return true;
+            if (state.scope === 'WS') return String(props.wsId || '') === String(getSelectedTargetId());
             return true;
         }
 
@@ -1637,8 +2056,8 @@ let sessionUserId, calendar;
             const friendRelated = type === 'FRIEND' || isReceivedPrivateCalendarEvent(props) || isFriendMoyo;
             if (!friendRelated) return false;
             if (isFriendMoyo && state.allScopeFilters && state.allScopeFilters.MOYO_PUBLIC === false) return false;
-            if (state.targetId === 'ALL') return true;
-            return isEventMatchedToSelectedFriend(props, state.targetId);
+            if (getSelectedTargetId() === 'ALL') return true;
+            return isEventMatchedToSelectedFriend(props, getSelectedTargetId());
         }
 
         function isEventMatchedToSelectedFriend(props, targetId) {
@@ -1759,7 +2178,7 @@ let sessionUserId, calendar;
             const displayType = props.displayType || getDisplayType(props.type, props);
             if (displayType === 'HOLIDAY') return -20;
             const projectKind = getProjectCalendarKind(props);
-            if (projectKind === 'PROJECT_PERIOD') return 99;
+            if (projectKind === 'PROJECT_PERIOD') return -5;
             if (projectKind === 'MILESTONE') return 4;
             if (projectKind === 'TASK_DUE' || projectKind === 'TASK_ASSIGNED') return 5;
 
@@ -1867,7 +2286,18 @@ let sessionUserId, calendar;
                     projName: item.projName || item.PROJ_NAME || item.projectName || item.PROJECT_NAME || item.projectTitle || item.PROJECT_TITLE,
                     projectWorkspaceName: item.projectWorkspaceName || item.PROJECT_WORKSPACE_NAME,
                     projectWorkspaceImagePath: item.projectWorkspaceImagePath || item.PROJECT_WORKSPACE_IMAGE_PATH || item.wsImagePath || item.WS_IMAGE_PATH,
+                    projectScope: item.projectScope || item.PROJECT_SCOPE,
+                    projectItemKind: item.projectItemKind || item.PROJECT_ITEM_KIND,
                     status: item.status || item.STATUS,
+                    assigneeUserId: item.assigneeUserId || item.ASSIGNEE_USER_ID || item.userId || item.USER_ID,
+                    assigneeName: item.assigneeName || item.ASSIGNEE_NAME || item.userName || item.USER_NAME,
+                    assigneeEmail: item.assigneeEmail || item.ASSIGNEE_EMAIL,
+                    assigneeProfileImagePath: item.assigneeProfileImagePath || item.ASSIGNEE_PROFILE_IMAGE_PATH,
+                    actualStartDt: item.actualStartDt || item.ACTUAL_START_DT || item.actualStartDate || item.ACTUAL_START_DATE,
+                    actualDoneDt: item.actualDoneDt || item.ACTUAL_DONE_DT || item.actualDoneDate || item.ACTUAL_DONE_DATE,
+                    delayedYn: item.delayedYn || item.DELAYED_YN || 'N',
+                    delayedCompletedYn: item.delayedCompletedYn || item.DELAYED_COMPLETED_YN || 'N',
+                    delayedDays: Number(item.delayedDays || item.DELAYED_DAYS || 0),
                     startTimeSlot: item.startTimeSlot || item.START_TIME_SLOT,
                     endTimeSlot: item.endTimeSlot || item.END_TIME_SLOT
                 }
@@ -2330,6 +2760,62 @@ let sessionUserId, calendar;
             });
         }
 
+
+        function getVisibleMonthProjectPeriods() {
+            if (!calendar || state.scope !== 'ALL') return [];
+            if (state.allScopeFilters && state.allScopeFilters.PROJ === false) return [];
+
+            const view = calendar.view || {};
+            const viewStart = view.currentStart || view.activeStart;
+            const viewEnd = view.currentEnd || view.activeEnd;
+            if (!viewStart || !viewEnd) return [];
+
+            const seen = new Set();
+            const results = [];
+            (state.calendarSourceEvents || []).forEach(function(event) {
+                const props = event.extendedProps || {};
+                if (getProjectCalendarKind(props) !== 'PROJECT_PERIOD') return;
+
+                const start = event.start instanceof Date ? event.start : parseLocalDate(event.start);
+                const endValue = event.end || event.start;
+                const end = endValue instanceof Date ? endValue : parseLocalDate(endValue);
+                if (!start || !end) return;
+                if (end < viewStart || start >= viewEnd) return;
+
+                const projectId = props.projId || props.PROJ_ID || props.projectId || props.PROJECT_ID;
+                const projectName = props.projName || props.projectName || event.title || '프로젝트';
+                const key = projectId ? 'ID:' + projectId : 'NAME:' + projectName;
+                if (seen.has(key)) return;
+                seen.add(key);
+                results.push(event);
+            });
+            return results;
+        }
+
+        function renderAllProjectOverview() {
+            const $toolbar = $('.moyo-calendar-board .fc-header-toolbar').first();
+            if (!$toolbar.length) return;
+
+            $toolbar.find('.moyo-all-project-overview').remove();
+            if (state.scope !== 'ALL') return;
+
+            const periods = getVisibleMonthProjectPeriods();
+            if (!periods.length) return;
+
+            const count = periods.length;
+            const label = '진행 중인 프로젝트 ' + count + '개';
+            const $item = $('<button type="button" class="moyo-all-project-overview" title="프로젝트 탭에서 기간을 확인하세요."></button>');
+            $item.append('<span class="moyo-all-project-overview-dot" aria-hidden="true"></span>');
+            $item.append('<span class="moyo-all-project-overview-text">' + escapeHtml(label) + '</span>');
+            $item.on('click', function() {
+                const $projectTab = $('.moyo-chip[data-scope="PROJ"]');
+                if ($projectTab.length) $projectTab.trigger('click');
+            });
+
+            const $leftChunk = $toolbar.find('.fc-toolbar-chunk').first();
+            $leftChunk.append($item);
+        }
+
         function renderProjectPeriodStatusSoon() {
             clearTimeout(state.projectPeriodStatusTimer);
             state.projectPeriodStatusTimer = setTimeout(function() {
@@ -2388,7 +2874,10 @@ let sessionUserId, calendar;
         }
 
         function renderProjectPeriodStatus() {
-            if (!calendar || !state.calendarSourceEvents) return;
+            // 프로젝트 기간은 FullCalendar의 다중일정 바로 직접 렌더링한다.
+            $('.moyo-calendar-board .moyo-day-project-status').remove();
+            $('.moyo-project-period-row-line').remove();
+            return;
             const $cells = $('.moyo-calendar-board .fc-daygrid-day[data-date]');
             if (!$cells.length) return;
 
@@ -2639,13 +3128,18 @@ let sessionUserId, calendar;
                     && eventOccursOnDate(event, selectedStr)
                     && matchesCalendarDisplayFilter(event);
             });
-            const events = projectPeriodEvents.concat(calendarEvents).sort(compareCalendarEvents);
+            const events = uniqueSelectedDateEvents(projectPeriodEvents.concat(calendarEvents).sort(compareCalendarEvents));
 
             const $list = $('#selectedDateEvents');
             $list.empty();
 
             if (!events.length) {
                 $list.append('<div class="moyo-day-empty">이 날짜에는 등록된 일정이 없습니다.<br>필요한 일정만 추가해 주세요.</div>');
+                return;
+            }
+
+            if (state.scope === 'PROJ') {
+                renderProjectSelectedDateSummary($list, events, selectedStr);
                 return;
             }
 
@@ -2670,19 +3164,92 @@ let sessionUserId, calendar;
             });
 
             groups.forEach(function(group) {
-                if (!group.events.length) return;
-                const visibleEvents = group.events.slice(0, group.key === 'SCHEDULE' ? 8 : 5);
-                $list.append('<div class="moyo-day-section-title">' + escapeHtml(group.title) + '</div>');
-                visibleEvents.forEach(function(event) {
-                    $list.append(buildSelectedDateEventCard(event));
-                });
-                if (group.events.length > visibleEvents.length) {
-                    $list.append('<div class="moyo-day-more-text">외 ' + (group.events.length - visibleEvents.length) + '개가 더 있습니다.</div>');
-                }
+                appendSelectedDateGroup($list, group, group.key === 'SCHEDULE' ? 8 : 5);
             });
         }
 
-        function buildSelectedDateEventCard(event) {
+        function renderProjectSelectedDateSummary($list, events, selectedStr) {
+            const groups = [
+                { key: 'DELAYED', title: '지연 업무', icon: 'fa-triangle-exclamation', events: [] },
+                { key: 'IN_PROGRESS', title: '진행 중 업무', icon: 'fa-spinner', events: [] },
+                { key: 'DUE_TODAY', title: '오늘 마감 업무', icon: 'fa-flag-checkered', events: [] },
+                { key: 'DONE_TODAY', title: '오늘 완료 업무', icon: 'fa-circle-check', events: [] },
+                { key: 'PROJECT_EVENT', title: '프로젝트 일정', icon: 'fa-calendar-day', events: [] }
+            ];
+            const groupMap = groups.reduce(function(map, group) {
+                map[group.key] = group;
+                return map;
+            }, {});
+
+            events.forEach(function(event) {
+                const props = event.extendedProps || {};
+                const kind = getProjectCalendarKind(props);
+                const isTask = kind === 'TASK_DUE' || kind === 'TASK_ASSIGNED';
+
+                if (isTask) {
+                    const status = getProjectTaskStatusInfo(props).key;
+                    if (isProjectTaskDelayed(props)) groupMap.DELAYED.events.push(event);
+                    if (status === 'IN_PROGRESS') groupMap.IN_PROGRESS.events.push(event);
+                    if (projectTaskDateEquals(props.originalEndDt || event.end || event.start, selectedStr, !!event.allDay)) {
+                        groupMap.DUE_TODAY.events.push(event);
+                    }
+                    if (status === 'DONE' && projectTaskDateEquals(props.actualDoneDt, selectedStr, false)) {
+                        groupMap.DONE_TODAY.events.push(event);
+                    }
+                    return;
+                }
+
+                if (kind === 'PROJECT_EVENT' || kind === 'PROJECT_PERIOD' || kind === 'MILESTONE') {
+                    groupMap.PROJECT_EVENT.events.push(event);
+                }
+            });
+
+            groups.forEach(function(group) {
+                group.events = uniqueSelectedDateEvents(group.events).sort(compareCalendarEvents);
+                appendSelectedDateGroup($list, group, 6, true);
+            });
+
+            if (!$list.children().length) {
+                $list.append('<div class="moyo-day-empty">선택한 조건에 해당하는 프로젝트 업무나 일정이 없습니다.</div>');
+            }
+        }
+
+        function projectTaskDateEquals(value, selectedStr, allDayExclusiveEnd) {
+            const date = normalizeCalendarDateValue(value);
+            if (!date) return false;
+            if (allDayExclusiveEnd) date.setDate(date.getDate() - 1);
+            return formatDateOnly(date) === selectedStr;
+        }
+
+        function uniqueSelectedDateEvents(events) {
+            const seen = {};
+            return (events || []).filter(function(event) {
+                const props = (event && event.extendedProps) || {};
+                const kind = getProjectCalendarKind(props);
+                const taskId = props.taskId || props.TASK_ID || props.eventId || props.EVENT_ID || event.id;
+                const key = (kind === 'TASK_DUE' || kind === 'TASK_ASSIGNED')
+                    ? 'TASK:' + String(taskId || getCalendarDisplayTitle(event))
+                    : String(kind || 'EVENT') + ':' + String(event.id || '') + ':' + formatDateOnly(event.start || new Date()) + ':' + getCalendarDisplayTitle(event);
+                if (seen[key]) return false;
+                seen[key] = true;
+                return true;
+            });
+        }
+
+        function appendSelectedDateGroup($list, group, limit, projectSummary) {
+            if (!group || !group.events || !group.events.length) return;
+            const visibleEvents = group.events.slice(0, limit || 5);
+            const icon = projectSummary && group.icon ? '<i class="fa-solid ' + group.icon + '"></i>' : '';
+            $list.append('<div class="moyo-day-section-title' + (projectSummary ? ' is-project-summary is-' + group.key.toLowerCase() : '') + '"><span>' + icon + escapeHtml(group.title) + '</span><strong>' + group.events.length + '</strong></div>');
+            visibleEvents.forEach(function(event) {
+                $list.append(buildSelectedDateEventCard(event, projectSummary ? group.key : ''));
+            });
+            if (group.events.length > visibleEvents.length) {
+                $list.append('<div class="moyo-day-more-text">외 ' + (group.events.length - visibleEvents.length) + '개가 더 있습니다.</div>');
+            }
+        }
+
+        function buildSelectedDateEventCard(event, summaryGroupKey) {
             const props = event.extendedProps || {};
             const type = props.displayType || getDisplayType(props.type, props);
             const kind = getProjectCalendarKind(props);
@@ -2690,7 +3257,8 @@ let sessionUserId, calendar;
             const title = getCalendarDisplayTitle(event);
             const kindClass = kind ? ' kind-' + kind : '';
             const cardTitle = kind === 'PROJECT_PERIOD' ? (getProjectCalendarPathText(props) || title) : title;
-            const $card = $('<div class="moyo-day-card type-' + type + kindClass + (props.isMoyoPublic ? ' is-moyo-public' : '') + '" title="' + escapeHtml(cardTitle) + '"></div>');
+            const summaryClass = summaryGroupKey ? ' summary-' + String(summaryGroupKey).toLowerCase() : '';
+            const $card = $('<div class="moyo-day-card type-' + type + kindClass + summaryClass + (props.isMoyoPublic ? ' is-moyo-public' : '') + '" title="' + escapeHtml(cardTitle) + '"></div>');
             const mascot = props.isMoyoPublic ? '<img class="moyo-day-mascot" src="' + moyoMascotPath + '" alt="MOYO 공개">' : '';
             const typeIcon = selectedDateEventTypeIcon(props);
             const projectPath = getProjectCalendarPathText(props);
@@ -2705,6 +3273,10 @@ let sessionUserId, calendar;
                 $card.append('<div class="moyo-day-card-path">' + escapeHtml(projectPath) + '</div>');
             }
             $card.append('<div class="moyo-day-card-meta"><i class="fa-regular fa-clock"></i><span>' + escapeHtml(meta) + '</span></div>');
+            if (kind === 'TASK_DUE' || kind === 'TASK_ASSIGNED') {
+                $card.addClass('is-project-task-card');
+                $card.append(buildProjectTaskDetailMarkup(event));
+            }
             if (type !== 'HOLIDAY') {
                 $card.on('click', function() { handleEventOpen(event); });
             }
@@ -2959,6 +3531,19 @@ let sessionUserId, calendar;
         function openCalendarEventByPermission(event) {
             const eventId = event && event.id;
             if (!eventId) return;
+            if (window.MoyoCalendarEventPreview && typeof window.MoyoCalendarEventPreview.open === 'function') {
+                window.MoyoCalendarEventPreview.open(eventId, {
+                    source: 'calendar',
+                    showActions: true,
+                    onDeleted: function() {
+                        if (calendar) calendar.refetchEvents();
+                    },
+                    onEdit: function(id) {
+                        window.location.href = contextPath + '/calendar/event/form?mode=edit&eventId=' + encodeURIComponent(id || '');
+                    }
+                });
+                return;
+            }
             fetchEventDetail(eventId)
                 .then(function(detail) {
                     showCalendarViewModal(detail, event);
@@ -3157,6 +3742,20 @@ let sessionUserId, calendar;
             const params = new URLSearchParams(window.location.search || '');
             const eventId = params.get('viewEventId') || params.get('eventId');
             if (!eventId) return;
+            if (window.MoyoCalendarEventPreview && typeof window.MoyoCalendarEventPreview.open === 'function') {
+                window.MoyoCalendarEventPreview.open(eventId, {
+                    source: 'calendar',
+                    showActions: true,
+                    silent: true,
+                    onDeleted: function() {
+                        if (calendar) calendar.refetchEvents();
+                    },
+                    onEdit: function(id) {
+                        window.location.href = contextPath + '/calendar/event/form?mode=edit&eventId=' + encodeURIComponent(id || '');
+                    }
+                });
+                return;
+            }
             fetchEventDetail(eventId)
                 .then(function(detail) {
                     showCalendarViewModal(detail, null);
@@ -3375,6 +3974,7 @@ let sessionUserId, calendar;
         }
 
         document.addEventListener('click', function(event) {
+            if (window.MoyoCalendarEventPreview && typeof window.MoyoCalendarEventPreview.open === 'function') return;
             const mapButton = event.target && event.target.closest ? event.target.closest('.moyo-event-view-map-link') : null;
             if (!mapButton) return;
             const query = mapButton.dataset.mapQuery || '';
@@ -3675,156 +4275,79 @@ let sessionUserId, calendar;
             return isEventMatchedToSelectedFriend(props, targetId);
         }
 
+        function refreshCalendarLayout() {
+            if (!calendar || typeof calendar.updateSize !== 'function') return;
+            window.requestAnimationFrame(function() {
+                calendar.updateSize();
+            });
+        }
+
         function renderTargetFilters() {
             const $bar = $('#calendarTargetBar');
             const $label = $('#calendarTargetLabel');
-            const $list = $('#calendarTargetList');
-            $list.empty();
+            const $current = $('#calendarTargetCurrent');
+            const $openButton = $('#calendarTargetSelectOpen');
 
             if (state.scope === 'ALL' || state.scope === 'PRIVATE') {
-                $bar.attr('hidden', true).removeAttr('data-scope').removeClass('is-scrollable can-scroll-left can-scroll-right');
+                $bar.attr('hidden', true).removeAttr('data-scope');
+                $openButton.attr('hidden', true);
+                refreshCalendarLayout();
                 return;
             }
 
+            const scopeLabel = state.scope === 'FRIEND' ? '친구' : state.scope === 'WS' ? '그룹' : '프로젝트';
             $bar.removeAttr('hidden').attr('data-scope', state.scope);
+            $label.text(scopeLabel);
+            $current.text(resolveCalendarSelectionLabel());
+            $openButton.removeAttr('hidden');
+            refreshCalendarLayout();
+        }
 
-            let label = '선택';
-            let allText = '전체';
-            let items = [];
+        function resolveCalendarSelectionLabel() {
+            const selection = state.selection || createCalendarSelection(state.scope);
+            if (selection.label) return String(selection.label);
 
             if (state.scope === 'FRIEND') {
-                label = '친구';
-                allText = '친구 전체';
-                items = (state.friends || []).map(function(friend) {
-                    const name = friend.userName || friend.friendName || friend.name || friend.email || '이름 없음';
-                    return {
-                        id: friend.friendId || friend.userId || friend.id || friend.USER_ID,
-                        name: name,
-                        avatar: friend.profileImagePath || friend.PROFILE_IMAGE_PATH || friend.profileImage || friend.avatarUrl || '',
-                        initial: getInitial(name)
-                    };
-                }).filter(function(item) {
-                    return item.id && friendHasVisibleCalendarEvent(item.id);
+                if (!selection.friendId) return '친구 전체';
+                const friend = getCalendarScopeSelectorFriends().find(function(item) {
+                    return String(item.id) === String(selection.friendId);
                 });
-            } else if (state.scope === 'WS') {
-                label = '그룹';
-                allText = '그룹 전체';
-                items = (state.userSpaces.workspaces || []).map(function(ws) {
-                    const name = ws.wsName || ws.WS_NAME || '이름 없음';
-                    return {
-                        id: ws.wsId || ws.WS_ID,
-                        name: name,
-                        avatar: ws.wsImagePath || ws.WS_IMAGE_PATH || ws.imagePath || ws.IMAGE_PATH || '',
-                        initial: getInitial(name)
-                    };
-                }).filter(function(item) { return item.id; });
-            } else if (state.scope === 'PROJ') {
-                label = '프로젝트';
-                allText = '프로젝트 전체';
-                items = (state.userSpaces.projects || []).map(function(project) {
-                    return {
-                        id: project.projId || project.PROJ_ID,
-                        name: getProjectFilterName(project)
-                    };
-                }).filter(function(item) { return item.id; });
+                return friend ? friend.name : '선택한 친구';
             }
 
-            if (state.targetId !== 'ALL' && !items.some(function(item) { return String(item.id) === String(state.targetId); })) {
-                state.targetId = 'ALL';
-            }
-
-            $label.text(label);
-            appendTargetChip($list, 'ALL', allText, state.targetId === 'ALL');
-            if (!items.length) {
-                const emptyText = state.scope === 'FRIEND' ? '표시할 친구가 없습니다' : '표시할 항목이 없습니다';
-                $list.append('<button type="button" class="moyo-target-chip is-empty" disabled>' + escapeHtml(emptyText) + '</button>');
-                requestAnimationFrame(updateTargetFilterScroll);
-                return;
-            }
-
-            items.forEach(function(item) {
-                appendTargetChip($list, item.id, item.name, String(state.targetId) === String(item.id), item);
-            });
-            requestAnimationFrame(function() {
-                updateTargetFilterScroll();
-                const activeChip = $list.find('.moyo-target-chip.is-active').get(0);
-                if (activeChip) activeChip.scrollIntoView({ behavior: 'auto', inline: 'nearest', block: 'nearest' });
-            });
-        }
-
-        function scrollTargetFilters(direction) {
-            const list = document.getElementById('calendarTargetList');
-            if (!list) return;
-            const amount = Math.max(160, Math.floor(list.clientWidth * 0.62));
-            list.scrollBy({ left: direction * amount, behavior: 'smooth' });
-            setTimeout(updateTargetFilterScroll, 180);
-        }
-
-        function updateTargetFilterScroll() {
-            const bar = document.getElementById('calendarTargetBar');
-            const list = document.getElementById('calendarTargetList');
-            if (!bar || !list || bar.hasAttribute('hidden')) return;
-
-            const maxScroll = Math.max(0, list.scrollWidth - list.clientWidth);
-            const canScroll = maxScroll > 2;
-            const left = list.scrollLeft;
-            const canLeft = canScroll && left > 2;
-            const canRight = canScroll && left < maxScroll - 2;
-
-            bar.classList.toggle('is-scrollable', canScroll);
-            bar.classList.toggle('can-scroll-left', canLeft);
-            bar.classList.toggle('can-scroll-right', canRight);
-            $('#targetFilterPrev').prop('disabled', !canLeft);
-            $('#targetFilterNext').prop('disabled', !canRight);
-        }
-
-        function appendAllFilterChip($list, key, text, active, meta) {
-            const $button = $('<button type="button" class="moyo-target-chip has-profile is-toggle"></button>');
-            $button.attr('data-all-filter', key);
-            if (meta) $button.append(buildTargetAvatar(meta));
-            $('<span class="moyo-target-label-text"></span>').text(text).appendTo($button);
-            if (active) $button.addClass('is-active');
-            $list.append($button);
-        }
-
-        function appendTargetChip($list, id, text, active, meta) {
-            const $button = $('<button type="button" class="moyo-target-chip"></button>');
-            $button.attr('data-target-id', id);
-
-            const showProfile = meta && (state.scope === 'FRIEND' || state.scope === 'WS');
-            if (showProfile) {
-                $button.addClass('has-profile');
-                $button.append(buildTargetAvatar(meta));
-            }
-
-            $('<span class="moyo-target-label-text"></span>').text(text).appendTo($button);
-            if (active) $button.addClass('is-active');
-            $list.append($button);
-        }
-
-        function buildTargetAvatar(meta) {
-            const $avatar = $('<span class="moyo-target-avatar" aria-hidden="true"></span>');
-            const imagePath = normalizeImagePath(meta.avatar);
-            const initial = meta.initial || getInitial(meta.name);
-
-            if (imagePath) {
-                const $img = $('<img alt="" loading="lazy">').attr('src', imagePath);
-                $img.on('error', function() {
-                    $(this).remove();
-                    $avatar.text(initial);
+            if (state.scope === 'WS') {
+                if (!selection.wsId) return '그룹 전체';
+                const workspace = getCalendarScopeSelectorWorkspaces().find(function(item) {
+                    return String(item.id) === String(selection.wsId);
                 });
-                $avatar.append($img);
-            } else {
-                $avatar.text(initial);
+                return workspace ? workspace.name : '선택한 그룹';
             }
-            return $avatar;
+
+            if (state.scope === 'PROJ') {
+                if (!selection.projectScope && !selection.projId) return '프로젝트 전체';
+                if (selection.projectScope === 'PERSONAL' && !selection.projId) return '개인 프로젝트 전체';
+                if (selection.projectScope === 'GROUP' && selection.wsId && !selection.projId) {
+                    const workspace = getCalendarScopeSelectorWorkspaces().find(function(item) {
+                        return String(item.id) === String(selection.wsId);
+                    });
+                    return workspace ? workspace.name + ' · 프로젝트 전체' : '그룹 프로젝트 전체';
+                }
+                if (selection.projId) {
+                    const project = getCalendarScopeSelectorProjects().find(function(item) {
+                        return String(item.id) === String(selection.projId);
+                    });
+                    return project ? project.name : '선택한 프로젝트';
+                }
+            }
+
+            return '전체';
         }
 
         function normalizeImagePath(path) {
             if (!path) return '';
             const value = String(path).trim();
             if (!value) return '';
-            if (/^(https?:)?\/\//i.test(value) || value.indexOf('data:') === 0) return value;
+            if (/^(https?:)?\/\//i.test(value) || value.indexOf('data:') === 0 || value.indexOf('blob:') === 0) return value;
             if (value.charAt(0) === '/') return value;
             return contextPath + '/' + value.replace(/^\/+/, '');
         }

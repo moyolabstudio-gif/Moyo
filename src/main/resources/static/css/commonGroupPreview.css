@@ -1,0 +1,296 @@
+/* MOYO profile group preview modal */
+body.profile-group-preview-open {
+    overflow: hidden;
+}
+
+.profile-group-row--preview {
+    width: 100%;
+    border: 0;
+    border-bottom: 1px solid var(--moyo-line);
+    background: transparent;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    appearance: none;
+}
+
+.profile-group-row--preview:last-child {
+    border-bottom: 0;
+}
+
+.profile-group-row--preview:hover {
+    background: rgba(248, 251, 255, .9);
+}
+
+.profile-group-preview-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 3200;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+}
+
+.profile-group-preview-modal.is-open {
+    display: flex;
+}
+
+.profile-group-preview-modal[aria-hidden="true"] {
+    display: none;
+}
+
+.profile-group-preview-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(20, 27, 40, .34);
+    backdrop-filter: blur(4px);
+}
+
+.profile-group-preview-panel {
+    position: relative;
+    z-index: 1;
+    width: min(460px, calc(100vw - 40px));
+    overflow: hidden;
+    border: 1px solid rgba(224, 232, 244, .95);
+    border-radius: 26px;
+    background: rgba(255, 255, 255, .98);
+    box-shadow: 0 24px 70px rgba(27, 38, 62, .22);
+}
+
+.profile-group-preview-close {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    z-index: 2;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    border: 1px solid #e7edf6;
+    border-radius: 50%;
+    color: #6f7d91;
+    background: rgba(255, 255, 255, .9);
+    font-family: inherit;
+    font-size: 22px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.profile-group-preview-hero {
+    display: grid;
+    grid-template-columns: 86px minmax(0, 1fr);
+    gap: 16px;
+    align-items: center;
+    padding: 30px 28px 22px;
+    background: linear-gradient(135deg, rgba(240, 254, 251, .9), rgba(247, 250, 255, .96));
+}
+
+.profile-group-preview-image {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 86px;
+    height: 86px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, .82);
+    border-radius: 24px;
+    color: #fff;
+    background: linear-gradient(135deg, #35ccb5, #60dcca);
+    box-shadow: 0 12px 26px rgba(37, 185, 163, .22);
+    font-size: 28px;
+    font-weight: 950;
+}
+
+.profile-group-preview-image img {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+    background: transparent;
+}
+
+/* 업로드한 그룹 이미지(PNG 포함)는 다른 그룹 아바타와 동일하게 원본의 투명 배경을 유지한다. */
+.profile-group-preview-image:has(img[src]:not([src=""])) {
+    background: transparent;
+    box-shadow: 0 8px 20px rgba(15, 23, 42, .08);
+}
+
+.profile-group-preview-titlebox {
+    min-width: 0;
+    padding-right: 30px;
+}
+
+.profile-group-preview-titlebox h3 {
+    overflow: hidden;
+    margin: 0;
+    color: #253044;
+    font-size: 21px;
+    font-weight: 950;
+    letter-spacing: -.04em;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.profile-group-preview-titlebox p {
+    display: -webkit-box;
+    overflow: hidden;
+    margin: 7px 0 0;
+    color: #738197;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.55;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+
+.profile-group-preview-summary {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    padding: 18px 28px 0;
+}
+
+.profile-group-preview-info {
+    min-width: 0;
+    padding: 12px 13px;
+    border: 1px solid #e8eef7;
+    border-radius: 16px;
+    background: #f8fafc;
+}
+
+.profile-group-preview-info span,
+.profile-group-preview-info strong {
+    display: block;
+}
+
+.profile-group-preview-info span {
+    margin-bottom: 5px;
+    color: #8996a9;
+    font-size: 11px;
+    font-weight: 800;
+}
+
+.profile-group-preview-info strong {
+    overflow: hidden;
+    color: #2f3a4f;
+    font-size: 12px;
+    font-weight: 950;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.profile-group-preview-note {
+    margin: 16px 28px 0;
+    padding: 15px 16px;
+    border: 1px solid #edf2f8;
+    border-radius: 18px;
+    background: #fbfdff;
+}
+
+.profile-group-preview-note p {
+    margin: 0;
+    color: #8492a6;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.5;
+}
+
+.profile-group-preview-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    padding: 20px 28px 26px;
+}
+
+.profile-group-preview-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 90px;
+    height: 40px;
+    padding: 0 20px;
+    border: 1px solid #e1e8f2;
+    border-radius: 999px;
+    appearance: none;
+    -webkit-appearance: none;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 800;
+    line-height: 1;
+    white-space: nowrap;
+    vertical-align: middle;
+    box-sizing: border-box;
+    transition: transform .16s ease, box-shadow .16s ease, background .16s ease;
+    cursor: pointer;
+}
+
+.profile-group-preview-btn.is-muted {
+    color: #66758a;
+    background: #fff;
+}
+
+.profile-group-preview-btn.is-primary {
+    border: 0;
+    color: #fff;
+    background: linear-gradient(90deg, #35c9b8 0%, #4a91e8 52%, #6b5cf6 100%);
+    box-shadow: 0 8px 20px rgba(74, 145, 232, 0.18);
+    cursor: pointer;
+}
+
+.profile-group-preview-btn.is-primary:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 10px 24px rgba(74, 145, 232, 0.24);
+}
+
+.profile-group-preview-btn.is-primary:disabled {
+    border-color: #dce4f0;
+    color: #98a5b7;
+    background: #f3f6fa;
+    box-shadow: none;
+    cursor: not-allowed;
+}
+
+@media (max-width: 640px) {
+    .profile-group-preview-modal {
+        padding: 16px;
+    }
+
+    .profile-group-preview-hero {
+        grid-template-columns: 64px minmax(0, 1fr);
+        gap: 13px;
+        padding: 26px 22px 18px;
+    }
+
+    .profile-group-preview-image {
+        width: 64px;
+        height: 64px;
+        border-radius: 20px;
+        font-size: 22px;
+    }
+
+    .profile-group-preview-summary {
+        grid-template-columns: 1fr;
+        padding-left: 22px;
+        padding-right: 22px;
+    }
+
+    .profile-group-preview-note {
+        margin-left: 22px;
+        margin-right: 22px;
+    }
+
+    .profile-group-preview-actions {
+        padding-left: 22px;
+        padding-right: 22px;
+    }
+}
+
+.profile-group-preview-btn.is-primary.is-checking {
+    border: 1px solid #dce4f0;
+    color: #7f8da1;
+    background: #f3f6fa;
+    box-shadow: none;
+}

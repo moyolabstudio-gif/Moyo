@@ -314,6 +314,7 @@ public class photoAlbumController {
         Map<String, Object> post = photoAlbumService.getPost(postId, user.getUserId());
         ResponseEntity<?> denied = authorizePost(post, session);
         if (denied != null) return denied;
+        addPhotoPermissionFlags(post, user.getUserId());
         return ResponseEntity.ok(Map.of("post", post, "photos", photoAlbumService.getPostPhotos(postId)));
     }
 
@@ -446,6 +447,7 @@ public class photoAlbumController {
 
         boolean success = photoAlbumService.updatePostVisibility(postId, normalized);
         Map<String, Object> updatedPost = success ? photoAlbumService.getPost(postId, user.getUserId()) : post;
+        addPhotoPermissionFlags(updatedPost, user.getUserId());
         return ResponseEntity.ok(Map.of("status", success ? "SUCCESS" : "FAIL", "post", updatedPost));
     }
 
@@ -482,7 +484,12 @@ public class photoAlbumController {
 
         try {
             Long collectedPostId = photoAlbumService.collectPost(postId, albumId, user.getUserId());
-            return ResponseEntity.ok(Map.of("status", "SUCCESS", "postId", collectedPostId));
+            appendCollectCommentIfMissing(postId, user.getUserId());
+            return ResponseEntity.ok(Map.of(
+                    "status", "SUCCESS",
+                    "postId", collectedPostId,
+                    "comments", photoAlbumService.getPostComments(postId, user.getUserId())
+            ));
         } catch (RuntimeException e) {
             return error(HttpStatus.BAD_REQUEST, e.getMessage());
         }
@@ -770,6 +777,37 @@ public class photoAlbumController {
         return null;
     }
 
+    private void addPhotoPermissionFlags(Map<String, Object> post, Long userId) {
+        if (post == null || userId == null) return;
+        String scopeType = string(value(post, "scopeType", "SCOPE_TYPE"));
+        Long scopeId = toLong(value(post, "scopeId", "SCOPE_ID"));
+        Long ownerId = toLong(firstMapValue(post, "createdBy", "CREATED_BY", "userId", "USER_ID"));
+        Long postId = toLong(value(post, "postId", "POST_ID"));
+        boolean isCreator = userId.equals(ownerId);
+        boolean isScopeManager = canManageScope(scopeType, scopeId, userId);
+        boolean canManage = isCreator || isScopeManager;
+        String normalizedScope;
+        try { normalizedScope = normalizeScopeType(scopeType); }
+        catch (IllegalArgumentException e) { normalizedScope = ""; }
+        boolean canMoveAlbum = canManage && ("PERSONAL".equals(normalizedScope) || "WORKSPACE".equals(normalizedScope) || "PROJECT".equals(normalizedScope));
+        boolean canToggleVisibility = isCreator && "PERSONAL".equals(normalizedScope);
+        boolean canShare = isCreator;
+        if (!canShare && postId != null) {
+            String visibilityType = string(value(post, "visibilityType", "VISIBILITY_TYPE"));
+            canShare = "PERSONAL".equals(normalizedScope)
+                    && "FRIENDS".equalsIgnoreCase(visibilityType)
+                    && ownerId != null
+                    && isAcceptedFriend(ownerId, userId);
+        }
+
+        post.put("canManage", canManage);
+        post.put("canEdit", canManage);
+        post.put("canDelete", canManage);
+        post.put("canMoveAlbum", canMoveAlbum);
+        post.put("canToggleVisibility", canToggleVisibility);
+        post.put("canShare", canShare);
+    }
+
     private ResponseEntity<?> authorizePost(Map<String, Object> post, HttpSession session) {
         if (post == null) return error(HttpStatus.NOT_FOUND, "사진 게시물을 찾을 수 없습니다.");
         usersDto user = loginUser(session);
@@ -985,6 +1023,23 @@ public class photoAlbumController {
             throw new IllegalArgumentException("지원하지 않는 공간 유형입니다.");
         }
         return normalized;
+    }
+
+    private void appendCollectCommentIfMissing(Long sourcePostId, Long userId) {
+        if (sourcePostId == null || userId == null) return;
+        final String collectMessage = "담아가요 :)";
+        try {
+            List<Map<String, Object>> comments = photoAlbumService.getPostComments(sourcePostId, userId);
+            boolean alreadyLeft = comments != null && comments.stream().anyMatch(comment ->
+                    userId.equals(toLong(value(comment, "userId", "USER_ID")))
+                            && collectMessage.equals(string(value(comment, "commentContent", "COMMENT_CONTENT")).trim())
+            );
+            if (!alreadyLeft) {
+                photoAlbumService.createPostComment(sourcePostId, null, collectMessage, userId);
+            }
+        } catch (RuntimeException ignored) {
+            // 담아가기 자체는 성공시킨다. 자동 댓글 생성 실패가 담아가기 흐름을 막으면 안 된다.
+        }
     }
 
     private usersDto loginUser(HttpSession session) {

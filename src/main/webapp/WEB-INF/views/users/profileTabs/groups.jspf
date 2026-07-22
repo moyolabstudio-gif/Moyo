@@ -1,0 +1,343 @@
+<%@ page pageEncoding="UTF-8" %>
+<section class="profile-tab-section profile-tab-section--groups">
+
+    <c:choose>
+        <c:when test="${groupsPublic ne 'N' and showGroups and not empty wsList}">
+            <div class="profile-tab-card profile-tab-card--list profile-group-card">
+                <div class="profile-group-list">
+                    <c:forEach var="ws" items="${wsList}">
+                        <c:set var="profileGroupDesc" value="${empty ws.wsDescription ? '아직 그룹 소개가 없어요.' : ws.wsDescription}" />
+                        <c:set var="profileGroupType" value="${empty ws.wsType ? 'COMMUNITY' : ws.wsType}" />
+                        <c:set var="profileGroupMemberCount" value="${empty ws.memberCount ? 0 : ws.memberCount}" />
+
+                        <button type="button"
+                                class="profile-group-row profile-group-row--preview js-profile-group-preview-open"
+                                data-ws-id="${fn:escapeXml(ws.wsId)}"
+                                data-ws-name="${fn:escapeXml(ws.wsName)}"
+                                data-ws-description="${fn:escapeXml(profileGroupDesc)}"
+                                data-ws-image="${fn:escapeXml(ws.wsImagePath)}"
+                                data-ws-type="${fn:escapeXml(profileGroupType)}"
+                                data-ws-member-count="${fn:escapeXml(profileGroupMemberCount)}"
+                                data-ws-join-type="${fn:escapeXml(empty ws.joinType ? 'INVITE_ONLY' : ws.joinType)}"
+                                data-context-path="${pageContext.request.contextPath}">
+                            <span class="profile-group-avatar" aria-hidden="true">
+                                <c:if test="${not empty ws.wsImagePath}">
+                                    <img src="${pageContext.request.contextPath}<c:out value='${ws.wsImagePath}'/>" alt="" onerror="this.hidden=true; this.nextElementSibling.hidden=false;">
+                                </c:if>
+                                <span class="profile-group-avatar-fallback" ${not empty ws.wsImagePath ? 'hidden' : ''}>
+                                    <c:choose>
+                                        <c:when test="${not empty ws.wsName}"><c:out value="${fn:toUpperCase(fn:substring(fn:trim(ws.wsName), 0, 1))}" /></c:when>
+                                        <c:otherwise>G</c:otherwise>
+                                    </c:choose>
+                                </span>
+                            </span>
+                            <span class="profile-group-text">
+                                <strong><c:out value="${ws.wsName}" /></strong>
+                                <small><c:out value="${empty ws.wsDescription ? '그룹 정보를 미리 볼 수 있어요' : ws.wsDescription}" /></small>
+                            </span>
+                            <span class="profile-group-link" aria-hidden="true">보기</span>
+                        </button>
+                    </c:forEach>
+                </div>
+            </div>
+
+            <div class="profile-group-preview-modal" id="profileGroupPreviewModal" aria-hidden="true">
+                <div class="profile-group-preview-backdrop js-profile-group-preview-close" aria-hidden="true"></div>
+                <div class="profile-group-preview-panel" role="dialog" aria-modal="true" aria-labelledby="profileGroupPreviewTitle">
+                    <button type="button" class="profile-group-preview-close js-profile-group-preview-close" aria-label="닫기">×</button>
+                    <div class="profile-group-preview-hero">
+                        <span class="profile-group-preview-image" id="profileGroupPreviewImage" aria-hidden="true"></span>
+                        <div class="profile-group-preview-titlebox">
+                            <h3 id="profileGroupPreviewTitle">그룹 미리보기</h3>
+                            <p id="profileGroupPreviewDescription">그룹 정보를 확인해 보세요.</p>
+                        </div>
+                    </div>
+                    <div class="profile-group-preview-summary" aria-label="그룹 정보">
+                        <div class="profile-group-preview-info">
+                            <span>유형</span>
+                            <strong id="profileGroupPreviewType">그룹</strong>
+                        </div>
+                        <div class="profile-group-preview-info">
+                            <span>멤버</span>
+                            <strong id="profileGroupPreviewMemberCount">0명</strong>
+                        </div>
+                        <div class="profile-group-preview-info">
+                            <span>참여</span>
+                            <strong id="profileGroupPreviewJoinType">초대 후 참여</strong>
+                        </div>
+                    </div>
+                    <div class="profile-group-preview-note">
+                        <p>그룹 공개 방식에 따라 바로 참여하거나 요청 후 함께할 수 있어요.</p>
+                    </div>
+                    <div class="profile-group-preview-actions">
+                        <button type="button" class="profile-group-preview-btn is-muted js-profile-group-preview-close">닫기</button>
+                        <button type="button" class="profile-group-preview-btn is-primary" id="profileGroupPreviewPrimary" disabled>참여/요청</button>
+                    </div>
+                </div>
+            </div>
+
+            <script>
+                (function () {
+                    var modal = document.getElementById('profileGroupPreviewModal');
+                    if (!modal || modal.dataset.bound === 'Y') {
+                        return;
+                    }
+                    modal.dataset.bound = 'Y';
+
+                    var title = document.getElementById('profileGroupPreviewTitle');
+                    var desc = document.getElementById('profileGroupPreviewDescription');
+                    var image = document.getElementById('profileGroupPreviewImage');
+                    var type = document.getElementById('profileGroupPreviewType');
+                    var memberCount = document.getElementById('profileGroupPreviewMemberCount');
+                    var joinType = document.getElementById('profileGroupPreviewJoinType');
+                    var primaryButton = document.getElementById('profileGroupPreviewPrimary');
+                    var currentWorkspaceId = null;
+                    var currentWorkspaceName = '';
+                    var currentContextPath = '';
+                    var currentJoinType = 'INVITE_ONLY';
+                    var currentIsMember = false;
+                    var currentJoinRequestStatus = '';
+                    var membershipRequestSeq = 0;
+                    var lastFocus = null;
+
+                    function getTypeLabel(value) {
+                        var normalized = (value || '').toUpperCase();
+                        var labels = {
+                            ORGANIZATION: '조직',
+                            TEAM: '팀',
+                            STUDY: '스터디',
+                            COMMUNITY: '커뮤니티',
+                            CLUB: '모임',
+                            LIFE: '생활',
+                            ETC: '기타'
+                        };
+                        return labels[normalized] || '그룹';
+                    }
+
+                    function getJoinTypeLabel(value) {
+                        var normalized = (value || '').toUpperCase();
+                        if (normalized === 'OPEN') return '자유 가입';
+                        if (normalized === 'APPROVAL') return '승인 후 참여';
+                        return '초대 전용';
+                    }
+
+                    function syncPrimaryButton(value, isMember, isChecking) {
+                        var normalized = (value || '').toUpperCase();
+                        var requestStatus = (currentJoinRequestStatus || '').toUpperCase();
+
+                        primaryButton.classList.toggle('is-checking', !!isChecking);
+                        primaryButton.classList.toggle('is-request-cancel', !isChecking && !isMember && normalized === 'APPROVAL' && requestStatus === 'PENDING');
+                        if (isChecking) {
+                            primaryButton.disabled = true;
+                            primaryButton.textContent = '확인 중';
+                            return;
+                        }
+
+                        if (isMember) {
+                            primaryButton.disabled = false;
+                            primaryButton.textContent = '입장';
+                            return;
+                        }
+
+                        if (normalized === 'OPEN') {
+                            primaryButton.disabled = false;
+                            primaryButton.textContent = '참여';
+                        } else if (normalized === 'APPROVAL') {
+                            primaryButton.disabled = false;
+                            primaryButton.textContent = requestStatus === 'PENDING' ? '요청 취소' : '참여 요청';
+                        } else {
+                            primaryButton.disabled = true;
+                            primaryButton.textContent = '초대 전용';
+                        }
+                    }
+
+                    function refreshMembership() {
+                        var requestSeq = ++membershipRequestSeq;
+                        currentIsMember = false;
+                        currentJoinRequestStatus = '';
+                        syncPrimaryButton(currentJoinType, false, true);
+
+                        if (!currentWorkspaceId) {
+                            syncPrimaryButton(currentJoinType, false, false);
+                            return;
+                        }
+
+                        fetch(currentContextPath + '/workspace/api/membership?wsId=' + encodeURIComponent(currentWorkspaceId), {
+                            method: 'GET',
+                            headers: { 'Accept': 'application/json' },
+                            credentials: 'same-origin'
+                        })
+                            .then(function (response) {
+                                if (!response.ok) throw new Error('membership_check_failed');
+                                return response.json();
+                            })
+                            .then(function (data) {
+                                if (requestSeq !== membershipRequestSeq) return;
+                                currentIsMember = data && data.member === true;
+                                currentJoinRequestStatus = data && data.joinRequestStatus ? data.joinRequestStatus : '';
+                                syncPrimaryButton(currentJoinType, currentIsMember, false);
+                            })
+                            .catch(function () {
+                                if (requestSeq !== membershipRequestSeq) return;
+                                currentIsMember = false;
+                                syncPrimaryButton(currentJoinType, false, false);
+                            });
+                    }
+
+                    function formatMemberCount(value) {
+                        var count = parseInt(value, 10);
+                        if (isNaN(count) || count < 0) {
+                            return '0명';
+                        }
+                        return count + '명';
+                    }
+
+                    function openModal(trigger) {
+                        if (!trigger) return;
+                        lastFocus = trigger;
+
+                        var nameValue = trigger.dataset.wsName || '그룹 미리보기';
+                        var descValue = trigger.dataset.wsDescription || '아직 그룹 소개가 없어요.';
+                        var imageValue = trigger.dataset.wsImage || '';
+                        var typeValue = trigger.dataset.wsType || 'COMMUNITY';
+                        var memberCountValue = trigger.dataset.wsMemberCount || '0';
+                        var joinTypeValue = trigger.dataset.wsJoinType || 'INVITE_ONLY';
+                        currentWorkspaceId = trigger.dataset.wsId || null;
+                        currentWorkspaceName = nameValue;
+                        currentContextPath = trigger.dataset.contextPath || '';
+                        currentJoinType = joinTypeValue;
+                        currentIsMember = false;
+                        currentJoinRequestStatus = '';
+
+                        title.textContent = nameValue;
+                        desc.textContent = descValue;
+                        type.textContent = getTypeLabel(typeValue);
+                        memberCount.textContent = formatMemberCount(memberCountValue);
+                        joinType.textContent = getJoinTypeLabel(joinTypeValue);
+                        syncPrimaryButton(joinTypeValue, false, true);
+
+                        image.innerHTML = '';
+                        if (imageValue) {
+                            var img = document.createElement('img');
+                            img.src = currentContextPath + imageValue;
+                            img.alt = '';
+                            img.onerror = function () {
+                                image.textContent = nameValue.substring(0, 1).toUpperCase();
+                            };
+                            image.appendChild(img);
+                        } else {
+                            image.textContent = nameValue.substring(0, 1).toUpperCase();
+                        }
+
+                        modal.classList.add('is-open');
+                        modal.setAttribute('aria-hidden', 'false');
+                        document.body.classList.add('profile-group-preview-open');
+                        refreshMembership();
+                    }
+
+                    function closeModal() {
+                        modal.classList.remove('is-open');
+                        modal.setAttribute('aria-hidden', 'true');
+                        document.body.classList.remove('profile-group-preview-open');
+                        if (lastFocus && typeof lastFocus.focus === 'function') {
+                            lastFocus.focus();
+                        }
+                    }
+
+                    document.addEventListener('click', function (event) {
+                        var openTrigger = event.target.closest('.js-profile-group-preview-open');
+                        if (openTrigger) {
+                            event.preventDefault();
+                            openModal(openTrigger);
+                            return;
+                        }
+                        if (event.target.closest('.js-profile-group-preview-close')) {
+                            event.preventDefault();
+                            closeModal();
+                        }
+                    });
+
+                    primaryButton.addEventListener('click', function () {
+                        if (primaryButton.disabled || !currentWorkspaceId) return;
+
+                        if (currentIsMember) {
+                            window.location.href = currentContextPath + '/workspace/main?wsId=' + encodeURIComponent(currentWorkspaceId);
+                            return;
+                        }
+
+                        if ((currentJoinType || '').toUpperCase() === 'APPROVAL') {
+                            var pending = (currentJoinRequestStatus || '').toUpperCase() === 'PENDING';
+                            if (pending && !window.confirm('참여 요청을 취소할까요?')) return;
+
+                            primaryButton.disabled = true;
+                            primaryButton.textContent = pending ? '취소 중' : '요청 중';
+                            var endpoint = pending ? '/workspace/api/join-request/cancel' : '/workspace/api/join-request';
+                            var body = new URLSearchParams();
+                            body.set('wsId', currentWorkspaceId);
+
+                            fetch(currentContextPath + endpoint, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8', 'Accept': 'application/json' },
+                                credentials: 'same-origin',
+                                body: body.toString()
+                            })
+                                .then(function (response) {
+                                    if (!response.ok) throw new Error('join_request_failed');
+                                    return response.json();
+                                })
+                                .then(function (data) {
+                                    if (!data || data.success !== true) {
+                                        var message = data && data.status === 'ALREADY_MEMBER'
+                                                ? '이미 참여 중인 그룹입니다.'
+                                                : '참여 요청을 처리하지 못했습니다.';
+                                        throw new Error(message);
+                                    }
+                                    currentJoinRequestStatus = pending ? 'CANCELED' : 'PENDING';
+                                    syncPrimaryButton(currentJoinType, false, false);
+                                })
+                                .catch(function (error) {
+                                    alert(error && error.message ? error.message : '참여 요청을 처리하지 못했습니다.');
+                                    refreshMembership();
+                                });
+                            return;
+                        }
+
+                        closeModal();
+                        if (typeof window.openGroupOpenJoinProfileModal === 'function') {
+                            window.openGroupOpenJoinProfileModal(
+                                    currentWorkspaceName || '그룹',
+                                    currentWorkspaceId
+                            );
+                        } else {
+                            alert('그룹 참여 프로필을 불러오지 못했습니다. 새로고침 후 다시 시도해주세요.');
+                        }
+                    });
+
+                    document.addEventListener('keydown', function (event) {
+                        if (event.key === 'Escape' && modal.classList.contains('is-open')) {
+                            closeModal();
+                        }
+                    });
+                })();
+            </script>
+        </c:when>
+        <c:otherwise>
+            <c:choose>
+                <c:when test="${groupsPublic eq 'N' or not showGroups}">
+                    <div class="profile-tab-card profile-empty-state is-private">
+                        <span>🔒</span>
+                        <strong>그룹 정보를 공개하지 않았어요</strong>
+                        <p>참여 중인 그룹은 공개 설정 후 표시됩니다.</p>
+                    </div>
+                </c:when>
+                <c:otherwise>
+                    <div class="profile-tab-card profile-empty-state">
+                        <span>👥</span>
+                        <strong>아직 참여 중인 그룹이 없어요</strong>
+                        <p>참여 중인 그룹이 생기면 여기에 표시됩니다.</p>
+                    </div>
+                </c:otherwise>
+            </c:choose>
+        </c:otherwise>
+    </c:choose>
+</section>

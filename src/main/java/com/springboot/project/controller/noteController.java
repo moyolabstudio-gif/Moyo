@@ -6,6 +6,7 @@ import com.springboot.project.dto.noteReplyDTO;
 import com.springboot.project.dto.noteFolderDTO;
 import com.springboot.project.dto.contentShareDTO;
 import com.springboot.project.dao.InoteFolderDAO;
+import com.springboot.project.dao.IworkspaceDAO;
 import com.springboot.project.dto.usersDto;
 import com.springboot.project.service.InoteService;
 import com.springboot.project.service.IcontentShareService;
@@ -36,6 +37,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -56,6 +58,9 @@ public class noteController {
 
     @Autowired
     private IcontentShareService contentShareService;
+
+    @Autowired
+    private IworkspaceDAO workspaceDAO;
 
     @GetMapping("/list")
     public String noteList(
@@ -311,6 +316,7 @@ public class noteController {
             @RequestParam(value = "category", defaultValue = "GENERAL") String category,
             @RequestParam(value = "icon", defaultValue = "📝") String icon,
             @RequestParam(value = "folderId", required = false) Long folderId,
+            @RequestParam(value = "moyoPublicYn", required = false, defaultValue = "N") String moyoPublicYn,
             @RequestParam(value = "redirectTo", required = false) String redirectTo,
             @RequestParam(value = "shareTargetType", required = false) List<String> shareTargetTypes,
             @RequestParam(value = "shareTargetId", required = false) List<Long> shareTargetIds,
@@ -336,6 +342,7 @@ public class noteController {
         note.setCategory(category);
         note.setIcon(icon);
         note.setFolderId(folderId);
+        note.setMoyoPublicYn(("PRIVATE".equalsIgnoreCase(normalizedScope) && "Y".equalsIgnoreCase(moyoPublicYn)) ? "Y" : "N");
         note.setDoneContent(memo); // 기존 컬럼 호환용. 화면에서는 memo만 사용합니다.
         note.setNextContent(null);
         note.setIssueContent(null);
@@ -359,6 +366,7 @@ public class noteController {
             @RequestParam(value = "category", defaultValue = "GENERAL") String category,
             @RequestParam(value = "icon", defaultValue = "📝") String icon,
             @RequestParam(value = "folderId", required = false) Long folderId,
+            @RequestParam(value = "moyoPublicYn", required = false, defaultValue = "N") String moyoPublicYn,
             @RequestParam(value = "files", required = false) List<MultipartFile> files,
             HttpSession session) {
 
@@ -384,6 +392,12 @@ public class noteController {
         note.setCategory(category);
         note.setIcon(icon);
         note.setFolderId(folderId);
+        boolean canChangeMoyoPublic = savedNote.getUserId() != null
+                && savedNote.getUserId().equals(loginUser.getUserId())
+                && "PRIVATE".equalsIgnoreCase(savedNote.getScopeType());
+        note.setMoyoPublicYn(canChangeMoyoPublic
+                ? ("Y".equalsIgnoreCase(moyoPublicYn) ? "Y" : "N")
+                : savedNote.getMoyoPublicYn());
         note.setDoneContent(memo); // 기존 컬럼 호환용
         note.setUpdatedBy(loginUser.getUserId());
         inoteService.modifyNote(note);
@@ -581,7 +595,7 @@ public class noteController {
 
     @GetMapping("/api/main")
     @ResponseBody
-    public List<noteDTO> mainNoteApi(
+    public ResponseEntity<?> mainNoteApi(
             @RequestParam(value = "scope", required = false) String scope,
             @RequestParam(value = "scopeType", required = false) String scopeType,
             @RequestParam(value = "wsId", required = false) Long wsId,
@@ -589,9 +603,37 @@ public class noteController {
             @RequestParam(value = "limit", defaultValue = "3") int limit,
             HttpSession session) {
         usersDto loginUser = getLoginUser(session);
-        if (loginUser == null) return new ArrayList<>();
+        if (loginUser == null) {
+            return ResponseEntity.status(401).body(Map.of("message", "LOGIN_REQUIRED"));
+        }
         String normalizedScope = normalizeScope(scope, scopeType, wsId, projId);
-        return inoteService.getMainNoteList(normalizedScope, wsId, projId, loginUser.getUserId(), limit);
+        if ("WS".equals(normalizedScope)
+                && (wsId == null || workspaceDAO.isWorkspaceMember(wsId, loginUser.getUserId()) < 1)) {
+            return ResponseEntity.status(403).body(Map.of("message", "WORKSPACE_MEMBER_REQUIRED"));
+        }
+        int safeLimit = Math.min(Math.max(limit, 1), 3);
+
+        // 전용 메인 쿼리(selectMainNoteList)에서 Oracle 500이 발생하므로,
+        // 실제 노트 목록 화면에서 사용 중인 검증된 조회 경로를 그대로 사용합니다.
+        // WS 범위와 wsId가 적용되고 previewContent도 서비스에서 가공됩니다.
+        List<noteDTO> widgetNotes = inoteService.getNoteListPage(
+                normalizedScope,
+                wsId,
+                projId,
+                loginUser.getUserId(),
+                null,
+                false,
+                null,
+                null,
+                0,
+                safeLimit
+        );
+        if (widgetNotes == null) widgetNotes = java.util.Collections.emptyList();
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("notes", widgetNotes);
+        response.put("count", widgetNotes.size());
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/api/list")
@@ -710,6 +752,359 @@ public class noteController {
         Long noteWsId = note != null ? note.getWsId() : wsId;
         Long noteProjId = note != null ? note.getProjId() : projId;
         return "redirect:/note/detail?noteId=" + noteId + "&" + buildScopeQuery(normalizedScope, noteWsId, noteProjId);
+    }
+
+
+    @PostMapping("/api/public/view")
+    @ResponseBody
+    public Map<String, Object> recordPublicNoteView(
+            @RequestParam("noteId") Long noteId,
+            HttpSession session) {
+        Map<String, Object> response = new HashMap<>();
+        usersDto loginUser = getLoginUser(session);
+        if (loginUser == null) {
+            response.put("success", false);
+            response.put("message", "로그인이 필요합니다.");
+            return response;
+        }
+        if (!inoteService.isMoyoPublicNote(noteId)) {
+            response.put("success", false);
+            response.put("message", "공개 노트를 찾을 수 없습니다.");
+            return response;
+        }
+        noteDTO note = inoteService.getNoteDetail(noteId, loginUser.getUserId());
+        if (note == null) {
+            response.put("success", false);
+            response.put("message", "공개 노트를 찾을 수 없습니다.");
+            return response;
+        }
+
+        // 작성자 본인의 열람은 조회수에 포함하지 않는다.
+        if (note.getUserId() != null && note.getUserId().equals(loginUser.getUserId())) {
+            response.put("success", true);
+            response.put("counted", false);
+            response.put("viewCount", inoteService.getNoteReactionStatus(noteId, loginUser.getUserId()).get("viewCount"));
+            return response;
+        }
+
+        final String viewedNoteIdsKey = "moyoPublicViewedNoteIds";
+        Object viewedValue = session.getAttribute(viewedNoteIdsKey);
+        Set<Long> viewedNoteIds;
+        if (viewedValue instanceof Set<?>) {
+            viewedNoteIds = new HashSet<>();
+            for (Object value : (Set<?>) viewedValue) {
+                if (value instanceof Number) {
+                    viewedNoteIds.add(((Number) value).longValue());
+                }
+            }
+        } else {
+            viewedNoteIds = new HashSet<>();
+        }
+
+        // 같은 세션에서는 같은 노트를 최초 한 번만 집계한다.
+        if (viewedNoteIds.contains(noteId)) {
+            response.put("success", true);
+            response.put("counted", false);
+            response.put("viewCount", inoteService.getNoteReactionStatus(noteId, loginUser.getUserId()).get("viewCount"));
+            return response;
+        }
+
+        int viewCount = inoteService.recordNoteView(noteId);
+        viewedNoteIds.add(noteId);
+        session.setAttribute(viewedNoteIdsKey, viewedNoteIds);
+
+        response.put("success", true);
+        response.put("counted", true);
+        response.put("viewCount", viewCount);
+        return response;
+    }
+
+    @GetMapping("/api/public/reaction")
+    @ResponseBody
+    public Map<String, Object> getPublicNoteReaction(
+            @RequestParam("noteId") Long noteId,
+            HttpSession session) {
+        Map<String, Object> response = new HashMap<>();
+        usersDto loginUser = getLoginUser(session);
+        if (loginUser == null) {
+            response.put("success", false);
+            response.put("message", "로그인이 필요합니다.");
+            return response;
+        }
+        if (!inoteService.isMoyoPublicNote(noteId)) {
+            response.put("success", false);
+            response.put("message", "공개 노트를 찾을 수 없습니다.");
+            return response;
+        }
+        response.put("success", true);
+        response.putAll(inoteService.getNoteReactionStatus(noteId, loginUser.getUserId()));
+        return response;
+    }
+
+    @PostMapping("/api/public/like")
+    @ResponseBody
+    public Map<String, Object> togglePublicNoteLike(
+            @RequestParam("noteId") Long noteId,
+            HttpSession session) {
+        Map<String, Object> response = new HashMap<>();
+        usersDto loginUser = getLoginUser(session);
+        if (loginUser == null) {
+            response.put("success", false);
+            response.put("message", "로그인이 필요합니다.");
+            return response;
+        }
+        if (!inoteService.isMoyoPublicNote(noteId)) {
+            response.put("success", false);
+            response.put("message", "공개 노트를 찾을 수 없습니다.");
+            return response;
+        }
+        response.put("success", true);
+        response.putAll(inoteService.toggleNoteLike(noteId, loginUser.getUserId()));
+        return response;
+    }
+
+    @GetMapping("/api/replies")
+    @ResponseBody
+    public Map<String, Object> getPublicNoteReplies(
+            @RequestParam("noteId") Long noteId,
+            HttpSession session) {
+        Map<String, Object> response = new HashMap<>();
+        usersDto loginUser = getLoginUser(session);
+        if (loginUser == null) {
+            response.put("success", false);
+            response.put("message", "로그인이 필요합니다.");
+            return response;
+        }
+        if (!inoteService.isMoyoPublicNote(noteId)) {
+            response.put("success", false);
+            response.put("message", "공개 노트를 찾을 수 없습니다.");
+            return response;
+        }
+
+        List<noteReplyDTO> replies = inoteService.getNoteReplyList(noteId, loginUser.getUserId());
+        response.put("success", true);
+        response.put("replies", replies == null ? new ArrayList<noteReplyDTO>() : replies);
+        response.put("count", replies == null ? 0 : replies.size());
+        response.put("currentUserId", loginUser.getUserId());
+        return response;
+    }
+
+    @PostMapping("/api/replies/add")
+    @ResponseBody
+    public Map<String, Object> addPublicNoteReply(
+            @RequestParam("noteId") Long noteId,
+            @RequestParam("replyContent") String replyContent,
+            @RequestParam(value = "parentReplyId", required = false) Long parentReplyId,
+            HttpSession session) {
+        Map<String, Object> response = new HashMap<>();
+        usersDto loginUser = getLoginUser(session);
+        if (loginUser == null) {
+            response.put("success", false);
+            response.put("message", "로그인이 필요합니다.");
+            return response;
+        }
+        if (!inoteService.isMoyoPublicNote(noteId)) {
+            response.put("success", false);
+            response.put("message", "공개 노트를 찾을 수 없습니다.");
+            return response;
+        }
+        String content = replyContent == null ? "" : replyContent.trim();
+        if (content.isEmpty()) {
+            response.put("success", false);
+            response.put("message", "댓글 내용을 입력해주세요.");
+            return response;
+        }
+        if (content.length() > 1000) {
+            response.put("success", false);
+            response.put("message", "댓글은 1000자 이하로 입력해주세요.");
+            return response;
+        }
+
+        if (parentReplyId != null && !inoteService.canReplyToNoteReply(noteId, parentReplyId)) {
+            response.put("success", false);
+            response.put("message", "답글을 남길 수 없는 댓글입니다.");
+            return response;
+        }
+
+        noteReplyDTO reply = new noteReplyDTO();
+        reply.setNoteId(noteId);
+        reply.setUserId(loginUser.getUserId());
+        reply.setParentReplyId(parentReplyId);
+        reply.setReplyContent(content);
+        boolean saved = inoteService.registerNoteReply(reply);
+        List<noteReplyDTO> replies = saved
+                ? inoteService.getNoteReplyList(noteId, loginUser.getUserId())
+                : new ArrayList<noteReplyDTO>();
+        response.put("success", saved);
+        response.put("message", saved ? "댓글이 등록되었습니다." : "댓글을 등록하지 못했습니다.");
+        response.put("replies", replies);
+        response.put("count", replies.size());
+        response.put("currentUserId", loginUser.getUserId());
+        return response;
+    }
+
+    @PostMapping("/api/replies/update")
+    @ResponseBody
+    public Map<String, Object> updatePublicNoteReply(
+            @RequestParam("noteId") Long noteId,
+            @RequestParam("replyId") Long replyId,
+            @RequestParam("replyContent") String replyContent,
+            HttpSession session) {
+        Map<String, Object> response = new HashMap<>();
+        usersDto loginUser = getLoginUser(session);
+        if (loginUser == null) {
+            response.put("success", false);
+            response.put("message", "로그인이 필요합니다.");
+            return response;
+        }
+        if (!inoteService.isMoyoPublicNote(noteId)) {
+            response.put("success", false);
+            response.put("message", "공개 노트를 찾을 수 없습니다.");
+            return response;
+        }
+        String content = replyContent == null ? "" : replyContent.trim();
+        if (content.isEmpty() || content.length() > 1000) {
+            response.put("success", false);
+            response.put("message", "댓글은 1자 이상 1000자 이하로 입력해주세요.");
+            return response;
+        }
+        noteReplyDTO reply = new noteReplyDTO();
+        reply.setReplyId(replyId);
+        reply.setNoteId(noteId);
+        reply.setUserId(loginUser.getUserId());
+        reply.setReplyContent(content);
+        boolean updated = inoteService.modifyNoteReply(reply);
+        List<noteReplyDTO> replies = inoteService.getNoteReplyList(noteId, loginUser.getUserId());
+        response.put("success", updated);
+        response.put("message", updated ? "댓글이 수정되었습니다." : "수정할 수 있는 댓글이 아닙니다.");
+        response.put("replies", replies);
+        response.put("count", replies.size());
+        response.put("currentUserId", loginUser.getUserId());
+        return response;
+    }
+
+    @PostMapping("/api/replies/delete")
+    @ResponseBody
+    public Map<String, Object> deletePublicNoteReply(
+            @RequestParam("noteId") Long noteId,
+            @RequestParam("replyId") Long replyId,
+            HttpSession session) {
+        Map<String, Object> response = new HashMap<>();
+        usersDto loginUser = getLoginUser(session);
+        if (loginUser == null) {
+            response.put("success", false);
+            response.put("message", "로그인이 필요합니다.");
+            return response;
+        }
+        if (!inoteService.isMoyoPublicNote(noteId)) {
+            response.put("success", false);
+            response.put("message", "공개 노트를 찾을 수 없습니다.");
+            return response;
+        }
+        List<noteReplyDTO> currentReplies = inoteService.getNoteReplyList(noteId, loginUser.getUserId());
+        boolean ownsReply = currentReplies != null && currentReplies.stream().anyMatch(reply ->
+                replyId.equals(reply.getReplyId()) && loginUser.getUserId().equals(reply.getUserId()));
+        boolean deleted = ownsReply && inoteService.removeNoteReply(replyId, loginUser.getUserId());
+        List<noteReplyDTO> replies = inoteService.getNoteReplyList(noteId, loginUser.getUserId());
+        response.put("success", deleted);
+        response.put("message", deleted ? "댓글이 삭제되었습니다." : "삭제할 수 있는 댓글이 아닙니다.");
+        response.put("replies", replies);
+        response.put("count", replies.size());
+        response.put("currentUserId", loginUser.getUserId());
+        return response;
+    }
+
+    @PostMapping("/api/replies/like")
+    @ResponseBody
+    public Map<String, Object> togglePublicNoteReplyLike(
+            @RequestParam("noteId") Long noteId,
+            @RequestParam("replyId") Long replyId,
+            HttpSession session) {
+        Map<String, Object> response = new HashMap<>();
+        usersDto loginUser = getLoginUser(session);
+        if (loginUser == null) {
+            response.put("success", false);
+            response.put("message", "로그인이 필요합니다.");
+            return response;
+        }
+        if (!inoteService.isMoyoPublicNote(noteId)) {
+            response.put("success", false);
+            response.put("message", "공개 노트를 찾을 수 없습니다.");
+            return response;
+        }
+
+        List<noteReplyDTO> currentReplies = inoteService.getNoteReplyList(noteId, loginUser.getUserId());
+        boolean belongsToNote = currentReplies != null && currentReplies.stream()
+                .anyMatch(reply -> replyId.equals(reply.getReplyId()));
+        boolean changed = belongsToNote && inoteService.toggleNoteReplyLike(replyId, loginUser.getUserId());
+        List<noteReplyDTO> replies = inoteService.getNoteReplyList(noteId, loginUser.getUserId());
+
+        response.put("success", changed);
+        response.put("message", changed ? "댓글 좋아요가 반영되었습니다." : "댓글 좋아요를 처리하지 못했습니다.");
+        response.put("replies", replies);
+        response.put("count", replies.size());
+        response.put("currentUserId", loginUser.getUserId());
+        return response;
+    }
+
+    @PostMapping("/api/collect")
+    @ResponseBody
+    public Map<String, Object> collectPublicNote(
+            @RequestParam("noteId") Long noteId,
+            @RequestParam(value = "folderId", required = false) Long folderId,
+            HttpSession session) {
+        Map<String, Object> response = new HashMap<>();
+        usersDto loginUser = getLoginUser(session);
+        if (loginUser == null) {
+            response.put("success", false);
+            response.put("message", "로그인이 필요합니다.");
+            return response;
+        }
+        try {
+            noteDTO source = inoteService.getNoteDetail(noteId, loginUser.getUserId());
+            if (source == null || !"Y".equalsIgnoreCase(source.getMoyoPublicYn())) {
+                throw new IllegalStateException("담을 수 있는 공개 노트가 아닙니다.");
+            }
+            if (source.getUserId() != null && source.getUserId().equals(loginUser.getUserId())) {
+                throw new IllegalStateException("내 노트는 담을 필요가 없습니다.");
+            }
+
+            noteDTO collected = new noteDTO();
+            collected.setUserId(loginUser.getUserId());
+            collected.setScopeType("PRIVATE");
+            collected.setNoteTitle(source.getNoteTitle());
+            collected.setMemo(source.getMemo());
+            collected.setDoneContent(source.getDoneContent());
+            collected.setNextContent(source.getNextContent());
+            collected.setIssueContent(source.getIssueContent());
+            collected.setChangeLog(source.getChangeLog());
+            collected.setCategory(source.getCategory());
+            // NOTES.ICON is NOT NULL. Preserve the source value even though the renewed UI no longer displays note icons.
+            collected.setIcon(source.getIcon());
+            collected.setFolderId(folderId);
+            collected.setMoyoPublicYn("N");
+
+            List<noteFileDTO> collectedFiles = new ArrayList<>();
+            List<noteFileDTO> sourceFiles = inoteService.getNoteFileList(noteId);
+            if (sourceFiles != null) {
+                for (noteFileDTO sourceFile : sourceFiles) {
+                    noteFileDTO copiedFile = new noteFileDTO();
+                    copiedFile.setOriginFileName(sourceFile.getOriginFileName());
+                    copiedFile.setStoredFileName(sourceFile.getStoredFileName());
+                    copiedFile.setFilePath(sourceFile.getFilePath());
+                    copiedFile.setFileSize(sourceFile.getFileSize());
+                    copiedFile.setFileExt(sourceFile.getFileExt());
+                    collectedFiles.add(copiedFile);
+                }
+            }
+            inoteService.registerNoteWithFiles(collected, collectedFiles);
+            response.put("success", true);
+            response.put("noteId", collected.getNoteId());
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", e.getMessage());
+        }
+        return response;
     }
 
     @PostMapping("/api/pin")

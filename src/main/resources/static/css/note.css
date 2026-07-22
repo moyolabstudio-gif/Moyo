@@ -3865,3 +3865,238 @@ body.note-page-body .note-meta-icon--moyo img {
 body.note-page-body .note-detail-action-btn .note-meta-icon--moyo {
   transform: translateY(-1px);
 }
+
+
+/* 노트 작성/수정: 개인 노트 MOYO 공개 토글 */
+body.note-page-body .note-moyo-public-toggle {
+    gap: 7px;
+    cursor: pointer;
+    user-select: none;
+}
+body.note-page-body .note-moyo-public-toggle input {
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    accent-color: #21c7a8;
+    cursor: pointer;
+}
+body.note-page-body .note-moyo-public-toggle .note-meta-icon--moyo {
+    width: 18px;
+    height: 18px;
+    border-radius: 999px;
+    background: #fff;
+    box-shadow: 0 2px 8px rgba(22, 163, 143, .14);
+    overflow: hidden;
+}
+body.note-page-body .note-moyo-public-toggle .note-meta-icon--moyo img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+}
+body.note-page-body .note-moyo-public-toggle:has(input:checked) {
+    color: #128f7d;
+    font-weight: 800;
+}
+body.note-page-body .note-moyo-public-toggle:has(input:checked) .note-meta-value::after {
+    content: ' 켜짐';
+    margin-left: 4px;
+    font-size: 11px;
+    font-weight: 800;
+    color: #12a891;
+}
+
+
+/* 노트 작성/수정 액션 칩 정리: 공유=종이비행기, MOYO 공개=마스코트 */
+body.note-page-body .note-template-actions .note-template-moyo-public,
+body.note-page-body .note-template-actions .note-meta-share,
+body.note-page-body .note-template-actions .note-meta-permission {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  min-height: 27px !important;
+  padding: 0 10px !important;
+  border-radius: 999px !important;
+  border: 1px solid #dbe6f6 !important;
+  background: #fff !important;
+  color: #475467 !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  line-height: 1 !important;
+  box-shadow: 0 1px 5px rgba(15, 23, 42, .035) !important;
+  cursor: pointer !important;
+  white-space: nowrap !important;
+  user-select: none !important;
+}
+body.note-page-body .note-template-actions .note-meta-share:hover,
+body.note-page-body .note-template-actions .note-meta-permission:hover {
+  border-color: var(--note-scope-border) !important;
+  background: var(--note-scope-soft) !important;
+  color: var(--note-scope-color) !important;
+}
+body.note-page-body .note-template-actions .note-template-moyo-public {
+  border-color: #e7edf5 !important;
+  background: rgba(255, 255, 255, .48) !important;
+  color: #98a4b4 !important;
+  box-shadow: none !important;
+  opacity: .72 !important;
+}
+body.note-page-body .note-template-actions .note-template-moyo-public:hover {
+  border-color: #d9e6f0 !important;
+  background: rgba(255, 255, 255, .82) !important;
+  color: #5f6f83 !important;
+  opacity: .9 !important;
+}
+body.note-page-body .note-template-actions .note-template-moyo-public input {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+body.note-page-body .note-template-actions .note-template-moyo-public .note-meta-icon--moyo {
+  width: 22px !important;
+  height: 22px !important;
+  border-radius: 999px !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  overflow: visible !important;
+  opacity: .36 !important;
+  filter: grayscale(.35) saturate(.62) !important;
+}
+body.note-page-body .note-template-actions .note-template-moyo-public .note-meta-icon--moyo img {
+  width: 22px !important;
+  height: 22px !important;
+  object-fit: contain !important;
+  display: block !important;
+}
+body.note-page-body .note-template-actions .note-template-moyo-public:has(input:checked) {
+  border-color: #cdeff0 !important;
+  background: #fff !important;
+  color: #243247 !important;
+  box-shadow: 0 2px 8px rgba(27, 192, 174, .10) !important;
+  opacity: 1 !important;
+}
+body.note-page-body .note-template-actions .note-template-moyo-public:has(input:checked) .note-meta-icon--moyo {
+  opacity: 1 !important;
+  filter: none !important;
+}
+body.note-page-body .note-template-actions .note-template-moyo-public:has(input:checked) .note-meta-value::after {
+  content: '' !important;
+}
+body.note-page-body .note-template-actions .note-meta-icon--plane {
+  width: 16px !important;
+  height: 16px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  color: inherit !important;
+  font-size: 13px !important;
+  line-height: 1 !important;
+  transform: translateY(-.5px) !important;
+}
+body.note-page-body .note-template-actions .note-meta-icon--plane i {
+  line-height: 1 !important;
+}
+
+body.note-page-body .note-meta-icon--plane {
+  width: 16px !important;
+  height: 16px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  color: inherit !important;
+  font-size: 13px !important;
+  line-height: 1 !important;
+  transform: translateY(-.5px) !important;
+}
+body.note-page-body .note-meta-icon--plane i {
+  line-height: 1 !important;
+}
+
+/* 작성/수정 위치 라인은 경로만 담당하고, 공개/공유 액션은 템플릿 행 우측으로 분리 */
+body.note-page-body .note-edit-meta-compact .note-edit-meta-left {
+  flex-wrap: wrap !important;
+}
+
+/* detail path line: MOYO public state lives at the far right of the path row */
+body.note-page-body .note-detail-meta-final .note-detail-path-row {
+  justify-content: space-between !important;
+  gap: 12px !important;
+}
+body.note-page-body .note-detail-meta-final .note-detail-path-main {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  min-width: 0 !important;
+  flex: 1 1 auto !important;
+}
+body.note-page-body .note-detail-moyo-public-badge {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  flex: 0 0 auto !important;
+  min-height: 27px !important;
+  padding: 0 10px !important;
+  border: 1px solid #cdeff0 !important;
+  border-radius: 999px !important;
+  background: #fff !important;
+  color: #243247 !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  line-height: 1 !important;
+  white-space: nowrap !important;
+  box-shadow: 0 2px 8px rgba(27, 192, 174, .10) !important;
+}
+body.note-page-body .note-detail-moyo-public-badge .note-meta-icon--moyo {
+  width: 22px !important;
+  height: 22px !important;
+  border-radius: 999px !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  overflow: visible !important;
+  opacity: 1 !important;
+  filter: none !important;
+}
+body.note-page-body .note-detail-moyo-public-badge .note-meta-icon--moyo img {
+  width: 22px !important;
+  height: 22px !important;
+  object-fit: contain !important;
+  display: block !important;
+}
+
+/* keep the detail share/permission icons in the same neutral tone as write/edit */
+body.note-page-body .note-detail-share-actions .note-detail-action-btn,
+body.note-page-body .note-detail-share-actions .note-detail-action-btn .note-meta-icon,
+body.note-page-body .note-detail-share-actions .note-detail-action-btn .note-meta-icon--plane,
+body.note-page-body .note-detail-share-actions .note-detail-action-btn .note-meta-icon--plane i {
+  color: #344054 !important;
+}
+body.note-page-body .note-detail-share-actions .note-detail-action-btn:hover,
+body.note-page-body .note-detail-share-actions .note-detail-action-btn:hover .note-meta-icon,
+body.note-page-body .note-detail-share-actions .note-detail-action-btn:hover .note-meta-icon--plane,
+body.note-page-body .note-detail-share-actions .note-detail-action-btn:hover .note-meta-icon--plane i {
+  color: var(--note-scope-color, #4f7df7) !important;
+}
+@media (max-width: 720px) {
+  body.note-page-body .note-detail-meta-final .note-detail-path-row {
+    align-items: flex-start !important;
+    flex-direction: column !important;
+  }
+}
+
+/* detail MOYO badge: use the same mascot asset treatment as write/edit */
+body.note-page-body .note-detail-moyo-public-badge .note-meta-icon--moyo {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex: 0 0 22px !important;
+}
+body.note-page-body .note-detail-moyo-public-badge .note-meta-icon--moyo img {
+  display: block !important;
+  width: 22px !important;
+  height: 22px !important;
+  max-width: none !important;
+  object-fit: contain !important;
+}

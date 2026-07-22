@@ -1,0 +1,95 @@
+<%@ page pageEncoding="UTF-8" %>
+<%-- 공통 사진 게시물 상세 모달: 사진첩/프로필에서 같은 구조로 사용 --%>
+<div id="photoRuntimeLightbox" class="photo-runtime-lightbox photo-runtime-lightbox--common" aria-hidden="true">
+    <button type="button" class="photo-runtime-close" data-photo-common-close aria-label="닫기">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+    </button>
+    <button type="button" class="photo-runtime-nav photo-runtime-prev" data-photo-common-prev aria-label="이전 사진">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
+    </button>
+    <div class="photo-runtime-panel" role="dialog" aria-modal="true" aria-label="사진 상세">
+        <section class="photo-runtime-media">
+            <img id="photoRuntimeImage" alt="">
+            <div id="photoRuntimeGallery" class="photo-runtime-gallery" hidden>
+                <span id="photoRuntimePhotoCount" class="photo-runtime-gallery-count">1/1</span>
+                <div id="photoRuntimeDots" class="photo-runtime-gallery-dots" aria-label="사진 순서"></div>
+            </div>
+        </section>
+        <aside class="photo-runtime-side">
+            <header class="photo-runtime-author">
+                <div class="photo-runtime-author-main">
+                    <span id="photoRuntimeAvatar" class="photo-runtime-avatar"></span>
+                    <span class="photo-runtime-author-text">
+                        <strong id="photoRuntimeCreator"></strong>
+                        <small id="photoRuntimeMeta"></small>
+                    </span>
+                </div>
+                <div class="photo-runtime-menu-wrap" data-photo-common-manage hidden>
+                    <button type="button" class="photo-runtime-menu-button" data-photo-common-menu-toggle aria-label="사진 관리 메뉴" aria-expanded="false">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+                    </button>
+                    <div class="photo-runtime-menu" data-photo-common-menu hidden>
+                        <button type="button" data-photo-common-action="edit">
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg><span>수정</span>
+                        </button>
+                        <button type="button" data-photo-common-action="visibility">
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/><circle cx="12" cy="12" r="3"/></svg><span>MOYO 공개</span>
+                        </button>
+                        <button type="button" data-photo-common-action="move">
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h6l2 2h10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/><path d="M3 7V5a2 2 0 0 1 2-2h4l2 2h4"/></svg><span>앨범 이동</span>
+                        </button>
+                        <button type="button" class="danger" data-photo-common-action="delete">
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/></svg><span>휴지통으로 이동</span>
+                        </button>
+                        <button type="button" data-photo-common-action="restore">
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v6h6"/></svg><span>복원</span>
+                        </button>
+                        <button type="button" class="danger" data-photo-common-action="permanent">
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/></svg><span>영구 삭제</span>
+                        </button>
+                    </div>
+                </div>
+            </header>
+            <section id="photoRuntimeDescription" class="photo-runtime-description" hidden>
+                <p id="photoRuntimeTitle"></p>
+            </section>
+            <div class="photo-runtime-detail-meta" data-runtime-detail-meta hidden>
+                <small id="photoRuntimeAlbum" hidden></small>
+            </div>
+            <section class="photo-runtime-stats">
+                <button type="button" class="photo-runtime-like" data-photo-common-like aria-pressed="false" aria-label="좋아요">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78Z"/></svg><strong id="photoRuntimeLikeCount">0</strong>
+                </button>
+                <span class="photo-runtime-comment-stat" aria-label="댓글">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5A8.48 8.48 0 0 1 21 11v.5Z"/></svg><strong id="photoRuntimeCommentCount">0</strong>
+                </span>
+                <span class="photo-runtime-action-pair">
+                    <button type="button" class="photo-runtime-share" data-photo-common-share aria-label="사진 공유" title="공유">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m22 2-7 20-4-9-9-4 20-7Z"/><path d="M22 2 11 13"/></svg>
+                    </button>
+                    <button type="button" class="photo-runtime-collect" data-photo-common-collect aria-label="담아가기" title="담아가기">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 21 12 17 5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16Z"/></svg>
+                    </button>
+                    <span id="photoRuntimeCollectedSource" class="photo-collected-source-runtime" hidden></span>
+                </span>
+                <span id="photoRuntimeVisibilityBadge" class="photo-runtime-visibility-badge" hidden></span>
+            </section>
+            <section class="photo-runtime-comments" aria-label="댓글">
+                <div class="photo-runtime-comment-title">댓글</div>
+                <div id="photoRuntimeComments" class="photo-runtime-comment-list"></div>
+            </section>
+            <form id="photoRuntimeCommentForm" class="photo-runtime-comment-form" data-photo-common-comment-form>
+                <div id="photoRuntimeReplyTarget" class="photo-runtime-reply-target" hidden></div>
+                <input type="hidden" id="photoRuntimeParentCommentId" value="">
+                <textarea id="photoRuntimeCommentInput" maxlength="500" rows="1" placeholder="댓글을 입력하세요."></textarea>
+                <div id="photoRuntimeMentionList" class="photo-runtime-mention-list" hidden></div>
+                <button type="submit">등록</button>
+            </form>
+        </aside>
+    </div>
+    <button type="button" class="photo-runtime-nav photo-runtime-next" data-photo-common-next aria-label="다음 사진">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+    </button>
+</div>
+
+<div id="photoRuntimeShareMount"></div>

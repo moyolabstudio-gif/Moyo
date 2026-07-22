@@ -664,6 +664,24 @@ public class calendarResponseServiceImpl implements IcalendarResponseService {
     }
 
 
+
+    @Override
+    public List<calendarResponseDTO> getProfilePublicEvents(Long profileUserId, int limit) {
+        ensureCalendarDetailColumns();
+        ensureCalendarEventTypeColumn();
+        if (profileUserId == null) return List.of();
+        int safeLimit = limit <= 0 ? 5 : Math.min(limit, 20);
+        return calendarDao.selectProfilePublicEvents(profileUserId, safeLimit);
+    }
+
+    @Override
+    public int countProfilePublicEvents(Long profileUserId) {
+        ensureCalendarDetailColumns();
+        ensureCalendarEventTypeColumn();
+        if (profileUserId == null) return 0;
+        return calendarDao.countProfilePublicEvents(profileUserId);
+    }
+
     @Override
     public List<Map<String, Object>> getSharedEvents(Long userId) {
         // DAO를 호출하여 팀 공유 일정을 가져옵니다.

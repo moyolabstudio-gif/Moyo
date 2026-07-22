@@ -1,0 +1,3875 @@
+/* commonNoteDetail.css - profile note detail viewer */
+.profile-note-detail-modal {
+
+    z-index: 4000;
+}
+
+.profile-note-detail-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(15, 23, 42, .54);
+    backdrop-filter: blur(8px);
+}
+
+.profile-note-detail-dialog {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+
+    margin: 17px auto;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, .72);
+    border-radius: 26px;
+    background: #f4f7fb;
+    box-shadow: 0 30px 80px rgba(15, 23, 42, .28);
+}
+
+.profile-note-detail-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 16px 18px;
+    border-bottom: 1px solid #e2e9f2;
+    background: rgba(255, 255, 255, .9);
+    flex: 0 0 auto;
+}
+
+.profile-note-detail-author {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+}
+
+.profile-note-detail-avatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    overflow: hidden;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #39cdb5, #3d8aff);
+    color: #fff;
+    font-size: 14px;
+    font-weight: 950;
+    flex: 0 0 auto;
+}
+
+.profile-note-detail-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.profile-note-detail-author strong,
+.profile-note-detail-author small {
+    display: block;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.profile-note-detail-author strong {
+    color: #263249;
+    font-size: 14px;
+    font-weight: 950;
+}
+
+.profile-note-detail-author small {
+    margin-top: 2px;
+    color: #7f8ca1;
+    font-size: 12px;
+    font-weight: 750;
+}
+
+.profile-note-detail-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    flex: 0 0 auto;
+}
+
+.profile-note-detail-action,
+.profile-note-detail-close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 34px;
+    border: 1px solid #dce5f1;
+    border-radius: 999px;
+    background: #fff;
+    color: #55657d;
+    font-size: 12px;
+    font-weight: 900;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.profile-note-detail-action {
+    padding: 0 13px;
+}
+
+.profile-note-detail-close {
+    width: 34px;
+    padding: 0;
+    font-size: 20px;
+    line-height: 1;
+}
+
+.profile-note-detail-action:hover,
+.profile-note-detail-close:hover {
+    border-color: #cdd9e8;
+    color: #263249;
+}
+
+.profile-note-detail-layout {
+    display: grid;
+
+    min-height: 0;
+    overflow: hidden;
+    flex: 1 1 auto;
+}
+
+.profile-note-document-wrap {
+    min-width: 0;
+
+    background: linear-gradient(180deg, #f6f8fc 0%, #eef3f8 100%);
+}
+
+.profile-note-page-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: min(794px, 100%);
+
+    color: #738198;
+    font-size: 12px;
+    font-weight: 850;
+}
+
+.profile-note-page-toolbar small {
+    color: #9aa7ba;
+    font-size: 11px;
+    font-weight: 850;
+}
+
+.profile-note-document {
+    position: relative;
+
+    padding: 72px 68px;
+    border: 1px solid #e7edf5;
+    background: #fff;
+    box-shadow: 0 18px 48px rgba(15, 23, 42, .10);
+    color: #253047;
+}
+
+.profile-note-page-stage.is-scaled .profile-note-document {
+    box-shadow: 0 16px 42px rgba(15, 23, 42, .12);
+}
+
+.profile-note-page-number {
+    position: absolute;
+    right: 44px;
+    bottom: 34px;
+    color: #b6c0cf;
+    font-size: 11px;
+    font-weight: 900;
+}
+
+.profile-note-document-meta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 7px;
+    margin-bottom: 18px;
+}
+
+.profile-note-document-meta span {
+    display: inline-flex;
+    align-items: center;
+    height: 24px;
+    padding: 0 9px;
+    border-radius: 999px;
+    background: #f2f7ff;
+    color: #5273a3;
+    font-size: 11px;
+    font-weight: 900;
+}
+
+.profile-note-document h2 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    color: #182235;
+    font-size: 28px;
+    font-weight: 950;
+    letter-spacing: -.55px;
+    line-height: 1.35;
+}
+
+.profile-note-document-divider {
+    width: 100%;
+    height: 1px;
+    margin: 24px 0 30px;
+    background: #e8eef6;
+}
+
+.profile-note-document-body {
+    color: #29344a;
+    font-size: 15px;
+    line-height: 1.85;
+}
+
+.profile-note-document-body img,
+.profile-note-document-body video,
+.profile-note-document-body iframe {
+    max-width: 100%;
+}
+
+.profile-note-review-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    min-width: 0;
+    overflow-y: auto;
+    padding: 22px 18px;
+    border-left: 1px solid #e2e9f2;
+    background: rgba(255, 255, 255, .78);
+}
+
+.profile-note-review-card {
+    border: 1px solid #e3eaf4;
+    border-radius: 20px;
+    background: #fff;
+    box-shadow: 0 12px 28px rgba(15, 23, 42, .06);
+}
+
+.profile-note-review-card--actions {
+    padding: 15px;
+}
+
+.profile-note-review-card--comments {
+    display: flex;
+    flex: 1 1 auto;
+    min-height: 260px;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.profile-note-review-title {
+    display: block;
+    margin-bottom: 12px;
+    color: #263249;
+    font-size: 13px;
+    font-weight: 950;
+}
+
+.profile-note-detail-feedbar {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.profile-note-detail-feed-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-width: 44px;
+    height: 34px;
+    padding: 0 12px;
+    border: 1px solid #dce5f1;
+    border-radius: 999px;
+    background: #fff;
+    color: #55657d;
+    font-size: 12px;
+    font-weight: 900;
+    line-height: 1;
+    cursor: default;
+}
+
+.profile-note-detail-feed-action i {
+    font-size: 13px;
+}
+
+.profile-note-detail-feed-action.is-like i {
+    color: #ff5e73;
+}
+
+.profile-note-review-headline {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 15px 16px;
+    border-bottom: 1px solid #edf1f6;
+}
+
+.profile-note-review-headline strong {
+    color: #263249;
+    font-size: 13px;
+    font-weight: 950;
+}
+
+.profile-note-review-headline span {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 22px;
+    height: 22px;
+    padding: 0 7px;
+    border-radius: 999px;
+    background: #f1f6ff;
+    color: #5f76a1;
+    font-size: 11px;
+    font-weight: 950;
+}
+
+.profile-note-review-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap: 7px;
+    padding: 32px 22px;
+    text-align: center;
+    color: #8b98ab;
+}
+
+.profile-note-review-empty i {
+    font-size: 24px;
+    color: #b7c2d2;
+}
+
+.profile-note-review-empty p {
+    max-width: 210px;
+    margin: 0;
+    color: #6d7a90;
+    font-size: 13px;
+    font-weight: 850;
+    line-height: 1.45;
+}
+
+.profile-note-review-empty small {
+    color: #9aa7ba;
+    font-size: 11px;
+    font-weight: 750;
+}
+
+.profile-note-review-input {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin: 0 14px 14px;
+    padding: 12px 13px;
+    border: 1px solid #e3eaf4;
+    border-radius: 16px;
+    background: #f8fafc;
+    color: #9aa7ba;
+    font-size: 12px;
+    font-weight: 850;
+}
+
+.profile-note-review-input i {
+    color: #9fb0c8;
+}
+
+.profile-note-modal-open {
+    overflow: hidden;
+}
+
+@media (max-width: 1100px) {
+    .profile-note-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        max-width: 700px;
+        gap: 22px;
+    }
+}
+
+@media (max-width: 900px) {
+    .profile-note-grid {
+        max-width: 640px;
+        gap: 18px;
+    }
+}
+
+@media (max-width: 760px) {
+    .profile-note-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        max-width: 430px;
+    }
+
+    .profile-note-detail-head {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .profile-note-detail-actions {
+        width: 100%;
+        justify-content: flex-end;
+    }
+
+    .profile-note-detail-feedbar {
+        justify-content: flex-start;
+        overflow-x: auto;
+    }
+
+    .profile-note-document-wrap {
+        padding: 18px 14px 26px;
+    }
+}
+
+@media (max-width: 520px) {
+    .profile-note-grid {
+        grid-template-columns: repeat(1, minmax(0, 1fr));
+        max-width: 260px;
+    }
+
+    .profile-note-paper-inner {
+        padding: 30px 24px 28px;
+    }
+
+    .profile-note-document-wrap {
+        padding: 18px 12px 26px;
+    }
+
+    .profile-note-page-toolbar {
+        margin-bottom: 8px;
+    }
+
+    .profile-note-document h2 {
+        font-size: 28px;
+    }
+}
+
+@media (max-width: 980px) {
+    .profile-note-detail-dialog {
+        width: min(860px, calc(100vw - 24px));
+    }
+
+    .profile-note-detail-layout {
+        grid-template-columns: minmax(0, 1fr);
+        overflow-y: auto;
+    }
+
+    .profile-note-document-wrap {
+        overflow: visible;
+    }
+
+    .profile-note-review-panel {
+        border-top: 1px solid #e2e9f2;
+        border-left: 0;
+        overflow: visible;
+    }
+
+    .profile-note-review-card--comments {
+        min-height: 230px;
+    }
+}
+
+@media print {
+    .profile-note-detail-modal.profile-note-printing {
+        position: static !important;
+        inset: auto !important;
+        z-index: auto !important;
+    }
+
+    .profile-note-printing .profile-note-detail-backdrop,
+    .profile-note-printing .profile-note-detail-head,
+    .profile-note-printing .profile-note-page-toolbar,
+    .profile-note-printing .profile-note-review-panel {
+        display: none !important;
+    }
+
+    .profile-note-printing .profile-note-detail-dialog,
+    .profile-note-printing .profile-note-detail-layout,
+    .profile-note-printing .profile-note-document-wrap,
+    .profile-note-printing .profile-note-page-stage,
+    .profile-note-printing .profile-note-page-stack {
+        width: auto !important;
+        max-height: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        overflow: visible !important;
+        border: 0 !important;
+        border-radius: 0 !important;
+        background: #fff !important;
+        box-shadow: none !important;
+        transform: none !important;
+    }
+
+    .profile-note-printing .profile-note-document {
+        width: auto !important;
+        min-height: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: 0 !important;
+        box-shadow: none !important;
+    }
+}
+
+/* Profile note page viewer / review mode */
+.profile-note-detail-dialog {
+    width: min(1280px, calc(100vw - 24px));
+    height: calc(100vh - 34px);
+    max-height: calc(100vh - 34px);
+}
+
+.profile-note-detail-layout {
+    grid-template-columns: minmax(0, 1fr) 326px;
+    height: 100%;
+    transition: grid-template-columns .22s ease;
+}
+
+.profile-note-detail-modal.is-review-collapsed .profile-note-detail-layout {
+    grid-template-columns: minmax(0, 1fr) 58px;
+}
+
+.profile-note-document-wrap {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
+    padding: 18px 22px 16px;
+}
+
+.profile-note-page-toolbar,
+.profile-note-page-footer {
+    width: min(100%, 860px);
+    flex: 0 0 auto;
+}
+
+.profile-note-page-toolbar {
+    margin: 0 auto 10px;
+}
+
+.profile-note-page-stage {
+    --note-page-scale: 1;
+    --note-page-index: 0;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 1 1 auto;
+    min-height: 0;
+    width: 100%;
+    margin: 0 auto;
+}
+
+.profile-note-page-viewport {
+    width: calc(794px * var(--note-page-scale));
+    height: calc(1123px * var(--note-page-scale));
+    overflow: hidden;
+    border-radius: 4px;
+}
+
+.profile-note-page-stack {
+    display: flex;
+    align-items: flex-start;
+    width: max-content;
+    margin: 0;
+
+    transition: transform .24s ease;
+}
+
+.profile-note-document {
+    flex: 0 0 794px;
+    width: 794px;
+    height: 1123px;
+    min-height: 1123px;
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
+.profile-note-document.is-continuation {
+    padding-top: 66px;
+}
+
+.profile-note-document.is-continuation .profile-note-document-body {
+    padding-top: 0;
+}
+
+.profile-note-page-turn {
+    position: absolute;
+    top: 50%;
+    z-index: 2;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border: 1px solid rgba(203, 213, 225, .82);
+    border-radius: 50%;
+    background: rgba(255, 255, 255, .92);
+    color: #53627a;
+    box-shadow: 0 10px 24px rgba(15, 23, 42, .13);
+    transform: translateY(-50%);
+    cursor: pointer;
+}
+
+.profile-note-page-turn:hover:not(:disabled) {
+    color: #253047;
+    border-color: #bfcbdc;
+    background: #fff;
+}
+
+.profile-note-page-turn:disabled {
+    opacity: .28;
+    cursor: default;
+}
+
+.profile-note-page-turn.is-prev {
+    left: max(10px, calc(50% - (397px * var(--note-page-scale)) - 56px));
+}
+
+.profile-note-page-turn.is-next {
+    right: max(10px, calc(50% - (397px * var(--note-page-scale)) - 56px));
+}
+
+.profile-note-page-footer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin: 11px auto 0;
+    color: #6b7890;
+    font-size: 12px;
+    font-weight: 900;
+}
+
+.profile-note-page-mini-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 30px;
+    padding: 0 12px;
+    border: 1px solid #dbe4f0;
+    border-radius: 999px;
+    background: #fff;
+    color: #61708a;
+    font-size: 12px;
+    font-weight: 900;
+    cursor: pointer;
+}
+
+.profile-note-page-mini-btn:disabled {
+    opacity: .35;
+    cursor: default;
+}
+
+.profile-note-review-panel {
+    position: relative;
+    transition: padding .22s ease, background .22s ease;
+}
+
+.profile-note-review-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    width: 100%;
+    min-height: 36px;
+    border: 1px solid #dce5f1;
+    border-radius: 999px;
+    background: #fff;
+    color: #526179;
+    font-size: 12px;
+    font-weight: 950;
+    cursor: pointer;
+    box-shadow: 0 8px 18px rgba(15, 23, 42, .06);
+}
+
+.profile-note-review-toggle:hover {
+    color: #253047;
+    border-color: #cdd9e8;
+}
+
+.profile-note-review-content {
+    display: flex;
+    flex: 1 1 auto;
+    min-height: 0;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.profile-note-detail-modal.is-review-collapsed .profile-note-review-panel {
+
+    align-items: center;
+    overflow: hidden;
+}
+
+.profile-note-detail-modal.is-review-collapsed .profile-note-review-toggle span {
+    display: inline-block;
+}
+
+@media (max-width: 980px) {
+    .profile-note-detail-dialog {
+        height: calc(100vh - 24px);
+        max-height: calc(100vh - 24px);
+        margin: 12px auto;
+    }
+
+    .profile-note-detail-modal.is-review-collapsed .profile-note-detail-layout,
+    .profile-note-detail-layout {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .profile-note-document-wrap {
+        min-height: 520px;
+        overflow: hidden;
+    }
+
+    .profile-note-review-panel {
+        border-top: 1px solid #e2e9f2;
+        border-left: 0;
+        overflow: visible;
+    }
+
+    .profile-note-detail-modal.is-review-collapsed .profile-note-review-panel {
+        padding: 12px 18px 18px;
+        align-items: stretch;
+    }
+
+    .profile-note-detail-modal.is-review-collapsed .profile-note-review-toggle {
+        width: 100%;
+        min-height: 36px;
+        height: 36px;
+        flex-direction: row;
+        writing-mode: horizontal-tb;
+    }
+}
+
+@media print {
+    .profile-note-printing .profile-note-page-turn,
+    .profile-note-printing .profile-note-page-footer,
+    .profile-note-printing .profile-note-review-toggle {
+        display: none !important;
+    }
+}
+
+/* Profile note detail - MOYO content viewer mode
+   A4 page is treated like the main media itself, not a document inside another frame. */
+.profile-note-detail-modal:not([hidden]) {
+    display: block;
+}
+
+.profile-note-detail-modal .profile-note-detail-backdrop {
+    background:
+        radial-gradient(circle at 50% 48%, rgba(30, 41, 59, .62) 0%, rgba(15, 23, 42, .88) 58%, rgba(8, 13, 22, .94) 100%);
+    backdrop-filter: blur(8px);
+}
+
+.profile-note-detail-modal .profile-note-detail-dialog {
+    position: relative;
+
+    margin: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+
+}
+
+.profile-note-detail-modal .profile-note-detail-head {
+    position: absolute;
+
+    z-index: 30;
+    min-height: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    pointer-events: none;
+}
+
+.profile-note-detail-modal .profile-note-detail-author,
+.profile-note-detail-modal .profile-note-detail-actions {
+    pointer-events: auto;
+}
+
+.profile-note-detail-modal .profile-note-detail-author {
+
+    color: #fff;
+
+}
+
+.profile-note-detail-modal .profile-note-detail-avatar {
+
+    background: rgba(255, 255, 255, .92);
+    color: #1e293b;
+    box-shadow: none;
+}
+
+.profile-note-detail-modal .profile-note-detail-action,
+.profile-note-detail-modal .profile-note-detail-close {
+    height: 34px;
+    border: 1px solid rgba(255, 255, 255, .16);
+    background: rgba(15, 23, 42, .46);
+    color: rgba(255, 255, 255, .86);
+    box-shadow: 0 12px 26px rgba(0, 0, 0, .13);
+    backdrop-filter: blur(12px);
+}
+
+.profile-note-detail-modal .profile-note-detail-action:hover,
+.profile-note-detail-modal .profile-note-detail-close:hover {
+    border-color: rgba(255, 255, 255, .32);
+    background: rgba(255, 255, 255, .16);
+    color: #fff;
+}
+
+.profile-note-detail-modal .profile-note-detail-close {
+
+    border-radius: 50%;
+    font-size: 19px;
+}
+
+.profile-note-detail-modal .profile-note-detail-layout,
+.profile-note-detail-modal.is-review-collapsed .profile-note-detail-layout {
+    position: relative;
+    display: block;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+}
+
+.profile-note-detail-modal .profile-note-document-wrap {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 0;
+    padding: 58px 76px 46px;
+    background: transparent;
+
+}
+
+.profile-note-detail-modal .profile-note-page-stage {
+
+    flex: 1 1 auto;
+    margin: 0;
+}
+
+.profile-note-detail-modal .profile-note-page-viewport {
+    border-radius: 2px;
+    background: #fff;
+    box-shadow:
+        0 26px 70px rgba(0, 0, 0, .38),
+        0 0 0 1px rgba(255, 255, 255, .08);
+}
+
+.profile-note-detail-modal .profile-note-document {
+    border-radius: 0;
+    box-shadow: none;
+}
+
+.profile-note-detail-modal .profile-note-page-turn {
+    width: 44px;
+    height: 44px;
+    border: 1px solid rgba(255, 255, 255, .13);
+    background: rgba(15, 23, 42, .42);
+    color: rgba(255, 255, 255, .84);
+    box-shadow: 0 16px 34px rgba(0, 0, 0, .18);
+    opacity: .58;
+    backdrop-filter: blur(12px);
+}
+
+.profile-note-detail-modal .profile-note-page-stage:hover .profile-note-page-turn:not(:disabled),
+.profile-note-detail-modal .profile-note-page-turn:focus-visible:not(:disabled) {
+    opacity: 1;
+}
+
+.profile-note-detail-modal .profile-note-page-turn:hover:not(:disabled) {
+    border-color: rgba(255, 255, 255, .28);
+    background: rgba(255, 255, 255, .16);
+    color: #fff;
+    transform: translateY(-50%) scale(1.04);
+}
+
+.profile-note-detail-modal .profile-note-page-turn:disabled {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.profile-note-detail-modal .profile-note-page-turn.is-prev {
+    left: max(16px, calc(50% - (397px * var(--note-page-scale)) - 58px));
+}
+
+.profile-note-detail-modal .profile-note-page-turn.is-next {
+    right: max(16px, calc(50% - (397px * var(--note-page-scale)) - 58px));
+}
+
+.profile-note-detail-modal .profile-note-page-footer {
+    position: absolute;
+    left: 50%;
+
+    z-index: 22;
+    width: auto;
+    min-width: 58px;
+    height: 30px;
+    margin: 0;
+    padding: 0 12px;
+    border: 1px solid rgba(255, 255, 255, .14);
+    border-radius: 999px;
+    background: rgba(15, 23, 42, .42);
+    color: rgba(255, 255, 255, .86);
+    font-size: 12px;
+    font-weight: 900;
+    box-shadow: 0 12px 26px rgba(0, 0, 0, .14);
+    transform: translateX(-50%);
+    backdrop-filter: blur(12px);
+}
+
+.profile-note-detail-modal .profile-note-review-panel {
+    position: absolute;
+    top: 68px;
+    right: 16px;
+    bottom: 18px;
+    z-index: 24;
+    display: flex;
+    flex-direction: column;
+    width: min(330px, calc(100vw - 40px));
+    padding: 12px;
+    border: 1px solid rgba(255, 255, 255, .16);
+    border-radius: 24px;
+    background: rgba(248, 251, 255, .92);
+    box-shadow: 0 26px 70px rgba(0, 0, 0, .28);
+    backdrop-filter: blur(16px);
+    transform: translateX(0);
+    opacity: 1;
+    transition: transform .24s ease, opacity .18s ease, width .24s ease, padding .24s ease, border-color .24s ease, background .24s ease;
+}
+
+.profile-note-detail-modal.is-review-collapsed .profile-note-review-panel {
+    top: auto;
+
+    padding: 0;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+    backdrop-filter: none;
+}
+
+.profile-note-detail-modal.is-review-collapsed .profile-note-review-content {
+    display: none;
+}
+
+.profile-note-detail-modal .profile-note-review-toggle {
+    flex: 0 0 auto;
+    width: 100%;
+    min-height: 34px;
+    margin: 0 0 10px;
+    border-color: #dce5f1;
+    border-radius: 999px;
+    background: #fff;
+    color: #526179;
+    box-shadow: 0 8px 18px rgba(15, 23, 42, .06);
+}
+
+.profile-note-detail-modal.is-review-collapsed .profile-note-review-toggle {
+
+    flex-direction: row;
+    gap: 7px;
+    border: 1px solid rgba(255, 255, 255, .16);
+    border-radius: 999px;
+
+    color: rgba(255, 255, 255, .9);
+    box-shadow: 0 14px 30px rgba(0, 0, 0, .17);
+    writing-mode: horizontal-tb;
+    text-orientation: mixed;
+    backdrop-filter: blur(12px);
+}
+
+.profile-note-detail-modal.is-review-collapsed .profile-note-review-toggle:hover {
+    border-color: rgba(255, 255, 255, .30);
+    background: rgba(255, 255, 255, .16);
+    color: #fff;
+}
+
+.profile-note-detail-modal.is-review-collapsed .profile-note-review-toggle i,
+.profile-note-detail-modal.is-review-collapsed .profile-note-review-toggle span {
+    font-size: 12px;
+}
+
+.profile-note-detail-modal .profile-note-review-content {
+    display: flex;
+    flex: 1 1 auto;
+    min-height: 0;
+
+}
+
+.profile-note-detail-modal .profile-note-review-card {
+    background: #fff;
+}
+
+@media (max-width: 980px) {
+    .profile-note-detail-modal .profile-note-detail-head {
+        top: 10px;
+        left: 10px;
+        right: 10px;
+    }
+
+    .profile-note-detail-modal .profile-note-detail-author {
+        max-width: calc(100vw - 190px);
+        height: 38px;
+    }
+
+    .profile-note-detail-modal .profile-note-detail-author small {
+        display: none;
+    }
+
+    .profile-note-detail-modal .profile-note-document-wrap {
+        padding: 54px 20px 50px;
+        overflow: auto;
+    }
+
+    .profile-note-detail-modal .profile-note-page-turn {
+        width: 38px;
+        height: 38px;
+    }
+
+    .profile-note-detail-modal .profile-note-page-turn.is-prev {
+        left: 10px;
+    }
+
+    .profile-note-detail-modal .profile-note-page-turn.is-next {
+        right: 10px;
+    }
+
+    .profile-note-detail-modal .profile-note-review-panel,
+    .profile-note-detail-modal.is-review-collapsed .profile-note-review-panel {
+        right: 12px;
+        bottom: 16px;
+    }
+
+    .profile-note-detail-modal:not(.is-review-collapsed) .profile-note-review-panel {
+        top: 58px;
+        left: 12px;
+        right: 12px;
+        bottom: 12px;
+        width: auto;
+    }
+}
+
+/* Profile note A4 viewer: optional two-page spread mode */
+.profile-note-page-stage {
+    --note-page-gap: 0px;
+    --note-page-offset: 0px;
+    --note-spread-width: 794px;
+}
+
+.profile-note-page-stack {
+    gap: var(--note-page-gap, 0px);
+    transform: scale(var(--note-page-scale)) translateX(calc(var(--note-page-offset, 0px) * -1));
+    transform-origin: top left;
+}
+
+.profile-note-page-stage.is-spread-mode .profile-note-page-viewport {
+    width: calc((1588px + 28px) * var(--note-page-scale));
+}
+
+.profile-note-page-stage.is-spread-mode .profile-note-page-turn.is-prev {
+    left: max(12px, calc(50% - (808px * var(--note-page-scale)) - 58px));
+}
+
+.profile-note-page-stage.is-spread-mode .profile-note-page-turn.is-next {
+    right: max(12px, calc(50% - (808px * var(--note-page-scale)) - 58px));
+}
+
+.profile-note-page-mode-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    height: 30px;
+    padding: 0 11px;
+    border: 1px solid rgba(255, 255, 255, .14);
+    border-radius: 999px;
+    background: rgba(15, 23, 42, .42);
+    color: rgba(255, 255, 255, .82);
+    font-size: 11px;
+    font-weight: 900;
+    line-height: 1;
+    box-shadow: 0 12px 26px rgba(0, 0, 0, .12);
+    cursor: pointer;
+    backdrop-filter: blur(12px);
+}
+
+.profile-note-page-mode-toggle:hover,
+.profile-note-page-mode-toggle.is-active {
+    border-color: rgba(255, 255, 255, .30);
+    background: rgba(255, 255, 255, .16);
+    color: #fff;
+}
+
+.profile-note-page-mode-toggle i {
+    font-size: 11px;
+}
+
+.profile-note-detail-modal .profile-note-page-footer {
+    gap: 8px;
+}
+
+@media (max-width: 980px) {
+    .profile-note-page-stage.is-spread-mode .profile-note-page-turn.is-prev {
+        left: 10px;
+    }
+
+    .profile-note-page-stage.is-spread-mode .profile-note-page-turn.is-next {
+        right: 10px;
+    }
+
+    .profile-note-page-mode-toggle span {
+        display: none;
+    }
+
+    .profile-note-page-mode-toggle {
+        width: 30px;
+        padding: 0;
+    }
+}
+
+@media print {
+    .profile-note-page-mode-toggle {
+        display: none !important;
+    }
+}
+
+/* Profile note detail - align A4 spread and feedback panel as one content row */
+.profile-note-detail-modal {
+    --note-review-panel-width: 326px;
+    --note-review-panel-gap: 18px;
+    --note-page-display-height: min(78vh, 820px);
+    --note-page-display-width: auto;
+}
+
+.profile-note-detail-modal:not(.is-review-collapsed) .profile-note-review-panel {
+
+    width: var(--note-review-panel-width);
+
+    max-height: calc(100vh - 92px);
+}
+
+.profile-note-detail-modal:not(.is-review-collapsed) .profile-note-review-card--comments {
+    min-height: 0;
+}
+
+.profile-note-detail-modal:not(.is-review-collapsed) .profile-note-page-stage.is-spread-mode .profile-note-page-viewport,
+.profile-note-detail-modal:not(.is-review-collapsed) .profile-note-page-stage.is-spread-mode .profile-note-page-stack {
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.profile-note-detail-modal:not(.is-review-collapsed) .profile-note-page-stage.is-spread-mode .profile-note-page-turn.is-prev {
+    left: max(10px, calc(50% - (var(--note-page-display-width) / 2) - 54px));
+}
+
+.profile-note-detail-modal:not(.is-review-collapsed) .profile-note-page-stage.is-spread-mode .profile-note-page-turn.is-next {
+    right: max(10px, calc(50% - (var(--note-page-display-width) / 2) - 54px));
+}
+
+@media (max-width: 1240px) {
+    .profile-note-detail-modal {
+        --note-review-panel-width: 300px;
+        --note-review-panel-gap: 14px;
+    }
+
+    .profile-note-detail-modal:not(.is-review-collapsed) .profile-note-document-wrap {
+        right: calc(var(--note-review-panel-width) + var(--note-review-panel-gap) + 12px);
+    }
+}
+
+@media (max-width: 980px) {
+    .profile-note-detail-modal:not(.is-review-collapsed) .profile-note-document-wrap {
+        right: 0;
+    }
+
+    .profile-note-detail-modal:not(.is-review-collapsed) .profile-note-review-panel {
+        top: 58px;
+        left: 12px;
+        right: 12px;
+        bottom: 12px;
+        width: auto;
+        height: auto;
+        max-height: none;
+    }
+}
+
+/* Profile note detail - modal scroll lock and stable reading size calculation */
+html.profile-note-modal-open,
+body.profile-note-modal-open {
+    width: 100%;
+    height: 100%;
+    overflow: hidden !important;
+    overscroll-behavior: none;
+}
+
+.profile-note-detail-modal {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100dvh;
+    overflow: hidden;
+}
+
+.profile-note-detail-modal .profile-note-detail-dialog {
+    width: 100vw;
+    height: 100dvh;
+    max-height: 100dvh;
+    overflow: hidden;
+}
+
+.profile-note-detail-modal .profile-note-detail-layout {
+    height: 100%;
+    overflow: hidden;
+}
+
+.profile-note-detail-modal .profile-note-document-wrap {
+
+    overscroll-behavior: contain;
+}
+
+.profile-note-detail-modal.is-note-scroll-mode .profile-note-document-wrap {
+    justify-content: flex-start;
+    overflow: auto;
+    scroll-padding: 70px 90px 72px;
+}
+
+.profile-note-detail-modal.is-note-scroll-mode .profile-note-page-stage {
+    align-items: flex-start;
+    padding-top: 16px;
+    padding-bottom: 56px;
+}
+
+.profile-note-detail-modal .profile-note-page-viewport {
+    flex: 0 0 auto;
+}
+
+.profile-note-detail-modal.is-note-scroll-mode .profile-note-page-footer {
+    position: sticky;
+    bottom: 17px;
+    left: auto;
+    transform: none;
+    margin: 8px auto 0;
+}
+
+.profile-note-detail-modal:not(.is-review-collapsed) .profile-note-document-wrap {
+    overflow: hidden;
+}
+
+.profile-note-detail-modal:not(.is-review-collapsed).is-note-scroll-mode .profile-note-document-wrap {
+    overflow: auto;
+}
+
+@media (max-width: 980px) {
+    .profile-note-detail-modal .profile-note-document-wrap,
+    .profile-note-detail-modal.is-note-scroll-mode .profile-note-document-wrap {
+        overflow: auto;
+        justify-content: flex-start;
+    }
+
+    .profile-note-detail-modal .profile-note-page-stage {
+        width: max(100%, calc(var(--note-page-display-width, 320px) + 54px));
+        min-width: max(100%, calc(var(--note-page-display-width, 320px) + 54px));
+        height: max(100%, calc(var(--note-page-display-height, 460px) + 66px));
+        min-height: max(100%, calc(var(--note-page-display-height, 460px) + 66px));
+        padding-top: 10px;
+        padding-bottom: 56px;
+    }
+}
+
+/* Profile note detail - final stable viewer modes
+   Rules: 전체보기/기본/듀얼 have no page scroll. 크게 only can scroll.
+   Control positions stay fixed while only the A4 scale changes. */
+.profile-note-detail-modal .profile-note-document-wrap {
+    overflow: hidden !important;
+}
+
+.profile-note-detail-modal .profile-note-page-stage {
+    width: 100% !important;
+    min-width: 0 !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    padding: 0 !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.profile-note-detail-modal.is-note-large-mode.is-note-scroll-mode .profile-note-document-wrap {
+    overflow: auto !important;
+    justify-content: flex-start;
+    scroll-padding: 70px 90px 72px;
+}
+
+.profile-note-detail-modal.is-note-large-mode.is-note-scroll-mode .profile-note-page-stage {
+    width: max(100%, calc(var(--note-page-display-width, 794px) + 112px)) !important;
+    min-width: max(100%, calc(var(--note-page-display-width, 794px) + 112px)) !important;
+    height: max(100%, calc(var(--note-page-display-height, 720px) + 72px)) !important;
+    min-height: max(100%, calc(var(--note-page-display-height, 720px) + 72px)) !important;
+    align-items: flex-start;
+    padding-top: 16px !important;
+    padding-bottom: 56px !important;
+}
+
+.profile-note-detail-modal.is-note-scroll-mode .profile-note-page-footer,
+.profile-note-detail-modal.is-note-large-mode.is-note-scroll-mode .profile-note-page-footer {
+    position: absolute;
+    left: 50%;
+    bottom: 17px;
+    transform: translateX(-50%);
+    margin: 0;
+}
+
+.profile-note-detail-modal.is-note-dual-mode .profile-note-page-size-btn.is-active {
+    background: transparent;
+    color: rgba(255, 255, 255, .62);
+}
+
+.profile-note-detail-modal.is-note-dual-mode .profile-note-page-mode-toggle {
+    border-color: rgba(255, 255, 255, .30);
+    background: rgba(255, 255, 255, .16);
+    color: #fff;
+}
+
+@media (max-width: 980px) {
+    .profile-note-detail-modal .profile-note-document-wrap,
+    .profile-note-detail-modal.is-note-large-mode.is-note-scroll-mode .profile-note-document-wrap {
+        overflow: auto !important;
+    }
+
+    .profile-note-detail-modal .profile-note-page-stage,
+    .profile-note-detail-modal.is-note-large-mode.is-note-scroll-mode .profile-note-page-stage {
+        width: max(100%, calc(var(--note-page-display-width, 320px) + 54px)) !important;
+        min-width: max(100%, calc(var(--note-page-display-width, 320px) + 54px)) !important;
+        height: max(100%, calc(var(--note-page-display-height, 460px) + 66px)) !important;
+        min-height: max(100%, calc(var(--note-page-display-height, 460px) + 66px)) !important;
+        align-items: flex-start;
+        padding-top: 10px !important;
+        padding-bottom: 56px !important;
+    }
+}
+
+/* Profile note detail - keep fixed controls outside the document area */
+.profile-note-detail-modal .profile-note-page-footer {
+    bottom: 18px !important;
+}
+
+.profile-note-detail-modal:not(.is-note-large-mode) .profile-note-page-stage {
+    /* Reserve visual space for the fixed bottom control bar so full-view never covers the page. */
+    max-height: calc(100dvh - 118px) !important;
+}
+
+.profile-note-detail-modal:not(.is-note-large-mode) .profile-note-page-viewport {
+    margin-bottom: 38px;
+}
+
+.profile-note-detail-modal.is-note-dual-mode .profile-note-page-viewport {
+    margin-bottom: 38px;
+}
+
+.profile-note-detail-modal.is-note-large-mode.is-note-scroll-mode .profile-note-page-viewport {
+    margin-bottom: 0;
+}
+
+@media (max-height: 760px) {
+    .profile-note-detail-modal:not(.is-note-large-mode) .profile-note-page-stage {
+        max-height: calc(100dvh - 106px) !important;
+    }
+
+    .profile-note-detail-modal:not(.is-note-large-mode) .profile-note-page-viewport {
+        margin-bottom: 32px;
+    }
+}
+
+/* Profile note detail - stable axis correction
+   문서/옵션 위치는 전체보기 축으로 고정하고, 피드백은 듀얼 높이 기준으로만 뜬다. */
+.profile-note-detail-modal:not(.is-review-collapsed) .profile-note-document-wrap {
+    right: 0 !important;
+    left: 0 !important;
+    padding-left: 76px !important;
+    padding-right: 76px !important;
+}
+
+.profile-note-detail-modal:not(.is-review-collapsed) .profile-note-page-stage {
+    justify-content: center !important;
+}
+
+.profile-note-detail-modal:not(.is-review-collapsed) .profile-note-page-viewport {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+}
+
+.profile-note-detail-modal:not(.is-review-collapsed) .profile-note-page-footer,
+.profile-note-detail-modal:not(.is-review-collapsed).is-note-dual-mode .profile-note-page-footer {
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+}
+
+.profile-note-detail-modal:not(.is-review-collapsed) .profile-note-page-turn.is-prev {
+    left: max(16px, calc(50% - (var(--note-page-display-width, 794px) / 2) - 58px)) !important;
+}
+
+.profile-note-detail-modal:not(.is-review-collapsed) .profile-note-page-turn.is-next {
+    right: max(16px, calc(50% - (var(--note-page-display-width, 794px) / 2) - 58px)) !important;
+}
+
+.profile-note-detail-modal:not(.is-review-collapsed) .profile-note-review-panel {
+    right: 18px !important;
+    top: max(68px, calc(50% - (var(--note-review-display-height, var(--note-page-display-height, 720px)) / 2))) !important;
+    bottom: auto !important;
+    height: min(var(--note-review-display-height, var(--note-page-display-height, 720px)), calc(100dvh - 92px)) !important;
+}
+
+@media (max-width: 980px), (orientation: portrait) {
+    .profile-note-detail-modal:not(.is-review-collapsed) .profile-note-document-wrap {
+        right: 0 !important;
+        left: 0 !important;
+        padding-left: 20px !important;
+        padding-right: 20px !important;
+    }
+
+    .profile-note-detail-modal:not(.is-review-collapsed) .profile-note-review-panel {
+        top: 58px !important;
+        left: 12px !important;
+        right: 12px !important;
+        bottom: 12px !important;
+        width: auto !important;
+        height: auto !important;
+        max-height: none !important;
+    }
+}
+
+/* Profile note detail - dual spread page margin balance */
+.profile-note-detail-modal .profile-note-page-stage.is-spread-mode {
+    --note-page-gap: 0px;
+}
+
+.profile-note-detail-modal .profile-note-page-stage.is-spread-mode .profile-note-page-viewport {
+    width: calc((1588px + var(--note-page-gap, 0px)) * var(--note-page-scale)) !important;
+    background: linear-gradient(90deg, #fff 0, #fff calc(50% - 2px), #edf1f6 calc(50% - 2px), #f8fafc 50%, #edf1f6 calc(50% + 2px), #fff calc(50% + 2px), #fff 100%);
+}
+
+.profile-note-detail-modal .profile-note-page-stage.is-spread-mode .profile-note-page-stack {
+    gap: var(--note-page-gap, 0px) !important;
+}
+
+/* In dual mode, treat the two A4 pages like an open book: outer margin is a bit wider, inner gutter is tighter. */
+.profile-note-detail-modal .profile-note-page-stage.is-spread-mode .profile-note-document:nth-child(odd) {
+    padding-left: 78px;
+    padding-right: 50px;
+}
+
+.profile-note-detail-modal .profile-note-page-stage.is-spread-mode .profile-note-document:nth-child(even) {
+    padding-left: 50px;
+    padding-right: 78px;
+}
+
+.profile-note-detail-modal .profile-note-page-stage.is-spread-mode .profile-note-document:nth-child(odd)::after,
+.profile-note-detail-modal .profile-note-page-stage.is-spread-mode .profile-note-document:nth-child(even)::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 10px;
+    pointer-events: none;
+}
+
+.profile-note-detail-modal .profile-note-page-stage.is-spread-mode .profile-note-document:nth-child(odd)::after {
+    right: 0;
+    background: linear-gradient(90deg, rgba(15, 23, 42, 0), rgba(15, 23, 42, .055));
+}
+
+.profile-note-detail-modal .profile-note-page-stage.is-spread-mode .profile-note-document:nth-child(even)::before {
+    left: 0;
+    background: linear-gradient(90deg, rgba(15, 23, 42, .055), rgba(15, 23, 42, 0));
+}
+
+/* Single-page and large modes keep the authored A4 layout untouched. */
+.profile-note-detail-modal .profile-note-page-stage:not(.is-spread-mode) .profile-note-document {
+    padding-left: 68px;
+    padding-right: 68px;
+}
+
+/* Profile note detail - dual mode vertical balance
+   Keep the fixed viewer axis and lift only the open-book spread slightly. */
+.profile-note-detail-modal.is-note-dual-mode .profile-note-page-stage.is-spread-mode .profile-note-page-viewport {
+    transform: translateY(-8px);
+}
+
+@media (max-height: 760px) {
+    .profile-note-detail-modal.is-note-dual-mode .profile-note-page-stage.is-spread-mode .profile-note-page-viewport {
+        transform: translateY(-4px);
+    }
+}
+
+/* commonNoteDetail.css rebuild patch
+   Source of truth for viewer/fold: uploaded good-state myPage-tabs.css detail viewer block.
+   Only these controls are newly layered: hidden state, bottom-left mode buttons, bottom-center page nav. */
+.profile-note-detail-modal[hidden] {
+    display: none !important;
+}
+
+.profile-note-detail-modal .profile-note-page-turn {
+    display: none !important;
+}
+
+.profile-note-detail-modal .profile-note-page-footer,
+.profile-note-detail-modal:not(.is-review-collapsed) .profile-note-page-footer,
+.profile-note-detail-modal:not(.is-review-collapsed).is-note-dual-mode .profile-note-page-footer,
+.profile-note-detail-modal.is-note-scroll-mode .profile-note-page-footer,
+.profile-note-detail-modal.is-note-large-mode.is-note-scroll-mode .profile-note-page-footer {
+    position: fixed !important;
+    left: 18px !important;
+    right: auto !important;
+    bottom: max(16px, env(safe-area-inset-bottom)) !important;
+    transform: none !important;
+    z-index: 120 !important;
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    width: auto;
+    min-width: 0;
+    height: 34px;
+    margin: 0;
+    padding: 5px 7px;
+    gap: 7px;
+    border: 1px solid rgba(226, 232, 240, .18);
+    border-radius: 999px;
+    background: rgba(14, 23, 40, .62);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, .22);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+}
+
+.profile-note-detail-modal .profile-note-page-size-group {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    height: auto;
+    padding: 0;
+    border: 0;
+    background: transparent;
+}
+
+.profile-note-detail-modal .profile-note-page-size-btn,
+.profile-note-detail-modal .profile-note-page-mode-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    height: 28px;
+    min-width: 34px;
+    padding: 0 9px;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    background: transparent;
+    color: rgba(255, 255, 255, .76);
+    font-size: 12px;
+    font-weight: 850;
+    line-height: 1;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.profile-note-detail-modal .profile-note-page-size-btn:hover,
+.profile-note-detail-modal .profile-note-page-size-btn.is-active,
+.profile-note-detail-modal .profile-note-page-mode-toggle:hover,
+.profile-note-detail-modal .profile-note-page-mode-toggle.is-active,
+.profile-note-detail-modal.is-note-dual-mode .profile-note-page-mode-toggle {
+    border-color: rgba(255, 255, 255, .32);
+    background: rgba(255, 255, 255, .16);
+    color: #fff;
+}
+
+.profile-note-detail-modal .profile-note-page-footer [data-profile-note-page-count],
+.profile-note-detail-modal .profile-note-page-footer .profile-note-page-nav,
+.profile-note-detail-modal .profile-note-page-footer .profile-note-page-nav-btn {
+    display: none !important;
+}
+
+.profile-note-page-nav {
+    position: fixed;
+    left: 50%;
+    bottom: max(18px, env(safe-area-inset-bottom));
+    z-index: 122;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: auto;
+    height: 36px;
+    transform: translateX(-50%);
+    pointer-events: auto;
+}
+
+.profile-note-page-nav > span[data-profile-note-page-count] {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 58px;
+    height: 34px;
+    padding: 0 14px;
+    border: 1px solid rgba(226, 232, 240, .24);
+    border-radius: 999px;
+    background: rgba(14, 23, 40, .76);
+    color: #f8fafc;
+    box-shadow: 0 10px 24px rgba(0, 0, 0, .22);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    font-size: 14px;
+    font-weight: 850;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+.profile-note-page-nav-btn {
+    position: static;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    border: 1px solid rgba(226, 232, 240, .22);
+    border-radius: 999px;
+    background: rgba(14, 23, 40, .68);
+    color: #f8fafc;
+    box-shadow: 0 10px 22px rgba(0, 0, 0, .20);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    cursor: pointer;
+}
+
+.profile-note-page-nav-btn i {
+    font-size: 13px;
+    line-height: 1;
+}
+
+.profile-note-page-nav-btn:hover:not(:disabled) {
+    border-color: rgba(248, 250, 252, .38);
+    background: rgba(30, 41, 59, .84);
+}
+
+.profile-note-page-nav-btn:disabled {
+    opacity: .32;
+    cursor: default;
+}
+
+@media (max-width: 720px) {
+    .profile-note-detail-modal .profile-note-page-footer,
+    .profile-note-detail-modal:not(.is-review-collapsed) .profile-note-page-footer,
+    .profile-note-detail-modal:not(.is-review-collapsed).is-note-dual-mode .profile-note-page-footer,
+    .profile-note-detail-modal.is-note-scroll-mode .profile-note-page-footer,
+    .profile-note-detail-modal.is-note-large-mode.is-note-scroll-mode .profile-note-page-footer {
+        left: 12px !important;
+        bottom: max(12px, env(safe-area-inset-bottom)) !important;
+        max-width: calc(100vw - 24px);
+        overflow-x: auto;
+        scrollbar-width: none;
+    }
+
+    .profile-note-detail-modal .profile-note-page-footer::-webkit-scrollbar {
+        display: none;
+    }
+
+    .profile-note-page-nav {
+        bottom: max(58px, calc(env(safe-area-inset-bottom) + 52px));
+        gap: 7px;
+    }
+
+    .profile-note-page-nav-btn {
+        width: 32px;
+        height: 32px;
+    }
+
+    .profile-note-page-nav > span[data-profile-note-page-count] {
+        height: 32px;
+        min-width: 52px;
+        padding: 0 12px;
+        font-size: 13px;
+    }
+}
+
+@media print {
+    .profile-note-page-nav {
+        display: none !important;
+    }
+}
+
+/* Profile note detail header and metadata */
+.profile-note-detail-modal .profile-note-detail-head {
+    top: 12px;
+    left: 16px;
+    right: 16px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 18px;
+}
+
+.profile-note-detail-modal .profile-note-detail-info {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+    max-width: min(640px, calc(100vw - 250px));
+    padding: 2px 0;
+    color: #fff;
+    pointer-events: auto;
+}
+
+.profile-note-detail-modal .profile-note-detail-title {
+    min-width: 0;
+    margin: 0;
+    overflow: hidden;
+    color: #fff;
+    font-size: 17px;
+    font-weight: 850;
+    line-height: 1.25;
+    letter-spacing: -.02em;
+    text-overflow: ellipsis;
+    text-shadow: 0 2px 12px rgba(0, 0, 0, .42);
+    white-space: nowrap;
+}
+
+.profile-note-detail-modal .profile-note-detail-meta {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 3px;
+    min-width: 0;
+    color: rgba(255, 255, 255, .72);
+}
+
+.profile-note-detail-modal .profile-note-detail-author {
+    display: inline-flex;
+    flex: 0 1 auto;
+    align-items: center;
+    gap: 7px;
+    min-width: 0;
+    max-width: 100%;
+    height: auto;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+}
+
+.profile-note-detail-modal .profile-note-detail-avatar {
+    flex: 0 0 auto;
+    width: 25px;
+    height: 25px;
+    border: 1px solid rgba(255, 255, 255, .24);
+}
+
+.profile-note-detail-modal .profile-note-detail-author-copy {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+}
+
+.profile-note-detail-modal .profile-note-detail-author strong {
+    flex: 0 1 auto;
+    max-width: 150px;
+    overflow: hidden;
+    color: rgba(255, 255, 255, .92);
+    font-size: 11.5px;
+    font-weight: 800;
+    line-height: 1.2;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.profile-note-detail-modal .profile-note-detail-author small {
+    display: block;
+    min-width: 0;
+    max-width: 390px;
+    margin: 0;
+    overflow: hidden;
+    color: rgba(255, 255, 255, .58);
+    font-size: 10px;
+    line-height: 1.2;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.profile-note-detail-modal .profile-note-detail-meta-dot {
+    margin: 0 2px;
+}
+
+.profile-note-detail-modal .profile-note-detail-meta-list {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    gap: 0;
+    min-width: 0;
+    max-width: 100%;
+    padding-left: 0;
+    overflow: visible;
+    white-space: nowrap;
+}
+
+.profile-note-detail-modal .profile-note-detail-meta-item {
+    display: inline-flex;
+    align-items: center;
+    min-width: 0;
+    overflow: hidden;
+    color: rgba(255, 255, 255, .72);
+    font-size: 10px;
+    font-weight: 650;
+    line-height: 1.2;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.profile-note-detail-modal .profile-note-detail-meta-item + .profile-note-detail-meta-item::before {
+    content: "·";
+    margin: 0 6px;
+    color: rgba(255, 255, 255, .34);
+}
+
+.profile-note-detail-modal .profile-note-detail-meta-item.is-public {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    min-height: 18px;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    color: #bdf8eb;
+    font-size: 10px;
+    font-weight: 800;
+    line-height: 1.2;
+}
+
+.profile-note-detail-modal .profile-note-detail-meta-item.is-public + .profile-note-detail-meta-item::before {
+    margin-left: 7px;
+}
+
+.profile-note-detail-modal .profile-note-detail-meta-item.is-folder {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.profile-note-detail-modal .profile-note-detail-meta-item.is-folder i {
+    flex: 0 0 auto;
+    color: currentColor;
+    font-size: 10px;
+    line-height: 1;
+    transform: translateY(-.25px);
+}
+
+.profile-note-detail-modal .profile-note-detail-content-counts {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+}
+
+.profile-note-detail-modal .profile-note-detail-content-count {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    color: rgba(255, 255, 255, .72);
+    font-size: 10px;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+.profile-note-detail-modal .profile-note-detail-content-count i {
+    width: 12px;
+    color: rgba(255, 255, 255, .64);
+    font-size: 10px;
+    text-align: center;
+}
+
+.profile-note-detail-modal .profile-note-detail-content-count b {
+    font-size: 10px;
+    font-weight: 700;
+}
+
+.profile-note-detail-modal .profile-note-detail-meta-item + .profile-note-detail-content-counts::before {
+    content: "·";
+    margin-right: -2px;
+    color: rgba(255, 255, 255, .34);
+}
+
+/* Reserve space for the external document header. */
+.profile-note-detail-modal .profile-note-document-wrap {
+    padding-top: 96px;
+}
+
+.profile-note-detail-modal.is-note-scroll-mode .profile-note-document-wrap {
+    scroll-padding-top: 96px;
+}
+
+/* Header actions */
+.profile-note-detail-modal .profile-note-detail-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 6px;
+    max-width: calc(100vw - 700px);
+    flex-wrap: nowrap;
+}
+
+.profile-note-detail-modal .profile-note-detail-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    min-width: 0;
+    height: 32px;
+    padding: 0 11px;
+    border: 1px solid rgba(255, 255, 255, .18);
+    border-radius: 999px;
+    background: rgba(15, 23, 42, .28);
+    color: rgba(255, 255, 255, .88);
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1;
+    text-decoration: none;
+    white-space: nowrap;
+    backdrop-filter: blur(10px);
+    transition: border-color .16s ease, background .16s ease, color .16s ease, transform .16s ease;
+}
+
+.profile-note-detail-modal .profile-note-detail-action:hover {
+    border-color: rgba(255, 255, 255, .34);
+    background: rgba(255, 255, 255, .1);
+    color: #fff;
+    transform: translateY(-1.5px);
+}
+
+.profile-note-detail-modal .profile-note-detail-action.is-primary {
+    border-color: rgba(129, 140, 248, .42);
+    background: rgba(79, 70, 229, .16);
+    color: #eef2ff;
+}
+
+.profile-note-detail-modal .profile-note-detail-action.is-icon {
+    width: 32px;
+    padding: 0;
+}
+
+.profile-note-detail-modal .profile-note-detail-action.is-danger {
+    color: rgba(254, 202, 202, .86);
+}
+
+.profile-note-detail-modal .profile-note-detail-action.is-danger:hover {
+    border-color: rgba(248, 113, 113, .42);
+    background: rgba(127, 29, 29, .22);
+    color: #fecaca;
+}
+
+.profile-note-detail-modal .profile-note-detail-action i {
+    font-size: 11px;
+}
+
+.profile-note-detail-modal .profile-note-detail-close {
+    display: inline-flex;
+    flex: 0 0 32px;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+}
+
+.profile-note-detail-modal .profile-note-detail-close > span {
+    display: block;
+    line-height: 1;
+    transform: translateY(-1px);
+}
+
+.profile-note-detail-modal .profile-note-detail-more {
+    position: relative;
+    flex: 0 0 auto;
+}
+
+.profile-note-detail-modal .profile-note-detail-more > summary {
+    list-style: none;
+    cursor: pointer;
+}
+
+.profile-note-detail-modal .profile-note-detail-more > summary::-webkit-details-marker {
+    display: none;
+}
+
+.profile-note-detail-modal .profile-note-detail-more[open] .profile-note-detail-more-toggle {
+    border-color: rgba(255, 255, 255, .36);
+    background: rgba(255, 255, 255, .12);
+    color: #fff;
+}
+
+.profile-note-detail-modal .profile-note-detail-more-menu {
+    position: absolute;
+    z-index: 30;
+    top: calc(100% + 8px);
+    right: 0;
+    display: grid;
+    min-width: 178px;
+    padding: 6px;
+    border: 1px solid rgba(255, 255, 255, .14);
+    border-radius: 12px;
+    background: rgba(15, 23, 42, .96);
+    box-shadow: 0 14px 34px rgba(2, 6, 23, .38);
+    backdrop-filter: blur(16px);
+}
+
+.profile-note-detail-modal .profile-note-detail-more-item {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    width: 100%;
+    min-height: 34px;
+    padding: 0 10px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: rgba(255, 255, 255, .86);
+    font-size: 12px;
+    font-weight: 650;
+    text-align: left;
+    cursor: pointer;
+}
+
+.profile-note-detail-modal .profile-note-detail-more-item:hover,
+.profile-note-detail-modal .profile-note-detail-more-item:focus-visible {
+    outline: none;
+    background: rgba(255, 255, 255, .08);
+    color: #fff;
+}
+
+.profile-note-detail-modal .profile-note-detail-more-item i {
+    width: 14px;
+    color: rgba(255, 255, 255, .62);
+    text-align: center;
+}
+
+.profile-note-detail-modal .profile-note-detail-more-item.is-danger {
+    color: #fecaca;
+}
+
+.profile-note-detail-modal .profile-note-detail-more-item.is-danger i {
+    color: #fca5a5;
+}
+
+.profile-note-detail-modal .profile-note-detail-more-item.is-danger:hover,
+.profile-note-detail-modal .profile-note-detail-more-item.is-danger:focus-visible {
+    background: rgba(127, 29, 29, .24);
+}
+
+.profile-note-detail-modal .profile-note-detail-more-divider {
+    height: 1px;
+    margin: 5px 4px;
+    background: rgba(255, 255, 255, .1);
+}
+
+.profile-note-detail-pin.is-pinned {
+    color: #ffd65a;
+    border-color: rgba(255, 214, 90, .62);
+    background: rgba(255, 214, 90, .12);
+}
+
+.profile-note-detail-pin.is-pinned:hover {
+    color: #ffe38a;
+    background: rgba(255, 214, 90, .18);
+}
+
+.profile-note-detail-pin:disabled {
+    opacity: .55;
+    cursor: wait;
+}
+
+/* Author profile links */
+.profile-note-detail-modal .profile-note-detail-author-link {
+    color: inherit;
+    text-decoration: none;
+}
+
+.profile-note-detail-modal .profile-note-detail-author-avatar-link {
+    display: inline-flex;
+    flex: 0 0 auto;
+    border-radius: 999px;
+}
+
+.profile-note-detail-modal .profile-note-detail-author-name-link {
+    display: inline-flex;
+    width: fit-content;
+    max-width: 100%;
+}
+
+.profile-note-detail-modal .profile-note-detail-author-link:hover strong,
+.profile-note-detail-modal .profile-note-detail-author-link:focus-visible strong {
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.profile-note-detail-modal .profile-note-detail-author-avatar-link:hover .profile-note-detail-avatar,
+.profile-note-detail-modal .profile-note-detail-author-avatar-link:focus-visible .profile-note-detail-avatar {
+    box-shadow: 0 0 0 2px rgba(102, 126, 234, .55);
+}
+
+.profile-note-detail-modal .profile-note-detail-author-link:focus-visible {
+    outline: none;
+}
+
+/* Child modals */
+#profileNoteShareModal.moyo-share-modal {
+    z-index: 4100 !important;
+}
+
+#noteMoveModal.common-folder-modal,
+#noteMoveModal.nl-modal-backdrop {
+    z-index: 4200 !important;
+}
+
+@media (max-width: 1320px) {
+    .profile-note-detail-modal .profile-note-detail-actions {
+        max-width: calc(100vw - 520px);
+        gap: 5px;
+    }
+
+    .profile-note-detail-modal .profile-note-detail-action {
+        width: 32px;
+        padding: 0;
+    }
+
+    .profile-note-detail-modal .profile-note-detail-action span {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+    }
+}
+
+@media (max-width: 1100px) {
+    .profile-note-detail-modal .profile-note-detail-info {
+        max-width: calc(100vw - 220px);
+    }
+
+    .profile-note-detail-modal .profile-note-detail-author small {
+        max-width: 300px;
+    }
+}
+
+@media (max-width: 760px) {
+    .profile-note-detail-modal .profile-note-detail-head {
+        top: 10px;
+        left: 12px;
+        right: 12px;
+        gap: 10px;
+    }
+
+    .profile-note-detail-modal .profile-note-detail-info {
+        max-width: calc(100vw - 154px);
+    }
+
+    .profile-note-detail-modal .profile-note-detail-title {
+        font-size: 14px;
+    }
+
+    .profile-note-detail-modal .profile-note-detail-author small {
+        display: none;
+    }
+
+    .profile-note-detail-modal .profile-note-detail-meta {
+        gap: 2px;
+    }
+
+    .profile-note-detail-modal .profile-note-detail-meta-list {
+        display: inline-flex;
+        max-width: calc(100vw - 170px);
+        padding-left: 0;
+        overflow: hidden;
+    }
+
+    .profile-note-detail-modal .profile-note-detail-meta-list .profile-note-detail-meta-item:not(.is-public),
+    .profile-note-detail-modal .profile-note-detail-content-counts {
+        display: none;
+    }
+
+    .profile-note-detail-modal .profile-note-document-wrap {
+        padding-top: 84px;
+    }
+
+    .profile-note-detail-modal .profile-note-detail-actions {
+        max-width: none;
+        gap: 4px;
+    }
+
+    .profile-note-detail-modal .profile-note-detail-action:not(.is-primary):not([data-profile-note-print]),
+    .profile-note-detail-modal .profile-note-detail-more {
+        display: none;
+    }
+}
+
+@media print {
+    .profile-note-detail-modal .profile-note-detail-info {
+        display: none !important;
+    }
+
+    .profile-note-detail-modal .profile-note-document-wrap {
+        padding-top: 0 !important;
+    }
+}
+
+/* MOYO 공개 노트 반응 요약/참여 패널 */
+.profile-note-detail-modal .profile-note-review-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 8px 10px 8px 13px;
+    text-align: left;
+}
+
+.profile-note-social-stats {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    gap: 14px;
+}
+
+.profile-note-social-stat {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    color: #738097;
+    font-size: 11px;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.profile-note-social-stat i {
+    width: 14px;
+    color: #8b98aa;
+    font-size: 12px;
+    text-align: center;
+}
+
+.profile-note-social-stat strong {
+    color: #435067;
+    font-size: 11px;
+    font-weight: 950;
+}
+
+.profile-note-social-stat.is-like i {
+    color: #ec7080;
+}
+
+.profile-note-review-toggle-action {
+    display: inline-flex;
+    align-items: center;
+    flex: 0 0 auto;
+    gap: 6px;
+    color: #526179;
+    font-size: 11px;
+    font-weight: 900;
+    white-space: nowrap;
+}
+
+.profile-note-review-toggle-action i {
+    font-size: 10px;
+    transition: transform .2s ease;
+}
+
+.profile-note-detail-modal.is-review-collapsed .profile-note-review-panel {
+    right: 18px;
+    bottom: 20px;
+    width: min(430px, calc(100vw - 36px));
+}
+
+.profile-note-detail-modal.is-review-collapsed .profile-note-review-toggle {
+    width: 100%;
+    height: 42px;
+    min-height: 42px;
+    padding: 0 14px;
+    background: rgba(15, 23, 42, .70);
+}
+
+.profile-note-detail-modal.is-review-collapsed .profile-note-social-stat,
+.profile-note-detail-modal.is-review-collapsed .profile-note-social-stat strong,
+.profile-note-detail-modal.is-review-collapsed .profile-note-review-toggle-action {
+    color: rgba(255, 255, 255, .90);
+}
+
+.profile-note-detail-modal.is-review-collapsed .profile-note-social-stat i {
+    color: rgba(255, 255, 255, .72);
+}
+
+.profile-note-detail-modal.is-review-collapsed .profile-note-social-stat.is-like i {
+    color: #ff8795;
+}
+
+.profile-note-detail-modal.is-review-collapsed .profile-note-review-toggle-action i {
+    transform: rotate(180deg);
+}
+
+.profile-note-detail-modal:not(.is-review-collapsed) .profile-note-review-toggle-action i {
+    transform: rotate(0deg);
+}
+
+@media (max-width: 560px) {
+    .profile-note-detail-modal.is-review-collapsed .profile-note-review-panel {
+        right: 10px;
+        bottom: 12px;
+        width: calc(100vw - 20px);
+    }
+
+    .profile-note-social-stats {
+        gap: 10px;
+    }
+
+    .profile-note-social-stat-label {
+        display: none;
+    }
+}
+
+/* 2026-07-11: A4 크기를 유지하는 단일 하단 도크 */
+.profile-note-detail-modal .profile-note-bottom-dock {
+
+    pointer-events: auto;
+}
+
+.profile-note-detail-modal .profile-note-bottom-dock .profile-note-social-stats {
+    justify-self: start;
+    display: inline-flex;
+    align-items: center;
+
+    min-width: 0;
+
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+}
+
+.profile-note-detail-modal .profile-note-bottom-dock .profile-note-page-nav {
+
+    left: auto;
+    bottom: auto;
+
+    transform: none;
+}
+
+.profile-note-detail-modal .profile-note-bottom-dock .profile-note-page-nav-btn,
+.profile-note-detail-modal .profile-note-bottom-dock .profile-note-page-nav > span[data-profile-note-page-count] {
+    box-shadow: none;
+}
+
+.profile-note-detail-modal .profile-note-bottom-dock .profile-note-review-toggle {
+    position: static;
+    justify-self: end;
+
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    width: auto;
+
+    white-space: nowrap;
+}
+
+.profile-note-detail-modal .profile-note-bottom-dock .profile-note-review-toggle i {
+    font-size: 10px;
+    transition: transform .2s ease;
+}
+
+.profile-note-detail-modal.is-review-collapsed .profile-note-bottom-dock .profile-note-review-toggle i {
+    transform: rotate(180deg);
+}
+
+.profile-note-detail-modal:not(.is-review-collapsed) .profile-note-bottom-dock .profile-note-review-toggle i {
+    transform: rotate(0deg);
+}
+
+/* 접힌 상태에서는 패널 자체를 숨기고 하단 도크만 유지한다. */
+.profile-note-detail-modal.is-review-collapsed .profile-note-review-panel {
+    display: none !important;
+}
+
+.profile-note-detail-modal:not(.is-review-collapsed) .profile-note-review-content {
+    height: 100%;
+    max-height: 100%;
+}
+
+@media (max-width: 700px) {
+    .profile-note-detail-modal .profile-note-bottom-dock {
+        width: calc(100vw - 20px);
+        grid-template-columns: 1fr auto auto;
+        gap: 8px;
+        padding-left: 11px;
+    }
+
+    .profile-note-detail-modal .profile-note-bottom-dock .profile-note-social-stats {
+        gap: 9px;
+    }
+
+    .profile-note-detail-modal .profile-note-bottom-dock .profile-note-social-stat-label {
+        display: none;
+    }
+}
+
+@media (max-width: 500px) {
+    .profile-note-detail-modal .profile-note-bottom-dock {
+        grid-template-columns: auto 1fr auto;
+        width: calc(100vw - 16px);
+    }
+
+    .profile-note-detail-modal .profile-note-bottom-dock .profile-note-social-stats {
+        gap: 7px;
+    }
+
+    .profile-note-detail-modal .profile-note-bottom-dock .profile-note-review-toggle span {
+        display: none;
+    }
+}
+
+@media print {
+    .profile-note-bottom-dock {
+        display: none !important;
+    }
+}
+
+/* 2026-07-11: 하단 통합 도크 최종 밀도·위계 조정 */
+
+.profile-note-detail-modal .profile-note-bottom-dock .profile-note-social-stats {
+    position: relative;
+
+    padding-right: 14px;
+    margin-right: 10px;
+
+}
+
+.profile-note-detail-modal .profile-note-bottom-dock .profile-note-social-stats::after {
+    content: "";
+    position: absolute;
+    top: 7px;
+    right: 0;
+    bottom: 7px;
+    width: 1px;
+    background: rgba(255, 255, 255, .14);
+}
+
+.profile-note-detail-modal .profile-note-bottom-dock .profile-note-social-stat,
+.profile-note-detail-modal .profile-note-bottom-dock .profile-note-social-stat strong {
+    color: rgba(255, 255, 255, .74);
+    font-weight: 700;
+}
+
+.profile-note-detail-modal .profile-note-bottom-dock .profile-note-page-nav {
+    position: relative;
+
+    margin-right: 10px;
+}
+
+.profile-note-detail-modal .profile-note-bottom-dock .profile-note-page-nav::after {
+    content: "";
+    position: absolute;
+    top: 6px;
+    right: 0;
+    bottom: 6px;
+    width: 1px;
+    background: rgba(255, 255, 255, .14);
+}
+
+@media (max-width: 700px) {
+    .profile-note-detail-modal .profile-note-bottom-dock {
+        width: min(520px, calc(100vw - 20px));
+        padding-left: 10px;
+    }
+
+    .profile-note-detail-modal .profile-note-bottom-dock .profile-note-social-stats {
+        gap: 8px;
+        padding-right: 10px;
+        margin-right: 8px;
+    }
+
+    .profile-note-detail-modal .profile-note-bottom-dock .profile-note-page-nav {
+        padding-right: 10px;
+        margin-right: 8px;
+    }
+}
+
+/* 2026-07-11: 통합 도크 가독성 및 균형 보정 */
+.profile-note-detail-modal .profile-note-bottom-dock {
+
+    column-gap: 14px;
+
+}
+
+.profile-note-detail-modal .profile-note-bottom-dock .profile-note-social-stats {
+
+    margin: 0;
+
+}
+
+.profile-note-detail-modal .profile-note-bottom-dock .profile-note-social-stats::after,
+.profile-note-detail-modal .profile-note-bottom-dock .profile-note-page-nav::after {
+    display: none;
+}
+
+.profile-note-detail-modal .profile-note-bottom-dock .profile-note-page-nav-btn {
+
+    border-color: rgba(226, 232, 240, .18);
+
+}
+
+.profile-note-detail-modal .profile-note-bottom-dock .profile-note-page-nav > span[data-profile-note-page-count] {
+
+    border-color: rgba(226, 232, 240, .18);
+
+}
+
+@media (max-width: 700px) {
+    .profile-note-detail-modal .profile-note-bottom-dock {
+        width: min(580px, calc(100vw - 20px));
+        column-gap: 10px;
+        padding-left: 11px;
+    }
+
+    .profile-note-detail-modal .profile-note-bottom-dock .profile-note-social-stats {
+        gap: 9px;
+    }
+
+    .profile-note-detail-modal .profile-note-bottom-dock .profile-note-page-nav {
+        padding: 0 10px;
+    }
+}
+
+/* 2026-07-11: 통합 도크 최종 미세 조정 */
+
+.profile-note-detail-modal .profile-note-bottom-dock .profile-note-social-stat i {
+    color: rgba(255, 255, 255, .68);
+}
+
+.profile-note-detail-modal .profile-note-bottom-dock .profile-note-social-stat.is-like i {
+    color: #ff8795;
+}
+
+/* 2026-07-11: 하단 뷰어 도크 실제 단일 컴포넌트화 */
+.profile-note-detail-modal .profile-note-page-footer {
+    display: none !important;
+}
+
+.profile-note-detail-modal .profile-note-bottom-dock {
+    position: fixed;
+    left: 50%;
+    right: auto;
+    bottom: max(8px, env(safe-area-inset-bottom));
+    z-index: 35;
+
+    justify-content: center;
+
+    max-width: calc(100vw - 32px);
+    min-height: 44px;
+
+    gap: 0;
+    transform: translateX(-50%);
+    border: 1px solid rgba(226, 232, 240, .20);
+    border-radius: 22px;
+    background: rgba(14, 23, 40, .78);
+    box-shadow: 0 10px 26px rgba(0, 0, 0, .24);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+}
+
+.profile-note-detail-modal .profile-note-bottom-dock .profile-note-dock-section {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    min-height: 34px;
+    margin: 0;
+}
+
+.profile-note-detail-modal .profile-note-view-controls {
+    gap: 6px;
+}
+
+.profile-note-detail-modal .profile-note-view-controls .profile-note-page-size-group {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    padding: 2px;
+    border: 0;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, .05);
+}
+
+.profile-note-detail-modal .profile-note-view-controls .profile-note-page-size-btn,
+.profile-note-detail-modal .profile-note-view-controls .profile-note-page-mode-toggle {
+    width: auto;
+    min-width: 0;
+    height: 30px;
+    min-height: 30px;
+    margin: 0;
+    padding: 0 10px;
+    border: 0;
+    border-radius: 14px;
+    background: transparent;
+    color: rgba(255, 255, 255, .72);
+    font-size: 12px;
+    font-weight: 800;
+    line-height: 1;
+    box-shadow: none;
+}
+
+.profile-note-detail-modal .profile-note-view-controls .profile-note-page-mode-toggle {
+    gap: 5px;
+}
+
+.profile-note-detail-modal .profile-note-view-controls .profile-note-page-size-btn:hover,
+.profile-note-detail-modal .profile-note-view-controls .profile-note-page-mode-toggle:hover {
+    background: rgba(255, 255, 255, .08);
+    color: #fff;
+}
+
+.profile-note-detail-modal .profile-note-view-controls .profile-note-page-size-btn.is-active,
+.profile-note-detail-modal .profile-note-view-controls .profile-note-page-mode-toggle.is-active,
+.profile-note-detail-modal .profile-note-view-controls .profile-note-page-mode-toggle[aria-pressed="true"] {
+    background: rgba(255, 255, 255, .14);
+    color: #fff;
+}
+
+.profile-note-detail-modal .profile-note-bottom-dock .profile-note-social-stats {
+    gap: 11px;
+    min-height: 34px;
+    padding: 0;
+    opacity: 1;
+}
+
+.profile-note-detail-modal .profile-note-bottom-dock .profile-note-social-stat {
+    gap: 5px;
+    min-height: 30px;
+    color: rgba(255, 255, 255, .78);
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+.profile-note-detail-modal .profile-note-bottom-dock .profile-note-social-stat strong {
+    color: rgba(255, 255, 255, .90);
+    font-weight: 800;
+}
+
+.profile-note-detail-modal .profile-note-bottom-dock .profile-note-page-nav {
+    gap: 7px;
+    height: auto;
+    padding-right: 0;
+
+}
+
+.profile-note-detail-modal .profile-note-bottom-dock .profile-note-page-nav-btn {
+    flex: 0 0 30px;
+    width: 30px;
+    height: 30px;
+    border: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, .07);
+    color: rgba(255, 255, 255, .80);
+}
+
+.profile-note-detail-modal .profile-note-bottom-dock .profile-note-page-nav-btn:hover:not(:disabled) {
+    background: rgba(255, 255, 255, .14);
+    color: #fff;
+}
+
+.profile-note-detail-modal .profile-note-bottom-dock .profile-note-page-nav > span[data-profile-note-page-count] {
+    min-width: 58px;
+    height: 30px;
+    padding: 0 10px;
+    border: 0;
+    border-radius: 15px;
+    background: rgba(255, 255, 255, .11);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 850;
+}
+
+.profile-note-detail-modal .profile-note-bottom-dock .profile-note-review-toggle {
+    height: 30px;
+    min-height: 30px;
+    padding: 0 9px;
+    border: 0;
+    border-radius: 15px;
+    background: transparent;
+    color: rgba(255, 255, 255, .80);
+    font-size: 12px;
+    font-weight: 850;
+    box-shadow: none;
+}
+
+.profile-note-detail-modal .profile-note-bottom-dock .profile-note-review-toggle:hover {
+    background: rgba(255, 255, 255, .08);
+    color: #fff;
+}
+
+@media (max-width: 860px) {
+    .profile-note-detail-modal .profile-note-bottom-dock {
+        max-width: calc(100vw - 18px);
+        padding: 4px 6px;
+        overflow-x: auto;
+        justify-content: flex-start;
+        scrollbar-width: none;
+    }
+
+    .profile-note-detail-modal .profile-note-bottom-dock::-webkit-scrollbar {
+        display: none;
+    }
+
+    .profile-note-detail-modal .profile-note-bottom-dock .profile-note-dock-section + .profile-note-dock-section {
+        margin-left: 9px;
+        padding-left: 10px;
+    }
+
+    .profile-note-detail-modal .profile-note-view-controls .profile-note-page-size-btn,
+    .profile-note-detail-modal .profile-note-view-controls .profile-note-page-mode-toggle {
+        padding: 0 8px;
+    }
+
+    .profile-note-detail-modal .profile-note-bottom-dock .profile-note-social-stats {
+        gap: 8px;
+    }
+}
+
+@media (max-width: 620px) {
+    .profile-note-detail-modal .profile-note-bottom-dock .profile-note-social-stat-label {
+        display: none;
+    }
+
+    .profile-note-detail-modal .profile-note-view-controls .profile-note-page-mode-toggle span,
+    .profile-note-detail-modal .profile-note-bottom-dock .profile-note-review-toggle span {
+        display: none;
+    }
+}
+
+@media print {
+    .profile-note-bottom-dock {
+        display: none !important;
+    }
+}
+
+/* 2026-07-11: 페이지 이동 중앙 기준 통합 도크 */
+.profile-note-detail-modal .profile-note-bottom-dock {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    align-items: center;
+    width: min(760px, calc(100vw - 32px));
+    padding: 5px 9px;
+}
+
+.profile-note-detail-modal .profile-note-bottom-dock .profile-note-dock-side {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+}
+
+.profile-note-detail-modal .profile-note-bottom-dock .profile-note-dock-left {
+    justify-self: stretch;
+    justify-content: flex-start;
+
+}
+
+.profile-note-detail-modal .profile-note-bottom-dock .profile-note-dock-right {
+    justify-self: stretch;
+    justify-content: flex-end;
+}
+
+.profile-note-detail-modal .profile-note-bottom-dock .profile-note-dock-section + .profile-note-dock-section {
+    margin-left: 0;
+    padding-left: 0;
+    border-left: 0;
+}
+
+.profile-note-detail-modal .profile-note-bottom-dock .profile-note-dock-left .profile-note-social-stats {
+    margin-left: 0;
+    padding-left: 13px;
+    border-left: 1px solid rgba(255, 255, 255, .14);
+}
+
+.profile-note-detail-modal .profile-note-bottom-dock .profile-note-page-nav {
+    grid-column: 2;
+    justify-self: center;
+    margin: 0;
+    padding: 0 14px;
+    border-left: 1px solid rgba(255, 255, 255, .14);
+    border-right: 1px solid rgba(255, 255, 255, .14);
+}
+
+.profile-note-detail-modal .profile-note-bottom-dock .profile-note-comment-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 30px;
+    padding: 0 10px;
+    border: 0;
+    border-radius: 15px;
+    background: transparent;
+    color: rgba(255, 255, 255, .82);
+    font-size: 12px;
+    font-weight: 800;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.profile-note-detail-modal .profile-note-bottom-dock .profile-note-comment-toggle:hover,
+.profile-note-detail-modal .profile-note-bottom-dock .profile-note-comment-toggle[aria-expanded="true"] {
+    background: rgba(255, 255, 255, .09);
+    color: #fff;
+}
+
+.profile-note-detail-modal .profile-note-bottom-dock .profile-note-comment-toggle strong {
+    color: #fff;
+    font-weight: 850;
+}
+
+.profile-note-detail-modal .profile-note-bottom-dock .profile-note-comment-toggle-chevron {
+    margin-left: 2px;
+    font-size: 9px;
+    transition: transform .18s ease;
+}
+
+.profile-note-detail-modal .profile-note-bottom-dock .profile-note-comment-toggle[aria-expanded="true"] .profile-note-comment-toggle-chevron {
+    transform: rotate(180deg);
+}
+
+/* 기존 별도 반응 보기 버튼 규칙 무효화 */
+.profile-note-detail-modal .profile-note-bottom-dock .profile-note-review-toggle {
+    display: none !important;
+}
+
+@media (max-width: 860px) {
+    .profile-note-detail-modal .profile-note-bottom-dock {
+        width: min(720px, calc(100vw - 18px));
+        grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+        overflow: visible;
+    }
+
+    .profile-note-detail-modal .profile-note-bottom-dock .profile-note-dock-left {
+        gap: 8px;
+    }
+
+    .profile-note-detail-modal .profile-note-bottom-dock .profile-note-page-nav {
+        padding: 0 10px;
+    }
+}
+
+@media (max-width: 700px) {
+    .profile-note-detail-modal .profile-note-bottom-dock {
+        width: calc(100vw - 16px);
+    }
+
+    .profile-note-detail-modal .profile-note-bottom-dock .profile-note-social-stat-label,
+    .profile-note-detail-modal .profile-note-bottom-dock .profile-note-comment-toggle > span,
+    .profile-note-detail-modal .profile-note-bottom-dock .profile-note-comment-toggle-chevron {
+        display: none;
+    }
+
+    .profile-note-detail-modal .profile-note-view-controls .profile-note-page-size-btn,
+    .profile-note-detail-modal .profile-note-view-controls .profile-note-page-mode-toggle {
+        padding: 0 7px;
+    }
+}
+
+/* 2026-07-11: 소셜 요약을 우측 그룹으로 통합 */
+.profile-note-detail-modal .profile-note-bottom-dock .profile-note-dock-left {
+    gap: 0;
+}
+
+.profile-note-detail-modal .profile-note-bottom-dock .profile-note-dock-right {
+    gap: 0;
+}
+
+.profile-note-detail-modal .profile-note-bottom-dock .profile-note-dock-right .profile-note-social-stats {
+    margin-left: 0;
+    padding: 0 13px;
+    border-left: 0;
+}
+
+.profile-note-detail-modal .profile-note-bottom-dock .profile-note-dock-right .profile-note-comment-toggle {
+    margin-left: 0;
+    padding-left: 13px;
+    border-left: 1px solid rgba(255, 255, 255, .14);
+    border-radius: 0 15px 15px 0;
+}
+
+@media (max-width: 860px) {
+    .profile-note-detail-modal .profile-note-bottom-dock .profile-note-dock-right .profile-note-social-stats {
+        padding: 0 9px;
+    }
+
+    .profile-note-detail-modal .profile-note-bottom-dock .profile-note-dock-right .profile-note-comment-toggle {
+        padding-left: 9px;
+    }
+}
+
+/* 2026-07-11: 우측 패널을 댓글 전용으로 단순화 */
+.profile-note-detail-modal .profile-note-review-content {
+    gap: 0;
+}
+
+.profile-note-detail-modal .profile-note-review-card--comments {
+    width: 100%;
+    height: 100%;
+    flex: 1 1 100%;
+    min-height: 0;
+}
+
+.profile-note-detail-modal .profile-note-review-card--actions,
+.profile-note-detail-modal .profile-note-detail-feedbar,
+.profile-note-detail-modal .profile-note-review-title {
+    display: none !important;
+}
+
+/* 2026-07-11: 댓글 패널을 화면 전체 높이가 아닌 중간 높이의 플로팅 카드로 조정 */
+@media (min-width: 981px) {
+    .profile-note-detail-modal:not(.is-review-collapsed) .profile-note-review-panel {
+        top: 50% !important;
+        right: 18px !important;
+        bottom: auto !important;
+        height: clamp(500px, 68dvh, 720px) !important;
+        max-height: calc(100dvh - 150px) !important;
+        transform: translateY(-50%) !important;
+    }
+
+    .profile-note-detail-modal:not(.is-review-collapsed) .profile-note-review-content {
+        height: 100% !important;
+        max-height: 100% !important;
+    }
+
+    .profile-note-detail-modal:not(.is-review-collapsed) .profile-note-review-empty {
+        transform: translateY(-6%);
+    }
+}
+
+@media (min-width: 981px) and (max-height: 760px) {
+    .profile-note-detail-modal:not(.is-review-collapsed) .profile-note-review-panel {
+        height: calc(100dvh - 120px) !important;
+        min-height: 430px;
+        max-height: calc(100dvh - 120px) !important;
+    }
+}
+
+/* 2026-07-11: 채팅 플로팅 버튼과 겹치지 않도록 댓글 패널 높이 소폭 축소 */
+@media (min-width: 981px) {
+    .profile-note-detail-modal:not(.is-review-collapsed) .profile-note-review-panel {
+        height: clamp(470px, 62dvh, 660px) !important;
+        max-height: calc(100dvh - 190px) !important;
+    }
+}
+
+@media (min-width: 981px) and (max-height: 760px) {
+    .profile-note-detail-modal:not(.is-review-collapsed) .profile-note-review-panel {
+        height: calc(100dvh - 165px) !important;
+        min-height: 410px;
+        max-height: calc(100dvh - 165px) !important;
+    }
+}
+
+/* MOYO 공개 노트 댓글: 답글 / 좋아요 / 인라인 수정 */
+.profile-note-comment-item.is-reply {
+    margin-left: 34px;
+    padding-left: 10px;
+    border-left: 2px solid rgba(120, 143, 177, 0.16);
+}
+
+.profile-note-comment-item.is-reply .profile-note-comment-avatar {
+    width: 28px;
+    height: 28px;
+}
+
+.profile-note-comment-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 6px;
+}
+
+.profile-note-comment-actions button {
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: #7b8ba2;
+    font-size: 11px;
+    line-height: 1.4;
+    cursor: pointer;
+}
+
+.profile-note-comment-actions button:hover,
+.profile-note-comment-actions button.is-active {
+    color: #ef6377;
+}
+
+.profile-note-comment-inline-form,
+.profile-note-comment-inline-editor {
+    margin: 8px 0 10px 42px;
+    padding: 9px 10px;
+    border: 1px solid #dce5f0;
+    border-radius: 12px;
+    background: #f8fbff;
+}
+
+.profile-note-comment-inline-editor {
+    margin-left: 0;
+}
+
+.profile-note-comment-inline-form textarea,
+.profile-note-comment-inline-editor textarea {
+    width: 100%;
+    min-height: 36px;
+    max-height: 96px;
+    padding: 7px 8px;
+    border: 0;
+    outline: 0;
+    resize: vertical;
+    background: transparent;
+    color: #26364d;
+    font: inherit;
+    line-height: 1.5;
+    box-sizing: border-box;
+}
+
+.profile-note-comment-inline-controls {
+    display: flex;
+    justify-content: flex-end;
+    gap: 6px;
+    margin-top: 6px;
+}
+
+.profile-note-comment-inline-controls button {
+    min-width: 48px;
+    height: 28px;
+    padding: 0 10px;
+    border: 1px solid #d8e2ee;
+    border-radius: 8px;
+    background: #fff;
+    color: #607188;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.profile-note-comment-inline-controls button[type="submit"],
+.profile-note-comment-inline-controls [data-profile-note-edit-save] {
+    border-color: #7ea4db;
+    background: #eef5ff;
+    color: #3f6ea7;
+}
+
+.profile-note-comment-item.is-editing .profile-note-comment-content,
+.profile-note-comment-item.is-editing .profile-note-comment-actions {
+    display: none;
+}
+
+/* 2026-07-11: 노트 댓글 프로필 이미지 원본 크기 노출 방지 */
+.profile-note-detail-modal .profile-note-comment-item {
+    display: grid !important;
+    grid-template-columns: 34px minmax(0, 1fr) !important;
+    align-items: start !important;
+    gap: 10px !important;
+}
+
+.profile-note-detail-modal .profile-note-comment-profile,
+.profile-note-detail-modal .profile-note-comment-avatar {
+    width: 34px !important;
+    height: 34px !important;
+    min-width: 34px !important;
+    max-width: 34px !important;
+    min-height: 34px !important;
+    max-height: 34px !important;
+}
+
+.profile-note-detail-modal .profile-note-comment-profile {
+    display: block !important;
+    overflow: hidden !important;
+    border-radius: 50% !important;
+    text-decoration: none !important;
+}
+
+.profile-note-detail-modal .profile-note-comment-avatar {
+    position: relative !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    overflow: hidden !important;
+    border: 1px solid #e0e7f1 !important;
+    border-radius: 50% !important;
+    background: #eef3fa !important;
+    color: #65758e !important;
+    font-size: 12px !important;
+    font-weight: 900 !important;
+    line-height: 1 !important;
+}
+
+.profile-note-detail-modal .profile-note-comment-avatar > img,
+.profile-note-detail-modal .profile-note-comment-profile img {
+    position: absolute !important;
+    inset: 0 !important;
+    display: block !important;
+    width: 100% !important;
+    height: 100% !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 50% !important;
+    object-fit: cover !important;
+    object-position: center !important;
+}
+
+.profile-note-detail-modal .profile-note-comment-body {
+    min-width: 0 !important;
+    overflow: hidden !important;
+}
+
+/* 2026-07-11: 실제 댓글 존재 시 빈 상태 제거 및 댓글 행/입력 UI 정리 */
+.profile-note-detail-modal [data-profile-note-comment-empty][hidden],
+.profile-note-detail-modal [data-profile-note-comment-list][hidden],
+.profile-note-detail-modal [data-profile-note-comment-loading][hidden] {
+    display: none !important;
+}
+
+.profile-note-detail-modal .profile-note-comment-item {
+    padding: 0 0 14px;
+}
+
+.profile-note-detail-modal .profile-note-comment-item + .profile-note-comment-item {
+    margin-top: 2px;
+}
+
+.profile-note-detail-modal .profile-note-comment-head {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    column-gap: 7px;
+    row-gap: 2px;
+    min-width: 0;
+    line-height: 1.35;
+}
+
+.profile-note-detail-modal .profile-note-comment-name {
+    display: inline-block;
+    min-width: 0;
+    color: #5367a8;
+
+    font-weight: 850;
+    line-height: 1.35;
+    text-decoration: none;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.profile-note-detail-modal .profile-note-comment-name:hover {
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.profile-note-detail-modal .profile-note-comment-head time {
+    flex: 0 0 auto;
+    color: #8e9aae;
+
+    font-weight: 650;
+    white-space: nowrap;
+}
+
+.profile-note-detail-modal .profile-note-comment-content {
+    margin: 6px 0 0;
+    color: #2f3c52;
+
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.profile-note-detail-modal .profile-note-comment-actions {
+
+    margin-top: 7px;
+}
+
+.profile-note-detail-modal .profile-note-comment-actions button {
+    color: #7c899d;
+
+}
+
+.profile-note-detail-modal .profile-note-comment-actions button:hover {
+    color: #4f6381;
+}
+
+.profile-note-detail-modal .profile-note-comment-actions button.is-active {
+    color: #ef6377;
+}
+
+.profile-note-detail-modal .profile-note-review-input textarea,
+.profile-note-detail-modal .profile-note-comment-inline-form textarea,
+.profile-note-detail-modal .profile-note-comment-inline-editor textarea {
+    resize: none !important;
+}
+
+.profile-note-detail-modal .profile-note-review-input textarea {
+    display: block;
+    flex: 1 1 auto;
+
+    max-height: 82px;
+    margin: 0;
+
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: #314057;
+    font: inherit;
+
+}
+
+.profile-note-detail-modal .profile-note-review-input button[type="submit"] {
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+}
+
+/* 2026-07-11: 답글/인라인 수정 입력 UI를 하단 댓글 입력창과 같은 컴팩트 스타일로 통일 */
+.profile-note-detail-modal .profile-note-comment-inline-form,
+.profile-note-detail-modal .profile-note-comment-inline-editor {
+    margin: 7px 0 10px 42px;
+
+    border: 1px solid #dce5f0;
+
+    box-shadow: none;
+    box-sizing: border-box;
+}
+
+.profile-note-detail-modal .profile-note-comment-inline-editor {
+    margin-left: 0;
+}
+
+.profile-note-detail-modal .profile-note-comment-inline-form textarea,
+.profile-note-detail-modal .profile-note-comment-inline-editor textarea {
+    display: block;
+    width: 100%;
+    min-width: 0;
+
+    margin: 0;
+
+    border: 0;
+    border-radius: 8px;
+    outline: 0;
+    resize: none !important;
+    overflow-y: hidden;
+    background: transparent;
+    color: #314057;
+
+    box-sizing: border-box;
+}
+
+.profile-note-detail-modal .profile-note-comment-inline-form textarea::placeholder,
+.profile-note-detail-modal .profile-note-comment-inline-editor textarea::placeholder {
+    color: #96a4b8;
+    white-space: nowrap;
+}
+
+.profile-note-detail-modal .profile-note-comment-inline-controls {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+
+}
+
+.profile-note-detail-modal .profile-note-comment-inline-controls button {
+
+    border: 1px solid transparent;
+
+    background: transparent;
+    color: #7b899c;
+
+    font-weight: 750;
+    line-height: 1;
+}
+
+.profile-note-detail-modal .profile-note-comment-inline-controls button:hover {
+    background: #eef3fa;
+    color: #53657d;
+}
+
+.profile-note-detail-modal .profile-note-comment-inline-controls button[type="submit"],
+.profile-note-detail-modal .profile-note-comment-inline-controls [data-profile-note-edit-save] {
+    border-color: #bfd2ed;
+    background: #eef5ff;
+    color: #4675ad;
+}
+
+.profile-note-detail-modal .profile-note-comment-inline-controls button[type="submit"]:hover,
+.profile-note-detail-modal .profile-note-comment-inline-controls [data-profile-note-edit-save]:hover {
+    border-color: #9ebbe2;
+    background: #e4efff;
+    color: #315f96;
+}
+
+.profile-note-detail-modal .profile-note-comment-actions {
+    gap: 11px;
+}
+
+.profile-note-detail-modal .profile-note-comment-actions button {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+}
+
+/* 2026-07-11: 댓글/답글 위계 및 인라인 작성기 최종 정돈 */
+
+.profile-note-detail-modal .profile-note-comment-inline-form:focus-within,
+.profile-note-detail-modal .profile-note-comment-inline-editor:focus-within {
+    border-color: #c8d8ec;
+    background: #ffffff;
+    box-shadow: 0 0 0 2px rgba(91, 132, 187, 0.08);
+}
+
+.profile-note-detail-modal .profile-note-comment-inline-form textarea,
+.profile-note-detail-modal .profile-note-comment-inline-editor textarea {
+
+    scrollbar-width: thin;
+}
+
+/* 답글은 본댓글보다 한 단계 가볍게 */
+.profile-note-detail-modal .profile-note-comment-item.is-reply {
+    position: relative;
+
+    grid-template-columns: 26px minmax(0, 1fr) !important;
+}
+
+.profile-note-detail-modal .profile-note-comment-item.is-reply::before {
+    content: "";
+    position: absolute;
+
+    width: 1px;
+
+}
+
+.profile-note-detail-modal .profile-note-comment-item.is-reply .profile-note-comment-profile,
+.profile-note-detail-modal .profile-note-comment-item.is-reply .profile-note-comment-avatar {
+    width: 26px !important;
+    height: 26px !important;
+    min-width: 26px !important;
+    max-width: 26px !important;
+    min-height: 26px !important;
+    max-height: 26px !important;
+}
+
+.profile-note-detail-modal .profile-note-comment-item.is-reply .profile-note-comment-name {
+
+    font-weight: 800;
+}
+
+.profile-note-detail-modal .profile-note-comment-item.is-reply .profile-note-comment-actions button {
+    color: #98a3b3;
+
+    font-weight: 650;
+}
+
+.profile-note-detail-modal .profile-note-comment-item.is-reply .profile-note-comment-actions button:hover {
+    color: #66768c;
+}
+
+.profile-note-detail-modal .profile-note-comment-item.is-reply .profile-note-comment-actions button.is-active {
+    color: #ef6377;
+}
+
+/* 답글 등록/수정 저장 버튼과 하단 전송 버튼의 강조 기준 통일 */
+.profile-note-detail-modal .profile-note-comment-inline-controls button[type="submit"],
+.profile-note-detail-modal .profile-note-comment-inline-controls [data-profile-note-edit-save],
+.profile-note-detail-modal .profile-note-review-input button[type="submit"] {
+    border-color: #bed0e8;
+    background: #eef5ff;
+    color: #4775ab;
+}
+
+.profile-note-detail-modal .profile-note-comment-inline-controls button[type="submit"]:hover,
+.profile-note-detail-modal .profile-note-comment-inline-controls [data-profile-note-edit-save]:hover,
+.profile-note-detail-modal .profile-note-review-input button[type="submit"]:hover {
+    border-color: #9fb9dd;
+    background: #e5effd;
+    color: #315f95;
+}
+
+/* 2026-07-11: 댓글 답글 흐름 최종 정돈 */
+.profile-note-detail-modal .profile-note-comment-inline-form,
+.profile-note-detail-modal .profile-note-comment-inline-editor {
+    margin-top: 5px;
+    margin-bottom: 7px;
+    padding: 3px 5px 4px;
+    border-color: #e7edf5;
+    border-radius: 9px;
+    background: rgba(249, 251, 254, 0.78);
+}
+
+.profile-note-detail-modal .profile-note-comment-inline-form {
+    margin-left: 36px;
+}
+
+.profile-note-detail-modal .profile-note-comment-inline-form textarea,
+.profile-note-detail-modal .profile-note-comment-inline-editor textarea {
+    min-height: 25px;
+    max-height: 68px;
+    padding: 3px 5px;
+    font-size: 10.5px;
+    line-height: 1.38;
+}
+
+.profile-note-detail-modal .profile-note-comment-inline-controls {
+    gap: 3px;
+    margin-top: 0;
+}
+
+.profile-note-detail-modal .profile-note-comment-inline-controls button {
+    min-width: 32px;
+    height: 20px;
+    padding: 0 6px;
+    border-radius: 6px;
+
+}
+
+/* 부모 댓글 아래 답글들은 하나의 연속된 스레드처럼 보이도록 연결선과 간격을 통일 */
+.profile-note-detail-modal .profile-note-comment-item.is-reply {
+    margin-left: 38px;
+    margin-bottom: 0;
+    padding: 3px 0 7px 11px;
+}
+
+.profile-note-detail-modal .profile-note-comment-item.is-reply::before {
+    left: -8px;
+    top: -7px;
+    bottom: -7px;
+    background: #e3e9f1;
+}
+
+.profile-note-detail-modal .profile-note-comment-item.is-reply:last-child::before {
+    bottom: 10px;
+}
+
+.profile-note-detail-modal .profile-note-comment-item.is-reply + .profile-note-comment-item.is-reply {
+    margin-top: 0;
+    padding-top: 5px;
+}
+
+.profile-note-detail-modal .profile-note-comment-item.is-reply .profile-note-comment-head {
+    gap: 6px;
+}
+
+.profile-note-detail-modal .profile-note-comment-item.is-reply .profile-note-comment-head time {
+    margin-left: 1px;
+    color: #a0acbb;
+}
+
+.profile-note-detail-modal .profile-note-comment-item.is-reply .profile-note-comment-content {
+    margin-top: 3px;
+    margin-bottom: 0;
+}
+
+.profile-note-detail-modal .profile-note-comment-item.is-reply .profile-note-comment-actions {
+    gap: 7px;
+    margin-top: 4px;
+}
+
+/* 댓글 좋아요는 활성 여부만 구분하고 수치 강조는 한 단계 낮춤 */
+.profile-note-detail-modal .profile-note-comment-actions button.is-active,
+.profile-note-detail-modal .profile-note-comment-item.is-reply .profile-note-comment-actions button.is-active {
+    color: #df7180;
+}
+
+.profile-note-detail-modal .profile-note-comment-actions button {
+    font-weight: 650;
+}
+
+/* 하단 전송 버튼을 답글 등록 버튼과 같은 둥근 강조 스타일로 통일 */
+.profile-note-detail-modal .profile-note-review-input button[type="submit"] {
+
+    flex-basis: 30px;
+
+}
+
+/* 2026-07-11: 댓글 패널 텍스트 가독성 보정 */
+.profile-note-detail-modal .profile-note-review-card-title,
+.profile-note-detail-modal .profile-note-review-card--comments .profile-note-review-card-title {
+    font-size: 14px;
+}
+
+.profile-note-detail-modal .profile-note-comment-name {
+    font-size: 13px;
+}
+
+.profile-note-detail-modal .profile-note-comment-head time {
+    font-size: 11px;
+}
+
+.profile-note-detail-modal .profile-note-comment-content {
+    font-size: 13px;
+    line-height: 1.55;
+}
+
+.profile-note-detail-modal .profile-note-comment-actions button {
+    font-size: 11px;
+}
+
+.profile-note-detail-modal .profile-note-comment-inline-form textarea,
+.profile-note-detail-modal .profile-note-comment-inline-editor textarea,
+.profile-note-detail-modal .profile-note-review-input textarea {
+    font-size: 12px;
+}
+
+.profile-note-detail-modal .profile-note-comment-inline-controls button {
+    font-size: 10px;
+}
+
+.profile-note-detail-modal .profile-note-comment-item.is-reply .profile-note-comment-name {
+    font-size: 12px;
+}
+
+.profile-note-detail-modal .profile-note-comment-item.is-reply .profile-note-comment-head time {
+    font-size: 10px;
+}
+
+.profile-note-detail-modal .profile-note-comment-item.is-reply .profile-note-comment-content {
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.profile-note-detail-modal .profile-note-comment-item.is-reply .profile-note-comment-actions button {
+    font-size: 10.5px;
+}
+
+.profile-note-detail-modal .profile-note-review-count,
+.profile-note-detail-modal [data-profile-note-comment-count] {
+    font-size: 11px;
+}
+
+/* 2026-07-11: 사진 댓글과 동일한 하단 공통 작성기 */
+.profile-note-detail-modal .profile-note-review-input {
+
+    column-gap: 8px;
+    row-gap: 6px;
+}
+
+.profile-note-detail-modal .profile-note-comment-composer-status {
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-width: 0;
+    margin: -2px -2px 0;
+    padding: 0 2px 6px;
+    border-bottom: 1px solid #e4ebf5;
+    color: #61718a;
+    font-size: 11px;
+    font-weight: 800;
+    line-height: 1.35;
+}
+
+.profile-note-detail-modal .profile-note-comment-composer-status span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.profile-note-detail-modal .profile-note-comment-composer-status button {
+    flex: 0 0 auto;
+    margin-left: 10px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: #7f8ca0;
+    font: inherit;
+    cursor: pointer;
+}
+
+.profile-note-detail-modal .profile-note-comment-composer-status button:hover {
+    color: #425775;
+}
+
+.profile-note-detail-modal .profile-note-comment-mention {
+    color: #3975c6;
+    font-weight: 800;
+}
+
+/* 2026-07-11: 노트 댓글 @멘션 자동완성 */
+
+.profile-note-detail-modal .profile-note-comment-mention-list {
+    position: absolute;
+    left: 0;
+
+    bottom: calc(100% + 6px);
+    z-index: 20;
+    max-height: 188px;
+    overflow-y: auto;
+    padding: 7px;
+    border: 1px solid #dfe7f2;
+    border-radius: 13px;
+    background: #fff;
+    box-shadow: 0 14px 34px rgba(31, 42, 68, .16);
+}
+
+.profile-note-detail-modal .profile-note-comment-mention-list[hidden] {
+    display: none;
+}
+
+.profile-note-detail-modal .profile-note-comment-mention-option {
+    width: 100%;
+    min-height: 38px;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 5px 8px;
+    border: 0;
+    border-radius: 9px;
+    background: transparent;
+    color: #26324a;
+    text-align: left;
+    cursor: pointer;
+}
+
+.profile-note-detail-modal .profile-note-comment-mention-option:hover,
+.profile-note-detail-modal .profile-note-comment-mention-option.is-active {
+    background: #f2f6ff;
+}
+
+.profile-note-detail-modal .profile-note-comment-mention-avatar {
+    width: 26px;
+    height: 26px;
+    flex: 0 0 26px;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    border: 1px solid #e0e8f3;
+    border-radius: 50%;
+    background: #edf3fb;
+    color: #63748e;
+    font-size: 11px;
+    font-weight: 900;
+}
+
+.profile-note-detail-modal .profile-note-comment-mention-avatar img {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+}
+
+.profile-note-detail-modal .profile-note-comment-mention-option strong {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: #3975c6;
+    font-size: 12px;
+    font-weight: 850;
+}
+
+.profile-note-detail-modal .profile-note-comment-mention-empty {
+    padding: 10px;
+    color: #8a97aa;
+    font-size: 11px;
+    font-weight: 700;
+    text-align: center;
+}
+
+/* 2026-07-11: 공유 비행기 아이콘과 댓글 등록 동작의 의미 충돌 제거 */
+.profile-note-detail-modal .profile-note-review-input button[type="submit"] {
+
+    border: 0;
+
+    background: linear-gradient(135deg, var(--moyo-mint, #63dbc7), var(--moyo-blue, #4778f2) 72%, var(--moyo-violet, #7b73f5));
+    color: #fff;
+    font-size: 12px;
+    font-weight: 800;
+    line-height: 1;
+
+}
+
+.profile-note-detail-modal .profile-note-review-input button[type="submit"]:hover {
+    border-color: transparent;
+    background: linear-gradient(135deg, var(--moyo-mint, #58d5bf), var(--moyo-blue, #3f70e8) 72%, var(--moyo-violet, #7169ed));
+    color: #fff;
+    transform: translateY(-1px);
+}
+
+.profile-note-detail-modal .profile-note-review-input button[type="submit"]:active {
+    transform: translateY(0);
+}
+
+.profile-note-detail-modal .profile-note-review-input button[type="submit"]:disabled {
+    opacity: .55;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* 2026-07-11: 댓글 입력창과 등록 버튼을 겹치지 않는 독립 열로 정렬 */
+.profile-note-detail-modal .profile-note-review-input {
+    display: grid;
+
+    align-items: center;
+
+    box-sizing: border-box;
+}
+
+.profile-note-detail-modal .profile-note-review-input textarea {
+    grid-column: 1;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    padding-right: 4px;
+
+}
+
+.profile-note-detail-modal .profile-note-review-input button[type="submit"] {
+    grid-column: 2;
+    position: static;
+    inset: auto;
+
+    flex: none;
+    margin: 0;
+
+    box-sizing: border-box;
+    white-space: nowrap;
+}
+
+.profile-note-detail-modal .profile-note-comment-composer-status {
+    grid-column: 1 / -1;
+}
+
+.profile-note-detail-modal .profile-note-comment-mention-list {
+    right: 0;
+}
+
+/* 2026-07-11: 댓글 입력창·등록 버튼 최종 비율 정리 */
+
+.profile-note-detail-modal .profile-note-review-input button[type="submit"] {
+
+    box-shadow: 0 3px 8px rgba(71, 120, 242, .14);
+}
+
+/* 2026-07-11: 댓글 입력창 내부 여백과 등록 버튼 정렬 보정 */
+.profile-note-detail-modal .profile-note-review-input {
+    grid-template-columns: minmax(0, 1fr) 44px;
+    gap: 4px;
+    min-height: 42px;
+    padding: 6px 8px;
+}
+
+.profile-note-detail-modal .profile-note-review-input textarea {
+    min-height: 30px;
+    height: 30px;
+    padding: 5px 9px;
+    line-height: 20px;
+    border-radius: 9px;
+    box-sizing: border-box;
+}
+
+.profile-note-detail-modal .profile-note-review-input textarea::placeholder {
+    line-height: 20px;
+}
+
+.profile-note-detail-modal .profile-note-review-input button[type="submit"] {
+    width: 44px;
+    min-width: 44px;
+    height: 30px;
+    padding: 0 7px;
+    border-radius: 9px;
+}
+
+/* 2026-07-11: 댓글 목록 독립 스크롤과 첫/마지막 댓글 여백 보정 */
+.profile-note-detail-modal .profile-note-review-card--comments {
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+}
+
+.profile-note-detail-modal .profile-note-review-headline {
+    position: relative;
+    z-index: 2;
+    flex: 0 0 auto;
+    background: #fff;
+}
+
+.profile-note-detail-modal .profile-note-comment-list {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 14px 18px 20px 14px !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    overscroll-behavior: contain;
+    scroll-padding-top: 14px;
+    scroll-padding-bottom: 20px;
+    scrollbar-gutter: stable;
+    box-sizing: border-box;
+}
+
+.profile-note-detail-modal .profile-note-comment-list > .profile-note-comment-item:first-child {
+    margin-top: 0 !important;
+}
+
+.profile-note-detail-modal .profile-note-comment-list > .profile-note-comment-item:last-child {
+    padding-bottom: 10px !important;
+}
+
+.profile-note-detail-modal .profile-note-comment-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.profile-note-detail-modal .profile-note-comment-list::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.profile-note-detail-modal .profile-note-comment-list::-webkit-scrollbar-thumb {
+    border-radius: 999px;
+    background: rgba(116, 128, 146, 0.46);
+}
+
+.profile-note-detail-modal .profile-note-comment-list::-webkit-scrollbar-thumb:hover {
+    background: rgba(96, 109, 129, 0.62);
+}
+
+.profile-note-detail-modal .profile-note-review-input {
+    position: relative;
+    z-index: 2;
+    flex: 0 0 auto !important;
+    background: #fff;
+}
+
+/* 노트 전체 좋아요 버튼 */
+.profile-note-social-stat.is-like {
+    appearance: none;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+}
+.profile-note-social-stat.is-like:hover { color: #ff6b86; }
+.profile-note-social-stat.is-like.is-active { color: #ff5f7f; }
+.profile-note-social-stat.is-like:disabled { opacity: .55; cursor: wait; }

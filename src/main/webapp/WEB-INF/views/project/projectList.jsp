@@ -5,13 +5,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>${workspace.wsName} 프로젝트 - MOYO</title>
+    <title><c:choose><c:when test="${personalMode}">개인 프로젝트</c:when><c:otherwise><c:out value="${workspace.wsName}"/> 프로젝트</c:otherwise></c:choose> - MOYO</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/moyoUi.css">
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/projectList.css?v=project-list-select-clean-v8">
-    <script defer src="${pageContext.request.contextPath}/js/projectList.js?v=project-list-select-clean-v8"></script>
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/projectList.css?v=project-list-final-density-v16">
+    <script defer src="${pageContext.request.contextPath}/js/projectList.js?v=project-list-final-density-v16"></script>
 </head>
 <body class="moyo-app-sidebar-enabled project-list-body"
-      data-initial-status="${empty param.status ? 'ALL' : param.status}">
+      data-initial-status="${empty param.status ? 'ALL' : param.status}" data-list-mode="${listMode}">
     <jsp:include page="/WEB-INF/views/common/header.jsp" />
 
     <c:set var="scheduledCount" value="0" />
@@ -28,13 +28,13 @@
     <main class="project-list-container">
         <section class="project-list-hero">
             <div>
-                <span class="project-list-type">${workspace.wsName}</span>
-                <h1>프로젝트 목록</h1>
-                <p>진행 중인 프로젝트부터 예정·완료 기록까지 한곳에서 관리합니다.</p>
+                <span class="project-list-type"><c:choose><c:when test="${personalMode}">나만의 프로젝트</c:when><c:otherwise><c:out value="${workspace.wsName}"/></c:otherwise></c:choose></span>
+                <h1><c:choose><c:when test="${personalMode}">개인 프로젝트</c:when><c:otherwise>프로젝트 목록</c:otherwise></c:choose></h1>
+                <p><c:choose><c:when test="${personalMode}">혼자 진행하는 프로젝트의 일정과 업무를 관리합니다.</c:when><c:otherwise>진행 중인 프로젝트부터 예정·완료 기록까지 한곳에서 관리합니다.</c:otherwise></c:choose></p>
             </div>
             <div class="project-list-hero-actions">
-                <a class="project-list-back" href="${pageContext.request.contextPath}/workspace/main?wsId=${workspace.wsId}">워크스페이스 홈</a>
-                <a class="project-list-create" href="${pageContext.request.contextPath}/project/create?wsId=${workspace.wsId}">+ 프로젝트 생성</a>
+                <c:if test="${not personalMode}"><a class="project-list-back" href="${pageContext.request.contextPath}/workspace/main?wsId=${wsId}">그룹 홈</a></c:if>
+                <a class="project-list-create" href="${pageContext.request.contextPath}/project/create${personalMode ? '' : '?wsId='}${personalMode ? '' : wsId}"><c:choose><c:when test="${personalMode}">+ 새 프로젝트 만들기</c:when><c:otherwise>+ 프로젝트 생성</c:otherwise></c:choose></a>
             </div>
         </section>
 
@@ -63,8 +63,13 @@
             </div>
             <div class="project-list-tools">
                 <label class="project-list-search">
-                    <span aria-hidden="true">🔍</span>
-                    <input id="projectListSearch" type="search" placeholder="프로젝트명 또는 멤버 검색" autocomplete="off">
+                    <span class="project-list-search-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="11" cy="11" r="6.5" stroke="currentColor" stroke-width="1.8"/>
+                            <path d="M16 16L20 20" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                        </svg>
+                    </span>
+                    <input id="projectListSearch" type="search" placeholder="${personalMode ? '프로젝트명 또는 설명 검색' : '프로젝트명 또는 멤버 검색'}" autocomplete="off">
                 </label>
                 <select id="projectListSort" aria-label="프로젝트 정렬">
                     <option value="DEFAULT">기본 정렬</option>
@@ -95,7 +100,7 @@
                                          data-id="${project.PROJ_ID}"
                                          data-start="${project.START_DATE}"
                                          data-end="${project.END_DATE}">
-                                    <a class="project-list-link" href="${pageContext.request.contextPath}/project/main?projId=${project.PROJ_ID}&wsId=${workspace.wsId}">
+                                    <a class="project-list-link" href="${pageContext.request.contextPath}/project/main?projId=${project.PROJ_ID}${personalMode ? '' : '&wsId='}${personalMode ? '' : wsId}">
                                         <div class="project-card-top">
                                             <span class="project-status-text is-progress">진행 중</span>
                                             <span class="project-card-type">
@@ -114,9 +119,16 @@
                                         <p class="project-description">${empty project.PROJ_DESC ? '등록된 프로젝트 설명이 없습니다.' : project.PROJ_DESC}</p>
                                         <dl class="project-meta">
                                             <div><dt>기간</dt><dd>${empty project.START_DATE ? '미설정' : project.START_DATE} ~ ${empty project.END_DATE ? '미정' : project.END_DATE}</dd></div>
-                                            <div><dt>팀장</dt><dd>${empty project.LEADER_NAME ? '-' : project.LEADER_NAME}</dd></div>
-                                            <div><dt>인원</dt><dd>${project.MEMBER_COUNT}명</dd></div>
-                                            <div class="project-member-row"><dt>멤버</dt><dd class="project-member-names">${empty project.MEMBER_NAMES ? '-' : project.MEMBER_NAMES}</dd></div>
+                                            <c:choose>
+                                                <c:when test="${personalMode}">
+                                                    <div><dt>업무</dt><dd><c:choose><c:when test="${project.TASK_TOTAL gt 0}">${project.TASK_DONE} / ${project.TASK_TOTAL} 완료</c:when><c:otherwise>등록된 업무 없음</c:otherwise></c:choose></dd></div>
+                                                </c:when>
+                                                <c:otherwise>
+                                                    <div><dt>팀장</dt><dd>${empty project.LEADER_NAME ? '-' : project.LEADER_NAME}</dd></div>
+                                                    <div><dt>인원</dt><dd>${project.MEMBER_COUNT}명</dd></div>
+                                                    <div class="project-member-row"><dt>멤버</dt><dd class="project-member-names">${empty project.MEMBER_NAMES ? '-' : project.MEMBER_NAMES}</dd></div>
+                                                </c:otherwise>
+                                            </c:choose>
                                         </dl>
                                         <span class="project-enter">프로젝트 열기 →</span>
                                     </a>
@@ -144,7 +156,7 @@
                                          data-id="${project.PROJ_ID}"
                                          data-start="${project.START_DATE}"
                                          data-end="${project.END_DATE}">
-                                    <a class="project-list-link" href="${pageContext.request.contextPath}/project/main?projId=${project.PROJ_ID}&wsId=${workspace.wsId}">
+                                    <a class="project-list-link" href="${pageContext.request.contextPath}/project/main?projId=${project.PROJ_ID}${personalMode ? '' : '&wsId='}${personalMode ? '' : wsId}">
                                         <div class="project-card-top">
                                             <span class="project-status-text is-scheduled">예정</span>
                                             <span class="project-card-type">
@@ -163,9 +175,16 @@
                                         <p class="project-description">${empty project.PROJ_DESC ? '등록된 프로젝트 설명이 없습니다.' : project.PROJ_DESC}</p>
                                         <dl class="project-meta">
                                             <div><dt>기간</dt><dd>${empty project.START_DATE ? '미설정' : project.START_DATE} ~ ${empty project.END_DATE ? '미정' : project.END_DATE}</dd></div>
-                                            <div><dt>팀장</dt><dd>${empty project.LEADER_NAME ? '-' : project.LEADER_NAME}</dd></div>
-                                            <div><dt>인원</dt><dd>${project.MEMBER_COUNT}명</dd></div>
-                                            <div class="project-member-row"><dt>멤버</dt><dd class="project-member-names">${empty project.MEMBER_NAMES ? '-' : project.MEMBER_NAMES}</dd></div>
+                                            <c:choose>
+                                                <c:when test="${personalMode}">
+                                                    <div><dt>업무</dt><dd><c:choose><c:when test="${project.TASK_TOTAL gt 0}">${project.TASK_DONE} / ${project.TASK_TOTAL} 완료</c:when><c:otherwise>등록된 업무 없음</c:otherwise></c:choose></dd></div>
+                                                </c:when>
+                                                <c:otherwise>
+                                                    <div><dt>팀장</dt><dd>${empty project.LEADER_NAME ? '-' : project.LEADER_NAME}</dd></div>
+                                                    <div><dt>인원</dt><dd>${project.MEMBER_COUNT}명</dd></div>
+                                                    <div class="project-member-row"><dt>멤버</dt><dd class="project-member-names">${empty project.MEMBER_NAMES ? '-' : project.MEMBER_NAMES}</dd></div>
+                                                </c:otherwise>
+                                            </c:choose>
                                         </dl>
                                         <span class="project-enter">프로젝트 열기 →</span>
                                     </a>
@@ -193,7 +212,7 @@
                                          data-id="${project.PROJ_ID}"
                                          data-start="${project.START_DATE}"
                                          data-end="${project.END_DATE}">
-                                    <a class="project-list-link" href="${pageContext.request.contextPath}/project/main?projId=${project.PROJ_ID}&wsId=${workspace.wsId}">
+                                    <a class="project-list-link" href="${pageContext.request.contextPath}/project/main?projId=${project.PROJ_ID}${personalMode ? '' : '&wsId='}${personalMode ? '' : wsId}">
                                         <div class="project-card-top">
                                             <span class="project-status-text is-completed">완료</span>
                                             <span class="project-card-type">
@@ -212,9 +231,16 @@
                                         <p class="project-description">${empty project.PROJ_DESC ? '등록된 프로젝트 설명이 없습니다.' : project.PROJ_DESC}</p>
                                         <dl class="project-meta">
                                             <div><dt>기간</dt><dd>${empty project.START_DATE ? '미설정' : project.START_DATE} ~ ${empty project.END_DATE ? '미정' : project.END_DATE}</dd></div>
-                                            <div><dt>팀장</dt><dd>${empty project.LEADER_NAME ? '-' : project.LEADER_NAME}</dd></div>
-                                            <div><dt>인원</dt><dd>${project.MEMBER_COUNT}명</dd></div>
-                                            <div class="project-member-row"><dt>멤버</dt><dd class="project-member-names">${empty project.MEMBER_NAMES ? '-' : project.MEMBER_NAMES}</dd></div>
+                                            <c:choose>
+                                                <c:when test="${personalMode}">
+                                                    <div><dt>업무</dt><dd><c:choose><c:when test="${project.TASK_TOTAL gt 0}">${project.TASK_DONE} / ${project.TASK_TOTAL} 완료</c:when><c:otherwise>등록된 업무 없음</c:otherwise></c:choose></dd></div>
+                                                </c:when>
+                                                <c:otherwise>
+                                                    <div><dt>팀장</dt><dd>${empty project.LEADER_NAME ? '-' : project.LEADER_NAME}</dd></div>
+                                                    <div><dt>인원</dt><dd>${project.MEMBER_COUNT}명</dd></div>
+                                                    <div class="project-member-row"><dt>멤버</dt><dd class="project-member-names">${empty project.MEMBER_NAMES ? '-' : project.MEMBER_NAMES}</dd></div>
+                                                </c:otherwise>
+                                            </c:choose>
                                         </dl>
                                         <span class="project-enter">프로젝트 열기 →</span>
                                     </a>

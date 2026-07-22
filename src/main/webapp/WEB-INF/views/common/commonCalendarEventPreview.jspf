@@ -1,0 +1,90 @@
+<%@ page pageEncoding="UTF-8" %>
+<div class="moyo-event-view-overlay" id="calendarViewModal" hidden>
+    <article class="moyo-event-view-card" role="dialog" aria-modal="true" aria-labelledby="calendarViewTitle">
+        <header class="moyo-event-view-head">
+            <div class="moyo-event-view-head-main">
+                <div class="moyo-event-view-kicker"><span class="moyo-event-view-dot" id="calendarViewTypeDot"></span><span id="calendarViewMeta">일정</span></div>
+                <div class="moyo-event-view-title-row">
+                    <h2 class="moyo-event-view-title" id="calendarViewTitle">일정</h2>
+                    <span class="moyo-event-view-type-icon" id="calendarViewTypeIcon" aria-hidden="true"><i class="fa-regular fa-calendar"></i></span>
+                    <span class="moyo-event-view-public-badge" id="calendarViewMoyoBadge" title="MOYO 공개" hidden>
+                        <img id="calendarViewMascot" src="" alt="" aria-hidden="true">
+                    </span>
+                </div>
+            </div>
+            <div class="moyo-event-view-head-actions">
+                <button type="button" class="moyo-event-view-head-btn moyo-event-view-edit" id="calendarViewEdit" aria-label="수정" title="수정" hidden>
+                    <i class="fa-solid fa-pencil" aria-hidden="true"></i>
+                </button>
+                <button type="button" class="moyo-event-view-head-btn moyo-event-view-delete" id="calendarViewDelete" aria-label="삭제" title="삭제" hidden>
+                    <i class="fa-regular fa-trash-can" aria-hidden="true"></i>
+                </button>
+                <button type="button" class="moyo-event-view-head-btn moyo-event-view-share" id="calendarViewShareBtn" aria-label="공유" title="공유" hidden>
+                    <i class="fa-regular fa-paper-plane" aria-hidden="true"></i>
+                </button>
+                <button type="button" class="moyo-event-view-head-btn moyo-event-view-close" id="calendarViewClose" aria-label="닫기" title="닫기">
+                    <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+                </button>
+            </div>
+        </header>
+        <div class="moyo-event-view-author" id="calendarViewAuthorRow" hidden>
+            <div class="moyo-event-view-author-main">
+                <span class="moyo-event-view-author-avatar" id="calendarViewAuthorAvatar" aria-hidden="true"></span>
+                <span class="moyo-event-view-author-name" id="calendarViewAuthorName"></span>
+            </div>
+            <span class="moyo-event-view-author-scope" id="calendarViewAuthorScope"></span>
+        </div>
+        <div class="moyo-event-view-body">
+            <section class="moyo-event-view-section time">
+                <div class="moyo-event-view-row-icon" aria-hidden="true"><i class="fa-regular fa-clock"></i></div>
+                <div class="moyo-event-view-content" id="calendarViewTimeInfo"></div>
+            </section>
+            <section class="moyo-event-view-section location" id="calendarViewLocationSection">
+                <div class="moyo-event-view-row-icon" aria-hidden="true"><i class="fa-solid fa-location-dot"></i></div>
+                <div class="moyo-event-view-content moyo-event-view-textbox" id="calendarViewLocation"></div>
+            </section>
+            <section class="moyo-event-view-section attendees" id="calendarViewAttendeesSection">
+                <div class="moyo-event-view-row-icon" aria-hidden="true"><i class="fa-solid fa-users"></i></div>
+                <div class="moyo-event-view-content moyo-event-view-people" id="calendarViewAttendees"></div>
+            </section>
+            <section class="moyo-event-view-section description" id="calendarViewDescriptionSection">
+                <div class="moyo-event-view-row-icon" aria-hidden="true"><i class="fa-regular fa-note-sticky"></i></div>
+                <div class="moyo-event-view-content moyo-event-view-textbox" id="calendarViewDescription"></div>
+            </section>
+        </div>
+    </article>
+</div>
+
+<div class="moyo-event-view-delete-modal" id="calendarViewDeleteModal" hidden>
+    <section class="moyo-event-view-delete-panel" role="dialog" aria-modal="true" aria-labelledby="calendarViewDeleteTitle">
+        <div class="moyo-event-view-delete-head">
+            <div>
+                <h3 id="calendarViewDeleteTitle">일정 삭제</h3>
+                <p id="calendarViewDeleteMessage">이 일정을 정말 삭제하시겠습니까?</p>
+            </div>
+            <button type="button" class="moyo-event-view-delete-close" data-calendar-view-delete-close aria-label="닫기">
+                <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+            </button>
+        </div>
+        <div class="moyo-event-view-delete-body" id="calendarViewDeleteRepeatBody" hidden>
+            <div class="moyo-event-view-delete-options" role="radiogroup" aria-label="반복 일정 삭제 범위">
+                <label class="moyo-event-view-delete-option">
+                    <input type="radio" name="calendarViewDeleteScope" value="ONE" checked>
+                    <span><strong>이 일정만 삭제</strong><span>선택한 날짜의 일정만 삭제합니다.</span></span>
+                </label>
+                <label class="moyo-event-view-delete-option">
+                    <input type="radio" name="calendarViewDeleteScope" value="FUTURE">
+                    <span><strong>이 날짜 이후 삭제</strong><span>선택한 날짜부터 이후 반복 일정을 삭제합니다.</span></span>
+                </label>
+                <label class="moyo-event-view-delete-option">
+                    <input type="radio" name="calendarViewDeleteScope" value="ALL">
+                    <span><strong>전체 반복 삭제</strong><span>이 반복 일정 전체를 삭제합니다.</span></span>
+                </label>
+            </div>
+        </div>
+        <div class="moyo-event-view-delete-actions">
+            <button type="button" class="moyo-event-view-delete-btn" data-calendar-view-delete-close>취소</button>
+            <button type="button" class="moyo-event-view-delete-btn danger" id="calendarViewDeleteConfirm">삭제</button>
+        </div>
+    </section>
+</div>

@@ -134,10 +134,17 @@ public class boardViewController {
             Model model,
             HttpSession session) {
 
+        boolean canManageBoard = canManagePin(wsId, projId, session);
+        if ("NOTICE".equalsIgnoreCase(type) && !canManageBoard) {
+            return "redirect:/group/board/list?wsId=" + wsId
+                    + (projId != null ? "&projId=" + projId : "")
+                    + "&type=NOTICE&error=notice_forbidden";
+        }
+
         model.addAttribute("wsId", wsId);
         model.addAttribute("boardType", type);
         model.addAttribute("projId", projId);
-        model.addAttribute("canManageBoard", canManagePin(wsId, projId, session));
+        model.addAttribute("canManageBoard", canManageBoard);
 
         return "board/boardWrite";
     }
@@ -188,6 +195,12 @@ public class boardViewController {
         if (projId != null) post.setProjId(projId);
 
         boolean canManage = iboardService.canManageBoardPin(wsId, projId, loginUser.getUserId());
+        if ("NOTICE".equalsIgnoreCase(boardType) && !canManage) {
+            return "redirect:/group/board/list?wsId=" + wsId
+                    + (projId != null ? "&projId=" + projId : "")
+                    + "&type=NOTICE&error=notice_forbidden";
+        }
+
         if (canManage && "Y".equalsIgnoreCase(isPinned)) {
             post.setIsPinned("Y");
             post.setPinStartDt(pinStartDt);

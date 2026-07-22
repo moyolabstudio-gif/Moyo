@@ -129,13 +129,16 @@
         const email = escapeHtml(user.email || '');
         const initial = name.substring(0, 1).toUpperCase();
         const shareBadge = options.shareable ? '<span class="friend-share-badge">공유 가능</span>' : '';
+        const profileUrl = `/users/profile?userId=${encodeURIComponent(user.userId || '')}`;
         return `
             <div class="friend-row">
-                <div class="friend-avatar">${escapeHtml(initial)}</div>
-                <div class="friend-info">
-                    <div class="friend-info-main"><strong>${name}</strong>${shareBadge}</div>
-                    <span>${email}</span>
-                </div>
+                <a class="friend-profile-link" href="${profileUrl}" aria-label="${name} 프로필 보기">
+                    <div class="friend-avatar">${escapeHtml(initial)}</div>
+                    <div class="friend-info">
+                        <div class="friend-info-main"><strong>${name}</strong>${shareBadge}</div>
+                        <span>${email}</span>
+                    </div>
+                </a>
                 <div class="friend-actions">${actionHtml}</div>
             </div>
         `;

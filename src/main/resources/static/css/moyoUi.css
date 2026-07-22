@@ -1,7 +1,14 @@
 :root {
     --moyo-primary: #4A90E2;
     --moyo-primary-hover: #397fca;
+    --moyo-blue: var(--moyo-primary);
     --moyo-mint: #39CDB5;
+    --moyo-purple: #8b5cf6;
+    --moyo-personal: var(--moyo-blue);
+    --moyo-friend: #f6b642;
+    --moyo-friend-deep: #d99a17;
+    --moyo-group: var(--moyo-mint);
+    --moyo-project: var(--moyo-purple);
     --moyo-danger: #ef5b67;
     --moyo-danger-hover: #dc4554;
     --moyo-text: #1f2937;

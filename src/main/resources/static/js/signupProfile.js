@@ -78,13 +78,9 @@
         if (!targetCanvas || !targetCtx || !targetImage) return { x: 0, y: 0 };
         const rect = getImageDrawRect(targetCanvas, targetImage, targetScale, offsets);
 
-        // 저장되는 최종 프로필 이미지는 회원가입 미리보기와 같은 기준으로 생성한다.
-        // 투명 PNG/WEBP가 화면마다 검정/파랑 배경으로 비쳐 보이지 않도록,
-        // 최종 crop 이미지 자체에 흰 배경을 포함한다.
         targetCtx.clearRect(0, 0, targetCanvas.width, targetCanvas.height);
         targetCtx.save();
-        targetCtx.fillStyle = PROFILE_PREVIEW_BACKGROUND;
-        targetCtx.fillRect(0, 0, targetCanvas.width, targetCanvas.height);
+        // 투명 PNG/WEBP의 알파 채널을 최종 크롭 이미지에도 유지한다.
         targetCtx.drawImage(targetImage, rect.x, rect.y, rect.drawW, rect.drawH);
         targetCtx.restore();
 

@@ -240,6 +240,21 @@
             mount();
         }
 
+        // 외부 공통 상세(사진/프로필 등)에서는 숨김 버튼 click 이벤트보다
+        // 직접 open API를 호출하는 쪽이 안정적이다. 기존 버튼 방식도 유지한다.
+        return {
+            openShare() {
+                mount();
+                openModal('SHARE');
+            },
+            openPermission() {
+                mount();
+                openModal('PERMISSION');
+            },
+            close() {
+                closeModal();
+            }
+        };
 
         function lockCommonShareNamespace(modal) {
             if (!modal) return;

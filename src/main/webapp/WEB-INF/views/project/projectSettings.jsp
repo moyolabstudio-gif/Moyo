@@ -12,15 +12,17 @@
     <jsp:include page="/WEB-INF/views/common/header.jsp" />
 
     <div class="settings-page project-settings-page">
-        <header class="settings-hero">
-            <div>
-                <span class="settings-kicker">프로젝트 설정</span>
-                <h1>${projectDetail.projName}</h1>
-                <p>프로젝트 정보, 외부 링크와 멤버 권한을 관리합니다.</p>
+        <header class="settings-hero project-settings-hero">
+            <div class="settings-hero-main project-settings-hero-main">
+                <div class="settings-hero-copy">
+                    <span class="settings-kicker">프로젝트 설정</span>
+                    <h1><c:out value="${projectDetail.projName}"/></h1>
+                    <p>프로젝트 정보, 외부 링크와 멤버 권한을 관리합니다.</p>
+                </div>
             </div>
 
             <div class="settings-hero-actions">
-                <button type="button" class="btn ghost" onclick="goProjectMain()">프로젝트 홈</button>
+                <button type="button" class="settings-back-link" onclick="goProjectMain()">프로젝트 홈</button>
             </div>
         </header>
 
@@ -304,7 +306,7 @@
 
         <div class="project-member-add-body">
             <div class="project-member-add-summary">
-                <span>워크스페이스 멤버 중 프로젝트에 추가할 멤버를 선택하세요.</span>
+                <span>그룹 멤버 중 프로젝트에 추가할 멤버를 선택하세요.</span>
                 <strong id="projectMemberSelectedCount">0명 선택</strong>
             </div>
 

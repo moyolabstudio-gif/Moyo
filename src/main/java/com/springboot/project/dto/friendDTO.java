@@ -15,8 +15,28 @@ public class friendDTO {
     private String userName;
     private String email;
     private String profileImagePath;
+    private String profileOriginalImagePath;
+    private Double profileCropScale;
+    private Double profileCropX;
+    private Double profileCropY;
+    private String profileAvatarType;
     private String relationStatus;
     private String direction;
+
+    // 공통 친구/프로필 모달 호환용 별칭 getter
+    public Long getId() { return userId; }
+    public String getName() { return userName; }
+    public String getDisplayName() { return userName; }
+    public String getProfile() { return profileImagePath; }
+    public String getProfileUrl() { return profileImagePath; }
+    public String getProfileImageUrl() { return profileImagePath; }
+    public String getCroppedImagePath() { return profileImagePath; }
+    public String getProfileOriginal() { return profileOriginalImagePath; }
+    public String getOriginalImagePath() { return profileOriginalImagePath; }
+    public Double getCropScale() { return profileCropScale; }
+    public Double getCropX() { return profileCropX; }
+    public Double getCropY() { return profileCropY; }
+    public String getAvatarType() { return profileAvatarType; }
 
     public Long getFriendId() { return friendId; }
     public void setFriendId(Long friendId) { this.friendId = friendId; }
@@ -40,6 +60,16 @@ public class friendDTO {
     public void setEmail(String email) { this.email = email; }
     public String getProfileImagePath() { return profileImagePath; }
     public void setProfileImagePath(String profileImagePath) { this.profileImagePath = profileImagePath; }
+    public String getProfileOriginalImagePath() { return profileOriginalImagePath; }
+    public void setProfileOriginalImagePath(String profileOriginalImagePath) { this.profileOriginalImagePath = profileOriginalImagePath; }
+    public Double getProfileCropScale() { return profileCropScale; }
+    public void setProfileCropScale(Double profileCropScale) { this.profileCropScale = profileCropScale; }
+    public Double getProfileCropX() { return profileCropX; }
+    public void setProfileCropX(Double profileCropX) { this.profileCropX = profileCropX; }
+    public Double getProfileCropY() { return profileCropY; }
+    public void setProfileCropY(Double profileCropY) { this.profileCropY = profileCropY; }
+    public String getProfileAvatarType() { return profileAvatarType; }
+    public void setProfileAvatarType(String profileAvatarType) { this.profileAvatarType = profileAvatarType; }
     public String getRelationStatus() { return relationStatus; }
     public void setRelationStatus(String relationStatus) { this.relationStatus = relationStatus; }
     public String getDirection() { return direction; }

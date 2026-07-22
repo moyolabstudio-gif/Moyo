@@ -1,5 +1,8 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%-- commonJoinProfile v2: header 공통 컴포넌트 사용 --%>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
+<%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
 <!DOCTYPE html>
 <html>
 <head>
@@ -131,7 +134,184 @@
     color:#475569; font-size:12px; font-weight:700; cursor:pointer;
 }
 
-    </style>
+
+/* MOYO 공지사항 페이지 계열 요청함 */
+html, body { min-height:100%; }
+body { margin:0; background:linear-gradient(115deg, rgba(220,251,247,.72) 0%, rgba(255,255,255,.96) 46%, rgba(228,238,255,.88) 100%); color:#172033; }
+.container.request-page { width:min(980px, calc(100% - 48px)); max-width:none; margin:0 auto; padding:62px 0 88px; }
+.request-summary { min-height:112px; margin:0 0 24px; align-items:flex-end; }
+.request-eyebrow { display:inline-flex; align-items:center; gap:8px; margin-bottom:10px; color:#1672dc; font-size:12px; font-weight:900; }
+.request-eyebrow::before { content:""; width:4px; height:18px; border-radius:999px; background:linear-gradient(180deg,#39cdb5,#4a7ff0); }
+.request-summary h2 { margin:0; font-size:34px; line-height:1.16; letter-spacing:-1.4px; color:#16243a; }
+.request-subtitle { margin-top:10px; font-size:14px; color:#5f7088; font-weight:600; }
+.request-counts { align-self:center; }
+.request-counts .request-chip { min-height:30px; padding:0 12px; background:rgba(255,255,255,.78); border:1px solid #dce8f6; box-shadow:0 5px 16px rgba(56,94,137,.06); }
+.request-counts .request-chip.is-pending { background:#fff7e8; border-color:#ffe3aa; color:#b26b00; }
+.request-tabs { margin:0; padding:16px 18px 0; border:1px solid #d8e4f2; border-bottom:0; border-radius:22px 22px 0 0; background:rgba(255,255,255,.94); gap:6px; }
+.request-tab { min-height:38px; padding:0 16px; border-color:transparent; background:transparent; }
+.request-tab:hover { background:#f5f9ff; color:#2878d0; }
+.request-tab.is-active { border-color:#acd0fb; background:#f5f9ff; box-shadow:0 3px 10px rgba(74,144,226,.08); }
+.request-panel { min-height:280px; padding:22px 18px 26px; border:1px solid #d8e4f2; border-top:0; border-radius:0 0 22px 22px; background:rgba(255,255,255,.94); box-shadow:0 22px 48px rgba(62,91,130,.10); }
+.request-section-title { margin:0 4px 16px; font-size:16px; }
+.request-card { margin:0 0 10px; padding:17px 18px; border-color:#e3ebf5; border-radius:15px; box-shadow:none; background:#fff; transition:border-color .18s ease, box-shadow .18s ease, transform .18s ease; }
+.request-card:hover { border-color:#c9ddf5; box-shadow:0 9px 22px rgba(54,87,128,.08); transform:translateY(-1px); }
+.request-card.is-pending { border-color:#cfe4ff; background:linear-gradient(110deg,#fbfeff,#f7fbff); }
+.request-type-badge { background:#eef6ff; color:#2878d0; }
+.request-type-badge.is-group { background:#eafaf6; color:#13846f; }
+.btn { min-height:38px; border-radius:10px; }
+.btn-accept { background:linear-gradient(135deg,#39cdb5,#4a7ff0); box-shadow:0 6px 14px rgba(66,143,214,.18); }
+.empty-msg { display:flex; align-items:center; justify-content:center; min-height:190px; margin:0; color:#8795a8; }
+@media(max-width:760px) {
+  .container.request-page { width:min(100% - 28px,980px); padding-top:38px; }
+  .request-summary { align-items:flex-start; flex-direction:column; min-height:auto; }
+  .request-summary h2 { font-size:29px; }
+  .request-counts { align-self:flex-start; justify-content:flex-start; }
+  .request-card { align-items:flex-start; flex-direction:column; }
+  .btn-group { width:100%; justify-content:flex-end; }
+}
+
+.request-tab-count { display:inline-flex; align-items:center; justify-content:center; min-width:20px; height:20px; margin-left:5px; padding:0 6px; border-radius:999px; background:#ff5b67; color:#fff; font-size:10px; font-weight:900; }
+.notification-list { display:grid; gap:10px; }
+.notification-card { position:relative; display:flex; align-items:flex-start; gap:14px; width:100%; padding:17px 18px; border:1px solid #e3ebf5; border-radius:15px; background:#fff; color:inherit; text-align:left; text-decoration:none; cursor:pointer; transition:border-color .18s ease, box-shadow .18s ease, transform .18s ease; }
+.notification-card:hover { border-color:#c9ddf5; box-shadow:0 9px 22px rgba(54,87,128,.08); transform:translateY(-1px); }
+.notification-card.is-unread { border-color:#cfe4ff; background:linear-gradient(110deg,#fbfeff,#f5faff); }
+.notification-card.is-unread::after { content:""; position:absolute; top:16px; right:16px; width:7px; height:7px; border-radius:50%; background:#3b82f6; box-shadow:0 0 0 4px rgba(59,130,246,.10); }
+.notification-icon { flex:0 0 40px; display:flex; align-items:center; justify-content:center; width:40px; height:40px; border-radius:12px; background:#eef6ff; color:#6b8cf5; }
+.notification-icon svg { width:20px; height:20px; display:block; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+.notification-icon.is-notice { background:#fff6e8; }
+.notification-icon.is-calendar { background:#edf8f5; }
+.notification-icon.is-activity { background:#f2efff; }
+.notification-main { min-width:0; flex:1; }
+.notification-head { display:flex; align-items:center; flex-wrap:wrap; gap:8px; padding-right:20px; }
+.notification-title { margin:0; color:#1d2a3d; font-size:15px; font-weight:900; line-height:1.35; }
+.notification-type { display:inline-flex; align-items:center; min-height:23px; padding:0 8px; border-radius:999px; background:#eef6ff; color:#2878d0; font-size:10px; font-weight:900; }
+.notification-content { display:-webkit-box; overflow:hidden; -webkit-line-clamp:2; -webkit-box-orient:vertical; margin:6px 0 0; color:#64748b; font-size:13px; line-height:1.55; }
+.notification-meta { display:flex; align-items:center; flex-wrap:wrap; gap:7px; margin-top:9px; color:#91a0b3; font-size:11px; font-weight:700; }
+.notification-read-state { color:#6f8096; }
+.notification-card.is-unread .notification-read-state { color:#2878d0; }
+@media(max-width:760px) {
+  .request-tabs { overflow-x:auto; padding-bottom:2px; }
+  .request-tab { flex:0 0 auto; }
+  .notification-card { padding:15px; }
+}
+
+    
+/* Request type icons: shared across received, sent and completed tabs */
+.request-card {
+  display:grid;
+  grid-template-columns:44px minmax(0,1fr) auto;
+  align-items:center;
+}
+.request-card-icon {
+  width:40px;
+  height:40px;
+  border-radius:12px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:#eef6ff;
+  color:#6b8cf5;
+  align-self:start;
+}
+.request-card-icon svg {
+  width:20px;
+  height:20px;
+  display:block;
+  fill:none;
+  stroke:currentColor;
+  stroke-width:1.8;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+}
+.request-card-icon.is-photo { background:#fff6e8; color:#e89a45; }
+.request-card-icon.is-note { background:#f2efff; color:#8068d8; }
+.request-card-icon.is-calendar { background:#edf8f5; color:#35a98f; }
+.request-card-icon.is-group { background:#eaf8f7; color:#2aaea5; }
+.request-card > .btn-group { justify-self:end; }
+/* Final alignment refinements */
+.request-card > .btn-group {
+  align-self:center;
+  justify-self:end;
+}
+.request-meta {
+  column-gap:10px;
+  row-gap:6px;
+}
+.request-detail-label {
+  font-weight:700;
+}
+@media (max-width:760px) {
+  .request-card { grid-template-columns:40px minmax(0,1fr); }
+  .request-card > .btn-group {
+    grid-column:1 / -1;
+    align-self:auto;
+    justify-self:stretch;
+    width:100%;
+  }
+}
+
+
+.notification-approved-action{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    align-self:flex-start;
+    min-height:34px;
+    margin-top:10px;
+    padding:0 15px;
+    border-radius:11px;
+    background:linear-gradient(135deg,#39cdb5 0%,#4a90e2 52%,#6b5df6 100%);
+    color:#fff;
+    font-size:13px;
+    font-weight:800;
+    line-height:1;
+    box-shadow:0 7px 16px rgba(67,141,232,.16);
+}
+.notification-card:hover .notification-approved-action{
+    transform:translateY(-1px);
+    box-shadow:0 9px 20px rgba(67,141,232,.22);
+}
+
+.notification-approved-actions{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-top:10px;
+    flex-wrap:wrap;
+}
+.notification-approved-actions .notification-approved-action{
+    margin-top:0;
+}
+.notification-abandon-action{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-height:34px;
+    padding:0 14px;
+    border:1px solid #dce5f2;
+    border-radius:11px;
+    background:#fff;
+    color:#68788f;
+    font-size:13px;
+    font-weight:800;
+    cursor:pointer;
+    box-sizing:border-box;
+    user-select:none;
+}
+.notification-abandon-action:focus-visible{
+    outline:none;
+    box-shadow:0 0 0 3px rgba(223,83,96,.14);
+}
+.notification-abandon-action:hover{
+    border-color:#f0b8be;
+    color:#df5360;
+    background:#fff8f8;
+}
+.notification-type.is-join-cancelled{
+    background:#f3f5f8;
+    color:#6d7b90;
+}
+</style>
 </head>
 <body
     data-account-name="<c:out value='${accountDisplayName}'/>"
@@ -141,12 +321,14 @@
 <div class="container request-page">
     <div class="request-summary">
         <div>
+            <span class="request-eyebrow">MOYO 안내</span>
             <h2>요청함</h2>
-            <p class="request-subtitle">그룹 초대와 사진/노트/일정 공유 요청을 한 곳에서 확인합니다.</p>
+            <p class="request-subtitle">그룹 초대·참여 요청과 사진/노트/일정 공유 요청을 한 곳에서 확인합니다.</p>
         </div>
         <div class="request-counts">
             <span class="request-chip is-pending">전체 대기 ${totalPendingRequestCount}</span>
             <span class="request-chip">초대 ${inviteRequestCount}</span>
+            <span class="request-chip">참여 요청 ${joinRequestCount}</span>
             <span class="request-chip">공유 ${shareRequestCount}</span>
         </div>
     </div>
@@ -155,6 +337,7 @@
         <button type="button" class="request-tab is-active" data-request-tab="received">받은 요청</button>
         <button type="button" class="request-tab" data-request-tab="sent">보낸 요청</button>
         <button type="button" class="request-tab" data-request-tab="done">완료됨</button>
+        <button type="button" class="request-tab" data-request-tab="notifications">전체 알림 <c:if test="${unreadNoticeCount > 0}"><span class="request-tab-count">${unreadNoticeCount}</span></c:if></button>
     </div>
 
     <section class="request-panel is-active" data-request-panel="received">
@@ -165,6 +348,19 @@
             <c:if test="${share.shareStatus == 'PENDING'}">
                 <c:set var="hasReceivedPending" value="${true}" />
                 <div class="request-card is-pending" id="share-request-${share.shareId}">
+                    <span class="request-card-icon <c:choose><c:when test="${share.contentType == 'PHOTO'}">is-photo</c:when><c:when test="${share.contentType == 'NOTE'}">is-note</c:when><c:when test="${share.contentType == 'CALENDAR'}">is-calendar</c:when></c:choose>" aria-hidden="true">
+                        <c:choose>
+                            <c:when test="${share.contentType == 'PHOTO'}">
+                                <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9" r="1.5"/><path d="m5 17 4.5-4.5 3 3 2-2L19 17"/></svg>
+                            </c:when>
+                            <c:when test="${share.contentType == 'NOTE'}">
+                                <svg viewBox="0 0 24 24"><path d="M6 3h9l3 3v15H6z"/><path d="M15 3v4h4"/><path d="M9 11h6M9 15h6"/></svg>
+                            </c:when>
+                            <c:otherwise>
+                                <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 10h18"/></svg>
+                            </c:otherwise>
+                        </c:choose>
+                    </span>
                     <div class="request-info">
                         <div class="request-title-line">
                             <span class="request-type-badge">
@@ -250,9 +446,52 @@
             </c:if>
         </c:forEach>
 
+        <c:forEach var="joinRequest" items="${joinRequestList}">
+            <c:set var="hasReceivedPending" value="${true}" />
+            <div class="request-card is-pending" id="join-request-${joinRequest.requestId}">
+                <span class="request-card-icon is-group" aria-hidden="true">
+                    <svg viewBox="0 0 24 24">
+                        <circle cx="9" cy="8" r="3"/>
+                        <circle cx="17" cy="9" r="2"/>
+                        <path d="M3 19c.7-3.3 3-5 6-5s5.3 1.7 6 5"/>
+                        <path d="M14.5 15c2.6.2 4.3 1.5 5 4"/>
+                    </svg>
+                </span>
+                <div class="request-info">
+                    <div class="request-title-line">
+                        <span class="request-type-badge is-group">그룹 참여 요청</span>
+                        <h3><c:out value="${joinRequest.wsName}"/></h3>
+                    </div>
+                    <p>
+                        <strong><c:out value="${joinRequest.requesterName}"/></strong>님이
+                        그룹 참여를 요청했습니다.
+                    </p>
+                    <c:if test="${not empty joinRequest.REQUESTER_EMAIL}">
+                        <p><c:out value="${joinRequest.requesterEmail}"/></p>
+                    </c:if>
+                    <div class="request-meta">
+                        <span class="request-chip">그룹</span>
+                        <span class="request-chip is-pending">승인 대기</span>
+                        <c:if test="${not empty joinRequest.REQUESTED_AT}">
+                            <span class="request-chip"><c:out value="${joinRequest.requestedAt}"/></span>
+                        </c:if>
+                    </div>
+                </div>
+                <div class="btn-group">
+                    <button type="button" class="btn btn-accept"
+                            onclick="respondJoinRequest(${joinRequest.requestId}, 'APPROVED')">승인</button>
+                    <button type="button" class="btn btn-reject"
+                            onclick="respondJoinRequest(${joinRequest.requestId}, 'REJECTED')">거절</button>
+                </div>
+            </div>
+        </c:forEach>
+
         <c:forEach var="invite" items="${inviteList}">
             <c:set var="hasReceivedPending" value="${true}" />
             <div class="request-card is-pending" id="invite-${invite.INVITE_ID}">
+                <span class="request-card-icon is-group" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2"/><path d="M3 19c.7-3.3 3-5 6-5s5.3 1.7 6 5"/><path d="M14.5 15c2.6.2 4.3 1.5 5 4"/></svg>
+                </span>
                 <div class="request-info">
                     <div class="request-title-line">
                         <span class="request-type-badge">그룹 초대</span>
@@ -266,7 +505,7 @@
                     </div>
                 </div>
                 <div class="btn-group">
-                    <button type="button" class="btn btn-accept" onclick="openAcceptProfile(${invite.INVITE_ID}, '${invite.WS_NAME}')">수락</button>
+                    <button type="button" class="btn btn-accept" onclick="openAcceptProfile(${invite.INVITE_ID}, '<c:out value="${fn:escapeXml(invite.WS_NAME)}"/>', ${invite.WS_ID})">수락</button>
                     <button type="button" class="btn btn-reject" onclick="rejectInvite(${invite.INVITE_ID})">거절</button>
                 </div>
             </div>
@@ -284,6 +523,19 @@
             <c:if test="${share.shareStatus == 'PENDING' || share.shareStatus == 'ACCEPTED'}">
                 <c:set var="hasSent" value="${true}" />
                 <div class="request-card" id="sent-share-${share.shareId}">
+                    <span class="request-card-icon <c:choose><c:when test="${share.contentType == 'PHOTO'}">is-photo</c:when><c:when test="${share.contentType == 'NOTE'}">is-note</c:when><c:when test="${share.contentType == 'CALENDAR'}">is-calendar</c:when></c:choose>" aria-hidden="true">
+                        <c:choose>
+                            <c:when test="${share.contentType == 'PHOTO'}">
+                                <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9" r="1.5"/><path d="m5 17 4.5-4.5 3 3 2-2L19 17"/></svg>
+                            </c:when>
+                            <c:when test="${share.contentType == 'NOTE'}">
+                                <svg viewBox="0 0 24 24"><path d="M6 3h9l3 3v15H6z"/><path d="M15 3v4h4"/><path d="M9 11h6M9 15h6"/></svg>
+                            </c:when>
+                            <c:otherwise>
+                                <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 10h18"/></svg>
+                            </c:otherwise>
+                        </c:choose>
+                    </span>
                     <div class="request-info">
                         <div class="request-title-line">
                             <span class="request-type-badge">
@@ -340,6 +592,19 @@
             <c:if test="${share.shareStatus != 'PENDING'}">
                 <c:set var="hasDone" value="${true}" />
                 <div class="request-card" id="done-share-${share.shareId}">
+                    <span class="request-card-icon <c:choose><c:when test="${share.contentType == 'PHOTO'}">is-photo</c:when><c:when test="${share.contentType == 'NOTE'}">is-note</c:when><c:when test="${share.contentType == 'CALENDAR'}">is-calendar</c:when></c:choose>" aria-hidden="true">
+                        <c:choose>
+                            <c:when test="${share.contentType == 'PHOTO'}">
+                                <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9" r="1.5"/><path d="m5 17 4.5-4.5 3 3 2-2L19 17"/></svg>
+                            </c:when>
+                            <c:when test="${share.contentType == 'NOTE'}">
+                                <svg viewBox="0 0 24 24"><path d="M6 3h9l3 3v15H6z"/><path d="M15 3v4h4"/><path d="M9 11h6M9 15h6"/></svg>
+                            </c:when>
+                            <c:otherwise>
+                                <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 10h18"/></svg>
+                            </c:otherwise>
+                        </c:choose>
+                    </span>
                     <div class="request-info">
                         <div class="request-title-line">
                             <span class="request-type-badge">
@@ -386,9 +651,125 @@
                 </div>
             </c:if>
         </c:forEach>
+
+        <c:forEach var="invite" items="${invitationHistory}">
+            <c:set var="hasDone" value="${true}" />
+            <div class="request-card" id="done-invite-${invite.INVITE_ID}">
+                <span class="request-card-icon is-group" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2"/><path d="M3 19c.7-3.3 3-5 6-5s5.3 1.7 6 5"/><path d="M14.5 15c2.6.2 4.3 1.5 5 4"/></svg>
+                </span>
+                <div class="request-info">
+                    <div class="request-title-line">
+                        <span class="request-type-badge is-group">그룹 초대</span>
+                        <h3><c:out value="${invite.WS_NAME}"/></h3>
+                    </div>
+                    <p><strong><c:out value="${invite.INVITER_NAME}"/></strong>님이 보낸 그룹 초대입니다.</p>
+                    <div class="request-meta">
+                        <span class="request-chip">그룹</span>
+                        <c:choose>
+                            <c:when test="${invite.STATUS == 'ACCEPTED'}"><span class="request-chip is-accepted">참여 완료</span></c:when>
+                            <c:when test="${invite.STATUS == 'REJECTED'}"><span class="request-chip is-rejected">거절됨</span></c:when>
+                            <c:otherwise><span class="request-chip"><c:out value="${invite.STATUS}"/></span></c:otherwise>
+                        </c:choose>
+                        <c:if test="${not empty invite.SENT_AT}"><span class="request-chip"><c:out value="${invite.SENT_AT}"/></span></c:if>
+                    </div>
+                </div>
+            </div>
+        </c:forEach>
+
         <c:if test="${not hasDone}">
             <p class="empty-msg">완료된 요청이 없습니다.</p>
         </c:if>
+    </section>
+
+    <section class="request-panel" data-request-panel="notifications">
+        <h3 class="request-section-title">전체 알림</h3>
+        <c:choose>
+            <c:when test="${empty allNotices}">
+                <p class="empty-msg">아직 도착한 알림이 없습니다.</p>
+            </c:when>
+            <c:otherwise>
+                <div class="notification-list">
+                    <c:forEach var="notice" items="${allNotices}">
+                        <c:set var="noticeLink" value="${notice.linkUrl}" />
+                        <c:if test="${empty noticeLink && notice.targetType == 'CALENDAR' && not empty notice.targetId}">
+                            <c:set var="noticeLink" value="/calendar?eventId=${notice.targetId}" />
+                        </c:if>
+                        <c:choose>
+                            <c:when test="${notice.alertType == 'NOTICE'}"><c:set var="noticeIconClass" value="is-notice"/></c:when>
+                            <c:when test="${notice.targetType == 'CALENDAR' || notice.alertType == 'CALENDAR_ATTENDEE'}"><c:set var="noticeIconClass" value="is-calendar"/></c:when>
+                            <c:otherwise><c:set var="noticeIconClass" value="is-activity"/></c:otherwise>
+                        </c:choose>
+                        <button type="button"
+                                class="notification-card ${notice.isRead == 'N' ? 'is-unread' : ''}"
+                                data-notification-id="${notice.alarmId}"
+                                data-notification-link="<c:out value='${noticeLink}'/>"
+                                data-alert-type="<c:out value='${notice.alertType}'/>"
+                                data-target-id="<c:out value='${notice.targetId}'/>"
+                                data-target-type="<c:out value='${notice.targetType}'/>"
+                                data-notification-title="<c:out value='${notice.title}'/>"
+                                aria-label="<c:out value='${notice.title}'/>">
+                            <span class="notification-icon ${noticeIconClass}">
+                                <c:choose>
+                                    <c:when test="${notice.alertType == 'NOTICE'}">
+                                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                                            <path d="M4 13.5v-3a2 2 0 0 1 2-2h2.5L16 5v14l-7.5-3.5H6a2 2 0 0 1-2-2Z"/>
+                                            <path d="M8 15.5 9.5 20h3L11 16.7"/>
+                                            <path d="M19 9a4 4 0 0 1 0 6"/>
+                                        </svg>
+                                    </c:when>
+                                    <c:when test="${notice.targetType == 'CALENDAR' || notice.alertType == 'CALENDAR_ATTENDEE'}">
+                                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                                            <rect x="3.5" y="5.5" width="17" height="15" rx="2.5"/>
+                                            <path d="M7.5 3.5v4M16.5 3.5v4M3.5 9.5h17"/>
+                                            <path d="M8 13h2M14 13h2M8 16.5h2M14 16.5h2"/>
+                                        </svg>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                                            <path d="M18 9a6 6 0 1 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9Z"/>
+                                            <path d="M10 21h4"/>
+                                        </svg>
+                                    </c:otherwise>
+                                </c:choose>
+                            </span>
+                            <span class="notification-main">
+                                <span class="notification-head">
+                                    <strong class="notification-title"><c:out value="${notice.title}"/></strong>
+                                    <span class="notification-type">
+                                        <c:choose>
+                                            <c:when test="${notice.alertType == 'NOTICE'}">공지 알림</c:when>
+                                            <c:when test="${notice.targetType == 'CALENDAR' || notice.alertType == 'CALENDAR_ATTENDEE'}">일정 알림</c:when>
+                                            <c:otherwise>활동 알림</c:otherwise>
+                                        </c:choose>
+                                    </span>
+                                </span>
+                                <c:if test="${not empty notice.content}">
+                                    <span class="notification-content" data-notification-content><c:out value="${notice.content}"/></span>
+                                </c:if>
+                                <span class="notification-meta">
+                                    <span class="notification-read-state">${notice.isRead == 'N' ? '새 알림' : '읽음'}</span>
+                                    <span>·</span>
+                                    <span><fmt:formatDate value="${notice.regDt}" pattern="yyyy.MM.dd HH:mm"/></span>
+                                </span>
+                                <c:if test="${notice.alertType == 'GROUP_JOIN_APPROVED'}">
+                                    <span class="notification-approved-actions">
+                                        <span class="notification-approved-action">프로필 설정하고 참여</span>
+                                        <span class="notification-abandon-action"
+                                              role="button"
+                                              tabindex="0"
+                                              onclick="event.stopPropagation(); abandonApprovedJoinFromCard(this)"
+                                              onkeydown="if(event.key === 'Enter' || event.key === ' '){ event.preventDefault(); event.stopPropagation(); abandonApprovedJoinFromCard(this); }">
+                                            참여 포기
+                                        </span>
+                                    </span>
+                                </c:if>
+                            </span>
+                        </button>
+                    </c:forEach>
+                </div>
+            </c:otherwise>
+        </c:choose>
     </section>
 </div>
 
@@ -402,423 +783,254 @@ document.addEventListener('click', function(e) {
         panel.classList.toggle('is-active', panel.getAttribute('data-request-panel') === key);
     });
 });
-</script>
 
-<div id="profileOverlay" class="profile-overlay" onclick="closeAcceptProfile()"></div>
-<div id="profileModal" class="profile-modal" role="dialog" aria-modal="true">
-    <div class="profile-modal-head">
-        <div>
-            <small>참여 전 프로필 설정</small>
-            <h3 id="profileModalTitle">그룹 프로필 선택</h3>
-        </div>
-        <button type="button" class="profile-close" onclick="closeAcceptProfile()">&times;</button>
-    </div>
+document.addEventListener('click', async function(e) {
+    const card = e.target.closest('[data-notification-id]');
+    if (!card) return;
 
-    <div class="profile-choice">
-        <label>
-            <input type="radio" name="inviteProfileMode" value="Y" checked>
-            <span>
-                <strong>계정 이름과 기본 이미지 사용</strong>
-                <span>이름과 이미지만 계정 정보를 사용합니다.</span>
-            </span>
-        </label>
-        <label>
-            <input type="radio" name="inviteProfileMode" value="N">
-            <span>
-                <strong>전용 프로필 만들기</strong>
-                <span>이 그룹에서만 사용할 이름과 이미지를 설정합니다.</span>
-            </span>
-        </label>
-    </div>
+    const alarmId = card.getAttribute('data-notification-id');
+    const link = card.getAttribute('data-notification-link') || '';
+    const contextPath = '${pageContext.request.contextPath}';
 
-    <div class="profile-image-editor">
-        <div id="inviteProfileViewport" class="profile-image-viewport">
-            <div id="inviteProfilePlaceholder" class="profile-image-placeholder"></div>
-            <img id="inviteProfileCropImage" hidden alt="">
-        </div>
-        <div class="profile-image-tools">
-            <strong>프로필 이미지</strong>
-            <label for="inviteProfileImageInput" class="profile-image-button">이미지 선택</label>
-            <input type="file" id="inviteProfileImageInput" accept="image/*" hidden>
-            <small>전용 프로필 선택 시 드래그와 확대 기능을 사용할 수 있습니다.</small>
-            <input type="range" id="inviteProfileZoom" min="1" max="4" step="0.05" value="1">
-        </div>
-    </div>
-
-    <div id="inviteProfileFields" class="profile-fields">
-        <div class="profile-field">
-            <label for="inviteDisplayName">표시 이름 *</label>
-            <input type="text" id="inviteDisplayName" maxlength="50"
-                   value="<c:out value='${accountDisplayName}'/>">
-        </div>
-        <div class="profile-field">
-            <label for="invitePositionName">직책 또는 담당 분야</label>
-            <input type="text" id="invitePositionName" maxlength="50" placeholder="예: 디자이너">
-        </div>
-        <div class="profile-field full">
-            <label for="inviteContactEmail">그룹 이메일 *</label>
-            <input type="text" id="inviteContactEmail" maxlength="100"
-                   value="<c:out value='${accountEmail}'/>">
-        </div>
-        <div class="profile-field full">
-            <label for="invitePhoneNumber">연락처 (선택)</label>
-            <input type="tel" id="invitePhoneNumber" maxlength="30" placeholder="예: 010-0000-0000">
-        </div>
-        <div class="profile-field full">
-            <label class="profile-check">
-                <input type="checkbox" id="inviteShowPhone">
-                다른 그룹 멤버에게 연락처 공개
-            </label>
-        </div>
-    </div>
-
-    <div class="profile-actions">
-        <button type="button" class="btn" onclick="closeAcceptProfile()">취소</button>
-        <button type="button" id="btnFinalAccept" class="btn btn-accept" onclick="acceptInviteWithProfile()">참여하기</button>
-    </div>
-</div>
-
-<script>
-
-function createProfileCropper(config) {
-    const fileInput = document.getElementById(config.fileInputId);
-    const viewport = document.getElementById(config.viewportId);
-    const image = document.getElementById(config.imageId);
-    const placeholder = document.getElementById(config.placeholderId);
-    const zoom = document.getElementById(config.zoomId);
-
-    const state = {
-        localFile: null,
-        localUrl: '',
-        externalSrc: '',
-        mode: 'custom',
-        fallbackText: '?',
-        x: 0,
-        y: 0,
-        scale: 1,
-        baseWidth: 0,
-        baseHeight: 0,
-        dragging: false,
-        startPointerX: 0,
-        startPointerY: 0,
-        startX: 0,
-        startY: 0
-    };
-
-    function revokeLocalUrl() {
-        if (state.localUrl) {
-            URL.revokeObjectURL(state.localUrl);
-            state.localUrl = '';
+    if (card.classList.contains('is-unread') && alarmId) {
+        try {
+            const body = new URLSearchParams();
+            body.set('alarmId', alarmId);
+            await fetch(contextPath + '/api/alarm/read', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'},
+                body: body.toString()
+            });
+            card.classList.remove('is-unread');
+            const state = card.querySelector('.notification-read-state');
+            if (state) state.textContent = '읽음';
+        } catch (error) {
+            console.error('알림 읽음 처리 실패', error);
         }
     }
 
-    function calculateBaseSize() {
-        const viewSize = viewport.clientWidth || 112;
-        if (!image.naturalWidth || !image.naturalHeight) return;
+    const alertType = (card.getAttribute('data-alert-type') || '').toUpperCase();
 
-        const imageRatio = image.naturalWidth / image.naturalHeight;
+    if (alertType === 'GROUP_JOIN_APPROVED') {
+        const match = link.match(/[?&]approvedJoinRequestId=(\d+)/);
+        const requestId = match ? match[1] : null;
+        const wsId = card.getAttribute('data-target-id') || '';
+        const title = card.getAttribute('data-notification-title') || '그룹';
 
-        // 확대값 1에서는 원형 영역을 빈 공간 없이 정확히 채우는 cover 기준.
-        // 가로 사진은 높이를, 세로 사진은 너비를 원형 크기에 맞춘다.
-        if (imageRatio >= 1) {
-            state.baseHeight = viewSize;
-            state.baseWidth = viewSize * imageRatio;
-        } else {
-            state.baseWidth = viewSize;
-            state.baseHeight = viewSize / imageRatio;
-        }
-
-        image.style.width = state.baseWidth + 'px';
-        image.style.height = state.baseHeight + 'px';
-        image.style.minWidth = '0';
-        image.style.minHeight = '0';
-        image.style.maxWidth = 'none';
-        image.style.maxHeight = 'none';
-        image.style.objectFit = 'cover';
-    }
-
-    function render() {
-        if (image.hidden) return;
-        image.style.transform =
-            'translate(-50%, -50%) translate(' + state.x + 'px, ' + state.y + 'px) scale(' + state.scale + ')';
-    }
-
-    function showPlaceholder() {
-        image.hidden = true;
-        placeholder.hidden = false;
-        placeholder.textContent = state.fallbackText || '?';
-        viewport.classList.remove('has-image');
-        viewport.style.cursor = 'default';
-    }
-
-    function showImage(src, resetPosition) {
-        if (!src) {
-            showPlaceholder();
+        if (!requestId) {
+            alert('승인된 참여 요청 정보를 확인할 수 없습니다.');
             return;
         }
 
-        if (resetPosition) {
-            state.x = 0;
-            state.y = 0;
-            state.scale = 1;
-            if (zoom) zoom.value = '1';
-        }
-
-        const applyReady = function() {
-            calculateBaseSize();
-            image.hidden = false;
-            placeholder.hidden = true;
-            viewport.classList.add('has-image');
-            viewport.style.cursor = state.mode === 'custom' ? 'grab' : 'default';
-            requestAnimationFrame(render);
-        };
-
-        image.onload = applyReady;
-        image.src = src;
-
-        if (image.complete && image.naturalWidth) {
-            applyReady();
-        }
-    }
-
-    function refreshDisplay() {
-        if (state.mode === 'account') {
-            showPlaceholder();
-            return;
-        }
-        if (state.localUrl) {
-            showImage(state.localUrl, false);
-            return;
-        }
-        if (state.externalSrc) {
-            showImage(state.externalSrc, false);
-            return;
-        }
-        showPlaceholder();
-    }
-
-    function setMode(mode, fallbackText) {
-        state.mode = mode === 'account' ? 'account' : 'custom';
-        if (fallbackText !== undefined) state.fallbackText = fallbackText || '?';
-        if (fileInput) fileInput.disabled = state.mode === 'account';
-        if (zoom) zoom.disabled = state.mode === 'account';
-        refreshDisplay();
-    }
-
-    function setFallbackText(text) {
-        state.fallbackText = text || '?';
-        if (state.mode === 'account' || (!state.localUrl && !state.externalSrc)) {
-            showPlaceholder();
-        }
-    }
-
-    function setExistingImage(src) {
-        state.externalSrc = src || '';
-        if (!state.localUrl) refreshDisplay();
-    }
-
-    if (fileInput) {
-        fileInput.addEventListener('change', function() {
-            const file = fileInput.files && fileInput.files[0];
-            if (!file) return;
-
-            revokeLocalUrl();
-            state.localFile = file;
-            state.localUrl = URL.createObjectURL(file);
-            state.x = 0;
-            state.y = 0;
-            state.scale = 1;
-            if (zoom) zoom.value = '1';
-            showImage(state.localUrl, true);
-        });
-    }
-
-    if (zoom) {
-        zoom.addEventListener('input', function() {
-            state.scale = Number(zoom.value || '1');
-            render();
-        });
-    }
-
-    function onPointerMove(e) {
-        if (!state.dragging || state.mode !== 'custom') return;
-        state.x = state.startX + (e.clientX - state.startPointerX);
-        state.y = state.startY + (e.clientY - state.startPointerY);
-        render();
-    }
-
-    function endDrag() {
-        state.dragging = false;
-        if (!image.hidden && state.mode === 'custom') viewport.style.cursor = 'grab';
-    }
-
-    viewport.addEventListener('pointerdown', function(e) {
-        if (state.mode !== 'custom' || image.hidden) return;
-        e.preventDefault();
-        state.dragging = true;
-        state.startPointerX = e.clientX;
-        state.startPointerY = e.clientY;
-        state.startX = state.x;
-        state.startY = state.y;
-        viewport.style.cursor = 'grabbing';
-        if (viewport.setPointerCapture) {
-            try { viewport.setPointerCapture(e.pointerId); } catch (_) {}
-        }
-    });
-
-    viewport.addEventListener('pointermove', onPointerMove);
-    viewport.addEventListener('pointerup', endDrag);
-    viewport.addEventListener('pointercancel', endDrag);
-    viewport.addEventListener('lostpointercapture', endDrag);
-    document.addEventListener('pointermove', onPointerMove);
-    document.addEventListener('pointerup', endDrag);
-
-    async function getBlob() {
-        if (image.hidden || !image.naturalWidth) return null;
-
-        const outputSize = 512;
-        const viewSize = viewport.clientWidth || 112;
-        const drawWidth = state.baseWidth * state.scale;
-        const drawHeight = state.baseHeight * state.scale;
-        const drawX = (viewSize - drawWidth) / 2 + state.x;
-        const drawY = (viewSize - drawHeight) / 2 + state.y;
-
-        const canvas = document.createElement('canvas');
-        canvas.width = outputSize;
-        canvas.height = outputSize;
-        const ctx = canvas.getContext('2d');
-        const ratio = outputSize / viewSize;
-        ctx.scale(ratio, ratio);
-        ctx.drawImage(image, drawX, drawY, drawWidth, drawHeight);
-
-        return await new Promise(function(resolve) {
-            canvas.toBlob(resolve, 'image/jpeg', 0.92);
-        });
-    }
-
-    return {
-        getBlob: getBlob,
-        setMode: setMode,
-        setFallbackText: setFallbackText,
-        setExistingImage: setExistingImage
-    };
-}
-
-let selectedInviteId = null;
-const accountName = document.body.dataset.accountName || '';
-const accountEmail = document.body.dataset.accountEmail || '';
-const inviteCropper = createProfileCropper({
-    fileInputId: 'inviteProfileImageInput',
-    viewportId: 'inviteProfileViewport',
-    imageId: 'inviteProfileCropImage',
-    placeholderId: 'inviteProfilePlaceholder',
-    zoomId: 'inviteProfileZoom'
-});
-
-document.getElementById('inviteProfilePlaceholder').textContent =
-    accountName ? accountName.substring(0, 1) : '?';
-document.getElementById('inviteDisplayName').value = accountName;
-document.getElementById('inviteContactEmail').value = accountEmail;
-
-function syncInviteProfileMode() {
-    const useAccount = $('input[name="inviteProfileMode"]:checked').val() === 'Y';
-    const avatarText = accountName ? accountName.substring(0, 1) : '?';
-
-    $('#inviteDisplayName').prop('readonly', useAccount);
-    document.querySelector('.profile-image-editor').style.opacity = useAccount ? '.55' : '1';
-    inviteCropper.setMode(useAccount ? 'account' : 'custom', avatarText);
-
-    if (useAccount) {
-        $('#inviteDisplayName').val(accountName);
-    } else if (!$('#inviteDisplayName').val().trim()) {
-        $('#inviteDisplayName').val(accountName);
-    }
-}
-
-$('input[name="inviteProfileMode"]').on('change', syncInviteProfileMode);
-$('#inviteDisplayName').on('input', function() {
-    const value = $(this).val().trim();
-    inviteCropper.setFallbackText(value ? value.substring(0, 1) : (accountName ? accountName.substring(0, 1) : '?'));
-});
-syncInviteProfileMode();
-
-function openAcceptProfile(inviteId, wsName) {
-    selectedInviteId = inviteId;
-    document.getElementById('profileModalTitle').textContent = wsName + ' 참여 프로필';
-    document.getElementById('profileOverlay').style.display = 'block';
-    document.getElementById('profileModal').style.display = 'block';
-    document.body.style.overflow = 'hidden';
-}
-
-function closeAcceptProfile() {
-    selectedInviteId = null;
-    document.getElementById('profileOverlay').style.display = 'none';
-    document.getElementById('profileModal').style.display = 'none';
-    document.body.style.overflow = '';
-}
-
-async function acceptInviteWithProfile() {
-    if (!selectedInviteId) return;
-
-    const useAccount = $('input[name="inviteProfileMode"]:checked').val();
-    const displayName = $('#inviteDisplayName').val().trim();
-    const contactEmail = $('#inviteContactEmail').val().trim();
-
-    if (!contactEmail) {
-        alert('그룹 이메일을 입력해주세요.');
-        $('#inviteContactEmail').focus();
+        openApprovedJoinProfile(
+            requestId,
+            title.replace(/\s*참여 요청 승인\s*$/, ''),
+            wsId
+        );
         return;
     }
-    if (useAccount === 'N' && !displayName) {
-        alert('그룹 표시 이름을 입력해주세요.');
-        $('#inviteDisplayName').focus();
+
+    if (link) {
+        const target = /^(https?:)?\/\//i.test(link)
+            ? link
+            : (link.startsWith(contextPath) ? link : contextPath + (link.startsWith('/') ? link : '/' + link));
+        window.location.href = target;
+    }
+});
+
+document.querySelectorAll('[data-notification-content]').forEach(function(el) {
+    const parser = document.createElement('textarea');
+    parser.innerHTML = el.textContent || '';
+    const holder = document.createElement('div');
+    holder.innerHTML = parser.value;
+    el.textContent = (holder.textContent || holder.innerText || '').trim();
+});
+</script>
+
+<script>
+function openAcceptProfile(inviteId, workspaceName, workspaceId) {
+    if (typeof window.openJoinProfileModal !== "function") {
+        alert("참여 프로필 화면을 불러오지 못했습니다. 페이지를 새로고침해주세요.");
+        return;
+    }
+
+    return window.openJoinProfileModal({
+        mode: "invite",
+        invitationId: inviteId,
+        workspaceName: workspaceName,
+        workspaceId: workspaceId || null,
+        onSuccess: function () {
+            window.location.reload();
+        }
+    });
+}
+
+function openApprovedJoinProfile(requestId, workspaceName, workspaceId) {
+    if (typeof window.openJoinProfileModal !== "function") {
+        alert("참여 프로필 화면을 불러오지 못했습니다. 페이지를 새로고침해주세요.");
+        return;
+    }
+
+    return window.openJoinProfileModal({
+        mode: "approved",
+        requestId: requestId,
+        workspaceName: workspaceName || "그룹",
+        workspaceId: workspaceId || null,
+        onSuccess: function () {
+            window.location.reload();
+        }
+    });
+}
+
+async function abandonApprovedJoinFromCard(button) {
+    const card = button.closest('[data-notification-id]');
+    if (!card) return;
+
+    const link = card.getAttribute('data-notification-link') || '';
+    const match = link.match(/[?&]approvedJoinRequestId=(\d+)/);
+    const requestId = match ? match[1] : null;
+
+    if (!requestId) {
+        alert('승인된 참여 요청 정보를 확인할 수 없습니다.');
+        return;
+    }
+
+    if (!confirm('그룹 참여를 포기할까요?\n승인된 참여 요청이 취소되며, 다시 참여하려면 새로 요청해야 합니다.')) {
+        return;
+    }
+
+    button.disabled = true;
+
+    try {
+        const body = new URLSearchParams();
+        body.set('requestId', requestId);
+
+        const response = await fetch(
+            '${pageContext.request.contextPath}/workspace/api/join-request/abandon',
+            {
+                method: 'POST',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'},
+                credentials: 'same-origin',
+                body: body.toString()
+            }
+        );
+        const data = await response.json();
+
+        if (!response.ok || !data || data.success !== true) {
+            throw new Error(data && data.status ? data.status : 'FAILED');
+        }
+
+        window.location.reload();
+    } catch (error) {
+        alert('참여 포기 처리 중 오류가 발생했습니다.');
+        button.disabled = false;
+    }
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+    const params = new URLSearchParams(window.location.search);
+    const inviteId = params.get("inviteId");
+    const approvedJoinRequestId = params.get("approvedJoinRequestId");
+
+    if (approvedJoinRequestId) {
+        const approvedCard = document.querySelector(
+            '[data-notification-link*="approvedJoinRequestId='
+            + approvedJoinRequestId + '"]'
+        );
+        const workspaceId = approvedCard
+            ? approvedCard.getAttribute("data-target-id")
+            : "";
+        const title = approvedCard
+            ? approvedCard.getAttribute("data-notification-title")
+            : "그룹";
+
+        openApprovedJoinProfile(
+            approvedJoinRequestId,
+            (title || "그룹").replace(/\s*참여 요청 승인\s*$/, ""),
+            workspaceId
+        );
+        params.delete("approvedJoinRequestId");
+    } else if (inviteId) {
+        const inviteCard = document.getElementById("invite-" + inviteId);
+        const acceptButton = inviteCard
+            ? inviteCard.querySelector(".btn-accept")
+            : null;
+
+        if (acceptButton) acceptButton.click();
+        params.delete("inviteId");
+    } else {
+        return;
+    }
+
+    const query = params.toString();
+    const cleanUrl =
+        window.location.pathname
+        + (query ? "?" + query : "")
+        + window.location.hash;
+
+    window.history.replaceState({}, document.title, cleanUrl);
+});
+
+function respondJoinRequest(requestId, status) {
+    if (!requestId) {
+        alert('참여 요청 정보를 확인할 수 없습니다.');
+        return;
+    }
+
+    let rejectionReason = '';
+    if (status === 'REJECTED') {
+        const entered = window.prompt(
+            '거절 사유를 입력할 수 있습니다. (선택)\n입력하지 않고 확인하면 기본 안내만 전달됩니다.',
+            ''
+        );
+        if (entered === null) return;
+        rejectionReason = entered.trim();
+        if (rejectionReason.length > 300) {
+            alert('거절 사유는 300자까지 입력할 수 있습니다.');
+            return;
+        }
+    } else if (!confirm('이 참여 요청을 승인하시겠습니까?')) {
         return;
     }
 
     const formData = new FormData();
-    formData.append('inviteId', selectedInviteId);
-    formData.append('status', 'ACCEPTED');
-    formData.append('useAccountProfile', useAccount);
-    formData.append('displayName', displayName);
-    formData.append('contactEmail', contactEmail);
-    formData.append('positionName', $('#invitePositionName').val().trim());
-    formData.append('phoneNumber', $('#invitePhoneNumber').val().trim());
-    formData.append('showPhone', $('#inviteShowPhone').is(':checked') ? 'Y' : 'N');
-
-    if (useAccount === 'N') {
-        const blob = await inviteCropper.getBlob();
-        if (blob) formData.append('profileImage', blob, 'workspace_profile.jpg');
-    }
-
-    const button = document.getElementById('btnFinalAccept');
-    button.disabled = true;
-    button.textContent = '참여 중...';
+    formData.append('requestId', requestId);
+    formData.append('status', status);
+    formData.append('rejectionReason', rejectionReason);
 
     $.ajax({
-        url: '/workspace/api/invitation/process',
+        url: '/workspace/api/join-request/respond',
         type: 'POST',
         processData: false,
         contentType: false,
         data: formData,
         success: function(res) {
-            if (res.success === true || res.success === 'true') {
-                location.href = res.redirectUrl || ('/workspace/main?wsId=' + res.wsId);
+            if (!res || !(res.success === true || res.success === 'true')) {
+                alert((res && res.message) ? res.message : '참여 요청 처리 중 오류가 발생했습니다.');
                 return;
             }
-            alert(res.message === 'DISPLAY_NAME_REQUIRED'
-                ? '그룹 표시 이름을 입력해주세요.'
-                : '초대 수락 중 오류가 발생했습니다.');
+
+            $('#join-request-' + requestId).fadeOut(220, function() {
+                $(this).remove();
+                if ($('[data-request-panel="received"] .request-card.is-pending').length === 0) {
+                    $('[data-request-panel="received"]').append(
+                        '<p class="empty-msg">처리할 받은 요청이 없습니다.</p>'
+                    );
+                }
+            });
+
+            if (typeof window.refreshHeaderNotifications === 'function') {
+                window.refreshHeaderNotifications();
+            }
         },
-        error: function() {
-            alert('서버 통신 중 오류가 발생했습니다.');
-        },
-        complete: function() {
-            button.disabled = false;
-            button.textContent = '참여하기';
+        error: function(xhr) {
+            const message = xhr.responseJSON && xhr.responseJSON.message
+                ? xhr.responseJSON.message
+                : '서버 통신 중 오류가 발생했습니다.';
+            alert(message);
         }
     });
 }
-
 
 function respondShareRequest(shareId, status) {
     const message = status === 'ACCEPTED' ? '공유 요청을 수락하시겠습니까?' : '공유 요청을 거절하시겠습니까?';

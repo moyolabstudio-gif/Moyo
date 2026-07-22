@@ -1,0 +1,31 @@
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<div class="moyo-scope-modal" id="commonScopeSelectorModal" hidden>
+    <div class="moyo-scope-modal__backdrop" data-common-scope-close></div>
+    <section class="moyo-scope-modal__panel" role="dialog" aria-modal="true" aria-labelledby="commonScopeSelectorTitle">
+        <header class="moyo-scope-modal__header">
+            <button type="button" class="moyo-scope-modal__back" id="commonScopeSelectorBack" hidden aria-label="이전 단계">
+                <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+            </button>
+            <h2 id="commonScopeSelectorTitle">대상 선택</h2>
+            <button type="button" class="moyo-scope-modal__close" data-common-scope-close aria-label="닫기">
+                <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+            </button>
+        </header>
+
+        <div class="moyo-scope-modal__search" id="commonScopeSelectorSearchWrap">
+            <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+            <input type="search" id="commonScopeSelectorSearch" placeholder="검색" autocomplete="off">
+            <button type="button" id="commonScopeSelectorSearchClear" aria-label="검색어 지우기">
+                <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+            </button>
+        </div>
+
+        <label class="moyo-scope-modal__completed" id="commonScopeSelectorCompletedWrap" hidden>
+            <input type="checkbox" id="commonScopeSelectorCompleted">
+            <span class="moyo-scope-modal__checkbox" aria-hidden="true"><i class="fa-solid fa-check"></i></span>
+            <span>완료된 프로젝트 보기</span>
+        </label>
+
+        <div class="moyo-scope-modal__body" id="commonScopeSelectorBody"></div>
+    </section>
+</div>

@@ -5,6 +5,7 @@
 <link rel="icon" type="image/png" href="${pageContext.request.contextPath}/brand/moyo_logo.png?v=moyo-logo-clear">
 
 <link rel="stylesheet" href="${pageContext.request.contextPath}/css/moyoModal.css">
+<link rel="stylesheet" href="${pageContext.request.contextPath}/css/commonJoinProfile.css?v=common-join-profile-v2">
 
 <link rel="stylesheet" href="${pageContext.request.contextPath}/css/appSidebar.css?v=header-profile-safe-20260706">
 
@@ -101,12 +102,25 @@
         color:#fff; font-size:14px; font-weight:900; flex-shrink:0;
         box-shadow:0 4px 12px rgba(57,145,216,.24);
     }
-    .moyo-header .user-avatar img {
-        display:block;
-        width:100%;
-        height:100%;
-        object-fit:cover;
-        border-radius:50%;
+    .moyo-header .user-avatar img,
+    .moyo-header .user-avatar .user-avatar-image {
+        display:block !important;
+        width:100% !important;
+        height:100% !important;
+        min-width:100% !important;
+        min-height:100% !important;
+        max-width:none !important;
+        max-height:none !important;
+        margin:0 !important;
+        padding:0 !important;
+        border:0 !important;
+        border-radius:50% !important;
+        background:transparent !important;
+        box-shadow:none !important;
+        object-fit:cover !important;
+        object-position:center !important;
+        transform:none !important;
+        filter:none !important;
     }
     .moyo-header .user-avatar .user-avatar-fallback {
         display:inline-flex;
@@ -115,6 +129,42 @@
         width:100%;
         height:100%;
     }
+    /* 업로드 프로필은 투명 PNG 자체를 표시하고, 기본 아바타 배경은 사용하지 않는다. */
+    .moyo-header .user-avatar.has-profile:not(.no-image) {
+        background:none !important;
+        background-color:transparent !important;
+        box-shadow:none;
+    }
+    .moyo-header .user-avatar.has-profile.no-image {
+        background:linear-gradient(135deg, #397BE8 0%, #4A90E2 45%, #39CDB5 100%) !important;
+        box-shadow:0 4px 12px rgba(57,145,216,.24);
+    }
+
+    /* 페이지별 CSS가 헤더 프로필 크기/여백/배경을 덮어쓰지 못하도록 공통 규칙을 고정한다. */
+    .moyo-header .user-status .user-link .user-avatar {
+        width:32px !important;
+        height:32px !important;
+        min-width:32px !important;
+        min-height:32px !important;
+        max-width:32px !important;
+        max-height:32px !important;
+        margin:0 !important;
+        padding:0 !important;
+        border-radius:50% !important;
+        overflow:hidden !important;
+        flex:0 0 32px !important;
+        box-sizing:border-box !important;
+    }
+    .moyo-header .user-status .user-link .user-avatar.is-uploaded-profile:not(.no-image) {
+        background:transparent !important;
+        box-shadow:none !important;
+    }
+    .moyo-header .user-status .user-link .user-avatar.is-default-profile,
+    .moyo-header .user-status .user-link .user-avatar.no-image {
+        background:linear-gradient(135deg, #397BE8 0%, #4A90E2 45%, #39CDB5 100%) !important;
+        box-shadow:0 4px 12px rgba(57,145,216,.24) !important;
+    }
+
     .moyo-header .user-avatar.has-profile .user-avatar-fallback { display:none; }
     .moyo-header .user-avatar.has-profile.no-image .user-avatar-fallback { display:inline-flex; }
     .user-name { max-width:120px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:900; }
@@ -415,6 +465,97 @@
         }
         .moyo-header.moyo-header-guest .moyo-logo-img { height:41px; max-width:106px; }
     }
+
+.moyo-alarm-approved-action{
+    display:inline-flex;
+    align-items:center;
+    margin-top:6px;
+    color:#2f72e8;
+    font-size:12px;
+    font-weight:800;
+    line-height:1.25;
+}
+.moyo-alarm-approved-action::after{
+    content:' →';
+    margin-left:2px;
+}
+.moyo-alarm-item:hover .moyo-alarm-approved-action{
+    text-decoration:underline;
+}
+/* 승인 알림 문구가 길어도 알림 모달 가로 스크롤이 생기지 않도록 정리 */
+#alarmDropdown.moyo-alarm-dropdown{
+    width:360px;
+    max-width:calc(100vw - 24px);
+}
+#alarmDropdown .moyo-alarm-list{
+    overflow-x:hidden;
+}
+#alarmDropdown .moyo-alarm-item{
+    align-items:flex-start;
+}
+#alarmDropdown .moyo-alarm-item-main{
+    width:0;
+    max-width:100%;
+    overflow:hidden;
+}
+#alarmDropdown .moyo-alarm-item-title,
+#alarmDropdown .moyo-alarm-item-desc{
+    overflow:visible;
+    text-overflow:clip;
+    white-space:normal;
+    overflow-wrap:anywhere;
+    word-break:keep-all;
+}
+#alarmDropdown .moyo-alarm-approved-action{
+    max-width:100%;
+    white-space:normal;
+    overflow-wrap:anywhere;
+}
+
+
+.moyo-alarm-approved-actions{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    margin-top:7px;
+    flex-wrap:wrap;
+}
+.moyo-alarm-abandon-action{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-height:24px;
+    padding:0 9px;
+    border:1px solid #dbe4ef;
+    border-radius:8px;
+    background:#fff;
+    color:#74839a;
+    font:inherit;
+    font-size:11px;
+    font-weight:800;
+    line-height:1;
+    cursor:pointer;
+    appearance:none;
+    -webkit-appearance:none;
+    box-sizing:border-box;
+    transition:border-color .16s ease, background-color .16s ease, color .16s ease;
+}
+.moyo-alarm-abandon-action:hover{
+    border-color:#efb8bf;
+    background:#fff7f8;
+    color:#dc5360;
+    text-decoration:none;
+}
+.moyo-alarm-abandon-action:focus-visible{
+    outline:none;
+    border-color:#e99ca6;
+    box-shadow:0 0 0 3px rgba(220,83,96,.12);
+}
+.moyo-alarm-abandon-action:disabled{
+    opacity:.55;
+    cursor:default;
+}
+
 </style>
 
 <header class="moyo-header ${empty sessionScope.user ? 'moyo-header-guest' : 'moyo-header-app'}">
@@ -456,7 +597,7 @@
                             <span class="moyo-nav-label">노트</span>
                         </a>
                         <a href="${pageContext.request.contextPath}/photo-album?scopeType=PERSONAL&amp;scopeId=${sessionScope.user.userId}" class="moyo-nav-link" data-nav-key="photo">
-                            <span class="moyo-nav-icon">🖼️</span>
+                            <span class="moyo-nav-icon">📷</span>
                             <span class="moyo-nav-label">사진</span>
                         </a>
                         <div class="moyo-nav-link" id="alarmContainer" data-nav-key="alarm" style="cursor:pointer;"
@@ -491,14 +632,14 @@
                             <c:set var="headerProfileImage" value="/${headerProfileImage}" />
                         </c:if>
                         <a href="/users/mypage" class="user-link" aria-label="내 정보로 이동">
-                            <span class="user-avatar ${not empty headerProfileImage ? 'has-profile' : ''}">
+                            <span class="user-avatar ${not empty headerProfileImage ? 'has-profile is-uploaded-profile' : 'is-default-profile'}">
                                 <c:if test="${not empty headerProfileImage}">
                                     <c:choose>
                                         <c:when test="${fn:startsWith(headerProfileImage, 'http')}">
-                                            <img src="${headerProfileImage}" alt="${headerUserName}" onerror="this.parentElement.classList.add('no-image'); this.remove();">
+                                            <img class="user-avatar-image" src="${headerProfileImage}" alt="${headerUserName}" onerror="this.parentElement.classList.add('no-image'); this.parentElement.classList.remove('is-uploaded-profile'); this.parentElement.classList.add('is-default-profile'); this.remove();">
                                         </c:when>
                                         <c:otherwise>
-                                            <img src="${pageContext.request.contextPath}${headerProfileImage}" alt="${headerUserName}" onerror="this.parentElement.classList.add('no-image'); this.remove();">
+                                            <img class="user-avatar-image" src="${pageContext.request.contextPath}${headerProfileImage}" alt="${headerUserName}" onerror="this.parentElement.classList.add('no-image'); this.parentElement.classList.remove('is-uploaded-profile'); this.parentElement.classList.add('is-default-profile'); this.remove();">
                                         </c:otherwise>
                                     </c:choose>
                                 </c:if>
@@ -519,6 +660,7 @@
         </nav>
     </div>
 </header>
+<jsp:include page="/WEB-INF/views/common/commonJoinProfile.jsp" />
 
 <jsp:include page="/WEB-INF/views/common/appSidebar.jsp" />
 
@@ -553,7 +695,20 @@
 <script>
 (function() {
     const isLogin = '${not empty sessionScope.user}' === 'true';
-    const requestPageUrl = '${pageContext.request.contextPath}/requests';
+    if (!isLogin) return;
+
+    const contextPath = '${pageContext.request.contextPath}';
+    const requestPageUrl = contextPath + '/requests';
+    const alarmListUrl = contextPath + '/api/alarm/list';
+    const alarmReadUrl = contextPath + '/api/alarm/read';
+    const requestCountUrl = contextPath + '/requests/api/count';
+    const requestPendingUrl = contextPath + '/requests/api/pending';
+    const shareRespondBaseUrl = contextPath + '/share/api/requests/';
+    const inviteProcessUrl = contextPath + '/workspace/api/invitation/process';
+
+    function qs(selector) {
+        return document.querySelector(selector);
+    }
 
     function normalizeAlarmList(res) {
         return Array.isArray(res) ? res : [];
@@ -564,23 +719,31 @@
     }
 
     function getUnreadCount(alarms) {
-        return alarms.filter(item => item && item.isRead === 'N').length;
+        return normalizeAlarmList(alarms).filter(function(item) {
+            return item && (item.isRead === 'N' || item.IS_READ === 'N');
+        }).length;
     }
 
     function getRequestCount(res) {
-        return res && res.count ? Number(res.count) : 0;
+        const count = res && res.count != null ? Number(res.count) : 0;
+        return Number.isFinite(count) ? count : 0;
     }
 
     function setAlarmBadge(count) {
-        const $badge = $('#alarmBadge');
+        const badge = qs('#alarmBadge');
+        if (!badge) return;
         if (count > 0) {
-            $badge.text(count > 99 ? '99+' : count).show();
+            badge.textContent = count > 99 ? '99+' : String(count);
+            badge.style.display = 'inline-block';
         } else {
-            $badge.hide();
+            badge.style.display = 'none';
         }
     }
 
     function setAlarmSummary(alarmCount, requestCount) {
+        const summary = qs('#alarmSummary');
+        if (!summary) return;
+
         const totalCount = alarmCount + requestCount;
         let text = '새로운 소식 없음';
         if (totalCount > 0) {
@@ -589,39 +752,58 @@
             if (alarmCount > 0) parts.push('읽지 않은 알림 ' + alarmCount + '건');
             text = parts.join(' · ');
         }
-        $('#alarmSummary').text(text);
+        summary.textContent = text;
+    }
+
+    function fetchJson(url, options) {
+        return fetch(url, Object.assign({ credentials: 'same-origin' }, options || {}))
+            .then(function(res) {
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                return res.json();
+            });
+    }
+
+    function postForm(url, data) {
+        const body = data instanceof FormData ? data : new URLSearchParams(data || {});
+        return fetch(url, {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: data instanceof FormData ? undefined : { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
+            body: body
+        }).then(function(res) {
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            const contentType = res.headers.get('content-type') || '';
+            return contentType.indexOf('application/json') >= 0 ? res.json() : res.text();
+        });
     }
 
     function updateAlarmCount() {
-        $.when(
-            $.get('/api/alarm/list'),
-            $.get('/requests/api/count')
-        ).done(function(alarmRes, requestRes) {
-            const alarms = normalizeAlarmList(alarmRes[0]);
+        Promise.allSettled([
+            fetchJson(alarmListUrl),
+            fetchJson(requestCountUrl)
+        ]).then(function(results) {
+            const alarms = results[0].status === 'fulfilled' ? normalizeAlarmList(results[0].value) : [];
+            const requestInfo = results[1].status === 'fulfilled' ? results[1].value : { count: 0 };
             const unreadCount = getUnreadCount(alarms);
-            const requestCount = getRequestCount(requestRes[0]);
+            const requestCount = getRequestCount(requestInfo);
             setAlarmBadge(unreadCount + requestCount);
-        }).fail(function() {
-            $.get('/api/alarm/list', function(data) {
-                setAlarmBadge(getUnreadCount(normalizeAlarmList(data)));
-            });
         });
     }
 
     function clickAlarm(alarmId, targetUrl) {
-        $.ajax({
-            url: '/api/alarm/read',
-            type: 'POST',
-            contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
-            data: $.param({ alarmId: alarmId }),
-            success: function() {
-                if (targetUrl) location.href = targetUrl;
+        if (!alarmId) {
+            if (targetUrl) window.location.href = targetUrl;
+            return;
+        }
+
+        postForm(alarmReadUrl, { alarmId: alarmId })
+            .then(function() {
+                if (targetUrl) window.location.href = targetUrl;
                 else loadAlarmDropdown(true);
-            },
-            error: function(xhr) {
-                alert(xhr.responseText || '알림을 여는 중 문제가 발생했습니다.');
-            }
-        });
+            })
+            .catch(function() {
+                alert('알림을 여는 중 문제가 발생했습니다.');
+            });
     }
 
     function getShareTypeName(contentType, item) {
@@ -644,6 +826,9 @@
         if (item.requestType === 'GROUP_INVITE') {
             return (item.requesterName || '누군가') + '님이 초대했습니다.';
         }
+        if (item.requestType === 'GROUP_JOIN_REQUEST') {
+            return (item.requesterName || '누군가') + '님이 그룹 참여를 요청했습니다.';
+        }
         const requester = item.requesterName || '누군가';
         if (item.contentType === 'CALENDAR') {
             if (item.calendarAttendeeYn === 'Y' && item.permissionType === 'EDIT') {
@@ -659,93 +844,161 @@
         return requester + '님이 공유 요청을 보냈습니다.';
     }
 
-    function processShareAction($card, shareId, status) {
-        const $buttons = $card.find('button');
-        $buttons.prop('disabled', true);
-        $.post('/share/api/requests/' + shareId + '/respond', { status: status }, function(res) {
-            if (!res || !(res.success === true || res.success === 'true')) {
-                alert((res && res.message) ? res.message : '요청 처리 중 오류가 발생했습니다.');
-                $buttons.prop('disabled', false);
-                return;
-            }
-            $card.slideUp(160, function() {
-                $(this).remove();
-                loadAlarmDropdown(true);
-                updateAlarmCount();
-            });
-        }).fail(function() {
-            alert('서버 통신 중 오류가 발생했습니다.');
-            $buttons.prop('disabled', false);
+    function disableCardButtons(card, disabled) {
+        card.querySelectorAll('button').forEach(function(btn) {
+            btn.disabled = disabled;
         });
     }
 
-    function processInviteAction($card, inviteId, status) {
-        const $buttons = $card.find('button');
-        const formData = new FormData();
-        const $container = $('#alarmContainer');
-        formData.append('inviteId', inviteId);
-        formData.append('status', status);
-        formData.append('useAccountProfile', 'Y');
-        formData.append('displayName', $container.data('account-name') || '');
-        formData.append('contactEmail', $container.data('account-email') || '');
-        formData.append('showPhone', 'N');
+    function removeCardAndRefresh(card) {
+        card.style.transition = 'opacity .16s ease, transform .16s ease';
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(-4px)';
+        setTimeout(function() {
+            card.remove();
+            loadAlarmDropdown(true);
+            updateAlarmCount();
+        }, 170);
+    }
 
-        $buttons.prop('disabled', true);
-        $.ajax({
-            url: '/workspace/api/invitation/process',
-            type: 'POST',
-            processData: false,
-            contentType: false,
-            data: formData,
-            success: function(res) {
-                if (!res || !(res.success === true || res.success === 'true')) {
-                    alert((res && res.message) ? res.message : '요청 처리 중 오류가 발생했습니다.');
-                    $buttons.prop('disabled', false);
+    function isSuccessResponse(res) {
+        return res === 'success' || res === true || (res && (res.success === true || res.success === 'true'));
+    }
+
+    function processShareAction(card, shareId, status) {
+        disableCardButtons(card, true);
+        postForm(shareRespondBaseUrl + encodeURIComponent(shareId) + '/respond', { status: status })
+            .then(function(res) {
+                if (!isSuccessResponse(res)) {
+                    alert(res && res.message ? res.message : '요청 처리 중 오류가 발생했습니다.');
+                    disableCardButtons(card, false);
                     return;
                 }
-                $card.slideUp(160, function() {
-                    $(this).remove();
-                    loadAlarmDropdown(true);
-                    updateAlarmCount();
-                });
-            },
-            error: function() {
+                removeCardAndRefresh(card);
+            })
+            .catch(function() {
                 alert('서버 통신 중 오류가 발생했습니다.');
-                $buttons.prop('disabled', false);
+                disableCardButtons(card, false);
+            });
+    }
+
+    function processInviteAction(card, inviteId, status, wsName, wsId) {
+        // 그룹 초대 수락은 그룹에서 사용할 프로필을 먼저 설정해야 한다.
+        // 헤더 알림에서 바로 계정 프로필로 가입시키지 않고 요청함의 프로필 설정 모달로 이동한다.
+        if (status === 'ACCEPTED') {
+            window.openGroupInviteProfileModal(inviteId, wsName || '그룹', wsId, function() {
+                removeCardAndRefresh(card);
+            });
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('inviteId', inviteId);
+        formData.append('status', status);
+
+        disableCardButtons(card, true);
+        postForm(inviteProcessUrl, formData)
+            .then(function(res) {
+                if (!isSuccessResponse(res)) {
+                    alert(res && res.message ? res.message : '요청 처리 중 오류가 발생했습니다.');
+                    disableCardButtons(card, false);
+                    return;
+                }
+                removeCardAndRefresh(card);
+            })
+            .catch(function() {
+                alert('서버 통신 중 오류가 발생했습니다.');
+                disableCardButtons(card, false);
+            });
+    }
+
+    function processGroupJoinRequestAction(card, requestId, status) {
+        let rejectionReason = '';
+        if (status === 'REJECTED') {
+            const entered = window.prompt(
+                '거절 사유를 입력할 수 있습니다. (선택)\n입력하지 않고 확인하면 기본 안내만 전달됩니다.',
+                ''
+            );
+            if (entered === null) return;
+            rejectionReason = entered.trim();
+            if (rejectionReason.length > 300) {
+                alert('거절 사유는 300자까지 입력할 수 있습니다.');
+                return;
             }
+        }
+
+        disableCardButtons(card, true);
+        postForm(contextPath + '/workspace/api/join-request/respond', {
+            requestId: requestId,
+            status: status,
+            rejectionReason: rejectionReason
+        }).then(function(res) {
+            if (!isSuccessResponse(res)) {
+                alert(res && res.message ? res.message : '참여 요청 처리 중 오류가 발생했습니다.');
+                disableCardButtons(card, false);
+                return;
+            }
+            removeCardAndRefresh(card);
+        }).catch(function() {
+            alert('서버 통신 중 오류가 발생했습니다.');
+            disableCardButtons(card, false);
         });
     }
 
     function makePendingRequestItem(item) {
         const isInvite = item.requestType === 'GROUP_INVITE';
-        const typeLabel = isInvite ? '그룹 초대' : getShareTypeName(item.contentType, item);
-        const id = item.id || item.shareId || item.inviteId;
-        const $li = $('<li class="moyo-alarm-request-card">');
-        const $main = $('<div class="moyo-alarm-request-main">');
-        const $title = $('<div class="moyo-alarm-request-title">');
-        $('<span class="moyo-alarm-request-type">').text(typeLabel).appendTo($title);
-        $('<span class="moyo-alarm-request-name">').text(getPendingTitle(item)).appendTo($title);
-        $('<div class="moyo-alarm-request-desc">').text(getPendingDescription(item)).appendTo($main);
-        $main.prepend($title);
+        const isJoinRequest = item.requestType === 'GROUP_JOIN_REQUEST';
+        const typeLabel = isInvite ? '그룹 초대'
+                : (isJoinRequest ? '그룹 참여 요청' : getShareTypeName(item.contentType, item));
+        const id = item.id || item.shareId || item.inviteId || item.requestId;
+        const li = document.createElement('li');
+        li.className = 'moyo-alarm-request-card';
 
-        const $actions = $('<div class="moyo-alarm-actions">');
-        const $accept = $('<button type="button" class="moyo-alarm-action-btn is-primary">수락</button>');
-        const $reject = $('<button type="button" class="moyo-alarm-action-btn">거절</button>');
-        $accept.on('click', function(e) {
+        const main = document.createElement('div');
+        main.className = 'moyo-alarm-request-main';
+        const title = document.createElement('div');
+        title.className = 'moyo-alarm-request-title';
+        const type = document.createElement('span');
+        type.className = 'moyo-alarm-request-type';
+        type.textContent = typeLabel;
+        const name = document.createElement('span');
+        name.className = 'moyo-alarm-request-name';
+        name.textContent = getPendingTitle(item);
+        const desc = document.createElement('div');
+        desc.className = 'moyo-alarm-request-desc';
+        desc.textContent = getPendingDescription(item);
+        title.append(type, name);
+        main.append(title, desc);
+
+        const actions = document.createElement('div');
+        actions.className = 'moyo-alarm-actions';
+        const accept = document.createElement('button');
+        accept.type = 'button';
+        accept.className = 'moyo-alarm-action-btn is-primary';
+        accept.textContent = isJoinRequest ? '승인' : '수락';
+        const reject = document.createElement('button');
+        reject.type = 'button';
+        reject.className = 'moyo-alarm-action-btn';
+        reject.textContent = '거절';
+
+        accept.addEventListener('click', function(e) {
             e.preventDefault();
             e.stopPropagation();
-            if (isInvite) processInviteAction($li, id, 'ACCEPTED');
-            else processShareAction($li, id, 'ACCEPTED');
+            if (isInvite) processInviteAction(li, id, 'ACCEPTED', getPendingTitle(item), item.wsId || item.ws_id || item.workspaceId || item.workspace_id || item.targetId || item.target_id);
+            else if (isJoinRequest) processGroupJoinRequestAction(li, id, 'APPROVED');
+            else processShareAction(li, id, 'ACCEPTED');
         });
-        $reject.on('click', function(e) {
+        reject.addEventListener('click', function(e) {
             e.preventDefault();
             e.stopPropagation();
-            if (isInvite) processInviteAction($li, id, 'REJECTED');
-            else processShareAction($li, id, 'REJECTED');
+            if (isInvite) processInviteAction(li, id, 'REJECTED', getPendingTitle(item), item.wsId || item.ws_id || item.workspaceId || item.workspace_id || item.targetId || item.target_id);
+            else if (isJoinRequest) processGroupJoinRequestAction(li, id, 'REJECTED');
+            else processShareAction(li, id, 'REJECTED');
         });
-        $actions.append($accept, $reject);
-        $li.append($main, $actions);
-        return $li;
+
+        actions.append(accept, reject);
+        li.append(main, actions);
+        return li;
     }
 
     function getAlarmMeta(item) {
@@ -765,110 +1018,236 @@
         const alertType = String(item.alertType || item.alert_type || 'NOTICE').toUpperCase();
         const targetType = String(item.targetType || item.target_type || '').toUpperCase();
         const targetId = item.targetId || item.target_id;
-        const noticeId = item.notice_id || item.noticeId;
+        const noticeId = item.noticeId || item.notice_id;
         if ((alertType === 'CALENDAR_REMINDER' || alertType === 'CALENDAR_ATTENDEE' || targetType === 'CALENDAR') && targetId) {
-            return '/calendar/event/detail?eventId=' + encodeURIComponent(targetId);
+            return contextPath + '/calendar/event/detail?eventId=' + encodeURIComponent(targetId);
         }
-        if (noticeId) return '/common/noticeList?openId=' + encodeURIComponent(noticeId);
+        if (noticeId) return contextPath + '/common/noticeList?openId=' + encodeURIComponent(noticeId);
         return '';
     }
 
     function makeAlarmItem(item) {
-        const alarmId = item.alarm_id || item.alarmId;
+        const alarmId = item.alarmId || item.alarm_id;
         const title = item.title || '새 알림';
         const content = item.content || item.CONTENT || '';
         const meta = getAlarmMeta(item);
         const targetUrl = getAlarmTargetUrl(item);
-        const $li = $('<li class="moyo-alarm-item">');
-        $('<span class="moyo-alarm-item-icon">').text(meta.icon).appendTo($li);
-        $li.append(
-            '<span class="moyo-alarm-item-main">' +
-                '<span class="moyo-alarm-item-title"></span>' +
-                '<span class="moyo-alarm-item-desc"></span>' +
-            '</span>'
-        );
-        $li.find('.moyo-alarm-item-title').text(title);
-        $li.find('.moyo-alarm-item-desc').text(content ? content : meta.label);
-        $li.attr('title', meta.label);
-        $li.on('click', function(e) {
+        const li = document.createElement('li');
+        li.className = 'moyo-alarm-item';
+        li.title = meta.label;
+
+        const icon = document.createElement('span');
+        icon.className = 'moyo-alarm-item-icon';
+        icon.textContent = meta.icon;
+
+        const main = document.createElement('span');
+        main.className = 'moyo-alarm-item-main';
+        const titleEl = document.createElement('span');
+        titleEl.className = 'moyo-alarm-item-title';
+        titleEl.textContent = title;
+        const desc = document.createElement('span');
+        desc.className = 'moyo-alarm-item-desc';
+        desc.textContent = content || meta.label;
+        main.append(titleEl, desc);
+
+        const alertTypeUpper = String(item.alertType || item.alert_type || '').toUpperCase();
+        if (alertTypeUpper === 'GROUP_JOIN_APPROVED') {
+            const actions = document.createElement('span');
+            actions.className = 'moyo-alarm-approved-actions';
+
+            const action = document.createElement('span');
+            action.className = 'moyo-alarm-approved-action';
+            action.textContent = '프로필 설정하고 참여';
+
+            const abandon = document.createElement('button');
+            abandon.type = 'button';
+            abandon.className = 'moyo-alarm-abandon-action';
+            abandon.textContent = '참여 포기';
+            abandon.addEventListener('click', async function(e) {
+                e.stopPropagation();
+
+                const match = String(targetUrl || '').match(/[?&]approvedJoinRequestId=(\d+)/);
+                const requestId = match ? match[1] : null;
+                if (!requestId) {
+                    alert('승인된 참여 요청 정보를 확인할 수 없습니다.');
+                    return;
+                }
+
+                if (!confirm('그룹 참여를 포기할까요?\n승인된 참여 요청이 취소되며, 다시 참여하려면 새로 요청해야 합니다.')) {
+                    return;
+                }
+
+                abandon.disabled = true;
+                try {
+                    const response = await postForm(
+                        contextPath + '/workspace/api/join-request/abandon',
+                        { requestId: requestId }
+                    );
+                    if (!response || !(response.success === true || response.success === 'true')) {
+                        throw new Error(response && response.status ? response.status : 'FAILED');
+                    }
+
+                    if (typeof window.refreshHeaderNotifications === 'function') {
+                        await window.refreshHeaderNotifications();
+                    } else {
+                        loadAlarmDropdown();
+                    }
+                } catch (error) {
+                    alert('참여 포기 처리 중 오류가 발생했습니다.');
+                    abandon.disabled = false;
+                }
+            });
+
+            actions.append(action, abandon);
+            main.appendChild(actions);
+        }
+
+        li.append(icon, main);
+
+        li.addEventListener('click', function(e) {
             e.stopPropagation();
+            const alertType = String(item.alertType || item.alert_type || '').toUpperCase();
+            if (alertType === 'GROUP_JOIN_APPROVED') {
+                const match = String(targetUrl || '').match(/[?&]approvedJoinRequestId=(\d+)/);
+                const requestId = match ? match[1] : null;
+                const wsId = item.targetId || item.target_id || null;
+                if (requestId && typeof window.openApprovedJoinProfileModal === 'function') {
+                    if (alarmId) {
+                        postForm(alarmReadUrl, { alarmId: alarmId }).catch(function(){});
+                    }
+                    hideDropdown();
+                    window.openApprovedJoinProfileModal(requestId, title.replace(/\s*참여 요청 승인\s*$/, ''), wsId);
+                    return;
+                }
+            }
             clickAlarm(alarmId, targetUrl);
         });
-        return $li;
+        return li;
     }
 
     function renderAlarmDropdown(alarms, pendingRequests) {
+        alarms = normalizeAlarmList(alarms);
+        pendingRequests = normalizePendingList({ items: pendingRequests });
+
         const unreadCount = getUnreadCount(alarms);
         const requestCount = pendingRequests.length;
-        const $list = $('#alarmList');
-        $list.empty();
+        const list = qs('#alarmList');
+        if (!list) return;
+        list.innerHTML = '';
         setAlarmSummary(unreadCount, requestCount);
         setAlarmBadge(unreadCount + requestCount);
 
         if (requestCount > 0) {
-            $list.append('<li class="moyo-alarm-section-label">요청</li>');
+            const section = document.createElement('li');
+            section.className = 'moyo-alarm-section-label';
+            section.textContent = '요청';
+            list.appendChild(section);
             pendingRequests.slice(0, 4).forEach(function(item) {
-                $list.append(makePendingRequestItem(item));
+                list.appendChild(makePendingRequestItem(item));
             });
             if (requestCount > 4) {
-                $list.append('<li class="moyo-alarm-more"><a href="' + requestPageUrl + '">남은 요청 ' + (requestCount - 4) + '건 보기</a></li>');
+                const more = document.createElement('li');
+                more.className = 'moyo-alarm-more';
+                const link = document.createElement('a');
+                link.href = requestPageUrl;
+                link.textContent = '남은 요청 ' + (requestCount - 4) + '건 보기';
+                more.appendChild(link);
+                list.appendChild(more);
             }
         }
 
-        if (alarms && alarms.length > 0) {
+        if (alarms.length > 0) {
             alarms.forEach(function(item) {
-                $list.append(makeAlarmItem(item));
+                list.appendChild(makeAlarmItem(item));
             });
         }
 
-        if (requestCount === 0 && (!alarms || alarms.length === 0)) {
-            $list.append('<li class="moyo-alarm-empty">새로운 알림이 없습니다.</li>');
+        if (requestCount === 0 && alarms.length === 0) {
+            const empty = document.createElement('li');
+            empty.className = 'moyo-alarm-empty';
+            empty.textContent = '새로운 알림이 없습니다.';
+            list.appendChild(empty);
         }
     }
 
-    function loadAlarmDropdown(keepOpen) {
-        $.when(
-            $.get('/api/alarm/list'),
-            $.get('/requests/api/pending')
-        ).done(function(alarmRes, requestRes) {
-            const alarms = normalizeAlarmList(alarmRes[0]);
-            const pendingRequests = normalizePendingList(requestRes[0]);
+    function showDropdown() {
+        const dropdown = qs('#alarmDropdown');
+        if (dropdown) dropdown.style.display = 'block';
+    }
+
+    function hideDropdown() {
+        const dropdown = qs('#alarmDropdown');
+        if (dropdown) dropdown.style.display = 'none';
+    }
+
+    function isDropdownVisible() {
+        const dropdown = qs('#alarmDropdown');
+        return dropdown && dropdown.style.display !== 'none' && window.getComputedStyle(dropdown).display !== 'none';
+    }
+
+    function loadAlarmDropdown() {
+        Promise.allSettled([
+            fetchJson(alarmListUrl),
+            fetchJson(requestPendingUrl)
+        ]).then(function(results) {
+            const alarms = results[0].status === 'fulfilled' ? normalizeAlarmList(results[0].value) : [];
+            const pendingRequests = results[1].status === 'fulfilled' ? normalizePendingList(results[1].value) : [];
             renderAlarmDropdown(alarms, pendingRequests);
-            $('#alarmDropdown').show();
-        }).fail(function() {
-            $.get('/api/alarm/list', function(data) {
-                const alarms = normalizeAlarmList(data);
-                renderAlarmDropdown(alarms, []);
-                $('#alarmDropdown').show();
-            });
+            showDropdown();
         });
     }
 
-    $(document).ready(function() {
-        if (isLogin) {
-            updateAlarmCount();
-            setInterval(updateAlarmCount, 30000);
-        }
+    window.refreshHeaderNotifications = function() {
+        return Promise.allSettled([
+            fetchJson(alarmListUrl),
+            fetchJson(requestPendingUrl)
+        ]).then(function(results) {
+            const alarms = results[0].status === 'fulfilled'
+                ? normalizeAlarmList(results[0].value)
+                : [];
+            const pendingRequests = results[1].status === 'fulfilled'
+                ? normalizePendingList(results[1].value)
+                : [];
 
-        $('#alarmContainer').on('click', function(e) {
+            renderAlarmDropdown(alarms, pendingRequests);
+            showDropdown();
+        });
+    };
+
+    function initAlarm() {
+        const container = qs('#alarmContainer');
+        const dropdown = qs('#alarmDropdown');
+        if (!container || !dropdown) return;
+
+        updateAlarmCount();
+        setInterval(updateAlarmCount, 30000);
+
+        container.addEventListener('click', function(e) {
             e.stopPropagation();
-            const $dropdown = $('#alarmDropdown');
-            if ($dropdown.is(':visible')) {
-                $dropdown.hide();
+            if (isDropdownVisible()) {
+                hideDropdown();
             } else {
                 loadAlarmDropdown();
             }
         });
 
-        $('#alarmDropdown').on('click', function(e) {
+        dropdown.addEventListener('click', function(e) {
             e.stopPropagation();
         });
 
-        $(document).on('click', function(e) {
-            if (!$(e.target).closest('#alarmContainer').length) {
-                $('#alarmDropdown').hide();
-            }
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('#alarmContainer')) hideDropdown();
         });
-    });
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initAlarm);
+    } else {
+        initAlarm();
+    }
 })();
 </script>
+<c:if test="${not empty sessionScope.user}">
+    <script src="${pageContext.request.contextPath}/js/commonProfileUtils.js?v=profile-utils-v1"></script>
+    <script src="${pageContext.request.contextPath}/js/commonJoinProfile.js?v=common-join-profile-refactor-v1"></script>
+</c:if>

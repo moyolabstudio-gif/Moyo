@@ -1314,8 +1314,20 @@
         return (state.albums || []).filter(album => albumBelongsToActivePostScope(album, post));
     }
 
+
+    async function refreshMoveAlbumsForPost(post = state.activePost) {
+        if (!post) return [];
+        const targetType = postAlbumScopeType(post);
+        const targetId = postAlbumScopeIdNumber(post);
+        if (!targetType || !targetId) return [];
+        const refreshedAlbums = await requestArrayOptional(albumsUrl(targetType, targetId));
+        const otherAlbums = (state.albums || []).filter(album => !albumBelongsToActivePostScope(album, post));
+        state.albums = uniqueBy(otherAlbums.concat(refreshedAlbums), album => pick(album, 'albumId', 'ALBUM_ID'));
+        return refreshedAlbums;
+    }
+
     function canMovePostAlbum(post) {
-        if (!post || !canManagePost(post) || !currentTabSupportsAlbumMove()) return false;
+        if (!post || !canManagePost(post)) return false;
         const targetType = postAlbumScopeType(post);
         const targetId = postAlbumScopeIdNumber(post);
         return !!targetType && !!targetId;
@@ -2318,7 +2330,7 @@
 
 
     function ensureRuntimeLightboxPatchStyle() {
-        // Runtime 상세 스타일은 photoAlbum.css의 정리 섹션에서 관리한다.
+        // Runtime 상세 스타일은 commonPhotoPostDetail.css에서 관리한다.
     }
 
     function runtimeLightboxNodes() {
@@ -3192,18 +3204,10 @@
     async function openPost(id) {
         const postId = Number(id);
         if (!postId) return toast('사진 정보를 찾지 못했습니다.', true);
-        try {
-            const data = await request(`/api/photo-posts/${postId}`);
-            const detail = normalizePostDetailResponse(data, postId);
-            state.activePost = detail.post;
-            state.photos = detail.photos;
-            state.photoIndex = 0;
-            state.runtimeDescExpanded = false;
-            if (!renderRuntimeLightbox()) return toast('표시할 사진을 찾지 못했습니다.', true);
-            await loadRuntimeComments(postId);
-        } catch(e) {
-            toast(e.message || '사진 상세를 열지 못했습니다.', true);
+        if (!window.MoyoPhotoPostDetail || typeof window.MoyoPhotoPostDetail.open !== 'function') {
+            return toast('사진 상세 모듈을 불러오지 못했습니다. 페이지를 새로고침해주세요.', true);
         }
+        return window.MoyoPhotoPostDetail.open(postId);
     }
 
     function renderLightbox() {
@@ -3371,7 +3375,7 @@
         const uid = `photoAlbumShare${postId}_${Date.now()}`;
         mount.innerHTML = photoShareModalMarkup(uid, shares || [], shareMode, post || state.activePost);
         const openButton = document.getElementById(`${uid}Open`);
-        window.MoyoShareModal.init({
+        const shareApi = window.MoyoShareModal.init({
             contentType: 'PHOTO',
             contentId: postId,
             contentIds: Array.isArray(contentIds) ? contentIds : [postId],
@@ -3413,6 +3417,11 @@
             }
         });
         elevatePhotoShareModal(uid);
+        if (shareApi && typeof shareApi.openShare === 'function') {
+            shareApi.openShare();
+            elevatePhotoShareModal(uid);
+            return;
+        }
         setTimeout(() => {
             if (!openButton) return;
             openButton.dispatchEvent(new MouseEvent('click', { bubbles: false, cancelable: true }));
@@ -3892,38 +3901,52 @@
         return !!(el.moveAlbumModal && el.moveAlbumList);
     }
 
-    function showMoveAlbumModal(options = {}) {
+    async function showMoveAlbumModal(options = {}) {
         if (!state.activePost) return toast('사진 정보를 찾지 못했습니다.', true);
-        if (!canMovePostAlbum(state.activePost)) return toast('개인/그룹/프로젝트 사진에서만 앨범 이동을 사용할 수 있습니다.', true);
-        const modalOptions = typeof options === 'boolean' ? { useRuntimeLayer: options } : (options || {});
-        const runtimeBox = document.getElementById('photoRuntimeLightbox');
-        const runtimeOpen = runtimeBox && runtimeBox.getAttribute('aria-hidden') === 'false';
-
-        // 앨범 이동은 리스트/상세 모두 같은 일반 모달을 사용한다.
-        // 런타임 상세 안에서 열 때만 z-index를 올려 위에 덮는다.
-        refreshMoveAlbumModalRefs();
-        if (!el.moveAlbumModal || !el.moveAlbumList) return toast('앨범 이동 모달을 찾지 못했습니다.', true);
-
-        const currentAlbumId = Number(pick(state.activePost, 'albumId', 'ALBUM_ID')) || null;
-        state.moveAlbumId = currentAlbumId;
-        state.editingMoveAlbumId = null;
-        if (el.moveAlbumCreatePanel) el.moveAlbumCreatePanel.hidden = true;
-        if (el.moveNewAlbumName) el.moveNewAlbumName.value = '';
-        if (el.openMoveAlbumCreateButton) el.openMoveAlbumCreateButton.hidden = false;
-        if (el.moveAlbumEditPanel) el.moveAlbumEditPanel.hidden = true;
-        if (el.moveEditAlbumName) el.moveEditAlbumName.value = '';
-        renderMoveAlbumOptions(currentAlbumId);
-
-        document.body.appendChild(el.moveAlbumModal);
-        el.moveAlbumModal.classList.toggle('photo-modal-backdrop--over-runtime', !!runtimeOpen);
-        if (runtimeOpen) {
-            el.moveAlbumModal.style.setProperty('z-index', '2147483647', 'important');
-        } else {
-            el.moveAlbumModal.style.removeProperty('z-index');
+        if (!canMovePostAlbum(state.activePost)) return toast('앨범 이동 권한이 없거나 앨범 이동할 수 없는 사진입니다.', true);
+        if (!window.MoyoPhotoAlbumMoveModal || typeof window.MoyoPhotoAlbumMoveModal.open !== 'function') {
+            return toast('앨범 이동 모달을 불러오지 못했습니다.', true);
         }
-        openModal(el.moveAlbumModal);
-        if (el.moveAlbumList) el.moveAlbumList.focus && el.moveAlbumList.focus();
+        const modalOptions = typeof options === 'boolean' ? {} : (options || {});
+        const bulkIds = modalOptions.bulk && Array.isArray(state.bulkMovePostIds)
+            ? state.bulkMovePostIds.map(Number).filter(Boolean)
+            : [];
+        const openedAlbumId = state.album ? Number(pick(state.album, 'albumId', 'ALBUM_ID')) : null;
+        const basePost = state.activePost;
+        const currentAlbumId = Number(pick(basePost, 'albumId', 'ALBUM_ID')) || null;
+
+        return window.MoyoPhotoAlbumMoveModal.open({
+            post: basePost,
+            count: bulkIds.length || 1,
+            currentAlbumId,
+            loadAlbums: async () => refreshMoveAlbumsForPost(basePost),
+            move: async (nextAlbumId) => {
+                if (!bulkIds.length && nextAlbumId === currentAlbumId) {
+                    toast('현재 선택된 앨범입니다.');
+                    return;
+                }
+                if (bulkIds.length) {
+                    await movePhotoIdsToAlbum(bulkIds, nextAlbumId);
+                    state.bulkMovePostIds = [];
+                    return;
+                }
+                await request(`/api/photo-posts/${pick(basePost,'postId','POST_ID')}/album`, {
+                    method: 'PUT',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ albumId: nextAlbumId })
+                });
+                toast(nextAlbumId ? '선택한 앨범으로 이동했습니다.' : '앨범에서 꺼냈습니다.');
+                await loadAll();
+            },
+            onMoved: async () => {
+                if (openedAlbumId && el.albumDetailView && !el.albumDetailView.hidden) await openAlbum(openedAlbumId);
+                if (state.activePost && window.MoyoPhotoPostDetail && typeof window.MoyoPhotoPostDetail.refresh === 'function') {
+                    window.MoyoPhotoPostDetail.refresh();
+                }
+            }
+        });
     }
+
 
     async function createAlbumFromMoveModal() {
         const albumName = el.moveNewAlbumName.value.trim();
@@ -4663,6 +4686,36 @@
     });
     ensureMoveAlbumModalDom();
     refreshMoveAlbumModalRefs();
+
+
+
+    document.addEventListener('moyo:photo-detail-action', event => {
+        const detail = event.detail || {};
+        const action = detail.action || '';
+        const postId = Number(detail.postId || pick(detail.post || {}, 'postId', 'POST_ID'));
+        if (!postId) return;
+        if (detail.post) state.activePost = detail.post;
+        if (Array.isArray(detail.photos)) state.photos = detail.photos;
+        if (state.photoIndex == null) state.photoIndex = 0;
+        if (action === 'share') return openActivePostShareModal();
+        if (action === 'collect') return Promise.resolve(collectPost(postId)).then(() => window.MoyoPhotoPostDetail && window.MoyoPhotoPostDetail.open(postId));
+        if (action === 'edit') return showEditPostModal();
+        if (action === 'visibility') return Promise.resolve(toggleRuntimePostVisibility()).then(() => window.MoyoPhotoPostDetail && window.MoyoPhotoPostDetail.open(postId));
+        if (action === 'move') return showMoveAlbumModal({ useRuntimeLayer: false, forceNormalModal: true });
+        if (action === 'delete') return deletePost();
+        if (action === 'restore') return restoreActivePost();
+        if (action === 'permanent') return permanentlyDeleteActivePost();
+    });
+
+    document.addEventListener('moyo:photo-post-updated', event => {
+        const detail = event.detail || {};
+        const postId = Number(detail.postId);
+        if (!postId) return;
+        if (detail.likeCount !== undefined) updatePostLikeState(postId, !!detail.liked, Number(detail.likeCount || 0));
+        if (detail.commentCount !== undefined) updatePostCommentCount(postId, Number(detail.commentCount || 0));
+        refreshPosts();
+        if (state.album && !el.albumDetailView.hidden) renderPosts(state.albumPosts, el.albumPostGrid);
+    });
 
     const initialPostId = Number(new URLSearchParams(location.search).get('postId'));
     const initialAlbumId = Number(new URLSearchParams(location.search).get('albumId'));

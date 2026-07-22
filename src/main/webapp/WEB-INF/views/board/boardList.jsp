@@ -17,7 +17,7 @@
                 <a href="/project/main?projId=${projId}&wsId=${wsId}" class="board-top-link">← 프로젝트로 돌아가기</a>
             </c:when>
             <c:otherwise>
-                <a href="/workspace/main?wsId=${wsId}" class="board-top-link">← 워크스페이스로 돌아가기</a>
+                <a href="/workspace/main?wsId=${wsId}" class="board-top-link">← 그룹로 돌아가기</a>
             </c:otherwise>
         </c:choose>
 
@@ -28,9 +28,9 @@
                         <c:when test="${not empty projId && boardType eq 'NOTICE'}">프로젝트 공지사항</c:when>
                         <c:when test="${not empty projId && boardType eq 'FILE'}">프로젝트 자료실</c:when>
                         <c:when test="${not empty projId}">프로젝트 자유 게시판</c:when>
-                        <c:when test="${boardType eq 'NOTICE'}">워크스페이스 공지사항</c:when>
-                        <c:when test="${boardType eq 'FILE'}">워크스페이스 자료실</c:when>
-                        <c:otherwise>워크스페이스 자유 게시판</c:otherwise>
+                        <c:when test="${boardType eq 'NOTICE'}">그룹 공지사항</c:when>
+                        <c:when test="${boardType eq 'FILE'}">그룹 자료실</c:when>
+                        <c:otherwise>그룹 자유 게시판</c:otherwise>
                     </c:choose>
                 </h2>
                 <p>
@@ -53,18 +53,20 @@
                         </c:otherwise>
                     </c:choose>
                 </c:if>
-                <c:choose>
-                    <c:when test="${not empty projId}">
-                        <a href="/group/board/write?wsId=${wsId}&projId=${projId}&type=${boardType}" class="board-write-btn">
-                            <c:choose><c:when test="${boardType eq 'FILE'}">+ 자료 등록</c:when><c:otherwise>+ 글쓰기</c:otherwise></c:choose>
-                        </a>
-                    </c:when>
-                    <c:otherwise>
-                        <a href="/group/board/write?wsId=${wsId}&type=${boardType}" class="board-write-btn">
-                            <c:choose><c:when test="${boardType eq 'FILE'}">+ 자료 등록</c:when><c:otherwise>+ 글쓰기</c:otherwise></c:choose>
-                        </a>
-                    </c:otherwise>
-                </c:choose>
+                <c:if test="${boardType ne 'NOTICE' or canManageBoard}">
+                    <c:choose>
+                        <c:when test="${not empty projId}">
+                            <a href="/group/board/write?wsId=${wsId}&projId=${projId}&type=${boardType}" class="board-write-btn">
+                                <c:choose><c:when test="${boardType eq 'FILE'}">+ 자료 등록</c:when><c:otherwise>+ 글쓰기</c:otherwise></c:choose>
+                            </a>
+                        </c:when>
+                        <c:otherwise>
+                            <a href="/group/board/write?wsId=${wsId}&type=${boardType}" class="board-write-btn">
+                                <c:choose><c:when test="${boardType eq 'FILE'}">+ 자료 등록</c:when><c:otherwise>+ 글쓰기</c:otherwise></c:choose>
+                            </a>
+                        </c:otherwise>
+                    </c:choose>
+                </c:if>
             </div>
         </section>
 
@@ -237,7 +239,8 @@
                                             <span>
                                                 <c:choose>
                                                     <c:when test="${not empty keyword}">검색어를 바꾸거나 필터를 초기화해 다시 확인해보세요.</c:when>
-                                                    <c:when test="${boardType eq 'NOTICE'}">중요한 안내나 팀 공지를 첫 게시글로 남겨보세요.</c:when>
+                                                    <c:when test="${boardType eq 'NOTICE' and canManageBoard}">중요한 안내나 그룹 공지를 첫 게시글로 남겨보세요.</c:when>
+                                                    <c:when test="${boardType eq 'NOTICE'}">그룹장이 공지를 등록하면 이곳에서 확인할 수 있어요.</c:when>
                                                     <c:when test="${boardType eq 'FILE'}">회의 자료, 문서, 참고 파일을 이곳에 모아보세요.</c:when>
                                                     <c:otherwise>가벼운 이야기나 공유하고 싶은 내용을 남겨보세요.</c:otherwise>
                                                 </c:choose>
@@ -257,6 +260,9 @@
                                             </c:when>
                                             <c:otherwise>
                                                 <c:choose>
+                                                    <c:when test="${boardType eq 'NOTICE' and not canManageBoard}">
+                                                        <a class="board-empty-action ghost" href="/workspace/main?wsId=${wsId}">그룹 홈으로</a>
+                                                    </c:when>
                                                     <c:when test="${not empty projId}">
                                                         <a class="board-empty-action" href="/group/board/write?wsId=${wsId}&projId=${projId}&type=${boardType}">
                                                             <c:choose>

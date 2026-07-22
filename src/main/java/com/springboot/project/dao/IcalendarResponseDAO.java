@@ -39,6 +39,8 @@ public interface IcalendarResponseDAO {
     int updateEventAll(Map<String, Object> params);
     int updateRecurringEvents(Map<String, Object> params);
     List<Map<String, Object>> getSharedEvents(@Param("userId") Long userId);
+    List<calendarResponseDTO> selectProfilePublicEvents(@Param("profileUserId") Long profileUserId, @Param("limit") int limit);
+    int countProfilePublicEvents(@Param("profileUserId") Long profileUserId);
     
     int leaveProject(@Param("projId") Long projId, @Param("userId") Long userId);
     List<Map<String, Object>> selectUserWorkspaces(long userId); // int -> long

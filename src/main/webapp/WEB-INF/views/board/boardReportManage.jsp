@@ -15,7 +15,7 @@
                 <a href="/project/board/list?projId=${projId}&wsId=${wsId}&type=NOTICE" class="board-top-link">← 프로젝트 게시판으로 돌아가기</a>
             </c:when>
             <c:otherwise>
-                <a href="/group/board/list?wsId=${wsId}&type=NOTICE" class="board-top-link">← 워크스페이스 게시판으로 돌아가기</a>
+                <a href="/group/board/list?wsId=${wsId}&type=NOTICE" class="board-top-link">← 그룹 게시판으로 돌아가기</a>
             </c:otherwise>
         </c:choose>
 

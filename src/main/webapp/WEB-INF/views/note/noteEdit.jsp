@@ -142,7 +142,6 @@
                                 <i class="fa-solid fa-angle-down" aria-hidden="true"></i>
                             </button>
                         </div>
-                        
                     </div>
                 </div>
             </div>
@@ -161,9 +160,16 @@
                         </div>
                     </div>
                     <div class="note-template-actions note-edit-meta-actions" aria-label="공유와 권한 설정">
+                            <c:if test="${note.scopeType eq 'PRIVATE' and note.ownedByMe}">
+                                <label class="note-meta-text note-moyo-public-toggle note-template-moyo-public" for="noteMoyoPublicYn">
+                                    <input type="checkbox" id="noteMoyoPublicYn" name="moyoPublicYn" value="Y" <c:if test="${note.moyoPublic}">checked</c:if>>
+                                    <span class="note-meta-icon note-meta-icon--moyo" aria-hidden="true"><img src="${pageContext.request.contextPath}/brand/moyo_mark.png?v=moyo-mark-v34" alt=""></span>
+                                    <span class="note-meta-value">MOYO 공개</span>
+                                </label>
+                            </c:if>
                             <button type="button" id="openNoteEditShareModal" class="note-meta-text note-meta-share"
                                     data-share-content-type="NOTE" data-share-content-id="${note.noteId}">
-                                <span class="note-meta-icon note-meta-icon--moyo" aria-hidden="true"><img src="${pageContext.request.contextPath}/brand/moyo_mark.png?v=moyo-mark-v34" alt=""></span>
+                                <span class="note-meta-icon note-meta-icon--plane" aria-hidden="true"><i class="fa-regular fa-paper-plane"></i></span>
                                 <span class="note-meta-value">공유</span>
                                 <span id="noteEditShareCount" class="note-share-count" hidden>0</span>
                             </button>
@@ -292,7 +298,7 @@
             </div>
             <div class="note-write-share-tabs" role="tablist" aria-label="공유 대상 유형">
                 <button type="button" class="note-write-share-tab is-active" data-share-tab="FRIEND">친구</button>
-                <button type="button" class="note-write-share-tab" data-share-tab="WORKSPACE">워크스페이스</button>
+                <button type="button" class="note-write-share-tab" data-share-tab="WORKSPACE">그룹</button>
                 <button type="button" class="note-write-share-tab" data-share-tab="PROJECT">프로젝트</button>
             </div>
             <div class="note-write-share-toolbar">

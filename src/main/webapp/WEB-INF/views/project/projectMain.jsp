@@ -1,12 +1,18 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
+<%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
 <c:set var="effectiveProjectWsId" value="${wsId}" />
 <c:if test="${empty effectiveProjectWsId and not empty param.wsId}"><c:set var="effectiveProjectWsId" value="${param.wsId}" /></c:if>
 <c:if test="${empty effectiveProjectWsId and not empty projectDetail.wsId}"><c:set var="effectiveProjectWsId" value="${projectDetail.wsId}" /></c:if>
+<c:set var="effectiveProjectScope" value="${projectDetail.projScope}" />
+<c:if test="${empty effectiveProjectScope and empty effectiveProjectWsId}"><c:set var="effectiveProjectScope" value="PERSONAL" /></c:if>
+<c:set var="isPersonalProject" value="${effectiveProjectScope eq 'PERSONAL'}" />
 <c:set var="effectiveProjectId" value="${projId}" />
 <c:if test="${empty effectiveProjectId and not empty param.projId}"><c:set var="effectiveProjectId" value="${param.projId}" /></c:if>
 <c:if test="${empty effectiveProjectId and not empty projectDetail.projId}"><c:set var="effectiveProjectId" value="${projectDetail.projId}" /></c:if>
+<c:set var="projectRouteQuery" value="projId=${effectiveProjectId}" />
+<c:if test="${not isPersonalProject and not empty effectiveProjectWsId}"><c:set var="projectRouteQuery" value="${projectRouteQuery}&amp;wsId=${effectiveProjectWsId}" /></c:if>
 <c:set var="projectNoteQuery" value="scope=PROJ" />
 <c:if test="${not empty effectiveProjectWsId}"><c:set var="projectNoteQuery" value="${projectNoteQuery}&amp;wsId=${effectiveProjectWsId}" /></c:if>
 <c:if test="${not empty effectiveProjectId}"><c:set var="projectNoteQuery" value="${projectNoteQuery}&amp;projId=${effectiveProjectId}" /></c:if>
@@ -16,7 +22,11 @@
 <head>
 <meta charset="UTF-8">
 	    <title>🎈 프로젝트 대시보드</title>
-		<link rel="stylesheet" href="${pageContext.request.contextPath}/css/projectMain.css?v=project-note-route-context-v2">
+		<link rel="stylesheet" href="${pageContext.request.contextPath}/css/projectMain.css?v=project-css-feature-split-v8">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/projectTask.css?v=project-css-feature-split-v8">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/projectMember.css?v=project-css-feature-split-v8">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/projectWidget.css?v=project-css-feature-split-v8">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/projectTimeline.css?v=project-css-feature-split-v8">
     <script>
         window.PROJECT_MAIN_CONFIG = {
             projectLeaderId: '<c:out value="${projectDetail.leaderId}"/>',
@@ -27,93 +37,102 @@
             paramProjId: '<c:out value="${param.projId}"/>',
             wsId: '<c:out value="${effectiveProjectWsId}"/>',
             paramWsId: '<c:out value="${param.wsId}"/>',
+            isPersonalProject: ${isPersonalProject ? 'true' : 'false'},
+            projectScope: '<c:out value="${effectiveProjectScope}"/>',
             canManageProject: <c:choose><c:when test="${canManageProject eq true}">true</c:when><c:otherwise>false</c:otherwise></c:choose>
         };
     </script>
-    <script src="${pageContext.request.contextPath}/js/projectMain.js?v=project-note-route-context-v2"></script>
+    <script src="${pageContext.request.contextPath}/js/projectMain.js?v=task-data-standard-v7"></script>
+    <script src="${pageContext.request.contextPath}/js/projectTaskData.js?v=task-data-standard-v7"></script>
+    <script src="${pageContext.request.contextPath}/js/projectMember.js?v=task-data-standard-v7"></script>
+    <script src="${pageContext.request.contextPath}/js/projectTask.js?v=task-data-standard-v7"></script>
+    <script src="${pageContext.request.contextPath}/js/projectWidget.js?v=task-data-standard-v7"></script>
+    <script src="${pageContext.request.contextPath}/js/projectTimeline.js?v=task-data-standard-v7"></script>
 
 </head>
-<body data-user-id="${sessionScope.user.userId}">
+<body class="${isPersonalProject ? 'personal-project-main' : 'group-project-main'}" data-user-id="${sessionScope.user.userId}" data-project-scope="${effectiveProjectScope}">
     <jsp:include page="/WEB-INF/views/common/header.jsp" />
 
     <div class="container">
 
-        <div class="project-hero">
-			<div class="project-hero-info">
-                <span class="project-type-label">프로젝트</span>
-                <h1>${projectDetail.projName}</h1>
-                <div class="project-hero-meta-line">
-                    <p class="project-hero-description">${projectDetail.projDesc}</p>
-                    <c:if test="${not empty projectLinks}">
-                        <div class="project-external-links" aria-label="프로젝트 외부 링크">
-                            <c:forEach var="link" items="${projectLinks}">
-                                <a href="<c:out value='${link.LINK_URL}'/>"
-                                   target="_blank"
-                                   rel="noopener noreferrer"
-                                   class="project-external-link"
-                                   title="<c:out value='${link.LINK_NAME}'/>">
-                                    <c:out value="${link.LINK_NAME}"/>
-                                    <span aria-hidden="true">↗</span>
-                                </a>
-                            </c:forEach>
-                        </div>
-                    </c:if>
+        <c:set var="hasProjectDescription" value="${not empty fn:trim(projectDetail.projDesc)}" />
+        <c:set var="hasProjectLinks" value="${not empty projectLinks}" />
+        <div class="project-hero${hasProjectDescription ? ' has-description' : ''}${hasProjectLinks ? ' has-links' : ''}">
+            <div class="project-hero-info">
+                <div class="project-type-status" aria-label="프로젝트 유형과 범위">
+                    <span class="project-type-label">
+                        <c:choose>
+                            <c:when test="${projectDetail.projType eq 'EVENT'}">행사 · 이벤트</c:when>
+                            <c:when test="${projectDetail.projType eq 'RESEARCH'}">연구 · 조사</c:when>
+                            <c:otherwise>프로젝트 · 업무</c:otherwise>
+                        </c:choose>
+                    </span>
+                    <span class="project-scope-badge ${isPersonalProject ? 'is-personal' : 'is-group'}">
+                        ${isPersonalProject ? '개인 프로젝트' : '그룹 프로젝트'}
+                    </span>
                 </div>
-            </div>
-
-			<div class="hero-actions project-hero-right">
-                <c:if test="${projectDetail.leaderId == sessionScope.user.userId}">
-                    <button type="button" class="project-setting-btn project-setting-text-btn" onclick="goProjectSettings()" title="프로젝트 설정">⚙️ 프로젝트 설정</button>
+                <h1 title="<c:out value='${projectDetail.projName}'/>"><c:out value="${projectDetail.projName}"/></h1>
+                <c:if test="${hasProjectDescription or hasProjectLinks}">
+                    <div class="project-hero-meta-line${hasProjectDescription ? ' has-description' : ''}${hasProjectLinks ? ' has-links' : ''}">
+                        <c:if test="${hasProjectDescription}">
+                            <p class="project-hero-description"><c:out value="${projectDetail.projDesc}"/></p>
+                        </c:if>
+                        <c:if test="${hasProjectLinks}">
+                            <div class="project-external-links" aria-label="프로젝트 외부 링크">
+                                <c:forEach var="link" items="${projectLinks}">
+                                    <a href="<c:out value='${link.LINK_URL}'/>"
+                                       target="_blank"
+                                       rel="noopener noreferrer"
+                                       class="project-external-link"
+                                       title="<c:out value='${link.LINK_NAME}'/>">
+                                        <span class="project-external-link-icon" aria-hidden="true">🔗</span>
+                                        <c:out value="${link.LINK_NAME}"/>
+                                        <span class="project-external-link-arrow" aria-hidden="true">↗</span>
+                                    </a>
+                                </c:forEach>
+                            </div>
+                        </c:if>
+                    </div>
                 </c:if>
             </div>
+
+            <div class="project-hero-actions">
+                <div class="project-main-menu-wrap">
+                    <button type="button"
+                            class="project-main-menu-trigger"
+                            id="projectMainMenuTrigger"
+                            aria-label="프로젝트 메뉴"
+                            aria-haspopup="true"
+                            aria-expanded="false"
+                            onclick="event.preventDefault(); event.stopPropagation(); var menu=this.nextElementSibling; var willOpen=menu.hidden; menu.hidden=!willOpen; this.setAttribute('aria-expanded', willOpen ? 'true' : 'false'); if(willOpen){ var rect=this.getBoundingClientRect(); var width=menu.offsetWidth || 168; var gap=12; menu.style.left=Math.min(window.innerWidth-width-gap, Math.max(gap, rect.right-width))+'px'; menu.style.top=(rect.bottom+8)+'px'; menu.style.right='auto'; } else { menu.style.left=''; menu.style.top=''; menu.style.right=''; }">⋯</button>
+                    <div class="project-main-menu" id="projectMainMenu" hidden>
+                        <c:if test="${projectDetail.leaderId == sessionScope.user.userId}">
+                            <button type="button" class="project-main-menu-item" onclick="goProjectSettings()">프로젝트 설정</button>
+                        </c:if>
+                        <c:choose>
+                            <c:when test="${isPersonalProject}">
+                                <a class="project-main-menu-item" href="${pageContext.request.contextPath}/project/manage">프로젝트 목록</a>
+                            </c:when>
+                            <c:otherwise>
+                                <a class="project-main-menu-item" href="${pageContext.request.contextPath}/project/list?wsId=${effectiveProjectWsId}">프로젝트 목록</a>
+                            </c:otherwise>
+                        </c:choose>
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <div id="projectTimelineCard" class="project-timeline-card">
-            <div class="project-timeline-header">
-                <div class="project-timeline-title-wrap">
-                    <div class="timeline-title-line">
-                        <h3>🗓 프로젝트 타임라인</h3>
-                    </div>
-                    <p>8일 이내는 시간별, 30일 이내는 일 단위, 90일 이내는 주 단위, 그 이상은 월 단위로 자동 표시됩니다.</p>
-                </div>
-                <div class="project-timeline-actions">
-                    <div class="timeline-scale-group" role="group" aria-label="타임라인 단위 선택">
-                        <button type="button" class="timeline-scale-btn" data-scale="HOUR" onclick="setProjectTimelineScale('HOUR')">시간</button>
-                        <button type="button" class="timeline-scale-btn" data-scale="DAY" onclick="setProjectTimelineScale('DAY')">일</button>
-                        <button type="button" class="timeline-scale-btn" data-scale="WEEK" onclick="setProjectTimelineScale('WEEK')">주</button>
-                        <button type="button" class="timeline-scale-btn" data-scale="MONTH" onclick="setProjectTimelineScale('MONTH')">월</button>
-                    </div>
-                    <button onclick="openAddScheduleModal()" class="btn btn-primary btn-sm">+ 일정 추가</button>
-                </div>
-            </div>
-
-            <div id="projectTimelineBody" class="project-timeline-body">
-                <div class="gantt-preview">
-                    <div class="gantt-preview-header">
-                        <div>
-                            <h4 class="gantt-preview-title">간트 미리보기</h4>
-                            <p class="gantt-preview-help">8일 이내는 시간별, 30일 이내는 일 단위, 90일 이내는 주 단위, 그 이상은 월 단위로 자동 표시됩니다.</p>
-                        </div>
-                    </div>
-                    <div id="projectGanttPreview" class="gantt-box">
-                        <div class="gantt-empty">프로젝트 일정을 불러오는 중...</div>
-                    </div>
-
-                </div>
-            </div>
-            <div class="gantt-drag-tip timeline-bottom-actions">
-                <span>빈 날짜 칸은 <strong>드래그</strong>로 새 일정을 만들고, 일정 막대는 이동하거나 양끝을 <strong class="resize-word">드래그</strong>해서 기간을 수정할 수 있습니다.</span>
-            </div>
-        </div>
+        <jsp:include page="/WEB-INF/views/project/projectTimeline.jsp" />
 
         <div class="dashboard-container">
             <div class="main-content">
 
+                <c:if test="${not isPersonalProject}">
                 <div class="widget-grid project-widget-notice-poll">
                     <div class="widget-card notice-widget-card">
                         <div class="board-title">
                             <span>📢 공지사항</span>
-                            <a href="/project/board/list?projId=${param.projId}&type=NOTICE&wsId=${param.wsId}">더보기</a>
+                            <a href="/project/board/list?${projectRouteQuery}&amp;type=NOTICE">더보기</a>
                         </div>
                         <div id="noticeBoard" class="board-list"></div>
                     </div>
@@ -124,7 +143,7 @@
                                 <span>📊 진행 중인 투표</span>
                                 <span id="projectActivePollCount" class="project-poll-title-count">0</span>
                             </span>
-                            <a href="/poll/list?scope=PROJECT&wsId=${param.wsId}&projId=${param.projId}">더보기</a>
+                            <a href="/poll/list?scope=PROJECT&amp;${projectRouteQuery}">더보기</a>
                         </div>
                         <div id="projectActivePollArea" class="project-active-poll-area">
                             <div class="project-poll-empty">진행 중인 투표 목록을 불러오는 중입니다.</div>
@@ -134,12 +153,14 @@
                     <div class="widget-card resource-widget-card">
                         <div class="board-title">
                             <span>📁 자료실</span>
-                            <a href="/project/board/list?projId=${param.projId}&type=FILE&wsId=${param.wsId}">더보기</a>
+                            <a href="/project/board/list?${projectRouteQuery}&amp;type=FILE">더보기</a>
                         </div>
                         <div id="fileBoard" class="board-list"></div>
                     </div>
                 </div>
+                </c:if>
 
+                <!-- 상세 일정 목록: 타임라인 시각화는 projectTimeline.jsp에서 관리 -->
                 <div class="section-card schedule-section">
                     <div class="section-header">
                         <div>
@@ -147,19 +168,6 @@
                             <p class="schedule-help">프로젝트 일정은 간트차트 기준으로 먼저 확인하고, 아래에서 상세 목록을 관리합니다.</p>
                         </div>
                         <button onclick="openAddScheduleModal()" class="btn btn-primary btn-sm">+ 일정 추가</button>
-                    </div>
-
-                    <div class="gantt-preview">
-                        <div class="gantt-preview-header">
-                            <div>
-                                <h4 class="gantt-preview-title">간트 미리보기</h4>
-                                <p class="gantt-preview-help">8일 이내는 시간별, 30일 이내는 일 단위, 90일 이내는 주 단위, 그 이상은 월 단위로 자동 표시됩니다.</p>
-                            </div>
-                            <span class="gantt-scale-badge">자동</span>
-                        </div>
-                        <div id="projectGanttPreview" class="gantt-box">
-                            <div class="gantt-empty">프로젝트 일정을 불러오는 중...</div>
-                        </div>
                     </div>
 
                     <div class="schedule-list-title">
@@ -270,7 +278,7 @@
                             <span id="projectCalendarTitle" class="moyo-calendar-month-title"></span>
                             <button type="button" class="calendar-arrow moyo-calendar-nav-btn" onclick="changeProjectMonth(1)" aria-label="다음 달">›</button>
                         </div>
-                        <a class="moyo-calendar-more" href="${pageContext.request.contextPath}/calendar?projId=${param.projId}&wsId=${param.wsId}">전체보기</a>
+                        <a class="moyo-calendar-more" href="${pageContext.request.contextPath}/calendar?${projectRouteQuery}">전체보기</a>
                     </div>
 
                     <div class="calendar-grid moyo-calendar-grid" id="projectCalendarGrid">
@@ -302,7 +310,8 @@
 
                 <div>
 
-            <div class="project-member-panel">
+            <c:if test="${not isPersonalProject}">
+                    <div class="project-member-panel">
                 <div class="project-member-head">
                     <div class="project-member-title">
                         <span>👥</span>
@@ -315,11 +324,13 @@
                 <div id="projectMemberList" class="project-member-list">
                     <div class="project-member-empty">멤버 정보를 불러오는 중입니다.</div>
                 </div>
-            </div>
+                    </div>
+            </c:if>
 
             </div>
         </div>
     </div>
+    <c:if test="${not isPersonalProject}">
     <div id="assignMemberModal" class="project-member-add-overlay"
          onclick="if(event.target === this) closeModal('assignMemberModal')">
         <section class="project-member-add-modal"
@@ -339,7 +350,7 @@
 
             <div class="project-member-add-body">
                 <div class="project-member-add-summary">
-                    <span>워크스페이스 멤버 중 프로젝트에 추가할 멤버를 선택하세요.</span>
+                    <span>그룹 멤버 중 프로젝트에 추가할 멤버를 선택하세요.</span>
                     <strong id="assignSelectedCount">0명 선택</strong>
                 </div>
 
@@ -358,6 +369,7 @@
             </div>
         </section>
     </div>
+    </c:if>
 
 <div id="addTaskModal" class="my-modal-overlay">
 	        <div class="my-modal-content task-polish-modal">
@@ -372,7 +384,7 @@
 	                    <input type="text" id="taskTitle" class="modal-input" placeholder="예: 메인 화면 정리">
                     </div>
 
-                    <div class="task-polish-field admin-only-task-field">
+                    <div class="task-polish-field admin-only-task-field personal-task-assignee-field">
                         <label for="taskAssignedUserId">담당자</label>
                         <select id="taskAssignedUserId" class="modal-select">
                             <option value="">담당자 선택</option>

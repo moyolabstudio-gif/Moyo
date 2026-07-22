@@ -40,7 +40,9 @@
 
     <select id="getMonthlyEvents" resultType="com.springboot.project.dto.calendarResponseDTO">
         SELECT 
-            id, title, startDt, endDt, itemType, color, eventType, status, startTimeSlot, endTimeSlot, wsId, projId, userId, isPrivate, wsName, projName, projectWorkspaceName, wsImagePath,
+            id, title, startDt, endDt, itemType, color, eventType, status, startTimeSlot, endTimeSlot, wsId, projId, userId, isPrivate, wsName, projName, projectWorkspaceName, projectScope, projectItemKind, wsImagePath,
+            assigneeUserId, assigneeName, assigneeEmail, assigneeProfileImagePath,
+            actualStartDt, actualDoneDt, delayedYn, delayedCompletedYn, delayedDays,
             CASE WHEN itemType = 'PRIVATE' AND isPrivate = 'N' THEN 'MOYO' ELSE 'PRIVATE' END as visibilityType,
             CASE WHEN itemType = 'PRIVATE' AND isPrivate = 'N' THEN 'Y' ELSE 'N' END as moyoPublicYn,
             isRecurring, recurType, recurInterval, untilDt, recurGroupId, recurDays, exceptionDateList,
@@ -65,7 +67,43 @@
                 COALESCE(w.WS_NAME, pw.WS_NAME) as wsName,
                 p.PROJ_NAME as projName,
                 pw.WS_NAME as projectWorkspaceName,
+                p.PROJ_SCOPE as projectScope,
+                CASE
+                    WHEN e.ITEM_TYPE = 'TASK' THEN 'TASK'
+                    WHEN e.ITEM_TYPE = 'PROJ' AND NVL(e.EVENT_TYPE, 'NONE') = 'PROJECT_PERIOD' THEN 'PROJECT_PERIOD'
+                    WHEN e.ITEM_TYPE = 'PROJ' THEN 'PROJECT_SCHEDULE'
+                    ELSE NULL
+                END as projectItemKind,
                 COALESCE(w.WS_IMAGE_PATH, pw.WS_IMAGE_PATH) as wsImagePath,
+                CASE WHEN e.ITEM_TYPE = 'TASK' THEN e.USER_ID ELSE NULL END as assigneeUserId,
+                CASE WHEN e.ITEM_TYPE = 'TASK' THEN au.USER_NAME ELSE NULL END as assigneeName,
+                CASE WHEN e.ITEM_TYPE = 'TASK' THEN au.EMAIL ELSE NULL END as assigneeEmail,
+                CASE WHEN e.ITEM_TYPE = 'TASK' THEN au.PROFILE_IMAGE_PATH ELSE NULL END as assigneeProfileImagePath,
+                CASE WHEN e.ITEM_TYPE = 'TASK' THEN TO_CHAR(e.ACTUAL_START_DT, 'YYYY-MM-DD HH24:MI:SS') ELSE NULL END as actualStartDt,
+                CASE WHEN e.ITEM_TYPE = 'TASK' THEN TO_CHAR(e.ACTUAL_DONE_DT, 'YYYY-MM-DD HH24:MI:SS') ELSE NULL END as actualDoneDt,
+                CASE
+                    WHEN e.ITEM_TYPE = 'TASK'
+                     AND NVL(e.STATUS, 'TODO') != 'DONE'
+                     AND e.END_DT IS NOT NULL
+                     AND e.END_DT &lt; SYSDATE THEN 'Y'
+                    ELSE 'N'
+                END as delayedYn,
+                CASE
+                    WHEN e.ITEM_TYPE = 'TASK'
+                     AND e.STATUS = 'DONE'
+                     AND e.END_DT IS NOT NULL
+                     AND e.ACTUAL_DONE_DT IS NOT NULL
+                     AND e.ACTUAL_DONE_DT &gt; e.END_DT THEN 'Y'
+                    ELSE 'N'
+                END as delayedCompletedYn,
+                CASE
+                    WHEN e.ITEM_TYPE != 'TASK' OR e.END_DT IS NULL THEN 0
+                    WHEN e.STATUS = 'DONE' AND e.ACTUAL_DONE_DT IS NOT NULL
+                        THEN GREATEST(TRUNC(e.ACTUAL_DONE_DT) - TRUNC(e.END_DT), 0)
+                    WHEN NVL(e.STATUS, 'TODO') != 'DONE' AND e.END_DT &lt; SYSDATE
+                        THEN GREATEST(TRUNC(SYSDATE) - TRUNC(e.END_DT), 0)
+                    ELSE 0
+                END as delayedDays,
 				TRUNC(e.START_DT) as RAW_START,
                 /* FullCalendar 렌더링을 위해 +1일 된 상태 그대로 사용 (31일 -> 6/1) */
                 TRUNC(e.END_DT) as RAW_END,
@@ -89,6 +127,7 @@
             LEFT JOIN WORKSPACES w ON w.WS_ID = e.WS_ID
             LEFT JOIN PROJECTS p ON p.PROJ_ID = e.PROJ_ID
             LEFT JOIN WORKSPACES pw ON pw.WS_ID = p.WS_ID
+            LEFT JOIN USERS au ON au.USER_ID = e.USER_ID
             UNION ALL
             SELECT 
                 h.HLD_ID as id, 
@@ -108,7 +147,18 @@
                 NULL as wsName,
                 NULL as projName,
                 NULL as projectWorkspaceName,
+                NULL as projectScope,
+                NULL as projectItemKind,
                 NULL as wsImagePath,
+                NULL as assigneeUserId,
+                NULL as assigneeName,
+                NULL as assigneeEmail,
+                NULL as assigneeProfileImagePath,
+                NULL as actualStartDt,
+                NULL as actualDoneDt,
+                'N' as delayedYn,
+                'N' as delayedCompletedYn,
+                0 as delayedDays,
                 h.HLD_DATE as RAW_START, 
                 h.HLD_DATE as RAW_END,
                 'N', NULL, 1, NULL, NULL, NULL, NULL,
@@ -191,6 +241,10 @@
       SELECT PROJ_ID
       FROM PROJ_MEMBERS
       WHERE USER_ID = #{userId}
+      UNION
+      SELECT PROJ_ID
+      FROM PROJECTS
+      WHERE LEADER_ID = #{userId}
   ))
  OR
  (itemType = 'TASK'
@@ -198,6 +252,10 @@
       SELECT PROJ_ID
       FROM PROJ_MEMBERS
       WHERE USER_ID = #{userId}
+      UNION
+      SELECT PROJ_ID
+      FROM PROJECTS
+      WHERE LEADER_ID = #{userId}
   ))
  OR EXISTS (
     SELECT 1
@@ -224,6 +282,10 @@
         SELECT PROJ_ID
         FROM PROJ_MEMBERS
         WHERE USER_ID = #{userId}
+        UNION
+        SELECT PROJ_ID
+        FROM PROJECTS
+        WHERE LEADER_ID = #{userId}
      ))
     OR EXISTS (
         SELECT 1
@@ -251,6 +313,12 @@
                 <otherwise>1=0</otherwise>
             </choose>
         )
+        <if test="projId != null">
+            AND (itemType = 'HOLIDAY' OR projId = #{projId, jdbcType=NUMERIC})
+        </if>
+        <if test="wsId != null">
+            AND (itemType = 'HOLIDAY' OR wsId = #{wsId, jdbcType=NUMERIC})
+        </if>
         AND (
             (isLunar = 'N' AND isRecurring = 'N' AND RAW_START &lt;= TO_DATE(#{endDate}, 'YYYY-MM-DD') AND RAW_END &gt;= TO_DATE(#{startDate}, 'YYYY-MM-DD'))
             OR 
@@ -393,6 +461,53 @@
            )
     </select>
 
+
+    <select id="selectProfilePublicEvents" resultType="com.springboot.project.dto.calendarResponseDTO">
+        SELECT e.EVENT_ID as id,
+               e.TITLE as title,
+               TO_CHAR(e.START_DT, 'YYYY-MM-DD HH24:MI:SS') as startDt,
+               TO_CHAR(e.END_DT, 'YYYY-MM-DD HH24:MI:SS') as endDt,
+               e.ITEM_TYPE as itemType,
+               e.USER_ID as userId,
+               e.EVENT_COLOR as color,
+               NVL(e.EVENT_TYPE, 'NONE') as eventType,
+               e.STATUS as status,
+               e.IS_PRIVATE as isPrivate,
+               CASE WHEN e.ITEM_TYPE = 'PRIVATE' AND e.IS_PRIVATE = 'N' THEN 'MOYO' ELSE 'PRIVATE' END as visibilityType,
+               CASE WHEN e.ITEM_TYPE = 'PRIVATE' AND e.IS_PRIVATE = 'N' THEN 'Y' ELSE 'N' END as moyoPublicYn,
+               NVL(e.IS_RECURRING, 'N') as isRecurring,
+               e.RECUR_TYPE as recurType,
+               NVL(e.RECUR_INTERVAL, 1) as recurInterval,
+               TO_CHAR(e.RECUR_END_DT, 'YYYY-MM-DD') as untilDt,
+               e.RECUR_GROUP_ID as recurGroupId,
+               e.RECUR_DAYS as recurDays,
+               NVL(e.IS_LUNAR, 'N') as isLunar,
+               e.LUNAR_MONTH as lunarMonth,
+               e.LUNAR_DAY as lunarDay,
+               NVL(e.TIMEZONE_ID, 'Asia/Seoul') as timezone,
+               NVL(e.REMINDER_YN, 'N') as reminderYn,
+               e.REMINDER_MINUTES as reminderMinutes
+          FROM EVENTS e
+         WHERE e.USER_ID = #{profileUserId, jdbcType=NUMERIC}
+           AND NVL(e.ITEM_TYPE, 'PRIVATE') = 'PRIVATE'
+           AND NVL(e.IS_PRIVATE, 'Y') = 'N'
+           AND NVL(e.STATUS, 'ACTIVE') != 'DELETED'
+         ORDER BY CASE WHEN e.START_DT &gt;= TRUNC(SYSDATE) THEN 0 ELSE 1 END ASC,
+                  CASE WHEN e.START_DT &gt;= TRUNC(SYSDATE) THEN e.START_DT END ASC,
+                  CASE WHEN e.START_DT &lt; TRUNC(SYSDATE) THEN e.START_DT END DESC,
+                  e.EVENT_ID DESC
+    </select>
+
+
+    <select id="countProfilePublicEvents" resultType="int">
+        SELECT COUNT(1)
+          FROM EVENTS e
+         WHERE e.USER_ID = #{profileUserId, jdbcType=NUMERIC}
+           AND NVL(e.ITEM_TYPE, 'PRIVATE') = 'PRIVATE'
+           AND NVL(e.IS_PRIVATE, 'Y') = 'N'
+           AND NVL(e.STATUS, 'ACTIVE') != 'DELETED'
+    </select>
+
     <select id="getSharedEvents" resultType="map">
         SELECT e.*, u.USER_NAME FROM EVENTS e JOIN USERS u ON e.USER_ID = u.USER_ID WHERE e.PROJ_ID = #{projId} AND (e.IS_PRIVATE = 'N' OR e.USER_ID = #{userId})
     </select>
@@ -465,41 +580,45 @@
     </update>
     
     <update id="updateEventDate">
-        UPDATE EVENTS SET START_DT = TO_DATE(#{startDt}, 'YYYY-MM-DD"T"HH24:MI'),
-            END_DT = TO_DATE(#{endDt}, 'YYYY-MM-DD"T"HH24:MI'),
-            TIMEZONE_ID = #{timezone, jdbcType=VARCHAR},
-            REMINDER_SENT_YN = 'N',
-            REMINDER_SENT_AT = NULL
-        WHERE EVENT_ID = #{id}
+        UPDATE EVENTS e
+           SET START_DT = TO_DATE(#{startDt}, 'YYYY-MM-DD"T"HH24:MI'),
+               END_DT = TO_DATE(#{endDt}, 'YYYY-MM-DD"T"HH24:MI'),
+               TIMEZONE_ID = #{timezone, jdbcType=VARCHAR},
+               REMINDER_SENT_YN = 'N',
+               REMINDER_SENT_AT = NULL
+         WHERE e.EVENT_ID = #{id}
+           AND (<include refid="calendarManagerCondition"/> OR <include refid="calendarEditShareCondition"/>)
     </update>
     
     <update id="updateEventAll">
-        UPDATE EVENTS SET TITLE = #{title},
-            START_DT = TO_DATE(#{startDt}, 'YYYY-MM-DD"T"HH24:MI'),
-            END_DT = TO_DATE(#{endDt}, 'YYYY-MM-DD"T"HH24:MI'),
-            EVENT_COLOR = #{color, jdbcType=VARCHAR},
-            EVENT_TYPE = #{eventType, jdbcType=VARCHAR},
-            IS_PRIVATE = #{isPrivate, jdbcType=CHAR},
-            LOCATION_TEXT = #{locationText, jdbcType=VARCHAR},
-            LOCATION_ADDRESS = #{locationAddress, jdbcType=VARCHAR},
-            LOCATION_LAT = #{locationLat, jdbcType=NUMERIC},
-            LOCATION_LNG = #{locationLng, jdbcType=NUMERIC},
-            LOCATION_PLACE_ID = #{locationPlaceId, jdbcType=VARCHAR},
-            DESCRIPTION_TEXT = #{descriptionText, jdbcType=VARCHAR},
-            REMINDER_YN = #{reminderYn, jdbcType=CHAR},
-            REMINDER_MINUTES = #{reminderMinutes, jdbcType=NUMERIC},
-            REMINDER_SENT_YN = 'N',
-            REMINDER_SENT_AT = NULL,
-            IS_RECURRING = #{isRecurring, jdbcType=CHAR},
-            RECUR_TYPE = #{recurType, jdbcType=VARCHAR},
-            RECUR_INTERVAL = #{recurInterval, jdbcType=NUMERIC},
-            RECUR_END_DT = CASE WHEN #{untilDt, jdbcType=VARCHAR} IS NOT NULL THEN TO_DATE(#{untilDt, jdbcType=VARCHAR}, 'YYYY-MM-DD') ELSE NULL END,
-            RECUR_DAYS = #{recurDays, jdbcType=VARCHAR},
-            TIMEZONE_ID = #{timezone, jdbcType=VARCHAR},
-            IS_LUNAR = #{isLunar, jdbcType=CHAR}, 
-            LUNAR_MONTH = #{lunarMonth, jdbcType=NUMERIC}, 
-            LUNAR_DAY = #{lunarDay, jdbcType=NUMERIC}     
-        WHERE EVENT_ID = #{id}
+        UPDATE EVENTS e
+           SET TITLE = #{title},
+               START_DT = TO_DATE(#{startDt}, 'YYYY-MM-DD"T"HH24:MI'),
+               END_DT = TO_DATE(#{endDt}, 'YYYY-MM-DD"T"HH24:MI'),
+               EVENT_COLOR = #{color, jdbcType=VARCHAR},
+               EVENT_TYPE = #{eventType, jdbcType=VARCHAR},
+               IS_PRIVATE = #{isPrivate, jdbcType=CHAR},
+               LOCATION_TEXT = #{locationText, jdbcType=VARCHAR},
+               LOCATION_ADDRESS = #{locationAddress, jdbcType=VARCHAR},
+               LOCATION_LAT = #{locationLat, jdbcType=NUMERIC},
+               LOCATION_LNG = #{locationLng, jdbcType=NUMERIC},
+               LOCATION_PLACE_ID = #{locationPlaceId, jdbcType=VARCHAR},
+               DESCRIPTION_TEXT = #{descriptionText, jdbcType=VARCHAR},
+               REMINDER_YN = #{reminderYn, jdbcType=CHAR},
+               REMINDER_MINUTES = #{reminderMinutes, jdbcType=NUMERIC},
+               REMINDER_SENT_YN = 'N',
+               REMINDER_SENT_AT = NULL,
+               IS_RECURRING = #{isRecurring, jdbcType=CHAR},
+               RECUR_TYPE = #{recurType, jdbcType=VARCHAR},
+               RECUR_INTERVAL = #{recurInterval, jdbcType=NUMERIC},
+               RECUR_END_DT = CASE WHEN #{untilDt, jdbcType=VARCHAR} IS NOT NULL THEN TO_DATE(#{untilDt, jdbcType=VARCHAR}, 'YYYY-MM-DD') ELSE NULL END,
+               RECUR_DAYS = #{recurDays, jdbcType=VARCHAR},
+               TIMEZONE_ID = #{timezone, jdbcType=VARCHAR},
+               IS_LUNAR = #{isLunar, jdbcType=CHAR},
+               LUNAR_MONTH = #{lunarMonth, jdbcType=NUMERIC},
+               LUNAR_DAY = #{lunarDay, jdbcType=NUMERIC}
+         WHERE e.EVENT_ID = #{id}
+           AND (<include refid="calendarManagerCondition"/> OR <include refid="calendarEditShareCondition"/>)
     </update>
 
     <update id="updateRecurringEvents">
@@ -553,6 +672,7 @@
             p.WS_ID as "wsId",
             w.WS_NAME as "wsName",
             p.LEADER_ID as "leaderId",
+            NVL(p.PROJ_SCOPE, CASE WHEN p.WS_ID IS NULL THEN 'PERSONAL' ELSE 'GROUP' END) as "projScope",
             CASE
                 WHEN p.LEADER_ID = #{userId} THEN 'LEADER'
                 ELSE NVL(pm.PROJ_ROLE, 'MEMBER')

@@ -28,7 +28,24 @@ public class userNoticeController {
     public List<userNoticeDTO> getAlarmList(HttpSession session) {
         usersDto user = (usersDto) session.getAttribute("user");
         if (user == null) return new ArrayList<>();
-        return userNoticeService.getMyNotices(user.getUserId());
+
+        List<userNoticeDTO> notices = userNoticeService.getMyNotices(user.getUserId());
+        if (notices == null) return new ArrayList<>();
+
+        return notices.stream()
+                .filter(notice -> {
+                    String alertType = notice.getAlertType();
+                    boolean isUnread = "N".equalsIgnoreCase(notice.getIsRead());
+                    boolean isPendingApprovedJoin =
+                            "GROUP_JOIN_APPROVED".equalsIgnoreCase(alertType);
+
+                    // 참여 승인 알림은 읽음 여부와 관계없이 최종 참여 전까지 유지합니다.
+                    // 최종 참여가 완료되면 GROUP_JOIN_COMPLETED로 바뀌므로 헤더에서 제외됩니다.
+                    return isUnread || isPendingApprovedJoin;
+                })
+                .filter(notice ->
+                        !"GROUP_JOIN_COMPLETED".equalsIgnoreCase(notice.getAlertType()))
+                .toList();
     }
 
     // 2. 읽음 처리 POST 메서드

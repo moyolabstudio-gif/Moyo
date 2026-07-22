@@ -11,6 +11,7 @@ public interface IfriendService {
     List<friendDTO> getReceivedRequests(Long userId);
     List<friendDTO> getSentRequests(Long userId);
     int getPendingReceivedCount(Long userId);
+    friendDTO getRelation(Long userId, Long targetUserId);
     Map<String, Object> requestFriend(Long userId, Long targetUserId);
     Map<String, Object> acceptRequest(Long userId, Long friendId);
     Map<String, Object> rejectRequest(Long userId, Long friendId);

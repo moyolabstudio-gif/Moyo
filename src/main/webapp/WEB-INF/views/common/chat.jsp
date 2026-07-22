@@ -1,5 +1,23 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
-<link rel="stylesheet" href="../css/chat.css">
+<link rel="stylesheet" href="<%= request.getContextPath() %>/css/chat.css?v=4">
+
+<style>
+    /* CSS 로딩 실패 시에도 채팅 include 영역이 본문에 풀리지 않도록 최소 보호 */
+    #chat-floating-btn.chat-btn-floating {
+        position: fixed;
+        right: 30px;
+        bottom: 96px;
+        z-index: 9999;
+    }
+    #chat-main-modal.chat-modal,
+    #mini-chat-window.chat-modal {
+        display: none;
+        position: fixed;
+        right: 30px;
+        bottom: 171px;
+        z-index: 9999;
+    }
+</style>
 
 <div id="chat-floating-btn" class="chat-btn-floating" onclick="toggleChatWindow()">
     <span style="font-size: 26px; color: white;">💬</span>
@@ -38,11 +56,9 @@
         <button onclick="closeChatModals()" style="background:none; border:none; color:white; font-size:22px; cursor:pointer; opacity:0.8;">&times;</button>
     </div>
 
-    <div style="display: none;">
-        <input type="number" id="roomId" value="0">
-        <input type="number" id="userId" value="${not empty sessionScope.user.userId ? sessionScope.user.userId : (not empty sessionScope.loginUserId ? sessionScope.loginUserId : sessionScope.user.getUSER_ID())}">
-        <input type="text" id="userName" value="${not empty sessionScope.user.userName ? sessionScope.user.userName : (not empty sessionScope.loginUserName ? sessionScope.loginUserName : sessionScope.user.getUSER_NAME())}">
-    </div>
+    <input type="hidden" id="roomId" value="0">
+    <input type="hidden" id="userId" value="${not empty sessionScope.user.userId ? sessionScope.user.userId : (not empty sessionScope.loginUserId ? sessionScope.loginUserId : sessionScope.user.getUSER_ID())}">
+    <input type="hidden" id="userName" value="${not empty sessionScope.user.userName ? sessionScope.user.userName : (not empty sessionScope.loginUserName ? sessionScope.loginUserName : sessionScope.user.getUSER_NAME())}">
 
     <div id="chatMessageArea" class="chat-list-view" style="background: #f5f8fa;">
         <div style="align-self: center; background: #e1e8ed; color: #657786; padding: 4px 12px; border-radius: 20px; font-size: 11px;">대화 데이터 정렬 중...</div>

@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/moyoUi.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/moyoModal.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/photoAlbum.css?v=display-file-output-final-1">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/commonPhotoPostDetail.css?v=20260709v50">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/commonShareModal.css?v=246">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/commonFriendPickerModal.css?v=14">
 </head>
@@ -336,6 +337,7 @@
 <jsp:include page="/WEB-INF/views/common/footer.jsp" />
 <script src="${pageContext.request.contextPath}/js/commonShareModal.js?v=20260626-photo-bulk-share"></script>
 <script src="${pageContext.request.contextPath}/js/commonFriendPickerModal.js?v=14"></script>
-<script src="${pageContext.request.contextPath}/js/photoAlbum.js?v=scope-upload-click-fix-1"></script>
+<script src="${pageContext.request.contextPath}/js/commonPhotoPostDetail.js?v=20260709v50"></script>
+<script src="${pageContext.request.contextPath}/js/photoAlbum.js?v=20260709v30"></script>
 </body>
 </html>

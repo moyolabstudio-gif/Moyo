@@ -427,3 +427,26 @@ body.friend-page-body .moyo-footer {
     .friend-row { align-items: stretch; flex-wrap: wrap; }
     .friend-actions { width: 100%; justify-content: flex-end; }
 }
+
+.friend-profile-link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    flex: 1 1 auto;
+    color: inherit;
+    text-decoration: none;
+}
+
+.friend-profile-link:hover .friend-info strong {
+    color: #276fcb;
+}
+
+.friend-profile-link:hover .friend-avatar {
+    box-shadow: 0 6px 16px rgba(67, 157, 217, .22);
+    transform: translateY(-1px);
+}
+
+.friend-avatar {
+    transition: transform .16s ease, box-shadow .16s ease;
+}

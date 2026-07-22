@@ -1657,3 +1657,539 @@
     border-color: #8db9f2;
     box-shadow: none !important;
 }
+
+
+/* PERSONAL / GROUP 공통 목록 모드 */
+.project-list-body[data-list-mode="PERSONAL"] .project-list-hero {
+    background: linear-gradient(135deg, rgba(93, 226, 197, .18), rgba(91, 157, 255, .15) 52%, rgba(157, 112, 255, .14));
+}
+.project-list-body[data-list-mode="PERSONAL"] .project-meta {
+    grid-template-columns: 1fr;
+}
+.project-list-body[data-list-mode="PERSONAL"] .project-list-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+@media (max-width: 860px) {
+    .project-list-body[data-list-mode="PERSONAL"] .project-list-grid { grid-template-columns: 1fr; }
+}
+
+
+/* =========================================================
+   v9: 개인 프로젝트 목록 디테일 정리
+   ========================================================= */
+.project-list-body[data-list-mode="PERSONAL"] .project-section-empty {
+    min-height: 48px;
+    border-radius: 12px;
+}
+
+.project-list-body[data-list-mode="PERSONAL"] .project-status-section {
+    gap: 10px;
+}
+
+.project-list-body[data-list-mode="PERSONAL"] .project-list-link h3 {
+    min-height: 22px;
+}
+
+.project-list-body[data-list-mode="PERSONAL"] .project-description {
+    min-height: 18px;
+}
+
+
+/* MOYO hero / primary action */
+.project-list-hero {
+    border-color: rgba(111, 142, 194, .18);
+    background:
+        radial-gradient(circle at 92% 12%, rgba(124, 92, 255, .14), transparent 29%),
+        linear-gradient(115deg,
+            rgba(54, 214, 189, .16) 0%,
+            rgba(72, 151, 244, .12) 52%,
+            rgba(132, 99, 255, .14) 100%);
+    box-shadow: 0 14px 34px rgba(56, 96, 154, .08);
+}
+
+.project-list-hero::before {
+    width: 5px;
+    background: linear-gradient(180deg, #35d5bc 0%, #438cf4 54%, #7a5cff 100%);
+}
+
+.project-list-hero::after {
+    right: -44px;
+    top: -86px;
+    width: 230px;
+    height: 230px;
+    background: linear-gradient(145deg, rgba(64, 213, 188, .06), rgba(69, 139, 244, .08), rgba(122, 92, 255, .11));
+}
+
+.project-list-create {
+    min-height: 42px;
+    padding: 0 18px;
+    border: 0;
+    border-radius: 13px;
+    background: linear-gradient(110deg, #35d5bc 0%, #438cf4 54%, #7a5cff 100%);
+    box-shadow: 0 10px 22px rgba(75, 113, 229, .22);
+    transition: transform .16s ease, box-shadow .16s ease, filter .16s ease;
+}
+
+.project-list-create:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 13px 26px rgba(75, 113, 229, .28);
+    filter: saturate(1.04);
+}
+
+.project-list-create:focus-visible {
+    outline: 3px solid rgba(67, 140, 244, .22);
+    outline-offset: 3px;
+}
+
+/* Single-layer search field with icon inside */
+.project-list-search {
+    position: relative;
+    width: 260px;
+    height: 40px;
+    display: block;
+    padding: 0;
+    border: 0;
+    border-radius: 11px;
+    color: #8b97aa;
+    background: transparent;
+}
+
+.project-list-search > span {
+    position: absolute;
+    left: 13px;
+    top: 50%;
+    z-index: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    transform: translateY(-50%);
+    font-size: 13px;
+    line-height: 1;
+    pointer-events: none;
+}
+
+.project-list-search input {
+    width: 100%;
+    height: 40px;
+    padding: 0 13px 0 38px;
+    border: 1px solid #d9e3ef;
+    border-radius: 11px;
+    outline: 0;
+    background: #fff;
+    color: #263247;
+    font: inherit;
+    font-size: 13px;
+    box-shadow: none;
+    transition: border-color .16s ease, box-shadow .16s ease;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+.project-list-search input:focus {
+    border-color: #4e9be9;
+    box-shadow: 0 0 0 3px rgba(61, 202, 190, .12);
+}
+
+.project-list-search input::-webkit-search-decoration,
+.project-list-search input::-webkit-search-cancel-button,
+.project-list-search input::-webkit-search-results-button,
+.project-list-search input::-webkit-search-results-decoration {
+    -webkit-appearance: none;
+}
+
+
+/* =========================================================
+   v11: 히어로 카드 제거 / 배경 위 직접 배치
+   ========================================================= */
+.project-list-hero {
+    min-height: 0;
+    padding: 12px 0 26px;
+    border: 0;
+    border-bottom: 1px solid rgba(115, 139, 177, .18);
+    border-radius: 0;
+    overflow: visible;
+    background: transparent !important;
+    box-shadow: none;
+}
+
+.project-list-hero::before,
+.project-list-hero::after {
+    display: none;
+}
+
+.project-list-type {
+    margin-bottom: 8px;
+    color: #6f7f96;
+    font-style: normal;
+    font-weight: 600;
+    letter-spacing: .02em;
+}
+
+.project-list-hero h1 {
+    color: #17233a;
+    font-size: clamp(30px, 2.6vw, 42px);
+    letter-spacing: -.035em;
+}
+
+.project-list-hero p {
+    margin-top: 10px;
+    color: #687991;
+    font-size: 15px;
+}
+
+.project-list-hero-actions {
+    align-self: center;
+}
+
+.project-list-create {
+    min-height: 44px;
+    padding: 0 20px;
+    border-radius: 13px;
+    background: linear-gradient(110deg, #35d5bc 0%, #438cf4 54%, #7a5cff 100%);
+    box-shadow: 0 10px 24px rgba(75, 113, 229, .22);
+}
+
+.project-list-back {
+    min-height: 44px;
+    border-radius: 13px;
+}
+
+.project-list-toolbar-card {
+    margin-top: 16px;
+}
+
+@media (max-width: 720px) {
+    .project-list-hero {
+        align-items: flex-start;
+        flex-direction: column;
+        padding-bottom: 20px;
+    }
+
+    .project-list-hero-actions {
+        width: 100%;
+        align-self: stretch;
+    }
+
+    .project-list-create,
+    .project-list-back {
+        flex: 1;
+    }
+}
+
+
+/* =========================================================
+   v12: 그룹 관리 페이지 배경 / 카드 폭 / 검색 아이콘 정리
+   ========================================================= */
+.project-list-body {
+    background:
+        radial-gradient(circle at 7% 10%, rgba(52, 214, 188, .14), transparent 30%),
+        radial-gradient(circle at 92% 8%, rgba(124, 92, 255, .12), transparent 34%),
+        linear-gradient(115deg, #f4fcfb 0%, #f5f8ff 52%, #f8f5ff 100%);
+    background-attachment: fixed;
+}
+
+.project-list-container {
+    width: min(1320px, calc(100% - 56px));
+    margin-top: 24px;
+}
+
+.project-list-hero {
+    padding-top: 10px;
+    padding-bottom: 22px;
+}
+
+.project-list-toolbar-card {
+    margin-top: 14px;
+}
+
+.project-list-card {
+    margin-top: 14px;
+    padding: 18px;
+}
+
+.project-list-grid,
+.project-list-body[data-list-mode="PERSONAL"] .project-list-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.project-list-link {
+    min-height: 196px;
+    padding: 16px 16px 14px;
+}
+
+.project-list-link h3 {
+    margin-top: 14px;
+}
+
+.project-description {
+    margin-top: 5px;
+}
+
+.project-meta {
+    margin-top: 14px;
+}
+
+.project-list-search {
+    width: 280px;
+}
+
+.project-list-search > .project-list-search-icon {
+    position: absolute;
+    left: 13px;
+    top: 50%;
+    z-index: 2;
+    display: inline-flex;
+    width: 18px;
+    height: 18px;
+    align-items: center;
+    justify-content: center;
+    transform: translateY(-50%);
+    color: #5f7898;
+    pointer-events: none;
+}
+
+.project-list-search > .project-list-search-icon svg {
+    display: block;
+    width: 18px;
+    height: 18px;
+}
+
+.project-list-search input {
+    padding-left: 42px;
+}
+
+.project-list-search:focus-within > .project-list-search-icon {
+    color: #438cf4;
+}
+
+@media (max-width: 1180px) {
+    .project-list-grid,
+    .project-list-body[data-list-mode="PERSONAL"] .project-list-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 760px) {
+    .project-list-container {
+        width: min(100% - 28px, 1320px);
+    }
+
+    .project-list-grid,
+    .project-list-body[data-list-mode="PERSONAL"] .project-list-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .project-list-search {
+        width: 100%;
+    }
+}
+
+/* Search icon spacing correction */
+.project-list-toolbar-card .project-list-search {
+    position: relative;
+}
+
+.project-list-toolbar-card .project-list-search > .project-list-search-icon {
+    left: 15px;
+    width: 16px;
+    height: 16px;
+}
+
+.project-list-toolbar-card .project-list-search > .project-list-search-icon svg {
+    width: 16px;
+    height: 16px;
+}
+
+.project-list-toolbar-card .project-list-search input[type="search"] {
+    box-sizing: border-box;
+    padding-left: 44px !important;
+    text-indent: 0;
+}
+
+/* =========================================================
+   v14: 개인·그룹 카드 폭/섹션 밀도 공통화
+   ========================================================= */
+.project-list-grid,
+.project-list-body[data-list-mode="PERSONAL"] .project-list-grid,
+.project-list-body[data-list-mode="GROUP"] .project-list-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.project-list-card {
+    padding: 16px 18px 18px;
+}
+
+.project-list-groups {
+    gap: 16px;
+}
+
+.project-status-section-head {
+    margin-bottom: 8px;
+}
+
+.project-list-link,
+.project-list-body[data-list-mode="PERSONAL"] .project-list-link,
+.project-list-body[data-list-mode="GROUP"] .project-list-link {
+    min-height: 176px;
+    padding: 15px 16px 13px 18px;
+}
+
+.project-list-link h3 {
+    margin-top: 11px;
+}
+
+.project-description {
+    min-height: 18px;
+    margin: 4px 0 9px;
+}
+
+.project-meta {
+    gap: 5px;
+    margin-top: 8px;
+}
+
+.project-list-body[data-list-mode="GROUP"] .project-meta {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 18px;
+    row-gap: 5px;
+}
+
+.project-list-body[data-list-mode="GROUP"] .project-meta > div:first-child,
+.project-list-body[data-list-mode="GROUP"] .project-meta > .project-member-row {
+    grid-column: 1 / -1;
+}
+
+.project-list-body[data-list-mode="GROUP"] .project-meta > div {
+    grid-template-columns: 34px minmax(0, 1fr);
+    gap: 7px;
+}
+
+.project-enter {
+    padding-top: 9px;
+}
+
+.project-section-empty {
+    min-height: 48px;
+    border-radius: 12px;
+}
+
+@media (max-width: 980px) {
+    .project-list-grid,
+    .project-list-body[data-list-mode="PERSONAL"] .project-list-grid,
+    .project-list-body[data-list-mode="GROUP"] .project-list-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 620px) {
+    .project-list-body[data-list-mode="GROUP"] .project-meta {
+        grid-template-columns: 1fr;
+    }
+
+    .project-list-body[data-list-mode="GROUP"] .project-meta > div,
+    .project-list-body[data-list-mode="GROUP"] .project-meta > div:first-child,
+    .project-list-body[data-list-mode="GROUP"] .project-meta > .project-member-row {
+        grid-column: auto;
+    }
+}
+
+/* =========================================================
+   v15: 상태 섹션 세로 밀도 및 단일 카드 폭 보정
+   ========================================================= */
+.project-list-groups {
+    gap: 12px;
+}
+
+.project-status-section-head {
+    margin-bottom: 6px;
+}
+
+.project-list-grid {
+    align-items: start;
+}
+
+.project-list-grid > .project-list-link:only-child {
+    width: min(100%, 620px);
+}
+
+.project-list-link,
+.project-list-body[data-list-mode="PERSONAL"] .project-list-link,
+.project-list-body[data-list-mode="GROUP"] .project-list-link {
+    min-height: 162px;
+    padding: 13px 15px 11px 17px;
+}
+
+.project-list-link h3 {
+    margin-top: 9px;
+}
+
+.project-description {
+    min-height: 16px;
+    margin: 3px 0 7px;
+}
+
+.project-meta {
+    gap: 3px;
+    margin-top: 6px;
+}
+
+.project-list-body[data-list-mode="GROUP"] .project-meta {
+    column-gap: 14px;
+    row-gap: 3px;
+}
+
+.project-list-body[data-list-mode="GROUP"] .project-meta > div {
+    grid-template-columns: 30px minmax(0, 1fr);
+    gap: 5px;
+}
+
+.project-enter {
+    padding-top: 7px;
+}
+
+.project-section-empty {
+    min-height: 42px;
+}
+
+@media (max-width: 980px) {
+    .project-list-grid > .project-list-link:only-child {
+        width: 100%;
+    }
+}
+
+/* =========================================================
+   v16: 최종 세로 밀도 및 상단 버튼 높이 정합
+   ========================================================= */
+.project-list-groups {
+    gap: 8px;
+    padding-bottom: 18px;
+}
+
+.project-status-section-head {
+    margin-bottom: 5px;
+}
+
+.project-list-body[data-list-mode="GROUP"] .project-meta {
+    column-gap: 10px;
+    row-gap: 2px;
+}
+
+.project-list-body[data-list-mode="GROUP"] .project-meta > div {
+    grid-template-columns: 28px minmax(0, 1fr);
+    gap: 4px;
+}
+
+.project-list-hero-actions .project-list-back,
+.project-list-hero-actions .project-list-create {
+    height: 44px;
+    min-height: 44px;
+    box-sizing: border-box;
+}
+
+.project-list-card {
+    padding-bottom: 24px;
+}

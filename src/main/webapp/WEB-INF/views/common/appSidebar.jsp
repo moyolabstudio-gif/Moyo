@@ -1,5 +1,6 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
 <c:if test="${not empty sessionScope.user}">
 <aside id="moyoAppSidebar"
        class="moyo-app-sidebar"
@@ -51,6 +52,21 @@
                 </div>
             </section>
 
+            <section class="moyo-app-sidebar-section moyo-app-sidebar-projects-section">
+                <div class="moyo-app-sidebar-section-heading">
+                    <span class="moyo-app-sidebar-section-title">프로젝트</span>
+                </div>
+
+                <nav class="moyo-app-sidebar-project-nav" aria-label="프로젝트 바로가기">
+                    <a href="/project/manage"
+                       class="moyo-app-sidebar-main-link moyo-app-sidebar-project-entry personal"
+                       data-app-path="/project/manage">
+                        <span class="moyo-app-sidebar-link-icon moyo-app-sidebar-project-icon personal" aria-hidden="true"></span>
+                        <span>개인 프로젝트</span>
+                    </a>
+                </nav>
+            </section>
+
             <section class="moyo-app-sidebar-section moyo-app-sidebar-groups-section">
                 <div class="moyo-app-sidebar-section-heading">
                     <span class="moyo-app-sidebar-section-title">그룹</span>
@@ -69,17 +85,17 @@
                                     <span class="moyo-app-workspace-avatar">
                                         <c:choose>
                                             <c:when test="${not empty workspace.wsImagePath}">
-                                                <img src="${workspace.wsImagePath}"
-                                                     alt="${workspace.wsName}"
-                                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                                                <span class="moyo-app-workspace-avatar-fallback">${workspace.wsName.substring(0,1)}</span>
+                                                <img src="<c:out value='${workspace.wsImagePath}'/>"
+                                                     alt="<c:out value='${workspace.wsName}'/>"
+                                                     onerror="this.hidden=true; this.nextElementSibling.classList.add('show');">
+                                                <span class="moyo-app-workspace-avatar-fallback"><c:choose><c:when test="${not empty workspace.wsName}"><c:out value="${fn:toUpperCase(fn:substring(fn:trim(workspace.wsName), 0, 1))}"/></c:when><c:otherwise>G</c:otherwise></c:choose></span>
                                             </c:when>
                                             <c:otherwise>
-                                                <span class="moyo-app-workspace-avatar-fallback show">${workspace.wsName.substring(0,1)}</span>
+                                                <span class="moyo-app-workspace-avatar-fallback show"><c:choose><c:when test="${not empty workspace.wsName}"><c:out value="${fn:toUpperCase(fn:substring(fn:trim(workspace.wsName), 0, 1))}"/></c:when><c:otherwise>G</c:otherwise></c:choose></span>
                                             </c:otherwise>
                                         </c:choose>
                                     </span>
-                                    <span class="moyo-app-workspace-name">${workspace.wsName}</span>
+                                    <span class="moyo-app-workspace-name"><c:out value="${workspace.wsName}"/></span>
                                     <span class="moyo-app-workspace-chevron">⌄</span>
                                 </button>
 

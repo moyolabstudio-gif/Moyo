@@ -8,6 +8,7 @@
     <meta charset="UTF-8">
     <title>${note.noteTitle}</title>
     <link rel="stylesheet" href="/css/moyoUi.css?v=moyo-ui-scope-20260617">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="/css/note.css?v=note-toolbar-boundary-v40">
     <link rel="stylesheet" href="/css/commonFolderModal.css?v=common-folder-modal-final-v15">
     <link rel="stylesheet" href="/css/commonShareModal.css?v=note-share-edit-inline-v1">
@@ -90,31 +91,41 @@
 
             <div class="note-write-meta-panel note-write-meta-line note-detail-meta-line note-detail-meta-final" aria-label="노트 정보와 작업">
                 <div class="note-detail-path-row">
-                    <span class="note-meta-text note-meta-scope note-path-scope">
-                        <span class="note-meta-value"><c:out value="${detailScopeDisplay}" /></span>
-                    </span>
-                    <span class="note-path-separator" aria-hidden="true">/</span>
-                    <c:choose>
-                        <c:when test="${canDelete}">
-                            <button type="button"
-                                    class="note-detail-folder-trigger"
-                                    id="noteDetailFolderMoveBtn"
-                                    title="폴더 위치 변경"
-                                    data-note-id="${note.noteId}"
-                                    data-folder-id="${empty note.folderId ? '' : note.folderId}"
-                                    data-scope="${empty note.scopeType ? scope : note.scopeType}"
-                                    data-ws-id="${empty note.wsId ? wsId : note.wsId}"
-                                    data-proj-id="${empty note.projId ? projId : note.projId}">
-                                <span class="note-meta-value" id="noteDetailFolderName"><c:out value="${detailFolderName}" /></span>
-                                <span class="note-detail-folder-trigger-icon" aria-hidden="true">⌄</span>
-                            </button>
-                        </c:when>
-                        <c:otherwise>
-                            <span class="note-meta-text note-meta-folder">
-                                <span class="note-meta-value" id="noteDetailFolderName"><c:out value="${detailFolderName}" /></span>
+                    <div class="note-detail-path-main">
+                        <span class="note-meta-text note-meta-scope note-path-scope">
+                            <span class="note-meta-value"><c:out value="${detailScopeDisplay}" /></span>
+                        </span>
+                        <span class="note-path-separator" aria-hidden="true">/</span>
+                        <c:choose>
+                            <c:when test="${canDelete}">
+                                <button type="button"
+                                        class="note-detail-folder-trigger"
+                                        id="noteDetailFolderMoveBtn"
+                                        title="폴더 위치 변경"
+                                        data-note-id="${note.noteId}"
+                                        data-folder-id="${empty note.folderId ? '' : note.folderId}"
+                                        data-scope="${empty note.scopeType ? scope : note.scopeType}"
+                                        data-ws-id="${empty note.wsId ? wsId : note.wsId}"
+                                        data-proj-id="${empty note.projId ? projId : note.projId}">
+                                    <span class="note-meta-value" id="noteDetailFolderName"><c:out value="${detailFolderName}" /></span>
+                                    <span class="note-detail-folder-trigger-icon" aria-hidden="true">⌄</span>
+                                </button>
+                            </c:when>
+                            <c:otherwise>
+                                <span class="note-meta-text note-meta-folder">
+                                    <span class="note-meta-value" id="noteDetailFolderName"><c:out value="${detailFolderName}" /></span>
+                                </span>
+                            </c:otherwise>
+                        </c:choose>
+                    </div>
+                    <c:if test="${note.moyoPublicYn eq 'Y'}">
+                        <span class="note-detail-moyo-public-badge" aria-label="MOYO 공개 노트">
+                            <span class="note-meta-icon note-meta-icon--moyo" aria-hidden="true">
+                                <img src="${pageContext.request.contextPath}/brand/moyo_mark.png?v=moyo-mark-v34" alt="" onerror="this.style.display='none';">
                             </span>
-                        </c:otherwise>
-                    </c:choose>
+                            <span class="note-meta-value">MOYO 공개</span>
+                        </span>
+                    </c:if>
                 </div>
 
                 <div class="note-detail-info-action-row">
@@ -153,13 +164,13 @@
                             <div class="note-detail-share-actions">
                                 <button type="button" id="openNoteDetailShareModal" class="note-meta-text note-detail-action-btn note-meta-share note-share-open-btn"
                                         data-share-content-type="NOTE" data-share-content-id="${note.noteId}">
-                                    <span class="note-meta-icon note-meta-icon--moyo" aria-hidden="true"><img src="${pageContext.request.contextPath}/brand/moyo_mark.png?v=moyo-mark-v34" alt=""></span>
+                                    <span class="note-meta-icon note-meta-icon--plane" aria-hidden="true"><i class="fa-regular fa-paper-plane"></i></span>
                                     <span class="note-meta-value">공유</span>
                                     <span id="noteDetailShareCount" class="note-share-count" hidden>0</span>
                                 </button>
                                 <button type="button" id="openNoteDetailPermissionModal" class="note-meta-text note-detail-action-btn note-meta-share note-share-open-btn note-detail-permission-btn"
                                         data-share-content-type="NOTE" data-share-content-id="${note.noteId}" data-share-mode="PERMISSION">
-                                    <span class="note-meta-icon" aria-hidden="true">♟</span>
+                                    <span class="note-meta-icon" aria-hidden="true">👤</span>
                                     <span class="note-meta-value">권한</span>
                                     <span id="noteDetailPermissionCount" class="note-share-count" hidden>0</span>
                                 </button>
@@ -440,7 +451,7 @@
             </div>
             <div class="note-write-share-tabs" role="tablist" aria-label="공유 대상 유형">
                 <button type="button" class="note-write-share-tab is-active" data-share-tab="FRIEND">친구</button>
-                <button type="button" class="note-write-share-tab" data-share-tab="WORKSPACE">워크스페이스</button>
+                <button type="button" class="note-write-share-tab" data-share-tab="WORKSPACE">그룹</button>
                 <button type="button" class="note-write-share-tab" data-share-tab="PROJECT">프로젝트</button>
             </div>
             <div class="note-write-share-toolbar">
@@ -468,27 +479,10 @@
 </c:if>
 
 
-<c:if test="${canDelete}">
-<div class="nl-modal-backdrop common-folder-modal note-detail-folder-modal" id="noteDetailMoveModal" hidden>
-    <section class="nl-move-modal" role="dialog" aria-modal="true" aria-labelledby="noteDetailMoveModalTitle">
-        <div class="nl-modal-head">
-            <div>
-                <h2 id="noteDetailMoveModalTitle">폴더 이동</h2>
-                <p id="noteDetailMoveModalDescription">노트가 저장될 위치를 선택합니다.</p>
-            </div>
-            <div class="nl-modal-head-actions">
-                <button type="button" class="nl-modal-folder-create" id="noteDetailModalFolderCreate">
-                    <span aria-hidden="true">＋</span> 새 폴더
-                </button>
-                <button type="button" class="nl-modal-close" id="noteDetailMoveModalClose" aria-label="닫기">×</button>
-            </div>
-        </div>
-        <div class="nl-folder-choice-list" id="noteDetailMoveFolderList"></div>
-    </section>
-</div>
-</c:if>
 
 <script src="/js/commonShareModal.js?v=note-share-edit-inline-v1"></script>
+<script src="/js/noteFolderAdapter.js?v=note-folder-adapter-v2"></script>
+<script src="/js/commonFolderModal.js?v=common-folder-modal-final-v16"></script>
 <script>
 (function () {
     function initNoteDetailShare() {
@@ -831,180 +825,128 @@ document.addEventListener('DOMContentLoaded', function () {
 
 function initNoteDetailFolderMove() {
     const moveButton = document.getElementById('noteDetailFolderMoveBtn');
-    const modal = document.getElementById('noteDetailMoveModal');
-    const closeButton = document.getElementById('noteDetailMoveModalClose');
-    const folderList = document.getElementById('noteDetailMoveFolderList');
-    const createButton = document.getElementById('noteDetailModalFolderCreate');
     const folderNameNode = document.getElementById('noteDetailFolderName');
-    if (!moveButton || !modal || !folderList) return;
+    if (!moveButton) return;
 
-    const state = {
-        noteId: moveButton.dataset.noteId || '',
-        folderId: moveButton.dataset.folderId || '',
-        scope: moveButton.dataset.scope || 'PRIVATE',
-        wsId: moveButton.dataset.wsId || '',
-        projId: moveButton.dataset.projId || ''
-    };
-    if (state.scope === 'PROJECT') state.scope = 'PROJ';
-    if (state.scope === 'WORKSPACE') state.scope = 'WS';
-
-    const post = function (url, params) {
-        return fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
-            body: new URLSearchParams(params)
-        }).then(function (res) { return res.json(); })
-          .then(function (result) {
-              if (!result || result.success !== true) throw new Error(result && result.message ? result.message : '요청을 처리하지 못했습니다.');
-              return result;
-          });
+    const normalizeScope = function (value) {
+        const scope = String(value || 'PRIVATE').toUpperCase();
+        if (scope === 'PROJECT') return 'PROJ';
+        if (scope === 'WORKSPACE') return 'WS';
+        return scope;
     };
 
-    const folderRequestParams = function () {
-        const params = new URLSearchParams({ scope: state.scope });
-        if (state.wsId) params.set('wsId', state.wsId);
-        if (state.projId) params.set('projId', state.projId);
-        return params;
+    const normalizeFolderName = function (value) {
+        const text = String(value == null ? '' : value).trim();
+        return text.replace(/^\/\s*/, '') || '미분류';
     };
 
-    const escapeHtml = function (value) {
-        return String(value == null ? '' : value)
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;')
-            .replace(/'/g, '&#39;');
-    };
+    moveButton.addEventListener('click', async function (event) {
+        event.preventDefault();
+        event.stopPropagation();
 
-    const promptFolderName = function (message, initialValue) {
-        const value = window.prompt(message, initialValue || '');
-        if (value == null) return null;
-        const name = value.trim();
-        if (!name) {
-            window.alert('폴더 이름을 입력해 주세요.');
-            return null;
-        }
-        if (name.length > 100) {
-            window.alert('폴더 이름은 100자 이하로 입력해 주세요.');
-            return null;
-        }
-        return name;
-    };
-
-    const renderChoice = function (id, name, depth) {
-        const folderId = id == null ? '' : String(id);
-        const isCurrent = folderId === String(state.folderId || '');
-        const row = document.createElement('div');
-        row.className = 'nl-folder-choice-row' + (isCurrent ? ' is-current' : '');
-        row.dataset.folderId = folderId;
-        row.dataset.folderName = name || '미분류';
-
-        const button = document.createElement('button');
-        button.type = 'button';
-        button.className = 'nl-folder-choice';
-        button.dataset.folderId = folderId;
-        button.disabled = isCurrent;
-        button.innerHTML = '<span class="nl-folder-choice-main" style="--folder-depth:' + Math.max(0, Number(depth || 0)) + '">'
-            + '<span class="nl-folder-choice-icon" aria-hidden="true">' + (id == null ? '▢' : '■') + '</span>'
-            + '<span class="nl-folder-choice-name">' + escapeHtml(name || '미분류') + '</span>'
-            + '</span>'
-            + (isCurrent ? '<em class="nl-folder-choice-badge">현재 위치</em>' : '');
-        row.appendChild(button);
-
-        if (id != null) {
-            const actions = document.createElement('div');
-            actions.className = 'nl-modal-folder-actions';
-            actions.innerHTML = '<button type="button" data-detail-folder-rename title="폴더 이름 수정" aria-label="폴더 이름 수정">✎</button>'
-                + '<button type="button" data-detail-folder-delete title="폴더 삭제" aria-label="폴더 삭제">🗑</button>';
-            row.appendChild(actions);
-        }
-        folderList.appendChild(row);
-    };
-
-    const loadFolders = function () {
-        folderList.innerHTML = '<div class="nl-folder-choice-empty">폴더 목록을 불러오는 중입니다.</div>';
-        return fetch('/note/api/folders?' + folderRequestParams().toString())
-            .then(function (res) { return res.json(); })
-            .then(function (result) {
-                if (!result || result.success !== true) throw new Error(result && result.message ? result.message : '폴더 목록을 불러오지 못했습니다.');
-                folderList.innerHTML = '';
-                renderChoice(null, '미분류', 0);
-                (result.folders || []).forEach(function (folder) {
-                    renderChoice(folder.folderId, folder.folderName, folder.depth || 0);
-                });
-            });
-    };
-
-    const openModal = function () {
-        loadFolders()
-            .then(function () {
-                modal.hidden = false;
-                document.body.classList.add('nl-modal-open');
-            })
-            .catch(function (error) { window.alert(error.message || '폴더 목록을 불러오지 못했습니다.'); });
-    };
-
-    const closeModal = function () {
-        modal.hidden = true;
-        document.body.classList.remove('nl-modal-open');
-    };
-
-    moveButton.addEventListener('click', openModal);
-    if (closeButton) closeButton.addEventListener('click', closeModal);
-    modal.addEventListener('click', function (event) { if (event.target === modal) closeModal(); });
-
-    if (createButton) createButton.addEventListener('click', function () {
-        const folderName = promptFolderName('새 폴더 이름을 입력해 주세요.');
-        if (!folderName) return;
-        const params = { scope: state.scope, folderName: folderName };
-        if (state.wsId) params.wsId = state.wsId;
-        if (state.projId) params.projId = state.projId;
-        post('/note/api/folder/create', params)
-            .then(loadFolders)
-            .catch(function (error) { window.alert(error.message || '폴더를 만들지 못했습니다.'); });
-    });
-
-    folderList.addEventListener('click', function (event) {
-        const row = event.target.closest('.nl-folder-choice-row');
-        if (!row) return;
-
-        const renameButton = event.target.closest('[data-detail-folder-rename]');
-        const deleteButton = event.target.closest('[data-detail-folder-delete]');
-        if (renameButton || deleteButton) {
-            event.preventDefault();
-            event.stopPropagation();
-            const folderId = row.dataset.folderId || '';
-            const currentName = row.dataset.folderName || '';
-            if (!folderId) return;
-            if (renameButton) {
-                const folderName = promptFolderName('수정할 폴더 이름을 입력해 주세요.', currentName);
-                if (!folderName || folderName === currentName) return;
-                post('/note/api/folder/rename', { folderId: folderId, folderName: folderName })
-                    .then(loadFolders)
-                    .catch(function (error) { window.alert(error.message || '폴더 이름을 수정하지 못했습니다.'); });
-            }
-            if (deleteButton) {
-                if (!window.confirm("'" + currentName + "' 폴더를 삭제할까요?\n하위 폴더나 노트가 있으면 삭제할 수 없습니다.")) return;
-                post('/note/api/folder/delete', { folderId: folderId })
-                    .then(loadFolders)
-                    .catch(function (error) { window.alert(error.message || '폴더를 삭제하지 못했습니다.'); });
-            }
+        if (!window.CommonFolderModal || !window.NoteFolderAdapter) {
+            window.alert('폴더 모달을 불러오지 못했습니다.');
             return;
         }
 
-        const choice = event.target.closest('.nl-folder-choice');
-        if (!choice || choice.disabled) return;
-        choice.disabled = true;
-        post('/note/api/folder/move-note', { noteId: state.noteId, folderId: choice.dataset.folderId || '' })
-            .then(function () {
-                state.folderId = choice.dataset.folderId || '';
-                if (folderNameNode) folderNameNode.textContent = row.dataset.folderName || '미분류';
-                closeModal();
-            })
-            .catch(function (error) {
-                window.alert(error.message || '폴더를 이동하지 못했습니다.');
-                choice.disabled = false;
+        const state = {
+            noteId: moveButton.dataset.noteId || '',
+            folderId: String(moveButton.dataset.folderId || ''),
+            scope: normalizeScope(moveButton.dataset.scope),
+            wsId: moveButton.dataset.wsId || '',
+            projId: moveButton.dataset.projId || ''
+        };
+
+        const query = new URLSearchParams({ scope: state.scope });
+        if (state.wsId) query.set('wsId', state.wsId);
+        if (state.projId) query.set('projId', state.projId);
+
+        moveButton.disabled = true;
+        try {
+            const response = await fetch('/note/api/folders?' + query.toString(), {
+                headers: { Accept: 'application/json' }
             });
+            const result = await response.json();
+            if (!response.ok || !result || result.success !== true) {
+                throw new Error(result && result.message ? result.message : '폴더 목록을 불러오지 못했습니다.');
+            }
+
+            let select = document.getElementById('noteDetailMoveFolderSelect');
+            if (!select) {
+                select = document.createElement('select');
+                select.id = 'noteDetailMoveFolderSelect';
+                select.className = 'note-folder-native-select';
+                select.setAttribute('aria-hidden', 'true');
+                select.hidden = true;
+                document.body.appendChild(select);
+            }
+
+            select.innerHTML = '';
+            const unclassified = document.createElement('option');
+            unclassified.value = '';
+            unclassified.textContent = '미분류';
+            select.appendChild(unclassified);
+
+            (Array.isArray(result.folders) ? result.folders : []).forEach(function (folder) {
+                const option = document.createElement('option');
+                option.value = String(folder.folderId || '');
+                option.textContent = normalizeFolderName(folder.folderPath || folder.folderName || '폴더');
+                option.dataset.depth = String(folder.depth || 0);
+                select.appendChild(option);
+            });
+
+            select.value = Array.from(select.options).some(function (option) {
+                return String(option.value || '') === state.folderId;
+            }) ? state.folderId : '';
+
+            window.CommonFolderModal.openSelect({
+                title: '폴더 이동',
+                description: '노트가 저장될 위치를 선택합니다.',
+                confirmLabel: '이동',
+                instantSelect: false,
+                showCurrent: true,
+                unclassifiedLabel: '미분류',
+                unclassifiedDescription: state.folderId === '' ? '현재 위치' : '폴더 없이 보관',
+                folderDescription: '이 폴더로 이동',
+                selectElement: select,
+                trigger: moveButton,
+                adapter: window.NoteFolderAdapter,
+                context: {
+                    scope: state.scope,
+                    wsId: state.wsId,
+                    projId: state.projId
+                },
+                canManage: true,
+                showManageActions: false,
+                itemDescription: function (folder) {
+                    if (folder.isCurrent) return '현재 위치';
+                    if (!folder.folderId) return '폴더 없이 보관';
+                    return '이 폴더로 이동';
+                },
+                onConfirm: async function (folder) {
+                    const selectedId = String(folder.folderId || '');
+                    if (selectedId === state.folderId) return;
+
+                    const moveResponse = await fetch('/note/api/folder/move-note', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
+                        body: new URLSearchParams({ noteId: state.noteId, folderId: selectedId })
+                    });
+                    const moveResult = await moveResponse.json();
+                    if (!moveResponse.ok || !moveResult || moveResult.success !== true) {
+                        throw new Error(moveResult && moveResult.message ? moveResult.message : '폴더를 이동하지 못했습니다.');
+                    }
+
+                    state.folderId = selectedId;
+                    moveButton.dataset.folderId = selectedId;
+                    if (folderNameNode) folderNameNode.textContent = folder.folderName || '미분류';
+                }
+            });
+        } catch (error) {
+            window.alert(error.message || '폴더 목록을 불러오지 못했습니다.');
+        } finally {
+            moveButton.disabled = false;
+        }
     });
 }
 

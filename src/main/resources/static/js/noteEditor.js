@@ -25,10 +25,24 @@
     let editorReady = false;
 
 
-    function ensurePrivateNoteContext() {
-        if (scopeInput) scopeInput.value = 'PRIVATE';
-        if (wsIdInput) wsIdInput.value = '';
-        if (projIdInput) projIdInput.value = '';
+    function preserveNoteContext() {
+        if (!scopeInput) return;
+
+        const rawScope = String(scopeInput.value || '').trim().toUpperCase();
+        let normalizedScope = rawScope;
+        if (normalizedScope === 'WORKSPACE' || normalizedScope === 'GROUP') normalizedScope = 'WS';
+        if (normalizedScope === 'PROJECT') normalizedScope = 'PROJ';
+        if (!normalizedScope) normalizedScope = projIdInput && projIdInput.value ? 'PROJ' : (wsIdInput && wsIdInput.value ? 'WS' : 'PRIVATE');
+
+        scopeInput.value = normalizedScope;
+
+        if (normalizedScope === 'PRIVATE' || normalizedScope === 'FRIEND') {
+            if (wsIdInput) wsIdInput.value = '';
+            if (projIdInput) projIdInput.value = '';
+            return;
+        }
+
+        if (normalizedScope === 'WS' && projIdInput) projIdInput.value = '';
     }
 
 
@@ -313,7 +327,7 @@
     renderCustomTemplates();
     initTemplateSaveDialog();
     initNoteFolderPicker();
-    ensurePrivateNoteContext();
+    preserveNoteContext();
 
     [title, category, folder].forEach(function (el) {
         if (el) el.addEventListener(el.tagName === 'SELECT' ? 'change' : 'input', markDirty);
@@ -402,7 +416,7 @@
     }
 
     form.addEventListener('submit', function (event) {
-        ensurePrivateNoteContext();
+        preserveNoteContext();
         submitting = true;
         clearTimeout(saveTimer);
         memo.value = getData();

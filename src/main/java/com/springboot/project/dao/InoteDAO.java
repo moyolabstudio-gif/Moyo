@@ -16,6 +16,10 @@ public interface InoteDAO {
 
     List<noteDTO> selectMainNoteList(Map<String, Object> paramMap);
 
+    List<noteDTO> selectProfilePublicNotes(Map<String, Object> paramMap);
+
+    int countProfilePublicNotes(@Param("profileUserId") Long profileUserId);
+
     int countPinnedNotes(@Param("userId") Long userId, @Param("pinScopeKey") String pinScopeKey);
 
     Integer selectNextPinOrder(@Param("userId") Long userId, @Param("pinScopeKey") String pinScopeKey);
@@ -57,13 +61,41 @@ public interface InoteDAO {
 
     int deleteNoteFilesByNoteId(@Param("noteId") Long noteId);
 
-    List<noteReplyDTO> selectNoteReplyList(@Param("noteId") Long noteId);
+    int countMoyoPublicNote(@Param("noteId") Long noteId);
+
+    int incrementNoteViewCount(@Param("noteId") Long noteId);
+
+    int selectNoteViewCount(@Param("noteId") Long noteId);
+
+    int countNoteLike(@Param("noteId") Long noteId, @Param("userId") Long userId);
+
+    int countAllNoteLikes(@Param("noteId") Long noteId);
+
+    int insertNoteLike(@Param("noteId") Long noteId, @Param("userId") Long userId);
+
+    int deleteNoteLike(@Param("noteId") Long noteId, @Param("userId") Long userId);
+
+    List<noteReplyDTO> selectNoteReplyList(@Param("noteId") Long noteId,
+                                               @Param("currentUserId") Long currentUserId);
+
+    int countRootNoteReply(@Param("noteId") Long noteId, @Param("replyId") Long replyId);
+
+    int countNoteReplyLike(@Param("replyId") Long replyId, @Param("userId") Long userId);
+
+    int insertNoteReplyLike(@Param("replyId") Long replyId, @Param("userId") Long userId);
+
+    int deleteNoteReplyLike(@Param("replyId") Long replyId, @Param("userId") Long userId);
 
     int insertNoteReply(noteReplyDTO reply);
 
     int updateNoteReply(noteReplyDTO reply);
 
+    int deleteNoteReplyReactionsForOwnedThread(@Param("replyId") Long replyId,
+                                                  @Param("userId") Long userId);
+
     int deleteNoteReply(@Param("replyId") Long replyId, @Param("userId") Long userId);
+
+    int deleteNoteReplyReactionsByNoteId(@Param("noteId") Long noteId);
 
     int deleteNoteRepliesByNoteId(@Param("noteId") Long noteId);
 }

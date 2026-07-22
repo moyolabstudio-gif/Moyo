@@ -7,6 +7,7 @@
 :root {
     --moyo-blue: #4A90E2;
     --moyo-mint: #39CDB5;
+    --moyo-purple: #7358E8;
     --moyo-text: #111827;
     --moyo-muted: #667085;
     --moyo-soft: #94a3b8;
@@ -51,7 +52,7 @@ body.workspace-community-body .moyo-header .user-avatar {
     margin-bottom: 22px;
     padding: 24px 32px;
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 20px;
     position: relative;
     overflow: hidden;
@@ -89,7 +90,7 @@ body.workspace-community-body .moyo-header .user-avatar {
     border-radius: 18px;
     overflow: hidden;
     border: 1px solid #e3ebf5;
-    background: #f8fafc;
+    background: linear-gradient(135deg, #65d2c7 0%, #62a4e7 52%, #8b80ef 100%);
     box-shadow: 0 7px 16px rgba(15,23,42,.06);
     position: relative;
     z-index: 1;
@@ -99,6 +100,12 @@ body.workspace-community-body .moyo-header .user-avatar {
     height: 100%;
     object-fit: cover;
     display: block;
+    background: transparent;
+}
+
+/* 업로드한 그룹 이미지가 있으면 메인 히어로의 기본 그라데이션 배경을 제거한다. */
+.workspace-community-container .workspace-avatar:has(img[src]:not([src=""])) {
+    background: transparent;
 }
 .workspace-community-container .workspace-hero-info {
     flex: 1 1 auto;
@@ -138,6 +145,7 @@ body.workspace-community-body .moyo-header .user-avatar {
     display: flex;
     align-items: center;
     justify-content: flex-end;
+    align-self: flex-start;
     gap: 8px;
     flex-shrink: 0;
 }
@@ -174,14 +182,14 @@ body.workspace-community-body .moyo-header .user-avatar {
 .workspace-community-container .ws-btn-primary,
 .workspace-community-container .btn-primary {
     border-color: transparent;
-    background: linear-gradient(135deg, var(--moyo-blue) 0%, var(--moyo-mint) 100%);
+    background: linear-gradient(110deg, var(--moyo-mint) 0%, var(--moyo-blue) 52%, var(--moyo-purple) 100%);
     color: #fff;
     box-shadow: 0 6px 14px rgba(57,205,181,.18);
 }
 .workspace-community-container .ws-btn-primary:hover,
 .workspace-community-container .btn-primary:hover {
     border-color: transparent;
-    background: linear-gradient(135deg, var(--moyo-blue) 0%, var(--moyo-mint) 100%);
+    background: linear-gradient(110deg, var(--moyo-mint) 0%, var(--moyo-blue) 52%, var(--moyo-purple) 100%);
     color: #fff;
     box-shadow: 0 8px 18px rgba(57, 205, 181, .24);
 }
@@ -189,7 +197,7 @@ body.workspace-community-body .moyo-header .user-avatar {
 /* 그룹 일정 등록 버튼은 공통 .btn:hover 때문에 배경이 흰색으로 덮이지 않게 고정 */
 .workspace-community-container .workspace-calendar-add-btn:hover {
     border-color: transparent !important;
-    background: linear-gradient(135deg, var(--moyo-blue) 0%, var(--moyo-mint) 100%) !important;
+    background: linear-gradient(110deg, var(--moyo-mint) 0%, var(--moyo-blue) 52%, var(--moyo-purple) 100%) !important;
     color: #fff !important;
     box-shadow: 0 8px 18px rgba(57, 205, 181, .24);
 }
@@ -974,8 +982,8 @@ body.moyo-app-sidebar-enabled .workspace-community-container .workspace-member-h
     margin: 0 !important;
     border: 0 !important;
     border-radius: 999px !important;
-    background: linear-gradient(135deg, #4A90E2 0%, #39CDB5 100%) !important;
-    background-image: linear-gradient(135deg, #4A90E2 0%, #39CDB5 100%) !important;
+    background: linear-gradient(110deg, #39CDB5 0%, #4A90E2 52%, #7358E8 100%) !important;
+    background-image: linear-gradient(110deg, #39CDB5 0%, #4A90E2 52%, #7358E8 100%) !important;
     color: #fff !important;
     font: 800 12px/1 Pretendard, sans-serif !important;
     letter-spacing: -0.03em !important;
@@ -992,25 +1000,7 @@ body.moyo-app-sidebar-enabled .workspace-community-container .workspace-member-h
 body.moyo-app-sidebar-enabled .workspace-community-container .workspace-member-head .workspace-member-invite-btn:active {
     transform: translateY(0) !important;
 }
-body.moyo-app-sidebar-enabled .workspace-community-container .workspace-member-list .workspace-member-avatar {
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    width: 34px !important;
-    height: 34px !important;
-    flex: 0 0 34px !important;
-    margin-top: 1px !important;
-    border: 0 !important;
-    border-radius: 50% !important;
-    background: linear-gradient(135deg, #4A90E2 0%, #39CDB5 100%) !important;
-    background-image: linear-gradient(135deg, #4A90E2 0%, #39CDB5 100%) !important;
-    color: #fff !important;
-    box-shadow: 0 6px 14px rgba(57, 205, 181, 0.18) !important;
-    font-size: 12px !important;
-    font-weight: 900 !important;
-    line-height: 1 !important;
-    letter-spacing: -0.04em !important;
-}
+/* 그룹 홈 멤버 아바타는 하단 단일 규칙에서 관리합니다. */
 
 /* ===== v3: 참여/공유 카드와 게시판 카드의 역할 분리 ===== */
 .workspace-community-container .workspace-participation-row {
@@ -1146,25 +1136,11 @@ body.moyo-app-sidebar-enabled .workspace-community-container .workspace-member-l
 }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
 .workspace-community-container .workspace-project-secondary-row {
     
     grid-template-columns: repeat(2, minmax(0, 1fr));
     
 }
-
 
 
 .workspace-community-container .workspace-project-grid-progress {
@@ -1174,7 +1150,6 @@ body.moyo-app-sidebar-enabled .workspace-community-container .workspace-member-l
 .workspace-community-container .workspace-project-grid-secondary {
     grid-template-columns: repeat(2, minmax(0, 1fr));
 }
-
 
 
 .workspace-community-container .workspace-project-card::before {
@@ -1189,10 +1164,6 @@ body.moyo-app-sidebar-enabled .workspace-community-container .workspace-member-l
 }
 
 
-
-
-
-
 .workspace-community-container .project-state-text {
     
     margin-bottom: 7px;
@@ -1200,20 +1171,6 @@ body.moyo-app-sidebar-enabled .workspace-community-container .workspace-member-l
     
     
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 @media (max-width: 1280px) {
@@ -1247,7 +1204,6 @@ body.moyo-app-sidebar-enabled .workspace-community-container .workspace-member-l
     flex-direction: column;
     gap: 16px;
 }
-
 
 
 .workspace-community-container .workspace-project-status-title {
@@ -1284,7 +1240,6 @@ body.moyo-app-sidebar-enabled .workspace-community-container .workspace-member-l
     background: #eafaf4;
     color: #20a582;
 }
-
 
 
 .workspace-community-container .workspace-project-card {
@@ -1354,11 +1309,6 @@ body.moyo-app-sidebar-enabled .workspace-community-container .workspace-member-l
 }
 
 
-
-
-
-
-
 .workspace-community-container .workspace-project-empty.compact {
     
     
@@ -1411,7 +1361,6 @@ body.moyo-app-sidebar-enabled .workspace-community-container .workspace-member-l
 }
 
 
-
 .workspace-community-container .workspace-project-titleline {
     
     align-items: center;
@@ -1422,13 +1371,6 @@ body.moyo-app-sidebar-enabled .workspace-community-container .workspace-member-l
 .workspace-community-container .workspace-project-titleline h3 {
     margin: 0;
 }
-
-
-
-
-
-
-
 
 
 @media (max-width: 640px) {
@@ -1454,13 +1396,9 @@ body.moyo-app-sidebar-enabled .workspace-community-container .workspace-member-l
 }
 
 
-
-
-
 .workspace-community-container .workspace-project-head-actions .workspace-project-create-btn {
     order: 2;
 }
-
 
 
 @media (max-width: 720px) {
@@ -1518,9 +1456,6 @@ body.moyo-app-sidebar-enabled .workspace-community-container .workspace-member-l
 .workspace-community-container .workspace-project-desc-row .workspace-project-create-btn {
     flex: 0 0 auto;
 }
-
-
-
 
 
 @media (max-width: 720px) {
@@ -1581,7 +1516,7 @@ body.moyo-app-sidebar-enabled .workspace-community-container .workspace-member-l
     padding: 0 15px;
     border: 0;
     border-radius: 999px;
-    background: linear-gradient(135deg, #4A90E2 0%, #55DDBF 100%);
+    background: linear-gradient(110deg, #55DDBF 0%, #4A90E2 52%, #7358E8 100%);
     color: #fff;
     font-size: 12px;
     font-weight: 700;
@@ -1655,11 +1590,6 @@ body.moyo-app-sidebar-enabled .workspace-community-container .workspace-member-l
 }
 
 
-
-
-
-
-
 .workspace-community-container .workspace-project-status-group {
     
     padding: 0;
@@ -1668,17 +1598,6 @@ body.moyo-app-sidebar-enabled .workspace-community-container .workspace-member-l
 .workspace-community-container .workspace-project-status-title {
     margin-bottom: 8px;
 }
-
-
-
-
-
-
-
-
-
-
-
 
 
 .workspace-community-container .workspace-project-section-footer {
@@ -1915,411 +1834,17 @@ body.moyo-app-sidebar-enabled .workspace-community-container .workspace-member-l
 
 body.workspace-modal-open { overflow: hidden; }
 
-.workspace-member-profile-overlay { z-index: 2099; }
-.workspace-member-profile-modal {
-    width: 560px;
-    max-height: calc(100vh - 40px);
-    overflow-y: auto;
-    z-index: 2100;
-}
-.workspace-profile-kicker {
-    display: block;
-    margin-bottom: 3px;
-    color: #8a94a6;
-    font-size: 11px;
-    font-weight: 600;
-}
-.workspace-profile-loading {
-    min-height: 180px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #8a94a6;
-    font-size: 13px;
-}
-.workspace-profile-summary {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    padding: 14px;
-    border: 1px solid #e8eef5;
-    border-radius: 15px;
-    background: linear-gradient(145deg, #fff 0%, #f8fbff 100%);
-}
-.workspace-profile-avatar {
-    width: 58px;
-    height: 58px;
-    flex: 0 0 58px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #4A90E2, #39CDB5);
-    color: #fff;
-    font-size: 21px;
-    font-weight: 900;
-    box-shadow: 0 7px 16px rgba(57, 145, 216, .2);
-}
-.workspace-profile-avatar img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-.workspace-profile-summary-text {
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 3px;
-}
-.workspace-profile-summary-text strong {
-    color: #111827;
-    font-size: 17px;
-    font-weight: 900;
-}
-.workspace-profile-summary-text > span:not(.workspace-profile-role) {
-    color: #667085;
-    font-size: 12px;
-}
-.workspace-profile-role {
-    display: inline-flex;
-    min-height: 20px;
-    padding: 0 8px;
-    align-items: center;
-    border-radius: 999px;
-    background: #eef6ff;
-    color: #2f7fd2;
-    font-size: 10px;
-    font-weight: 800;
-}
-.workspace-profile-detail-list {
-    margin: 16px 0 0;
-    padding: 0;
-    border-top: 1px solid #eef2f6;
-}
-.workspace-profile-detail-list > div {
-    display: grid;
-    grid-template-columns: 82px minmax(0, 1fr);
-    gap: 14px;
-    padding: 12px 2px;
-    border-bottom: 1px solid #eef2f6;
-}
-.workspace-profile-detail-list dt {
-    color: #8a94a6;
-    font-size: 12px;
-    font-weight: 600;
-}
-.workspace-profile-detail-list dd {
-    margin: 0;
-    color: #334155;
-    font-size: 13px;
-    line-height: 1.55;
-    overflow-wrap: anywhere;
-}
-.workspace-profile-edit { margin-top: 16px; }
-.workspace-profile-switch-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 18px;
-    padding: 13px 14px;
-    border: 1px solid #e6edf5;
-    border-radius: 13px;
-    background: #f9fbfd;
-}
-.workspace-profile-switch-row > span {
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-}
-.workspace-profile-switch-row strong {
-    color: #334155;
-    font-size: 13px;
-}
-.workspace-profile-switch-row small {
-    color: #8a94a6;
-    font-size: 11px;
-}
-.workspace-profile-switch-row input {
-    width: 18px;
-    height: 18px;
-    accent-color: #4A90E2;
-}
-.workspace-profile-form-grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 13px;
-    margin-top: 14px;
-}
-.workspace-profile-form-grid label {
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-}
-.workspace-profile-form-grid label > span {
-    color: #475569;
-    font-size: 12px;
-    font-weight: 700;
-}
-.workspace-profile-form-grid label em {
-    color: #94a3b8;
-    font-style: normal;
-    font-weight: 500;
-}
-.workspace-profile-form-grid input,
-.workspace-profile-form-grid textarea {
-    width: 100%;
-    border: 1px solid #dfe7ef;
-    border-radius: 10px;
-    background: #fff;
-    color: #1f2937;
-    font: 13px/1.4 inherit;
-    outline: none;
-}
-.workspace-profile-form-grid input {
-    height: 40px;
-    padding: 0 11px;
-}
-.workspace-profile-form-grid textarea {
-    min-height: 94px;
-    padding: 10px 11px;
-    resize: vertical;
-}
-.workspace-profile-form-grid input:focus,
-.workspace-profile-form-grid textarea:focus {
-    border-color: #79ace7;
-    box-shadow: 0 0 0 3px rgba(74, 144, 226, .1);
-}
-.workspace-profile-form-grid input:disabled {
-    background: #f3f5f7;
-    color: #94a3b8;
-}
-.workspace-profile-full-field { grid-column: 1 / -1; }
-.workspace-profile-check-row {
-    flex-direction: row !important;
-    align-items: center;
-    gap: 8px !important;
-}
-.workspace-profile-check-row input {
-    width: 16px;
-    height: 16px;
-    flex: 0 0 16px;
-    accent-color: #4A90E2;
-}
-.workspace-profile-check-row span {
-    font-weight: 500 !important;
-}
-.workspace-profile-actions {
-    min-height: 38px;
-    margin-top: 18px;
-    padding-top: 14px;
-    display: flex;
-    align-items: center;
-    
-    gap: 10px;
-    border-top: 1px solid #eef2f6;
-}
-.workspace-profile-action-right {
-    
-    
-    
-    gap: 8px;
-}
-.workspace-profile-danger-link {
-    border: 0;
-    background: transparent;
-    color: #e45864;
-    font: 600 12px/1 inherit;
-    cursor: pointer;
-    padding: 7px 0;
-}
-.workspace-profile-owner-guide {
-    color: #8a94a6;
-    font-size: 11px;
-    line-height: 1.45;
-}
-@media (max-width: 620px) {
-    .workspace-member-profile-modal { width: calc(100vw - 24px); padding: 20px; }
-    .workspace-profile-form-grid { grid-template-columns: 1fr; }
-    .workspace-profile-full-field { grid-column: auto; }
-    .workspace-profile-actions { align-items: stretch; flex-direction: column; }
-    .workspace-profile-action-right { width: 100%; margin-left: 0; }
-    .workspace-profile-action-right .ws-btn { flex: 1; }
-}
-/* ===== End 워크스페이스 멤버 프로필 모달 ===== */
+/* 프로필 모달 본체는 commonMemberProfile.css에서 관리합니다. */
 
 
-/* 프로필 로딩/콘텐츠 hidden 상태가 display:flex 규칙보다 우선하도록 보정 */
-.workspace-member-profile-modal [hidden] {
-    display: none !important;
-}
-
-
-
-.profile-image-editor {
-    display:flex; align-items:center; gap:18px; margin:18px 0;
-    padding:15px; border:1px solid #e3eaf2; border-radius:15px; background:#fbfdff;
-}
-.profile-image-viewport {
-    position:relative; width:112px; height:112px; flex:0 0 112px;
-     border-radius:50%; border:1px solid #dbe6f1;
-    
-    touch-action:none; cursor:default;
-}
-.profile-image-viewport:active { cursor:grabbing; }
-.profile-image-viewport img {
-    position:absolute;
-    left:50%;
-    top:50%;
-    width:auto;
-    height:auto;
-    min-width:0;
-    min-height:0;
-    max-width:none;
-    max-height:none;
-    user-select:none;
-    pointer-events:none;
-    transform-origin:center;
-    will-change:transform;
-}
-.profile-image-placeholder {
-    width:100%; height:100%; display:flex; align-items:center; justify-content:center;
-    color:#fff; font-size:34px; font-weight:900;
-}
-.profile-image-tools { flex:1; min-width:0; }
-.profile-image-tools strong { display:block; margin-bottom:7px; font-size:13px; color:#334155; }
-.profile-image-tools small { display:block; margin:7px 0 11px; color:#8491a3; font-size:11px; }
-.profile-image-tools input[type="range"] { width:100%; accent-color:#4A90E2; }
-.profile-image-button {
-    display:inline-flex; align-items:center; min-height:34px; padding:0 12px;
-    border:1px solid #dbe4ee; border-radius:9px; background:#fff;
-    color:#475569; font-size:12px; font-weight:700; cursor:pointer;
-}
-
-.workspace-profile-image-editor{margin-top:16px;}
-
-.profile-image-viewport.has-image { cursor: grab; }
-.profile-image-viewport.has-image:active { cursor: grabbing; }
-
-/* 프로필 미리보기: 원형 영역을 정확히 채우고 바깥 부분은 숨김 */
-.profile-image-viewport {
-    overflow: hidden !important;
-    background: linear-gradient(135deg, #4A90E2, #39CDB5);
-}
-.profile-image-viewport img {
-    object-fit: cover !important;
-}
-
-
-/* ===== 워크스페이스 프로필 모달 하단 버튼 정리 ===== */
-.workspace-profile-actions {
-    justify-content: flex-end;
-}
-
-.workspace-profile-action-right {
-    margin-left: auto;
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-}
-
-.workspace-profile-save-button {
-    min-width: 78px;
-    height: 38px;
-    padding: 0 18px;
-    border: 0;
-    border-radius: 10px;
-    background: linear-gradient(135deg, #4A90E2, #39CDB5);
-    color: #fff;
-    font-family: inherit;
-    font-size: 12px;
-    font-weight: 700;
-    line-height: 1;
-    cursor: pointer;
-    box-shadow: 0 7px 16px rgba(57, 205, 181, .22);
-    transition:
-        transform .16s ease,
-        box-shadow .16s ease,
-        opacity .16s ease;
-}
-
-.workspace-profile-save-button:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 10px 20px rgba(57, 205, 181, .28);
-}
-
-.workspace-profile-save-button:active {
-    transform: translateY(0);
-}
-
-.workspace-profile-save-button:disabled {
-    opacity: .55;
-    cursor: default;
-    transform: none;
-    box-shadow: none;
-}
-/* ===== End 워크스페이스 프로필 모달 하단 버튼 정리 ===== */
-
-
-/* ===== 워크스페이스 프로필 조회/관리 버튼 정리 ===== */
-.workspace-profile-actions.is-empty {
-    display: none;
-}
-
-.workspace-profile-manage-button {
-    min-height: 36px;
-    padding: 0 13px;
-    border: 1px solid #dce5ee;
-    border-radius: 9px;
-    background: #fff;
-    color: #536274;
-    font-family: inherit;
-    font-size: 11.5px;
-    font-weight: 600;
-    line-height: 1;
-    cursor: pointer;
-    transition:
-        border-color .16s ease,
-        background .16s ease,
-        color .16s ease,
-        transform .16s ease;
-}
-
-.workspace-profile-manage-button:hover {
-    border-color: #b9d3ed;
-    background: #f6faff;
-    color: #347fcf;
-    transform: translateY(-1px);
-}
-
-.workspace-profile-manage-button.is-danger {
-    border-color: #efc8cd;
-    background: #fffafa;
-    color: #d85864;
-}
-
-.workspace-profile-manage-button.is-danger:hover {
-    border-color: #e9aeb6;
-    background: #fff2f3;
-    color: #c94350;
-}
-/* ===== End 워크스페이스 프로필 조회/관리 버튼 정리 ===== */
-
-/* 멤버 프로필의 내보내기 버튼은 위험 작업으로 표시 */
-.workspace-profile-manage-button.is-danger {
-    min-width: 72px;
-}
-
+/* 그룹 프로필 편집기와 액션 버튼은 commonMemberProfile.css에서 관리합니다. */
 
 /* ===== 워크스페이스 히어로 외부 링크 복구 ===== */
 .workspace-community-container .workspace-hero-meta-line {
     min-width: 0;
-    height: 28px;
-    margin-top: 1px;
+    margin-top: 3px;
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 9px;
 }
 
@@ -2327,19 +1852,25 @@ body.workspace-modal-open { overflow: hidden; }
     min-width: 70px;
     max-width: 430px;
     margin: 0;
+    display: -webkit-box;
     overflow: hidden;
     color: #6b7280;
     font-size: 13px;
     font-weight: 500;
-    line-height: 28px;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    line-height: 1.55;
+    white-space: pre-line;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    max-height: calc(1.55em * 3);
 }
 
 .workspace-community-container .workspace-external-links {
     min-width: 0;
     max-width: min(46vw, 500px);
-    height: 28px;
+    min-height: 28px;
+    height: auto;
     margin: 0;
     display: flex;
     flex: 0 1 auto;
@@ -2411,12 +1942,16 @@ body.workspace-modal-open { overflow: hidden; }
         width: 100%;
     }
 
-    .workspace-community-container .workspace-hero-description {
-        max-width: 42%;
+    .workspace-community-container .workspace-hero-meta-line {
+        align-items: stretch;
+        flex-direction: column;
+        gap: 7px;
     }
 
+    .workspace-community-container .workspace-hero-description,
     .workspace-community-container .workspace-external-links {
-        max-width: 58%;
+        width: 100%;
+        max-width: 100%;
     }
 }
 /* ===== End 워크스페이스 히어로 외부 링크 복구 ===== */
@@ -2463,233 +1998,6 @@ body.workspace-modal-open { overflow: hidden; }
 /* =========================================================
    Workspace main - member invite modal
    ========================================================= */
-body.workspace-main-invite-open {
-    overflow: hidden;
-}
-
-.workspace-main-invite-overlay {
-    z-index: 3000;
-    background: rgba(15, 23, 42, .48);
-    backdrop-filter: blur(2px);
-}
-
-.workspace-main-invite-modal {
-    width: min(520px, calc(100vw - 28px));
-    padding: 0;
-    overflow: hidden;
-    border: 1px solid #e5ebf2;
-    border-radius: 18px;
-    background: #fff;
-    box-shadow: 0 26px 70px rgba(15, 23, 42, .24);
-    z-index: 3001;
-}
-
-.workspace-main-invite-head {
-    min-height: 88px;
-    padding: 18px 20px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    border-bottom: 1px solid #eef2f6;
-}
-
-.workspace-main-invite-head span {
-    display: block;
-    margin-bottom: 5px;
-    color: #8b96a8;
-    font-size: 11px;
-    font-weight: 700;
-}
-
-.workspace-main-invite-head h3 {
-    margin: 0;
-    color: #172033;
-    font-size: 20px;
-    line-height: 1.25;
-    font-weight: 900;
-    letter-spacing: -.5px;
-}
-
-.workspace-main-invite-close {
-    width: 34px;
-    height: 34px;
-    padding: 0;
-    border: 0;
-    border-radius: 10px;
-    background: transparent;
-    color: #98a2b3;
-    font-family: inherit;
-    font-size: 24px;
-    line-height: 1;
-    cursor: pointer;
-    transition: background .18s ease, color .18s ease;
-}
-
-.workspace-main-invite-close:hover {
-    background: #f3f6fa;
-    color: #475467;
-}
-
-.workspace-main-invite-body {
-    padding: 18px 20px 20px;
-}
-
-.workspace-main-invite-search {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) 70px;
-    gap: 8px;
-}
-
-.workspace-main-invite-search input {
-    width: 100%;
-    height: 42px;
-    min-width: 0;
-    padding: 0 12px;
-    border: 1px solid #dfe7ef;
-    border-radius: 11px;
-    background: #fff;
-    color: #172033;
-    font-family: inherit;
-    font-size: 13px;
-    outline: none;
-    transition: border-color .18s ease, box-shadow .18s ease;
-}
-
-.workspace-main-invite-search input::placeholder {
-    color: #98a2b3;
-}
-
-.workspace-main-invite-search input:focus {
-    border-color: #4a90e2;
-    box-shadow: 0 0 0 3px rgba(74, 144, 226, .12);
-}
-
-.workspace-main-invite-search button,
-.workspace-main-invite-user-row > button {
-    border: 0;
-    border-radius: 10px;
-    background: linear-gradient(135deg, #4a90e2, #39cdb5);
-    color: #fff;
-    font-family: inherit;
-    font-size: 12px;
-    font-weight: 800;
-    cursor: pointer;
-    box-shadow: 0 8px 16px rgba(66, 164, 205, .2);
-    transition: transform .18s ease, box-shadow .18s ease;
-}
-
-.workspace-main-invite-search button:hover,
-.workspace-main-invite-user-row > button:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 10px 20px rgba(66, 164, 205, .26);
-}
-
-.workspace-main-invite-results {
-    max-height: 300px;
-    margin-top: 14px;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.workspace-main-invite-empty {
-    padding: 38px 14px;
-    border: 1px dashed #dfe7ef;
-    border-radius: 12px;
-    color: #98a2b3;
-    background: #fff;
-    font-size: 12px;
-    text-align: center;
-}
-
-.workspace-main-invite-user-row {
-    min-height: 60px;
-    padding: 9px 10px;
-    display: grid;
-    grid-template-columns: 40px minmax(0, 1fr) 58px;
-    align-items: center;
-    gap: 10px;
-    border: 1px solid #e6edf4;
-    border-radius: 12px;
-    background: #fbfdff;
-}
-
-.workspace-main-invite-avatar {
-    width: 40px;
-    height: 40px;
-    overflow: hidden;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #4a90e2, #39cdb5);
-    color: #fff;
-    font-size: 14px;
-    font-weight: 800;
-}
-
-.workspace-main-invite-avatar img {
-    width: 100%;
-    height: 100%;
-    display: block;
-    object-fit: cover;
-}
-
-.workspace-main-invite-user-info {
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-}
-
-.workspace-main-invite-user-info strong,
-.workspace-main-invite-user-info span {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.workspace-main-invite-user-info strong {
-    color: #253047;
-    font-size: 12px;
-}
-
-.workspace-main-invite-user-info span {
-    color: #8a94a6;
-    font-size: 10.5px;
-}
-
-.workspace-main-invite-user-row > button {
-    min-height: 34px;
-}
-
-@media (max-width: 560px) {
-    .workspace-main-invite-head {
-        min-height: 80px;
-        padding: 16px 17px;
-    }
-
-    .workspace-main-invite-body {
-        padding: 16px 17px 18px;
-    }
-
-    .workspace-main-invite-search {
-        grid-template-columns: minmax(0, 1fr) 64px;
-    }
-}
-
-
-.workspace-main-invite-user-row > button.is-disabled,
-.workspace-main-invite-user-row > button:disabled {
-    cursor: default;
-    color: #667085;
-    background: #eef2f6;
-    box-shadow: none;
-    transform: none;
-}
-
 /* 사진첩 v4: 최근 사진 게시물 2개를 크게 표시 */
 .workspace-community-container .workspace-photo-grid{
     display:grid !important;
@@ -3070,7 +2378,7 @@ body.workspace-main-invite-open {
 .workspace-community-container .workspace-start-btn.is-project,
 .workspace-community-container .workspace-start-btn.is-invite:hover {
     border-color: transparent;
-    background: linear-gradient(135deg, var(--moyo-blue), var(--moyo-mint));
+    background: linear-gradient(110deg, var(--moyo-mint) 0%, var(--moyo-blue) 52%, var(--moyo-purple) 100%);
     color: #fff;
     box-shadow: 0 6px 14px rgba(57, 205, 181, .16);
 }
@@ -3120,7 +2428,7 @@ body.workspace-main-invite-open {
     align-items: center;
     justify-content: center;
     border-radius: 10px;
-    background: linear-gradient(135deg, var(--moyo-blue), var(--moyo-mint));
+    background: linear-gradient(110deg, var(--moyo-mint) 0%, var(--moyo-blue) 52%, var(--moyo-purple) 100%);
     color: #fff;
     font-size: 12px;
     font-weight: 800;
@@ -3180,13 +2488,6 @@ body.workspace-main-invite-open {
 }
 
 
-
-
-
-
-
-
-
 @media (max-width: 900px) {
     .workspace-community-container .workspace-project-card,
     .workspace-community-container .workspace-project-empty.compact {
@@ -3195,8 +2496,6 @@ body.workspace-main-invite-open {
 }
 
 /* ===== Workspace main project shortcut: 3-column unified layout ===== */
-
-
 
 
 .workspace-community-container .workspace-project-status-group {
@@ -3211,15 +2510,11 @@ body.workspace-main-invite-open {
 }
 
 
-
-
-
 .workspace-community-container .workspace-project-card {
     
     
     justify-content: flex-start !important;
 }
-
 
 
 .workspace-community-container .workspace-project-empty.compact {
@@ -3294,7 +2589,6 @@ body.workspace-main-invite-open {
 }
 
 
-
 .workspace-community-container .project-meta-pill {
     
     
@@ -3312,15 +2606,9 @@ body.workspace-main-invite-open {
 }
 
 
-
-
-
 .workspace-community-container .workspace-project-card p {
     margin-bottom: 9px;
 }
-
-
-
 
 
 @media (max-width: 900px) {
@@ -3399,7 +2687,6 @@ body.workspace-main-invite-open {
 }
 
 
-
 .workspace-community-container .workspace-project-card-desc {
     
     height: 17px !important;
@@ -3474,7 +2761,6 @@ body.workspace-main-invite-open {
 }
 
 
-
 @media (max-width: 1360px) {
     .workspace-community-container .workspace-project-card,
     .workspace-community-container .workspace-project-empty.compact {
@@ -3494,10 +2780,6 @@ body.workspace-main-invite-open {
 /* 프로젝트 바로가기 위젯은 압축 카드라 설명 문구는 숨기고 핵심 정보만 노출 */
 
 
-
-
-
-
 .workspace-community-container .workspace-project-meta {
     margin-bottom: 8px !important;
 }
@@ -3505,7 +2787,6 @@ body.workspace-main-invite-open {
 .workspace-community-container .workspace-project-period {
     margin-bottom: 9px !important;
 }
-
 
 
 /* 사진첩 빈 상태는 카드 안쪽 전체 폭을 사용 */
@@ -3526,60 +2807,7 @@ body.workspace-main-invite-open {
     box-sizing: border-box !important;
 }
 
-/* ===== 2026-06-12 workspace main final polish ===== */
-/* 사진첩: 실제 사진/빈 상태 모두 카드 폭에 맞게 안정화 */
-.workspace-community-container .workspace-photo-feature-card {
-    min-width: 0;
-}
-
-.workspace-community-container .workspace-photo-feature-card .board-title {
-    min-height: 24px;
-}
-
-.workspace-community-container .workspace-photo-feature-card .workspace-photo-grid {
-    width: 100% !important;
-    min-height: 122px !important;
-    display: grid !important;
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-    gap: 12px !important;
-    align-items: stretch !important;
-}
-
-.workspace-community-container .workspace-photo-feature-card .workspace-photo-post {
-    display: block;
-    min-width: 0;
-    height: 100%;
-    border-radius: 13px;
-    overflow: hidden;
-}
-
-.workspace-community-container .workspace-photo-feature-card .workspace-photo-post-thumb {
-    width: 100% !important;
-    height: 122px !important;
-    min-height: 122px !important;
-    aspect-ratio: auto !important;
-    background-size: cover !important;
-    background-position: center !important;
-    border-radius: 13px !important;
-}
-
-.workspace-community-container .workspace-photo-feature-card .workspace-photo-grid:has(.workspace-feature-empty),
-.workspace-community-container .workspace-photo-feature-card .workspace-photo-grid.is-empty {
-    display: block !important;
-    min-height: 122px !important;
-}
-
-.workspace-community-container .workspace-photo-feature-card .workspace-feature-empty,
-.workspace-community-container .workspace-photo-feature-card .workspace-photo-empty {
-    width: 100% !important;
-    max-width: none !important;
-    min-height: 122px !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: flex-start !important;
-    box-sizing: border-box !important;
-}
-
+/* Photo widget legacy fixed-height rules removed; consolidated styles are defined below. */
 /* 프로젝트 바로가기: 목록 카드 기준으로 압축하되 설명은 제외 */
 .workspace-community-container .workspace-project-shortcut-section {
     padding: 18px 20px 16px !important;
@@ -4062,523 +3290,1869 @@ body.workspace-main-invite-open {
 /* ===== End workspace/project calendar widget shared UI tone ===== */
 
 
-/* ===== Workspace shared note widget v1 ===== */
-.workspace-community-container .workspace-note-list {
-    min-height: 118px;
-    padding: 12px 14px;
-    display: block;
-    overflow: hidden;
-}
-.workspace-community-container .workspace-note-loading,
-.workspace-community-container .workspace-note-empty-link {
-    min-height: 92px;
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    width: 100%;
-    color: inherit;
-    text-decoration: none;
-}
-.workspace-community-container .workspace-note-empty-link {
-    border: 1px dashed #d7e5f4;
-    border-radius: 14px;
-    padding: 14px 16px;
-    background: #fbfdff;
-}
-.workspace-community-container .workspace-note-empty-action {
-    margin-left: auto;
+/* ===== 2026-07-13 group home light polish ===== */
+.workspace-community-container .workspace-group-menu-wrap {
+    position: relative;
     flex: 0 0 auto;
-    padding: 7px 12px;
-    border: 1px solid #d6e5f5;
+}
+
+.workspace-community-container .workspace-group-menu-trigger {
+    width: 38px;
+    height: 38px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #dbe3ea;
     border-radius: 10px;
-    color: #397bc5;
     background: #fff;
-    font-size: 12px;
-    font-weight: 600;
-}
-.workspace-community-container .workspace-note-items {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-}
-.workspace-community-container .workspace-note-item {
-    min-width: 0;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 9px 10px;
-    border: 1px solid transparent;
-    border-radius: 11px;
-    color: inherit;
-    text-decoration: none;
-    transition: background-color .15s ease, border-color .15s ease;
-}
-.workspace-community-container .workspace-note-item:hover {
-    background: #f8fbff;
-    border-color: #e0ebf7;
-}
-.workspace-community-container .workspace-note-item-main {
-    min-width: 0;
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-}
-.workspace-community-container .workspace-note-item-title {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    color: #172033;
-    font-size: 13px;
-    font-weight: 650;
-}
-.workspace-community-container .workspace-note-item-preview {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    color: #7f8ca1;
-    font-size: 11px;
-}
-.workspace-community-container .workspace-note-item-meta {
-    flex: 0 0 auto;
-    display: flex;
-    align-items: center;
-    gap: 5px;
-}
-.workspace-community-container .workspace-note-mini-chip {
-    padding: 3px 6px;
-    border-radius: 999px;
-    background: #f2f7fc;
-    color: #68809a;
-    font-size: 10px;
+    color: #64748b;
+    font: inherit;
+    font-size: 20px;
+    font-weight: 800;
     line-height: 1;
-    white-space: nowrap;
-}
-.workspace-community-container .workspace-note-mini-chip.pin {
-    background: #eef3ff;
-    color: #5573d8;
-}
-.workspace-community-container .workspace-note-author {
-    max-width: 72px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    color: #8b97a8;
-    font-size: 10px;
-}
-@media (max-width: 1100px) {
-    .workspace-community-container .workspace-note-item-meta { display: none; }
+    cursor: pointer;
+    transition: border-color .15s ease, background .15s ease, color .15s ease, transform .15s ease;
 }
 
-/* ===== Workspace shared note widget v2: empty/loading layout stabilization ===== */
-.workspace-community-container .workspace-note-feature-card,
-.workspace-community-container .workspace-note-list,
-.workspace-community-container .workspace-note-loading,
-.workspace-community-container .workspace-note-empty-link {
-    min-width: 0 !important;
-    width: 100% !important;
-    box-sizing: border-box !important;
+.workspace-community-container .workspace-group-menu-trigger:hover,
+.workspace-community-container .workspace-group-menu-trigger[aria-expanded="true"] {
+    border-color: #bfd3e7;
+    background: #f7fbff;
+    color: var(--moyo-blue);
+    transform: translateY(-1px);
 }
 
-.workspace-community-container .workspace-note-list {
-    min-height: 122px !important;
-    padding: 0 !important;
-    border: 0 !important;
-    background: transparent !important;
-    overflow: hidden !important;
-}
-
-.workspace-community-container .workspace-note-loading,
-.workspace-community-container .workspace-note-empty-link {
-    min-height: 122px !important;
-    padding: 16px 18px !important;
-    display: grid !important;
-    grid-template-columns: 44px minmax(0, 1fr) auto !important;
-    align-items: center !important;
-    column-gap: 14px !important;
-    border: 1px dashed #dce6f1 !important;
-    border-radius: 14px !important;
-    background: #f9fbfd !important;
-    text-align: left !important;
-}
-
-.workspace-community-container .workspace-note-placeholder-icon {
-    grid-column: 1 !important;
-    width: 44px !important;
-    height: 44px !important;
-    min-width: 44px !important;
-    flex: none !important;
-}
-
-.workspace-community-container .workspace-note-placeholder-copy {
-    grid-column: 2 !important;
-    width: 100% !important;
-    min-width: 0 !important;
-    display: flex !important;
-    flex-direction: column !important;
-    gap: 4px !important;
-    writing-mode: horizontal-tb !important;
-    word-break: keep-all !important;
-    overflow-wrap: break-word !important;
-}
-
-.workspace-community-container .workspace-note-placeholder-copy strong,
-.workspace-community-container .workspace-note-placeholder-copy span {
-    display: block !important;
-    width: 100% !important;
-    max-width: none !important;
-    writing-mode: horizontal-tb !important;
-    white-space: normal !important;
-    word-break: keep-all !important;
-}
-
-.workspace-community-container .workspace-note-placeholder-copy strong {
-    color: #334155 !important;
-    font-size: 13px !important;
-    font-weight: 700 !important;
-    line-height: 1.4 !important;
-}
-
-.workspace-community-container .workspace-note-placeholder-copy span {
-    color: #8a94a6 !important;
-    font-size: 11px !important;
-    line-height: 1.5 !important;
-}
-
-.workspace-community-container .workspace-note-empty-action {
-    grid-column: 3 !important;
-    margin-left: 0 !important;
-    white-space: nowrap !important;
-    align-self: center !important;
-}
-
-.workspace-community-container .workspace-note-items {
-    width: 100% !important;
-    min-height: 122px !important;
-    padding: 4px 0 !important;
-}
-
-@media (max-width: 700px) {
-    .workspace-community-container .workspace-note-loading,
-    .workspace-community-container .workspace-note-empty-link {
-        grid-template-columns: 40px minmax(0, 1fr) !important;
-        row-gap: 10px !important;
-    }
-
-    .workspace-community-container .workspace-note-empty-action {
-        grid-column: 2 !important;
-        justify-self: start !important;
-    }
-}
-/* ===== End Workspace shared note widget v2 ===== */
-
-
-/* ===== Workspace shared note widget v4: unified compact rows ===== */
-.workspace-community-container .workspace-note-list {
-    display: block !important;
-    min-width: 0;
-    overflow: hidden;
-}
-.workspace-community-container .workspace-note-items {
-    display: flex !important;
-    flex-direction: column;
-    gap: 8px;
-    width: 100%;
-    min-width: 0;
-}
-.workspace-community-container .workspace-note-item {
-    display: grid !important;
-    grid-template-columns: minmax(0, 1fr) auto;
-    align-items: center;
-    gap: 10px;
-    min-width: 0;
-    padding: 10px 12px;
-    border: 1px solid #e4edf7;
+.workspace-community-container .workspace-group-menu {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    z-index: 30;
+    width: 168px;
+    padding: 6px;
+    border: 1px solid #dce6f0;
     border-radius: 12px;
     background: #fff;
-    color: inherit;
-    text-decoration: none;
+    box-shadow: 0 14px 32px rgba(15, 23, 42, .14);
 }
-.workspace-community-container .workspace-note-item:hover {
-    border-color: #c8dbef;
-    background: #fbfdff;
+
+.workspace-community-container .workspace-group-menu[hidden] {
+    display: none !important;
 }
-.workspace-community-container .workspace-note-item-main {
-    display: flex;
-    min-width: 0;
-    flex-direction: column;
-    gap: 4px;
-}
-.workspace-community-container .workspace-note-item-title-row {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    min-width: 0;
-}
-.workspace-community-container .workspace-note-item-title {
-    flex: 1 1 auto;
-    min-width: 0;
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-    font-size: 13px;
-    font-weight: 600;
-}
-.workspace-community-container .workspace-note-item-preview {
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-    color: #718096;
-    font-size: 11px;
-}
-.workspace-community-container .workspace-note-item-meta {
-    display: flex !important;
-    align-items: center;
-    justify-content: flex-end;
-    gap: 5px;
-    min-width: 0;
-    white-space: nowrap;
-    color: #65758b;
-    font-size: 10px;
-}
-.workspace-community-container .workspace-note-author {
-    max-width: 58px;
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-}
-.workspace-community-container .workspace-note-arrow {
-    color: #7fa8d8;
-    font-size: 17px;
-}
-.workspace-community-container .workspace-note-more-row {
-    display: block;
-    padding: 6px 4px 0;
-    text-align: right;
-    color: #4f86c6;
-    font-size: 11px;
-    text-decoration: none;
-}
-.workspace-community-container .workspace-note-loading,
-.workspace-community-container .workspace-note-empty-link {
-    display: grid !important;
-    grid-template-columns: 46px minmax(0, 1fr);
-    align-items: center;
-    gap: 12px;
+
+.workspace-community-container .workspace-group-menu-item {
     width: 100%;
-    min-width: 0;
-    min-height: 118px;
-    padding: 18px;
-    border: 1px dashed #d5e3f1;
-    border-radius: 13px;
-    background: #fbfdff;
+    min-height: 36px;
+    padding: 0 10px;
+    display: flex;
+    align-items: center;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: #334155;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 700;
+    text-align: left;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.workspace-community-container .workspace-group-menu-item:hover {
+    background: #f4f8fc;
+    color: var(--moyo-blue);
+}
+
+.workspace-community-container .workspace-group-menu-item.is-danger {
+    color: #e85b67;
+}
+
+.workspace-community-container .workspace-group-menu-item.is-danger:hover {
+    background: #fff4f5;
+    color: #d94755;
+}
+
+.workspace-community-container .workspace-external-link {
+    padding: 0 10px 0 8px;
+    gap: 5px;
+}
+
+.workspace-community-container .workspace-external-link-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 14px;
+    color: #4b8ed1;
+    font-size: 11px;
+    line-height: 1;
+}
+
+.workspace-community-container .workspace-external-link-arrow {
+    margin-left: 1px;
+    font-size: 10px;
+    opacity: .72;
+}
+
+/* ===== 2026-07-13 group home overflow fixes ===== */
+/* 히어로의 overflow:hidden 영향을 받지 않도록 메뉴는 뷰포트 기준으로 배치한다. */
+.workspace-community-container .workspace-group-menu {
+    position: fixed !important;
+    top: auto;
+    right: auto;
+    z-index: 1200;
+}
+
+
+/* 그룹장 탈퇴 제한 안내 */
+.workspace-owner-leave-modal[hidden] { display: none !important; }
+.workspace-owner-leave-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 2200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: rgba(31, 42, 61, 0.48);
+    backdrop-filter: blur(3px);
+}
+.workspace-owner-leave-dialog {
+    position: relative;
+    width: min(440px, 100%);
+    padding: 30px;
+    border: 1px solid #e2e9f4;
+    border-radius: 24px;
+    background: #fff;
+    box-shadow: 0 22px 60px rgba(31, 55, 92, 0.22);
+}
+.workspace-owner-leave-close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    width: 38px;
+    height: 38px;
+    border: 0;
+    border-radius: 12px;
+    background: #f4f7fb;
+    color: #7b8ba3;
+    font-size: 25px;
+    line-height: 1;
+    cursor: pointer;
+}
+.workspace-owner-leave-kicker {
+    display: block;
+    margin-bottom: 8px;
+    color: #4e7ff0;
+    font-size: 13px;
+    font-weight: 800;
+}
+.workspace-owner-leave-dialog h3 {
+    margin: 0;
+    color: #17243a;
+    font-size: 22px;
+    line-height: 1.35;
+}
+.workspace-owner-leave-dialog p {
+    margin: 12px 0 26px;
+    color: #71819a;
+    font-size: 14px;
+    line-height: 1.65;
+}
+.workspace-owner-leave-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+.workspace-owner-leave-actions button {
+    min-height: 46px;
+    border-radius: 14px;
+    font: inherit;
+    font-weight: 800;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    outline: none;
+    box-sizing: border-box;
+}
+.workspace-owner-leave-cancel {
+    border: 1px solid #dce5f2;
+    background: #fff;
+    color: #52627a;
+    box-shadow: none;
+}
+.workspace-owner-leave-cancel:focus,
+.workspace-owner-leave-cancel:focus-visible {
+    outline: none;
+    border-color: #b9c9df;
+    box-shadow: 0 0 0 3px rgba(68, 139, 234, 0.10);
+}
+.workspace-owner-leave-transfer {
+    border: 0;
+    background: linear-gradient(100deg, #38c9bc 0%, #438bea 55%, #7061f2 100%);
+    color: #fff;
+    box-shadow: 0 10px 22px rgba(73, 118, 226, 0.2);
+}
+.workspace-owner-leave-cancel:hover { background: #f7f9fc; }
+.workspace-owner-leave-transfer:hover { transform: translateY(-1px); }
+body.workspace-modal-open { overflow: hidden; }
+
+
+/* ===== Group widget height / content-count consistency ===== */
+.workspace-community-container {
+    --workspace-board-row-height: 26px;
+    --workspace-board-visible-count: 3;
+    --workspace-feature-card-height: 178px;
+    --workspace-feature-body-height: 104px;
+}
+
+/* 게시판 위젯은 API/화면 모두 3건 기준으로 고정한다. */
+.workspace-community-container .workspace-widget-grid {
+    align-items: stretch;
+}
+.workspace-community-container .workspace-widget-card {
+    height: 146px !important;
+    min-height: 146px !important;
+    box-sizing: border-box !important;
+    overflow: hidden;
+}
+.workspace-community-container .workspace-widget-card .board-list {
+    min-height: calc(var(--workspace-board-row-height) * var(--workspace-board-visible-count));
+    max-height: calc(var(--workspace-board-row-height) * var(--workspace-board-visible-count));
+    overflow: hidden;
+}
+.workspace-community-container .workspace-widget-card .board-item {
+    height: var(--workspace-board-row-height) !important;
+    min-height: var(--workspace-board-row-height) !important;
+    box-sizing: border-box;
+}
+.workspace-community-container .workspace-widget-card .workspace-board-empty-line,
+.workspace-community-container .workspace-widget-card .workspace-widget-error {
+    min-height: calc(var(--workspace-board-row-height) * var(--workspace-board-visible-count));
+    height: calc(var(--workspace-board-row-height) * var(--workspace-board-visible-count));
+    box-sizing: border-box;
+}
+
+/* 같은 행의 오늘 일정/진행 중 투표는 최대 표시량 기준으로 같은 높이를 유지한다. */
+.workspace-community-container .workspace-core-row {
+    align-items: stretch;
+}
+.workspace-community-container .workspace-core-row > .workspace-core-card {
+    min-height: 168px;
+    height: 168px;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+.workspace-community-container .workspace-core-row .today-schedule-list,
+.workspace-community-container .workspace-core-row .workspace-poll-summary-area {
+    min-height: 112px;
+    max-height: 112px;
+    overflow: hidden;
+}
+.workspace-community-container .workspace-core-row .workspace-poll-summary-list {
+    max-height: 112px;
+    overflow: hidden;
+}
+
+/* 사진/노트는 각각 최대 2건을 동일한 카드/본문 높이 안에서 표시한다. */
+
+/* ===== Group note/photo widgets: consolidated final styles ===== */
+.workspace-community-container {
+    --workspace-note-photo-gap: 12px;
+    --workspace-note-photo-padding-block: 8px;
+    --workspace-note-photo-empty-height: 104px;
+}
+
+.workspace-community-container .workspace-note-feature-card,
+.workspace-community-container .workspace-photo-feature-card {
+    height: auto;
+    min-height: 0;
+    overflow: visible;
+    box-sizing: border-box;
+}
+
+.workspace-community-container .workspace-note-feature-card .board-title,
+.workspace-community-container .workspace-photo-feature-card .board-title {
+    min-height: 24px;
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #e9eef5;
+    box-sizing: content-box;
+}
+
+.workspace-community-container .workspace-note-feature-card .workspace-note-list,
+.workspace-community-container .workspace-photo-feature-card .workspace-photo-grid {
+    width: 100%;
+    margin: 0;
+    box-sizing: border-box;
+}
+
+/* Empty, loading and error states stay compact instead of reserving preview height. */
+.workspace-community-container .workspace-note-feature-card .workspace-note-list:not(.is-ready),
+.workspace-community-container .workspace-photo-feature-card .workspace-photo-grid:not(.is-ready),
+.workspace-community-container .workspace-photo-feature-card .workspace-photo-grid.is-empty {
+    min-height: var(--workspace-note-photo-empty-height);
+    height: var(--workspace-note-photo-empty-height);
+    padding: 0;
+}
+
+.workspace-community-container .workspace-note-feature-card .workspace-note-loading,
+.workspace-community-container .workspace-note-feature-card .workspace-note-empty-link,
+.workspace-community-container .workspace-note-feature-card .workspace-feature-empty,
+.workspace-community-container .workspace-photo-feature-card .workspace-feature-empty,
+.workspace-community-container .workspace-photo-feature-card .workspace-photo-empty {
+    width: 100%;
+    min-height: var(--workspace-note-photo-empty-height);
+    height: var(--workspace-note-photo-empty-height);
+    margin: 0;
+    padding: 12px 18px;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+.workspace-community-container .workspace-note-empty-link {
+    display: grid;
+    grid-template-columns: 44px minmax(0, 1fr);
+    align-items: center;
+    gap: 14px;
+    border: 1px dashed #d8e5f5;
+    border-radius: 14px;
+    background: #f9fbfd;
     color: inherit;
     text-decoration: none;
 }
+
 .workspace-community-container .workspace-note-placeholder-icon {
-    display: grid;
-    place-items: center;
-    width: 46px;
-    height: 46px;
-    border-radius: 13px;
-    background: #eef6ff;
-    font-size: 21px;
+    width: 44px;
+    height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    background: #eef5ff;
+    font-size: 22px;
 }
+
 .workspace-community-container .workspace-note-placeholder-copy {
-    display: flex;
     min-width: 0;
+    display: flex;
     flex-direction: column;
-    align-items: flex-start;
     gap: 4px;
 }
+
 .workspace-community-container .workspace-note-placeholder-copy strong,
 .workspace-community-container .workspace-note-placeholder-copy span,
 .workspace-community-container .workspace-note-placeholder-copy em {
     display: block;
-    width: 100%;
-    white-space: normal;
-    word-break: keep-all;
-    overflow-wrap: break-word;
-    writing-mode: horizontal-tb;
+    margin: 0;
+    font-style: normal;
+    line-height: 1.45;
 }
+
 .workspace-community-container .workspace-note-placeholder-copy strong {
-    color: #223047;
+    color: #334155;
     font-size: 13px;
-    line-height: 1.4;
+    font-weight: 800;
 }
+
 .workspace-community-container .workspace-note-placeholder-copy span {
-    color: #78889d;
+    color: #8a94a6;
+    font-size: 11px;
+}
+
+.workspace-community-container .workspace-note-placeholder-copy em {
+    color: #3f83ea;
+    font-size: 11px;
+    font-weight: 800;
+}
+
+/* Ready previews share the same vertical padding and fill their widget width. */
+.workspace-community-container .workspace-note-feature-card .workspace-note-list.is-ready,
+.workspace-community-container .workspace-photo-feature-card .workspace-photo-grid.is-ready {
+    min-height: 0;
+    height: auto;
+    max-height: none;
+    padding: var(--workspace-note-photo-padding-block) 0;
+    overflow: visible;
+}
+
+/* A4 note previews: three equal columns. */
+.workspace-community-container .workspace-note-feature-card .workspace-note-items.workspace-note-paper-grid {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--workspace-note-photo-gap);
+    margin: 0;
+    padding: 0;
+}
+
+.workspace-community-container .workspace-note-paper-card {
+    min-width: 0;
+    display: block;
+    color: inherit;
+    text-decoration: none;
+    outline: none;
+}
+
+.workspace-community-container .workspace-note-paper-card:focus-visible {
+    border-radius: 12px;
+    box-shadow: 0 0 0 3px rgba(68, 139, 234, .16);
+}
+
+.workspace-community-container .workspace-note-paper {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 210 / 297;
+    display: block;
+    overflow: hidden;
+    border: 1px solid #dce6f2;
+    border-radius: 11px;
+    background: #fff;
+    box-shadow: 0 8px 20px rgba(31, 55, 92, .10);
+    transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+}
+
+.workspace-community-container .workspace-note-paper::before {
+    content: '';
+    position: absolute;
+    inset: 7px;
+    border: 1px solid #e7edf5;
+    border-radius: 4px;
+    pointer-events: none;
+}
+
+.workspace-community-container .workspace-note-paper-card:hover .workspace-note-paper,
+.workspace-community-container .workspace-note-paper-card:focus-visible .workspace-note-paper {
+    transform: translateY(-3px);
+    border-color: #c9d9ee;
+    box-shadow: 0 14px 28px rgba(31, 55, 92, .15);
+}
+
+.workspace-community-container .workspace-note-paper-inner {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    padding: 18px 16px 14px;
+    box-sizing: border-box;
+}
+
+.workspace-community-container .workspace-note-paper-title {
+    display: block;
+    overflow: hidden;
+    color: #17243a;
+    font-size: 12px;
+    font-weight: 900;
+    line-height: 1.35;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.workspace-community-container .workspace-note-paper-line {
+    display: block;
+    width: 45%;
+    height: 1px;
+    margin-top: 13px;
+    background: #dce7f4;
+}
+
+.workspace-community-container .workspace-note-paper-line.is-strong {
+    width: 52%;
+    background: #cbd9ea;
+}
+
+.workspace-community-container .workspace-note-paper-body {
+    display: -webkit-box;
+    min-height: 34px;
+    margin-top: 15px;
+    overflow: hidden;
+    color: #607089;
+    font-size: 10px;
+    line-height: 1.55;
+    word-break: break-word;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+}
+
+.workspace-community-container .workspace-note-paper-lines {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: auto;
+    padding-bottom: 3px;
+}
+
+.workspace-community-container .workspace-note-paper-lines span {
+    display: block;
+    height: 1px;
+    border-radius: 999px;
+    background: #e5ecf5;
+}
+.workspace-community-container .workspace-note-paper-lines span:nth-child(1) { width: 96%; }
+.workspace-community-container .workspace-note-paper-lines span:nth-child(2) { width: 90%; }
+.workspace-community-container .workspace-note-paper-lines span:nth-child(3) { width: 82%; }
+.workspace-community-container .workspace-note-paper-lines span:nth-child(4) { width: 66%; }
+.workspace-community-container .workspace-note-paper-lines span:nth-child(5) { width: 48%; }
+
+.workspace-community-container .workspace-note-paper-hover {
+    position: absolute;
+    right: 7px;
+    bottom: 7px;
+    left: 7px;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    padding: 7px 9px;
+    border: 1px solid rgba(218, 228, 241, .95);
+    border-radius: 9px;
+    background: rgba(255, 255, 255, .96);
+    box-shadow: 0 7px 18px rgba(31, 55, 92, .12);
+    opacity: 0;
+    transform: translateY(4px);
+    transition: opacity .16s ease, transform .16s ease;
+    pointer-events: none;
+}
+
+.workspace-community-container .workspace-note-paper-hover strong,
+.workspace-community-container .workspace-note-paper-hover span {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.workspace-community-container .workspace-note-paper-hover strong {
+    color: #25344d;
+    font-size: 10px;
+    font-weight: 900;
+}
+
+.workspace-community-container .workspace-note-paper-hover span {
+    color: #8290a6;
+    font-size: 9px;
+}
+
+.workspace-community-container .workspace-note-paper-card:hover .workspace-note-paper-hover,
+.workspace-community-container .workspace-note-paper-card:focus-visible .workspace-note-paper-hover {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Square photo previews: two equal columns. */
+.workspace-community-container .workspace-photo-feature-card .workspace-photo-grid.is-ready {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--workspace-note-photo-gap);
+    align-items: start;
+}
+
+.workspace-community-container .workspace-photo-feature-card .workspace-photo-post {
+    min-width: 0;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    overflow: hidden;
+    border-radius: 12px;
+    box-shadow: 0 8px 20px rgba(31, 55, 92, .10);
+    transition: transform .18s ease, box-shadow .18s ease;
+}
+
+.workspace-community-container .workspace-photo-feature-card .workspace-photo-post:hover,
+.workspace-community-container .workspace-photo-feature-card .workspace-photo-post:focus-visible {
+    transform: translateY(-3px);
+    box-shadow: 0 14px 28px rgba(31, 55, 92, .15);
+}
+
+.workspace-community-container .workspace-photo-feature-card .workspace-photo-post-thumb {
+    display: block;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    max-width: none;
+    max-height: none;
+    aspect-ratio: 1 / 1;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    object-fit: cover;
+    border-radius: inherit;
+}
+
+.workspace-community-container .workspace-camera-icon {
+    font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
+    font-style: normal;
+}
+
+@media (max-width: 760px) {
+    .workspace-community-container .workspace-note-feature-card,
+    .workspace-community-container .workspace-photo-feature-card {
+        overflow: visible;
+    }
+
+    .workspace-community-container .workspace-note-feature-card .workspace-note-list.is-ready,
+    .workspace-community-container .workspace-photo-feature-card .workspace-photo-grid.is-ready {
+        overflow-x: auto;
+        overflow-y: hidden;
+        scrollbar-width: thin;
+    }
+
+    .workspace-community-container .workspace-note-feature-card .workspace-note-items.workspace-note-paper-grid {
+        grid-template-columns: repeat(3, minmax(142px, 1fr));
+        width: max-content;
+        min-width: 100%;
+    }
+
+    .workspace-community-container .workspace-photo-feature-card .workspace-photo-grid.is-ready {
+        grid-template-columns: repeat(2, minmax(172px, 1fr));
+        width: max-content;
+        min-width: 100%;
+    }
+}
+/* ===== End group note/photo widgets ===== */
+
+/* ===== Group hero description / external links final layout ===== */
+.workspace-community-container .workspace-hero {
+    min-height: 0;
+    padding-top: 20px;
+    padding-bottom: 20px;
+    align-items: center;
+}
+
+.workspace-community-container .workspace-hero-info {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.workspace-community-container .workspace-hero-meta-line {
+    width: 100%;
+    margin-top: 2px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 7px;
+}
+
+.workspace-community-container .workspace-hero-description {
+    width: 100%;
+    max-width: 720px;
+    min-width: 0;
+    margin: 0;
+    display: -webkit-box;
+    overflow: hidden;
+    white-space: pre-line;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+}
+
+.workspace-community-container .workspace-external-links {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    min-height: 0;
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    overflow: visible;
+    white-space: normal;
+}
+
+.workspace-community-container .workspace-hero-meta-line:empty {
+    display: none;
+}
+
+@media (max-width: 680px) {
+    .workspace-community-container .workspace-hero-meta-line {
+        gap: 6px;
+    }
+
+    .workspace-community-container .workspace-external-links {
+        width: 100%;
+        max-width: 100%;
+    }
+}
+/* ===== End group hero description / external links final layout ===== */
+
+/* ===== Group home profile hero state matrix ===== */
+.workspace-community-container .workspace-hero {
+    display: grid;
+    grid-template-columns: 70px minmax(0, 1fr) auto;
+    align-items: start;
+    column-gap: 20px;
+    row-gap: 0;
+    min-height: 112px;
+    padding: 20px 32px;
+}
+
+.workspace-community-container .workspace-avatar {
+    grid-column: 1;
+    grid-row: 1;
+    align-self: start;
+    margin: 2px 0 0 2px;
+}
+
+.workspace-community-container .workspace-hero-info {
+    grid-column: 2;
+    grid-row: 1;
+    width: 100%;
+    min-width: 0;
+    align-self: start;
+}
+
+.workspace-community-container .workspace-hero-actions {
+    grid-column: 3;
+    grid-row: 1;
+    align-self: start;
+    justify-self: end;
+    margin-top: 2px;
+}
+
+.workspace-community-container .workspace-hero h1 {
+    max-width: min(760px, 100%);
+    display: -webkit-box;
+    overflow: hidden;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+}
+
+.workspace-community-container .workspace-hero-meta-line {
+    max-width: 100%;
+}
+
+.workspace-community-container .workspace-hero-description {
+    max-width: min(720px, 100%);
+    line-height: 1.55;
+}
+
+/* 소개만 있는 경우 */
+.workspace-community-container .workspace-hero.has-description:not(.has-links)
+.workspace-hero-meta-line {
+    gap: 0;
+}
+
+/* 링크만 있는 경우 */
+.workspace-community-container .workspace-hero.has-links:not(.has-description)
+.workspace-hero-meta-line {
+    margin-top: 5px;
+}
+
+/* 소개와 링크가 모두 있는 경우 */
+.workspace-community-container .workspace-hero.has-description.has-links
+.workspace-hero-meta-line {
+    gap: 7px;
+}
+
+/* 소개와 링크가 모두 없으면 히어로를 기본 높이로 유지하되 불필요한 공간은 만들지 않는다. */
+.workspace-community-container .workspace-hero:not(.has-description):not(.has-links) {
+    align-items: center;
+}
+
+.workspace-community-container .workspace-hero:not(.has-description):not(.has-links)
+.workspace-avatar,
+.workspace-community-container .workspace-hero:not(.has-description):not(.has-links)
+.workspace-hero-info,
+.workspace-community-container .workspace-hero:not(.has-description):not(.has-links)
+.workspace-hero-actions {
+    align-self: center;
+}
+
+.workspace-community-container .workspace-external-links {
+    width: min(760px, 100%);
+    max-height: 60px;
+    align-content: flex-start;
+    overflow: hidden;
+}
+
+.workspace-community-container .workspace-external-link {
+    max-width: 220px;
+}
+
+.workspace-community-container .workspace-external-link > span:not(.workspace-external-link-icon):not(.workspace-external-link-arrow),
+.workspace-community-container .workspace-external-link {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+@media (max-width: 980px) {
+    .workspace-community-container .workspace-hero {
+        grid-template-columns: 58px minmax(0, 1fr) auto !important;
+        align-items: start !important;
+        gap: 0 14px !important;
+        padding: 18px 20px !important;
+    }
+
+    .workspace-community-container .workspace-avatar {
+        width: 58px !important;
+        height: 58px !important;
+        flex-basis: 58px !important;
+        margin: 2px 0 0 !important;
+    }
+
+    .workspace-community-container .workspace-hero-actions {
+        grid-column: 3 !important;
+        grid-row: 1 !important;
+        width: auto !important;
+        margin: 0 !important;
+        justify-content: flex-end !important;
+    }
+
+    .workspace-community-container .workspace-hero h1 {
+        max-width: 100%;
+        padding-right: 4px;
+        font-size: 22px !important;
+    }
+
+    .workspace-community-container .workspace-hero-description,
+    .workspace-community-container .workspace-external-links {
+        max-width: 100%;
+    }
+}
+
+@media (max-width: 680px) {
+    .workspace-community-container .workspace-hero {
+        grid-template-columns: 52px minmax(0, 1fr) 38px !important;
+        column-gap: 11px !important;
+        padding: 16px 16px !important;
+        border-radius: 17px !important;
+    }
+
+    .workspace-community-container .workspace-avatar {
+        width: 52px !important;
+        height: 52px !important;
+        flex-basis: 52px !important;
+        border-radius: 14px !important;
+    }
+
+    .workspace-community-container .workspace-group-menu-trigger {
+        width: 36px;
+        height: 36px;
+    }
+
+    .workspace-community-container .workspace-type-label {
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .workspace-community-container .workspace-hero h1 {
+        font-size: 20px !important;
+        line-height: 1.22 !important;
+    }
+
+    .workspace-community-container .workspace-hero-description {
+        font-size: 12px;
+        line-height: 1.5;
+    }
+
+    .workspace-community-container .workspace-external-links {
+        width: 100%;
+        max-height: 58px;
+        gap: 5px;
+    }
+
+    .workspace-community-container .workspace-external-link {
+        max-width: min(190px, 100%);
+        height: 25px;
+        min-height: 25px;
+    }
+}
+
+@media (max-width: 420px) {
+    .workspace-community-container .workspace-hero {
+        grid-template-columns: 46px minmax(0, 1fr) 34px !important;
+        column-gap: 9px !important;
+        padding: 14px !important;
+    }
+
+    .workspace-community-container .workspace-avatar {
+        width: 46px !important;
+        height: 46px !important;
+        flex-basis: 46px !important;
+        border-radius: 13px !important;
+    }
+
+    .workspace-community-container .workspace-group-menu-trigger {
+        width: 34px;
+        height: 34px;
+    }
+
+    .workspace-community-container .workspace-hero h1 {
+        font-size: 18px !important;
+    }
+
+    .workspace-community-container .workspace-external-link {
+        max-width: 100%;
+    }
+}
+/* ===== End group home profile hero state matrix ===== */
+
+/* ===== Group type / join type display ===== */
+.workspace-community-container .workspace-type-status {
+    min-width: 0;
+    margin-bottom: 5px;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 7px;
+}
+
+.workspace-community-container .workspace-type-status .workspace-type-label {
+    display: inline;
+    margin: 0;
+    line-height: 22px;
+}
+
+.workspace-community-container .workspace-join-status-badge {
+    min-height: 22px;
+    padding: 0 9px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 800;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+.workspace-community-container .workspace-join-status-badge.is-open {
+    border-color: #d7f3ec;
+    background: #f2fcf8;
+    color: #159777;
+}
+
+.workspace-community-container .workspace-join-status-badge.is-approval {
+    border-color: #eadfff;
+    background: #faf7ff;
+    color: #7652c7;
+}
+
+.workspace-community-container .workspace-join-status-badge.is-invite {
+    border-color: #e2e8f0;
+    background: #f5f7fa;
+    color: #64748b;
+}
+
+@media (max-width: 680px) {
+    .workspace-community-container .workspace-type-status {
+        gap: 5px;
+        margin-bottom: 4px;
+    }
+
+    .workspace-community-container .workspace-join-status-badge {
+        min-height: 20px;
+        padding: 0 8px;
+        font-size: 9.5px;
+    }
+
+    .workspace-community-container .workspace-type-status .workspace-type-label {
+        max-width: 100%;
+        line-height: 20px;
+    }
+}
+/* ===== End group type / join type display ===== */
+
+/* 그룹 프로필 조회·편집 레이아웃은 commonMemberProfile.css에서 관리합니다. */
+
+
+/* 프로필 조회/편집 전환은 commonMemberProfile.css에서 관리합니다. */
+
+/* 편집 모드 레이아웃은 commonMemberProfile.css에서 관리합니다. */
+
+/* 프로필 조회 디자인은 commonMemberProfile.css에서 관리합니다. */
+
+/* ===== 그룹 홈 멤버 아바타 ===== */
+.workspace-community-container .workspace-member-list .workspace-member-avatar {
+    position: relative !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 34px !important;
+    height: 34px !important;
+    flex: 0 0 34px !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 50% !important;
+    overflow: hidden !important;
+    box-sizing: border-box !important;
+}
+
+.workspace-community-container .workspace-member-list .workspace-member-avatar.has-image {
+    background: transparent !important;
+    background-image: none !important;
+    box-shadow: none !important;
+}
+
+.workspace-community-container .workspace-member-list .workspace-member-avatar.is-default-profile {
+    background: linear-gradient(
+        135deg,
+        #397be8 0%,
+        #4a90e2 45%,
+        #39cdb5 100%
+    ) !important;
+    box-shadow: 0 4px 12px rgba(57, 145, 216, 0.24) !important;
+}
+
+.workspace-community-container .workspace-member-list .workspace-member-avatar img {
+    position: absolute !important;
+    inset: 0 !important;
+    display: block !important;
+    width: 100% !important;
+    height: 100% !important;
+    border-radius: inherit !important;
+    object-fit: cover !important;
+    object-position: center !important;
+    background: transparent !important;
+}
+
+.workspace-community-container .workspace-member-list .workspace-member-avatar-fallback {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 900;
+    line-height: 1;
+}
+
+.workspace-community-container .workspace-member-list .workspace-member-avatar.has-image .workspace-member-avatar-fallback {
+    display: none;
+}
+
+.workspace-community-container .workspace-member-list .workspace-member-avatar.is-default-profile .workspace-member-avatar-fallback {
+    display: inline-flex;
+}
+
+
+/* 이미지 및 fallback 상태 */
+body.moyo-app-sidebar-enabled
+.workspace-community-container
+.workspace-member-list
+.workspace-member-avatar.has-image img {
+    position: absolute !important;
+    inset: 0 !important;
+    display: block !important;
+    width: 100% !important;
+    height: 100% !important;
+    max-width: none !important;
+    max-height: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 50% !important;
+    object-fit: cover !important;
+    object-position: center !important;
+    background: transparent !important;
+}
+
+body.moyo-app-sidebar-enabled
+.workspace-community-container
+.workspace-member-list
+.workspace-member-avatar.has-image
+.workspace-member-avatar-fallback {
+    display: none !important;
+}
+
+body.moyo-app-sidebar-enabled
+.workspace-community-container
+.workspace-member-list
+.workspace-member-avatar.is-default-profile
+.workspace-member-avatar-fallback {
+    display: inline-flex !important;
+}
+
+
+/* 저장된 프로필 크롭 */
+body.moyo-app-sidebar-enabled
+.workspace-community-container
+.workspace-member-list
+.workspace-member-avatar.has-saved-crop {
+    background: #fff !important;
+    background-image: none !important;
+    border-color: #e4eaf1 !important;
+    box-shadow: none !important;
+}
+
+body.moyo-app-sidebar-enabled
+.workspace-community-container
+.workspace-member-list
+.workspace-member-avatar-cropped {
+    position: absolute !important;
+    inset: 0 !important;
+    z-index: 1 !important;
+    display: block !important;
+    width: 100% !important;
+    height: 100% !important;
+    border-radius: inherit !important;
+    background-color: #fff !important;
+    background-repeat: no-repeat !important;
+    box-sizing: border-box !important;
+}
+
+body.moyo-app-sidebar-enabled
+.workspace-community-container
+.workspace-member-list
+.workspace-member-avatar.has-saved-crop
+.workspace-member-avatar-fallback {
+    display: none !important;
+}
+/* ===== 그룹 홈 멤버 아바타 끝 ===== */
+
+
+
+/* 탈퇴 후 재참여 영역: 기존 그룹 홈 히어로를 재사용한다. */
+.workspace-rejoin-card{display:flex;align-items:center;justify-content:space-between;gap:32px;margin-top:20px;padding:30px 34px;border:1px solid #dce5f2;border-radius:20px;background:rgba(255,255,255,.96);box-shadow:0 14px 34px rgba(45,72,110,.08)}
+.workspace-rejoin-copy{min-width:0}.workspace-rejoin-kicker{display:block;margin-bottom:7px;color:#72839b;font-size:12px;font-weight:800}.workspace-rejoin-copy h2{margin:0;color:#182236;font-size:22px;line-height:1.35}.workspace-rejoin-copy p{margin:10px 0 12px;color:#718097;font-size:14px;line-height:1.65}.workspace-rejoin-member-count{color:#50627a;font-size:13px}.workspace-rejoin-member-count strong{color:#345fcb}.workspace-rejoin-actions{display:flex;flex:0 0 170px;flex-direction:column;align-items:stretch;gap:10px;width:170px}.workspace-rejoin-primary,.workspace-rejoin-secondary{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:0 18px;border-radius:13px;font-size:14px;font-weight:800;text-decoration:none;cursor:pointer}.workspace-rejoin-primary{border:0;color:#fff;background:linear-gradient(110deg,#3fc9c2 0%,#4e91e8 52%,#7358e8 100%);box-shadow:0 8px 18px rgba(78,111,220,.2)}.workspace-rejoin-secondary{border:1px solid #d5dfed;color:#53657d;background:#fff}.workspace-rejoin-primary:disabled,.workspace-rejoin-secondary:disabled{opacity:.55;cursor:wait}.workspace-rejoin-back{color:#7a889b;font-size:12px;font-weight:700;text-align:center;text-decoration:none}@media(max-width:760px){.workspace-rejoin-card{align-items:stretch;flex-direction:column;padding:24px}.workspace-rejoin-actions{width:100%;flex-basis:auto}}
+
+/* ===== Group main compact widget empty states ===== */
+.workspace-community-container .workspace-compact-empty-state {
+    width: 100%;
+    min-width: 0;
+    min-height: 100%;
+    margin: 0;
+    padding: 8px 12px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    color: #94a3b8;
+    text-align: center;
+    list-style: none;
+}
+.workspace-community-container .workspace-compact-empty-state strong {
+    color: #475569;
+    font-size: 12px;
+    font-weight: 800;
+    line-height: 1.35;
+}
+.workspace-community-container .workspace-compact-empty-state > span {
+    color: #94a3b8;
+    font-size: 10px;
+    font-weight: 500;
+    line-height: 1.45;
+}
+.workspace-community-container .workspace-compact-empty-state > a {
+    margin-top: 2px;
+    color: var(--moyo-blue, #438bea);
+    font-size: 11px;
+    font-weight: 800;
+    line-height: 1.35;
+    text-decoration: none;
+}
+.workspace-community-container .workspace-compact-empty-state > a:hover {
+    text-decoration: underline;
+}
+
+/* 상단 일정/투표 카드의 빈 상태 높이와 중심을 동일하게 맞춘다. */
+.workspace-community-container .workspace-core-row .today-schedule-list:has(.workspace-compact-empty-state),
+.workspace-community-container .workspace-core-row .workspace-poll-summary-area:has(.workspace-compact-empty-state) {
+    display: flex;
+    align-items: stretch;
+    justify-content: stretch;
+}
+.workspace-community-container .workspace-core-row .workspace-poll-summary-empty {
+    justify-content: center;
+}
+.workspace-community-container .workspace-core-row .workspace-poll-summary-empty > div {
+    display: contents;
+}
+
+/* 게시판 3종 위젯은 동일한 중앙형 빈 상태를 사용한다. */
+.workspace-community-container .workspace-widget-card .board-list:has(.workspace-board-compact-empty) {
+    display: flex;
+    align-items: stretch;
+    justify-content: stretch;
+}
+.workspace-community-container .workspace-widget-card .workspace-board-compact-empty {
+    min-height: calc(var(--workspace-board-row-height, 26px) * var(--workspace-board-visible-count, 3));
+    height: calc(var(--workspace-board-row-height, 26px) * var(--workspace-board-visible-count, 3));
+}
+/* ===== End group main compact widget empty states ===== */
+
+
+/* ===== Shared note/photo empty-state alignment ===== */
+.workspace-community-container .workspace-note-feature-card .workspace-note-empty-link,
+.workspace-community-container .workspace-photo-feature-card .workspace-feature-empty,
+.workspace-community-container .workspace-photo-feature-card .workspace-photo-empty {
+    display: grid;
+    grid-template-columns: 44px minmax(0, 1fr);
+    align-items: center;
+    justify-content: initial;
+    gap: 14px;
+    padding: 12px 18px;
+    text-align: left;
+}
+
+.workspace-community-container .workspace-photo-feature-card .workspace-feature-empty-icon {
+    width: 44px;
+    height: 44px;
+    flex: none;
+    border-radius: 12px;
+    font-size: 22px;
+}
+
+.workspace-community-container .workspace-photo-feature-card .workspace-feature-empty > div {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+}
+
+.workspace-community-container .workspace-photo-feature-card .workspace-feature-empty strong {
+    color: #334155;
+    font-size: 13px;
+    font-weight: 800;
+    line-height: 1.45;
+}
+
+.workspace-community-container .workspace-photo-feature-card .workspace-feature-empty span:not(.workspace-feature-empty-icon),
+.workspace-community-container .workspace-photo-feature-card .workspace-feature-empty-action {
+    margin: 0;
     font-size: 11px;
     line-height: 1.45;
 }
-.workspace-community-container .workspace-note-placeholder-copy em {
-    margin-top: 2px;
-    color: #347fd0;
+
+.workspace-community-container .workspace-photo-feature-card .workspace-feature-empty-action {
+    color: #3f83ea;
+    font-weight: 800;
+}
+/* ===== End shared note/photo empty-state alignment ===== */
+
+/* ===== Final: MOYO gradient button edge cleanup ===== */
+.workspace-community-container .workspace-calendar-add-btn,
+.workspace-community-container .workspace-project-create-btn,
+.workspace-community-container .workspace-project-empty-btn,
+.workspace-community-container .workspace-start-btn.is-project,
+body.moyo-app-sidebar-enabled .workspace-community-container .workspace-member-head .workspace-member-invite-btn {
+    border: 0 !important;
+    outline: 0 !important;
+    background: linear-gradient(110deg, var(--moyo-mint) 0%, var(--moyo-blue) 52%, var(--moyo-purple) 100%) !important;
+    background-image: linear-gradient(110deg, var(--moyo-mint) 0%, var(--moyo-blue) 52%, var(--moyo-purple) 100%) !important;
+    background-origin: border-box !important;
+    background-clip: border-box !important;
+    -webkit-background-clip: border-box !important;
+    overflow: hidden !important;
+    color: #fff !important;
+    -webkit-appearance: none !important;
+    appearance: none !important;
+    box-sizing: border-box !important;
+}
+.workspace-community-container .workspace-calendar-add-btn {
+    border-radius: 9px !important;
+}
+.workspace-community-container .workspace-project-create-btn,
+.workspace-community-container .workspace-project-empty-btn {
+    border-radius: 10px !important;
+}
+body.moyo-app-sidebar-enabled .workspace-community-container .workspace-member-head .workspace-member-invite-btn {
+    border-radius: 999px !important;
+}
+.workspace-community-container .workspace-calendar-add-btn:hover,
+.workspace-community-container .workspace-calendar-add-btn:focus,
+.workspace-community-container .workspace-project-create-btn:hover,
+.workspace-community-container .workspace-project-create-btn:focus,
+.workspace-community-container .workspace-project-empty-btn:hover,
+.workspace-community-container .workspace-project-empty-btn:focus,
+.workspace-community-container .workspace-start-btn.is-project:hover,
+.workspace-community-container .workspace-start-btn.is-project:focus,
+body.moyo-app-sidebar-enabled .workspace-community-container .workspace-member-head .workspace-member-invite-btn:hover,
+body.moyo-app-sidebar-enabled .workspace-community-container .workspace-member-head .workspace-member-invite-btn:focus {
+    border: 0 !important;
+    outline: 0 !important;
+    background: linear-gradient(110deg, var(--moyo-mint) 0%, var(--moyo-blue) 52%, var(--moyo-purple) 100%) !important;
+    background-image: linear-gradient(110deg, var(--moyo-mint) 0%, var(--moyo-blue) 52%, var(--moyo-purple) 100%) !important;
+    color: #fff !important;
+}
+/* ===== End gradient button edge cleanup ===== */
+
+/* =====================================================================
+   FINAL: Group main project quick-entry widget
+   - Project list card visual parity
+   - Up to three active projects
+   - Scheduled/completed are summarized in the header area
+   ===================================================================== */
+.workspace-community-container .workspace-project-quick-widget {
+    padding: 18px 20px 16px !important;
+    overflow: hidden;
+}
+
+.workspace-community-container .workspace-project-quick-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 18px;
+    margin-bottom: 13px;
+}
+
+.workspace-community-container .workspace-project-quick-heading {
+    min-width: 0;
+}
+
+.workspace-community-container .workspace-project-quick-title {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+
+.workspace-community-container .workspace-project-quick-title h3 {
+    margin: 0;
+    color: #111827;
+    font-size: 16px;
+    font-weight: 900;
+    line-height: 1.25;
+    letter-spacing: -.035em;
+}
+
+.workspace-community-container .workspace-project-quick-total {
+    min-width: 21px;
+    height: 21px;
+    padding: 0 7px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    background: #eef6ff;
+    color: #2f7fd2;
+    font-size: 11px;
+    font-weight: 850;
+}
+
+.workspace-community-container .workspace-project-quick-heading p {
+    margin: 5px 0 0;
+    color: #7b8798;
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1.45;
+}
+
+.workspace-community-container .workspace-project-quick-actions {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+}
+
+.workspace-community-container .workspace-project-quick-more {
+    color: #64748b;
+    font-size: 12px;
+    font-weight: 650;
+    text-decoration: none;
+}
+
+.workspace-community-container .workspace-project-quick-more:hover {
+    color: #2f7fd2;
+}
+
+.workspace-community-container .workspace-project-quick-widget .workspace-project-create-btn {
+    min-width: 112px;
+    height: 34px;
+    min-height: 34px;
+    padding: 0 14px;
+    border-radius: 10px !important;
+}
+
+.workspace-community-container .workspace-project-quick-summary {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    margin-bottom: 13px;
+}
+
+.workspace-community-container .workspace-project-quick-summary-item {
+    min-height: 29px;
+    padding: 0 10px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid #e3eaf3;
+    border-radius: 999px;
+    background: #fff;
+    color: #687487;
+    text-decoration: none;
+    transition: border-color .16s ease, background .16s ease, transform .16s ease;
+}
+
+.workspace-community-container .workspace-project-quick-summary-item span {
+    font-size: 11px;
+    font-weight: 650;
+}
+
+.workspace-community-container .workspace-project-quick-summary-item strong {
+    font-size: 11px;
+    font-weight: 850;
+}
+
+.workspace-community-container .workspace-project-quick-summary-item.is-progress {
+    border-color: #d7e9ff;
+    background: #f4f9ff;
+    color: #2f7fd2;
+}
+
+.workspace-community-container .workspace-project-quick-summary-item.is-scheduled {
+    border-color: #ffe7b8;
+    background: #fff8eb;
+    color: #c98200;
+}
+
+.workspace-community-container .workspace-project-quick-summary-item.is-completed {
+    border-color: #d7f3ec;
+    background: #f3fdf9;
+    color: #0d9877;
+}
+
+.workspace-community-container .workspace-project-quick-summary-item:hover {
+    transform: translateY(-1px);
+}
+
+.workspace-community-container .workspace-project-quick-list {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.workspace-community-container .workspace-project-quick-card {
+    position: relative;
+    min-width: 0;
+    min-height: 184px;
+    padding: 14px 15px 13px 18px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border: 1px solid #dbe7f5;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #fff 0%, #f4fffb 100%);
+    color: inherit;
+    text-decoration: none;
+    box-shadow: 0 7px 18px rgba(15, 23, 42, .035);
+    transition: border-color .17s ease, box-shadow .17s ease, transform .17s ease;
+}
+
+.workspace-community-container .workspace-project-quick-card::after {
+    content: "";
+    position: absolute;
+    right: -46px;
+    bottom: -52px;
+    width: 150px;
+    height: 126px;
+    opacity: .26;
+    background: radial-gradient(circle at 64% 70%, rgba(74,144,226,.52), rgba(85,221,191,.25) 42%, rgba(255,255,255,0) 72%);
+    pointer-events: none;
+}
+
+.workspace-community-container .workspace-project-quick-card:hover {
+    border-color: #bed8f3;
+    box-shadow: 0 11px 24px rgba(15, 23, 42, .07);
+    transform: translateY(-2px);
+}
+
+.workspace-community-container .workspace-project-quick-card > * {
+    position: relative;
+    z-index: 2;
+}
+
+.workspace-community-container .workspace-project-quick-accent {
+    position: absolute;
+    z-index: 3;
+    top: 12px;
+    bottom: 12px;
+    left: 0;
+    width: 3px;
+    border-radius: 0 999px 999px 0;
+    background: linear-gradient(180deg, #4a90e2 0%, #55ddbf 100%);
+}
+
+.workspace-community-container .workspace-project-quick-badges {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 9px;
+}
+
+.workspace-community-container .workspace-project-quick-status,
+.workspace-community-container .workspace-project-quick-type {
+    height: 21px;
+    padding: 0 8px;
+    display: inline-flex;
+    align-items: center;
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 750;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+.workspace-community-container .workspace-project-quick-status {
+    border: 1px solid #d7e9ff;
+    background: #f4f9ff;
+    color: #2f7fd2;
+}
+
+.workspace-community-container .workspace-project-quick-type {
+    border: 1px solid #e2e8f0;
+    background: #fff;
+    color: #64748b;
+}
+
+.workspace-community-container .workspace-project-quick-card h4 {
+    margin: 0 0 6px !important;
+    overflow: hidden;
+    color: #111827 !important;
+    font-size: 14px !important;
+    font-weight: 850 !important;
+    line-height: 1.35 !important;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.workspace-community-container .workspace-project-quick-desc {
+    margin: 0 0 9px !important;
+    overflow: hidden;
+    color: #7b8798 !important;
+    font-size: 10.5px !important;
+    font-weight: 500 !important;
+    line-height: 1.4 !important;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.workspace-community-container .workspace-project-quick-info {
+    margin: 0;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 5px 13px;
+}
+
+.workspace-community-container .workspace-project-quick-info > div {
+    min-width: 0;
+    display: grid;
+    grid-template-columns: 32px minmax(0, 1fr);
+    align-items: center;
+    gap: 6px;
+}
+
+.workspace-community-container .workspace-project-quick-info > .workspace-project-quick-period {
+    grid-column: 1 / -1;
+}
+
+.workspace-community-container .workspace-project-quick-info dt,
+.workspace-community-container .workspace-project-quick-info dd {
+    margin: 0;
+    min-width: 0;
+    font-size: 10.5px;
+    line-height: 1.35;
+}
+
+.workspace-community-container .workspace-project-quick-info dt {
+    color: #718096;
+    font-weight: 700;
+}
+
+.workspace-community-container .workspace-project-quick-info dd {
+    overflow: hidden;
+    color: #42526a;
+    font-weight: 550;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.workspace-community-container .workspace-project-quick-info dd span {
+    margin: 0 3px;
+    color: #9aa6b6;
+}
+
+.workspace-community-container .workspace-project-quick-enter {
+    margin-top: auto;
+    padding-top: 11px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: #2f7fd2;
+    font-size: 11px;
+    font-weight: 800;
+}
+
+.workspace-community-container .workspace-project-quick-enter b {
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.workspace-community-container .workspace-project-quick-rest {
+    width: fit-content;
+    margin: 11px auto 0;
+    display: block;
+    color: #5d6b7e;
+    font-size: 11px;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.workspace-community-container .workspace-project-quick-rest:hover {
+    color: #2f7fd2;
+}
+
+.workspace-community-container .workspace-project-quick-no-progress {
+    min-height: 104px;
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    border: 1px dashed #dce6f2;
+    border-radius: 14px;
+    background: #fafbfd;
+    text-align: center;
+    text-decoration: none;
+}
+
+.workspace-community-container .workspace-project-quick-no-progress strong {
+    color: #445268;
+    font-size: 13px;
+    font-weight: 850;
+}
+
+.workspace-community-container .workspace-project-quick-no-progress span {
+    color: #8a95a6;
+    font-size: 11px;
+}
+
+.workspace-community-container .workspace-project-quick-no-progress em {
+    margin-top: 3px;
+    color: #2f7fd2;
     font-size: 11px;
     font-style: normal;
-    font-weight: 600;
+    font-weight: 800;
 }
-/* ===== End workspace shared note widget v4 ===== */
 
+.workspace-community-container .workspace-project-quick-empty {
+    min-height: 104px;
+}
 
-/* ===== Workspace shared note widget v5: project widget parity ===== */
-.workspace-community-container .workspace-note-feature-card {
-    min-width: 0 !important;
-    height: 178px !important;
-    min-height: 178px !important;
-    padding: 18px 20px !important;
-}
-.workspace-community-container .workspace-note-feature-card .board-title {
-    min-height: 24px !important;
-    margin-bottom: 10px !important;
-    padding-bottom: 8px !important;
-    border-bottom: 1px solid #e9eef5 !important;
-}
-.workspace-community-container .workspace-note-feature-card .workspace-note-list {
-    width: 100% !important;
-    min-width: 0 !important;
-    min-height: 122px !important;
-    height: 122px !important;
-    padding: 0 !important;
-    overflow: hidden !important;
-}
-.workspace-community-container .workspace-note-feature-card .workspace-note-items {
-    width: 100% !important;
-    min-width: 0 !important;
-    min-height: 0 !important;
-    height: 100% !important;
-    padding: 0 !important;
-    display: flex !important;
-    flex-direction: column !important;
-    gap: 7px !important;
-}
-.workspace-community-container .workspace-note-feature-card .workspace-note-item {
-    width: 100% !important;
-    min-width: 0 !important;
-    min-height: 54px !important;
-    padding: 8px 10px !important;
-    display: grid !important;
-    grid-template-columns: minmax(0, 1fr) auto !important;
-    grid-template-rows: auto auto !important;
-    column-gap: 8px !important;
-    row-gap: 3px !important;
-    align-content: center !important;
-    border: 1px solid #e4edf7 !important;
-    border-radius: 11px !important;
-    background: #fff !important;
-    box-sizing: border-box !important;
-    overflow: hidden !important;
-}
-.workspace-community-container .workspace-note-feature-card .workspace-note-item-title-row {
-    grid-column: 1 / -1 !important;
-    min-width: 0 !important;
-    display: flex !important;
-    align-items: center !important;
-    gap: 6px !important;
-}
-.workspace-community-container .workspace-note-feature-card .workspace-note-item-title {
-    flex: 1 1 auto !important;
-    min-width: 0 !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-    white-space: nowrap !important;
-    color: #172033 !important;
-    font-size: 12px !important;
-    font-weight: 750 !important;
-    line-height: 1.25 !important;
-}
-.workspace-community-container .workspace-note-feature-card .workspace-note-item-preview {
-    grid-column: 1 !important;
-    min-width: 0 !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-    white-space: nowrap !important;
-    color: #718096 !important;
-    font-size: 10.5px !important;
-    line-height: 1.3 !important;
-}
-.workspace-community-container .workspace-note-feature-card .workspace-note-item-footer {
-    grid-column: 2 !important;
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: flex-end !important;
-    gap: 5px !important;
-    min-width: 0 !important;
-    white-space: nowrap !important;
-}
-.workspace-community-container .workspace-note-feature-card .workspace-note-author {
-    max-width: 62px !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-    white-space: nowrap !important;
-    color: #8b97a8 !important;
-    font-size: 10px !important;
-    line-height: 1 !important;
-}
-.workspace-community-container .workspace-note-feature-card .workspace-note-mini-chip {
-    flex: 0 0 auto !important;
-    min-height: 18px !important;
-    padding: 0 6px !important;
-    display: inline-flex !important;
-    align-items: center !important;
-    border-radius: 999px !important;
-    background: #f2f7fc !important;
-    color: #68809a !important;
-    font-size: 9.5px !important;
-    line-height: 1 !important;
-    white-space: nowrap !important;
-}
-.workspace-community-container .workspace-note-feature-card .workspace-note-mini-chip.pin {
-    background: #eef3ff !important;
-    color: #5573d8 !important;
-    border: 1px solid #d7e0ff !important;
-}
-.workspace-community-container .workspace-note-feature-card .workspace-note-more-row {
-    margin-top: auto !important;
-    padding: 1px 2px 0 !important;
-    display: block !important;
-    text-align: right !important;
-    color: #4f86c6 !important;
-    font-size: 10.5px !important;
-    line-height: 1.2 !important;
-    text-decoration: none !important;
-}
-.workspace-community-container .workspace-note-feature-card .workspace-note-loading,
-.workspace-community-container .workspace-note-feature-card .workspace-note-empty-link {
-    width: 100% !important;
-    min-width: 0 !important;
-    min-height: 122px !important;
-    height: 122px !important;
-    padding: 16px 18px !important;
-    display: grid !important;
-    grid-template-columns: 44px minmax(0, 1fr) !important;
-    align-items: center !important;
-    gap: 14px !important;
-    border: 1px dashed #dce6f1 !important;
-    border-radius: 14px !important;
-    background: #f9fbfd !important;
-    box-sizing: border-box !important;
-}
-.workspace-community-container .workspace-note-feature-card .workspace-note-placeholder-copy {
-    min-width: 0 !important;
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: flex-start !important;
-    gap: 4px !important;
-}
-.workspace-community-container .workspace-note-feature-card .workspace-note-placeholder-copy strong,
-.workspace-community-container .workspace-note-feature-card .workspace-note-placeholder-copy span,
-.workspace-community-container .workspace-note-feature-card .workspace-note-placeholder-copy em {
-    max-width: 100% !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-    white-space: nowrap !important;
-    word-break: normal !important;
-}
-@media (max-width: 700px) {
-    .workspace-community-container .workspace-note-feature-card {
-        height: auto !important;
-        min-height: 178px !important;
+@media (max-width: 1180px) {
+    .workspace-community-container .workspace-project-quick-list {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 }
-/* ===== End workspace shared note widget v5 ===== */
+
+@media (max-width: 760px) {
+    .workspace-community-container .workspace-project-quick-head {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .workspace-community-container .workspace-project-quick-actions {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .workspace-community-container .workspace-project-quick-summary {
+        flex-wrap: wrap;
+    }
+
+    .workspace-community-container .workspace-project-quick-list {
+        grid-template-columns: 1fr;
+    }
+
+    .workspace-community-container .workspace-project-quick-card {
+        min-height: 170px;
+    }
+}
+/* ===== End group main project quick-entry widget ===== */
+
+/* =====================================================================
+   FINAL v2: all active projects + action hierarchy
+   ===================================================================== */
+.workspace-community-container .workspace-project-quick-actions {
+    align-self: flex-start;
+}
+
+.workspace-community-container .workspace-project-quick-toolbar {
+    width: 100%;
+    margin-bottom: 13px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+}
+
+.workspace-community-container .workspace-project-quick-toolbar
+.workspace-project-quick-summary {
+    min-width: 0;
+    margin-bottom: 0;
+}
+
+.workspace-community-container .workspace-project-quick-create {
+    flex: 0 0 auto;
+    min-width: 112px !important;
+    height: 32px !important;
+    min-height: 32px !important;
+    padding: 0 14px !important;
+}
+
+/* 1개는 목록 화면처럼 과하게 늘어나지 않게 제한한다. */
+.workspace-community-container .workspace-project-quick-list.count-1 {
+    grid-template-columns: minmax(0, 1fr) !important;
+}
+
+.workspace-community-container .workspace-project-quick-list.count-1
+.workspace-project-quick-card {
+    width: min(100%, 520px);
+}
+
+/* 2개는 남는 공간 없이 정확히 2열을 사용한다. */
+.workspace-community-container .workspace-project-quick-list.count-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+}
+
+/* 3개 이상은 3열로 계속 내려가며 진행 중 프로젝트를 모두 표시한다. */
+.workspace-community-container .workspace-project-quick-list {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+}
+
+/* 이전 3개 제한용 링크는 더 이상 사용하지 않는다. */
+.workspace-community-container .workspace-project-quick-rest {
+    display: none !important;
+}
+
+@media (max-width: 1180px) {
+    .workspace-community-container .workspace-project-quick-list,
+    .workspace-community-container .workspace-project-quick-list.count-2 {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+
+    .workspace-community-container .workspace-project-quick-list.count-1 {
+        grid-template-columns: minmax(0, 1fr) !important;
+    }
+}
+
+@media (max-width: 760px) {
+    .workspace-community-container .workspace-project-quick-toolbar {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 9px;
+    }
+
+    .workspace-community-container .workspace-project-quick-create {
+        align-self: flex-end;
+    }
+
+    .workspace-community-container .workspace-project-quick-list,
+    .workspace-community-container .workspace-project-quick-list.count-1,
+    .workspace-community-container .workspace-project-quick-list.count-2 {
+        grid-template-columns: 1fr !important;
+    }
+
+    .workspace-community-container .workspace-project-quick-list.count-1
+    .workspace-project-quick-card {
+        width: 100%;
+    }
+}
+/* ===== End project quick widget v2 ===== */
+
+/* =====================================================================
+   FINAL v3: count-4 grid + softer project card glow
+   ===================================================================== */
+
+/* 4개일 때는 3+1이 아니라 2x2로 배치한다. */
+.workspace-community-container .workspace-project-quick-list.count-4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+}
+
+/* 카드 배경 블러와 그림자를 한 단계 낮춘다. */
+.workspace-community-container .workspace-project-quick-card {
+    box-shadow: 0 4px 12px rgba(15, 23, 42, .025) !important;
+}
+
+.workspace-community-container .workspace-project-quick-card::after {
+    right: -54px !important;
+    bottom: -60px !important;
+    width: 138px !important;
+    height: 112px !important;
+    opacity: .12 !important;
+    background:
+        radial-gradient(
+            circle at 64% 70%,
+            rgba(74, 144, 226, .30),
+            rgba(85, 221, 191, .14) 42%,
+            rgba(255, 255, 255, 0) 72%
+        ) !important;
+}
+
+.workspace-community-container .workspace-project-quick-card:hover {
+    box-shadow: 0 7px 16px rgba(15, 23, 42, .045) !important;
+}
+
+@media (max-width: 1180px) {
+    .workspace-community-container .workspace-project-quick-list.count-4 {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+}
+
+@media (max-width: 760px) {
+    .workspace-community-container .workspace-project-quick-list.count-4 {
+        grid-template-columns: 1fr !important;
+    }
+}
+/* ===== End project quick widget v3 ===== */
+
+/* =====================================================================
+   FINAL v4: compact 2-column project cards
+   ===================================================================== */
+.workspace-community-container .workspace-project-quick-card {
+    min-height: 154px !important;
+    padding: 12px 14px 11px 17px !important;
+    background: linear-gradient(135deg, #fff 0%, #f8fffc 100%) !important;
+}
+
+.workspace-community-container .workspace-project-quick-card::after {
+    opacity: .08 !important;
+}
+
+.workspace-community-container .workspace-project-quick-badges {
+    margin-bottom: 7px !important;
+}
+
+.workspace-community-container .workspace-project-quick-card h4 {
+    margin-bottom: 4px !important;
+}
+
+.workspace-community-container .workspace-project-quick-desc {
+    margin-bottom: 6px !important;
+}
+
+.workspace-community-container .workspace-project-quick-info {
+    gap: 4px 12px !important;
+}
+
+.workspace-community-container .workspace-project-quick-info > div {
+    gap: 5px !important;
+}
+
+.workspace-community-container .workspace-project-quick-enter {
+    padding-top: 7px !important;
+    margin-top: 7px !important;
+}
+
+.workspace-community-container .workspace-project-quick-list.count-4
+.workspace-project-quick-card {
+    min-height: 148px !important;
+}
+
+@media (max-width: 760px) {
+    .workspace-community-container .workspace-project-quick-card,
+    .workspace-community-container .workspace-project-quick-list.count-4
+    .workspace-project-quick-card {
+        min-height: 150px !important;
+    }
+}
+/* ===== End project quick widget v4 ===== */

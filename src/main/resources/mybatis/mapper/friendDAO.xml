@@ -14,6 +14,11 @@
         <result property="userName" column="USER_NAME"/>
         <result property="email" column="EMAIL"/>
         <result property="profileImagePath" column="PROFILE_IMAGE_PATH"/>
+        <result property="profileOriginalImagePath" column="PROFILE_ORIGINAL_IMAGE_PATH"/>
+        <result property="profileCropScale" column="PROFILE_CROP_SCALE"/>
+        <result property="profileCropX" column="PROFILE_CROP_X"/>
+        <result property="profileCropY" column="PROFILE_CROP_Y"/>
+        <result property="profileAvatarType" column="PROFILE_AVATAR_TYPE"/>
         <result property="relationStatus" column="RELATION_STATUS"/>
         <result property="direction" column="DIRECTION"/>
     </resultMap>
@@ -24,7 +29,16 @@
             SELECT u.USER_ID,
                    NVL(u.USER_NAME, u.EMAIL) AS USER_NAME,
                    u.EMAIL,
-                   u.PROFILE_IMAGE_PATH,
+                   NVL(u.PROFILE_IMAGE_PATH, pi.CROPPED_IMAGE_PATH) AS PROFILE_IMAGE_PATH,
+                   NVL(u.PROFILE_ORIGINAL_IMAGE_PATH, pi.ORIGINAL_IMAGE_PATH) AS PROFILE_ORIGINAL_IMAGE_PATH,
+                   NVL(u.PROFILE_CROP_SCALE, pi.CROP_SCALE) AS PROFILE_CROP_SCALE,
+                   NVL(u.PROFILE_CROP_X, pi.CROP_X) AS PROFILE_CROP_X,
+                   NVL(u.PROFILE_CROP_Y, pi.CROP_Y) AS PROFILE_CROP_Y,
+                   CASE
+                       WHEN NVL(u.PROFILE_IMAGE_PATH, pi.CROPPED_IMAGE_PATH) IS NOT NULL
+                         OR NVL(u.PROFILE_ORIGINAL_IMAGE_PATH, pi.ORIGINAL_IMAGE_PATH) IS NOT NULL THEN 'IMAGE'
+                       ELSE NVL(u.PROFILE_AVATAR_TYPE, 'DEFAULT')
+                   END AS PROFILE_AVATAR_TYPE,
                    f.FRIEND_ID,
                    f.REQUESTER_ID,
                    f.ADDRESSEE_ID,
@@ -39,6 +53,20 @@
                        ELSE 'RECEIVED'
                    END AS DIRECTION
               FROM USERS u
+          LEFT JOIN (
+              SELECT USER_ID, ORIGINAL_IMAGE_PATH, CROPPED_IMAGE_PATH, CROP_SCALE, CROP_X, CROP_Y
+              FROM (
+                  SELECT p.*,
+                         ROW_NUMBER() OVER (
+                             PARTITION BY p.USER_ID
+                             ORDER BY CASE WHEN p.IS_CURRENT = 'Y' THEN 0 ELSE 1 END,
+                                      p.CREATED_AT DESC,
+                                      p.PROFILE_IMAGE_ID DESC
+                         ) AS RN
+                    FROM USER_PROFILE_IMAGES p
+              )
+              WHERE RN = 1
+          ) pi ON pi.USER_ID = u.USER_ID
               LEFT JOIN USER_FRIENDS f
                 ON ((f.REQUESTER_ID = #{userId} AND f.ADDRESSEE_ID = u.USER_ID)
                  OR (f.ADDRESSEE_ID = #{userId} AND f.REQUESTER_ID = u.USER_ID))
@@ -66,12 +94,35 @@
                u.USER_ID,
                NVL(u.USER_NAME, u.EMAIL) AS USER_NAME,
                u.EMAIL,
-               u.PROFILE_IMAGE_PATH,
+               NVL(u.PROFILE_IMAGE_PATH, pi.CROPPED_IMAGE_PATH) AS PROFILE_IMAGE_PATH,
+               NVL(u.PROFILE_ORIGINAL_IMAGE_PATH, pi.ORIGINAL_IMAGE_PATH) AS PROFILE_ORIGINAL_IMAGE_PATH,
+               NVL(u.PROFILE_CROP_SCALE, pi.CROP_SCALE) AS PROFILE_CROP_SCALE,
+               NVL(u.PROFILE_CROP_X, pi.CROP_X) AS PROFILE_CROP_X,
+               NVL(u.PROFILE_CROP_Y, pi.CROP_Y) AS PROFILE_CROP_Y,
+               CASE
+                   WHEN NVL(u.PROFILE_IMAGE_PATH, pi.CROPPED_IMAGE_PATH) IS NOT NULL
+                     OR NVL(u.PROFILE_ORIGINAL_IMAGE_PATH, pi.ORIGINAL_IMAGE_PATH) IS NOT NULL THEN 'IMAGE'
+                   ELSE NVL(u.PROFILE_AVATAR_TYPE, 'DEFAULT')
+               END AS PROFILE_AVATAR_TYPE,
                f.STATUS AS RELATION_STATUS,
                CASE WHEN f.REQUESTER_ID = #{userId} THEN 'SENT' ELSE 'RECEIVED' END AS DIRECTION
           FROM USER_FRIENDS f
           JOIN USERS u
             ON u.USER_ID = CASE WHEN f.REQUESTER_ID = #{userId} THEN f.ADDRESSEE_ID ELSE f.REQUESTER_ID END
+          LEFT JOIN (
+              SELECT USER_ID, ORIGINAL_IMAGE_PATH, CROPPED_IMAGE_PATH, CROP_SCALE, CROP_X, CROP_Y
+              FROM (
+                  SELECT p.*,
+                         ROW_NUMBER() OVER (
+                             PARTITION BY p.USER_ID
+                             ORDER BY CASE WHEN p.IS_CURRENT = 'Y' THEN 0 ELSE 1 END,
+                                      p.CREATED_AT DESC,
+                                      p.PROFILE_IMAGE_ID DESC
+                         ) AS RN
+                    FROM USER_PROFILE_IMAGES p
+              )
+              WHERE RN = 1
+          ) pi ON pi.USER_ID = u.USER_ID
          WHERE f.STATUS = 'ACCEPTED'
            AND (f.REQUESTER_ID = #{userId} OR f.ADDRESSEE_ID = #{userId})
            <if test="keyword != null and keyword != ''">
@@ -94,11 +145,34 @@
                u.USER_ID,
                NVL(u.USER_NAME, u.EMAIL) AS USER_NAME,
                u.EMAIL,
-               u.PROFILE_IMAGE_PATH,
+               NVL(u.PROFILE_IMAGE_PATH, pi.CROPPED_IMAGE_PATH) AS PROFILE_IMAGE_PATH,
+               NVL(u.PROFILE_ORIGINAL_IMAGE_PATH, pi.ORIGINAL_IMAGE_PATH) AS PROFILE_ORIGINAL_IMAGE_PATH,
+               NVL(u.PROFILE_CROP_SCALE, pi.CROP_SCALE) AS PROFILE_CROP_SCALE,
+               NVL(u.PROFILE_CROP_X, pi.CROP_X) AS PROFILE_CROP_X,
+               NVL(u.PROFILE_CROP_Y, pi.CROP_Y) AS PROFILE_CROP_Y,
+               CASE
+                   WHEN NVL(u.PROFILE_IMAGE_PATH, pi.CROPPED_IMAGE_PATH) IS NOT NULL
+                     OR NVL(u.PROFILE_ORIGINAL_IMAGE_PATH, pi.ORIGINAL_IMAGE_PATH) IS NOT NULL THEN 'IMAGE'
+                   ELSE NVL(u.PROFILE_AVATAR_TYPE, 'DEFAULT')
+               END AS PROFILE_AVATAR_TYPE,
                f.STATUS AS RELATION_STATUS,
                'RECEIVED' AS DIRECTION
           FROM USER_FRIENDS f
           JOIN USERS u ON u.USER_ID = f.REQUESTER_ID
+          LEFT JOIN (
+              SELECT USER_ID, ORIGINAL_IMAGE_PATH, CROPPED_IMAGE_PATH, CROP_SCALE, CROP_X, CROP_Y
+              FROM (
+                  SELECT p.*,
+                         ROW_NUMBER() OVER (
+                             PARTITION BY p.USER_ID
+                             ORDER BY CASE WHEN p.IS_CURRENT = 'Y' THEN 0 ELSE 1 END,
+                                      p.CREATED_AT DESC,
+                                      p.PROFILE_IMAGE_ID DESC
+                         ) AS RN
+                    FROM USER_PROFILE_IMAGES p
+              )
+              WHERE RN = 1
+          ) pi ON pi.USER_ID = u.USER_ID
          WHERE f.ADDRESSEE_ID = #{userId}
            AND f.STATUS = 'PENDING'
          ORDER BY f.REQUESTED_AT DESC, f.FRIEND_ID DESC
@@ -115,11 +189,34 @@
                u.USER_ID,
                NVL(u.USER_NAME, u.EMAIL) AS USER_NAME,
                u.EMAIL,
-               u.PROFILE_IMAGE_PATH,
+               NVL(u.PROFILE_IMAGE_PATH, pi.CROPPED_IMAGE_PATH) AS PROFILE_IMAGE_PATH,
+               NVL(u.PROFILE_ORIGINAL_IMAGE_PATH, pi.ORIGINAL_IMAGE_PATH) AS PROFILE_ORIGINAL_IMAGE_PATH,
+               NVL(u.PROFILE_CROP_SCALE, pi.CROP_SCALE) AS PROFILE_CROP_SCALE,
+               NVL(u.PROFILE_CROP_X, pi.CROP_X) AS PROFILE_CROP_X,
+               NVL(u.PROFILE_CROP_Y, pi.CROP_Y) AS PROFILE_CROP_Y,
+               CASE
+                   WHEN NVL(u.PROFILE_IMAGE_PATH, pi.CROPPED_IMAGE_PATH) IS NOT NULL
+                     OR NVL(u.PROFILE_ORIGINAL_IMAGE_PATH, pi.ORIGINAL_IMAGE_PATH) IS NOT NULL THEN 'IMAGE'
+                   ELSE NVL(u.PROFILE_AVATAR_TYPE, 'DEFAULT')
+               END AS PROFILE_AVATAR_TYPE,
                f.STATUS AS RELATION_STATUS,
                'SENT' AS DIRECTION
           FROM USER_FRIENDS f
           JOIN USERS u ON u.USER_ID = f.ADDRESSEE_ID
+          LEFT JOIN (
+              SELECT USER_ID, ORIGINAL_IMAGE_PATH, CROPPED_IMAGE_PATH, CROP_SCALE, CROP_X, CROP_Y
+              FROM (
+                  SELECT p.*,
+                         ROW_NUMBER() OVER (
+                             PARTITION BY p.USER_ID
+                             ORDER BY CASE WHEN p.IS_CURRENT = 'Y' THEN 0 ELSE 1 END,
+                                      p.CREATED_AT DESC,
+                                      p.PROFILE_IMAGE_ID DESC
+                         ) AS RN
+                    FROM USER_PROFILE_IMAGES p
+              )
+              WHERE RN = 1
+          ) pi ON pi.USER_ID = u.USER_ID
          WHERE f.REQUESTER_ID = #{userId}
            AND f.STATUS = 'PENDING'
          ORDER BY f.REQUESTED_AT DESC, f.FRIEND_ID DESC

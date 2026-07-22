@@ -16,6 +16,10 @@ public interface InoteService {
 
     List<noteDTO> getMainNoteList(String scopeType, Long wsId, Long projId, Long userId, int limit);
 
+    List<noteDTO> getProfilePublicNotes(Long profileUserId, Long viewerUserId, int limit);
+
+    int countProfilePublicNotes(Long profileUserId);
+
     boolean pinNote(Long userId, Long noteId);
 
     boolean unpinNote(Long userId, Long noteId);
@@ -50,7 +54,21 @@ public interface InoteService {
 
     boolean removeNoteFilesByNoteId(Long noteId);
 
+    boolean isMoyoPublicNote(Long noteId);
+
+    int recordNoteView(Long noteId);
+
+    Map<String, Object> getNoteReactionStatus(Long noteId, Long userId);
+
+    Map<String, Object> toggleNoteLike(Long noteId, Long userId);
+
     List<noteReplyDTO> getNoteReplyList(Long noteId);
+
+    List<noteReplyDTO> getNoteReplyList(Long noteId, Long currentUserId);
+
+    boolean canReplyToNoteReply(Long noteId, Long replyId);
+
+    boolean toggleNoteReplyLike(Long replyId, Long userId);
 
     boolean registerNoteReply(noteReplyDTO reply);
 

@@ -15,29 +15,110 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import com.springboot.project.dao.IworkspaceDAO;
 import com.springboot.project.dto.postDTO;
 import com.springboot.project.dto.projectRequestDTO;
 import com.springboot.project.dto.usersDto;
+import com.springboot.project.dto.workspaceDTO;
 import com.springboot.project.service.IprojectService;
 import com.springboot.project.service.IworkspaceService;
 
 import jakarta.servlet.http.HttpSession;
-import lombok.RequiredArgsConstructor;
 
 @Controller
 @RequestMapping("/project")
-@RequiredArgsConstructor
 public class projectController {
 
     private final IprojectService projectService;
     private final IworkspaceService workspaceService;
+    private final IworkspaceDAO workspaceDAO;
+
+    public projectController(IprojectService projectService,
+                             IworkspaceService workspaceService,
+                             IworkspaceDAO workspaceDAO) {
+        this.projectService = projectService;
+        this.workspaceService = workspaceService;
+        this.workspaceDAO = workspaceDAO;
+    }
 
     @GetMapping("/create")
-    public String showCreatePage(@RequestParam("wsId") Long wsId, Model model) {
-        model.addAttribute("wsId", wsId); 
+    public String showCreatePage(
+            @RequestParam(value = "wsId", required = false) Long wsId,
+            @RequestParam(value = "scope", required = false) String requestedScope,
+            HttpSession session,
+            Model model) {
+
+        usersDto loginUser = (usersDto) session.getAttribute("user");
+        if (loginUser == null) {
+            return "redirect:/login";
+        }
+
+        List<workspaceDTO> workspaceList = workspaceService.getWorkspaceList(loginUser.getUserId());
+        boolean hasWorkspace = wsId != null && workspaceList.stream()
+                .anyMatch(workspace -> wsId.equals(workspace.getWsId()));
+
+        if (wsId != null && !hasWorkspace) {
+            return "redirect:/project/manage";
+        }
+
+        String scope = requestedScope == null ? "" : requestedScope.trim().toUpperCase();
+        boolean personalEntry = "PERSONAL".equals(scope);
+        boolean groupEntry = wsId != null;
+
+        workspaceDTO selectedWorkspace = groupEntry
+                ? workspaceService.getWorkspaceDetail(wsId)
+                : null;
+
+        boolean isWorkspaceOwner = selectedWorkspace != null
+                && selectedWorkspace.getOwnerId() != null
+                && selectedWorkspace.getOwnerId().equals(loginUser.getUserId());
+
+        boolean isWorkspaceAdmin = groupEntry
+                && workspaceDAO.isWorkspaceAdmin(wsId, loginUser.getUserId()) > 0;
+
+        boolean canCreateGroupProject = !groupEntry
+                || isWorkspaceOwner
+                || isWorkspaceAdmin;
+
+        if (!personalEntry && !"GROUP".equals(scope) && !scope.isEmpty()) {
+            return "redirect:/project/create";
+        }
+
+        String initialScope = personalEntry ? "PERSONAL" : "GROUP";
+        boolean scopeFixed = personalEntry || groupEntry;
+
+        if (groupEntry) {
+            session.setAttribute("currentWsId", wsId);
+        }
+
+        model.addAttribute("wsId", wsId);
+        model.addAttribute("workspaceList", workspaceList);
+        model.addAttribute("initialScope", initialScope);
+        model.addAttribute("scopeFixed", scopeFixed);
+        model.addAttribute("personalEntry", personalEntry);
+        model.addAttribute("groupEntry", groupEntry);
+        model.addAttribute("workspace", selectedWorkspace);
+        model.addAttribute("isWorkspaceOwner", isWorkspaceOwner);
+        model.addAttribute("isWorkspaceAdmin", isWorkspaceAdmin);
+        model.addAttribute("canCreateGroupProject", canCreateGroupProject);
         return "project/projectCreate";
     }
 
+
+
+    @GetMapping("/manage")
+    public String projectManagePage(HttpSession session, Model model) {
+        usersDto loginUser = (usersDto) session.getAttribute("user");
+        if (loginUser == null) {
+            return "redirect:/login";
+        }
+
+        List<Map<String, Object>> projects = projectService.getPersonalProjects(loginUser.getUserId());
+        model.addAttribute("projects", projects);
+        model.addAttribute("listMode", "PERSONAL");
+        model.addAttribute("personalMode", true);
+        return "project/projectList";
+    }
 
     @GetMapping("/list")
     public String projectListPage(@RequestParam("wsId") Long wsId,
@@ -49,8 +130,11 @@ public class projectController {
         }
 
         session.setAttribute("currentWsId", wsId);
+        model.addAttribute("wsId", wsId);
         model.addAttribute("workspace", workspaceService.getWorkspaceDetail(wsId));
         model.addAttribute("projects", projectService.getProjectListByWorkspaceId(wsId));
+        model.addAttribute("listMode", "GROUP");
+        model.addAttribute("personalMode", false);
         return "project/projectList";
     }
 
@@ -67,13 +151,70 @@ public class projectController {
         }
 
         try {
-            dto.setWsId(dto.getWsId() != null ? dto.getWsId() : (Long) session.getAttribute("currentWsId"));
+            String scope = dto.getProjScope() == null
+                    ? "GROUP"
+                    : dto.getProjScope().trim().toUpperCase();
+
+            if (!"PERSONAL".equals(scope) && !"GROUP".equals(scope)) {
+                response.put("status", "fail");
+                response.put("message", "올바르지 않은 프로젝트 범위입니다.");
+                return response;
+            }
+
+            dto.setProjScope(scope);
+
+            if ("GROUP".equals(scope) && dto.getWsId() == null) {
+                dto.setWsId((Long) session.getAttribute("currentWsId"));
+            }
+
+            if ("PERSONAL".equals(scope)) {
+                dto.setWsId(null);
+            }
+
+            if ("GROUP".equals(scope)) {
+                if (dto.getWsId() == null) {
+                    response.put("status", "fail");
+                    response.put("message", "그룹 정보가 없습니다.");
+                    return response;
+                }
+
+                workspaceDTO workspace = workspaceService.getWorkspaceDetail(dto.getWsId());
+                boolean isWorkspaceOwner = workspace != null
+                        && workspace.getOwnerId() != null
+                        && workspace.getOwnerId().equals(loginUser.getUserId());
+                boolean isWorkspaceAdmin =
+                        workspaceDAO.isWorkspaceAdmin(dto.getWsId(), loginUser.getUserId()) > 0;
+
+                if (!isWorkspaceOwner && !isWorkspaceAdmin) {
+                    response.put("status", "fail");
+                    response.put("message", "그룹 프로젝트는 그룹장 또는 관리자만 만들 수 있어요.");
+                    return response;
+                }
+            }
+
             projectService.insertProject(dto, loginUser.getUserId());
+
+            projectRequestDTO createdProject = projectService.getProjectById(dto.getProjId());
+            if (createdProject == null) {
+                response.put("status", "error");
+                response.put("message", "생성된 프로젝트 정보를 불러오지 못했습니다.");
+                return response;
+            }
+
+            Long createdWsId = createdProject.getWsId();
+            String createdScope = createdProject.getProjScope() == null
+                    ? (createdWsId == null ? "PERSONAL" : "GROUP")
+                    : createdProject.getProjScope().trim().toUpperCase();
+
             response.put("status", "success");
-            response.put("projId", dto.getProjId());
-            response.put("redirectUrl",
-                    "/project/main?projId=" + dto.getProjId()
-                    + "&wsId=" + dto.getWsId());
+            response.put("projId", createdProject.getProjId());
+            response.put("projScope", createdScope);
+
+            String redirectUrl = "/project/main?projId=" + createdProject.getProjId();
+            if ("GROUP".equals(createdScope) && createdWsId != null) {
+                redirectUrl += "&wsId=" + createdWsId;
+            }
+            response.put("redirectUrl", redirectUrl);
         } catch (Exception e) {
             e.printStackTrace();
             response.put("status", "error");
@@ -88,15 +229,22 @@ public class projectController {
 
     @GetMapping("/main")
     public String projectMainPage(@RequestParam("projId") Long projId,
-                                  @RequestParam("wsId") Long wsId,
+                                  @RequestParam(value = "wsId", required = false) Long wsId,
                                   Model model,
                                   HttpSession session) {
-        
-        // 1. [추가] 프로젝트 상세 정보 조회 (제목, 설명 등 가져오기)
-        projectRequestDTO projectDetail = projectService.getProjectById(projId); 
-        
-        System.out.println("START_DATE = " + projectDetail.getStartDate());
-        System.out.println("END_DATE = " + projectDetail.getEndDate());
+
+        usersDto loginUser = (usersDto) session.getAttribute("user");
+        if (loginUser == null) {
+            return "redirect:/login";
+        }
+
+        projectRequestDTO projectDetail = getAccessibleProject(projId, wsId, loginUser.getUserId());
+        if (projectDetail == null) {
+            return wsId == null
+                    ? "redirect:/project/manage"
+                    : "redirect:/project/list?wsId=" + wsId;
+        }
+        wsId = projectDetail.getWsId();
         // 2. 기존 로직
         List<Map<String, Object>> projectMemberList = projectService.getProjectMembers(projId);
         Map<String, Object> taskSummary = projectService.getProjectTaskSummary(projId);
@@ -115,7 +263,7 @@ public class projectController {
     @GetMapping("/settings")
     public String projectSettingsPage(
             @RequestParam("projId") Long projId,
-            @RequestParam("wsId") Long wsId,
+            @RequestParam(value = "wsId", required = false) Long wsId,
             Model model,
             HttpSession session) {
 
@@ -124,7 +272,13 @@ public class projectController {
             return "redirect:/login";
         }
 
-        projectRequestDTO projectDetail = projectService.getProjectById(projId);
+        projectRequestDTO projectDetail = getAccessibleProject(projId, wsId, loginUser.getUserId());
+        if (projectDetail == null) {
+            return wsId == null
+                    ? "redirect:/project/manage"
+                    : "redirect:/project/list?wsId=" + wsId;
+        }
+        wsId = projectDetail.getWsId();
         List<Map<String, Object>> projectMemberList = projectService.getProjectMembers(projId);
 
         model.addAttribute("projectDetail", projectDetail);
@@ -148,11 +302,18 @@ public class projectController {
     @GetMapping("/api/assignable-members")
     @ResponseBody
     public List<Map<String, Object>> getAssignableMembers(
-            @RequestParam("wsId") Long wsId, 
-            @RequestParam("projId") Long projId) {
-        
-        // 조차 시에는 userIds가 필요 없으므로 wsId와 projId만 넘깁니다.
-        return projectService.getAssignableMembers(wsId, projId);
+            @RequestParam(value = "wsId", required = false) Long wsId,
+            @RequestParam("projId") Long projId,
+            HttpSession session) {
+
+        usersDto loginUser = (usersDto) session.getAttribute("user");
+        projectRequestDTO project = loginUser == null ? null
+                : getAccessibleProject(projId, wsId, loginUser.getUserId());
+        if (project == null || !isProjectAdmin(projId, loginUser.getUserId())
+                || !"GROUP".equalsIgnoreCase(project.getProjScope())) {
+            return List.of();
+        }
+        return projectService.getAssignableMembers(project.getWsId(), projId);
     }
 
     
@@ -264,7 +425,11 @@ public class projectController {
     }
 @GetMapping("/api/tasks")
     @ResponseBody
-    public List<Map<String, Object>> getTasks(@RequestParam("projId") Long projId) {
+    public List<Map<String, Object>> getTasks(@RequestParam("projId") Long projId, HttpSession session) {
+        usersDto loginUser = (usersDto) session.getAttribute("user");
+        if (loginUser == null || getAccessibleProject(projId, null, loginUser.getUserId()) == null) {
+            return List.of();
+        }
         return projectService.getProjectTasks(projId);
     }
     
@@ -272,7 +437,7 @@ public class projectController {
     @ResponseBody
     public String addTask(
         @RequestParam("projId") Long projId,
-        @RequestParam("wsId") Long wsId,
+        @RequestParam(value = "wsId", required = false) Long wsId,
         @RequestParam("title") String title,
         @RequestParam(value = "startDate", required = false) String startDate,
         @RequestParam(value = "endDate", required = false) String endDate,
@@ -291,6 +456,12 @@ public class projectController {
         if (loginUser == null) {
             return "LOGIN_FAIL";
         }
+
+        projectRequestDTO project = getAccessibleProject(projId, wsId, loginUser.getUserId());
+        if (project == null) {
+            return "NO_PERMISSION";
+        }
+        wsId = project.getWsId();
 
         Long taskUserId = loginUser.getUserId();
 
@@ -544,12 +715,22 @@ public class projectController {
     @ResponseBody
     public String updateTaskStatus(
             @RequestParam("taskId") Long taskId,
-            @RequestParam("status") String status) {
+            @RequestParam("status") String status,
+            HttpSession session) {
 
-        System.out.println("컨트롤러 진입");
+        usersDto loginUser = (usersDto) session.getAttribute("user");
+        if (loginUser == null) {
+            return "LOGIN_FAIL";
+        }
+        Map<String, Object> task = projectService.getTaskDetail(taskId);
+        Long projId = task == null ? null : toLong(getMapValueIgnoreCase(task, "PROJ_ID"));
+        Long ownerId = task == null ? null : toLong(getMapValueIgnoreCase(task, "USER_ID"));
+        if (projId == null || getAccessibleProject(projId, null, loginUser.getUserId()) == null
+                || (!loginUser.getUserId().equals(ownerId) && !isProjectAdmin(projId, loginUser.getUserId()))) {
+            return "NO_PERMISSION";
+        }
 
-        boolean result =
-            projectService.updateTaskStatus(taskId, status);
+        boolean result = projectService.updateTaskStatus(taskId, status);
 
         return result ? "SUCCESS" : "FAIL";
     }
@@ -577,8 +758,15 @@ public class projectController {
     @ResponseBody
     public String updateProject(@RequestBody projectRequestDTO dto, HttpSession session) {
         usersDto loginUser = (usersDto) session.getAttribute("user");
-        
-        // 여기서도 dto의 리더 ID와 loginUser를 비교하는 로직을 넣으면 더 완벽합니다.
+        if (loginUser == null) {
+            return "LOGIN_FAIL";
+        }
+        projectRequestDTO project = getAccessibleProject(dto.getProjId(), dto.getWsId(), loginUser.getUserId());
+        if (project == null || !isProjectAdmin(dto.getProjId(), loginUser.getUserId())) {
+            return "NO_PERMISSION";
+        }
+        dto.setWsId(project.getWsId());
+        dto.setProjScope(project.getProjScope());
         boolean isUpdated = projectService.updateProject(dto);
         return isUpdated ? "SUCCESS" : "FAIL";
     }
@@ -641,7 +829,11 @@ public class projectController {
 
     @GetMapping("/api/members")
     @ResponseBody
-    public List<Map<String, Object>> getProjectMembersApi(@RequestParam("projId") Long projId) {
+    public List<Map<String, Object>> getProjectMembersApi(@RequestParam("projId") Long projId, HttpSession session) {
+        usersDto loginUser = (usersDto) session.getAttribute("user");
+        if (loginUser == null || getAccessibleProject(projId, null, loginUser.getUserId()) == null) {
+            return List.of();
+        }
         return projectService.getProjectMembers(projId);
     }
     
@@ -723,10 +915,74 @@ public class projectController {
 
 @GetMapping("/api/schedules")
     @ResponseBody
-    public List<Map<String, Object>> getProjectSchedules(@RequestParam("projId") Long projId) {
+    public List<Map<String, Object>> getProjectSchedules(@RequestParam("projId") Long projId, HttpSession session) {
+        usersDto loginUser = (usersDto) session.getAttribute("user");
+        if (loginUser == null || getAccessibleProject(projId, null, loginUser.getUserId()) == null) {
+            return List.of();
+        }
         return projectService.getProjectSchedules(projId);
     }
 
+
+    private projectRequestDTO getAccessibleProject(Long projId, Long requestedWsId, Long userId) {
+        if (projId == null || userId == null) {
+            return null;
+        }
+
+        projectRequestDTO project = projectService.getProjectById(projId);
+        if (project == null) {
+            return null;
+        }
+
+        String scope = project.getProjScope() == null
+                ? "GROUP"
+                : project.getProjScope().trim().toUpperCase();
+
+        if ("PERSONAL".equals(scope)) {
+            if (project.getWsId() != null) {
+                return null;
+            }
+            return isProjectMemberOrLeader(project, userId) ? project : null;
+        }
+
+        if (!"GROUP".equals(scope) || project.getWsId() == null) {
+            return null;
+        }
+        if (requestedWsId != null && !project.getWsId().equals(requestedWsId)) {
+            return null;
+        }
+
+        // 그룹 프로젝트는 해당 그룹의 멤버라면 조회할 수 있다.
+        // 프로젝트 팀장/관리자/멤버 여부는 수정·관리 권한에서 별도로 검사한다.
+        return isWorkspaceMember(project.getWsId(), userId) ? project : null;
+    }
+
+    private boolean isWorkspaceMember(Long wsId, Long userId) {
+        if (wsId == null || userId == null) {
+            return false;
+        }
+        List<workspaceDTO> workspaces = workspaceService.getWorkspaceList(userId);
+        if (workspaces == null) {
+            return false;
+        }
+        return workspaces.stream().anyMatch(workspace ->
+                workspace != null && wsId.equals(workspace.getWsId()));
+    }
+
+    private boolean isProjectMemberOrLeader(projectRequestDTO project, Long userId) {
+        if (project == null || userId == null) {
+            return false;
+        }
+        if (project.getLeaderId() != null && project.getLeaderId().equals(userId)) {
+            return true;
+        }
+        List<Map<String, Object>> members = projectService.getProjectMembers(project.getProjId());
+        if (members == null) {
+            return false;
+        }
+        return members.stream().anyMatch(member ->
+                userId.equals(toLong(getMapValueIgnoreCase(member, "USER_ID"))));
+    }
 
     private boolean isProjectAdmin(Long projId, Long userId) {
         if (projId == null || userId == null) {

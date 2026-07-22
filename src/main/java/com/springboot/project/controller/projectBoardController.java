@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.*;
 import com.springboot.project.dto.postDTO;
 import com.springboot.project.service.IboardService;
 import com.springboot.project.dto.usersDto;
+import com.springboot.project.dto.projectRequestDTO;
+import com.springboot.project.service.IprojectService;
 import jakarta.servlet.http.HttpSession;
 
 @Controller
@@ -17,6 +19,9 @@ public class projectBoardController {
 
     @Autowired
     private IboardService iboardService;
+
+    @Autowired
+    private IprojectService projectService;
 
 
     private Long currentUserId(HttpSession session) {
@@ -59,6 +64,12 @@ public class projectBoardController {
                                    Model model,
                                    HttpSession session) {
 
+        projectRequestDTO project = getAccessibleProject(projId, wsId, session);
+        if (project == null) {
+            return currentUserId(session) == null ? "redirect:/login" : "redirect:/project/list";
+        }
+        wsId = project.getWsId();
+
         if (type == null || type.isEmpty()) {
             type = "FREE";
         }
@@ -89,13 +100,21 @@ public class projectBoardController {
     @GetMapping("/api/board-list")
     @ResponseBody
     public List<postDTO> getBoardListApi(@RequestParam("projId") Long projId,
-                                         @RequestParam("boardType") String boardType) {
+                                         @RequestParam("boardType") String boardType,
+                                         HttpSession session) {
+        if (getAccessibleProject(projId, null, session) == null) {
+            return List.of();
+        }
         return iboardService.getListByProject(projId, boardType);
     }
 
     @PostMapping("/api/write")
     @ResponseBody
-    public Map<String, String> write(@RequestBody postDTO post) {
+    public Map<String, String> write(@RequestBody postDTO post, HttpSession session) {
+        if (post == null || getAccessibleProject(post.getProjId(), post.getWsId(), session) == null) {
+            return Map.of("status", "NO_PERMISSION");
+        }
+        post.setUserId(currentUserId(session));
         return Map.of("status", iboardService.registerPost(post) ? "SUCCESS" : "FAIL");
     }
 
@@ -103,5 +122,23 @@ public class projectBoardController {
     @ResponseBody
     public Map<String, String> delete(@PathVariable Long postId) {
         return Map.of("status", iboardService.deletePost(postId) ? "SUCCESS" : "FAIL");
+    }
+
+    private projectRequestDTO getAccessibleProject(Long projId, Long requestedWsId, HttpSession session) {
+        Long userId = currentUserId(session);
+        if (projId == null || userId == null) return null;
+        projectRequestDTO project = projectService.getProjectById(projId);
+        if (project == null) return null;
+        String scope = project.getProjScope() == null ? "GROUP" : project.getProjScope().trim().toUpperCase();
+        if ("PERSONAL".equals(scope)) {
+            return project.getWsId() == null && userId.equals(project.getLeaderId()) ? project : null;
+        }
+        if (!"GROUP".equals(scope) || project.getWsId() == null) return null;
+        if (requestedWsId != null && !requestedWsId.equals(project.getWsId())) return null;
+        boolean member = projectService.getProjectMembers(projId).stream().anyMatch(m -> {
+            Object value = m.get("USER_ID");
+            return value != null && userId.equals(Long.valueOf(String.valueOf(value)));
+        });
+        return member || userId.equals(project.getLeaderId()) ? project : null;
     }
 }

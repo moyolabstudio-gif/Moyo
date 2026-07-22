@@ -1,0 +1,49 @@
+<%@ page pageEncoding="UTF-8" %>
+<section class="profile-tab-section profile-tab-section--calendar">
+
+    <c:choose>
+        <c:when test="${calendarPublic eq 'N' or not calendarVisible}">
+            <div class="profile-tab-card profile-empty-state is-private">
+                <span>🔒</span>
+                <strong>일정 정보를 공개하지 않았어요</strong>
+                <p>공개 설정을 변경하면 프로필에 다시 표시됩니다.</p>
+            </div>
+        </c:when>
+        <c:when test="${not empty profilePublicSchedules}">
+            <div class="profile-tab-card profile-tab-card--list profile-calendar-card">
+                <div class="profile-calendar-list">
+                    <c:forEach var="event" items="${profilePublicSchedules}">
+                        <a class="profile-calendar-row" href="${pageContext.request.contextPath}/calendar?viewEventId=${event.id}" data-open-calendar-event-preview="${event.id}" data-preview-source="profile">
+                            <span class="profile-calendar-date">
+                                <strong><c:out value="${fn:substring(event.startDt, 8, 10)}" /></strong>
+                                <small><c:out value="${fn:substring(event.startDt, 5, 7)}" />월</small>
+                            </span>
+                            <span class="profile-calendar-text">
+                                <strong><c:out value="${event.title}" /></strong>
+                                <small>
+                                    <c:choose>
+                                        <c:when test="${fn:substring(event.startDt, 11, 16) eq '00:00' and fn:substring(event.endDt, 11, 16) eq '23:59'}">종일</c:when>
+                                        <c:otherwise>
+                                            <c:out value="${fn:substring(event.startDt, 11, 16)}" />
+                                            <c:if test="${not empty event.endDt}"> - <c:out value="${fn:substring(event.endDt, 11, 16)}" /></c:if>
+                                        </c:otherwise>
+                                    </c:choose>
+                                    <c:if test="${event.isRecurring eq 'Y'}"> · 반복</c:if>
+                                    <c:if test="${event.isLunar eq 'Y'}"> · 음력</c:if>
+                                </small>
+                            </span>
+                            <span class="profile-calendar-link">보기</span>
+                        </a>
+                    </c:forEach>
+                </div>
+            </div>
+        </c:when>
+        <c:otherwise>
+            <div class="profile-tab-card profile-empty-state">
+                <span>📅</span>
+                <strong>아직 공개한 일정이 없어요</strong>
+                <p>MOYO에 공개한 일정이 여기에 표시됩니다.</p>
+            </div>
+        </c:otherwise>
+    </c:choose>
+</section>

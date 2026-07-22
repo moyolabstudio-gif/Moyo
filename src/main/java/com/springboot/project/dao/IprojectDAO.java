@@ -16,6 +16,7 @@ public interface IprojectDAO {
     List<projectRequestDTO> selectProjectsByWsId(Long wsId);
     List<projectRequestDTO> selectSidebarActiveProjectsByWsId(Long wsId);
     List<Map<String, Object>> selectProjectListByWorkspaceId(@Param("wsId") Long wsId);
+    List<Map<String, Object>> selectPersonalProjects(@Param("userId") Long userId);
     projectRequestDTO selectProjectById(Long projId);
     // 2. 프로젝트 멤버 할당
     int insertProjectMember(@Param("projId") Long projId, 

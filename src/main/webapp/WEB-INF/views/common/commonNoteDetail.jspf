@@ -1,0 +1,302 @@
+<%@ page pageEncoding="UTF-8" %>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
+<%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
+<c:forEach var="note" items="${profilePublicNotes}">
+    <section id="profileNoteDetail-${note.noteId}" class="profile-note-detail-modal is-review-collapsed" data-profile-note-detail data-note-id="${note.noteId}" data-note-owner-id="${note.userId}" data-note-scope="${empty note.scopeType ? 'PRIVATE' : note.scopeType}" data-note-ws-id="${note.wsId}" data-note-proj-id="${note.projId}" data-note-folder-id="${note.folderId}" data-context-path="${pageContext.request.contextPath}" data-current-user-id="${sessionScope.user.userId}" hidden aria-label="${empty note.noteTitle ? '제목 없는 노트' : fn:escapeXml(note.noteTitle)} 노트 보기">
+        <div class="profile-note-detail-backdrop" data-profile-note-close></div>
+
+        <div class="profile-note-detail-dialog" role="dialog" aria-modal="true">
+            <header class="profile-note-detail-head">
+                <div class="profile-note-detail-info">
+                    <h2 class="profile-note-detail-title">
+                        <c:out value="${empty note.noteTitle ? '제목 없는 노트' : note.noteTitle}" />
+                    </h2>
+
+                    <div class="profile-note-detail-meta">
+                        <div class="profile-note-detail-author">
+                            <a class="profile-note-detail-author-link profile-note-detail-author-avatar-link" href="${pageContext.request.contextPath}/users/profile?userId=${note.userId}" aria-label="${empty note.userName ? displayName : note.userName} 프로필 보기">
+                            <span class="profile-note-detail-avatar">
+                                <c:choose>
+                                    <c:when test="${not empty note.profileImagePath}">
+                                        <c:choose>
+                                            <c:when test="${fn:startsWith(note.profileImagePath, 'http')}">
+                                                <img src="${note.profileImagePath}" alt="${empty note.userName ? displayName : note.userName}" onerror="this.remove();">
+                                            </c:when>
+                                            <c:otherwise>
+                                                <img src="${pageContext.request.contextPath}${note.profileImagePath}" alt="${empty note.userName ? displayName : note.userName}" onerror="this.remove();">
+                                            </c:otherwise>
+                                        </c:choose>
+                                    </c:when>
+                                    <c:otherwise>${fn:substring(empty note.userName ? 'M' : note.userName, 0, 1)}</c:otherwise>
+                                </c:choose>
+                            </span>
+                            </a>
+                            <span class="profile-note-detail-author-copy">
+                                <a class="profile-note-detail-author-link profile-note-detail-author-name-link" href="${pageContext.request.contextPath}/users/profile?userId=${note.userId}">
+                                    <strong><c:out value="${empty note.userName ? displayName : note.userName}" /></strong>
+                                </a>
+                                <small>
+                                    작성 <fmt:formatDate value="${note.regDt}" pattern="yyyy.MM.dd HH:mm" />
+                                    <c:if test="${not empty note.updDt}">
+                                        <span class="profile-note-detail-meta-dot" aria-hidden="true">·</span>
+                                        수정 <fmt:formatDate value="${note.updDt}" pattern="yyyy.MM.dd HH:mm" />
+                                    </c:if>
+                                </small>
+                            </span>
+                        </div>
+
+                        <div class="profile-note-detail-meta-list" aria-label="노트 정보">
+                            <span class="profile-note-detail-meta-item is-public" title="MOYO 공개">MOYO 공개</span>
+                            <c:if test="${note.ownedByMe and (not empty note.folderPath or not empty note.folderName)}">
+                                <span class="profile-note-detail-meta-item is-folder" title="${fn:escapeXml(not empty note.folderPath ? note.folderPath : note.folderName)}">
+                                    <i class="fa-regular fa-folder-open" aria-hidden="true"></i>
+                                    <c:out value="${not empty note.folderPath ? note.folderPath : note.folderName}" />
+                                </span>
+                            </c:if>
+                            <c:if test="${note.tableCount gt 0 or note.imageCount gt 0 or note.videoCount gt 0 or note.attachmentCount gt 0}">
+                                <span class="profile-note-detail-content-counts" aria-label="노트 콘텐츠 정보">
+                                    <c:if test="${note.tableCount gt 0}">
+                                        <span class="profile-note-detail-content-count" title="표 ${note.tableCount}개" aria-label="표 ${note.tableCount}개">
+                                            <i class="fa-solid fa-table-cells" aria-hidden="true"></i>
+                                            <b><c:out value="${note.tableCount}" /></b>
+                                        </span>
+                                    </c:if>
+                                    <c:if test="${note.imageCount gt 0}">
+                                        <span class="profile-note-detail-content-count" title="이미지 ${note.imageCount}개" aria-label="이미지 ${note.imageCount}개">
+                                            <i class="fa-regular fa-image" aria-hidden="true"></i>
+                                            <b><c:out value="${note.imageCount}" /></b>
+                                        </span>
+                                    </c:if>
+                                    <c:if test="${note.videoCount gt 0}">
+                                        <span class="profile-note-detail-content-count" title="영상 ${note.videoCount}개" aria-label="영상 ${note.videoCount}개">
+                                            <i class="fa-regular fa-circle-play" aria-hidden="true"></i>
+                                            <b><c:out value="${note.videoCount}" /></b>
+                                        </span>
+                                    </c:if>
+                                    <c:if test="${note.attachmentCount gt 0}">
+                                        <span class="profile-note-detail-content-count" title="첨부파일 ${note.attachmentCount}개" aria-label="첨부파일 ${note.attachmentCount}개">
+                                            <i class="fa-solid fa-paperclip" aria-hidden="true"></i>
+                                            <b><c:out value="${note.attachmentCount}" /></b>
+                                        </span>
+                                    </c:if>
+                                </span>
+                            </c:if>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="profile-note-detail-actions" aria-label="노트 작업">
+                    <c:choose>
+                        <c:when test="${note.ownedByMe}">
+                            <c:if test="${note.canEdit}">
+                                <a class="profile-note-detail-action is-primary" href="${pageContext.request.contextPath}/note/edit?noteId=${note.noteId}">
+                                    <i class="fa-regular fa-pen-to-square" aria-hidden="true"></i><span>수정</span>
+                                </a>
+                            </c:if>
+                            <button type="button" class="profile-note-detail-action" data-profile-note-share data-note-id="${note.noteId}" title="공유" aria-label="공유">
+                                <i class="fa-regular fa-paper-plane" aria-hidden="true"></i><span>공유</span>
+                            </button>
+                            <button type="button" class="profile-note-detail-action is-icon profile-note-detail-pin ${note.pinned ? 'is-pinned' : ''}" data-profile-note-pin data-note-id="${note.noteId}" data-pinned="${note.pinned}" title="${note.pinned ? '중요 해제' : '중요 표시'}" aria-label="${note.pinned ? '중요 해제' : '중요 표시'}" aria-pressed="${note.pinned}">
+                                <i class="${note.pinned ? 'fa-solid' : 'fa-regular'} fa-star" aria-hidden="true"></i>
+                            </button>
+                            <button type="button" class="profile-note-detail-action is-icon" data-profile-note-print title="인쇄" aria-label="인쇄">
+                                <i class="fa-solid fa-print" aria-hidden="true"></i>
+                            </button>
+
+                            <details class="profile-note-detail-more">
+                                <summary class="profile-note-detail-action is-icon profile-note-detail-more-toggle" title="더보기" aria-label="더보기">
+                                    <i class="fa-solid fa-ellipsis" aria-hidden="true"></i>
+                                </summary>
+                                <div class="profile-note-detail-more-menu" role="menu" aria-label="노트 관리 메뉴">
+                                    <button type="button" class="profile-note-detail-more-item" data-profile-note-permission data-note-id="${note.noteId}" role="menuitem">
+                                        <i class="fa-solid fa-user-shield" aria-hidden="true"></i><span>권한 관리</span>
+                                    </button>
+                                    <button type="button" class="profile-note-detail-more-item" data-profile-note-folder-move data-note-id="${note.noteId}" role="menuitem">
+                                        <i class="fa-regular fa-folder-open" aria-hidden="true"></i><span>폴더 이동</span>
+                                    </button>
+                                    <span class="profile-note-detail-more-divider" aria-hidden="true"></span>
+                                    <button type="button" class="profile-note-detail-more-item is-danger" data-profile-note-delete data-note-id="${note.noteId}" role="menuitem">
+                                        <i class="fa-regular fa-trash-can" aria-hidden="true"></i><span>삭제</span>
+                                    </button>
+                                </div>
+                            </details>
+                        </c:when>
+                        <c:otherwise>
+                            <c:if test="${note.canEdit}">
+                                <a class="profile-note-detail-action is-primary" href="${pageContext.request.contextPath}/note/edit?noteId=${note.noteId}">
+                                    <i class="fa-regular fa-pen-to-square" aria-hidden="true"></i><span>수정</span>
+                                </a>
+                            </c:if>
+                            <button type="button" class="profile-note-detail-action is-primary" data-profile-note-collect data-note-id="${note.noteId}" title="내 노트에 담기" aria-label="내 노트에 담기" aria-pressed="false">
+                                <i class="fa-regular fa-bookmark" aria-hidden="true"></i><span>담기</span>
+                            </button>
+                            <button type="button" class="profile-note-detail-action" data-profile-note-share data-note-id="${note.noteId}" title="공유" aria-label="공유">
+                                <i class="fa-regular fa-paper-plane" aria-hidden="true"></i><span>공유</span>
+                            </button>
+                            <button type="button" class="profile-note-detail-action is-icon profile-note-detail-pin ${note.pinned ? 'is-pinned' : ''}" data-profile-note-pin data-note-id="${note.noteId}" data-pinned="${note.pinned}" title="${note.pinned ? '중요 해제' : '중요 표시'}" aria-label="${note.pinned ? '중요 해제' : '중요 표시'}" aria-pressed="${note.pinned}">
+                                <i class="${note.pinned ? 'fa-solid' : 'fa-regular'} fa-star" aria-hidden="true"></i>
+                            </button>
+                            <button type="button" class="profile-note-detail-action is-icon" data-profile-note-print title="인쇄" aria-label="인쇄">
+                                <i class="fa-solid fa-print" aria-hidden="true"></i>
+                            </button>
+
+                            <details class="profile-note-detail-more">
+                                <summary class="profile-note-detail-action is-icon profile-note-detail-more-toggle" title="더보기" aria-label="더보기">
+                                    <i class="fa-solid fa-ellipsis" aria-hidden="true"></i>
+                                </summary>
+                                <div class="profile-note-detail-more-menu" role="menu" aria-label="기타 메뉴">
+                                    <span class="profile-note-detail-more-divider" aria-hidden="true"></span>
+                                    <button type="button" class="profile-note-detail-more-item is-danger" data-profile-note-placeholder role="menuitem">
+                                        <i class="fa-regular fa-flag" aria-hidden="true"></i><span>신고</span>
+                                    </button>
+                                </div>
+                            </details>
+                        </c:otherwise>
+                    </c:choose>
+                    <button type="button" class="profile-note-detail-close" data-profile-note-close aria-label="닫기"><span aria-hidden="true">×</span></button>
+                </div>
+            </header>
+
+            <div class="profile-note-detail-layout">
+                <div class="profile-note-document-wrap" aria-label="A4 노트 페이지 뷰어">
+                    <div class="profile-note-page-stage" data-profile-note-page-stage data-profile-note-current-page="0" data-profile-note-view-size="fit">
+                        <div class="profile-note-page-viewport">
+                            <div class="profile-note-page-stack" data-profile-note-page-stack>
+                                <article class="profile-note-document profile-note-page" data-profile-note-page="1" data-profile-note-page-template>
+                                    <div class="profile-note-document-body common-rich-content" data-profile-note-source-body>
+                                        <c:if test="${not empty note.memo}"><c:out value="${note.memo}" escapeXml="false" /></c:if>
+                                    </div>
+                                </article>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <aside class="profile-note-review-panel" aria-label="노트 반응 패널">
+                    <div class="profile-note-review-content">
+                        <div class="profile-note-review-card profile-note-review-card--comments">
+                            <div class="profile-note-review-headline">
+                                <strong>댓글</strong>
+                                <span data-profile-note-panel-comment-count><c:out value="${empty note.feedbackCount ? 0 : note.feedbackCount}" /></span>
+                            </div>
+                            <div class="profile-note-review-loading" data-profile-note-comment-loading hidden>
+                                <i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i>
+                                <span>댓글을 불러오는 중입니다.</span>
+                            </div>
+                            <div class="profile-note-comment-list" data-profile-note-comment-list></div>
+                            <div class="profile-note-review-empty" data-profile-note-comment-empty>
+                                <i class="fa-regular fa-comment-dots" aria-hidden="true"></i>
+                                <p>이 노트에 대한 생각을 나눠보세요.</p>
+                                <small>첫 댓글을 남기면 대화가 시작됩니다.</small>
+                            </div>
+                            <form class="profile-note-review-input" data-profile-note-comment-form>
+                                <textarea rows="1" maxlength="1000" data-profile-note-comment-input placeholder="댓글을 입력하세요" aria-label="댓글 입력"></textarea>
+                                <button type="submit" data-profile-note-comment-submit aria-label="댓글 등록">
+                                    <span>등록</span>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </aside>
+
+                <div class="profile-note-bottom-dock" aria-label="노트 보기 및 반응 도구">
+                    <div class="profile-note-dock-side profile-note-dock-left">
+                        <div class="profile-note-dock-section profile-note-view-controls" aria-label="보기 방식">
+                            <div class="profile-note-page-size-group">
+                                <button type="button" class="profile-note-page-size-btn is-active" data-profile-note-size-toggle data-note-view-size="fit">기본</button>
+                                <button type="button" class="profile-note-page-size-btn" data-profile-note-size-toggle data-note-view-size="large">크게</button>
+                            </div>
+                            <button type="button" class="profile-note-page-mode-toggle" data-profile-note-spread-toggle aria-pressed="false">
+                                <i class="fa-regular fa-clone" aria-hidden="true"></i>
+                                <span>듀얼</span>
+                            </button>
+                        </div>
+
+                    </div>
+
+                    <div class="profile-note-dock-section profile-note-page-nav" aria-label="페이지 이동">
+                        <button type="button" class="profile-note-page-nav-btn is-prev" data-profile-note-page-prev aria-label="이전 페이지">
+                            <i class="fa-solid fa-chevron-left" aria-hidden="true"></i>
+                        </button>
+                        <span data-profile-note-page-count>1 / 1</span>
+                        <button type="button" class="profile-note-page-nav-btn is-next" data-profile-note-page-next aria-label="다음 페이지">
+                            <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+                        </button>
+                    </div>
+
+                    <div class="profile-note-dock-side profile-note-dock-right">
+                        <div class="profile-note-dock-section profile-note-social-stats" aria-label="노트 반응 요약">
+                            <span class="profile-note-social-stat">
+                                <i class="fa-regular fa-eye" aria-hidden="true"></i>
+                                <span class="profile-note-social-stat-label">조회</span>
+                                <strong data-profile-note-view-count><c:out value="${empty note.viewCount ? 0 : note.viewCount}" /></strong>
+                            </span>
+                            <button type="button" class="profile-note-social-stat is-like ${note.likedByMe ? 'is-active' : ''}" data-profile-note-like-toggle aria-pressed="${note.likedByMe}" aria-label="${note.likedByMe ? '좋아요 취소' : '좋아요'}">
+                                <i class="${note.likedByMe ? 'fa-solid' : 'fa-regular'} fa-heart" aria-hidden="true"></i>
+                                <span class="profile-note-social-stat-label">좋아요</span>
+                                <strong data-profile-note-like-count><c:out value="${empty note.likeCount ? 0 : note.likeCount}" /></strong>
+                            </button>
+                        </div>
+                        <button type="button" class="profile-note-dock-section profile-note-comment-toggle" data-profile-note-review-toggle aria-expanded="false" aria-label="댓글 보기">
+                            <i class="fa-regular fa-comment" aria-hidden="true"></i>
+                            <span>댓글</span>
+                            <strong data-profile-note-comment-count><c:out value="${empty note.feedbackCount ? 0 : note.feedbackCount}" /></strong>
+                            <i class="fa-solid fa-chevron-up profile-note-comment-toggle-chevron" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</c:forEach>
+
+<button type="button" id="profileNoteShareOpenHidden" data-share-content-id="" hidden>공유</button>
+<button type="button" id="profileNotePermissionOpenHidden" hidden>권한</button>
+<span id="profileNoteShareCount" hidden>0</span>
+<span id="profileNotePermissionCount" hidden>0</span>
+<div id="profileNoteShareHiddenFields" hidden></div>
+<div id="profileNoteShareInitialSource" hidden></div>
+<div id="profileNoteWorkspaceMemberSource" hidden></div>
+<div id="profileNoteProjectMemberSource" hidden></div>
+<div id="profileNoteWorkspaceTargetSource" hidden></div>
+<div id="profileNoteProjectTargetSource" hidden></div>
+<div id="profileNoteShareModal" class="note-write-share-modal moyo-share-modal" data-current-user-id="${sessionScope.user.userId}" hidden>
+    <div class="note-write-share-backdrop" data-note-share-close></div>
+    <section class="note-write-share-panel" role="dialog" aria-modal="true" aria-labelledby="profileNoteShareModalTitle">
+        <div class="note-write-share-modal-head">
+            <div><h3 id="profileNoteShareModalTitle">공유하기</h3><p>친구·그룹·프로젝트를 선택하고 필요하면 편집 권한을 함께 줄 수 있어요.</p></div>
+            <button type="button" class="note-write-share-close" data-note-share-close aria-label="닫기">×</button>
+        </div>
+        <div class="note-write-share-tabs" role="tablist" aria-label="공유 대상 유형">
+            <button type="button" class="note-write-share-tab is-active" data-share-tab="FRIEND">친구</button>
+            <button type="button" class="note-write-share-tab" data-share-tab="WORKSPACE">그룹</button>
+            <button type="button" class="note-write-share-tab" data-share-tab="PROJECT">프로젝트</button>
+        </div>
+        <div class="note-write-share-toolbar">
+            <select id="profileNoteShareContext" class="note-write-share-select" aria-label="공유 범위 선택" hidden></select>
+            <input type="text" id="profileNoteShareKeyword" class="note-write-share-input" placeholder="친구 이름 또는 이메일 검색">
+        </div>
+        <div class="note-write-share-body note-write-share-body-simple">
+            <div><div class="note-write-share-subtitle">받는 대상</div><div id="profileNoteShareCandidates" class="note-write-share-list"></div></div>
+            <div><div class="note-write-share-subtitle">공유 목록 <span id="profileNoteShareModalCount" class="note-share-modal-count" hidden>0</span></div><div id="profileNoteShareSelected" class="note-write-share-selected"></div></div>
+        </div>
+        <div class="note-write-share-modal-actions"><div><button type="button" class="note-soft-btn" data-note-share-close>닫기</button><button type="button" id="profileNoteShareApply" class="note-gradient-btn">적용</button></div></div>
+    </section>
+</div>
+
+<div id="profileNoteCollectModal" class="profile-note-collect-modal" hidden>
+    <div class="profile-note-collect-backdrop" data-profile-note-collect-close></div>
+    <section class="profile-note-collect-panel" role="dialog" aria-modal="true" aria-labelledby="profileNoteCollectTitle">
+        <header class="profile-note-collect-head">
+            <div><h3 id="profileNoteCollectTitle">내 노트에 담기</h3><p>저장할 개인 폴더를 선택하세요.</p></div>
+            <button type="button" class="profile-note-collect-close" data-profile-note-collect-close aria-label="닫기">×</button>
+        </header>
+        <div id="profileNoteCollectFolderList" class="profile-note-collect-folder-list"></div>
+        <footer class="profile-note-collect-actions">
+            <button type="button" class="profile-note-collect-cancel" data-profile-note-collect-close>취소</button>
+            <button type="button" id="profileNoteCollectApply" class="profile-note-collect-apply" data-profile-note-collect-apply>담기</button>
+        </footer>
+    </section>
+</div>

@@ -26,6 +26,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.springboot.project.dto.postDTO;
+import com.springboot.project.dao.IworkspaceDAO;
 import com.springboot.project.service.IboardService;
 
 @RestController
@@ -35,12 +36,20 @@ public class boardApiController {
     @Autowired
     private IboardService iboardService;
 
+    @Autowired
+    private IworkspaceDAO workspaceDAO;
+
     /**
-     * 📢 대시보드 진입 시 공지사항 및 자유게시판 최신글 5개를 비동기로 반환하는 API
+     * 📢 대시보드 진입 시 공지사항 및 자유게시판 최신글 3개를 비동기로 반환하는 API
      * 브라우저 호출 주소: /api/workspace/{wsId}/dashboard-widgets
      */
     @GetMapping("/{wsId}/dashboard-widgets")
-    public ResponseEntity<Map<String, Object>> getDashboardWidgets(@PathVariable("wsId") Long wsId) {
+    public ResponseEntity<Map<String, Object>> getDashboardWidgets(
+            @PathVariable("wsId") Long wsId,
+            HttpSession session) {
+        ResponseEntity<Map<String, Object>> denied = authorizeWorkspaceMember(wsId, session);
+        if (denied != null) return denied;
+
         Map<String, Object> response = new HashMap<>();
         
         // 윤재 님이 기존에 가지고 계시던 서비스 메서드 호출
@@ -214,7 +223,12 @@ public class boardApiController {
     }
 
     @GetMapping("/{wsId}/calendar-events")
-    public ResponseEntity<List<Map<String, Object>>> getCalendarEvents(@PathVariable("wsId") Long wsId) {
+    public ResponseEntity<List<Map<String, Object>>> getCalendarEvents(
+            @PathVariable("wsId") Long wsId,
+            HttpSession session) {
+        ResponseEntity<List<Map<String, Object>>> denied = authorizeWorkspaceMemberList(wsId, session);
+        if (denied != null) return denied;
+
         try {
             List<Map<String, Object>> list = iboardService.selectWorkspaceCalendar(wsId);
             return ResponseEntity.ok(list != null ? list : new ArrayList<>());
@@ -303,7 +317,7 @@ public class boardApiController {
     public ResponseEntity<Map<String, List<postDTO>>> getProjectDashboardWidgets(@PathVariable("projId") Long projId) {
         Map<String, List<postDTO>> response = new HashMap<>();
         
-        // 각각의 최신글 5개씩 조회
+        // 각각의 최신글 3개씩 조회
         response.put("notice", iboardService.getListByProject(projId, "NOTICE"));
         response.put("free", iboardService.getListByProject(projId, "FREE"));
         response.put("file", iboardService.getListByProject(projId, "FILE"));
@@ -368,6 +382,26 @@ public class boardApiController {
 
         boolean success = iboardService.deleteReportedContent(reportId, loginUser.getUserId());
         return ResponseEntity.ok(Map.of("status", success ? "SUCCESS" : "FAIL"));
+    }
+
+    private ResponseEntity<Map<String, Object>> authorizeWorkspaceMember(Long wsId, HttpSession session) {
+        usersDto loginUser = (usersDto) session.getAttribute("user");
+        if (loginUser == null) {
+            return ResponseEntity.status(401).body(Map.of("message", "LOGIN_REQUIRED"));
+        }
+        if (wsId == null || workspaceDAO.isWorkspaceMember(wsId, loginUser.getUserId()) < 1) {
+            return ResponseEntity.status(403).body(Map.of("message", "WORKSPACE_MEMBER_REQUIRED"));
+        }
+        return null;
+    }
+
+    private ResponseEntity<List<Map<String, Object>>> authorizeWorkspaceMemberList(Long wsId, HttpSession session) {
+        usersDto loginUser = (usersDto) session.getAttribute("user");
+        if (loginUser == null) return ResponseEntity.status(401).build();
+        if (wsId == null || workspaceDAO.isWorkspaceMember(wsId, loginUser.getUserId()) < 1) {
+            return ResponseEntity.status(403).build();
+        }
+        return null;
     }
 
 }

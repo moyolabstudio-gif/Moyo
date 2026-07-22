@@ -107,16 +107,21 @@ public class projectServiceImpl implements IprojectService {
             dto.setProjCategoryDetail(null);
         }
 
-        if (dto.getWsId() == null) {
-            throw new IllegalArgumentException("워크스페이스 정보가 없습니다.");
-        }
-
         if ("PERSONAL".equals(scope)) {
+            // 개인 프로젝트는 그룹에 소속되지 않으므로 WS_ID가 없어야 합니다.
+            dto.setWsId(null);
             dto.setLeaderId(userId);
-            dto.setMemberIds(List.of(userId));
+            dto.setMemberIds(List.of());
             dto.setAdminIds(List.of());
-        } else if (dto.getLeaderId() == null) {
-            dto.setLeaderId(userId);
+            dto.setMemberPositions(Map.of());
+        } else {
+            // 그룹 프로젝트에서만 WS_ID를 필수로 검사합니다.
+            if (dto.getWsId() == null) {
+                throw new IllegalArgumentException("그룹 정보가 없습니다.");
+            }
+            if (dto.getLeaderId() == null) {
+                dto.setLeaderId(userId);
+            }
         }
 
         dto.setProjScope(scope);
@@ -252,6 +257,11 @@ public class projectServiceImpl implements IprojectService {
     @Override
     public List<Map<String, Object>> getProjectListByWorkspaceId(Long wsId) {
         return projectDao.selectProjectListByWorkspaceId(wsId);
+    }
+
+    @Override
+    public List<Map<String, Object>> getPersonalProjects(Long userId) {
+        return projectDao.selectPersonalProjects(userId);
     }
     
     @Override

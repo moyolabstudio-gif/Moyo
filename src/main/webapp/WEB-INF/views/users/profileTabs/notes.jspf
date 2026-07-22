@@ -1,0 +1,113 @@
+<%@ page pageEncoding="UTF-8" %>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
+<%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
+<section class="profile-tab-section profile-tab-section--notes">
+
+    <c:choose>
+        <c:when test="${notesPublic eq 'N'}">
+            <div class="profile-tab-card profile-empty-state is-private">
+                <span>🔒</span>
+                <strong>노트 정보를 공개하지 않았어요</strong>
+                <p>공개 설정을 변경하면 프로필에 다시 표시됩니다.</p>
+            </div>
+        </c:when>
+
+        <c:when test="${not empty profilePublicNotes}">
+            <div class="profile-note-grid" aria-label="MOYO 공개 노트">
+                <c:forEach var="note" items="${profilePublicNotes}">
+                    <article class="profile-note-paper-card">
+                        <div class="profile-note-paper-button" role="button" tabindex="0" data-profile-note-open="profileNoteDetail-${note.noteId}" aria-label="${empty note.noteTitle ? '제목 없는 노트' : fn:escapeXml(note.noteTitle)} 노트 보기">
+                            <span class="profile-note-paper" aria-hidden="true">
+                                <span class="profile-note-paper-inner">
+                                    <span class="profile-note-paper-title">
+                                        <c:out value="${empty note.noteTitle ? '제목 없는 노트' : note.noteTitle}" />
+                                    </span>
+                                    <span class="profile-note-paper-line is-strong"></span>
+                                    <span class="profile-note-paper-body">
+                                        <c:out value="${note.previewText}" />
+                                    </span>
+                                    <span class="profile-note-paper-lines" aria-hidden="true">
+                                        <span></span>
+                                        <span></span>
+                                        <span></span>
+                                        <span></span>
+                                        <span></span>
+                                    </span>
+                                </span>
+
+                                <span class="profile-note-moyo-mark" title="MOYO 공개">
+                                    <img src="${pageContext.request.contextPath}/brand/moyo_mark.png" alt="MOYO 공개">
+                                </span>
+
+                                <span class="profile-note-hover">
+                                    <span class="profile-note-hover-main">
+                                        <span class="profile-note-hover-meta">
+                                            <strong><c:out value="${empty note.userName ? displayName : note.userName}" /></strong>
+                                            <span class="profile-note-hover-dot" aria-hidden="true">·</span>
+                                            <span class="profile-note-hover-date">
+                                                <c:choose>
+                                                    <c:when test="${not empty note.moyoPublicAt}"><fmt:formatDate value="${note.moyoPublicAt}" pattern="yyyy.MM.dd" /></c:when>
+                                                    <c:when test="${not empty note.updDt}"><fmt:formatDate value="${note.updDt}" pattern="yyyy.MM.dd" /></c:when>
+                                                    <c:otherwise><fmt:formatDate value="${note.regDt}" pattern="yyyy.MM.dd" /></c:otherwise>
+                                                </c:choose>
+                                            </span>
+                                        </span>
+
+                                        <span class="profile-note-feed-actions" aria-label="노트 반응 정보">
+                                            <span class="profile-note-feed-action" title="조회수">
+                                                <i class="fa-regular fa-eye" aria-hidden="true"></i>
+                                                <span data-profile-note-card-view-count="${note.noteId}"><c:out value="${empty note.viewCount ? 0 : note.viewCount}" /></span>
+                                            </span>
+                                            <button type="button" class="profile-note-feed-action is-like ${note.likedByMe ? 'is-active' : ''}"
+                                                  data-profile-note-card-like-toggle
+                                                  data-note-id="${note.noteId}"
+                                                  data-modal-id="profileNoteDetail-${note.noteId}"
+                                                  aria-pressed="${note.likedByMe}"
+                                                  title="${note.likedByMe ? '좋아요 취소' : '좋아요'}">
+                                                <i class="${note.likedByMe ? 'fa-solid' : 'fa-regular'} fa-heart" aria-hidden="true"></i>
+                                                <span data-profile-note-card-like-count="${note.noteId}"><c:out value="${empty note.likeCount ? 0 : note.likeCount}" /></span>
+                                            </button>
+                                            <button type="button" class="profile-note-feed-action"
+                                                  data-profile-note-card-comment-open="profileNoteDetail-${note.noteId}"
+                                                  title="댓글 보기">
+                                                <i class="fa-regular fa-comment" aria-hidden="true"></i>
+                                                <span data-profile-note-card-comment-count="${note.noteId}"><c:out value="${empty note.feedbackCount ? 0 : note.feedbackCount}" /></span>
+                                            </button>
+                                            <button type="button" class="profile-note-feed-action is-icon-only"
+                                                  data-profile-note-card-share
+                                                  data-note-id="${note.noteId}"
+                                                  title="공유">
+                                                <i class="fa-regular fa-paper-plane" aria-hidden="true"></i>
+                                            </button>
+                                            <c:if test="${not note.ownedByMe}">
+                                                <button type="button" class="profile-note-feed-action is-icon-only"
+                                                      data-profile-note-card-collect
+                                                      data-profile-note-collect
+                                                      data-note-id="${note.noteId}"
+                                                      title="담기"
+                                                      aria-pressed="false">
+                                                    <i class="fa-regular fa-bookmark" aria-hidden="true"></i>
+                                                </button>
+                                            </c:if>
+                                        </span>
+                                    </span>
+                                </span>
+                            </span>
+                        </div>
+                    </article>
+                </c:forEach>
+            </div>
+
+            <%@ include file="/WEB-INF/views/common/commonNoteDetail.jspf" %>
+        </c:when>
+
+        <c:otherwise>
+            <div class="profile-tab-card profile-empty-state">
+                <span>📝</span>
+                <strong>아직 공개한 노트가 없어요</strong>
+                <p>MOYO에 공개한 노트가 여기에 표시됩니다.</p>
+            </div>
+        </c:otherwise>
+    </c:choose>
+</section>

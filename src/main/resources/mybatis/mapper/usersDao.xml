@@ -14,9 +14,21 @@
         PROFILE_CROP_X AS profileCropX,
         PROFILE_CROP_Y AS profileCropY,
         NVL(PROFILE_AVATAR_TYPE, 'DEFAULT') AS profileAvatarType,
+        PROFILE_INTRO AS profileIntro,
         TO_CHAR(BIRTH_DATE, 'YYYY-MM-DD') AS birthDate,
         BIRTH_CALENDAR_TYPE AS birthCalendarType,
-        BIRTH_PUBLIC_YN AS birthPublicYn
+        BIRTH_PUBLIC_YN AS birthPublicYn,
+        NVL(PROFILE_PHOTOS_PUBLIC_YN, 'Y') AS profilePhotosPublicYn,
+        NVL(PROFILE_NOTES_PUBLIC_YN, 'Y') AS profileNotesPublicYn,
+        NVL(PROFILE_CALENDAR_PUBLIC_YN, 'Y') AS profileCalendarPublicYn,
+        NVL(PROFILE_GROUPS_PUBLIC_YN, 'Y') AS profileGroupsPublicYn,
+        NVL((SELECT SCHEDULE_ALARM_YN FROM USER_NOTIFICATION_SETTINGS S WHERE S.USER_ID = USERS.USER_ID), 'Y') AS notifyScheduleYn,
+        NVL((SELECT SHARE_ALARM_YN FROM USER_NOTIFICATION_SETTINGS S WHERE S.USER_ID = USERS.USER_ID), 'Y') AS notifyShareYn,
+        NVL((SELECT REQUEST_ALARM_YN FROM USER_NOTIFICATION_SETTINGS S WHERE S.USER_ID = USERS.USER_ID), 'Y') AS notifyRequestYn,
+        NVL((SELECT COMMENT_ALARM_YN FROM USER_NOTIFICATION_SETTINGS S WHERE S.USER_ID = USERS.USER_ID), 'Y') AS notifyCommentYn,
+        NVL((SELECT LIKE_ALARM_YN FROM USER_NOTIFICATION_SETTINGS S WHERE S.USER_ID = USERS.USER_ID), 'Y') AS notifyLikeYn,
+        TO_CHAR(WITHDRAW_REQUESTED_AT, 'YYYY-MM-DD') AS withdrawRequestedAt,
+        TO_CHAR(WITHDRAW_DEADLINE_AT, 'YYYY-MM-DD') AS withdrawDeadlineAt
     </sql>
 
     <select id="findAll" resultType="com.springboot.project.dto.usersDto">
@@ -31,8 +43,10 @@
         INSERT INTO USERS (
             USER_ID, EMAIL, PWD_HASH, USER_NAME, STATUS, USER_ROLE,
             PROFILE_IMAGE_PATH, PROFILE_ORIGINAL_IMAGE_PATH, PROFILE_CROP_SCALE,
-            PROFILE_CROP_X, PROFILE_CROP_Y, PROFILE_AVATAR_TYPE,
-            BIRTH_DATE, BIRTH_CALENDAR_TYPE, BIRTH_PUBLIC_YN
+            PROFILE_CROP_X, PROFILE_CROP_Y, PROFILE_AVATAR_TYPE, PROFILE_INTRO,
+            BIRTH_DATE, BIRTH_CALENDAR_TYPE, BIRTH_PUBLIC_YN,
+            PROFILE_PHOTOS_PUBLIC_YN, PROFILE_NOTES_PUBLIC_YN,
+            PROFILE_CALENDAR_PUBLIC_YN, PROFILE_GROUPS_PUBLIC_YN
         ) VALUES (
             #{userId},
             #{email},
@@ -46,12 +60,17 @@
             #{profileCropX, jdbcType=NUMERIC},
             #{profileCropY, jdbcType=NUMERIC},
             NVL(#{profileAvatarType, jdbcType=VARCHAR}, 'DEFAULT'),
+            #{profileIntro, jdbcType=VARCHAR},
             CASE
                 WHEN #{birthDate, jdbcType=VARCHAR} IS NULL THEN NULL
                 ELSE TO_DATE(#{birthDate, jdbcType=VARCHAR}, 'YYYY-MM-DD')
             END,
             NVL(#{birthCalendarType, jdbcType=VARCHAR}, 'SOLAR'),
-            NVL(#{birthPublicYn, jdbcType=VARCHAR}, 'Y')
+            NVL(#{birthPublicYn, jdbcType=VARCHAR}, 'Y'),
+            NVL(#{profilePhotosPublicYn, jdbcType=VARCHAR}, 'Y'),
+            NVL(#{profileNotesPublicYn, jdbcType=VARCHAR}, 'Y'),
+            NVL(#{profileCalendarPublicYn, jdbcType=VARCHAR}, 'Y'),
+            NVL(#{profileGroupsPublicYn, jdbcType=VARCHAR}, 'Y')
         )
     </insert>
 
@@ -59,18 +78,65 @@
         UPDATE USERS
         <set>
             <if test="userName != null">USER_NAME = #{userName},</if>
+            <if test="profileIntro != null">PROFILE_INTRO = #{profileIntro, jdbcType=VARCHAR},</if>
             <if test="status != null">STATUS = #{status},</if>
-            <if test="profileImagePath != null">PROFILE_IMAGE_PATH = #{profileImagePath},</if>
-            <if test="profileOriginalImagePath != null">PROFILE_ORIGINAL_IMAGE_PATH = #{profileOriginalImagePath},</if>
-            <if test="profileCropScale != null">PROFILE_CROP_SCALE = #{profileCropScale},</if>
-            <if test="profileCropX != null">PROFILE_CROP_X = #{profileCropX},</if>
-            <if test="profileCropY != null">PROFILE_CROP_Y = #{profileCropY},</if>
-            <if test="profileAvatarType != null">PROFILE_AVATAR_TYPE = #{profileAvatarType},</if>
-            <if test="birthDate != null">BIRTH_DATE = TO_DATE(#{birthDate}, 'YYYY-MM-DD'),</if>
+            <choose>
+                <when test="profileAvatarType != null and profileAvatarType == 'DEFAULT'">
+                    PROFILE_IMAGE_PATH = NULL,
+                    PROFILE_ORIGINAL_IMAGE_PATH = NULL,
+                    PROFILE_CROP_SCALE = NULL,
+                    PROFILE_CROP_X = NULL,
+                    PROFILE_CROP_Y = NULL,
+                    PROFILE_AVATAR_TYPE = 'DEFAULT',
+                </when>
+                <otherwise>
+                    <if test="profileImagePath != null">PROFILE_IMAGE_PATH = #{profileImagePath},</if>
+                    <if test="profileOriginalImagePath != null">PROFILE_ORIGINAL_IMAGE_PATH = #{profileOriginalImagePath},</if>
+                    <if test="profileCropScale != null">PROFILE_CROP_SCALE = #{profileCropScale},</if>
+                    <if test="profileCropX != null">PROFILE_CROP_X = #{profileCropX},</if>
+                    <if test="profileCropY != null">PROFILE_CROP_Y = #{profileCropY},</if>
+                    <if test="profileAvatarType != null">PROFILE_AVATAR_TYPE = #{profileAvatarType},</if>
+                </otherwise>
+            </choose>
+            <choose>
+                <when test="birthDate != null and birthDate == ''">BIRTH_DATE = NULL,</when>
+                <when test="birthDate != null">BIRTH_DATE = TO_DATE(#{birthDate}, 'YYYY-MM-DD'),</when>
+            </choose>
             <if test="birthCalendarType != null">BIRTH_CALENDAR_TYPE = #{birthCalendarType},</if>
             <if test="birthPublicYn != null">BIRTH_PUBLIC_YN = #{birthPublicYn},</if>
+            <if test="profilePhotosPublicYn != null">PROFILE_PHOTOS_PUBLIC_YN = #{profilePhotosPublicYn},</if>
+            <if test="profileNotesPublicYn != null">PROFILE_NOTES_PUBLIC_YN = #{profileNotesPublicYn},</if>
+            <if test="profileCalendarPublicYn != null">PROFILE_CALENDAR_PUBLIC_YN = #{profileCalendarPublicYn},</if>
+            <if test="profileGroupsPublicYn != null">PROFILE_GROUPS_PUBLIC_YN = #{profileGroupsPublicYn},</if>
         </set>
         WHERE USER_ID = #{userId}
+    </update>
+
+    <update id="upsertNotificationSettings" parameterType="com.springboot.project.dto.usersDto">
+        MERGE INTO USER_NOTIFICATION_SETTINGS S
+        USING (SELECT #{userId} AS USER_ID FROM DUAL) D
+           ON (S.USER_ID = D.USER_ID)
+        WHEN MATCHED THEN
+            UPDATE SET
+                SCHEDULE_ALARM_YN = NVL(#{notifyScheduleYn, jdbcType=VARCHAR}, S.SCHEDULE_ALARM_YN),
+                SHARE_ALARM_YN = NVL(#{notifyShareYn, jdbcType=VARCHAR}, S.SHARE_ALARM_YN),
+                REQUEST_ALARM_YN = NVL(#{notifyRequestYn, jdbcType=VARCHAR}, S.REQUEST_ALARM_YN),
+                COMMENT_ALARM_YN = NVL(#{notifyCommentYn, jdbcType=VARCHAR}, S.COMMENT_ALARM_YN),
+                LIKE_ALARM_YN = NVL(#{notifyLikeYn, jdbcType=VARCHAR}, S.LIKE_ALARM_YN),
+                UPDATED_AT = SYSDATE
+        WHEN NOT MATCHED THEN
+            INSERT (
+                USER_ID, SCHEDULE_ALARM_YN, SHARE_ALARM_YN, REQUEST_ALARM_YN,
+                COMMENT_ALARM_YN, LIKE_ALARM_YN, UPDATED_AT
+            ) VALUES (
+                #{userId},
+                NVL(#{notifyScheduleYn, jdbcType=VARCHAR}, 'Y'),
+                NVL(#{notifyShareYn, jdbcType=VARCHAR}, 'Y'),
+                NVL(#{notifyRequestYn, jdbcType=VARCHAR}, 'Y'),
+                NVL(#{notifyCommentYn, jdbcType=VARCHAR}, 'Y'),
+                NVL(#{notifyLikeYn, jdbcType=VARCHAR}, 'Y'),
+                SYSDATE
+            )
     </update>
 
     <update id="clearCurrentProfileImages" parameterType="long">
@@ -122,14 +188,138 @@
          WHERE USER_ID = #{userId}
     </select>
 
+
+    <select id="countByUserIdAndPassword" resultType="int">
+        SELECT COUNT(*)
+          FROM USERS
+         WHERE USER_ID = #{userId}
+           AND PWD_HASH = #{pwdHash}
+           AND NVL(STATUS, 'ACTIVE') != 'QUIT'
+    </select>
+
+    <update id="updatePassword">
+        UPDATE USERS
+           SET PWD_HASH = #{pwdHash}
+         WHERE USER_ID = #{userId}
+    </update>
+
+    <update id="requestWithdrawal">
+        UPDATE USERS
+           SET STATUS = 'WITHDRAW_PENDING',
+               WITHDRAW_REQUESTED_AT = SYSDATE,
+               WITHDRAW_DEADLINE_AT = SYSDATE + 30
+         WHERE USER_ID = #{userId}
+    </update>
+
+    <update id="cancelWithdrawal">
+        UPDATE USERS
+           SET STATUS = 'ACTIVE',
+               WITHDRAW_REQUESTED_AT = NULL,
+               WITHDRAW_DEADLINE_AT = NULL
+         WHERE USER_ID = #{userId}
+           AND STATUS = 'WITHDRAW_PENDING'
+           AND WITHDRAW_DEADLINE_AT >= SYSDATE
+    </update>
+
+    <select id="countCancelableWithdrawal" resultType="int">
+        SELECT COUNT(*)
+          FROM USERS
+         WHERE USER_ID = #{userId}
+           AND STATUS = 'WITHDRAW_PENDING'
+           AND WITHDRAW_DEADLINE_AT >= SYSDATE
+    </select>
+
+
+    <select id="findProfileImageHistory" resultType="map">
+        SELECT *
+          FROM (
+                SELECT PROFILE_IMAGE_ID AS "profileImageId",
+                       ORIGINAL_IMAGE_PATH AS "profileOriginalImagePath",
+                       CROPPED_IMAGE_PATH AS "profileImagePath",
+                       CROP_SCALE AS "profileCropScale",
+                       CROP_X AS "profileCropX",
+                       CROP_Y AS "profileCropY",
+                       IS_CURRENT AS "isCurrent",
+                       TO_CHAR(CREATED_AT, 'YYYY-MM-DD HH24:MI') AS "createdAt"
+                  FROM USER_PROFILE_IMAGES
+                 WHERE USER_ID = #{userId}
+                   AND CROPPED_IMAGE_PATH IS NOT NULL
+                 ORDER BY CREATED_AT DESC, PROFILE_IMAGE_ID DESC
+               )
+         WHERE ROWNUM &lt;= 6
+    </select>
+
+    <select id="findProfileImageHistoryById" resultType="map">
+        SELECT PROFILE_IMAGE_ID AS "profileImageId",
+               ORIGINAL_IMAGE_PATH AS "profileOriginalImagePath",
+               CROPPED_IMAGE_PATH AS "profileImagePath",
+               CROP_SCALE AS "profileCropScale",
+               CROP_X AS "profileCropX",
+               CROP_Y AS "profileCropY",
+               IS_CURRENT AS "isCurrent",
+               TO_CHAR(CREATED_AT, 'YYYY-MM-DD HH24:MI') AS "createdAt"
+          FROM USER_PROFILE_IMAGES
+         WHERE USER_ID = #{userId}
+           AND PROFILE_IMAGE_ID = #{profileImageId}
+           AND CROPPED_IMAGE_PATH IS NOT NULL
+    </select>
+
+    <update id="markProfileImageCurrent">
+        UPDATE USER_PROFILE_IMAGES
+           SET IS_CURRENT = 'Y'
+         WHERE USER_ID = #{userId}
+           AND PROFILE_IMAGE_ID = #{profileImageId}
+    </update>
+
     <select id="findWorkspacesByUserId" resultType="com.springboot.project.dto.workspaceDTO">
-        SELECT WS_ID, WS_NAME, INVITE_CODE, OWNER_ID
-          FROM WORKSPACES
-         WHERE OWNER_ID = #{userId}
+        SELECT W.WS_ID,
+               W.WS_NAME,
+               W.INVITE_CODE,
+               W.OWNER_ID,
+               W.WS_IMAGE_PATH,
+               W.WS_DESCRIPTION,
+               W.WS_TYPE,
+               W.JOIN_TYPE,
+               (
+                   SELECT COUNT(*)
+                     FROM WS_MEMBERS WM
+                    WHERE WM.WS_ID = W.WS_ID
+               ) AS memberCount
+          FROM WORKSPACES W
+          JOIN WS_MEMBERS M ON W.WS_ID = M.WS_ID
+         WHERE M.USER_ID = #{userId}
+         ORDER BY W.WS_ID DESC
     </select>
 
     <select id="getAllUserIds" resultType="long">
         SELECT USER_ID
           FROM USERS
     </select>
+
+
+    <select id="findProfileLinks" resultType="map">
+        SELECT LINK_ID, USER_ID, LINK_NAME, LINK_URL, SORT_ORDER
+          FROM USER_PROFILE_LINKS
+         WHERE USER_ID = #{userId}
+         ORDER BY SORT_ORDER ASC, LINK_ID ASC
+    </select>
+
+    <delete id="deleteProfileLinks">
+        DELETE FROM USER_PROFILE_LINKS
+         WHERE USER_ID = #{userId}
+    </delete>
+
+    <insert id="insertProfileLink" parameterType="map">
+        INSERT INTO USER_PROFILE_LINKS (
+            LINK_ID, USER_ID, LINK_NAME, LINK_URL, SORT_ORDER, CREATED_AT
+        ) VALUES (
+            SEQ_USER_PROFILE_LINK_ID.NEXTVAL,
+            #{userId},
+            #{linkName},
+            #{linkUrl},
+            #{sortOrder},
+            SYSDATE
+        )
+    </insert>
+
 </mapper>

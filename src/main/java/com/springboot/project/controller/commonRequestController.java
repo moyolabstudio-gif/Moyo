@@ -2,13 +2,20 @@ package com.springboot.project.controller;
 
 import com.springboot.project.dto.usersDto;
 import com.springboot.project.dto.contentShareDTO;
+import com.springboot.project.dto.noticeDTO;
 import com.springboot.project.service.IcontentShareService;
+import com.springboot.project.service.noticeService;
 import com.springboot.project.service.IworkspaceService;
+import com.springboot.project.service.userNoticeService;
+
 import jakarta.servlet.http.HttpSession;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.util.ArrayList;
@@ -25,27 +32,47 @@ public class commonRequestController {
     @Autowired
     private IcontentShareService contentShareService;
 
+    @Autowired
+    private userNoticeService userNoticeService;
+
+    @Autowired
+    private noticeService noticeService;
+
     @GetMapping("/requests")
     public String requestsPage(HttpSession session, Model model) {
         usersDto user = (usersDto) session.getAttribute("user");
         if (user == null) return "redirect:/login";
 
         List<Map<String, Object>> inviteList = workspaceService.getPendingInvitations(user.getUserId());
+        List<Map<String, Object>> joinRequestList = workspaceService.getPendingJoinRequestsForAdmin(user.getUserId());
+        // 현재 IworkspaceService에는 초대 이력 조회 API가 없으므로 빈 목록으로 유지합니다.
+        // 초대 이력 기능 구현 시 서비스/DAO/Mapper를 함께 추가한 뒤 교체합니다.
+        List<Map<String, Object>> invitationHistory = new ArrayList<>();
         int shareRequestCount = contentShareService.countPendingShareRequests(user.getUserId());
         int inviteRequestCount = inviteList == null ? 0 : inviteList.size();
+        int joinRequestCount = joinRequestList == null ? 0 : joinRequestList.size();
 
         model.addAttribute("inviteList", inviteList);
+        model.addAttribute("joinRequestList", joinRequestList);
+        model.addAttribute("invitationHistory", invitationHistory);
         model.addAttribute("receivedShareRequests", contentShareService.getReceivedShareRequests(user.getUserId()));
         model.addAttribute("sentShareRequests", contentShareService.getSentShareRequests(user.getUserId()));
         model.addAttribute("shareRequestCount", shareRequestCount);
         model.addAttribute("inviteRequestCount", inviteRequestCount);
-        model.addAttribute("totalPendingRequestCount", shareRequestCount + inviteRequestCount);
+        model.addAttribute("joinRequestCount", joinRequestCount);
+        model.addAttribute("totalPendingRequestCount", shareRequestCount + inviteRequestCount + joinRequestCount);
         model.addAttribute("accountDisplayName", user.getUSER_NAME() == null ? "" : user.getUSER_NAME());
         model.addAttribute("accountEmail", user.getEMAIL() == null ? "" : user.getEMAIL());
 
+        var allNotices = userNoticeService.getMyNotices(user.getUserId());
+        long unreadNoticeCount = allNotices == null ? 0 : allNotices.stream()
+                .filter(notice -> "N".equalsIgnoreCase(notice.getIsRead()))
+                .count();
+        model.addAttribute("allNotices", allNotices);
+        model.addAttribute("unreadNoticeCount", unreadNoticeCount);
+
         return "common/requests";
     }
-
 
     @GetMapping("/requests/api/pending")
     @ResponseBody
@@ -88,6 +115,23 @@ public class commonRequestController {
             }
         }
 
+        List<Map<String, Object>> joinRequests = workspaceService.getPendingJoinRequestsForAdmin(user.getUserId());
+        if (joinRequests != null) {
+            for (Map<String, Object> request : joinRequests) {
+                Map<String, Object> item = new HashMap<>();
+                item.put("requestType", "GROUP_JOIN_REQUEST");
+                item.put("id", value(request, "requestId", "REQUEST_ID", "request_id", "REQUESTID"));
+                item.put("requestId", value(request, "requestId", "REQUEST_ID", "request_id", "REQUESTID"));
+                item.put("wsId", value(request, "wsId", "WS_ID"));
+                item.put("title", stringValue(request, "wsName", "WS_NAME"));
+                item.put("wsName", stringValue(request, "wsName", "WS_NAME"));
+                item.put("requesterName", stringValue(request, "requesterName", "REQUESTER_NAME"));
+                item.put("requesterEmail", stringValue(request, "requesterEmail", "REQUESTER_EMAIL"));
+                item.put("createdAt", value(request, "requestedAt", "REQUESTED_AT"));
+                items.add(item);
+            }
+        }
+
         List<Map<String, Object>> invites = workspaceService.getPendingInvitations(user.getUserId());
         if (invites != null) {
             for (Map<String, Object> invite : invites) {
@@ -111,10 +155,28 @@ public class commonRequestController {
 
     private Object value(Map<String, Object> map, String... keys) {
         if (map == null || keys == null) return null;
+
         for (String key : keys) {
-            if (map.containsKey(key)) return map.get(key);
+            if (map.containsKey(key)) {
+                return map.get(key);
+            }
         }
+
+        for (Map.Entry<String, Object> entry : map.entrySet()) {
+            String actualKey = normalizeMapKey(entry.getKey());
+            for (String key : keys) {
+                if (actualKey.equals(normalizeMapKey(key))) {
+                    return entry.getValue();
+                }
+            }
+        }
+
         return null;
+    }
+
+    private String normalizeMapKey(String key) {
+        if (key == null) return "";
+        return key.replace("_", "").toLowerCase();
     }
 
     private String stringValue(Map<String, Object> map, String... keys) {
@@ -122,25 +184,70 @@ public class commonRequestController {
         return v == null ? "" : String.valueOf(v);
     }
 
+    @GetMapping("/requests/api/notice-target")
+    @ResponseBody
+    public Map<String, Object> resolveNoticeTarget(
+            @RequestParam("targetId") Long targetId,
+            HttpSession session) {
+
+        Map<String, Object> result = new HashMap<>();
+        usersDto user = (usersDto) session.getAttribute("user");
+
+        if (user == null) {
+            result.put("success", false);
+            result.put("status", "LOGIN_REQUIRED");
+            return result;
+        }
+
+        if (targetId == null) {
+            result.put("success", false);
+            result.put("status", "INVALID_TARGET");
+            return result;
+        }
+
+        noticeDTO notice = noticeService.getNoticeById(targetId);
+        if (notice == null) {
+            result.put("success", true);
+            result.put("exists", false);
+            result.put("message", "삭제된 게시글입니다.");
+            return result;
+        }
+
+        result.put("success", true);
+        result.put("exists", true);
+        result.put("url", "/common/noticeList?openId=" + notice.getNoticeId());
+        return result;
+    }
+
     @GetMapping("/requests/api/count")
     @ResponseBody
     public Map<String, Object> requestCount(HttpSession session) {
         Map<String, Object> result = new HashMap<>();
         usersDto user = (usersDto) session.getAttribute("user");
+
         if (user == null) {
             result.put("count", 0);
             result.put("shareCount", 0);
             result.put("inviteCount", 0);
+            result.put("joinRequestCount", 0);
             return result;
         }
 
-        int shareCount = contentShareService.countPendingShareRequests(user.getUserId());
-        List<Map<String, Object>> invites = workspaceService.getPendingInvitations(user.getUserId());
+        int shareCount =
+                contentShareService.countPendingShareRequests(user.getUserId());
+
+        List<Map<String, Object>> invites =
+                workspaceService.getPendingInvitations(user.getUserId());
         int inviteCount = invites == null ? 0 : invites.size();
 
-        result.put("count", shareCount + inviteCount);
+        List<Map<String, Object>> joinRequests =
+                workspaceService.getPendingJoinRequestsForAdmin(user.getUserId());
+        int joinRequestCount = joinRequests == null ? 0 : joinRequests.size();
+
+        result.put("count", shareCount + inviteCount + joinRequestCount);
         result.put("shareCount", shareCount);
         result.put("inviteCount", inviteCount);
+        result.put("joinRequestCount", joinRequestCount);
         return result;
     }
 

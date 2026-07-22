@@ -18,6 +18,8 @@
         <result property="changeLog" column="CHANGE_LOG"/>
         <result property="memo" column="MEMO"/>
         <result property="previewContent" column="PREVIEW_CONTENT"/>
+        <result property="moyoPublicYn" column="MOYO_PUBLIC_YN"/>
+        <result property="moyoPublicAt" column="MOYO_PUBLIC_AT"/>
         <result property="category" column="CATEGORY"/>
         <result property="icon" column="ICON"/>
         <result property="folderId" column="FOLDER_ID"/>
@@ -42,6 +44,9 @@
         <result property="ownedByMe" column="OWNED_BY_ME" javaType="boolean"/>
         <result property="attachmentCount" column="ATTACHMENT_COUNT"/>
         <result property="feedbackCount" column="FEEDBACK_COUNT"/>
+        <result property="viewCount" column="VIEW_COUNT"/>
+        <result property="likeCount" column="LIKE_COUNT"/>
+        <result property="likedByMe" column="LIKED_BY_ME" javaType="boolean"/>
         <result property="tableCount" column="TABLE_COUNT"/>
         <result property="imageCount" column="IMAGE_COUNT"/>
         <result property="videoCount" column="VIDEO_COUNT"/>
@@ -64,11 +69,14 @@
         <id property="replyId" column="REPLY_ID"/>
         <result property="noteId" column="NOTE_ID"/>
         <result property="userId" column="USER_ID"/>
+        <result property="parentReplyId" column="PARENT_REPLY_ID"/>
         <result property="replyContent" column="REPLY_CONTENT"/>
         <result property="regDt" column="REG_DT"/>
         <result property="updDt" column="UPD_DT"/>
         <result property="userName" column="USER_NAME"/>
         <result property="profileImagePath" column="PROFILE_IMAGE_PATH"/>
+        <result property="likeCount" column="LIKE_COUNT"/>
+        <result property="likedByMe" column="LIKED_BY_ME"/>
     </resultMap>
 
     <sql id="noteReadableScope">
@@ -275,6 +283,8 @@
                     CAST(NULL AS VARCHAR2(1)) AS CHANGE_LOG,
                     CAST(NULL AS VARCHAR2(1)) AS MEMO,
                     CAST(DBMS_LOB.SUBSTR(n.MEMO, 600, 1) AS VARCHAR2(2400 BYTE)) AS PREVIEW_CONTENT,
+                    n.MOYO_PUBLIC_YN,
+                    n.MOYO_PUBLIC_AT,
                     REGEXP_COUNT(n.MEMO, '&lt;[[:space:]]*table([[:space:]>])', 1, 'i') AS TABLE_COUNT,
                     REGEXP_COUNT(n.MEMO, '&lt;[[:space:]]*img([[:space:]>])', 1, 'i') AS IMAGE_COUNT,
                     REGEXP_COUNT(n.MEMO, '&lt;[[:space:]]*(video|iframe|oembed)([[:space:]>])', 1, 'i') AS VIDEO_COUNT,
@@ -422,12 +432,117 @@
         WHERE RN <![CDATA[>]]> NVL(#{startRow, jdbcType=NUMERIC}, 0)
     </select>
 
+    <select id="selectProfilePublicNotes" parameterType="map" resultMap="noteResultMap">
+        SELECT *
+        FROM (
+            SELECT
+                n.NOTE_ID,
+                n.SCOPE_TYPE,
+                n.WS_ID,
+                n.PROJ_ID,
+                n.USER_ID,
+                n.NOTE_TITLE,
+                CAST(NULL AS VARCHAR2(1)) AS DONE_CONTENT,
+                CAST(NULL AS VARCHAR2(1)) AS NEXT_CONTENT,
+                CAST(NULL AS VARCHAR2(1)) AS ISSUE_CONTENT,
+                CAST(NULL AS VARCHAR2(1)) AS CHANGE_LOG,
+                n.MEMO,
+                CAST(DBMS_LOB.SUBSTR(n.MEMO, 900, 1) AS VARCHAR2(3600 BYTE)) AS PREVIEW_CONTENT,
+                n.MOYO_PUBLIC_YN,
+                n.MOYO_PUBLIC_AT,
+                n.CATEGORY,
+                n.ICON,
+                n.FOLDER_ID,
+                nf.FOLDER_NAME,
+                NVL(nfp.FOLDER_PATH, nf.FOLDER_NAME) AS FOLDER_PATH,
+                CAST(NULL AS VARCHAR2(200)) AS WS_NAME,
+                CAST(NULL AS VARCHAR2(200)) AS PROJ_NAME,
+                'PRIVATE' AS SHARE_SCOPE_TYPES,
+                '개인' AS SHARE_SCOPE_NAMES,
+                n.REG_DT,
+                n.UPD_DT,
+                n.DELETED_AT,
+                n.UPDATED_BY,
+                u.USER_NAME,
+                u.PROFILE_IMAGE_PATH AS PROFILE_IMAGE_PATH,
+                uu.USER_NAME AS UPDATED_BY_NAME,
+                CASE WHEN EXISTS (
+                    SELECT 1 FROM NOTE_PINS p
+                     WHERE p.NOTE_ID = n.NOTE_ID
+                       AND p.USER_ID = #{viewerUserId, jdbcType=NUMERIC}
+                ) THEN 1 ELSE 0 END AS PINNED,
+                (SELECT MIN(p.PIN_ORDER) FROM NOTE_PINS p
+                  WHERE p.NOTE_ID = n.NOTE_ID
+                    AND p.USER_ID = #{viewerUserId, jdbcType=NUMERIC}) AS PIN_ORDER,
+                CASE WHEN n.USER_ID = #{viewerUserId, jdbcType=NUMERIC} THEN 1 ELSE 0 END AS CAN_MANAGE,
+                CASE WHEN n.USER_ID = #{viewerUserId, jdbcType=NUMERIC} THEN 1 ELSE 0 END AS CAN_EDIT,
+                CASE WHEN n.USER_ID = #{viewerUserId, jdbcType=NUMERIC} THEN 1 ELSE 0 END AS CAN_MANAGE_SPACE,
+                CASE WHEN n.USER_ID = #{viewerUserId, jdbcType=NUMERIC} THEN 1 ELSE 0 END AS OWNED_BY_ME,
+                (SELECT COUNT(*) FROM NOTE_FILES nfc WHERE nfc.NOTE_ID = n.NOTE_ID) AS ATTACHMENT_COUNT,
+                (SELECT COUNT(*) FROM NOTE_REPLIES nrc WHERE nrc.NOTE_ID = n.NOTE_ID) AS FEEDBACK_COUNT,
+                NVL(n.VIEW_COUNT, 0) AS VIEW_COUNT,
+                (SELECT COUNT(*)
+                   FROM CONTENT_REACTIONS cr
+                  WHERE cr.CONTENT_TYPE = 'NOTE'
+                    AND cr.CONTENT_ID = n.NOTE_ID
+                    AND cr.REACTION_TYPE = 'LIKE') AS LIKE_COUNT,
+                CASE
+                    WHEN #{viewerUserId, jdbcType=NUMERIC} IS NOT NULL
+                     AND EXISTS (
+                         SELECT 1
+                           FROM CONTENT_REACTIONS myr
+                          WHERE myr.CONTENT_TYPE = 'NOTE'
+                            AND myr.CONTENT_ID = n.NOTE_ID
+                            AND myr.USER_ID = #{viewerUserId, jdbcType=NUMERIC}
+                            AND myr.REACTION_TYPE = 'LIKE'
+                     )
+                    THEN 1 ELSE 0
+                END AS LIKED_BY_ME,
+                REGEXP_COUNT(n.MEMO, '&lt;[[:space:]]*table([[:space:]>])', 1, 'i') AS TABLE_COUNT,
+                REGEXP_COUNT(n.MEMO, '&lt;[[:space:]]*img([[:space:]>])', 1, 'i') AS IMAGE_COUNT,
+                REGEXP_COUNT(n.MEMO, '&lt;[[:space:]]*(video|iframe|oembed)([[:space:]>])', 1, 'i') AS VIDEO_COUNT,
+                (SELECT MIN(nff.ORIGIN_FILE_NAME) KEEP (DENSE_RANK FIRST ORDER BY nff.FILE_ID)
+                   FROM NOTE_FILES nff WHERE nff.NOTE_ID = n.NOTE_ID) AS FIRST_ATTACHMENT_NAME,
+                (SELECT MIN(nfi.FILE_ID) KEEP (DENSE_RANK FIRST ORDER BY nfi.FILE_ID)
+                   FROM NOTE_FILES nfi
+                  WHERE nfi.NOTE_ID = n.NOTE_ID
+                    AND LOWER(LTRIM(nfi.FILE_EXT, '.')) IN ('jpg','jpeg','png','gif','webp','bmp')) AS PREVIEW_IMAGE_FILE_ID
+            FROM NOTES n
+            JOIN USERS u ON u.USER_ID = n.USER_ID
+            LEFT JOIN USERS uu ON uu.USER_ID = n.UPDATED_BY
+            LEFT JOIN NOTE_FOLDERS nf ON nf.FOLDER_ID = n.FOLDER_ID
+            LEFT JOIN (
+                SELECT
+                    f.FOLDER_ID,
+                    LTRIM(SYS_CONNECT_BY_PATH(f.FOLDER_NAME, ' / '), ' / ') AS FOLDER_PATH
+                FROM NOTE_FOLDERS f
+                START WITH f.PARENT_FOLDER_ID IS NULL
+                CONNECT BY PRIOR f.FOLDER_ID = f.PARENT_FOLDER_ID
+            ) nfp ON nfp.FOLDER_ID = n.FOLDER_ID
+            WHERE n.USER_ID = #{profileUserId, jdbcType=NUMERIC}
+              AND n.SCOPE_TYPE = 'PRIVATE'
+              AND NVL(n.DELETED_YN, 'N') = 'N'
+              AND NVL(n.MOYO_PUBLIC_YN, 'N') = 'Y'
+            ORDER BY NVL(n.MOYO_PUBLIC_AT, NVL(n.UPD_DT, n.REG_DT)) DESC, n.NOTE_ID DESC
+        )
+        WHERE ROWNUM &lt;= NVL(#{limit, jdbcType=NUMERIC}, 6)
+    </select>
+
+    <select id="countProfilePublicNotes" resultType="int">
+        SELECT COUNT(*)
+          FROM NOTES n
+         WHERE n.USER_ID = #{profileUserId, jdbcType=NUMERIC}
+           AND n.SCOPE_TYPE = 'PRIVATE'
+           AND NVL(n.DELETED_YN, 'N') = 'N'
+           AND NVL(n.MOYO_PUBLIC_YN, 'N') = 'Y'
+    </select>
+
     <select id="selectMainNoteList" parameterType="map" resultMap="noteResultMap">
         SELECT *
         FROM (
             SELECT
                 n.NOTE_ID, n.SCOPE_TYPE, n.WS_ID, n.PROJ_ID, n.USER_ID, n.NOTE_TITLE,
-                n.DONE_CONTENT, n.NEXT_CONTENT, n.ISSUE_CONTENT, n.CHANGE_LOG, n.MEMO, n.CATEGORY, n.ICON, n.FOLDER_ID, nf.FOLDER_NAME, nf.FOLDER_NAME AS FOLDER_PATH, nw.WS_NAME, np.PROJ_NAME,
+                n.DONE_CONTENT, n.NEXT_CONTENT, n.ISSUE_CONTENT, n.CHANGE_LOG, n.MEMO, n.MOYO_PUBLIC_YN, n.MOYO_PUBLIC_AT, n.CATEGORY, n.ICON, n.FOLDER_ID, nf.FOLDER_NAME, nf.FOLDER_NAME AS FOLDER_PATH, nw.WS_NAME, np.PROJ_NAME,
                 NULL AS SHARE_SCOPE_TYPES, NULL AS SHARE_SCOPE_NAMES,
                 n.REG_DT, n.UPD_DT, n.UPDATED_BY, u.USER_NAME, u.PROFILE_IMAGE_PATH AS PROFILE_IMAGE_PATH, uu.USER_NAME AS UPDATED_BY_NAME,
                 CASE WHEN p.NOTE_ID IS NULL THEN 0 ELSE 1 END AS PINNED,
@@ -575,7 +690,7 @@
     <select id="selectNoteDetail" resultMap="noteResultMap">
         SELECT
             n.NOTE_ID, n.SCOPE_TYPE, n.WS_ID, n.PROJ_ID, n.USER_ID, n.NOTE_TITLE,
-            n.DONE_CONTENT, n.NEXT_CONTENT, n.ISSUE_CONTENT, n.CHANGE_LOG, n.MEMO, n.CATEGORY, n.ICON, n.FOLDER_ID, nf.FOLDER_NAME, nf.FOLDER_NAME AS FOLDER_PATH, nw.WS_NAME, np.PROJ_NAME,
+            n.DONE_CONTENT, n.NEXT_CONTENT, n.ISSUE_CONTENT, n.CHANGE_LOG, n.MEMO, n.MOYO_PUBLIC_YN, n.MOYO_PUBLIC_AT, n.CATEGORY, n.ICON, n.FOLDER_ID, nf.FOLDER_NAME, nf.FOLDER_NAME AS FOLDER_PATH, nw.WS_NAME, np.PROJ_NAME,
             NULL AS SHARE_SCOPE_TYPES, NULL AS SHARE_SCOPE_NAMES,
             n.REG_DT, n.UPD_DT, n.DELETED_AT, n.UPDATED_BY, u.USER_NAME, uu.USER_NAME AS UPDATED_BY_NAME,
             (SELECT COUNT(*) FROM NOTE_FILES nfc WHERE nfc.NOTE_ID = n.NOTE_ID) AS ATTACHMENT_COUNT,
@@ -587,6 +702,7 @@
                 AND LOWER(LTRIM(nfi.FILE_EXT, '.')) IN ('jpg','jpeg','png','gif','webp','bmp')) AS PREVIEW_IMAGE_FILE_ID,
             CASE WHEN p.NOTE_ID IS NULL THEN 0 ELSE 1 END AS PINNED,
             p.PIN_ORDER,
+            CASE WHEN n.USER_ID = #{userId, jdbcType=NUMERIC} THEN 1 ELSE 0 END AS OWNED_BY_ME,
             CASE
                 WHEN n.USER_ID = #{userId, jdbcType=NUMERIC} THEN 1
                 WHEN n.SCOPE_TYPE = 'WS'
@@ -646,7 +762,7 @@
         </selectKey>
         INSERT INTO NOTES (
             NOTE_ID, SCOPE_TYPE, WS_ID, PROJ_ID, USER_ID, NOTE_TITLE,
-            DONE_CONTENT, NEXT_CONTENT, ISSUE_CONTENT, CHANGE_LOG, MEMO, CATEGORY, ICON, FOLDER_ID, REG_DT, UPDATED_BY
+            DONE_CONTENT, NEXT_CONTENT, ISSUE_CONTENT, CHANGE_LOG, MEMO, MOYO_PUBLIC_YN, MOYO_PUBLIC_AT, CATEGORY, ICON, FOLDER_ID, REG_DT, UPDATED_BY
         ) VALUES (
             #{noteId, jdbcType=NUMERIC},
             #{scopeType, jdbcType=VARCHAR},
@@ -659,6 +775,8 @@
             #{issueContent, jdbcType=CLOB},
             #{changeLog, jdbcType=CLOB},
             #{memo, jdbcType=CLOB},
+            NVL(#{moyoPublicYn, jdbcType=CHAR}, 'N'),
+            CASE WHEN NVL(#{moyoPublicYn, jdbcType=CHAR}, 'N') = 'Y' THEN SYSDATE ELSE NULL END,
             #{category, jdbcType=VARCHAR},
             #{icon, jdbcType=VARCHAR},
             #{folderId, jdbcType=NUMERIC},
@@ -672,6 +790,13 @@
         SET NOTE_TITLE = #{noteTitle, jdbcType=VARCHAR},
             DONE_CONTENT = #{doneContent, jdbcType=CLOB},
             MEMO = #{memo, jdbcType=CLOB},
+            MOYO_PUBLIC_YN = NVL(#{moyoPublicYn, jdbcType=CHAR}, 'N'),
+            MOYO_PUBLIC_AT = CASE
+                WHEN NVL(#{moyoPublicYn, jdbcType=CHAR}, 'N') = 'Y'
+                     AND NVL(MOYO_PUBLIC_YN, 'N') = 'N' THEN SYSDATE
+                WHEN NVL(#{moyoPublicYn, jdbcType=CHAR}, 'N') = 'Y' THEN MOYO_PUBLIC_AT
+                ELSE NULL
+            END,
             CATEGORY = #{category, jdbcType=VARCHAR},
             ICON = #{icon, jdbcType=VARCHAR},
             FOLDER_ID = #{folderId, jdbcType=NUMERIC},
@@ -775,20 +900,146 @@
         WHERE NOTE_ID = #{noteId, jdbcType=NUMERIC}
     </delete>
 
+    <select id="countMoyoPublicNote" resultType="int">
+        SELECT COUNT(*)
+          FROM NOTES n
+         WHERE n.NOTE_ID = #{noteId, jdbcType=NUMERIC}
+           AND n.SCOPE_TYPE = 'PRIVATE'
+           AND NVL(n.DELETED_YN, 'N') = 'N'
+           AND NVL(n.MOYO_PUBLIC_YN, 'N') = 'Y'
+    </select>
+
+    <update id="incrementNoteViewCount">
+        UPDATE NOTES
+           SET VIEW_COUNT = NVL(VIEW_COUNT, 0) + 1
+         WHERE NOTE_ID = #{noteId, jdbcType=NUMERIC}
+           AND MOYO_PUBLIC_YN = 'Y'
+           AND DELETED_AT IS NULL
+    </update>
+
+    <select id="selectNoteViewCount" resultType="int">
+        SELECT NVL(VIEW_COUNT, 0)
+          FROM NOTES
+         WHERE NOTE_ID = #{noteId, jdbcType=NUMERIC}
+    </select>
+
+    <select id="countNoteLike" resultType="int">
+        SELECT COUNT(*)
+          FROM CONTENT_REACTIONS
+         WHERE CONTENT_TYPE = 'NOTE'
+           AND CONTENT_ID = #{noteId, jdbcType=NUMERIC}
+           AND USER_ID = #{userId, jdbcType=NUMERIC}
+           AND REACTION_TYPE = 'LIKE'
+    </select>
+
+    <select id="countAllNoteLikes" resultType="int">
+        SELECT COUNT(*)
+          FROM CONTENT_REACTIONS
+         WHERE CONTENT_TYPE = 'NOTE'
+           AND CONTENT_ID = #{noteId, jdbcType=NUMERIC}
+           AND REACTION_TYPE = 'LIKE'
+    </select>
+
+    <insert id="insertNoteLike">
+        INSERT INTO CONTENT_REACTIONS (
+            REACTION_ID, CONTENT_TYPE, CONTENT_ID, USER_ID, REACTION_TYPE, CREATED_AT
+        ) VALUES (
+            SEQ_CONTENT_REACTION_ID.NEXTVAL, 'NOTE', #{noteId, jdbcType=NUMERIC},
+            #{userId, jdbcType=NUMERIC}, 'LIKE', SYSDATE
+        )
+    </insert>
+
+    <delete id="deleteNoteLike">
+        DELETE FROM CONTENT_REACTIONS
+         WHERE CONTENT_TYPE = 'NOTE'
+           AND CONTENT_ID = #{noteId, jdbcType=NUMERIC}
+           AND USER_ID = #{userId, jdbcType=NUMERIC}
+           AND REACTION_TYPE = 'LIKE'
+    </delete>
+
     <select id="selectNoteReplyList" resultMap="noteReplyResultMap">
-        SELECT rr.REPLY_ID, rr.NOTE_ID, rr.USER_ID, rr.REPLY_CONTENT, rr.REG_DT, rr.UPD_DT, u.USER_NAME
+        SELECT rr.REPLY_ID,
+               rr.NOTE_ID,
+               rr.USER_ID,
+               rr.PARENT_REPLY_ID,
+               rr.REPLY_CONTENT,
+               rr.REG_DT,
+               rr.UPD_DT,
+               u.USER_NAME,
+               u.PROFILE_IMAGE_PATH,
+               (SELECT COUNT(*)
+                  FROM CONTENT_REACTIONS cr
+                 WHERE cr.CONTENT_TYPE = 'NOTE_REPLY'
+                   AND cr.CONTENT_ID = rr.REPLY_ID
+                   AND cr.REACTION_TYPE = 'LIKE') AS LIKE_COUNT,
+               CASE
+                   WHEN #{currentUserId, jdbcType=NUMERIC} IS NOT NULL
+                    AND EXISTS (
+                        SELECT 1
+                          FROM CONTENT_REACTIONS my
+                         WHERE my.CONTENT_TYPE = 'NOTE_REPLY'
+                           AND my.CONTENT_ID = rr.REPLY_ID
+                           AND my.USER_ID = #{currentUserId, jdbcType=NUMERIC}
+                           AND my.REACTION_TYPE = 'LIKE'
+                    )
+                   THEN 1 ELSE 0
+               END AS LIKED_BY_ME
         FROM NOTE_REPLIES rr
         JOIN USERS u ON rr.USER_ID = u.USER_ID
         WHERE rr.NOTE_ID = #{noteId, jdbcType=NUMERIC}
-        ORDER BY rr.REG_DT ASC, rr.REPLY_ID ASC
+        ORDER BY NVL(rr.PARENT_REPLY_ID, rr.REPLY_ID),
+                 CASE WHEN rr.PARENT_REPLY_ID IS NULL THEN 0 ELSE 1 END,
+                 rr.REG_DT ASC,
+                 rr.REPLY_ID ASC
     </select>
+
+    <select id="countRootNoteReply" resultType="int">
+        SELECT COUNT(*)
+          FROM NOTE_REPLIES
+         WHERE NOTE_ID = #{noteId, jdbcType=NUMERIC}
+           AND REPLY_ID = #{replyId, jdbcType=NUMERIC}
+           AND PARENT_REPLY_ID IS NULL
+    </select>
+
+    <select id="countNoteReplyLike" resultType="int">
+        SELECT COUNT(*)
+          FROM CONTENT_REACTIONS
+         WHERE CONTENT_TYPE = 'NOTE_REPLY'
+           AND CONTENT_ID = #{replyId, jdbcType=NUMERIC}
+           AND USER_ID = #{userId, jdbcType=NUMERIC}
+           AND REACTION_TYPE = 'LIKE'
+    </select>
+
+    <insert id="insertNoteReplyLike">
+        INSERT INTO CONTENT_REACTIONS (
+            REACTION_ID, CONTENT_TYPE, CONTENT_ID, USER_ID, REACTION_TYPE, CREATED_AT
+        )
+        VALUES (
+            SEQ_CONTENT_REACTION_ID.NEXTVAL, 'NOTE_REPLY', #{replyId, jdbcType=NUMERIC},
+            #{userId, jdbcType=NUMERIC}, 'LIKE', SYSDATE
+        )
+    </insert>
+
+    <delete id="deleteNoteReplyLike">
+        DELETE FROM CONTENT_REACTIONS
+         WHERE CONTENT_TYPE = 'NOTE_REPLY'
+           AND CONTENT_ID = #{replyId, jdbcType=NUMERIC}
+           AND USER_ID = #{userId, jdbcType=NUMERIC}
+           AND REACTION_TYPE = 'LIKE'
+    </delete>
 
     <insert id="insertNoteReply" parameterType="com.springboot.project.dto.noteReplyDTO">
         <selectKey keyProperty="replyId" resultType="long" order="BEFORE">
             SELECT SEQ_NOTE_REPLY_ID.NEXTVAL FROM DUAL
         </selectKey>
-        INSERT INTO NOTE_REPLIES (REPLY_ID, NOTE_ID, USER_ID, REPLY_CONTENT, REG_DT)
-        VALUES (#{replyId, jdbcType=NUMERIC}, #{noteId, jdbcType=NUMERIC}, #{userId, jdbcType=NUMERIC}, #{replyContent, jdbcType=CLOB}, SYSDATE)
+        INSERT INTO NOTE_REPLIES (
+            REPLY_ID, NOTE_ID, USER_ID, PARENT_REPLY_ID, REPLY_CONTENT, REG_DT
+        )
+        VALUES (
+            #{replyId, jdbcType=NUMERIC}, #{noteId, jdbcType=NUMERIC},
+            #{userId, jdbcType=NUMERIC}, #{parentReplyId, jdbcType=NUMERIC},
+            #{replyContent, jdbcType=CLOB}, SYSDATE
+        )
     </insert>
 
     <update id="updateNoteReply" parameterType="com.springboot.project.dto.noteReplyDTO">
@@ -800,10 +1051,39 @@
           AND USER_ID = #{userId, jdbcType=NUMERIC}
     </update>
 
+    <delete id="deleteNoteReplyReactionsForOwnedThread">
+        DELETE FROM CONTENT_REACTIONS
+         WHERE CONTENT_TYPE = 'NOTE_REPLY'
+           AND REACTION_TYPE = 'LIKE'
+           AND CONTENT_ID IN (
+                SELECT R.REPLY_ID
+                  FROM NOTE_REPLIES R
+                 WHERE (R.REPLY_ID = #{replyId, jdbcType=NUMERIC}
+                        OR R.PARENT_REPLY_ID = #{replyId, jdbcType=NUMERIC})
+                   AND EXISTS (
+                        SELECT 1
+                          FROM NOTE_REPLIES OWNER_REPLY
+                         WHERE OWNER_REPLY.REPLY_ID = #{replyId, jdbcType=NUMERIC}
+                           AND OWNER_REPLY.USER_ID = #{userId, jdbcType=NUMERIC}
+                   )
+           )
+    </delete>
+
     <delete id="deleteNoteReply">
         DELETE FROM NOTE_REPLIES
         WHERE REPLY_ID = #{replyId, jdbcType=NUMERIC}
           AND USER_ID = #{userId, jdbcType=NUMERIC}
+    </delete>
+
+    <delete id="deleteNoteReplyReactionsByNoteId">
+        DELETE FROM CONTENT_REACTIONS
+         WHERE CONTENT_TYPE = 'NOTE_REPLY'
+           AND REACTION_TYPE = 'LIKE'
+           AND CONTENT_ID IN (
+                SELECT REPLY_ID
+                  FROM NOTE_REPLIES
+                 WHERE NOTE_ID = #{noteId, jdbcType=NUMERIC}
+           )
     </delete>
 
     <delete id="deleteNoteRepliesByNoteId">

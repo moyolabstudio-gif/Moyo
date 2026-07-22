@@ -69,6 +69,25 @@ public class noteServiceImpl implements InoteService {
         return noteList;
     }
 
+    @Override
+    public List<noteDTO> getProfilePublicNotes(Long profileUserId, Long viewerUserId, int limit) {
+        if (profileUserId == null) return Collections.emptyList();
+        Map<String, Object> paramMap = new HashMap<>();
+        paramMap.put("profileUserId", profileUserId);
+        paramMap.put("viewerUserId", viewerUserId);
+        paramMap.put("limit", Math.min(Math.max(limit, 1), 12));
+        List<noteDTO> noteList = inoteDAO.selectProfilePublicNotes(paramMap);
+        preparePreviewText(noteList);
+        attachEmptyFileList(noteList);
+        return noteList;
+    }
+
+    @Override
+    public int countProfilePublicNotes(Long profileUserId) {
+        if (profileUserId == null) return 0;
+        return inoteDAO.countProfilePublicNotes(profileUserId);
+    }
+
 
     @Override
     @Transactional
@@ -165,6 +184,7 @@ public class noteServiceImpl implements InoteService {
     public boolean removeNote(Long noteId) {
         contentShareService.removeContentShares("NOTE", noteId);
         inoteDAO.deleteNotePinsByNoteId(noteId);
+        inoteDAO.deleteNoteReplyReactionsByNoteId(noteId);
         inoteDAO.deleteNoteRepliesByNoteId(noteId);
         inoteDAO.deleteNoteFilesByNoteId(noteId);
         return inoteDAO.deleteNote(noteId) > 0;
@@ -196,8 +216,66 @@ public class noteServiceImpl implements InoteService {
     }
 
     @Override
+    public boolean isMoyoPublicNote(Long noteId) {
+        return noteId != null && inoteDAO.countMoyoPublicNote(noteId) > 0;
+    }
+
+    @Override
+    @Transactional
+    public int recordNoteView(Long noteId) {
+        if (!isMoyoPublicNote(noteId)) return 0;
+        inoteDAO.incrementNoteViewCount(noteId);
+        return inoteDAO.selectNoteViewCount(noteId);
+    }
+
+    @Override
+    public Map<String, Object> getNoteReactionStatus(Long noteId, Long userId) {
+        if (noteId == null) return Map.of("viewCount", 0, "likeCount", 0, "liked", false);
+        return Map.of(
+                "viewCount", inoteDAO.selectNoteViewCount(noteId),
+                "likeCount", inoteDAO.countAllNoteLikes(noteId),
+                "liked", userId != null && inoteDAO.countNoteLike(noteId, userId) > 0
+        );
+    }
+
+    @Override
+    @Transactional
+    public Map<String, Object> toggleNoteLike(Long noteId, Long userId) {
+        if (!isMoyoPublicNote(noteId) || userId == null) {
+            return Map.of("liked", false, "likeCount", 0);
+        }
+        boolean liked = inoteDAO.countNoteLike(noteId, userId) > 0;
+        if (liked) inoteDAO.deleteNoteLike(noteId, userId);
+        else inoteDAO.insertNoteLike(noteId, userId);
+        return Map.of(
+                "liked", !liked,
+                "likeCount", inoteDAO.countAllNoteLikes(noteId),
+                "viewCount", inoteDAO.selectNoteViewCount(noteId)
+        );
+    }
+
+    @Override
     public List<noteReplyDTO> getNoteReplyList(Long noteId) {
-        return inoteDAO.selectNoteReplyList(noteId);
+        return inoteDAO.selectNoteReplyList(noteId, null);
+    }
+
+    @Override
+    public List<noteReplyDTO> getNoteReplyList(Long noteId, Long currentUserId) {
+        return inoteDAO.selectNoteReplyList(noteId, currentUserId);
+    }
+
+    @Override
+    public boolean canReplyToNoteReply(Long noteId, Long replyId) {
+        return noteId != null && replyId != null && inoteDAO.countRootNoteReply(noteId, replyId) > 0;
+    }
+
+    @Override
+    public boolean toggleNoteReplyLike(Long replyId, Long userId) {
+        if (replyId == null || userId == null) return false;
+        if (inoteDAO.countNoteReplyLike(replyId, userId) > 0) {
+            return inoteDAO.deleteNoteReplyLike(replyId, userId) > 0;
+        }
+        return inoteDAO.insertNoteReplyLike(replyId, userId) > 0;
     }
 
     @Override
@@ -215,7 +293,13 @@ public class noteServiceImpl implements InoteService {
     }
 
     @Override
+    @Transactional
     public boolean removeNoteReply(Long replyId, Long userId) {
+        if (replyId == null || userId == null) return false;
+
+        // 본인 댓글(루트 또는 답글)만 삭제 대상이 된다. 루트 댓글이면
+        // ON DELETE CASCADE로 함께 삭제될 답글들의 좋아요까지 먼저 정리한다.
+        inoteDAO.deleteNoteReplyReactionsForOwnedThread(replyId, userId);
         return inoteDAO.deleteNoteReply(replyId, userId) > 0;
     }
 

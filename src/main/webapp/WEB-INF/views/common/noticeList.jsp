@@ -413,7 +413,7 @@
                 <p class="notice-subtitle">MOYO의 업데이트, 운영 안내, 중요한 소식을 한 곳에서 확인하세요.</p>
             </div>
             <c:if test="${sessionScope.user.userRole == 'ADMIN'}">
-                <a href="/admin/notice/writeForm" class="notice-admin-write">+ 공지 작성</a>
+                <a href="${pageContext.request.contextPath}/admin/notice/writeForm" class="notice-admin-write">+ 공지 작성</a>
             </c:if>
         </section>
 
@@ -445,10 +445,10 @@
                                     <span class="notice-toggle-icon">⌄</span>
                                 </div>
                                 <div class="notice-body">
-                                    <div class="notice-body-inner">${notice.content}</div>
+                                    <div class="notice-body-inner common-rich-content">${notice.content}</div>
                                     <c:if test="${sessionScope.user.userRole == 'ADMIN'}">
                                         <div class="notice-admin-actions">
-                                            <a href="/admin/notice/noticeEdit?noticeId=${notice.noticeId}" class="notice-admin-link" onclick="event.stopPropagation();">수정</a>
+                                            <a href="${pageContext.request.contextPath}/admin/notice/noticeEdit?noticeId=${notice.noticeId}" class="notice-admin-link" onclick="event.stopPropagation();">수정</a>
                                             <button type="button" onclick="deleteNotice(${notice.noticeId}, event)" class="notice-admin-delete">삭제</button>
                                         </div>
                                     </c:if>
@@ -480,35 +480,38 @@
 
 <script>
 function toggleNotice(summaryElement) {
-    const $item = $(summaryElement).closest('.notice-item');
-    const $body = $item.find('.notice-body');
+    const item = summaryElement.closest('.notice-item');
+    if (!item) return;
 
-    $body.stop(true, true).slideToggle(220);
-    $item.toggleClass('is-open');
+    const body = item.querySelector('.notice-body');
+    if (!body) return;
+
+    const willOpen = !item.classList.contains('is-open');
+    item.classList.toggle('is-open', willOpen);
+    body.style.display = willOpen ? 'block' : 'none';
 }
 
-$(document).ready(function() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const openId = urlParams.get('openId');
+document.addEventListener('DOMContentLoaded', function () {
+    const openId = new URLSearchParams(window.location.search).get('openId');
+    if (!openId) return;
 
-    if (openId) {
-        const $target = $('#notice-' + openId);
-        if ($target.length > 0) {
-            $('html, body').animate({
-                scrollTop: $target.offset().top - 110
-            }, 450);
-            const summary = $target.find('.notice-summary')[0];
-            if (summary) {
-                toggleNotice(summary);
-            }
-        }
-    }
+    const target = document.getElementById('notice-' + openId);
+    if (!target) return;
+
+    const summary = target.querySelector('.notice-summary');
+    if (summary) toggleNotice(summary);
+
+    window.setTimeout(function () {
+        const headerOffset = 110;
+        const top = target.getBoundingClientRect().top + window.scrollY - headerOffset;
+        window.scrollTo({ top: top, behavior: 'smooth' });
+    }, 50);
 });
 
 function deleteNotice(noticeId, event) {
-    event.stopPropagation();
+    if (event) event.stopPropagation();
     if (confirm('정말 이 공지사항을 삭제하시겠습니까?')) {
-        window.location.href = '/admin/notice/delete?noticeId=' + noticeId;
+        window.location.href = '${pageContext.request.contextPath}/admin/notice/delete?noticeId=' + encodeURIComponent(noticeId);
     }
 }
 </script>

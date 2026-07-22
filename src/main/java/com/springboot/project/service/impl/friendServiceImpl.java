@@ -42,6 +42,12 @@ public class friendServiceImpl implements IfriendService {
     }
 
     @Override
+    public friendDTO getRelation(Long userId, Long targetUserId) {
+        if (userId == null || targetUserId == null || userId.equals(targetUserId)) return null;
+        return friendDAO.selectRelation(userId, targetUserId);
+    }
+
+    @Override
     @Transactional
     public Map<String, Object> requestFriend(Long userId, Long targetUserId) {
         if (userId == null || targetUserId == null) return fail("대상을 찾을 수 없습니다.");

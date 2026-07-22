@@ -3209,847 +3209,7 @@
             .moyo-quick-btn.is-primary { min-width: 0; }
         }
 
-        .moyo-event-view-overlay {
-            position: fixed;
-            inset: 0;
-            z-index: 2300;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 24px;
-            background: rgba(15, 23, 42, 0.24);
-            backdrop-filter: blur(8px);
-        }
 
-        .moyo-event-view-overlay[hidden] { display: none !important; }
-
-        #calendarViewShareModal.moyo-share-modal {
-            z-index: 2600 !important;
-        }
-
-        .moyo-event-view-card {
-            --event-accent: var(--moyo-blue);
-            --event-accent-soft: rgba(63, 124, 255, 0.10);
-            --event-accent-border: rgba(63, 124, 255, 0.20);
-            position: relative;
-            width: min(520px, calc(100vw - 40px));
-            min-height: 232px;
-            max-height: calc(100vh - 36px);
-            overflow: auto;
-            border: 1px solid rgba(214, 225, 242, 0.96);
-            border-radius: 24px;
-            background: rgba(255, 255, 255, 0.98);
-            box-shadow: 0 24px 70px rgba(31, 51, 92, 0.18);
-        }
-
-        .moyo-event-view-card.is-compact-detail {
-            min-height: 0;
-        }
-
-        .moyo-event-view-card.is-compact-detail .moyo-event-view-head {
-            min-height: 62px;
-            padding: 15px 22px 12px;
-        }
-
-        .moyo-event-view-card.is-compact-detail .moyo-event-view-author {
-            padding: 9px 22px 2px;
-        }
-
-        .moyo-event-view-card.is-compact-detail .moyo-event-view-author-scope {
-            max-width: 38%;
-            margin-left: auto;
-        }
-
-        .moyo-event-view-card.is-compact-detail .moyo-event-view-body {
-            padding: 6px 22px 14px;
-            gap: 8px;
-        }
-
-        .moyo-event-view-card.is-compact-detail .moyo-event-view-section.time {
-            padding: 2px 0 0;
-        }
-
-        .moyo-event-view-card.is-compact-detail .moyo-event-view-time-list {
-            gap: 5px;
-        }
-
-        .moyo-event-view-card.is-compact-detail .moyo-event-view-time-period {
-            gap: 4px;
-        }
-
-        .moyo-event-view-card.is-compact-detail .moyo-event-view-time-meta {
-            margin-top: 0;
-        }
-
-        .moyo-event-view-head {
-            position: relative;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 12px;
-            min-height: 66px;
-            padding: 16px 22px 13px;
-            border-bottom: 1px solid rgba(225, 232, 244, 0.72);
-        }
-
-        .moyo-event-view-head-main {
-            flex: 1 1 auto;
-            min-width: 0;
-        }
-
-        .moyo-event-view-head::after {
-            content: "";
-            position: absolute;
-            left: 0;
-            right: 0;
-            bottom: -1px;
-            height: 2px;
-            background: linear-gradient(90deg, var(--event-accent-border) 0%, rgba(225, 232, 244, 0.68) 100%);
-            pointer-events: none;
-        }
-
-        .moyo-event-view-author {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 12px;
-            padding: 13px 22px 3px;
-        }
-
-        .moyo-event-view-author[hidden] {
-            display: none !important;
-        }
-
-        .moyo-event-view-author-main {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            min-width: 0;
-        }
-
-        .moyo-event-view-author-avatar {
-            flex: 0 0 28px;
-            width: 28px;
-            height: 28px;
-            border-radius: 999px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
-            background: var(--event-accent-soft);
-            color: var(--event-accent);
-            font-size: 12px;
-            font-weight: 950;
-            line-height: 1;
-        }
-
-        .moyo-event-view-author-avatar img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            display: block;
-        }
-
-        .moyo-event-view-author-name {
-            min-width: 0;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            color: #24314a;
-            font-size: 13px;
-            font-weight: 700;
-            letter-spacing: -0.03em;
-        }
-
-        .moyo-event-view-author-scope {
-            flex: 0 1 auto;
-            max-width: 48%;
-            min-height: 24px;
-            padding: 0 9px;
-            border: 1px solid rgba(218, 227, 242, 0.86);
-            border-radius: 999px;
-            background: rgba(247, 250, 254, 0.88);
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            color: #7e8ba1;
-            font-size: 12px;
-            font-weight: 620;
-            letter-spacing: -0.025em;
-            text-align: right;
-            display: inline-flex;
-            align-items: center;
-            justify-content: flex-end;
-            gap: 5px;
-        }
-
-        .moyo-event-view-author-scope.is-moyo-public {
-            padding: 0;
-            border: 0;
-            background: transparent;
-            color: #4f82f5;
-            font-weight: 700;
-        }
-
-        .moyo-event-view-author-scope img {
-            width: 18px;
-            height: 18px;
-            object-fit: contain;
-            flex: 0 0 18px;
-            display: inline-block;
-        }
-
-        .moyo-event-view-author-scope .moyo-public-text {
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            color: inherit;
-        }
-
-        .moyo-event-view-kicker {
-            display: none;
-            align-items: center;
-            gap: 0;
-            color: #7f8ca4;
-            font-size: 12px;
-            font-weight: 650;
-            letter-spacing: -0.02em;
-            margin-bottom: 6px;
-        }
-
-        .moyo-event-view-dot {
-            display: none;
-        }
-
-        .moyo-event-view-title-row {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            min-width: 0;
-            width: 100%;
-            min-height: 31px;
-            overflow: visible;
-        }
-
-        .moyo-event-view-type-icon {
-            order: 2;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            flex: 0 0 auto;
-            width: 22px;
-            height: 22px;
-            margin-left: 3px;
-            font-size: 18px;
-            line-height: 1;
-            align-self: center;
-            transform: translateY(1px);
-        }
-
-        .moyo-event-view-title {
-            order: 1;
-            margin: 0;
-            color: #172033;
-            font-size: 19px;
-            line-height: 1.38;
-            font-weight: 740;
-            letter-spacing: -0.045em;
-            word-break: break-word;
-            min-width: 0;
-            overflow: visible;
-        }
-
-        .moyo-event-view-public-badge {
-            order: 3;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            flex: 0 0 auto;
-            width: 24px;
-            height: 24px;
-            padding: 0;
-            margin-left: -1px;
-            border: 0;
-            border-radius: 0;
-            background: transparent;
-            color: inherit;
-            line-height: 1;
-            transform: none;
-        }
-
-        .moyo-event-view-public-badge[hidden] {
-            display: none !important;
-        }
-
-        .moyo-event-view-public-badge img {
-            width: 23px;
-            height: 23px;
-            object-fit: contain;
-            flex: 0 0 23px;
-            display: block;
-        }
-
-        .moyo-event-view-public-badge i,
-        .moyo-event-view-public-badge span {
-            display: none !important;
-        }
-
-
-        .moyo-event-view-head-actions {
-            display: inline-flex;
-            align-items: center;
-            gap: 0;
-            flex: 0 0 auto;
-            transform: translateY(1px);
-        }
-
-        .moyo-event-view-head-btn {
-            width: 26px;
-            height: 26px;
-            border: 0;
-            border-radius: 999px;
-            background: transparent;
-            color: #7a879c;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 13px;
-            line-height: 1;
-            transition: background .15s ease, color .15s ease, box-shadow .15s ease, transform .15s ease;
-        }
-
-        .moyo-event-view-head-btn[hidden] { display: none !important; }
-
-        .moyo-event-view-edit,
-        .moyo-event-view-share,
-        .moyo-event-view-delete,
-        .moyo-event-view-close {
-            color: #8a96aa;
-        }
-
-        .moyo-event-view-edit:hover,
-        .moyo-event-view-share:hover,
-        .moyo-event-view-delete:hover,
-        .moyo-event-view-close:hover {
-            background: #f1f5fb;
-            color: #334155;
-            box-shadow: 0 8px 18px rgba(30, 41, 59, 0.08);
-        }
-
-        .moyo-event-view-body {
-            padding: 12px 22px 18px;
-            display: grid;
-            gap: 13px;
-        }
-
-        .moyo-event-view-section {
-            display: grid;
-            grid-template-columns: 28px minmax(0, 1fr);
-            align-items: center;
-            column-gap: 13px;
-        }
-
-        .moyo-event-view-section.time {
-            align-items: start;
-            grid-template-columns: 28px minmax(0, 1fr);
-            column-gap: 13px;
-            padding: 5px 0 3px;
-            margin: 0;
-        }
-
-        .moyo-event-view-section[hidden] { display: none !important; }
-
-        .moyo-event-view-row-icon {
-            width: 28px;
-            height: 28px;
-            margin-top: 0;
-            border-radius: 0;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            color: #5f7cff;
-            background: transparent;
-            font-size: 19px;
-            line-height: 1;
-        }
-
-        .moyo-event-view-section.time .moyo-event-view-row-icon {
-            width: 28px;
-            height: 28px;
-            margin-top: 3px;
-            color: var(--event-accent);
-            font-size: 21px;
-        }
-
-        .moyo-event-view-section.location .moyo-event-view-row-icon { color: #ef5d87; }
-        .moyo-event-view-section.attendees .moyo-event-view-row-icon { color: #15b8aa; }
-        .moyo-event-view-section.description .moyo-event-view-row-icon { color: #8b63f6; }
-        .moyo-event-view-section.location .moyo-event-view-content {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 10px;
-        }
-
-        .moyo-event-view-location-text {
-            min-width: 0;
-            flex: 1 1 auto;
-            white-space: pre-wrap;
-            word-break: break-word;
-        }
-
-        .moyo-event-view-map-link {
-            flex: 0 0 auto;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            min-height: 26px;
-            padding: 0 7px;
-            border: 0;
-            border-radius: 999px;
-            background: transparent;
-            color: #73839b;
-            font-size: 12px;
-            font-weight: 620;
-            letter-spacing: -0.025em;
-            cursor: pointer;
-            transition: background .15s ease, color .15s ease;
-        }
-
-        .moyo-event-view-map-link:hover {
-            background: #f3f6fb;
-            color: #3f7cff;
-        }
-
-        .moyo-event-view-map-link i {
-            font-size: 11px;
-            line-height: 1;
-        }
-
-
-        .moyo-event-view-content {
-            min-width: 0;
-            color: #25324a;
-            font-size: 13px;
-            font-weight: 560;
-            line-height: 1.45;
-            letter-spacing: -0.025em;
-        }
-
-        .moyo-event-view-section:not(.time) .moyo-event-view-content {
-            min-height: 24px;
-            display: flex;
-            align-items: center;
-        }
-
-        .moyo-event-view-time-list {
-            display: grid;
-            gap: 9px;
-            padding-top: 0;
-        }
-
-        .moyo-event-view-time-period {
-            position: relative;
-            display: grid;
-            gap: 7px;
-            padding-left: 0;
-        }
-
-        .moyo-event-view-time-line {
-            display: grid;
-            grid-template-columns: 34px minmax(0, 1fr);
-            align-items: baseline;
-            column-gap: 10px;
-            color: #111c31;
-            line-height: 1.22;
-        }
-
-        .moyo-event-view-time-line .time-label {
-            color: #8794a9;
-            font-size: 12px;
-            font-weight: 620;
-            letter-spacing: -0.025em;
-        }
-
-        .moyo-event-view-time-line .time-main {
-            color: #172033;
-            font-size: 15.5px;
-            font-weight: 720;
-            letter-spacing: -0.045em;
-            white-space: nowrap;
-        }
-
-        .moyo-event-view-time-line .time-clock {
-            margin-left: 6px;
-        }
-
-        .moyo-event-view-time-line .time-clock.all-day {
-            display: inline-flex;
-            align-items: center;
-            height: 20px;
-            margin-left: 8px;
-            padding: 0 7px;
-            border-radius: 999px;
-            background: rgba(91, 124, 178, 0.08);
-            color: #5f7fbc;
-            font-size: 11px;
-            font-weight: 600;
-            letter-spacing: -0.035em;
-            vertical-align: 1px;
-        }
-
-        .moyo-event-view-time-chip.all-day {
-            color: #748198;
-            font-weight: 580;
-        }
-
-        .moyo-event-view-time-meta {
-            display: flex;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 0;
-            margin-top: 1px;
-            padding-left: 44px;
-            color: #748198;
-            font-size: 12px;
-            font-weight: 580;
-            line-height: 1.35;
-            letter-spacing: -0.025em;
-        }
-
-        .moyo-event-view-time-chip {
-            display: inline-flex;
-            align-items: center;
-            min-height: 0;
-            padding: 0;
-            border: 0;
-            border-radius: 0;
-            background: transparent;
-            color: inherit;
-            font-size: inherit;
-            font-weight: inherit;
-            letter-spacing: inherit;
-        }
-
-        .moyo-event-view-time-chip + .moyo-event-view-time-chip::before {
-            content: "·";
-            margin: 0 7px;
-            color: #a3afc1;
-            font-weight: 700;
-        }
-
-        .moyo-event-view-time-chip.repeat {
-            color: #657188;
-            border: 0;
-            background: transparent;
-        }
-
-        .moyo-event-view-textbox {
-            min-height: 24px;
-            padding: 0;
-            border: 0;
-            border-radius: 0;
-            background: transparent;
-            color: #26354f;
-            font-size: 13px;
-            line-height: 1.45;
-            font-weight: 540;
-            white-space: pre-wrap;
-            word-break: break-word;
-            display: flex;
-            align-items: center;
-        }
-
-        .moyo-event-view-section.description .moyo-event-view-textbox {
-            align-items: flex-start;
-            max-height: 118px;
-            overflow: auto;
-            padding: 8px 10px;
-            border: 1px solid rgba(226, 233, 245, 0.58);
-            border-radius: 13px;
-            background: rgba(250, 252, 255, 0.54);
-            color: #334058;
-            font-weight: 520;
-        }
-
-
-        .moyo-event-view-people {
-            display: flex;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 7px;
-            padding-top: 0;
-        }
-
-        .moyo-event-view-person {
-            --share-accent: var(--moyo-share-blue, #4f7cff);
-            --share-soft: #eef4ff;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            max-width: 100%;
-            min-height: 30px;
-            padding: 3px 8px 3px 4px;
-            border: 1px solid #cfe0ff;
-            border-radius: 999px;
-            background: #fff;
-            color: #1f2d45;
-            font-size: 12px;
-            font-weight: 620;
-            line-height: 1;
-            box-shadow: none;
-        }
-
-        .moyo-event-view-person.note-share-type-ws {
-            --share-accent: var(--moyo-share-mint, #58cfd0);
-            --share-soft: #eafffb;
-            border-color: rgba(89, 210, 194, .48);
-            background: #f8fffd;
-        }
-
-        .moyo-event-view-person.note-share-type-proj {
-            --share-accent: var(--moyo-share-violet, #6b65f6);
-            --share-soft: #f2efff;
-            border-color: rgba(125, 107, 255, .38);
-            background: #fbfaff;
-        }
-
-        .moyo-event-view-person.note-share-scope-ws-member {
-            --share-accent: var(--moyo-share-mint, #58cfd0);
-            --share-soft: #eafffb;
-            border-color: rgba(89, 210, 194, .48);
-            background: #f8fffd;
-        }
-
-        .moyo-event-view-person.note-share-scope-proj-member {
-            --share-accent: var(--moyo-share-violet, #6b65f6);
-            --share-soft: #f2efff;
-            border-color: rgba(125, 107, 255, .38);
-            background: #fbfaff;
-        }
-
-        .moyo-event-view-person .note-share-avatar {
-            flex: 0 0 24px;
-            width: 24px;
-            height: 24px;
-            min-width: 24px;
-            min-height: 24px;
-            max-width: 24px;
-            max-height: 24px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
-            border-radius: 999px;
-            background: var(--share-soft, #eef4ff);
-            color: var(--share-accent, #4f7cff);
-            font-size: 10px;
-            font-weight: 760;
-            line-height: 1;
-            box-shadow: none;
-        }
-
-        .moyo-event-view-person.note-share-type-ws .note-share-avatar,
-        .moyo-event-view-person.note-share-type-proj .note-share-avatar {
-            border-radius: 12px;
-        }
-
-        .moyo-event-view-person.note-share-scope-ws-member .note-share-avatar,
-        .moyo-event-view-person.note-share-scope-proj-member .note-share-avatar,
-        .moyo-event-view-person.note-share-type-user .note-share-avatar {
-            border-radius: 999px;
-        }
-
-        .moyo-event-view-person .note-share-avatar img {
-            width: 100%;
-            height: 100%;
-            display: block;
-            object-fit: cover;
-            border-radius: inherit;
-        }
-
-        .moyo-event-view-person .note-share-avatar b {
-            font-size: 10px;
-            font-weight: 900;
-            line-height: 1;
-        }
-
-        .moyo-event-view-person .note-share-chip-name {
-            display: inline-block;
-            max-width: 180px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            font-size: 12px;
-            font-weight: 620;
-            letter-spacing: -.03em;
-        }
-
-
-        .moyo-event-view-delete-modal {
-            position: fixed;
-            inset: 0;
-            z-index: 2700;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-            background: rgba(15, 23, 42, 0.30);
-            backdrop-filter: blur(6px);
-        }
-
-        .moyo-event-view-delete-modal[hidden] { display: none !important; }
-
-        .moyo-event-view-delete-panel {
-            width: min(430px, calc(100vw - 40px));
-            border: 1px solid rgba(214, 225, 242, 0.96);
-            border-radius: 22px;
-            background: #fff;
-            box-shadow: 0 22px 60px rgba(31, 51, 92, 0.20);
-            overflow: hidden;
-        }
-
-        .moyo-event-view-delete-head {
-            display: flex;
-            align-items: flex-start;
-            justify-content: space-between;
-            gap: 14px;
-            padding: 20px 22px 14px;
-            border-bottom: 1px solid #edf2f8;
-        }
-
-        .moyo-event-view-delete-head h3 {
-            margin: 0 0 6px;
-            color: #14213d;
-            font-size: 18px;
-            font-weight: 900;
-            letter-spacing: -0.04em;
-        }
-
-        .moyo-event-view-delete-head p {
-            margin: 0;
-            color: #748198;
-            font-size: 13px;
-            font-weight: 700;
-            line-height: 1.45;
-            letter-spacing: -0.025em;
-        }
-
-        .moyo-event-view-delete-close {
-            width: 32px;
-            height: 32px;
-            border: 0;
-            border-radius: 999px;
-            background: transparent;
-            color: #7f8ca4;
-            cursor: pointer;
-            font-size: 16px;
-            line-height: 1;
-        }
-
-        .moyo-event-view-delete-close:hover {
-            background: #f1f5fb;
-            color: #334155;
-        }
-
-        .moyo-event-view-delete-body {
-            padding: 14px 22px 2px;
-        }
-
-        .moyo-event-view-delete-options {
-            display: grid;
-            gap: 8px;
-        }
-
-        .moyo-event-view-delete-option {
-            display: flex;
-            align-items: flex-start;
-            gap: 9px;
-            padding: 12px 13px;
-            border: 1px solid #dce8f8;
-            border-radius: 15px;
-            background: #fff;
-            cursor: pointer;
-        }
-
-        .moyo-event-view-delete-option input {
-            margin-top: 3px;
-            accent-color: var(--moyo-blue);
-        }
-
-        .moyo-event-view-delete-option strong {
-            display: block;
-            color: #20304a;
-            font-size: 13px;
-            font-weight: 900;
-            letter-spacing: -0.025em;
-        }
-
-        .moyo-event-view-delete-option span span {
-            display: block;
-            margin-top: 3px;
-            color: #7b8aa0;
-            font-size: 12px;
-            font-weight: 600;
-            line-height: 1.35;
-        }
-
-        .moyo-event-view-delete-actions {
-            display: flex;
-            justify-content: flex-end;
-            gap: 8px;
-            padding: 16px 22px 22px;
-        }
-
-        .moyo-event-view-delete-btn {
-            height: 38px;
-            padding: 0 17px;
-            border: 1px solid #d8e5f6;
-            border-radius: 14px;
-            background: #fff;
-            color: #52627a;
-            cursor: pointer;
-            font-size: 13px;
-            font-weight: 900;
-            letter-spacing: -0.025em;
-        }
-
-        .moyo-event-view-delete-btn.danger {
-            border-color: #ffd2d8;
-            background: #fff6f7;
-            color: #ff4d5b;
-        }
-
-        .moyo-event-view-delete-btn.danger:hover {
-            background: #fff0f2;
-            border-color: rgba(248, 113, 113, 0.95);
-        }
-
-
-        @media (max-width: 560px) {
-            .moyo-event-view-section.location .moyo-event-view-content {
-                align-items: flex-start;
-                flex-direction: column;
-                gap: 6px;
-            }
-            .moyo-event-view-map-link {
-                margin-left: -2px;
-            }
-        }
-
-        @media (max-height: 720px) {
-            .moyo-event-view-overlay { padding: 12px; align-items: center; }
-            .moyo-event-view-card { min-height: 0; max-height: calc(100vh - 24px); }
-            .moyo-event-view-head { padding: 16px 22px 14px; }
-            .moyo-event-view-body { padding-top: 13px; gap: 12px; }
-            .moyo-event-view-author { padding: 10px 22px 1px; }
-            .moyo-event-view-author-scope { max-width: 42%; }
-            .moyo-event-view-section.time { padding: 3px 0 2px; }
-            .moyo-event-view-time-line .time-main { font-size: 16px; }
-        }
-
-        body.moyo-event-view-open { overflow: hidden; }
 
 
 .fc-popover .moyo-more-project-periods {
@@ -4198,4 +3358,651 @@
 .moyo-calendar-board .fc-popover .moyo-event-mascot {
     top: 50% !important;
     transform: translateY(-50%) !important;
+}
+
+
+/* =====================================================================
+   15. 캘린더 프로젝트 탭 상단 업무 요약
+   - 프로젝트 탭에서만 노출
+   - TODO / IN_PROGRESS / DONE / 지연 / 완료율 집계
+   ===================================================================== */
+.moyo-project-summary {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(112px, 1fr)) minmax(210px, 1.45fr);
+    gap: 8px;
+    margin: 0 0 8px;
+    flex: 0 0 auto;
+}
+
+.moyo-project-summary[hidden] {
+    display: none !important;
+}
+
+.moyo-project-summary-card {
+    position: relative;
+    min-width: 0;
+    min-height: 50px;
+    padding: 9px 13px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    overflow: hidden;
+    border: 1px solid rgba(222, 229, 239, .96);
+    border-radius: 13px;
+    background: rgba(255, 255, 255, .88);
+    box-shadow: 0 7px 18px rgba(31, 45, 70, .035);
+}
+
+.moyo-project-summary-card::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 10px;
+    bottom: 10px;
+    width: 3px;
+    border-radius: 0 999px 999px 0;
+    background: #cbd5e1;
+}
+
+.moyo-project-summary-card.is-todo::before { background: #f6b642; }
+.moyo-project-summary-card.is-progress::before { background: #6da9f7; }
+.moyo-project-summary-card.is-done::before { background: #55d8c6; }
+.moyo-project-summary-card.is-delayed::before { background: #ff6b6b; }
+.moyo-project-summary-card.is-rate::before {
+    background: linear-gradient(180deg, #55d8c6 0%, #3f7cff 58%, #8b63f6 100%);
+}
+
+.moyo-project-summary-label {
+    min-width: 0;
+    color: #7c8799;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: -.025em;
+    white-space: nowrap;
+}
+
+.moyo-project-summary-value {
+    color: #243047;
+    font-size: 19px;
+    font-weight: 900;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+}
+
+.moyo-project-summary-card.is-todo .moyo-project-summary-value { color: #d99719; }
+.moyo-project-summary-card.is-progress .moyo-project-summary-value { color: #4a8fe5; }
+.moyo-project-summary-card.is-done .moyo-project-summary-value { color: #24bda7; }
+.moyo-project-summary-card.is-delayed .moyo-project-summary-value { color: #ef5b5b; }
+
+.moyo-project-summary-card.is-rate {
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: center;
+    gap: 7px;
+}
+
+.moyo-project-summary-rate-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.moyo-project-summary-percent {
+    color: #5369d8;
+    font-size: 13px;
+    font-weight: 900;
+    font-variant-numeric: tabular-nums;
+}
+
+.moyo-project-summary-progress {
+    width: 100%;
+    height: 5px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: #edf1f6;
+}
+
+.moyo-project-summary-progress > span {
+    display: block;
+    width: 0;
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, #55d8c6 0%, #3f7cff 60%, #8b63f6 100%);
+    transition: width .22s ease;
+}
+
+.moyo-project-summary[data-empty="true"] .moyo-project-summary-progress > span {
+    opacity: .45;
+}
+
+@media (max-width: 1080px) {
+    .moyo-project-summary {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+    .moyo-project-summary-card.is-rate {
+        grid-column: 1 / -1;
+        min-height: 44px;
+    }
+}
+
+@media (max-width: 720px) {
+    .moyo-project-summary {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .moyo-project-summary-card.is-rate {
+        grid-column: 1 / -1;
+    }
+}
+/* ===== End calendar project summary ===== */
+
+
+/* =====================================================================
+   16. 캘린더 프로젝트 업무 표시 개선
+   - 월간 이벤트: 상태점/담당자/지연 표시
+   - 날짜 상세: 상태, 담당자, 예정 기간, 실제 시작/완료, 지연 일수
+   ===================================================================== */
+.moyo-fc-task-due {
+    gap: 5px !important;
+    padding-right: 6px !important;
+    border-radius: 7px !important;
+    background: #f8faff !important;
+    box-shadow: inset 0 0 0 1px #e6ebf5;
+}
+.moyo-project-task-status-dot {
+    width: 6px;
+    height: 6px;
+    flex: 0 0 6px;
+    border-radius: 999px;
+    background: #f4aa2f;
+}
+.moyo-fc-task-due.is-in_progress .moyo-project-task-status-dot { background: #5b9df3; }
+.moyo-fc-task-due.is-done .moyo-project-task-status-dot { background: #3bc8ad; }
+.moyo-fc-task-due.is-delayed .moyo-project-task-status-dot { background: #ef6464; }
+.moyo-fc-task-due .moyo-fc-event-title {
+    min-width: 0;
+    flex: 1 1 auto;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.moyo-project-task-assignee {
+    max-width: 52px;
+    flex: 0 1 auto;
+    overflow: hidden;
+    color: #7c8798;
+    font-size: 9px;
+    font-weight: 700;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.moyo-project-task-delay {
+    flex: 0 0 auto;
+    padding: 1px 4px;
+    border-radius: 999px;
+    background: #fff0f0;
+    color: #e55454;
+    font-size: 8px;
+    font-weight: 900;
+}
+.moyo-day-card.is-project-task-card {
+    border-color: #e3e9f3;
+    background: linear-gradient(180deg, #fff 0%, #fbfcff 100%);
+}
+.moyo-project-task-detail {
+    margin-top: 9px;
+    padding-top: 9px;
+    border-top: 1px solid #edf1f6;
+}
+.moyo-project-task-detail-head {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-bottom: 8px;
+}
+.moyo-project-task-status {
+    display: inline-flex;
+    align-items: center;
+    min-height: 21px;
+    padding: 0 7px;
+    border-radius: 999px;
+    background: #fff5df;
+    color: #c98313;
+    font-size: 10px;
+    font-weight: 900;
+}
+.moyo-project-task-status.is-in_progress { background: #eaf3ff; color: #397fd5; }
+.moyo-project-task-status.is-done { background: #e9fbf7; color: #20a990; }
+.moyo-project-task-status.is-delayed { background: #fff0f0; color: #df4f4f; }
+.moyo-project-task-detail-grid {
+    margin: 0;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px 10px;
+}
+.moyo-project-task-detail-grid > div {
+    min-width: 0;
+    display: grid;
+    grid-template-columns: 52px minmax(0, 1fr);
+    gap: 6px;
+    align-items: baseline;
+}
+.moyo-project-task-detail-grid dt {
+    margin: 0;
+    color: #97a1b1;
+    font-size: 10px;
+    font-weight: 700;
+}
+.moyo-project-task-detail-grid dd {
+    min-width: 0;
+    margin: 0;
+    overflow: hidden;
+    color: #4a5669;
+    font-size: 10px;
+    font-weight: 750;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+@media (max-width: 720px) {
+    .moyo-project-task-assignee { display: none; }
+    .moyo-project-task-detail-grid { grid-template-columns: 1fr; }
+}
+/* ===== End calendar project task display ===== */
+
+
+/* =====================================================================
+   17. 캘린더 프로젝트 필터
+   - 업무 범위, 담당자, 상태, 일정/업무 표시를 프로젝트 탭에서만 제공
+   ===================================================================== */
+.moyo-project-task-filter {
+    margin: -2px 0 18px;
+    padding: 13px 16px;
+    display: flex;
+    align-items: center;
+    gap: 14px 18px;
+    flex-wrap: wrap;
+    border: 1px solid #e7ebf3;
+    border-radius: 15px;
+    background: #fff;
+    box-shadow: 0 5px 16px rgba(31, 42, 68, .035);
+}
+.moyo-project-task-filter[hidden] { display: none !important; }
+.moyo-project-filter-group {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.moyo-project-filter-group.is-display { margin-left: auto; }
+.moyo-project-filter-label {
+    flex: 0 0 auto;
+    color: #8b95a7;
+    font-size: 11px;
+    font-weight: 800;
+}
+.moyo-project-filter-options {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    flex-wrap: wrap;
+}
+.moyo-project-filter-chip {
+    min-height: 28px;
+    padding: 0 10px;
+    border: 1px solid #e1e6ee;
+    border-radius: 999px;
+    background: #fff;
+    color: #687386;
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: border-color .15s ease, background .15s ease, color .15s ease, box-shadow .15s ease;
+}
+.moyo-project-filter-chip:hover {
+    border-color: #bfd3f1;
+    background: #f7faff;
+    color: #477fc8;
+}
+.moyo-project-filter-chip.is-active {
+    border-color: #bcd4f6;
+    background: #edf5ff;
+    color: #397fd5;
+    box-shadow: inset 0 0 0 1px rgba(91, 157, 243, .08);
+}
+.moyo-project-filter-chip.is-delay.is-active {
+    border-color: #f1c0c0;
+    background: #fff0f0;
+    color: #dc5656;
+}
+.moyo-project-filter-select {
+    height: 30px;
+    max-width: 190px;
+    padding: 0 28px 0 10px;
+    border: 1px solid #dfe5ee;
+    border-radius: 9px;
+    background: #fff;
+    color: #4b586b;
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 750;
+    outline: none;
+}
+.moyo-project-filter-select:focus {
+    border-color: #9fc2ef;
+    box-shadow: 0 0 0 3px rgba(74, 144, 226, .1);
+}
+.moyo-project-filter-reset {
+    min-height: 28px;
+    padding: 0 4px;
+    border: 0;
+    background: transparent;
+    color: #9aa3b2;
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 750;
+    cursor: pointer;
+}
+.moyo-project-filter-reset:hover { color: #4a90e2; }
+@media (max-width: 1050px) {
+    .moyo-project-filter-group.is-display { margin-left: 0; }
+}
+@media (max-width: 720px) {
+    .moyo-project-task-filter { align-items: stretch; padding: 13px; }
+    .moyo-project-filter-group { width: 100%; align-items: flex-start; flex-direction: column; }
+    .moyo-project-filter-options { width: 100%; }
+    .moyo-project-filter-select { max-width: 100%; flex: 1 1 150px; }
+    .moyo-project-filter-reset { margin-left: auto; }
+}
+/* ===== End calendar project filter ===== */
+
+
+/* ===== Calendar project selected-date summary v18 ===== */
+.moyo-day-section-title.is-project-summary {
+    min-height: 30px;
+    margin: 15px 0 8px;
+    padding: 0 2px 7px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    border-bottom: 1px solid #edf1f6;
+    color: #48566a;
+}
+.moyo-day-section-title.is-project-summary:first-child { margin-top: 0; }
+.moyo-day-section-title.is-project-summary > span {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    min-width: 0;
+}
+.moyo-day-section-title.is-project-summary i {
+    width: 16px;
+    text-align: center;
+    font-size: 12px;
+}
+.moyo-day-section-title.is-project-summary strong {
+    min-width: 24px;
+    height: 22px;
+    padding: 0 7px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    background: #f1f5f9;
+    color: #64748b;
+    font-size: 11px;
+    font-weight: 900;
+}
+.moyo-day-section-title.is-delayed { color: #d55252; }
+.moyo-day-section-title.is-delayed strong { background: #fff0f0; color: #d55252; }
+.moyo-day-section-title.is-in_progress { color: #3f80cf; }
+.moyo-day-section-title.is-in_progress strong { background: #edf5ff; color: #3f80cf; }
+.moyo-day-section-title.is-due_today { color: #d88722; }
+.moyo-day-section-title.is-due_today strong { background: #fff6e8; color: #c97919; }
+.moyo-day-section-title.is-done_today { color: #159b7e; }
+.moyo-day-section-title.is-done_today strong { background: #edfbf7; color: #159b7e; }
+.moyo-day-section-title.is-project_event { color: #7659c7; }
+.moyo-day-section-title.is-project_event strong { background: #f3efff; color: #7659c7; }
+
+.moyo-day-card.summary-delayed::before { background: #ef6b6b !important; }
+.moyo-day-card.summary-in_progress::before { background: #65a6ef !important; }
+.moyo-day-card.summary-due_today::before { background: #f2a23a !important; }
+.moyo-day-card.summary-done_today::before { background: #42c8a5 !important; }
+.moyo-day-card.summary-project_event::before { background: #8b6bdd !important; }
+.moyo-day-card.is-project-task-card { cursor: pointer; }
+.moyo-day-card.is-project-task-card:hover {
+    border-color: #cbdcf0;
+    box-shadow: 0 7px 17px rgba(64, 100, 145, .08);
+    transform: translateY(-1px);
+}
+/* ===== End calendar project selected-date summary v18 ===== */
+
+
+/* ===== Calendar project top structure compact ===== */
+.moyo-calendar-context {
+    width: 100%;
+    margin: 0 0 10px;
+}
+
+.moyo-calendar-context:empty,
+.moyo-calendar-context[hidden] {
+    display: none !important;
+}
+
+.moyo-calendar-context.is-project-mode {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+}
+
+.moyo-calendar-context.is-project-mode .moyo-calendar-targetbar,
+.moyo-calendar-context.is-project-mode .moyo-project-summary,
+.moyo-calendar-context.is-project-mode .moyo-project-task-filter {
+    width: 100%;
+    margin-left: 0;
+    margin-right: 0;
+}
+
+.moyo-calendar-context.is-project-mode .moyo-calendar-targetbar,
+.moyo-calendar-context.is-project-mode .moyo-project-summary,
+.moyo-calendar-context.is-project-mode .moyo-project-task-filter {
+    margin-bottom: 0;
+}
+
+@media (max-width: 760px) {
+    .moyo-calendar-context,
+    .moyo-calendar-context.is-project-mode {
+        gap: 7px;
+        margin-bottom: 8px;
+    }
+}
+/* ===== End calendar project top structure compact ===== */
+
+/* calendar target selector modal */
+.moyo-target-select-open{flex:0 0 auto;height:38px;padding:0 14px;border:1px solid #dfe5ef;border-radius:12px;background:#fff;color:#384152;font:700 13px/1 inherit;display:inline-flex;align-items:center;gap:7px;cursor:pointer;white-space:nowrap}.moyo-target-select-open:hover{border-color:#8b63f6;color:#6f47df}
+@media(max-width:720px){.moyo-target-select-open span{display:none}.moyo-target-select-open{width:38px;padding:0;justify-content:center}}
+
+
+/* 대상 칩 제거 후 현재 선택 대상만 표시 */
+.moyo-calendar-targetbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    width: 100%;
+    min-height: 42px;
+    margin: 0 0 10px;
+    padding: 0 2px;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+}
+.moyo-calendar-targetbar[hidden] { display: none !important; }
+.moyo-calendar-target-current {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.moyo-calendar-target-label {
+    flex: 0 0 auto;
+    margin: 0;
+    color: #7b8494;
+    font-size: 12px;
+    font-weight: 800;
+}
+.moyo-calendar-target-name {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: #242b38;
+    font-size: 14px;
+    font-weight: 800;
+}
+.moyo-calendar-target-viewport,
+.moyo-calendar-target-list,
+.moyo-target-nav { display: none !important; }
+.moyo-target-select-open {
+    height: 36px;
+    padding: 0 13px;
+    border-radius: 11px;
+}
+@media (max-width: 720px) {
+    .moyo-calendar-targetbar { min-height: 38px; margin-bottom: 8px; }
+    .moyo-calendar-target-current { gap: 7px; }
+    .moyo-calendar-target-label { font-size: 11px; }
+    .moyo-calendar-target-name { font-size: 13px; }
+    .moyo-target-select-open { width: 36px; height: 36px; padding: 0; justify-content: center; }
+}
+
+/* 프로젝트 기간 표시 개선: 얇은 overlay 선 대신 FullCalendar 다중일정 바 사용 */
+.moyo-calendar-board .moyo-project-kind-PROJECT_PERIOD,
+.moyo-calendar-board .moyo-project-kind-PROJECT_PERIOD .fc-event-main {
+    min-height: 21px !important;
+    height: 21px !important;
+    border: 0 !important;
+    background: linear-gradient(90deg, rgba(126, 93, 232, 0.16), rgba(92, 120, 238, 0.12)) !important;
+    color: #5f45c7 !important;
+    box-shadow: inset 0 0 0 1px rgba(111, 79, 214, 0.14) !important;
+    overflow: hidden !important;
+}
+
+.moyo-calendar-board .moyo-project-kind-PROJECT_PERIOD {
+    border-radius: 4px !important;
+    margin-top: 1px !important;
+}
+
+.moyo-calendar-board .moyo-project-kind-PROJECT_PERIOD.fc-event-start {
+    border-top-left-radius: 7px !important;
+    border-bottom-left-radius: 7px !important;
+}
+
+.moyo-calendar-board .moyo-project-kind-PROJECT_PERIOD.fc-event-end {
+    border-top-right-radius: 7px !important;
+    border-bottom-right-radius: 7px !important;
+}
+
+.moyo-calendar-board .moyo-project-kind-PROJECT_PERIOD .moyo-fc-event {
+    display: flex !important;
+    align-items: center !important;
+    width: 100% !important;
+    max-width: none !important;
+    height: 21px !important;
+    min-height: 21px !important;
+    padding: 0 7px !important;
+    border: 0 !important;
+    border-radius: inherit !important;
+    background: transparent !important;
+    color: inherit !important;
+    box-shadow: none !important;
+    overflow: hidden !important;
+}
+
+.moyo-calendar-board .moyo-project-kind-PROJECT_PERIOD .moyo-fc-event-title {
+    display: block !important;
+    flex: 1 1 auto !important;
+    max-width: none !important;
+    min-width: 0 !important;
+    padding: 0 !important;
+    background: transparent !important;
+    color: inherit !important;
+    font-size: 10.5px !important;
+    font-weight: 750 !important;
+    line-height: 21px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
+.moyo-calendar-board .moyo-project-kind-PROJECT_PERIOD .moyo-project-period-tail,
+.moyo-calendar-board .moyo-project-kind-PROJECT_PERIOD .moyo-calendar-event-avatar,
+.moyo-project-period-row-line,
+.moyo-day-project-status {
+    display: none !important;
+}
+
+.moyo-project-period-event-hidden,
+.moyo-project-period-event-hidden .fc-event-main,
+.moyo-calendar-board .fc-daygrid-event-harness.moyo-project-period-event-hidden {
+    display: block !important;
+    height: auto !important;
+    min-height: 0 !important;
+    margin: initial !important;
+    padding: initial !important;
+    overflow: visible !important;
+}
+
+/* 전체 탭: 프로젝트 기간은 개별 바 대신 월 헤더의 축약 정보로만 표시 */
+.moyo-calendar-board .moyo-all-project-overview {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 30px;
+    margin-left: 8px;
+    padding: 0 10px;
+    border: 1px solid rgba(83, 122, 235, 0.18);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.92);
+    color: #52627b;
+    font-size: 11px;
+    font-weight: 760;
+    line-height: 1;
+    cursor: pointer;
+    white-space: nowrap;
+    box-shadow: 0 4px 12px rgba(41, 77, 145, 0.06);
+}
+
+.moyo-calendar-board .moyo-all-project-overview:hover {
+    border-color: rgba(71, 122, 238, 0.34);
+    background: #fff;
+    color: #315ec9;
+}
+
+.moyo-calendar-board .moyo-all-project-overview-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 999px;
+    background: linear-gradient(135deg, #35d7bd 0%, #4c8df6 52%, #8a63f6 100%);
+    box-shadow: 0 0 0 3px rgba(76, 141, 246, 0.1);
+}
+
+@media (max-width: 980px) {
+    .moyo-calendar-board .moyo-all-project-overview {
+        max-width: 170px;
+    }
+
+    .moyo-calendar-board .moyo-all-project-overview-text {
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
 }

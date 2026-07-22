@@ -12,13 +12,16 @@
         WS_NAME, 
         INVITE_CODE, 
         OWNER_ID, 
-        WS_IMAGE_PATH, WS_DESCRIPTION, WS_TYPE
+        WS_IMAGE_PATH, WS_DESCRIPTION, WS_TYPE, JOIN_TYPE
     ) VALUES (
         #{wsId}, 
-        #{wsName}, 
-        #{inviteCode}, 
+        #{wsName, jdbcType=VARCHAR}, 
+        #{inviteCode, jdbcType=VARCHAR}, 
         #{ownerId}, 
-        #{wsImagePath}, #{wsDescription}, #{wsType}
+        #{wsImagePath, jdbcType=VARCHAR},
+        #{wsDescription, jdbcType=VARCHAR},
+        #{wsType, jdbcType=VARCHAR},
+        #{joinType, jdbcType=VARCHAR}
     )
 </insert>
 	
@@ -30,7 +33,11 @@
 	        W.OWNER_ID,
 	        W.WS_IMAGE_PATH,
 	        W.WS_DESCRIPTION,
-        W.WS_TYPE
+        W.WS_TYPE,
+        W.JOIN_TYPE,
+        NVL(W.STATUS, 'ACTIVE') AS STATUS,
+        TO_CHAR(W.DELETE_REQUESTED_AT, 'YYYY-MM-DD HH24:MI') AS DELETE_REQUESTED_AT,
+        TO_CHAR(W.DELETE_DEADLINE_AT, 'YYYY-MM-DD HH24:MI') AS DELETE_DEADLINE_AT
 	    FROM WORKSPACES W
 	    JOIN WS_MEMBERS M ON W.WS_ID = M.WS_ID
 	    WHERE M.USER_ID = #{userId}
@@ -39,27 +46,49 @@
 	
 	<select id="selectWorkspaceDetail" parameterType="long" resultType="com.springboot.project.dto.workspaceDTO">
 	    SELECT 
-	        WS_ID, 
-	        WS_NAME, 
-	        INVITE_CODE, 
-	        OWNER_ID,
-	        WS_IMAGE_PATH,
-	        WS_DESCRIPTION,
-        WS_TYPE
+	        WS_ID,
+            WS_NAME,
+            INVITE_CODE,
+            OWNER_ID,
+            WS_IMAGE_PATH,
+            WS_IMAGE_ORIGINAL_PATH,
+            WS_IMAGE_CROP_SCALE,
+            WS_IMAGE_CROP_X,
+            WS_IMAGE_CROP_Y,
+            WS_DESCRIPTION,
+            WS_TYPE,
+            JOIN_TYPE,
+            NVL(STATUS, 'ACTIVE') AS STATUS,
+            TO_CHAR(DELETE_REQUESTED_AT, 'YYYY-MM-DD HH24:MI') AS DELETE_REQUESTED_AT,
+            TO_CHAR(DELETE_DEADLINE_AT, 'YYYY-MM-DD HH24:MI') AS DELETE_DEADLINE_AT
 	    FROM WORKSPACES 
 	    WHERE WS_ID = #{wsId}
 	</select>
 	
 	<update id="updateWorkspace" parameterType="com.springboot.project.dto.workspaceDTO">
-	    UPDATE WORKSPACES
-	    SET 
-	        WS_NAME = #{wsName},
-	        WS_DESCRIPTION = #{wsDescription}
-	        <if test="wsImagePath != null and wsImagePath != ''">
-	        , WS_IMAGE_PATH = #{wsImagePath}
-	        </if>
-	    WHERE WS_ID = #{wsId}
-	</update>
+        UPDATE WORKSPACES
+           SET WS_NAME = #{wsName, jdbcType=VARCHAR},
+               WS_DESCRIPTION = #{wsDescription, jdbcType=VARCHAR},
+               WS_TYPE = #{wsType, jdbcType=VARCHAR},
+               JOIN_TYPE = #{joinType, jdbcType=VARCHAR}
+            <choose>
+                <when test='removeWorkspaceImage == "Y"'>
+                   , WS_IMAGE_PATH = NULL
+                   , WS_IMAGE_ORIGINAL_PATH = NULL
+                   , WS_IMAGE_CROP_SCALE = NULL
+                   , WS_IMAGE_CROP_X = NULL
+                   , WS_IMAGE_CROP_Y = NULL
+                </when>
+                <when test="wsImagePath != null and wsImagePath != ''">
+                   , WS_IMAGE_PATH = #{wsImagePath, jdbcType=VARCHAR}
+                   , WS_IMAGE_ORIGINAL_PATH = #{wsImageOriginalPath, jdbcType=VARCHAR}
+                   , WS_IMAGE_CROP_SCALE = #{wsImageCropScale, jdbcType=NUMERIC}
+                   , WS_IMAGE_CROP_X = #{wsImageCropX, jdbcType=NUMERIC}
+                   , WS_IMAGE_CROP_Y = #{wsImageCropY, jdbcType=NUMERIC}
+                </when>
+            </choose>
+         WHERE WS_ID = #{wsId}
+    </update>
 	
 	<insert id="insertWorkspaceMember">
 	    INSERT INTO WS_MEMBERS (
@@ -82,13 +111,18 @@
             m.WS_MEM_ID,
             m.WS_ROLE,
             u.USER_ID,
+            p.CONTACT_EMAIL AS CUSTOM_CONTACT_EMAIL,
             NVL(p.CONTACT_EMAIL, u.EMAIL) AS EMAIL,
             CASE
                 WHEN NVL(p.USE_ACCOUNT_PROFILE, 'Y') = 'N'
                     THEN NVL(p.DISPLAY_NAME, u.USER_NAME)
                 ELSE u.USER_NAME
             END AS DISPLAY_NAME,
-            p.PROFILE_IMAGE_PATH AS PROFILE_IMAGE_PATH,
+            CASE
+                WHEN NVL(p.USE_ACCOUNT_PROFILE, 'Y') = 'N'
+                    THEN p.PROFILE_IMAGE_PATH
+                ELSE u.PROFILE_IMAGE_PATH
+            END AS PROFILE_IMAGE_PATH,
             p.POSITION_NAME,
             TO_CHAR(m.JOINED_AT, 'YYYY-MM-DD') AS JOINED_AT
         FROM WS_MEMBERS m
@@ -207,6 +241,35 @@
 	    WHERE m.WS_ID = #{wsId}
 	    ORDER BY CASE WHEN m.WS_ROLE = 'ADMIN' THEN 1 ELSE 2 END, "USER_NAME"
 	</select>
+    <update id="requestWorkspaceDeletion">
+        UPDATE WORKSPACES
+           SET STATUS = 'DELETE_PENDING',
+               DELETE_REQUESTED_AT = SYSDATE,
+               DELETE_DEADLINE_AT = SYSDATE + 30
+         WHERE WS_ID = #{wsId}
+           AND OWNER_ID = #{ownerId}
+           AND NVL(STATUS, 'ACTIVE') = 'ACTIVE'
+    </update>
+
+    <update id="cancelWorkspaceDeletion">
+        UPDATE WORKSPACES
+           SET STATUS = 'ACTIVE',
+               DELETE_REQUESTED_AT = NULL,
+               DELETE_DEADLINE_AT = NULL
+         WHERE WS_ID = #{wsId}
+           AND OWNER_ID = #{ownerId}
+           AND STATUS = 'DELETE_PENDING'
+           AND DELETE_DEADLINE_AT >= SYSDATE
+    </update>
+
+    <select id="selectExpiredWorkspaceDeletionIds" resultType="long">
+        SELECT WS_ID
+          FROM WORKSPACES
+         WHERE STATUS = 'DELETE_PENDING'
+           AND DELETE_DEADLINE_AT &lt; SYSDATE
+         ORDER BY DELETE_DEADLINE_AT
+    </select>
+
 	<delete id="deleteWorkspaceAllMembers">
 	    DELETE FROM WS_MEMBERS 
 	    WHERE WS_ID = #{wsId}
@@ -342,11 +405,11 @@
            ON (p.WS_ID = src.WS_ID AND p.USER_ID = src.USER_ID)
         WHEN NOT MATCHED THEN
             INSERT (
-                WS_ID, USER_ID, USE_ACCOUNT_PROFILE, SHOW_PHONE,
+                WS_ID, USER_ID, USE_ACCOUNT_PROFILE, SHOW_PHONE, SHOW_BIRTH,
                 CREATED_AT, UPDATED_AT
             )
             VALUES (
-                src.WS_ID, src.USER_ID, 'Y', 'N',
+                src.WS_ID, src.USER_ID, 'Y', 'N', 'Y',
                 SYSDATE, SYSDATE
             )
     </insert>
@@ -360,8 +423,20 @@
                 ELSE 'N'
             END AS IS_OWNER,
             u.EMAIL AS ACCOUNT_EMAIL,
+            p.CONTACT_EMAIL AS CUSTOM_CONTACT_EMAIL,
             NVL(p.CONTACT_EMAIL, u.EMAIL) AS EMAIL,
             u.USER_NAME AS ACCOUNT_NAME,
+            u.PROFILE_IMAGE_PATH AS ACCOUNT_PROFILE_IMAGE_PATH,
+            u.PROFILE_ORIGINAL_IMAGE_PATH AS ACCOUNT_PROFILE_ORIGINAL_IMAGE_PATH,
+            NVL(u.PROFILE_CROP_SCALE, 1) AS ACCOUNT_PROFILE_CROP_SCALE,
+            NVL(u.PROFILE_CROP_X, 0) AS ACCOUNT_PROFILE_CROP_X,
+            NVL(u.PROFILE_CROP_Y, 0) AS ACCOUNT_PROFILE_CROP_Y,
+            NVL(u.PROFILE_AVATAR_TYPE, 'DEFAULT') AS ACCOUNT_PROFILE_AVATAR_TYPE,
+            p.PROFILE_IMAGE_PATH AS CUSTOM_PROFILE_IMAGE_PATH,
+            p.PROFILE_IMAGE_ORIGINAL_PATH AS CUSTOM_PROFILE_IMAGE_ORIGINAL_PATH,
+            NVL(p.PROFILE_IMAGE_CROP_SCALE, 1) AS CUSTOM_PROFILE_IMAGE_CROP_SCALE,
+            NVL(p.PROFILE_IMAGE_CROP_X, 0) AS CUSTOM_PROFILE_IMAGE_CROP_X,
+            NVL(p.PROFILE_IMAGE_CROP_Y, 0) AS CUSTOM_PROFILE_IMAGE_CROP_Y,
             CASE
                 WHEN NVL(p.USE_ACCOUNT_PROFILE, 'Y') = 'N'
                     THEN NVL(p.DISPLAY_NAME, u.USER_NAME)
@@ -371,7 +446,7 @@
             CASE
                 WHEN NVL(p.USE_ACCOUNT_PROFILE, 'Y') = 'N'
                     THEN p.PROFILE_IMAGE_PATH
-                ELSE NULL
+                ELSE u.PROFILE_IMAGE_PATH
             END AS PROFILE_IMAGE_PATH,
             p.POSITION_NAME,
             CASE
@@ -380,8 +455,19 @@
                 ELSE NULL
             END AS PHONE_NUMBER,
             NVL(p.SHOW_PHONE, 'N') AS SHOW_PHONE,
+            NVL(p.SHOW_BIRTH, 'Y') AS SHOW_BIRTH,
             NVL(p.USE_ACCOUNT_PROFILE, 'Y') AS USE_ACCOUNT_PROFILE,
-            TO_CHAR(m.JOINED_AT, 'YYYY-MM-DD') AS JOINED_AT
+            TO_CHAR(m.JOINED_AT, 'YYYY-MM-DD') AS JOINED_AT,
+            CASE
+                WHEN NVL(p.SHOW_BIRTH, 'Y') = 'Y'
+                    THEN TO_CHAR(u.BIRTH_DATE, 'MM-DD')
+                ELSE NULL
+            END AS BIRTH_DATE,
+            CASE
+                WHEN NVL(p.SHOW_BIRTH, 'Y') = 'Y'
+                    THEN NVL(u.BIRTH_CALENDAR_TYPE, 'SOLAR')
+                ELSE NULL
+            END AS BIRTH_CALENDAR_TYPE
         FROM WS_MEMBERS m
         JOIN WORKSPACES w ON w.WS_ID = m.WS_ID
         JOIN USERS u ON u.USER_ID = m.USER_ID
@@ -398,16 +484,76 @@
           )
     </select>
 
+    <select id="selectSavedWorkspaceMemberProfile" resultType="map">
+        SELECT
+            p.WS_ID,
+            p.USER_ID,
+            NVL(p.USE_ACCOUNT_PROFILE, 'Y') AS USE_ACCOUNT_PROFILE,
+            p.DISPLAY_NAME AS CUSTOM_DISPLAY_NAME,
+            p.PROFILE_IMAGE_PATH AS CUSTOM_PROFILE_IMAGE_PATH,
+            p.PROFILE_IMAGE_ORIGINAL_PATH AS CUSTOM_PROFILE_IMAGE_ORIGINAL_PATH,
+            NVL(p.PROFILE_IMAGE_CROP_SCALE, 1) AS CUSTOM_PROFILE_IMAGE_CROP_SCALE,
+            NVL(p.PROFILE_IMAGE_CROP_X, 0) AS CUSTOM_PROFILE_IMAGE_CROP_X,
+            NVL(p.PROFILE_IMAGE_CROP_Y, 0) AS CUSTOM_PROFILE_IMAGE_CROP_Y,
+            p.CONTACT_EMAIL,
+            p.POSITION_NAME,
+            p.PHONE_NUMBER,
+            NVL(p.SHOW_PHONE, 'N') AS SHOW_PHONE,
+            NVL(p.SHOW_BIRTH, 'Y') AS SHOW_BIRTH
+        FROM WS_MEMBER_PROFILES p
+        WHERE p.WS_ID = #{wsId}
+          AND p.USER_ID = #{userId}
+    </select>
+
     <update id="updateWorkspaceMemberProfile" parameterType="map">
         UPDATE WS_MEMBER_PROFILES
-           SET USE_ACCOUNT_PROFILE = #{useAccountProfile},
+           SET USE_ACCOUNT_PROFILE = #{useAccountProfile, jdbcType=VARCHAR},
                DISPLAY_NAME = #{displayName, jdbcType=VARCHAR},
                PROFILE_IMAGE_PATH =
-                   COALESCE(#{profileImagePath, jdbcType=VARCHAR}, PROFILE_IMAGE_PATH),
+                   CASE
+                       WHEN #{removeProfileImage, jdbcType=VARCHAR} = 'Y' THEN NULL
+                       ELSE COALESCE(
+                           #{profileImagePath, jdbcType=VARCHAR},
+                           PROFILE_IMAGE_PATH
+                       )
+                   END,
+               PROFILE_IMAGE_ORIGINAL_PATH =
+                   CASE
+                       WHEN #{removeProfileImage, jdbcType=VARCHAR} = 'Y' THEN NULL
+                       ELSE COALESCE(
+                           #{profileImageOriginalPath, jdbcType=VARCHAR},
+                           PROFILE_IMAGE_ORIGINAL_PATH
+                       )
+                   END,
+               PROFILE_IMAGE_CROP_SCALE =
+                   CASE
+                       WHEN #{removeProfileImage, jdbcType=VARCHAR} = 'Y' THEN 1
+                       ELSE COALESCE(
+                           #{profileImageCropScale, jdbcType=NUMERIC},
+                           PROFILE_IMAGE_CROP_SCALE
+                       )
+                   END,
+               PROFILE_IMAGE_CROP_X =
+                   CASE
+                       WHEN #{removeProfileImage, jdbcType=VARCHAR} = 'Y' THEN 0
+                       ELSE COALESCE(
+                           #{profileImageCropX, jdbcType=NUMERIC},
+                           PROFILE_IMAGE_CROP_X
+                       )
+                   END,
+               PROFILE_IMAGE_CROP_Y =
+                   CASE
+                       WHEN #{removeProfileImage, jdbcType=VARCHAR} = 'Y' THEN 0
+                       ELSE COALESCE(
+                           #{profileImageCropY, jdbcType=NUMERIC},
+                           PROFILE_IMAGE_CROP_Y
+                       )
+                   END,
                CONTACT_EMAIL = #{contactEmail, jdbcType=VARCHAR},
                POSITION_NAME = #{positionName, jdbcType=VARCHAR},
                PHONE_NUMBER = #{phoneNumber, jdbcType=VARCHAR},
-               SHOW_PHONE = #{showPhone},
+               SHOW_PHONE = #{showPhone, jdbcType=VARCHAR},
+               SHOW_BIRTH = #{showBirth, jdbcType=VARCHAR},
                UPDATED_AT = SYSDATE
          WHERE WS_ID = #{wsId}
            AND USER_ID = #{userId}
@@ -420,10 +566,15 @@
             USE_ACCOUNT_PROFILE,
             DISPLAY_NAME,
             PROFILE_IMAGE_PATH,
+            PROFILE_IMAGE_ORIGINAL_PATH,
+            PROFILE_IMAGE_CROP_SCALE,
+            PROFILE_IMAGE_CROP_X,
+            PROFILE_IMAGE_CROP_Y,
             CONTACT_EMAIL,
             POSITION_NAME,
             PHONE_NUMBER,
             SHOW_PHONE,
+            SHOW_BIRTH,
             CREATED_AT,
             UPDATED_AT
         ) VALUES (
@@ -432,10 +583,15 @@
             #{useAccountProfile},
             #{displayName, jdbcType=VARCHAR},
             #{profileImagePath, jdbcType=VARCHAR},
+            #{profileImageOriginalPath, jdbcType=VARCHAR},
+            #{profileImageCropScale, jdbcType=NUMERIC},
+            #{profileImageCropX, jdbcType=NUMERIC},
+            #{profileImageCropY, jdbcType=NUMERIC},
             #{contactEmail, jdbcType=VARCHAR},
             #{positionName, jdbcType=VARCHAR},
             #{phoneNumber, jdbcType=VARCHAR},
             #{showPhone},
+            #{showBirth},
             SYSDATE,
             SYSDATE
         )
@@ -491,6 +647,7 @@
                 USE_ACCOUNT_PROFILE,
                 POSITION_NAME,
                 SHOW_PHONE,
+                SHOW_BIRTH,
                 CREATED_AT,
                 UPDATED_AT
             )
@@ -503,6 +660,279 @@
                 SYSDATE,
                 SYSDATE
             )
+    </insert>
+
+    <select id="countPendingJoinRequest" resultType="int">
+        SELECT COUNT(*)
+          FROM WS_JOIN_REQUESTS
+         WHERE WS_ID = #{wsId}
+           AND REQUESTER_ID = #{userId}
+           AND STATUS = 'PENDING'
+    </select>
+
+    <insert id="insertJoinRequest">
+        INSERT INTO WS_JOIN_REQUESTS (
+            REQUEST_ID, WS_ID, REQUESTER_ID, STATUS, REQUESTED_AT, UPDATED_AT
+        ) VALUES (
+            SEQ_WS_JOIN_REQUEST_ID.NEXTVAL, #{wsId}, #{userId}, 'PENDING', SYSDATE, SYSDATE
+        )
+    </insert>
+
+    <update id="cancelJoinRequest">
+        UPDATE WS_JOIN_REQUESTS
+           SET STATUS = 'CANCELLED',
+               UPDATED_AT = SYSDATE
+         WHERE WS_ID = #{wsId}
+           AND REQUESTER_ID = #{userId}
+           AND STATUS = 'PENDING'
+    </update>
+
+    <select id="selectJoinRequestStatus" resultType="string">
+        SELECT STATUS
+          FROM (
+                SELECT STATUS
+                  FROM WS_JOIN_REQUESTS
+                 WHERE WS_ID = #{wsId}
+                   AND REQUESTER_ID = #{userId}
+                 ORDER BY REQUESTED_AT DESC, REQUEST_ID DESC
+          )
+         WHERE ROWNUM = 1
+    </select>
+
+    <insert id="insertJoinRequestNotices">
+        INSERT INTO USER_NOTICES (
+            ALARM_ID, USER_ID, NOTICE_ID, ALERT_TYPE, TARGET_TYPE, TARGET_ID,
+            TITLE, CONTENT, LINK_URL, IS_READ, REG_DT
+        )
+        SELECT SEQ_ALARM_ID.NEXTVAL,
+               recipients.USER_ID,
+               NULL,
+               'GROUP_JOIN_REQUEST',
+               'GROUP',
+               #{wsId},
+               w.WS_NAME || ' 참여 요청',
+               u.USER_NAME || '님이 그룹 참여를 요청했습니다.',
+               '/workspace/settings?wsId=' || #{wsId} || '&amp;tab=members',
+               'N',
+               SYSDATE
+          FROM (
+                SELECT OWNER_ID AS USER_ID
+                  FROM WORKSPACES
+                 WHERE WS_ID = #{wsId}
+                UNION
+                SELECT USER_ID
+                  FROM WS_MEMBERS
+                 WHERE WS_ID = #{wsId}
+                   AND WS_ROLE = 'ADMIN'
+          ) recipients
+          JOIN WORKSPACES w ON w.WS_ID = #{wsId}
+          JOIN USERS u ON u.USER_ID = #{userId}
+         WHERE recipients.USER_ID &lt;&gt; #{userId}
+    </insert>
+
+    <delete id="deleteJoinRequestManagerNotices">
+        DELETE FROM USER_NOTICES un
+         WHERE un.ALERT_TYPE = 'GROUP_JOIN_REQUEST'
+           AND EXISTS (
+               SELECT 1
+                 FROM WS_JOIN_REQUESTS r
+                 JOIN USERS requester
+                   ON requester.USER_ID = r.REQUESTER_ID
+                 JOIN WORKSPACES w
+                   ON w.WS_ID = r.WS_ID
+                WHERE r.REQUEST_ID = #{requestId}
+                  AND un.TARGET_TYPE = 'GROUP'
+                  AND un.TARGET_ID = r.WS_ID
+                  AND un.CONTENT = requester.USER_NAME || '님이 그룹 참여를 요청했습니다.'
+                  AND (
+                      un.USER_ID = w.OWNER_ID
+                      OR EXISTS (
+                          SELECT 1
+                            FROM WS_MEMBERS admin_member
+                           WHERE admin_member.WS_ID = r.WS_ID
+                             AND admin_member.USER_ID = un.USER_ID
+                             AND admin_member.WS_ROLE = 'ADMIN'
+                      )
+                  )
+           )
+    </delete>
+
+    <select id="selectPendingJoinRequestsForAdmin" resultType="map">
+        SELECT r.REQUEST_ID AS "requestId",
+               r.WS_ID AS "wsId",
+               w.WS_NAME AS "wsName",
+               r.REQUESTER_ID AS "requesterId",
+               u.USER_NAME AS "requesterName",
+               u.EMAIL AS "requesterEmail",
+               u.PROFILE_IMAGE_PATH AS "requesterProfileImage",
+               r.REQUESTED_AT AS "requestedAt",
+               r.STATUS AS "status"
+          FROM WS_JOIN_REQUESTS r
+          JOIN WORKSPACES w ON w.WS_ID = r.WS_ID
+          JOIN USERS u ON u.USER_ID = r.REQUESTER_ID
+         WHERE r.STATUS = 'PENDING'
+           AND (w.OWNER_ID = #{userId}
+                OR EXISTS (
+                    SELECT 1
+                      FROM WS_MEMBERS m
+                     WHERE m.WS_ID = r.WS_ID
+                       AND m.USER_ID = #{userId}
+                       AND m.WS_ROLE = 'ADMIN'
+                ))
+         ORDER BY r.REQUESTED_AT ASC, r.REQUEST_ID ASC
+    </select>
+
+    <select id="selectJoinRequestById" resultType="map">
+        SELECT r.REQUEST_ID AS requestId,
+               r.WS_ID AS wsId,
+               r.REQUESTER_ID AS requesterId,
+               r.STATUS AS status,
+               w.WS_NAME AS wsName,
+               w.OWNER_ID AS ownerId
+          FROM WS_JOIN_REQUESTS r
+          JOIN WORKSPACES w ON w.WS_ID = r.WS_ID
+         WHERE r.REQUEST_ID = #{requestId}
+    </select>
+
+    <update id="updateJoinRequestStatus">
+        UPDATE WS_JOIN_REQUESTS
+           SET STATUS = #{status},
+               REVIEWER_ID = #{reviewerId},
+               REVIEWED_AT = SYSDATE,
+               UPDATED_AT = SYSDATE
+         WHERE REQUEST_ID = #{requestId}
+           AND STATUS = 'PENDING'
+    </update>
+
+
+    <delete id="deleteJoinRequestResultNotices">
+        DELETE FROM USER_NOTICES un
+         WHERE un.ALERT_TYPE IN (
+                   'GROUP_JOIN_APPROVED',
+                   'GROUP_JOIN_REJECTED',
+                   'GROUP_JOIN_COMPLETED'
+               )
+           AND EXISTS (
+               SELECT 1
+                 FROM WS_JOIN_REQUESTS r
+                WHERE r.REQUEST_ID = #{requestId}
+                  AND r.REQUESTER_ID = un.USER_ID
+                  AND r.WS_ID = un.TARGET_ID
+           )
+    </delete>
+
+    <insert id="insertJoinRequestResultNotice">
+        INSERT INTO USER_NOTICES (
+            ALARM_ID, USER_ID, NOTICE_ID, ALERT_TYPE, TARGET_TYPE, TARGET_ID,
+            TITLE, CONTENT, LINK_URL, IS_READ, REG_DT
+        )
+        SELECT SEQ_ALARM_ID.NEXTVAL,
+               r.REQUESTER_ID,
+               NULL,
+               CASE WHEN #{status} = 'APPROVED'
+                    THEN 'GROUP_JOIN_APPROVED'
+                    ELSE 'GROUP_JOIN_REJECTED' END,
+               'GROUP',
+               r.WS_ID,
+               w.WS_NAME || CASE WHEN #{status} = 'APPROVED'
+                                 THEN ' 참여 요청 승인'
+                                 ELSE ' 참여 요청 거절' END,
+               CASE WHEN #{status} = 'APPROVED'
+                    THEN '참여 요청이 승인되었습니다. 프로필을 설정하면 그룹에 참여할 수 있습니다.'
+                    ELSE CASE
+                        WHEN #{rejectionReason, jdbcType=VARCHAR} IS NOT NULL
+                        THEN '이번에는 그룹 참여가 승인되지 않았습니다. 사유: '
+                             || #{rejectionReason, jdbcType=VARCHAR}
+                        ELSE '이번에는 그룹 참여가 승인되지 않았습니다.'
+                    END
+               END,
+               CASE WHEN #{status} = 'APPROVED'
+                    THEN '/requests?approvedJoinRequestId=' || r.REQUEST_ID
+                    ELSE '/requests?rejectedJoinRequestId=' || r.REQUEST_ID END,
+               'N',
+               SYSDATE
+          FROM WS_JOIN_REQUESTS r
+          JOIN WORKSPACES w ON w.WS_ID = r.WS_ID
+         WHERE r.REQUEST_ID = #{requestId}
+           AND NOT EXISTS (
+               SELECT 1
+                 FROM USER_NOTICES un
+                WHERE un.USER_ID = r.REQUESTER_ID
+                  AND un.ALERT_TYPE = CASE WHEN #{status} = 'APPROVED'
+                                           THEN 'GROUP_JOIN_APPROVED'
+                                           ELSE 'GROUP_JOIN_REJECTED' END
+                  AND un.LINK_URL = CASE WHEN #{status} = 'APPROVED'
+                                        THEN '/requests?approvedJoinRequestId=' || r.REQUEST_ID
+                                        ELSE '/requests?rejectedJoinRequestId=' || r.REQUEST_ID END
+           )
+    </insert>
+
+
+    <update id="abandonApprovedJoinRequest">
+        UPDATE WS_JOIN_REQUESTS
+           SET STATUS = 'CANCELLED',
+               UPDATED_AT = SYSDATE
+         WHERE REQUEST_ID = #{requestId}
+           AND REQUESTER_ID = #{userId}
+           AND STATUS = 'APPROVED'
+    </update>
+
+    <insert id="insertJoinAbandonedNotice">
+        INSERT INTO USER_NOTICES (
+            ALARM_ID, USER_ID, NOTICE_ID, ALERT_TYPE, TARGET_TYPE, TARGET_ID,
+            TITLE, CONTENT, LINK_URL, IS_READ, REG_DT
+        )
+        SELECT SEQ_ALARM_ID.NEXTVAL,
+               r.REQUESTER_ID,
+               NULL,
+               'GROUP_JOIN_CANCELLED',
+               'GROUP',
+               r.WS_ID,
+               w.WS_NAME || ' 참여 포기',
+               '승인된 그룹 참여를 포기했습니다. 다시 참여하려면 새로 요청해주세요.',
+               '/requests',
+               'Y',
+               SYSDATE
+          FROM WS_JOIN_REQUESTS r
+          JOIN WORKSPACES w ON w.WS_ID = r.WS_ID
+         WHERE r.REQUEST_ID = #{requestId}
+    </insert>
+
+    <update id="completeApprovedJoinRequest">
+        UPDATE WS_JOIN_REQUESTS
+           SET STATUS = 'COMPLETED',
+               UPDATED_AT = SYSDATE
+         WHERE REQUEST_ID = #{requestId}
+           AND REQUESTER_ID = #{userId}
+           AND STATUS = 'APPROVED'
+    </update>
+
+
+    <update id="resolveApprovedJoinNotice">
+        UPDATE USER_NOTICES
+           SET IS_READ = 'Y'
+         WHERE 1 = 0
+    </update>
+
+    <insert id="insertJoinCompletedNotice">
+        INSERT INTO USER_NOTICES (
+            ALARM_ID, USER_ID, NOTICE_ID, ALERT_TYPE, TARGET_TYPE, TARGET_ID,
+            TITLE, CONTENT, LINK_URL, IS_READ, REG_DT
+        )
+        SELECT SEQ_ALARM_ID.NEXTVAL,
+               r.REQUESTER_ID,
+               NULL,
+               'GROUP_JOIN_COMPLETED',
+               'GROUP',
+               r.WS_ID,
+               w.WS_NAME || ' 참여 완료',
+               '그룹 프로필 설정과 참여가 완료되었습니다.',
+               '/workspace/main?wsId=' || r.WS_ID,
+               'Y',
+               SYSDATE
+          FROM WS_JOIN_REQUESTS r
+          JOIN WORKSPACES w ON w.WS_ID = r.WS_ID
+         WHERE r.REQUEST_ID = #{requestId}
     </insert>
 
 </mapper>

@@ -26,7 +26,20 @@ public class calendarResponseDTO {
     private String wsName;
     private String projName;
     private String projectWorkspaceName;
+    private String projectScope;
+    private String projectItemKind;
     private String wsImagePath;
+
+    // 프로젝트 업무 캘린더 연결 정보
+    private Long assigneeUserId;
+    private String assigneeName;
+    private String assigneeEmail;
+    private String assigneeProfileImagePath;
+    private String actualStartDt;
+    private String actualDoneDt;
+    private String delayedYn;
+    private String delayedCompletedYn;
+    private Integer delayedDays;
     private String locationText;
     private String locationAddress;
     private Double locationLat;

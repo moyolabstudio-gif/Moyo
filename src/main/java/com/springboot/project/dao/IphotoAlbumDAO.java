@@ -23,6 +23,9 @@ public interface IphotoAlbumDAO {
                                                 @Param("scopeId") Long scopeId,
                                                 @Param("limit") int limit,
                                                 @Param("userId") Long userId);
+    List<Map<String, Object>> selectProfilePublicPosts(@Param("profileUserId") Long profileUserId,
+                                                       @Param("userId") Long userId);
+    int countProfilePublicPosts(@Param("profileUserId") Long profileUserId);
     Map<String, Object> selectPost(@Param("postId") Long postId, @Param("userId") Long userId);
     List<Map<String, Object>> selectPostPhotos(@Param("postId") Long postId);
     int insertPost(Map<String, Object> params);

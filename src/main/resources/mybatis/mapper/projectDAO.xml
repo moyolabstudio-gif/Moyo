@@ -76,18 +76,46 @@
     </delete>
 
 <select id="getAssignableMembers" resultType="map">
-        SELECT *
-        FROM USERS
-        WHERE USER_ID IN (
-            SELECT USER_ID
-            FROM WS_MEMBERS
-            WHERE WS_ID = #{wsId}
-        )
-          AND USER_ID NOT IN (
-            SELECT USER_ID
-            FROM PROJ_MEMBERS
-            WHERE PROJ_ID = #{projId}
-        )
+        SELECT
+            u.USER_ID AS "USER_ID",
+            CASE
+                WHEN NVL(wp.USE_ACCOUNT_PROFILE, 'Y') = 'N'
+                    THEN NVL(wp.DISPLAY_NAME, u.USER_NAME)
+                ELSE u.USER_NAME
+            END AS "USER_NAME",
+            CASE
+                WHEN NVL(wp.USE_ACCOUNT_PROFILE, 'Y') = 'N'
+                    THEN wp.PROFILE_IMAGE_PATH
+                ELSE u.PROFILE_IMAGE_PATH
+            END AS "PROFILE_IMAGE_PATH",
+            CASE
+                WHEN NVL(wp.USE_ACCOUNT_PROFILE, 'Y') = 'N'
+                    THEN wp.PROFILE_IMAGE_PATH
+                ELSE u.PROFILE_IMAGE_PATH
+            END AS "profileImagePath",
+            NVL(wp.CONTACT_EMAIL, u.EMAIL) AS "EMAIL",
+            wm.WS_ROLE AS "WS_ROLE",
+            wp.POSITION_NAME AS "WS_POSITION"
+        FROM WS_MEMBERS wm
+        JOIN USERS u
+          ON u.USER_ID = wm.USER_ID
+        LEFT JOIN WS_MEMBER_PROFILES wp
+          ON wp.WS_ID = wm.WS_ID
+         AND wp.USER_ID = wm.USER_ID
+        WHERE wm.WS_ID = #{wsId}
+          AND NOT EXISTS (
+              SELECT 1
+              FROM PROJ_MEMBERS pm
+              WHERE pm.PROJ_ID = #{projId}
+                AND pm.USER_ID = wm.USER_ID
+          )
+        ORDER BY
+            CASE
+                WHEN wm.WS_ROLE IN ('OWNER', 'LEADER') THEN 1
+                WHEN wm.WS_ROLE = 'ADMIN' THEN 2
+                ELSE 3
+            END,
+            "USER_NAME" ASC
     </select>
 
     <select id="getProjectMembers" resultType="map">
@@ -171,7 +199,7 @@
             p.PROJ_NAME AS "projName",
             p.WS_ID AS "wsId",
             TO_CHAR(pd.START_DT, 'YYYY-MM-DD') AS "startDate",
-            TO_CHAR(pd.END_DT - 1, 'YYYY-MM-DD') AS "endDate"
+            TO_CHAR(pd.END_DT, 'YYYY-MM-DD') AS "endDate"
         FROM PROJECTS p
         LEFT JOIN (
             SELECT
@@ -201,7 +229,7 @@
             p.LEADER_ID AS "LEADER_ID",
             u.USER_NAME AS "LEADER_NAME",
             TO_CHAR(pd.START_DT, 'YYYY-MM-DD') AS "START_DATE",
-            TO_CHAR(pd.END_DT - 1, 'YYYY-MM-DD') AS "END_DATE",
+            TO_CHAR(pd.END_DT, 'YYYY-MM-DD') AS "END_DATE",
             CASE
                 WHEN pd.START_DT IS NOT NULL AND TRUNC(pd.START_DT) &gt; TRUNC(SYSDATE) THEN 'SCHEDULED'
                 WHEN pd.END_DT IS NOT NULL AND TRUNC(pd.END_DT) &lt;= TRUNC(SYSDATE) THEN 'COMPLETED'
@@ -244,6 +272,64 @@
                 WHEN pd.END_DT IS NOT NULL AND TRUNC(pd.END_DT) &lt;= TRUNC(SYSDATE) THEN pd.END_DT
                 ELSE pd.START_DT
             END DESC NULLS LAST,
+            p.PROJ_ID DESC
+    </select>
+
+    <select id="selectPersonalProjects" resultType="map">
+        SELECT
+            p.PROJ_ID AS "PROJ_ID",
+            p.WS_ID AS "WS_ID",
+            p.PROJ_NAME AS "PROJ_NAME",
+            p.PROJ_DESC AS "PROJ_DESC",
+            p.PROJ_TYPE AS "PROJ_TYPE",
+            p.PROJ_CATEGORY AS "PROJ_CATEGORY",
+            NVL(UPPER(p.PROJ_SCOPE), CASE WHEN p.WS_ID IS NULL THEN 'PERSONAL' ELSE 'GROUP' END) AS "PROJ_SCOPE",
+            p.LEADER_ID AS "LEADER_ID",
+            u.USER_NAME AS "LEADER_NAME",
+            w.WS_NAME AS "WS_NAME",
+            w.WS_IMAGE_PATH AS "WS_IMAGE_PATH",
+            TO_CHAR(pd.START_DT, 'YYYY-MM-DD') AS "START_DATE",
+            TO_CHAR(pd.END_DT, 'YYYY-MM-DD') AS "END_DATE",
+            CASE
+                WHEN pd.START_DT IS NOT NULL AND TRUNC(pd.START_DT) &gt; TRUNC(SYSDATE) THEN 'SCHEDULED'
+                WHEN pd.END_DT IS NOT NULL AND TRUNC(pd.END_DT) &lt;= TRUNC(SYSDATE) THEN 'COMPLETED'
+                ELSE 'IN_PROGRESS'
+            END AS "PROJECT_STATUS",
+            (SELECT COUNT(*) FROM PROJ_MEMBERS pm WHERE pm.PROJ_ID = p.PROJ_ID) AS "MEMBER_COUNT",
+            (SELECT COUNT(*) FROM EVENTS e WHERE e.PROJ_ID = p.PROJ_ID AND e.ITEM_TYPE = 'TASK') AS "TASK_TOTAL",
+            (SELECT COUNT(*) FROM EVENTS e WHERE e.PROJ_ID = p.PROJ_ID AND e.ITEM_TYPE = 'TASK' AND e.STATUS = 'DONE') AS "TASK_DONE",
+            (
+                SELECT LISTAGG(u2.USER_NAME, ', ') WITHIN GROUP (ORDER BY u2.USER_NAME)
+                FROM PROJ_MEMBERS pm2
+                JOIN USERS u2 ON u2.USER_ID = pm2.USER_ID
+                WHERE pm2.PROJ_ID = p.PROJ_ID
+            ) AS "MEMBER_NAMES"
+        FROM PROJECTS p
+        LEFT JOIN USERS u ON u.USER_ID = p.LEADER_ID
+        LEFT JOIN WORKSPACES w ON w.WS_ID = p.WS_ID
+        LEFT JOIN (
+            SELECT PROJ_ID, MIN(START_DT) AS START_DT, MAX(END_DT) AS END_DT
+            FROM EVENTS
+            WHERE ITEM_TYPE = 'PROJ'
+            GROUP BY PROJ_ID
+        ) pd ON pd.PROJ_ID = p.PROJ_ID
+        WHERE NVL(UPPER(p.PROJ_SCOPE), CASE WHEN p.WS_ID IS NULL THEN 'PERSONAL' ELSE 'GROUP' END) = 'PERSONAL'
+          AND (
+              p.LEADER_ID = #{userId}
+              OR EXISTS (
+                  SELECT 1
+                  FROM PROJ_MEMBERS pm
+                  WHERE pm.PROJ_ID = p.PROJ_ID
+                    AND pm.USER_ID = #{userId}
+              )
+          )
+        ORDER BY
+            CASE
+                WHEN pd.START_DT IS NOT NULL AND TRUNC(pd.START_DT) &gt; TRUNC(SYSDATE) THEN 2
+                WHEN pd.END_DT IS NOT NULL AND TRUNC(pd.END_DT) &lt;= TRUNC(SYSDATE) THEN 3
+                ELSE 1
+            END,
+            NVL(pd.START_DT, SYSDATE) DESC,
             p.PROJ_ID DESC
     </select>
 
@@ -389,6 +475,7 @@
     <select id="selectProjectById" resultType="com.springboot.project.dto.projectRequestDTO">
         SELECT
             p.PROJ_ID,
+            p.WS_ID,
             p.PROJ_NAME,
             p.PROJ_DESC,
             p.LEADER_ID,
@@ -518,7 +605,7 @@
         UPDATE EVENTS
         SET
             START_DT = TO_DATE(#{startDate}, 'YYYY-MM-DD'),
-            END_DT   = TO_DATE(#{endDate}, 'YYYY-MM-DD') + 1
+            END_DT   = TO_DATE(#{endDate}, 'YYYY-MM-DD')
         WHERE PROJ_ID = #{projId}
           AND ITEM_TYPE = 'PROJ'
     </update>

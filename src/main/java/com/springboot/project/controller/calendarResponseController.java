@@ -144,34 +144,58 @@ public class calendarResponseController {
 
     // 6. 날짜 수정
     @PostMapping("/update-date")
-    public ResponseEntity<String> updateEventDate(@RequestBody Map<String, Object> params) {
+    public ResponseEntity<String> updateEventDate(
+            @RequestBody Map<String, Object> params,
+            HttpSession session) {
+
+        usersDto loginUser = (usersDto) session.getAttribute("user");
+        if (loginUser == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Fail: Login required");
+        }
+
+        Long eventId = toLong(params.get("id"));
+        if (eventId == null) {
+            return ResponseEntity.badRequest().body("Fail: Invalid event id");
+        }
+
+        if (!calendarService.canEditEvent(eventId, loginUser.getUserId())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Fail: No edit permission");
+        }
+
+        params.put("userId", loginUser.getUserId());
+
         boolean isUpdated = calendarService.updateEventDate(params);
-        return isUpdated ? ResponseEntity.ok("Success") : ResponseEntity.status(500).body("Fail");
+        return isUpdated
+                ? ResponseEntity.ok("Success")
+                : ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Fail");
     }
 
     // 7. 일정 수정 API (권한 검증 포함)
     @PostMapping("/update-all")
-    public ResponseEntity<String> updateEventAll(@RequestBody Map<String, Object> params, HttpSession session) {
-        usersDto loginUser = (usersDto) session.getAttribute("user");
-        if (loginUser == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Fail: Login required");
+    public ResponseEntity<String> updateEventAll(
+            @RequestBody Map<String, Object> params,
+            HttpSession session) {
 
-        params.put("userId", loginUser.getUserId());
-        
-        String itemType = (String) params.get("itemType");
-        if ("WS".equals(itemType)) {
-            Object wsIdObj = params.get("wsId");
-            Long wsId = (wsIdObj instanceof Number) ? ((Number) wsIdObj).longValue() : null;
-            
-            if (wsId != null) {
-                String role = calendarService.checkUserRole(wsId, loginUser.getUserId());
-                if (!"ADMIN".equals(role)) {
-                    return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Fail: No Admin Privilege");
-                }
-            }
+        usersDto loginUser = (usersDto) session.getAttribute("user");
+        if (loginUser == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Fail: Login required");
         }
 
+        Long eventId = toLong(params.get("id"));
+        if (eventId == null) {
+            return ResponseEntity.badRequest().body("Fail: Invalid event id");
+        }
+
+        if (!calendarService.canEditEvent(eventId, loginUser.getUserId())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Fail: No edit permission");
+        }
+
+        params.put("userId", loginUser.getUserId());
+
         boolean isUpdated = calendarService.updateEventAll(params);
-        return isUpdated ? ResponseEntity.ok("Success") : ResponseEntity.status(500).body("Fail");
+        return isUpdated
+                ? ResponseEntity.ok("Success")
+                : ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Fail");
     }
     
     // 8. 프로젝트 나가기
@@ -235,6 +259,17 @@ public class calendarResponseController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("일정을 볼 권한이 없습니다.");
         }
         return ResponseEntity.ok(detail);
+    }
+
+    private Long toLong(Object value) {
+        if (value == null) return null;
+        if (value instanceof Number number) return number.longValue();
+
+        try {
+            return Long.valueOf(String.valueOf(value));
+        } catch (NumberFormatException e) {
+            return null;
+        }
     }
 
 }

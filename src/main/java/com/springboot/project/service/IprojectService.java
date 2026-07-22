@@ -10,6 +10,7 @@ public interface IprojectService {
     void insertProject(projectRequestDTO dto, Long userId);
     List<projectRequestDTO> getProjectsByWsId(Long wsId);
     List<Map<String, Object>> getProjectListByWorkspaceId(Long wsId);
+    List<Map<String, Object>> getPersonalProjects(Long userId);
  // 프로젝트에 할당 가능한 멤버 목록 가져오기
     List<Map<String, Object>> getAssignableMembers(Long wsId, Long projId);
     

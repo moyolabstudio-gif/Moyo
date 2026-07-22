@@ -19,6 +19,7 @@
 
     document.addEventListener('DOMContentLoaded', () => {
         const body = document.body;
+        const personalMode = body.dataset.listMode === 'PERSONAL';
         const tabs = [...document.querySelectorAll('.project-list-tab')];
         const cards = [...document.querySelectorAll('.project-list-item')];
         const sections = [...document.querySelectorAll('.project-status-section')];
@@ -86,7 +87,7 @@
             const selectedType = typeSelect?.value || 'ALL';
             return [...section.querySelectorAll('.project-list-item')].filter((card) => {
                 const typeMatch = selectedType === 'ALL' || (card.dataset.typeNormalized || normalizeType(card.dataset.type)) === selectedType;
-                const target = [card.dataset.name, card.dataset.desc, card.dataset.members].map(normalize).join(' ');
+                const target = (personalMode ? [card.dataset.name, card.dataset.desc] : [card.dataset.name, card.dataset.desc, card.dataset.members]).map(normalize).join(' ');
                 return typeMatch && (!query || target.includes(query));
             });
         };

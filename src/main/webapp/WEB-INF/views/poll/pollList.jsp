@@ -1131,11 +1131,11 @@ document.addEventListener('keydown',function(event){
 
 function initializePollPage(){
     const isProject=scope==='PROJECT';
-    document.getElementById('pageTitle').innerText=isProject?'프로젝트 투표':'워크스페이스 투표';
-    document.getElementById('pageDescription').innerText=isProject?'프로젝트 안에서 필요한 의사결정을 투표로 정리합니다.':'워크스페이스 전체 구성원이 참여하는 의사결정을 투표로 정리합니다.';
+    document.getElementById('pageTitle').innerText=isProject?'프로젝트 투표':'그룹 투표';
+    document.getElementById('pageDescription').innerText=isProject?'프로젝트 안에서 필요한 의사결정을 투표로 정리합니다.':'그룹 전체 구성원이 참여하는 의사결정을 투표로 정리합니다.';
     const back=document.getElementById('backLink');
     back.href=isProject?'/project/main?wsId='+encodeURIComponent(wsId||'')+'&projId='+encodeURIComponent(projId||''):'/workspace/main?wsId='+encodeURIComponent(wsId||'');
-    back.innerText=isProject?'⬅ 프로젝트로 돌아가기':'⬅ 워크스페이스로 돌아가기';
+    back.innerText=isProject?'⬅ 프로젝트로 돌아가기':'⬅ 그룹로 돌아가기';
 }
 
 function initializeDeadlineDefaults(){

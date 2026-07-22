@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.springboot.project.dto.usersDto;
+import com.springboot.project.dao.IworkspaceDAO;
 import com.springboot.project.service.IpollService;
 
 @RestController
@@ -28,13 +30,21 @@ public class pollController {
     @Autowired
     private IpollService pollService;
 
+    @Autowired
+    private IworkspaceDAO workspaceDAO;
+
     @GetMapping("/api/polls/active")
     public Map<String, Object> getActivePoll(@RequestParam("scope") String scope,
                                              @RequestParam("wsId") Long wsId,
                                              @RequestParam(value = "projId", required = false) Long projId,
                                              HttpSession session) {
         usersDto loginUser = (usersDto) session.getAttribute("user");
-        Long userId = loginUser != null ? loginUser.getUserId() : null;
+        if (loginUser == null) return Map.of("message", "LOGIN_REQUIRED");
+        Long userId = loginUser.getUserId();
+        if ("WORKSPACE".equalsIgnoreCase(scope)
+                && (wsId == null || workspaceDAO.isWorkspaceMember(wsId, userId) < 1)) {
+            return Map.of("message", "WORKSPACE_MEMBER_REQUIRED");
+        }
 
         Map<String, Object> data = pollService.getActivePoll(scope, wsId, projId, userId);
         return data != null ? data : new HashMap<>();
@@ -43,20 +53,38 @@ public class pollController {
 
 
     @GetMapping("/api/polls/detail")
-    public Map<String, Object> getPoll(@RequestParam("pollId") Long pollId,
-                                       HttpSession session) {
+    public ResponseEntity<?> getPoll(@RequestParam("pollId") Long pollId,
+                                     HttpSession session) {
         usersDto loginUser = (usersDto) session.getAttribute("user");
-        Long userId = loginUser != null ? loginUser.getUserId() : null;
+        if (loginUser == null) {
+            return ResponseEntity.status(401).body(Map.of("message", "LOGIN_REQUIRED"));
+        }
 
-        Map<String, Object> data = pollService.getPoll(pollId, userId);
-        return data != null ? data : new HashMap<>();
+        Map<String, Object> data = pollService.getPoll(pollId, loginUser.getUserId());
+        if (data == null || data.isEmpty()) return ResponseEntity.ok(new HashMap<>());
+        Long wsId = mapLong(data, "wsId", "WS_ID");
+        String scope = mapString(data, "scope", "SCOPE", "scopeType", "SCOPE_TYPE");
+        if (("WORKSPACE".equalsIgnoreCase(scope) || (scope == null && wsId != null))
+                && (wsId == null || workspaceDAO.isWorkspaceMember(wsId, loginUser.getUserId()) < 1)) {
+            return ResponseEntity.status(403).body(Map.of("message", "WORKSPACE_MEMBER_REQUIRED"));
+        }
+        return ResponseEntity.ok(data);
     }
 
     @GetMapping("/api/polls/list")
-    public List<Map<String, Object>> getPollList(@RequestParam("scope") String scope,
-                                                 @RequestParam("wsId") Long wsId,
-                                                 @RequestParam(value = "projId", required = false) Long projId) {
-        return pollService.getPollList(scope, wsId, projId);
+    public ResponseEntity<?> getPollList(@RequestParam("scope") String scope,
+                                         @RequestParam("wsId") Long wsId,
+                                         @RequestParam(value = "projId", required = false) Long projId,
+                                         HttpSession session) {
+        usersDto loginUser = (usersDto) session.getAttribute("user");
+        if (loginUser == null) {
+            return ResponseEntity.status(401).body(Map.of("message", "LOGIN_REQUIRED"));
+        }
+        if ("WORKSPACE".equalsIgnoreCase(scope)
+                && (wsId == null || workspaceDAO.isWorkspaceMember(wsId, loginUser.getUserId()) < 1)) {
+            return ResponseEntity.status(403).body(Map.of("message", "WORKSPACE_MEMBER_REQUIRED"));
+        }
+        return ResponseEntity.ok(pollService.getPollList(scope, wsId, projId));
     }
 
     @PostMapping("/api/polls/vote")
@@ -68,6 +96,17 @@ public class pollController {
         if (loginUser == null) {
             result.put("success", false);
             result.put("message", "LOGIN_REQUIRED");
+            return result;
+        }
+
+        Long pollId = toLong(params.get("pollId"));
+        Map<String, Object> poll = pollId == null ? null : pollService.getPoll(pollId, loginUser.getUserId());
+        Long wsId = mapLong(poll, "wsId", "WS_ID");
+        String scope = mapString(poll, "scope", "SCOPE", "scopeType", "SCOPE_TYPE");
+        if (("WORKSPACE".equalsIgnoreCase(scope) || (scope == null && wsId != null))
+                && (wsId == null || workspaceDAO.isWorkspaceMember(wsId, loginUser.getUserId()) < 1)) {
+            result.put("success", false);
+            result.put("message", "WORKSPACE_MEMBER_REQUIRED");
             return result;
         }
 
@@ -297,4 +336,28 @@ public class pollController {
         }
         return result;
     }
+    private Object mapValue(Map<String, Object> map, String... keys) {
+        if (map == null) return null;
+        for (String key : keys) {
+            if (map.containsKey(key) && map.get(key) != null) return map.get(key);
+        }
+        return null;
+    }
+
+    private Long mapLong(Map<String, Object> map, String... keys) {
+        return toLong(mapValue(map, keys));
+    }
+
+    private Long toLong(Object value) {
+        if (value instanceof Number number) return number.longValue();
+        if (value == null || String.valueOf(value).isBlank()) return null;
+        try { return Long.valueOf(String.valueOf(value)); }
+        catch (NumberFormatException e) { return null; }
+    }
+
+    private String mapString(Map<String, Object> map, String... keys) {
+        Object value = mapValue(map, keys);
+        return value == null ? null : String.valueOf(value);
+    }
+
 }

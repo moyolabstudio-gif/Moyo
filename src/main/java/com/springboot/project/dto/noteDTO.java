@@ -22,6 +22,8 @@ public class noteDTO {
     private String changeLog;
     private String memo;
     private String previewContent;
+    private String moyoPublicYn;
+    private Date moyoPublicAt;
     private String category;
     private String icon;
     private Long folderId;
@@ -57,6 +59,9 @@ public class noteDTO {
     // 목록 미리보기용 첨부/피드백 정보
     private Integer attachmentCount;
     private Integer feedbackCount;
+    private Integer viewCount;
+    private Integer likeCount;
+    private boolean likedByMe;
     private Integer tableCount;
     private Integer imageCount;
     private Integer videoCount;
@@ -186,6 +191,26 @@ public class noteDTO {
             return "내용이 비어있는 노트입니다.";
         }
         return previewContent;
+    }
+
+    public String getMoyoPublicYn() {
+        return moyoPublicYn;
+    }
+
+    public void setMoyoPublicYn(String moyoPublicYn) {
+        this.moyoPublicYn = moyoPublicYn;
+    }
+
+    public Date getMoyoPublicAt() {
+        return moyoPublicAt;
+    }
+
+    public void setMoyoPublicAt(Date moyoPublicAt) {
+        this.moyoPublicAt = moyoPublicAt;
+    }
+
+    public boolean isMoyoPublic() {
+        return "Y".equalsIgnoreCase(moyoPublicYn);
     }
 
     public String getIcon() {
@@ -519,4 +544,11 @@ public class noteDTO {
                 ", userName='" + userName + '\'' +
                 '}';
     }
+
+    public Integer getViewCount() { return viewCount; }
+    public void setViewCount(Integer viewCount) { this.viewCount = viewCount; }
+    public Integer getLikeCount() { return likeCount; }
+    public void setLikeCount(Integer likeCount) { this.likeCount = likeCount; }
+    public boolean isLikedByMe() { return likedByMe; }
+    public void setLikedByMe(boolean likedByMe) { this.likedByMe = likedByMe; }
 }

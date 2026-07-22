@@ -6,7 +6,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MOYO - 새 프로젝트 생성</title>
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/projectCreate.css?v=project-create-step-v2">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/projectCreate.css?v=project-create-member-display-v6">
 </head>
 <body>
 <jsp:include page="/WEB-INF/views/common/header.jsp" />
@@ -14,11 +14,23 @@
 <div class="project-create-page"
      data-context-path="${pageContext.request.contextPath}"
      data-ws-id="${wsId}"
+     data-initial-scope="${initialScope}"
+     data-personal-entry="${personalEntry}"
+     data-group-entry="${groupEntry}"
      data-current-user-id="${sessionScope.user.userId}"
-     data-current-user-name="${sessionScope.user.userName}">
+     data-current-user-name="${sessionScope.user.userName}"
+     data-can-create-group-project="${canCreateGroupProject}">
 
     <main class="project-create-shell">
         <section class="project-create-card">
+            <c:if test="${groupEntry and not canCreateGroupProject}">
+                <div class="project-create-permission-notice" role="alert">
+                    <strong>그룹 프로젝트를 만들 수 없어요.</strong>
+                    <p>그룹 프로젝트는 그룹장 또는 관리자만 만들 수 있어요.</p>
+                    <button type="button" class="btn primary" onclick="history.back()">그룹으로 돌아가기</button>
+                </div>
+            </c:if>
+            <div class="project-create-content${groupEntry and not canCreateGroupProject ? ' is-blocked' : ''}">
             <div class="create-step" id="createStepLabel">1 / 2</div>
 
             <div class="create-title-row">
@@ -44,27 +56,15 @@
                             <input type="text" id="projName" maxlength="100" placeholder="예: 여름 제주도 가족여행">
                         </div>
 
-                        <div class="field full">
-                            <span class="field-label">참여 방식 <span class="required">*</span></span>
-                            <div class="scope-options" role="radiogroup" aria-label="참여 방식">
-                                <label class="scope-card">
-                                    <input type="radio" name="projScope" value="PERSONAL">
-                                    <span class="scope-icon">👤</span>
-                                    <span class="scope-copy">
-                                        <strong>나만 사용</strong>
-                                        <small>개인 일정과 목표를 혼자 관리합니다.</small>
-                                    </span>
-                                </label>
-                                <label class="scope-card active">
-                                    <input type="radio" name="projScope" value="GROUP" checked>
-                                    <span class="scope-icon">👥</span>
-                                    <span class="scope-copy">
-                                        <strong>함께 사용</strong>
-                                        <small>다음 단계에서 멤버와 권한을 지정합니다.</small>
-                                    </span>
-                                </label>
+                        <c:if test="${groupEntry}">
+                            <div class="field full project-context-field">
+                                <span class="field-label">그룹 프로젝트</span>
+                                <div class="project-context-summary">
+                                    <strong><c:out value="${workspace.wsName}" /></strong>
+                                    <small>현재 그룹에 프로젝트가 생성됩니다.</small>
+                                </div>
                             </div>
-                        </div>
+                        </c:if>
 
                         <div class="field category-field">
                             <label for="projCategory">프로젝트 카테고리 <span class="required">*</span></label>
@@ -88,11 +88,11 @@
                         <div class="date-row field full">
                             <div class="field">
                                 <label for="startDate">시작일 <span class="required">*</span></label>
-                                <input type="date" id="startDate">
+                                <input type="text" id="startDate" class="project-date-input" inputmode="numeric" autocomplete="off" placeholder="YYYY-MM-DD" data-project-date-picker readonly>
                             </div>
                             <div class="field">
                                 <label for="endDate">종료일 <span class="required">*</span></label>
-                                <input type="date" id="endDate">
+                                <input type="text" id="endDate" class="project-date-input" inputmode="numeric" autocomplete="off" placeholder="YYYY-MM-DD" data-project-date-picker readonly>
                             </div>
                         </div>
 
@@ -126,7 +126,7 @@
                     <div class="create-card-head member-head">
                         <div>
                             <h2>참여 멤버</h2>
-                            <p>함께 진행할 멤버를 선택하고 팀장 1명을 지정합니다.</p>
+                            <p>함께할 멤버를 선택하고 프로젝트 팀장 1명을 지정합니다.</p>
                         </div>
                         <div class="role-guide">
                             <span>팀장 1명</span>
@@ -134,9 +134,18 @@
                         </div>
                     </div>
 
-                    <div id="memberList" class="member-list">
-                        <div class="member-loading">워크스페이스 멤버를 불러오는 중입니다.</div>
+                    <div class="member-tools">
+                        <label class="member-search" for="memberSearchInput">
+                            <span class="member-search-icon" aria-hidden="true">⌕</span>
+                            <input type="search" id="memberSearchInput" placeholder="이름 또는 이메일로 검색" autocomplete="off">
+                        </label>
+                        <button type="button" id="memberSelectedFilter" class="member-filter-btn" aria-pressed="false">선택한 멤버만</button>
+                        <span id="memberSelectedCount" class="member-selected-count" aria-live="polite">참여 멤버 1명</span>
                     </div>
+                    <div id="memberList" class="member-list">
+                        <div class="member-loading">그룹 멤버를 불러오는 중입니다.</div>
+                    </div>
+                    <div id="memberFilterEmpty" class="member-filter-empty" hidden>조건에 맞는 멤버가 없습니다.</div>
                 </section>
             </section>
             <div class="create-actions">
@@ -145,11 +154,12 @@
                 <button type="button" id="btnNextStep" class="btn primary">다음</button>
                 <button type="button" id="btnSubmit" class="btn primary" hidden>프로젝트 생성</button>
             </div>
+            </div>
         </section>
     </main>
 </div>
 
 <jsp:include page="/WEB-INF/views/common/footer.jsp" />
-<script src="${pageContext.request.contextPath}/js/projectCreate.js?v=project-create-step-v2"></script>
+<script src="${pageContext.request.contextPath}/js/projectCreate.js?v=project-create-member-display-v6"></script>
 </body>
 </html>

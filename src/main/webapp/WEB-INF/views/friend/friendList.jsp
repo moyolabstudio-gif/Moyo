@@ -5,7 +5,7 @@
 <head>
     <meta charset="UTF-8">
     <title>MOYO - 친구</title>
-    <link rel="stylesheet" href="/css/friend.css?v=friend-footer-bottom-v1">
+    <link rel="stylesheet" href="/css/friend.css?v=friend-profile-link-20260707">
 </head>
 <body class="friend-page-body moyo-app-sidebar-enabled">
 <jsp:include page="/WEB-INF/views/common/header.jsp" />
@@ -83,6 +83,6 @@
 
 <jsp:include page="/WEB-INF/views/common/footer.jsp" />
 
-<script src="/js/friend.js?v=friend-v7"></script>
+<script src="/js/friend.js?v=friend-profile-link-20260707"></script>
 </body>
 </html>

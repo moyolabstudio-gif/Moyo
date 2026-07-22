@@ -27,6 +27,9 @@ public interface IworkspaceDAO {
     int insertWorkspaceLink(Map<String, Object> params);
     int deleteWorkspaceAllMembers(long wsId);
     int deleteWorkspace(long wsId);
+    int requestWorkspaceDeletion(@Param("wsId") Long wsId, @Param("ownerId") Long ownerId);
+    int cancelWorkspaceDeletion(@Param("wsId") Long wsId, @Param("ownerId") Long ownerId);
+    List<Long> selectExpiredWorkspaceDeletionIds();
     List<Map<String, Object>> selectWorkspaceMembers(Long wsId);
 
     Map<String, Object> selectWorkspaceMemberProfile(
@@ -34,11 +37,45 @@ public interface IworkspaceDAO {
         @Param("targetUserId") Long targetUserId,
         @Param("viewerUserId") Long viewerUserId
     );
+    Map<String, Object> selectSavedWorkspaceMemberProfile(
+        @Param("wsId") Long wsId,
+        @Param("userId") Long userId
+    );
     int updateWorkspaceMemberProfile(Map<String, Object> params);
     int insertWorkspaceMemberProfile(Map<String, Object> params);
     int insertDefaultWorkspaceMemberProfile(@Param("wsId") Long wsId, @Param("userId") Long userId);
     int isWorkspaceMember(@Param("wsId") Long wsId, @Param("userId") Long userId);
     int isWorkspaceAdmin(@Param("wsId") Long wsId, @Param("userId") Long userId);
+
+    int countPendingJoinRequest(@Param("wsId") Long wsId, @Param("userId") Long userId);
+    int insertJoinRequest(@Param("wsId") Long wsId, @Param("userId") Long userId);
+    int cancelJoinRequest(@Param("wsId") Long wsId, @Param("userId") Long userId);
+    String selectJoinRequestStatus(@Param("wsId") Long wsId, @Param("userId") Long userId);
+    int insertJoinRequestNotices(@Param("wsId") Long wsId, @Param("userId") Long userId);
+    int deleteJoinRequestManagerNotices(@Param("requestId") Long requestId);
+    List<Map<String, Object>> selectPendingJoinRequestsForAdmin(@Param("userId") Long userId);
+    Map<String, Object> selectJoinRequestById(@Param("requestId") Long requestId);
+    int updateJoinRequestStatus(@Param("requestId") Long requestId,
+                                @Param("status") String status,
+                                @Param("reviewerId") Long reviewerId);
+    int deleteJoinRequestResultNotices(@Param("requestId") Long requestId);
+
+    int insertJoinRequestResultNotice(@Param("requestId") Long requestId,
+                                      @Param("status") String status,
+                                      @Param("rejectionReason") String rejectionReason);
+    int completeApprovedJoinRequest(@Param("requestId") Long requestId,
+                                    @Param("userId") Long userId);
+
+    int abandonApprovedJoinRequest(@Param("requestId") Long requestId,
+                                   @Param("userId") Long userId);
+
+    int insertJoinAbandonedNotice(@Param("requestId") Long requestId);
+
+    int resolveApprovedJoinNotice(@Param("requestId") Long requestId,
+                                  @Param("userId") Long userId,
+                                  @Param("wsId") Long wsId);
+
+    int insertJoinCompletedNotice(@Param("requestId") Long requestId);
 
  // IworkspaceDAO.java
     int deleteWorkspaceMember(@Param("wsId") Long wsId, @Param("userId") Long userId);
