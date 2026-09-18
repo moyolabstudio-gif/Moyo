@@ -1,0 +1,292 @@
+/* =====================================================================
+   Common community widgets
+   - Recent activity / active poll / notice / free feed / resources.
+   ===================================================================== */
+.moyo-community-widgets .workspace-core-row,
+.moyo-community-widgets .workspace-widget-grid {
+    align-items: stretch;
+}
+
+.moyo-community-widgets .workspace-core-card > .workspace-core-head,
+.moyo-community-widgets .workspace-widget-card > .board-title {
+    flex: 0 0 auto;
+}
+
+.moyo-community-widgets .today-schedule-list,
+.moyo-community-widgets .workspace-poll-summary-area,
+.moyo-community-widgets .board-list {
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+/* Empty/loading/error states occupy the whole body and sit on its center axis. */
+.moyo-community-widgets .today-schedule-list:has(> .moyo-widget-state),
+.moyo-community-widgets .board-list:has(> .moyo-widget-state),
+.moyo-community-widgets .workspace-poll-summary-body.is-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.moyo-community-widgets .moyo-widget-state {
+    min-height: 0 !important;
+    height: auto !important;
+    padding-block: 8px;
+}
+
+/* Poll rendering uses a script-created body wrapper. */
+.moyo-community-widgets .workspace-poll-summary-area {
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+}
+
+.moyo-community-widgets .workspace-poll-summary-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.moyo-community-widgets .workspace-poll-summary-body.is-empty > .moyo-widget-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding-inline: 12px;
+}
+
+.moyo-community-widgets .workspace-poll-summary-list {
+    width: 100%;
+}
+
+/* Final common contract: poll body must fill the stretched top-row card. */
+.moyo-community-widgets .workspace-core-row > .workspace-main-poll-card {
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+.moyo-community-widgets .workspace-main-poll-card > .workspace-poll-summary-area {
+    flex: 1 1 auto !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow: visible !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+.moyo-community-widgets .workspace-main-poll-card .workspace-poll-summary-body {
+    flex: 1 1 auto !important;
+    width: 100% !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+.moyo-community-widgets .workspace-main-poll-card .workspace-poll-summary-body.is-empty,
+.moyo-community-widgets .workspace-main-poll-card > .workspace-poll-summary-area:has(> .moyo-widget-state) {
+    flex: 1 1 auto !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.moyo-community-widgets .workspace-main-poll-card .workspace-poll-summary-body.is-empty > .moyo-widget-state,
+.moyo-community-widgets .workspace-main-poll-card > .workspace-poll-summary-area > .moyo-widget-state {
+    margin: auto 0 !important;
+    padding-block: 0 !important;
+}
+
+/* Common community list item rhythm: recent activity and active poll cards share one compact row height. */
+.moyo-community-widgets .workspace-main-today-card .workspace-recent-activity-item,
+.moyo-community-widgets .workspace-main-poll-card .workspace-poll-summary-item {
+    min-height: 42px !important;
+    height: 42px !important;
+    box-sizing: border-box;
+}
+
+.moyo-community-widgets .workspace-main-poll-card .workspace-poll-summary-item {
+    padding: 6px 9px !important;
+    border-radius: 11px !important;
+}
+
+.moyo-community-widgets .workspace-main-poll-card .workspace-poll-summary-main {
+    gap: 2px;
+}
+
+/* Common community item skin: active poll rows use the same visual shell as recent activity rows. */
+.moyo-community-widgets .workspace-main-poll-card .workspace-poll-summary-item {
+    border: 1px solid #e4ebf5 !important;
+    background: linear-gradient(100deg, rgba(45, 211, 189, .07), rgba(75, 136, 255, .05), rgba(124, 77, 255, .04)) !important;
+    box-shadow: none !important;
+    transition: border-color .15s ease, box-shadow .15s ease, transform .15s ease !important;
+}
+
+.moyo-community-widgets .workspace-main-poll-card .workspace-poll-summary-item:hover {
+    border-color: #cbdcf7 !important;
+    background: linear-gradient(100deg, rgba(45, 211, 189, .07), rgba(75, 136, 255, .05), rgba(124, 77, 255, .04)) !important;
+    box-shadow: 0 5px 14px rgba(56, 91, 150, .08) !important;
+    transform: none !important;
+}
+
+/* =====================================================================
+   Canonical community widget geometry v2
+   - Workspace and project use the exact same top/board card contract.
+   ===================================================================== */
+.moyo-main-shell .moyo-community-widgets .workspace-core-row > .moyo-widget-card {
+    height: 210px !important;
+    min-height: 210px !important;
+    padding: 15px 17px 14px !important;
+}
+
+.moyo-main-shell .moyo-community-widgets .workspace-core-head.moyo-widget-head {
+    flex: 0 0 auto;
+    min-height: 24px;
+    margin: 0 0 10px !important;
+    padding: 0 0 9px !important;
+    border-bottom: 1px solid var(--moyo-widget-divider) !important;
+}
+
+.moyo-main-shell .moyo-community-widgets .workspace-core-titleline.moyo-widget-title {
+    gap: 6px;
+}
+
+.moyo-main-shell .moyo-community-widgets .workspace-core-titleline .moyo-widget-title__text {
+    display: flex;
+    align-items: center;
+    min-height: 20px;
+    margin: 0;
+    color: var(--moyo-widget-title-color);
+    font: inherit;
+}
+
+.moyo-main-shell .moyo-community-widgets .workspace-title-count.moyo-widget-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    margin: 0;
+    padding: 0 6px;
+    line-height: 1;
+}
+
+.moyo-main-shell .moyo-community-widgets .workspace-core-row .today-schedule-list,
+.moyo-main-shell .moyo-community-widgets .workspace-core-row .workspace-poll-summary-area {
+    flex: 1 1 auto;
+    width: 100%;
+    min-height: 138px !important;
+    max-height: 138px !important;
+    margin: 0;
+    overflow: hidden !important;
+    box-sizing: border-box;
+}
+
+.moyo-main-shell .moyo-community-widgets .workspace-core-row .workspace-core-state {
+    min-height: 100%;
+    height: 100%;
+    padding: 8px 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    border: 0;
+    background: transparent;
+    list-style: none;
+}
+
+.moyo-main-shell .moyo-community-widgets .workspace-project-card-row > .workspace-board-card {
+    display: grid;
+    grid-template-rows: var(--moyo-widget-head-height) minmax(0, 1fr);
+    height: 148px !important;
+    min-height: 148px !important;
+    padding: 0 18px 12px !important;
+}
+
+.moyo-main-shell .moyo-community-widgets .workspace-project-card-row .board-title.moyo-widget-head {
+    height: var(--moyo-widget-head-height);
+    min-height: var(--moyo-widget-head-height);
+    margin: 0 !important;
+    padding: 0 !important;
+    border-bottom: 1px solid var(--moyo-widget-divider) !important;
+}
+
+.moyo-main-shell .moyo-community-widgets .workspace-project-card-row .board-title-label.moyo-widget-title {
+    font-size: 15px;
+    font-weight: 800;
+    line-height: 1;
+}
+
+.moyo-main-shell .moyo-community-widgets .workspace-project-card-row .board-list {
+    display: block;
+    min-width: 0;
+    min-height: 0 !important;
+    max-height: none !important;
+    height: 91px;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    border: 0;
+    background: transparent;
+}
+
+@media (max-width: 760px) {
+    .moyo-main-shell .moyo-community-widgets .workspace-core-row > .moyo-widget-card {
+        height: 210px !important;
+        min-height: 210px !important;
+        padding: 14px 15px 13px !important;
+    }
+
+    .moyo-main-shell .moyo-community-widgets .workspace-project-card-row > .workspace-board-card {
+        height: 150px !important;
+        min-height: 150px !important;
+        padding-inline: 16px !important;
+    }
+}
+
+/* Shared recent activity viewport: three 42px cards and two 6px gaps.
+   The fourth item and beyond stay inside the widget scroll viewport. */
+.moyo-main-shell .moyo-community-widgets .workspace-core-row .workspace-recent-activity-list {
+    flex: 0 0 138px;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    height: 138px !important;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) !important;
+    grid-template-rows: none !important;
+    grid-auto-rows: 42px !important;
+    align-content: start;
+    justify-items: stretch;
+    gap: 6px !important;
+    padding-block: 0 !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+}
+.moyo-main-shell .moyo-community-widgets .workspace-recent-activity-list > li:not(.moyo-widget-state) {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    justify-self: stretch !important;
+    height: 42px;
+    min-height: 42px;
+    margin-block: 0;
+    box-sizing: border-box;
+}
+.moyo-main-shell .moyo-community-widgets .workspace-main-today-card .workspace-recent-activity-item {
+    display: grid;
+    width: 100% !important;
+    inline-size: 100% !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    justify-self: stretch !important;
+    box-sizing: border-box;
+}
+.moyo-main-shell .moyo-community-widgets .workspace-recent-activity-list:has(> .moyo-widget-state) {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}

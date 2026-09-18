@@ -6,13 +6,14 @@
     <meta charset="UTF-8">
     <title>노트 작성</title>
     <link rel="stylesheet" href="/css/moyoUi.css?v=moyo-ui-scope-20260617">
+<link rel="stylesheet" href="${pageContext.request.contextPath}/css/common/commonCkeditor.css?v=moyo-ckeditor-common-v2">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <link rel="stylesheet" href="/css/note.css?v=note-ckeditor-media-table-v41">
 <link rel="stylesheet" href="/css/commonFolderModal.css?v=common-folder-modal-final-v15">
-    <link rel="stylesheet" href="/css/commonShareModal.css?v=note-share-edit-inline-v1">
+    <link rel="stylesheet" href="/css/commonPeopleModal.css?v=20260810-inline-share-state-popover-2">
     <script src="https://cdn.ckeditor.com/ckeditor5/41.1.0/super-build/ckeditor.js"></script>
     <script src="https://cdn.ckeditor.com/ckeditor5/41.1.0/super-build/translations/ko.js"></script>
-    <script src="/js/commonCkeditor.js?v=moyo-editor-media-preview-v3"></script>
+    <script src="${pageContext.request.contextPath}/js/commonCkeditor.js?v=20260907-image-guard-1"></script>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/commonRichContent.css?v=rich-content-v4-20260619">
 </head>
 <body class="note-page-body">
@@ -210,13 +211,7 @@
                         <button type="button" class="note-write-share-close" data-note-share-close aria-label="닫기">×</button>
                     </div>
 
-                    <div class="note-write-share-tabs" role="tablist" aria-label="공유 대상 유형">
-                        <button type="button" class="note-write-share-tab is-active" data-share-tab="FRIEND">친구</button>
-                        <button type="button" class="note-write-share-tab" data-share-tab="WORKSPACE">그룹</button>
-                        <button type="button" class="note-write-share-tab" data-share-tab="PROJECT">프로젝트</button>
-                    </div>
-
-                    <div class="note-write-share-toolbar">
+<div class="note-write-share-toolbar">
                         <select id="noteWriteShareContext" class="note-write-share-select" aria-label="공유 범위 선택" hidden></select>
                         <input type="text" id="noteWriteShareKeyword" class="note-write-share-input" placeholder="친구 이름 또는 이메일 검색">
                     </div>
@@ -300,14 +295,15 @@
 <script src="/js/commonFolderModal.js?v=common-folder-modal-v13"></script>
 <script src="/js/noteFolderAdapter.js?v=note-folder-adapter-v10"></script>
 <script src="/js/noteEditor.js?v=note-editor-folder-common-v10"></script>
-<script src="/js/commonShareModal.js?v=note-share-edit-inline-v1"></script>
+<script src="/js/commonPeopleModal.js?v=20260906-share-policy-cleanup-61"></script>
 <script>
 (function () {
     function initNoteWriteShare() {
-        if (!window.MoyoShareModal || typeof window.MoyoShareModal.init !== 'function') return;
+        if (!window.CommonPeopleModal || typeof window.CommonPeopleModal.init !== 'function') return;
         if (!document.getElementById('noteWriteShareModal')) return;
-        window.MoyoShareModal.init({
+        window.CommonPeopleModal.init({
             contentType: 'NOTE',
+            friendOnly: true,
             bodyOpenClass: 'note-share-modal-open',
             currentUserId: document.getElementById('noteWriteShareModal')?.dataset.currentUserId || document.body?.dataset.userId || document.getElementById('userId')?.value || ''
         });

@@ -1,0 +1,372 @@
+/* 자료실 탐색기 고유 표현만 관리한다.
+   공통 카드/리스트 골격, 선택, 드래그, 메뉴는 commonContentExplorer.css에 유지한다. */
+
+.file-explorer[data-content-type="FILE"] .file-drop-zone,
+.file-explorer[data-content-type="FILE"] .file-drop-zone.is-dragging {
+    display: none !important;
+}
+
+.file-explorer[data-content-type="FILE"].is-external-dragging .file-browser-panel::before {
+    content: "";
+    position: absolute;
+    inset: 10px;
+    z-index: 80;
+    border: 2px dashed #53a9e9;
+    border-radius: 15px;
+    background: linear-gradient(135deg, rgba(236, 255, 251, .94), rgba(239, 246, 255, .95) 55%, rgba(244, 240, 255, .95));
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .72), 0 14px 34px rgba(64, 103, 171, .13);
+    pointer-events: none;
+}
+
+.file-explorer[data-content-type="FILE"].is-external-dragging .file-browser-panel::after {
+    content: "파일을 여기에 놓아 업로드";
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    z-index: 81;
+    transform: translate(-50%, -50%);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 46px;
+    padding: 0 22px;
+    border: 1px solid rgba(91, 135, 224, .28);
+    border-radius: 13px;
+    color: #315baf;
+    background: rgba(255, 255, 255, .90);
+    box-shadow: 0 10px 24px rgba(65, 98, 158, .13);
+    font-size: 14px;
+    font-weight: 800;
+    letter-spacing: -.01em;
+    pointer-events: none;
+}
+
+.file-explorer[data-content-type="FILE"] .file-item__download {
+    width: 28px;
+    height: 28px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: #71819a;
+    display: inline-grid;
+    place-items: center;
+    padding: 0;
+    cursor: pointer;
+}
+
+.file-explorer[data-content-type="FILE"] .file-item__download:hover {
+    background: #eef4ff;
+    color: #426fd2;
+}
+
+.file-explorer[data-content-type="FILE"] .file-browser-grid.is-list .file-item__download {
+    position: static;
+    margin: 0;
+}
+
+.file-explorer[data-content-type="FILE"] .file-browser-grid:not(.is-list) .file-item__download {
+    display: none;
+}
+
+/* 외부 파일 드롭 오버레이는 자료실의 오른쪽 탐색기 패널 안에서만 표시한다. */
+.file-explorer[data-content-type="FILE"] .file-browser-panel {
+    position: relative;
+    overflow: hidden;
+}
+
+.file-explorer[data-content-type="FILE"].is-external-dragging .file-browser-panel::before {
+    inset: 10px;
+}
+
+/* 2026-08-07 FILE list view unified with PHOTO list standard
+   Keep file-specific size/download data while sharing the clearer list rhythm. */
+.file-explorer[data-content-type="FILE"] .file-browser-grid.is-list {
+    padding-top: 0;
+}
+
+.file-explorer[data-content-type="FILE"] .file-list-header {
+    display: grid;
+    grid-template-columns: 58px minmax(260px, 1fr) 188px 156px 110px 72px;
+    grid-template-areas: "preview name uploader date size actions";
+    align-items: center;
+    column-gap: 12px;
+    min-height: 38px;
+    padding: 0 12px;
+    border-bottom: 1px solid #dfe7f2;
+    background: #f8faff;
+    color: #8390a4;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: -.01em;
+}
+
+.file-explorer[data-content-type="FILE"] .file-list-header__preview { grid-area: preview; text-align: center; }
+.file-explorer[data-content-type="FILE"] .file-list-header__name { grid-area: name; }
+.file-explorer[data-content-type="FILE"] .file-list-header__uploader { grid-area: uploader; }
+.file-explorer[data-content-type="FILE"] .file-list-header__date { grid-area: date; }
+.file-explorer[data-content-type="FILE"] .file-list-header__size { grid-area: size; }
+.file-explorer[data-content-type="FILE"] .file-list-header__actions { grid-area: actions; }
+
+.file-explorer[data-content-type="FILE"] .file-browser-grid.is-list .file-item {
+    grid-template-columns: 58px minmax(260px, 1fr) 188px 156px 110px 72px;
+    grid-template-areas: "icon name uploader date size actions";
+    align-items: center;
+    column-gap: 12px;
+    min-height: 72px;
+    padding: 9px 12px;
+}
+
+.file-explorer[data-content-type="FILE"] .file-browser-grid.is-list .file-item__icon {
+    grid-area: icon;
+    width: 48px;
+    height: 48px;
+    margin: 0;
+    border-radius: 11px;
+    display: grid;
+    place-items: center;
+}
+
+.file-explorer[data-content-type="FILE"] .file-browser-grid.is-list .file-item__icon:not(.is-folder) {
+    background: transparent;
+    border: 0;
+}
+
+.file-explorer[data-content-type="FILE"] .file-browser-grid.is-list .file-item__icon > img,
+.file-explorer[data-content-type="FILE"] .file-browser-grid.is-list .file-item__icon > svg {
+    width: 30px;
+    height: 30px;
+    max-width: 30px;
+    max-height: 30px;
+}
+
+.file-explorer[data-content-type="FILE"] .file-browser-grid.is-list .file-item__icon.is-folder {
+    background: transparent;
+    border: 0;
+}
+
+.file-explorer[data-content-type="FILE"] .file-browser-grid.is-list .file-folder-mark {
+    width: 28px;
+    height: 22px;
+}
+
+.file-explorer[data-content-type="FILE"] .file-browser-grid.is-list .file-item__name {
+    grid-area: name;
+    min-width: 0;
+    font-weight: 700;
+}
+
+.file-explorer[data-content-type="FILE"] .file-browser-grid.is-list .file-item__uploader {
+    grid-area: uploader;
+    min-width: 0;
+}
+
+.file-explorer[data-content-type="FILE"] .file-browser-grid.is-list .file-item__uploader .file-uploader-cell {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    max-width: 100%;
+}
+
+.file-explorer[data-content-type="FILE"] .file-browser-grid.is-list .file-item__uploader .file-uploader-cell > span:last-child {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.file-explorer[data-content-type="FILE"] .file-browser-grid.is-list .file-item__date {
+    grid-area: date;
+    white-space: nowrap;
+}
+
+.file-explorer[data-content-type="FILE"] .file-browser-grid.is-list .file-item__size {
+    grid-area: size;
+    justify-self: start;
+    white-space: nowrap;
+}
+
+.file-explorer[data-content-type="FILE"] .file-browser-grid.is-list .file-item__actions {
+    grid-area: actions;
+    width: 72px;
+    justify-self: end;
+    display: inline-flex;
+    justify-content: flex-end;
+    gap: 4px;
+}
+
+.file-explorer[data-content-type="FILE"] .file-browser-grid.is-list .file-item__download,
+.file-explorer[data-content-type="FILE"] .file-browser-grid.is-list .file-item__menu {
+    width: 28px;
+    height: 28px;
+}
+
+@media (max-width: 1220px) {
+    .file-explorer[data-content-type="FILE"] .file-list-header,
+    .file-explorer[data-content-type="FILE"] .file-browser-grid.is-list .file-item {
+        grid-template-columns: 54px minmax(230px, 1fr) 168px 142px 96px 68px;
+        column-gap: 9px;
+    }
+}
+
+@media (max-width: 980px) {
+    .file-explorer[data-content-type="FILE"] .file-list-header,
+    .file-explorer[data-content-type="FILE"] .file-browser-grid.is-list .file-item {
+        grid-template-columns: 54px minmax(210px, 1fr) 132px 90px 68px;
+        grid-template-areas: "preview name date size actions";
+    }
+
+    .file-explorer[data-content-type="FILE"] .file-list-header__uploader,
+    .file-explorer[data-content-type="FILE"] .file-browser-grid.is-list .file-item__uploader {
+        display: none;
+    }
+}
+
+/* 2026-08-07 리스트 열 제목 제거 및 등록일/크기 간격 보정 */
+.file-explorer[data-content-type="FILE"] .file-list-header {
+    display: none !important;
+}
+
+.file-explorer[data-content-type="FILE"] .file-browser-grid.is-list .file-item {
+    grid-template-columns: 58px minmax(260px, 1fr) 188px 176px 120px 72px;
+    column-gap: 18px;
+}
+
+.file-explorer[data-content-type="FILE"] .file-browser-grid.is-list .file-item__size {
+    padding-left: 10px;
+}
+
+@media (max-width: 1220px) {
+    .file-explorer[data-content-type="FILE"] .file-browser-grid.is-list .file-item {
+        grid-template-columns: 54px minmax(230px, 1fr) 168px 158px 104px 68px;
+        column-gap: 14px;
+    }
+}
+
+@media (max-width: 980px) {
+    .file-explorer[data-content-type="FILE"] .file-browser-grid.is-list .file-item {
+        grid-template-columns: 54px minmax(210px, 1fr) 148px 104px 68px;
+        grid-template-areas: "icon name date size actions";
+        column-gap: 12px;
+    }
+}
+
+/* 2026-08-07 자료실 리스트 공유 상태 */
+.file-explorer[data-content-type="FILE"] .file-browser-grid.is-list .file-item__size {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.file-explorer[data-content-type="FILE"] .file-browser-grid.is-list .file-item__share-status {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: #718096;
+    font-size: 13px;
+    line-height: 1;
+}
+
+.file-explorer[data-content-type="FILE"] .file-browser-grid:not(.is-list) .file-item__share-status {
+    display: none;
+}
+
+/* 2026-08-07 자료실 리스트: 상태 → 다운로드 → 더보기 순서 분리 */
+.file-explorer[data-content-type="FILE"] .file-browser-grid.is-list .file-item {
+    grid-template-columns: 58px minmax(260px, 1fr) 188px 176px 104px 34px 72px;
+    grid-template-areas: "icon name uploader date size status actions";
+    column-gap: 14px;
+}
+
+.file-explorer[data-content-type="FILE"] .file-browser-grid.is-list .file-item__size {
+    display: block;
+    padding-left: 0;
+}
+
+.file-explorer[data-content-type="FILE"] .file-browser-grid.is-list .file-item__status {
+    grid-area: status;
+    width: 34px;
+    min-width: 34px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.file-explorer[data-content-type="FILE"] .file-browser-grid.is-list .file-item__actions {
+    grid-area: actions;
+    width: 72px;
+    gap: 6px;
+}
+
+@media (max-width: 1220px) {
+    .file-explorer[data-content-type="FILE"] .file-browser-grid.is-list .file-item {
+        grid-template-columns: 54px minmax(230px, 1fr) 168px 158px 92px 32px 68px;
+        grid-template-areas: "icon name uploader date size status actions";
+        column-gap: 11px;
+    }
+}
+
+@media (max-width: 980px) {
+    .file-explorer[data-content-type="FILE"] .file-browser-grid.is-list .file-item {
+        grid-template-columns: 54px minmax(210px, 1fr) 148px 90px 32px 68px;
+        grid-template-areas: "icon name date size status actions";
+        column-gap: 10px;
+    }
+}
+
+/* 리스트 바깥 좌표/높이/간격은 commonContentExplorer.css에서 공통 관리 */
+.file-explorer[data-content-type="FILE"] .file-browser-grid.is-list .file-item__size{padding-left:0;text-align:left;display:block;}
+.file-explorer[data-content-type="FILE"] .file-browser-grid.is-list .file-item__status{width:auto;min-width:0;}
+
+/* 2026-08-10 FILE 공유 상태: PHOTO와 동일하게 실제 공유 관계가 있을 때만 표시 */
+.file-explorer[data-content-type="FILE"] .file-item__share-status--grid {
+    display: none;
+}
+
+.file-explorer[data-content-type="FILE"] .file-browser-grid:not(.is-list) .file-item__icon {
+    position: relative;
+}
+
+.file-explorer[data-content-type="FILE"] .file-browser-grid:not(.is-list) .file-item__share-status--grid {
+    position: absolute;
+    right: calc(50% - 25px);
+    bottom: -2px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    color: #718096;
+    background: rgba(255, 255, 255, .96);
+    box-shadow: 0 1px 5px rgba(41, 57, 82, .13);
+    font-size: 10px;
+    line-height: 1;
+    pointer-events: none;
+}
+
+.file-explorer[data-content-type="FILE"] .file-browser-grid.is-list .file-item__share-status--grid {
+    display: none !important;
+}
+
+.file-explorer[data-content-type="FILE"] .file-browser-grid:not(.is-list) .file-item__share-status--list {
+    display: none !important;
+}
+
+.file-explorer[data-content-type="FILE"] .file-browser-grid.is-list .file-item__share-status--list {
+    display: inline-flex;
+}
+
+
+/* MOYO Stage 7 - File explorer visual alignment */
+.file-explorer[data-content-type="FILE"] .file-item {
+    border-color: var(--moyo-border-color, #e5ebf1) !important;
+}
+.file-explorer[data-content-type="FILE"] .file-item:hover {
+    border-color: var(--moyo-border-color-strong, #cfdae7) !important;
+}
+.file-explorer[data-content-type="FILE"] .file-browser-grid.is-list .file-item {
+    border-radius: var(--moyo-radius-md, 12px) !important;
+}

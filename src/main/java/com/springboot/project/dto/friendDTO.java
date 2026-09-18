@@ -22,6 +22,14 @@ public class friendDTO {
     private String profileAvatarType;
     private String relationStatus;
     private String direction;
+    private Integer mutualFriendCount;
+
+    // 사이드바 '업데이트한 친구'용 최근 공개 활동 시각
+    private Date latestProfileAt;
+    private Date latestPhotoAt;
+    private Long latestPhotoPostId;
+    private Date latestNoteAt;
+    private Long latestNoteId;
 
     // 공통 친구/프로필 모달 호환용 별칭 getter
     public Long getId() { return userId; }
@@ -74,4 +82,16 @@ public class friendDTO {
     public void setRelationStatus(String relationStatus) { this.relationStatus = relationStatus; }
     public String getDirection() { return direction; }
     public void setDirection(String direction) { this.direction = direction; }
+    public Integer getMutualFriendCount() { return mutualFriendCount; }
+    public void setMutualFriendCount(Integer mutualFriendCount) { this.mutualFriendCount = mutualFriendCount; }
+    public Date getLatestProfileAt() { return latestProfileAt; }
+    public void setLatestProfileAt(Date latestProfileAt) { this.latestProfileAt = latestProfileAt; }
+    public Date getLatestPhotoAt() { return latestPhotoAt; }
+    public void setLatestPhotoAt(Date latestPhotoAt) { this.latestPhotoAt = latestPhotoAt; }
+    public Long getLatestPhotoPostId() { return latestPhotoPostId; }
+    public void setLatestPhotoPostId(Long latestPhotoPostId) { this.latestPhotoPostId = latestPhotoPostId; }
+    public Date getLatestNoteAt() { return latestNoteAt; }
+    public void setLatestNoteAt(Date latestNoteAt) { this.latestNoteAt = latestNoteAt; }
+    public Long getLatestNoteId() { return latestNoteId; }
+    public void setLatestNoteId(Long latestNoteId) { this.latestNoteId = latestNoteId; }
 }

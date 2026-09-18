@@ -1,1741 +1,2748 @@
 * { box-sizing: border-box; }
 
+html, body { min-height: 100%; }
+
 body {
     margin: 0;
-    background: #f7f9fc;
     color: #172033;
     font-family: "Pretendard", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background:
+        radial-gradient(circle at 8% 8%, rgba(87, 214, 196, .18) 0, rgba(87, 214, 196, 0) 34%),
+        radial-gradient(circle at 92% 4%, rgba(92, 139, 235, .17) 0, rgba(92, 139, 235, 0) 38%),
+        linear-gradient(135deg, #f3fffd 0%, #f7faff 48%, #f0f5ff 100%);
+    background-attachment: fixed;
 }
 
-.settings-page,
-.settings-page input,
-.settings-page select,
-.settings-page textarea,
-.settings-page button {
-    font-family: inherit;
+.project-settings-page {
+    width: min(1120px, calc(100% - 48px));
+    margin: 28px auto 48px;
 }
 
+.settings-page-header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 20px;
+    padding-bottom: 22px;
+}
 
+.settings-page-heading h1 {
+    margin: 0 0 6px;
+    color: #142033;
+    font-size: 27px;
+    font-weight: 850;
+    letter-spacing: -.04em;
+}
 
-.settings-hero {
+.settings-page-heading p {
+    margin: 0;
+    color: #7c899b;
+    font-size: 13px;
+    line-height: 1.55;
+}
+
+.settings-page-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 9px;
+}
+
+.settings-btn {
+    min-height: 38px;
+    padding: 0 15px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #d5dfeb;
+    border-radius: 11px;
+    background: rgba(255,255,255,.78);
+    color: #52667d;
+    font: 750 12px/1 inherit;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.settings-btn:hover { border-color: #b8c8da; background: #fff; color: #243d59; }
+
+.settings-btn-primary,
+#projectSettingsSaveButton {
+    min-width: 126px;
+    border: 0;
+    color: #fff;
+    background: linear-gradient(135deg, #42cdb8 0%, #438fdf 52%, #6f61ef 100%);
+    box-shadow: 0 10px 22px rgba(77, 112, 218, .22);
+}
+
+.settings-btn-primary:hover,
+#projectSettingsSaveButton:hover {
+    color: #fff;
+    transform: translateY(-1px);
+    box-shadow: 0 12px 24px rgba(77, 112, 218, .27);
+}
+
+.settings-tabs {
+    min-height: 48px;
+    padding: 0;
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+    border-bottom: 1px solid #dfe8f2;
+}
+
+.settings-tab-button {
     position: relative;
-    
-    
-    
+    min-width: 96px;
+    height: 48px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    background: transparent;
+    color: #8793a5;
+    font: 900 13px/1 inherit;
+    cursor: pointer;
+}
+
+.settings-tab-button::after {
+    content: "";
+    position: absolute;
+    left: 16px;
+    right: 16px;
+    bottom: -1px;
+    height: 2px;
+    border-radius: 999px;
+    background: transparent;
+}
+
+.settings-tab-button:hover,
+.settings-tab-button.is-active { color: #2f3a4f; }
+.settings-tab-button.is-active::after { background: linear-gradient(90deg, #55c8c8, #4a6df5); }
+
+.settings-tab-panel { display: none; }
+.settings-tab-panel.is-active { display: block; }
+.settings-layout, .settings-card { background: transparent; }
+.settings-card { padding: 0; border: 0; box-shadow: none; }
+
+.settings-section {
+    padding: 30px 2px 32px;
+    border-bottom: 1px solid #e8eef5;
+}
+
+.settings-section-head { margin-bottom: 18px; }
+.settings-section-head h2 { margin: 0 0 5px; color: #20334a; font-size: 18px; font-weight: 850; letter-spacing: -.025em; }
+.settings-section-head p { margin: 0; color: #8794a5; font-size: 12.5px; line-height: 1.6; }
+
+.settings-form-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 16px;
+}
+
+.form-group { min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+.form-group.full { grid-column: 1 / -1; }
+.form-group label { color: #334b64; font-size: 12.5px; font-weight: 750; }
+.form-control {
+    width: 100%;
+    min-height: 46px;
+    padding: 0 14px;
+    border: 1px solid #dce7f1;
+    border-radius: 12px;
+    outline: none;
+    background: rgba(255,255,255,.82);
+    color: #26384d;
+    font: 500 13.5px/1.4 inherit;
+}
+.form-control:hover { border-color: #c9d9e8; background: #fff; }
+.form-control:focus { border-color: #7faee7; background: #fff; box-shadow: 0 0 0 2px rgba(74,144,226,.09); }
+textarea.form-control { min-height: 104px; height: 104px; padding: 12px 14px; resize: none; }
+
+.settings-section-head-with-action { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.project-link-head-actions { display: inline-flex; align-items: center; gap: 10px; }
+.project-link-count-wrap {
+    height: 32px;
+    padding: 0 10px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    border: 1px solid #d8e1eb;
+    border-radius: 999px;
+    background: rgba(255,255,255,.7);
+    color: #7a899b;
+}
+.project-link-count-label, .project-link-count { font-size: 11px; font-weight: 800; }
+.project-link-count { color: #52667d; }
+.project-link-add {
+    height: 32px;
+    padding: 0 12px;
+    border: 1px solid #d4deea;
+    border-radius: 10px;
+    background: rgba(255,255,255,.78);
+    color: #46627f;
+    font: 800 11px/1 inherit;
+    cursor: pointer;
+}
+.project-link-add:hover { border-color: #9eb5cf; background: #fff; color: #24486f; }
+.project-settings-link-list { display: flex; flex-direction: column; gap: 8px; }
+.project-settings-link-row { display: grid; grid-template-columns: 150px minmax(0,1fr) 34px; gap: 8px; align-items: center; }
+.project-settings-link-row .form-control { min-height: 38px; height: 38px; font-size: 12px; }
+.project-setting-link-remove {
+    width: 34px; height: 34px; border: 1px solid #e1e8ef; border-radius: 9px;
+    background: #fff; color: #98a2b3; font-size: 18px; cursor: pointer;
+}
+.project-setting-link-remove:hover { border-color: #f0b8bf; color: #d85c68; background: #fff8f8; }
+.project-link-help { margin: 8px 0 0; color: #98a2b3; font-size: 10.5px; }
+
+.settings-side-card.danger-zone {
+    min-height: 70px;
+    padding: 18px 2px 0;
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 24px;
-    border: 1px solid #e5edf7;
-    
-    background: linear-gradient(135deg, #fff 0%, #f7fbff 100%);
-    box-shadow: 0 10px 28px rgba(34, 91, 155, .05);
+    border-top: 1px solid rgba(214,169,179,.42);
+}
+.danger-zone h3 { margin: 0 0 5px; color: #d85864; font-size: 13.5px; }
+.danger-zone p { margin: 0; color: #8a94a6; font-size: 11px; line-height: 1.5; }
+.btn-delete {
+    min-width: 118px; height: 38px; padding: 0 16px; border: 1px solid #e6c8cc;
+    border-radius: 999px; background: transparent; color: #cf5964; font: 800 11px/1 inherit; cursor: pointer;
+}
+.btn-delete:hover { border-color: #dc9fa7; background: rgba(255,244,245,.75); color: #bd4551; }
+
+#projectSettingsMembers .settings-card { padding-top: 28px; }
+.member-tab-head { margin-bottom: 16px; display: flex; align-items: flex-end; justify-content: space-between; gap: 14px; }
+.member-tab-head h2 { margin: 0 0 5px; color: #172033; font-size: 20px; letter-spacing: -.035em; }
+.member-tab-head p { margin: 0; color: #7d8da3; font-size: 12px; }
+.member-tab-invite {
+    height: 36px; padding: 0 13px; border: 0; border-radius: 10px; color: #fff;
+    background: linear-gradient(100deg,#54c9c8,#4388ef 52%,#5b55ec); font: 800 11.5px/1 inherit; cursor: pointer;
+    box-shadow: 0 8px 18px rgba(67,137,237,.18);
+}
+.project-member-toolbar { display: grid; grid-template-columns: minmax(280px,1fr) auto; gap: 18px; align-items: center; margin: 14px 0 16px; }
+.member-search-box { position: relative; max-width: 440px; }
+.member-search-box::before {
+    content: ""; position: absolute; left: 14px; top: 50%; width: 15px; height: 15px; transform: translateY(-50%);
+    background: no-repeat center/15px 15px url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23758aa2' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m20 20-3.5-3.5'/%3E%3C/svg%3E");
+}
+.member-search-box input { width: 100%; height: 40px; padding: 0 14px 0 40px; border: 1px solid rgba(174,193,214,.66); border-radius: 11px; background: rgba(255,255,255,.78); outline: none; }
+.project-member-toolbar-actions { display: flex; justify-content: flex-end; }
+.project-member-total { min-height: 34px; padding: 0 10px; display: inline-flex; align-items: center; border: 1px solid #dbe5f0; border-radius: 10px; background: rgba(255,255,255,.7); color: #718096; font-size: 11.5px; font-weight: 700; }
+.project-member-total strong { margin: 0 3px 0 5px; color: #253b53; }
+.project-member-col-person { width: 37%; } .project-member-col-role { width: 15%; } .project-member-col-position { width: 23%; } .project-member-col-date { width: 15%; }
+.project-member-avatar { width: 38px; height: 38px; flex: 0 0 38px; display: grid; place-items: center; border-radius: 50%; background: transparent; color: #fff; font-weight: 800; }
+.project-member-role-summary { min-height: 24px; padding: 0 9px; display: inline-flex; align-items: center; border-radius: 999px; background: #eef4fb; color: #31547f; font-size: 10.5px; font-weight: 800; }
+.project-member-role-summary.is-admin { background: #f0effc; color: #625aa5; }
+.project-member-position-summary { color: #4c5f74; font-size: 11.5px; }
+.project-member-position-summary.is-empty { color: #98a6ba; }
+.project-member-role-edit, .project-member-position-edit { width: 100%; height: 36px; padding: 0 10px; border: 1px solid #d5e0ec; border-radius: 9px; background: #fff; color: #2f4963; }
+.workspace-member-empty { display: none; padding: 22px 14px; color: #8a94a6; text-align: center; }
+.workspace-member-empty.is-visible { display: block; }
+.workspace-member-role-note { margin: 10px 0 0; color: #7f8da0; font-size: 10.5px; }
+
+@media (max-width: 760px) {
+    .project-settings-page { width: calc(100% - 24px); margin: 18px auto 30px; }
+    .settings-page-header { grid-template-columns: 1fr; }
+    .settings-page-actions { justify-content: flex-end; }
+    .settings-form-grid { grid-template-columns: 1fr; }
+    .form-group.full { grid-column: auto; }
+    .settings-section-head-with-action { flex-direction: column; }
+    .project-member-toolbar { grid-template-columns: 1fr; }
+    .member-search-box { max-width: none; }
+    .project-member-toolbar-actions { justify-content: flex-start; }
+    .danger-zone { align-items: flex-start; flex-direction: column; }
+    .btn-delete { width: 100%; }
 }
 
-.settings-hero::before {
-    content: "";
-    position: absolute;
-    left: 0;
-    top: 22px;
-    bottom: 22px;
-    width: 4px;
-    border-radius: 0 999px 999px 0;
-    background: linear-gradient(180deg, #4a90e2, #39cdb5);
+@media (max-width: 480px) {
+    .project-settings-page { width: 100%; margin: 0; padding: 20px 16px 28px; }
+    .settings-page-heading h1 { font-size: 23px; }
+    .settings-page-actions { width: 100%; }
+    .settings-page-actions .settings-btn { flex: 1; }
+    .settings-tabs { overflow-x: auto; }
+    .settings-tab-button { min-width: 88px; }
+    .project-settings-link-row { grid-template-columns: 1fr 34px; }
+    .project-settings-link-row input:first-child, .project-settings-link-row input:nth-child(2) { grid-column: 1; }
+    .project-setting-link-remove { grid-column: 2; grid-row: 1 / span 2; height: 100%; }
+    .member-tab-head { align-items: flex-start; flex-direction: column; }
+    .member-tab-invite { width: 100%; }
 }
 
-.settings-hero::after {
-    content: "";
-    position: absolute;
-    right: -68px;
-    top: -98px;
-    width: 210px;
-    height: 210px;
-    border-radius: 50%;
-    background: rgba(74, 144, 226, .045);
-}
 
-.settings-hero > div,
-.settings-hero-actions {
-    position: relative;
-    z-index: 1;
-}
-
-.settings-kicker {
-    display: block;
-    margin-bottom: 5px;
-    color: #8a94a6;
-    font-size: 11px;
-    font-style: italic;
-}
-
-.settings-hero h1 {
-    margin: 0 0 6px;
-    color: #172033;
-    font-size: 24px;
-    letter-spacing: -.035em;
-}
-
-.settings-hero p {
-    margin: 0;
-    color: #7b8798;
-    font-size: 12px;
-}
-
-.settings-tabs {
-    margin-top: 15px;
-    padding: 5px;
-    display: inline-flex;
-    gap: 4px;
-    border: 1px solid #e4ebf3;
-    border-radius: 12px;
-    background: #f4f7fb;
-}
-
-.settings-tab-button {
-    min-height: 36px;
-    padding: 0 15px;
-    border: 0;
-    border-radius: 9px;
-    background: transparent;
-    color: #667085;
-    font-size: 12px;
-    font-weight: 600;
-    cursor: pointer;
-}
-
-.settings-tab-button.is-active {
-    background: #fff;
-    color: #347fcf;
-    box-shadow: 0 4px 12px rgba(15, 23, 42, .07);
-}
-
-.settings-layout {
-    margin-top: 15px;
-}
-
-.settings-tab-panel {
-    display: none;
-}
-
-.settings-tab-panel.is-active {
-    display: block;
-}
-
-.settings-card {
-    
-    border: 1px solid #e7edf4;
-    
-    background: #fff;
-    box-shadow: 0 8px 22px rgba(15, 23, 42, .035);
-}
-
-.settings-card + .settings-card {
-    margin-top: 15px;
-}
-
-.settings-card-head,
-.project-settings-link-head,
-.member-manage-head {
-    margin-bottom: 14px;
+/* ========================================================================
+   20-12 프로젝트 설정 접근 권한 · 읽기 전용 상태
+   ======================================================================== */
+.project-settings-readonly-notice {
+    margin: 2px 0 18px;
+    padding: 14px 16px;
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     justify-content: space-between;
-    gap: 14px;
+    gap: 18px;
+    border: 1px solid rgba(112, 139, 176, .22);
+    border-radius: 14px;
+    background: rgba(255, 255, 255, .58);
+    box-shadow: 0 5px 16px rgba(46, 81, 126, .035);
 }
 
-.settings-card-head h2,
-.project-settings-link-head h2 {
-    
-    color: #1d2939;
-    
-}
-
-
-
-.settings-form-grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    
-}
-
-.field {
-    min-width: 0;
-}
-
-.field.full {
-    grid-column: 1 / -1;
-}
-
-.field label {
+.project-settings-readonly-notice strong {
     display: block;
-    
-    
-    
-    
+    margin-bottom: 4px;
+    color: #314b67;
+    font-size: 12.5px;
+    font-weight: 850;
 }
 
-.field input,
-.field select,
-.field textarea,
-.project-settings-link-row input,
-.member-add-panel select,
-.proj-role-select,
-.proj-position-input {
-    width: 100%;
-    min-width: 0;
-    
-    padding: 0 11px;
-    border: 1px solid #dfe7ef;
-    
-    background: #fff;
-    color: #263244;
-    
-    outline: none;
-}
-
-.field textarea {
-    
-    
-    padding-top: 10px;
-    
+.project-settings-readonly-notice p {
+    margin: 0;
+    color: #7b8ca1;
+    font-size: 11px;
     line-height: 1.5;
 }
 
-.field input:focus,
-.field select:focus,
-.field textarea:focus,
-.project-settings-link-row input:focus,
-.proj-role-select:focus,
-.proj-position-input:focus {
-    border-color: #79ace7;
-    box-shadow: 0 0 0 3px rgba(74, 144, 226, .1);
-}
-
-.field input:disabled,
-.field select:disabled,
-.field textarea:disabled,
-.proj-role-select:disabled,
-.proj-position-input:disabled {
-    background: #f2f5f8;
-    color: #8a94a6;
-}
-
-.settings-section-divider {
-    height: 1px;
-    
-    background: #eef2f6;
-}
-
-.project-settings-link-list {
-    
-    display: flex;
-    flex-direction: column;
-    
-}
-
-.project-settings-link-row {
-    display: grid;
-    
-    
-    align-items: center;
-}
-
-.project-setting-link-remove {
-    
-    
-    border: 1px solid #e1e8ef;
-    
-    background: #fff;
-    color: #98a2b3;
-    font-size: 18px;
-    cursor: pointer;
-}
-
-.member-head-actions {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.member-count {
-    min-width: 30px;
-    height: 24px;
-    padding: 0 9px;
+.project-settings-role-badge {
+    flex: 0 0 auto;
+    min-height: 28px;
+    padding: 0 10px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     border-radius: 999px;
-    background: #eef7ff;
-    color: #347fcf;
-    font-size: 11px;
-    font-weight: 600;
-}
-
-.member-add-panel {
-    margin-bottom: 13px;
-    padding: 11px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    border: 1px solid #e5ecf3;
-    border-radius: 12px;
-    background: #fafcff;
-}
-
-.member-add-panel select {
-    flex: 1;
-}
-
-.member-table-head,
-.member-role-row {
-    display: grid;
-    grid-template-columns: minmax(250px, 1fr) 120px minmax(190px, 240px) 170px;
-    align-items: center;
-    column-gap: 9px;
-}
-
-.member-table-head {
-    padding: 0 13px 8px;
-    color: #8a94a6;
+    background: #eef3f8;
+    color: #526b86;
     font-size: 10.5px;
+    font-weight: 800;
 }
 
-
-
-.member-role-row {
-    min-height: 68px;
-    
-    
-    
-    
+body.project-settings-readonly .form-control:disabled,
+body.project-settings-readonly .project-member-role-edit:disabled,
+body.project-settings-readonly .project-member-position-edit:disabled {
+    opacity: 1;
+    cursor: default;
+    border-color: rgba(199, 211, 224, .72);
+    background: rgba(247, 249, 252, .78);
+    color: #65758a;
+    -webkit-text-fill-color: #65758a;
 }
 
-.member-profile {
-    
-    display: flex;
-    align-items: center;
-    gap: 11px;
+body.project-settings-readonly .settings-page-actions,
+body.project-settings-readonly .project-setting-link-add,
+body.project-settings-readonly .project-setting-link-remove,
+body.project-settings-readonly .project-member-edit-trigger,
+body.project-settings-readonly .project-member-remove-trigger,
+body.project-settings-readonly .project-member-add-button {
+    display: none !important;
 }
 
-.member-avatar {
-    
-    
-    
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #4a90e2, #39cdb5);
-    color: #fff;
-    
-    font-weight: 700;
-}
-
-.member-meta {
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-}
-
-.member-meta strong,
-.member-meta span {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.member-meta strong {
-    font-size: 13px;
-}
-
-.member-meta span {
-    color: #8a94a6;
-    font-size: 10.5px;
-}
-
-.member-row-actions {
-    width: 170px;
-    display: flex;
-    
-}
-
-.member-transfer-btn,
-.member-remove-btn {
-    min-height: 36px;
-    padding: 0 11px;
-    border: 1px solid #efc9ce;
-    border-radius: 9px;
-    background: #fffafa;
-    color: #d85864;
-    font-size: 11px;
-    font-weight: 600;
-    cursor: pointer;
-}
-
-.member-transfer-btn {
-    border: 1px solid #bdd8f1;
-    border-radius: 9px;
-    background: #f5faff;
-    color: #347fcf;
-    font-size: 11px;
-    font-weight: 600;
-    cursor: pointer;
-}
-
-.member-row-actions {
-    gap: 7px;
-}
-
-body.project-member-modal-open {
-    overflow: hidden;
-}
-
-.project-member-add-overlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    z-index: 3200;
-    background: rgba(15,23,42,.48);
-}
-
-.project-member-add-modal {
-    display: none;
-    position: fixed;
-    z-index: 3201;
-    left: 50%;
-    top: 50%;
-    width: min(560px, calc(100vw - 28px));
-    max-height: calc(100vh - 48px);
-    overflow: hidden;
-    transform: translate(-50%, -50%);
-    border: 1px solid #e5ebf2;
-    border-radius: 18px;
-    background: #fff;
-    box-shadow: 0 26px 70px rgba(15,23,42,.24);
-}
-
-.project-member-add-head {
-    min-height: 72px;
-    padding: 18px 20px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    border-bottom: 1px solid #eef2f6;
-}
-
-.project-member-add-head span {
-    display: block;
-    margin-bottom: 3px;
-    color: #8b96a8;
-    font-size: 10.5px;
-}
-
-.project-member-add-head h3 {
-    margin: 0;
-    font-size: 18px;
-}
-
-.project-member-add-head button {
-    width: 32px;
-    height: 32px;
-    border: 0;
-    border-radius: 8px;
-    background: transparent;
-    color: #98a2b3;
-    font-size: 23px;
-    cursor: pointer;
-}
-
-.project-member-add-body {
-    padding: 17px 20px;
-}
-
-.project-member-add-summary {
-    margin-bottom: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-}
-
-.project-member-add-summary span {
-    color: #7b8798;
-    font-size: 11px;
-}
-
-.project-member-add-summary strong {
-    color: #347fcf;
-    font-size: 11px;
-}
-
-.project-member-candidate-list {
-    max-height: 340px;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.project-member-candidate-empty {
-    padding: 42px 16px;
-    border: 1px dashed #dfe7ef;
-    border-radius: 12px;
-    color: #98a2b3;
-    font-size: 12px;
-    text-align: center;
-}
-
-.project-member-candidate-row {
-    min-height: 62px;
-    padding: 9px 11px;
-    display: grid;
-    grid-template-columns: 18px 40px minmax(0,1fr) 38px;
-    align-items: center;
-    gap: 10px;
-    border: 1px solid #e6edf4;
-    border-radius: 12px;
-    background: #fbfdff;
-    cursor: pointer;
-}
-
-.project-member-candidate-row:hover {
-    border-color: #bdd8f1;
-    background: #f7fbff;
-}
-
-.project-member-checkbox {
-    width: 16px;
-    height: 16px;
-    accent-color: #4a90e2;
-}
-
-.project-member-candidate-avatar {
-    width: 40px;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    background: linear-gradient(135deg,#4a90e2,#39cdb5);
-    color: #fff;
-    font-size: 13px;
-    font-weight: 700;
-}
-
-.project-member-candidate-info {
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-}
-
-.project-member-candidate-info strong,
-.project-member-candidate-info small {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.project-member-candidate-info strong {
-    font-size: 12px;
-}
-
-.project-member-candidate-info small {
-    color: #8a94a6;
-    font-size: 10.5px;
-}
-
-.project-member-candidate-check {
-    color: #98a2b3;
-    font-size: 10px;
-}
-
-.project-member-checkbox:checked
-    ~ .project-member-candidate-check {
-    color: #347fcf;
-    font-weight: 700;
-}
-
-.project-member-add-actions {
-    padding: 14px 20px;
-    display: flex;
-    justify-content: flex-end;
-    gap: 8px;
-    border-top: 1px solid #eef2f6;
-}
-
-.settings-actions {
-    
-    
-    display: flex;
-    justify-content: flex-end;
-    border-top: 1px solid #eef2f6;
-}
-
-.btn {
-    min-height: 38px;
-    padding: 0 14px;
-    border: 1px solid #dbe5ef;
-    border-radius: 10px;
-    background: #fff;
-    color: #536274;
-    font-size: 12px;
-    font-weight: 600;
-    cursor: pointer;
-}
-
-.btn.primary {
-    border: 0;
-    color: #fff;
-    background: linear-gradient(135deg, #4a90e2, #39cdb5);
-    box-shadow: 0 8px 18px rgba(57, 205, 181, .18);
-}
-
-.btn.mini {
-    min-height: 34px;
-    padding: 0 11px;
-    font-size: 11px;
-}
-
-.btn.danger {
-    border-color: #efc9ce;
-    background: #fffafa;
-    color: #d85864;
-}
-
-.danger-card {
-    border-color: #f1d7da;
-    background: #fffafa;
-}
-
-.danger-actions {
-    display: flex;
-    justify-content: flex-end;
-}
-
-@media (max-width: 980px) {
-    .member-table-head {
-        display: none;
-    }
-
-    .member-role-row {
-        grid-template-columns: minmax(220px, 1fr) 118px;
-        row-gap: 9px;
-    }
-
-    .proj-position-input {
-        grid-column: 1 / 2;
-        grid-row: 2;
-    }
-
-    .member-row-actions {
-        grid-column: 2 / 3;
-        grid-row: 2;
-        width: 100%;
-    }
-}
-
-@media (max-width: 650px) {
-    .settings-page {
-        width: calc(100% - 20px);
-        margin-top: 18px;
-    }
-
-    .settings-hero {
+@media (max-width: 600px) {
+    .project-settings-readonly-notice {
         align-items: flex-start;
-        flex-direction: column;
-    }
-
-    .settings-form-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .field.full {
-        grid-column: auto;
-    }
-
-    .project-settings-link-row {
-        grid-template-columns: 1fr 36px;
-    }
-
-    .project-setting-link-url {
-        grid-column: 1 / 2;
-    }
-
-    .project-setting-link-remove {
-        grid-column: 2 / 3;
-        grid-row: 1 / span 2;
-        height: auto;
-    }
-
-    .member-role-row {
-        grid-template-columns: 1fr;
-    }
-
-    .proj-position-input,
-    .member-row-actions {
-        grid-column: auto;
-        grid-row: auto;
-        width: 100%;
-    }
-
-    .member-row-actions .member-remove-btn {
-        width: 100%;
     }
 }
 
 
-/* 프로젝트 기본 설정 행 정렬
-   1행: 프로젝트명 | 프로젝트 유형
-   2행: 시작일 | 마감일
-   설명과 기타 유형명은 전체 폭 */
-.settings-form-grid > .field:nth-child(1),
-.settings-form-grid > .field:nth-child(2),
-.settings-form-grid > .field:nth-child(4),
-.settings-form-grid > .field:nth-child(5) {
-    min-width: 0;
+/* ========================================================================
+   20-14 설정 저장 결과 · 변경 감지 · 취소 확인
+   ======================================================================== */
+.project-settings-status {
+    margin: 0 0 16px;
+    padding: 11px 14px;
+    border: 1px solid transparent;
+    border-radius: 12px;
+    font-size: 11.5px;
+    font-weight: 750;
+    line-height: 1.5;
 }
 
-@media (max-width: 760px) {
-    .settings-form-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .field.full {
-        grid-column: auto;
-    }
+.project-settings-status[hidden] {
+    display: none !important;
 }
 
-
-/* ===== MOYO project settings: workspace-style compact override ===== */
-.settings-page {
-    
-    
-    
-    padding-bottom: 38px !important;
+.project-settings-status.is-success {
+    border-color: rgba(67, 190, 169, .32);
+    background: rgba(232, 250, 246, .88);
+    color: #167f72;
 }
 
-.settings-hero {
-    min-height: 132px !important;
-    padding: 26px 32px !important;
-    border-radius: 20px !important;
-    overflow: hidden !important;
+.project-settings-status.is-error {
+    border-color: rgba(221, 112, 126, .32);
+    background: rgba(255, 241, 243, .92);
+    color: #b53c4b;
+}
+
+body:not(.project-settings-dirty)
+#workspaceSettingsSaveButton.settings-btn-primary,
+body:not(.project-settings-dirty)
+#projectSettingsSaveButton.settings-btn-primary {
+    cursor: default;
+    opacity: .58;
+    box-shadow: none;
+    transform: none;
+}
+
+body.project-settings-dirty
+#workspaceSettingsSaveButton.settings-btn-primary,
+body.project-settings-dirty
+#projectSettingsSaveButton.settings-btn-primary {
+    opacity: 1;
+}
+
+/* ========================================================================
+   2026-07-23 프로젝트 설정 · 그룹 설정 최종 레이아웃 정렬
+   ======================================================================== */
+body.moyo-app-sidebar-enabled .project-settings-page,
+body .project-settings-page {
+    width: min(calc(100% - 48px), 940px) !important;
+    max-width: 940px !important;
+    min-height: calc(100vh - 176px) !important;
+    margin: 28px auto 42px !important;
+    padding: 0 !important;
+}
+
+.settings-page-header {
+    align-items: start !important;
+    gap: 22px !important;
+    padding: 0 0 22px !important;
+}
+
+.settings-page-heading h1 {
+    margin: 0 0 7px !important;
+    font-size: 27px !important;
+    line-height: 1.2 !important;
+    font-weight: 900 !important;
+    letter-spacing: -.04em !important;
+}
+
+.settings-page-heading p {
+    font-size: 12.5px !important;
+    line-height: 1.55 !important;
+}
+
+.settings-page-actions {
+    align-self: start !important;
+    padding-top: 0 !important;
+}
+
+#projectSettingsSaveButton.settings-btn-primary {
+    min-width: 126px !important;
+    height: 42px !important;
+    min-height: 42px !important;
+    padding: 0 18px !important;
+    border-radius: 11px !important;
+    font-size: 12px !important;
+    font-weight: 850 !important;
+}
+
+body:not(.project-settings-dirty) #projectSettingsSaveButton.settings-btn-primary {
+    color: rgba(255,255,255,.94) !important;
+    background: linear-gradient(100deg, #9edfdc 0%, #9abce9 52%, #b2a8ec 100%) !important;
+    opacity: 1 !important;
 }
 
 .settings-tabs {
-    width: fit-content !important;
-    margin: 16px 0 14px !important;
-}
-
-.settings-card {
-    padding: 24px 26px !important;
-    border-radius: 18px !important;
-}
-
-.settings-card-head {
-    margin-bottom: 16px !important;
-}
-
-.settings-card-head h2,
-.project-settings-link-head h2 {
-    margin: 0 0 4px !important;
-    font-size: 18px !important;
-    font-weight: 950 !important;
-    letter-spacing: -.035em !important;
-}
-
-.settings-card-head p,
-.project-settings-link-head p {
     margin: 0 !important;
-    color: #8a96a8 !important;
-    font-size: 12px !important;
-    font-weight: 700 !important;
+}
+
+.settings-section {
+    padding: 30px 2px 32px !important;
+}
+
+.settings-section-head {
+    margin-bottom: 18px !important;
+}
+
+.settings-section-head h2 {
+    font-size: 18px !important;
+    line-height: 1.3 !important;
+}
+
+.settings-section-head p {
+    font-size: 12.5px !important;
+    line-height: 1.6 !important;
 }
 
 .settings-form-grid {
-    gap: 12px 14px !important;
-}
-
-.field label {
-    margin-bottom: 7px !important;
-    color: #1f2a3a !important;
-    font-size: 12px !important;
-    font-weight: 900 !important;
-}
-
-.field input,
-.field select,
-.field textarea,
-.project-settings-link-row input,
-.member-add-panel select,
-.proj-role-select,
-.proj-position-input {
-    height: 42px !important;
-    border-color: #dbe6f2 !important;
-    border-radius: 12px !important;
-    font-size: 13px !important;
-    font-weight: 700 !important;
-}
-
-.field select,
-.proj-role-select {
-    appearance: none !important;
-    background-image: linear-gradient(45deg, transparent 50%, #94a3b8 50%), linear-gradient(135deg, #94a3b8 50%, transparent 50%) !important;
-    background-position: calc(100% - 18px) 50%, calc(100% - 13px) 50% !important;
-    background-size: 5px 5px, 5px 5px !important;
-    background-repeat: no-repeat !important;
-    padding-right: 34px !important;
-}
-
-.field textarea {
-    height: 78px !important;
-    min-height: 78px !important;
-    resize: none !important;
-}
-
-.settings-section-divider {
-    margin: 18px 0 !important;
-}
-
-.project-settings-link-head {
-    display: flex !important;
-    align-items: flex-start !important;
-    justify-content: space-between !important;
     gap: 16px !important;
-    margin-bottom: 12px !important;
+}
+
+.form-group {
+    gap: 8px !important;
+}
+
+.form-group label {
+    font-size: 12.5px !important;
+}
+
+.form-control {
+    min-height: 46px !important;
+    height: 46px !important;
+    padding: 0 14px !important;
+    border-radius: 12px !important;
+    font-size: 13.5px !important;
+}
+
+textarea.form-control {
+    min-height: 104px !important;
+    height: 104px !important;
+    padding: 12px 14px !important;
+}
+
+.field-help {
+    margin: 0 !important;
+    color: #8794a5 !important;
+    font-size: 11px !important;
+    line-height: 1.5 !important;
+}
+
+.settings-link-section {
+    padding-top: 30px !important;
 }
 
 .project-settings-link-list {
-    max-width: none !important;
     gap: 8px !important;
 }
 
 .project-settings-link-row {
-    grid-template-columns: 150px minmax(0, 1fr) 34px !important;
-    gap: 8px !important;
+    grid-template-columns: 118px minmax(0, 1fr) 32px !important;
+    gap: 6px !important;
+}
+
+.project-settings-link-row .form-control,
+.project-setting-link-remove {
+    height: 36px !important;
+    min-height: 36px !important;
 }
 
 .project-setting-link-remove {
-    width: 34px !important;
-    height: 34px !important;
-    border-radius: 10px !important;
+    width: 32px !important;
+    border-radius: 8px !important;
 }
 
-.settings-actions {
-    margin-top: 14px !important;
-    padding-top: 14px !important;
-}
-
-.danger-card {
-    margin-top: 14px !important;
-    padding: 16px 20px !important;
-}
-
-
-
-.member-role-list {
-    display: flex !important;
-    flex-direction: column !important;
-    gap: 10px !important;
-}
-
-.member-role-row {
-    display: grid !important;
-    grid-template-columns: minmax(260px, 1fr) 118px 260px auto !important;
+.settings-side-card.danger-zone {
+    min-height: 76px !important;
+    padding: 22px 2px 0 !important;
     align-items: center !important;
-    gap: 10px !important;
-    padding: 12px 14px !important;
-    border: 1px solid #e2ecf6 !important;
-    border-radius: 14px !important;
-    background: #fbfdff !important;
 }
 
-.member-profile {
-    min-width: 0 !important;
+.danger-zone h3 {
+    font-size: 13.5px !important;
 }
 
-.member-avatar {
-    width: 38px !important;
-    height: 38px !important;
-    flex: 0 0 38px !important;
-    font-size: 13px !important;
+.danger-zone p {
+    font-size: 11px !important;
 }
 
-.proj-position-input {
+@media (max-width: 760px) {
+    body.moyo-app-sidebar-enabled .project-settings-page,
+    body .project-settings-page {
+        width: calc(100% - 28px) !important;
+        min-height: auto !important;
+        margin: 18px auto 30px !important;
+    }
+}
+
+@media (max-width: 600px) {
+    body.moyo-app-sidebar-enabled .project-settings-page,
+    body .project-settings-page {
+        width: calc(100% - 20px) !important;
+    }
+
+    .settings-page-header {
+        grid-template-columns: 1fr auto !important;
+    }
+
+    .settings-page-actions {
+        width: auto !important;
+    }
+}
+
+/* ========================================================================
+   프로젝트 설정 탭 — 그룹 설정 최종 규격과 동일하게 보정
+   ======================================================================== */
+.settings-tabs {
+    display: flex !important;
+    align-items: flex-end !important;
+    gap: 8px !important;
     width: 100% !important;
+    min-height: 48px !important;
+    margin-top: 0 !important;
+    padding: 0 !important;
+    border-bottom: 1px solid var(--moyo-line, #dfe8f2) !important;
+    background: transparent !important;
 }
 
-.member-row-actions {
-    min-width: 88px !important;
+.settings-tab-button,
+.settings-tab-button.is-active {
+    position: relative !important;
+    min-width: 96px !important;
+    width: auto !important;
+    height: 48px !important;
+    min-height: 48px !important;
+    padding: 0 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    color: #8793a5 !important;
+    font-family: inherit !important;
+    font-size: 13px !important;
+    font-weight: 900 !important;
+    line-height: 1 !important;
+    text-align: center !important;
+    white-space: nowrap !important;
+    cursor: pointer !important;
+}
+
+.settings-tab-button:hover,
+.settings-tab-button.is-active {
+    color: #2f3a4f !important;
+    background: transparent !important;
+}
+
+.settings-tab-button::after {
+    content: "" !important;
+    position: absolute !important;
+    left: 16px !important;
+    right: 16px !important;
+    bottom: -1px !important;
+    width: auto !important;
+    height: 2px !important;
+    margin: 0 auto !important;
+    border-radius: 999px !important;
+    background: transparent !important;
+    transform: none !important;
+}
+
+.settings-tab-button.is-active::after {
+    background: linear-gradient(
+        90deg,
+        var(--moyo-mint, #55c8c8),
+        var(--moyo-blue, #4a6df5)
+    ) !important;
+}
+
+.settings-tab-button:focus,
+.settings-tab-button:focus-visible {
+    outline: none !important;
+    outline-offset: 0 !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    background: transparent !important;
+}
+
+/* 키보드 포커스도 외곽 박스 대신 하단선으로만 표시 */
+.settings-tab-button:focus-visible::after {
+    background: linear-gradient(
+        90deg,
+        var(--moyo-mint, #55c8c8),
+        var(--moyo-blue, #4a6df5)
+    ) !important;
+    opacity: .55 !important;
+}
+
+.settings-tab-button.is-active:focus-visible::after {
+    opacity: 1 !important;
+}
+
+@media (max-width: 600px) {
+    .settings-tabs {
+        gap: 8px !important;
+        overflow-x: auto !important;
+        scrollbar-width: none !important;
+    }
+
+    .settings-tabs::-webkit-scrollbar {
+        display: none !important;
+    }
+
+    .settings-tab-button,
+    .settings-tab-button.is-active {
+        min-width: 88px !important;
+        flex: 0 0 auto !important;
+    }
+}
+
+/* ========================================================================
+   프로젝트 설정 상단 액션 — 그룹 설정과 동일한 단일 저장 버튼
+   ======================================================================== */
+.settings-page-actions {
+    display: flex !important;
+    align-items: center !important;
     justify-content: flex-end !important;
+    gap: 0 !important;
 }
 
-.member-transfer-btn {
+.settings-page-actions .settings-btn-cancel,
+#projectSettingsCancelButton {
     display: none !important;
 }
 
-.member-manage-head + .member-table-head::before {
-    content: "팀장은 권한 선택에서 팀장 위임을 선택하면 바로 위임할 수 있습니다.";
-    display: block;
-    margin-bottom: 10px;
-    color: #8a96a8;
-    font-size: 11px;
-    font-weight: 700;
-}
-
-@media (max-height: 820px) and (min-width: 900px) {
-    .settings-page { margin-top: 24px !important; }
-    .settings-hero { min-height: 118px !important; padding: 22px 30px !important; }
-    .settings-card { padding: 20px 24px !important; }
-    .field textarea { height: 68px !important; min-height: 68px !important; }
-    .danger-card { display: none !important; }
-}
-
-@media (max-width: 980px) {
-    .settings-page {
-        width: min(100% - 28px, 980px) !important;
-    }
-    .member-role-row {
-        grid-template-columns: minmax(220px, 1fr) 118px !important;
-    }
-    .proj-position-input,
-    .member-row-actions {
-        grid-column: auto !important;
-        grid-row: auto !important;
-    }
-}
-
-@media (max-width: 650px) {
-    .settings-page { width: calc(100% - 20px) !important; }
-    .settings-hero { padding: 22px !important; }
-    .project-settings-link-row { grid-template-columns: 1fr 34px !important; }
-    .member-role-row { grid-template-columns: 1fr !important; }
-}
-/* ===== End project settings workspace-style compact override ===== */
-
-/* ===== PROJECT SETTINGS: workspace width + compact final override ===== */
-
-
-body .settings-page,
-body .project-settings-page {
-    width: min(1040px, calc(100vw - 360px)) !important;
-    max-width: 1040px !important;
-    min-width: 0 !important;
-    margin: 30px auto 64px !important;
-    padding: 0 !important;
-}
-
-body .settings-hero {
-    min-height: 108px !important;
-    padding: 22px 26px !important;
-}
-
-body .settings-tabs {
-    margin: 14px 0 14px !important;
-}
-
-body .settings-layout,
-body .settings-tab-panel,
-body .settings-card {
-    width: 100% !important;
-    max-width: 100% !important;
-}
-
-body .settings-card {
-    padding: 22px 22px !important;
-}
-
-body .settings-form-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-    gap: 12px 14px !important;
-}
-
-body .field.full {
-    grid-column: 1 / -1 !important;
-}
-
-body .field textarea {
-    height: 72px !important;
-    min-height: 72px !important;
-}
-
-body .project-settings-link-head {
-    margin-bottom: 10px !important;
-}
-
-body .project-settings-link-list {
-    max-width: 760px !important;
-}
-
-body .project-settings-link-row {
-    grid-template-columns: 130px minmax(0, 1fr) 34px !important;
-}
-
-body .settings-actions {
-    margin-top: 12px !important;
-    padding-top: 12px !important;
-}
-
-body .danger-card {
-    margin-top: 12px !important;
-}
-
-@media (max-width: 1280px) {
-    body .settings-page,
-    body .project-settings-page {
-        width: min(980px, calc(100vw - 300px)) !important;
-        max-width: 980px !important;
-    }
-}
-
-@media (max-width: 980px) {
-    body .settings-page,
-    body .project-settings-page {
-        width: calc(100vw - 32px) !important;
-        max-width: none !important;
-    }
-    body .settings-form-grid {
-        grid-template-columns: 1fr !important;
-    }
-    body .project-settings-link-list {
-        max-width: none !important;
-    }
-}
-
-@media (min-width: 981px) and (max-height: 820px) {
-    body .settings-page,
-    body .project-settings-page {
-        margin-top: 24px !important;
-    }
-    body .settings-hero {
-        min-height: 104px !important;
-        padding: 20px 26px !important;
-    }
-    body .settings-card {
-        padding: 20px 22px !important;
-    }
-    body .field textarea {
-        height: 64px !important;
-        min-height: 64px !important;
-    }
-    body .danger-card {
-        display: none !important;
-    }
-}
-/* ===== End PROJECT SETTINGS: workspace width + compact final override ===== */
-
-
-/* ===== REAL FINAL: project settings width same as workspace settings ===== */
-html, body {
-    overflow-x: hidden !important;
-}
-
-/* 기존 override가 여러 번 누적되어 있어서 마지막에서 다시 확정 */
-body .settings-page.project-settings-page,
-body .project-settings-page,
-body div.settings-page.project-settings-page {
-    
-    
-    min-width: 0 !important;
-    
-    padding: 0 !important;
-}
-
-body .project-settings-page .settings-hero,
-body .project-settings-page .settings-tabs,
-body .project-settings-page .settings-layout,
-body .project-settings-page .settings-tab-panel,
-body .project-settings-page .settings-card {
-    width: 100% !important;
-    max-width: 100% !important;
-    box-sizing: border-box !important;
-}
-
-body .project-settings-page .settings-card {
-    padding: 22px 24px !important;
-}
-
-body .project-settings-page .settings-form-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-    gap: 12px 14px !important;
-}
-
-body .project-settings-page .field textarea {
-    height: 72px !important;
-    min-height: 72px !important;
-}
-
-body .project-settings-page .project-settings-link-list {
-    max-width: 760px !important;
-}
-
-body .project-settings-page .project-settings-link-row {
-    grid-template-columns: 130px minmax(0, 1fr) 34px !important;
-}
-
-body .project-settings-page .settings-actions {
-    margin-top: 12px !important;
-    padding-top: 12px !important;
-}
-
-@media (max-width: 1320px) {
-    body .settings-page.project-settings-page,
-    body .project-settings-page,
-    body div.settings-page.project-settings-page {
-        max-width: 980px !important;
-        width: calc(100% - 36px) !important;
-    }
-}
-
-@media (max-width: 980px) {
-    body .settings-page.project-settings-page,
-    body .project-settings-page,
-    body div.settings-page.project-settings-page {
-        max-width: none !important;
-        width: calc(100% - 28px) !important;
-    }
-    body .project-settings-page .settings-form-grid {
-        grid-template-columns: 1fr !important;
-    }
-    body .project-settings-page .project-settings-link-list {
-        max-width: none !important;
-    }
-}
-/* ===== End REAL FINAL project settings width ===== */
-
-/* ===== FINAL: project member save unified with workspace + footer spacing ===== */
-body .settings-page.project-settings-page,
-body .project-settings-page,
-body div.settings-page.project-settings-page {
-    width: 100% !important;
-    max-width: 1040px !important;
-    min-height: calc(100vh - 230px) !important;
-    margin: 30px auto 42px !important;
-}
-
-body .project-settings-page .member-role-row {
-    grid-template-columns: minmax(250px, 1fr) 118px 260px 190px !important;
-}
-
-body .project-settings-page .member-row-actions {
-    width: 190px !important;
-    min-width: 190px !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: flex-end !important;
-    gap: 7px !important;
-}
-
-body .project-settings-page .member-save-btn {
-    min-height: 34px !important;
-    padding: 0 13px !important;
-    border: 1px solid #bdd8f1 !important;
-    border-radius: 10px !important;
-    background: #f7fbff !important;
-    color: #347fcf !important;
-    font-size: 11px !important;
-    font-weight: 800 !important;
-    cursor: pointer !important;
+#projectSettingsSaveButton.settings-btn-primary {
+    min-width: 126px !important;
+    min-height: 42px !important;
+    padding: 0 18px !important;
+    border: 0 !important;
+    border-radius: 11px !important;
+    color: #fff !important;
+    background: linear-gradient(
+        135deg,
+        #42cdb8 0%,
+        #438fdf 52%,
+        #6f61ef 100%
+    ) !important;
+    box-shadow: 0 10px 22px rgba(77, 112, 218, .22) !important;
+    font-family: inherit !important;
+    font-size: 12px !important;
+    font-weight: 850 !important;
+    line-height: 1 !important;
     white-space: nowrap !important;
 }
 
-body .project-settings-page .member-save-btn:disabled {
-    opacity: .65 !important;
+#projectSettingsSaveButton.settings-btn-primary:hover:not(:disabled) {
+    color: #fff !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 12px 24px rgba(77, 112, 218, .27) !important;
+}
+
+#projectSettingsSaveButton.settings-btn-primary:disabled {
+    color: rgba(255, 255, 255, .96) !important;
+    background: linear-gradient(
+        135deg,
+        #8bdcd0 0%,
+        #82b4e2 52%,
+        #9c91e8 100%
+    ) !important;
+    box-shadow: 0 6px 14px rgba(77, 112, 218, .10) !important;
+    opacity: .78 !important;
+    cursor: default !important;
+    transform: none !important;
+}
+
+.settings-page-heading > p {
+    margin-top: 7px !important;
+}
+
+/* ========================================================================
+   프로젝트 설정 저장 버튼 비활성 시각 — 그룹 설정과 동일하게 유지
+   ======================================================================== */
+#projectSettingsSaveButton.settings-btn-primary:disabled,
+#projectSettingsSaveButton.settings-btn-primary[aria-busy="true"] {
+    color: #fff !important;
+    background: linear-gradient(
+        135deg,
+        #42cdb8 0%,
+        #438fdf 52%,
+        #6f61ef 100%
+    ) !important;
+    box-shadow: 0 10px 22px rgba(77, 112, 218, .22) !important;
+    opacity: 1 !important;
+    transform: none !important;
+}
+
+#projectSettingsSaveButton.settings-btn-primary:disabled {
     cursor: default !important;
 }
 
-body .project-settings-page .member-remove-btn {
-    min-height: 34px !important;
+#projectSettingsSaveButton.settings-btn-primary[aria-busy="true"] {
+    cursor: wait !important;
+}
+
+/* ========================================================================
+   프로젝트 설정 저장 버튼 비활성 색상 최종 우선순위 보정
+   ======================================================================== */
+body:not(.project-settings-dirty)
+#projectSettingsSaveButton.settings-btn-primary,
+body:not(.project-settings-dirty)
+#projectSettingsSaveButton.settings-btn-primary:disabled,
+body.project-settings-dirty
+#projectSettingsSaveButton.settings-btn-primary,
+body.project-settings-dirty
+#projectSettingsSaveButton.settings-btn-primary:disabled {
+    color: #fff !important;
+    background: linear-gradient(
+        135deg,
+        #42cdb8 0%,
+        #438fdf 52%,
+        #6f61ef 100%
+    ) !important;
+    box-shadow: 0 10px 22px rgba(77, 112, 218, .22) !important;
+    opacity: 1 !important;
+    filter: none !important;
+    transform: none !important;
+}
+
+body:not(.project-settings-dirty)
+#projectSettingsSaveButton.settings-btn-primary:disabled {
+    cursor: default !important;
+}
+
+/* ========================================================================
+   프로젝트 설정 하단 — 그룹 설정 하단 규격과 동일하게 보정
+   ======================================================================== */
+
+/* 외부 링크 섹션 간격 */
+.settings-media-section,
+.project-link-section,
+.settings-section.project-link-section {
+    padding-top: 28px !important;
+    padding-bottom: 30px !important;
+}
+
+.settings-media-panel,
+.project-link-panel {
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+}
+
+.settings-media-panel .settings-section-head,
+.project-link-panel .settings-section-head {
+    margin-bottom: 14px !important;
+}
+
+/* 외부 링크 행 비율과 간격 */
+.workspace-link-list,
+.project-setting-link-list {
+    gap: 6px !important;
+}
+
+.workspace-link-row,
+.project-setting-link-row {
+    display: grid !important;
+    grid-template-columns: 118px minmax(0, 1fr) 32px !important;
+    align-items: center !important;
+    gap: 6px !important;
+}
+
+.workspace-link-row .form-control,
+.project-setting-link-row .form-control,
+.workspace-link-remove,
+.project-setting-link-remove {
+    height: 36px !important;
+    min-height: 36px !important;
+    box-sizing: border-box !important;
+}
+
+.workspace-link-remove,
+.project-setting-link-remove {
+    width: 32px !important;
+    min-width: 32px !important;
+    padding: 0 !important;
+    border-radius: 8px !important;
+    font-size: 18px !important;
+}
+
+.workspace-link-help,
+.project-setting-link-help {
+    margin: 7px 0 0 !important;
+    font-size: 10.5px !important;
+    line-height: 1.4 !important;
+}
+
+/* 외부 링크와 위험 구역 사이 구분선/여백 */
+.settings-side-card.danger-zone,
+.project-danger-zone {
+    margin-top: 0 !important;
+    min-height: 76px !important;
+    padding: 22px 4px 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 24px !important;
+    border: 0 !important;
+    border-top: 1px solid rgba(214, 169, 179, .42) !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+}
+
+.settings-side-card.danger-zone .danger-zone-copy,
+.project-danger-zone .danger-zone-copy {
+    min-width: 0 !important;
+    padding-right: 20px !important;
+}
+
+.settings-side-card.danger-zone h3,
+.project-danger-zone h3 {
+    margin: 0 0 5px !important;
+    color: #d85864 !important;
+    font-size: 13.5px !important;
+    line-height: 1.3 !important;
+}
+
+.settings-side-card.danger-zone p,
+.project-danger-zone p {
+    margin: 0 !important;
+    font-size: 11px !important;
+    line-height: 1.5 !important;
+}
+
+.settings-side-card.danger-zone .btn-delete,
+.project-danger-zone .btn-delete,
+#projectDeleteButton {
+    flex: 0 0 auto !important;
+    width: auto !important;
+    min-width: 112px !important;
+    height: 36px !important;
+    min-height: 36px !important;
+    padding: 0 16px !important;
+    border: 1px solid #efc6cb !important;
+    border-radius: 999px !important;
+    background: transparent !important;
+    color: #d85864 !important;
+    font-size: 11px !important;
+    font-weight: 800 !important;
+    line-height: 1 !important;
+    box-shadow: none !important;
+}
+
+/* 위험 구역 아래 여백과 푸터 간격 */
+.workspace-settings-page,
+.project-settings-page {
+    padding-bottom: 18px !important;
+    margin-bottom: 22px !important;
+}
+
+@media (max-width: 600px) {
+    .workspace-link-row,
+    .project-setting-link-row {
+        grid-template-columns: 1fr 32px !important;
+    }
+
+    .workspace-link-row input:first-child,
+    .project-setting-link-row input:first-child {
+        grid-column: 1 / 2 !important;
+    }
+
+    .workspace-link-row input:nth-child(2),
+    .project-setting-link-row input:nth-child(2) {
+        grid-column: 1 / 2 !important;
+    }
+
+    .workspace-link-remove,
+    .project-setting-link-remove {
+        grid-column: 2 / 3 !important;
+        grid-row: 1 / span 2 !important;
+        align-self: stretch !important;
+        height: auto !important;
+    }
+
+    .settings-side-card.danger-zone,
+    .project-danger-zone {
+        align-items: flex-start !important;
+        flex-direction: column !important;
+        gap: 14px !important;
+    }
+
+    .settings-side-card.danger-zone .btn-delete,
+    .project-danger-zone .btn-delete,
+    #projectDeleteButton {
+        width: 100% !important;
+    }
+}
+
+/* ========================================================================
+   프로젝트 설정 하단 세부 규격 — 그룹 설정 기준 최종 보정
+   ======================================================================== */
+
+/* 등록 개수 배지 */
+.workspace-link-count-wrap,
+.project-link-count-wrap {
+    min-height: 30px !important;
+    height: 30px !important;
+    padding: 0 10px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    border: 1px solid #d8e1eb !important;
+    border-radius: 999px !important;
+    background: rgba(255, 255, 255, .70) !important;
+    color: #7a899b !important;
+    box-shadow: none !important;
     white-space: nowrap !important;
 }
 
-body .project-settings-page #projectSettingsMembers .settings-actions {
+.workspace-link-count,
+.project-link-count {
+    color: #52667d !important;
+    font-size: 11px !important;
+    font-weight: 800 !important;
+    line-height: 1 !important;
+}
+
+/* + 링크 추가 버튼 */
+.settings-section-head-with-action .workspace-link-add,
+.workspace-link-add,
+.project-setting-link-add,
+.settings-section-head-with-action .project-setting-link-add {
+    min-height: 32px !important;
+    height: 32px !important;
+    padding: 0 12px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 5px !important;
+    margin: 0 !important;
+    border: 1px solid #d4deea !important;
+    border-radius: 10px !important;
+    background: rgba(255, 255, 255, .78) !important;
+    color: #46627f !important;
+    font-family: inherit !important;
+    font-size: 11px !important;
+    font-weight: 800 !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+    box-shadow: none !important;
+    transform: none !important;
+}
+
+.workspace-link-add:hover:not(:disabled),
+.project-setting-link-add:hover:not(:disabled) {
+    border-color: #9eb5cf !important;
+    background: rgba(255, 255, 255, .98) !important;
+    color: #24486f !important;
+    box-shadow: none !important;
+    transform: none !important;
+}
+
+.workspace-link-add:disabled,
+.project-setting-link-add:disabled {
+    opacity: .5 !important;
+    cursor: default !important;
+}
+
+/* 위험 구역 제목은 그룹 설정과 동일하게 검은색 */
+.settings-side-card.danger-zone h3,
+.project-danger-zone h3,
+.danger-zone h3 {
+    margin: 0 0 5px !important;
+    color: #172033 !important;
+    font-size: 13.5px !important;
+    font-weight: 850 !important;
+    line-height: 1.3 !important;
+}
+
+/* 설명·버튼 정렬 */
+.settings-side-card.danger-zone,
+.project-danger-zone,
+.danger-zone {
+    align-items: center !important;
+}
+
+.settings-side-card.danger-zone p,
+.project-danger-zone p,
+.danger-zone p {
+    margin: 0 !important;
+    color: #7b8798 !important;
+    font-size: 11px !important;
+    line-height: 1.5 !important;
+}
+
+@media (max-width: 600px) {
+    .workspace-link-count-wrap,
+    .project-link-count-wrap {
+        padding: 0 8px !important;
+    }
+
+    .settings-side-card.danger-zone,
+    .project-danger-zone,
+    .danger-zone {
+        align-items: flex-start !important;
+    }
+}
+
+/* ========================================================================
+   프로젝트 외부 링크 헤더 · 위험 구역 — 실제 마크업 기준 최종 일치
+   ======================================================================== */
+
+/* 실제 프로젝트 링크 추가 버튼 클래스 직접 지정 */
+#projectSettingLinkAddButton.project-link-add,
+.settings-section-head-with-action #projectSettingLinkAddButton.project-link-add {
+    flex: 0 0 auto !important;
+    align-self: center !important;
+    min-width: 0 !important;
+    width: auto !important;
+    min-height: 32px !important;
+    height: 32px !important;
+    margin: 0 !important;
+    padding: 0 12px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 5px !important;
+    border: 1px solid #d4deea !important;
+    border-radius: 10px !important;
+    background: rgba(255, 255, 255, .78) !important;
+    color: #46627f !important;
+    font-family: inherit !important;
+    font-size: 11px !important;
+    font-weight: 800 !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+    box-shadow: none !important;
+    transform: none !important;
+}
+
+#projectSettingLinkAddButton.project-link-add:hover:not(:disabled) {
+    border-color: #9eb5cf !important;
+    background: rgba(255, 255, 255, .98) !important;
+    color: #24486f !important;
+    box-shadow: none !important;
+    transform: none !important;
+}
+
+/* 그룹 설정처럼 개수만 보이는 배지 */
+.project-link-count-wrap {
+    min-width: 0 !important;
+    width: auto !important;
+    min-height: 32px !important;
+    height: 32px !important;
+    padding: 0 10px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    color: #52667d !important;
+    box-shadow: none !important;
+    white-space: nowrap !important;
+}
+
+#projectSettingLinkCount.project-link-count {
+    color: #52667d !important;
+    font-family: inherit !important;
+    font-size: 11px !important;
+    font-weight: 800 !important;
+    line-height: 1 !important;
+}
+
+/* 실제 위험 구역 마크업에 최고 우선순위 적용 */
+body .workspace-settings-page
+.settings-side-card.danger-zone
+.danger-zone-copy h3 {
+    margin: 0 0 5px !important;
+    color: #172033 !important;
+    font-family: inherit !important;
+    font-size: 13.5px !important;
+    font-weight: 850 !important;
+    line-height: 1.3 !important;
+}
+
+body .workspace-settings-page
+.settings-side-card.danger-zone
+.danger-zone-copy p {
+    margin: 0 !important;
+    color: #7b8798 !important;
+    font-family: inherit !important;
+    font-size: 11px !important;
+    font-weight: 400 !important;
+    line-height: 1.5 !important;
+}
+
+/* ========================================================================
+   프로젝트 생성 화면과 동일한 MOYO 커스텀 날짜 선택기
+   ======================================================================== */
+.project-date-input {
+    cursor: pointer !important;
+    padding-right: 40px !important;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%2355708f' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='4'/%3E%3Cpath d='M16 2v4M8 2v4M3 10h18'/%3E%3C/svg%3E") !important;
+    background-repeat: no-repeat !important;
+    background-position: right 13px center !important;
+}
+
+.project-date-input:disabled {
+    cursor: default !important;
+}
+
+.project-date-picker-menu {
+    position: fixed;
+    z-index: 3000;
+    width: 248px;
+    padding: 10px;
+    border: 1px solid rgba(126, 164, 255, .28);
+    border-radius: 17px;
+    background: #fff;
+    box-shadow: 0 16px 32px rgba(30, 64, 122, .16);
+    overflow: hidden;
+}
+
+.project-date-picker-menu[hidden] {
     display: none !important;
 }
 
-@media (max-width: 1320px) {
-    body .settings-page.project-settings-page,
-    body .project-settings-page,
-    body div.settings-page.project-settings-page {
-        max-width: 980px !important;
-        width: calc(100% - 36px) !important;
-    }
-
-    body .project-settings-page .member-role-row {
-        grid-template-columns: minmax(230px, 1fr) 112px 240px 180px !important;
-    }
-
-    body .project-settings-page .member-row-actions {
-        width: 180px !important;
-        min-width: 180px !important;
-    }
-}
-
-@media (max-width: 980px) {
-    body .settings-page.project-settings-page,
-    body .project-settings-page,
-    body div.settings-page.project-settings-page {
-        min-height: auto !important;
-        max-width: none !important;
-        width: calc(100% - 28px) !important;
-    }
-
-    body .project-settings-page .member-role-row {
-        grid-template-columns: 1fr !important;
-    }
-
-    body .project-settings-page .member-row-actions {
-        width: 100% !important;
-        min-width: 0 !important;
-        justify-content: flex-start !important;
-    }
-}
-/* ===== End FINAL project member save unified ===== */
-
-/* === Project settings member tab unified with workspace settings === */
-.settings-page {
-    width: min(1040px, calc(100% - 48px)) !important;
-    max-width: 1040px !important;
-    margin: 28px auto 64px !important;
-}
-
-.settings-page .settings-hero,
-.settings-page .settings-tabs,
-.settings-page .settings-layout,
-.settings-page .settings-card {
-    width: 100% !important;
-    max-width: 100% !important;
-}
-
-.settings-layout {
-    min-height: calc(100vh - 430px);
-}
-
-.member-tab-head {
-    margin-bottom: 14px;
+.project-date-picker-head {
+    margin-bottom: 9px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 14px;
+    gap: 8px;
 }
 
-.member-tab-head h2 {
-    margin: 0 0 4px;
-    color: #1d2939;
-    font-size: 16px;
-    letter-spacing: -.02em;
+.project-date-picker-title {
+    color: #162842;
+    font-size: 13px;
+    font-weight: 950;
+    letter-spacing: -.35px;
 }
 
-.member-tab-head p {
-    margin: 0;
-    color: #8a94a6;
+.project-date-picker-nav {
+    display: flex;
+    gap: 4px;
+}
+
+.project-date-picker-nav button,
+.project-date-picker-today {
+    border: 1px solid #d7e4f5;
+    background: #fff;
+    color: #55708f;
+    cursor: pointer;
+    font-family: inherit;
+    font-weight: 900;
+    transition: .14s ease;
+}
+
+.project-date-picker-nav button {
+    width: 25px;
+    height: 25px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    font-size: 14px;
+}
+
+.project-date-picker-nav button:hover,
+.project-date-picker-today:hover {
+    border-color: #9fc0ff;
+    background: #f3f7ff;
+    color: #2563eb;
+}
+
+.project-date-picker-weekdays,
+.project-date-picker-days {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 3px;
+}
+
+.project-date-picker-weekdays {
+    margin-bottom: 4px;
+}
+
+.project-date-picker-weekdays span {
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #7c8aa0;
+    font-size: 11px;
+    font-weight: 900;
+}
+
+.project-date-picker-weekdays span:first-child {
+    color: #ff6b87;
+}
+
+.project-date-picker-weekdays span:last-child {
+    color: #4f7cff;
+}
+
+.project-date-picker-day {
+    height: 27px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    background: transparent;
+    color: #24364f;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 850;
+    cursor: pointer;
+    transition: .14s ease;
+}
+
+.project-date-picker-day:nth-child(7n/**/+1) {
+    color: #ff5d7a;
+}
+
+.project-date-picker-day:nth-child(7n) {
+    color: #4f7cff;
+}
+
+.project-date-picker-day:hover:not(:disabled) {
+    border-color: #b6d7ff;
+    background: #f4f8ff;
+    transform: translateY(-1px);
+}
+
+.project-date-picker-day.is-muted {
+    color: #b1bdca !important;
+    font-weight: 750;
+}
+
+.project-date-picker-day.is-today {
+    border-color: #55d6c2;
+    background: #effcf9;
+    color: #0f9f8f;
+}
+
+.project-date-picker-day.is-selected,
+.project-date-picker-day.is-selected:hover,
+.project-date-picker-day.is-selected:focus,
+.project-date-picker-day.is-selected:focus-visible {
+    border: 0;
+    outline: 0;
+    background: linear-gradient(
+        135deg,
+        #35d6bd 0%,
+        #4a90e2 52%,
+        #8067f3 100%
+    );
+    background-clip: border-box;
+    color: #fff !important;
+    box-shadow: 0 7px 15px rgba(83, 111, 222, .24);
+    transform: none;
+}
+
+.project-date-picker-day.is-disabled,
+.project-date-picker-day:disabled {
+    opacity: .28;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.project-date-picker-day:focus,
+.project-date-picker-day:focus-visible {
+    outline: none;
+}
+
+.project-date-picker-foot {
+    margin-top: 8px;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.project-date-picker-today {
+    height: 25px;
+    padding: 0 9px;
+    border-radius: 999px;
     font-size: 11px;
 }
 
-.member-tab-invite {
-    min-height: 36px;
-    padding: 0 13px;
-    border: 0;
-    border-radius: 9px;
-    background: linear-gradient(135deg,#4a90e2,#39cdb5);
-    color: #fff;
-    font: 600 11px inherit;
-    cursor: pointer;
-    white-space: nowrap;
+/* ========================================================================
+   프로젝트 멤버 관리 — 그룹 설정 최종 테이블 구조
+   ======================================================================== */
+#projectSettingsMembers {
+    --project-member-line: #dbe5ef;
 }
 
-.member-search-box {
-    margin: 0 0 12px;
+#projectSettingsMembers .settings-card {
+    padding-top: 28px;
+}
+
+#projectSettingsMembers .member-tab-head {
+    margin-bottom: 16px;
+}
+
+.project-wsmt-toolbar {
+    margin-bottom: 16px;
+    display: grid;
+    grid-template-columns: minmax(280px, 1fr) auto;
+    align-items: center;
+    gap: 18px;
+}
+
+.project-wsmt-toolbar .member-search-box {
     position: relative;
+    min-width: 0;
 }
 
-.member-search-box input {
-    width: 100%;
-    height: 40px;
-    padding: 0 14px 0 38px;
-    border: 1px solid #dfe7ef;
-    border-radius: 11px;
-    background: #fff;
-    color: #172033;
-    font: 12px inherit;
-    outline: none;
-    transition: border-color .15s ease, box-shadow .15s ease;
-}
-
-.member-search-box input:focus {
-    border-color: #91bff0;
-    box-shadow: 0 0 0 3px rgba(74,144,226,.12);
-}
-
-.member-search-box::before {
-    content: "🔎";
+.project-wsmt-toolbar .member-search-box::before {
+    content: "⌕";
     position: absolute;
     left: 14px;
     top: 50%;
+    color: #7890aa;
+    font-size: 17px;
     transform: translateY(-50%);
-    font-size: 12px;
-    opacity: .62;
     pointer-events: none;
 }
 
-.workspace-member-empty {
+.project-wsmt-toolbar .member-search-box input {
+    width: 100%;
+    height: 40px;
+    padding: 0 14px 0 42px;
+    border: 1px solid #cfdceb;
+    border-radius: 11px;
+    outline: 0;
+    background: rgba(255,255,255,.78);
+    color: #30465f;
+    font: 500 12px/1 inherit;
+}
+
+.project-member-toolbar-actions,
+.project-member-view-actions,
+.project-member-edit-actions,
+.project-member-remove-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.project-member-edit-actions,
+.project-member-remove-actions {
     display: none;
-    padding: 22px 14px;
-    border: 1px dashed #dbe6f2;
-    border-radius: 12px;
-    background: #fbfdff;
-    color: #8a94a6;
-    font-size: 12px;
-    text-align: center;
 }
 
-.workspace-member-empty.is-visible {
-    display: block;
+#projectSettingsMembers.is-member-editing .project-member-view-actions,
+#projectSettingsMembers.is-member-removing .project-member-view-actions {
+    display: none;
 }
 
-.member-table-head {
+#projectSettingsMembers.is-member-editing .project-member-edit-actions {
+    display: flex;
+}
+
+#projectSettingsMembers.is-member-removing .project-member-remove-actions {
+    display: flex;
+}
+
+.project-member-total,
+.project-member-selected {
+    height: 36px;
+    padding: 0 11px;
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid #dbe4ee;
+    border-radius: 10px;
+    background: rgba(255,255,255,.72);
+    color: #718197;
+    font-size: 11px;
+    font-weight: 750;
+    white-space: nowrap;
+}
+
+.project-member-total strong {
+    margin: 0 2px 0 4px;
+    color: #405978;
+    font-weight: 900;
+}
+
+.project-member-toolbar-button,
+#projectSettingsMembers .member-tab-invite {
+    height: 36px;
+    padding: 0 13px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #d7e1ec;
+    border-radius: 10px;
+    background: rgba(255,255,255,.78);
+    color: #49627e;
+    font: 800 11.5px/1 inherit;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.project-member-toolbar-button.is-primary,
+#projectSettingsMembers .member-tab-invite {
+    border: 0;
+    color: #fff;
+    background: linear-gradient(100deg,#54c9c8,#4388ef 52%,#5b55ec);
+    box-shadow: 0 8px 18px rgba(71,105,220,.16);
+}
+
+.project-member-toolbar-button.is-danger-ghost {
+    border-color: #ecc8ce;
+    color: #c95865;
+}
+
+.project-member-toolbar-button.is-danger {
+    border-color: #df8f9a;
+    background: #fff1f3;
+    color: #b83c49;
+}
+
+.project-member-toolbar-button:disabled {
+    cursor: default;
+    opacity: .5;
+}
+
+.project-wsmt-wrap {
+    width: 100%;
+    overflow: hidden;
+    border-top: 1px solid var(--project-member-line);
+    border-bottom: 1px solid var(--project-member-line);
+}
+
+.project-wsmt-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+    background: rgba(255,255,255,.42);
+}
+
+.project-member-col-check { width: 0; }
+.project-member-col-person { width: 43%; }
+.project-member-col-role { width: 18%; }
+.project-member-col-position { width: 24%; }
+.project-member-col-date { width: 15%; }
+
+.project-wsmt-table th,
+.project-wsmt-table td {
+    padding: 0 16px;
+    vertical-align: middle;
+    text-align: left;
+    border-bottom: 1px solid var(--project-member-line);
+}
+
+.project-wsmt-table thead th {
+    height: 46px;
+    color: #61748a;
+    font-size: 10.5px;
+    font-weight: 850;
+    background: rgba(246,249,252,.72);
+}
+
+.project-wsmt-table tbody td {
+    height: 64px;
+    color: #354b63;
+    font-size: 11px;
+}
+
+.project-wsmt-table tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+.project-wsmt-row[hidden] {
     display: none !important;
 }
 
-.workspace-member-manage-list,
-.member-role-list {
-    display: flex;
-    flex-direction: column;
-    gap: 9px;
+.project-wsmt-row.is-selected td {
+    background: rgba(235,246,255,.72);
 }
 
-.member-role-row.workspace-member-manage-row {
-    min-height: 66px;
-    padding: 11px 13px;
-    display: grid !important;
-    grid-template-columns: minmax(260px,1fr) 110px 260px 82px 72px !important;
-    align-items: center;
-    column-gap: 10px;
-    border: 1px solid #e6edf4;
-    border-radius: 12px;
-    background: #fbfdff;
+.project-member-check-cell {
+    width: 0;
+    padding: 0 !important;
+    overflow: hidden;
+    opacity: 0;
+    pointer-events: none;
+    transition: width .18s ease, opacity .18s ease;
 }
 
-.workspace-member-manage-info,
-.member-profile {
+#projectSettingsMembers.is-member-removing .project-member-col-check {
+    width: 46px;
+}
+
+#projectSettingsMembers.is-member-removing .project-member-check-cell {
+    width: 46px;
+    padding: 0 12px !important;
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.project-member-check-cell input {
+    width: 15px;
+    height: 15px;
+    accent-color: #4f92df;
+}
+
+.project-wsmt-person {
     min-width: 0;
     display: flex;
     align-items: center;
     gap: 11px;
 }
 
-.workspace-member-manage-avatar,
-.member-avatar {
-    width: 40px;
-    height: 40px;
-    flex: 0 0 40px;
-    overflow: hidden;
-    display: flex;
+.project-wsmt-avatar {
+    position: relative;
+    width: 38px;
+    height: 38px;
+    flex: 0 0 38px;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-    border-radius: 50%;
-    background: linear-gradient(135deg,#4a90e2,#39cdb5);
+    overflow: hidden;
+    border-radius: 11px;
+    background: linear-gradient(135deg,#55d6c2,#4a90e2 55%,#8067f3);
     color: #fff;
-    font-size: 14px;
-    font-weight: 700;
+    font-size: 13px;
+    font-weight: 900;
 }
 
-.workspace-member-manage-text,
-.member-meta {
+.project-wsmt-avatar img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.project-wsmt-avatar-fallback {
+    position: relative;
+    z-index: 0;
+}
+
+.project-wsmt-person-copy {
     min-width: 0;
     display: flex;
     flex-direction: column;
     gap: 3px;
 }
 
-.workspace-member-manage-name,
-.workspace-member-manage-email,
-.member-meta strong,
-.member-meta span {
+.project-wsmt-name {
     overflow: hidden;
+    color: #182b42;
+    font-size: 12px;
+    font-weight: 850;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 
-.workspace-member-manage-name,
-.member-meta strong {
-    color: #172033;
-    font-size: 13px;
-    font-weight: 700;
-}
-
-.workspace-member-manage-email,
-.member-meta span {
-    color: #8a94a6;
-    font-size: 10.5px;
-}
-
-.workspace-member-role-select,
-.workspace-member-position-input,
-.proj-role-select,
-.proj-position-input {
-    width: 100%;
-    min-width: 0;
-    height: 36px;
-    padding: 0 10px;
-    border: 1px solid #dfe7ef;
-    border-radius: 9px;
-    background: #fff;
-    color: #475569;
-    font: 12px inherit;
-    outline: none;
-}
-
-.workspace-member-role-select:disabled,
-.proj-role-select:disabled {
-    background: #f2f5f8;
-    color: #8a94a6;
-}
-
-.workspace-member-position-save,
-.workspace-member-position-save-placeholder,
-.workspace-member-kick-button,
-.member-save-btn,
-.member-remove-btn {
-    min-height: 36px;
-    padding: 0 10px;
-    border-radius: 9px;
-    font: 600 11px inherit;
+.project-wsmt-email {
+    overflow: hidden;
+    color: #6682a1;
+    font-size: 10px;
+    text-overflow: ellipsis;
     white-space: nowrap;
 }
 
-.workspace-member-position-save,
-.member-save-btn {
-    width: 82px;
-    border: 1px solid #c9ddf1;
-    background: #f7fbff;
-    color: #347fcf;
-    cursor: pointer;
+.project-member-role-summary {
+    min-height: 24px;
+    padding: 0 9px;
+    display: inline-flex;
+    align-items: center;
+    border-radius: 999px;
+    background: #eef4fa;
+    color: #476887;
+    font-size: 10px;
+    font-weight: 850;
 }
 
-.workspace-member-position-save-placeholder {
-    width: 82px;
+.project-member-role-summary.is-leader {
+    background: #edf5ff;
+    color: #24598c;
+}
+
+.project-member-role-summary.is-admin {
+    background: #eff9f6;
+    color: #257d6d;
+}
+
+.project-member-position-summary {
+    color: #50657d;
+    font-size: 11px;
+}
+
+.project-member-position-summary.is-empty {
+    color: #98a6b6;
+}
+
+.project-member-role-edit,
+.project-member-position-edit {
+    display: none;
+    width: 100%;
+    height: 36px;
+    padding: 0 11px;
+    border: 1px solid #cfdbe7;
+    border-radius: 9px;
+    outline: 0;
+    background: #fff;
+    color: #334b64;
+    font: 600 11px/1 inherit;
+}
+
+#projectSettingsMembers.is-member-editing .project-member-role-summary,
+#projectSettingsMembers.is-member-editing .project-member-position-summary {
+    display: none;
+}
+
+#projectSettingsMembers.is-member-editing .project-member-role-edit,
+#projectSettingsMembers.is-member-editing .project-member-position-edit {
     display: block;
 }
 
-.workspace-member-actions,
-.member-row-actions {
-    width: 72px;
-    display: flex;
-    justify-content: flex-end;
-    gap: 6px;
+.project-wsmt-date-cell {
+    color: #50657d;
+    white-space: nowrap;
 }
 
-.workspace-member-kick-button,
-.member-remove-btn {
-    border: 1px solid #efc9ce;
-    background: #fffafa;
-    color: #d85864;
-    cursor: pointer;
+.project-member-empty {
+    display: none;
+    padding: 30px 0;
+    color: #8b99aa;
+    font-size: 11px;
+    text-align: center;
 }
 
-.workspace-member-role-note {
-    margin: 10px 0 0;
-    color: #98a2b3;
+.project-member-empty.is-visible {
+    display: block;
+}
+
+.project-member-role-note {
+    margin: 14px 0 0;
+    color: #8795a7;
     font-size: 10.5px;
-    line-height: 1.5;
 }
 
-@media (max-width: 1180px) {
-    .settings-page { width: min(980px, calc(100% - 36px)) !important; }
-    .member-role-row.workspace-member-manage-row {
-        grid-template-columns: minmax(220px,1fr) 105px 220px 82px 72px !important;
+@media (max-width: 760px) {
+    .project-wsmt-toolbar {
+        grid-template-columns: 1fr;
+    }
+
+    .project-member-toolbar-actions,
+    .project-member-view-actions,
+    .project-member-edit-actions,
+    .project-member-remove-actions {
+        justify-content: flex-start;
+        flex-wrap: wrap;
+    }
+
+    .project-wsmt-wrap {
+        overflow-x: auto;
+    }
+
+    .project-wsmt-table {
+        min-width: 720px;
     }
 }
 
-@media (max-width: 900px) {
-    .member-role-row.workspace-member-manage-row {
-        grid-template-columns: 1fr !important;
-        gap: 8px;
-    }
-    .workspace-member-actions,
-    .member-row-actions {
-        width: 100%;
-        justify-content: flex-end;
-    }
+/* ========================================================================
+   프로젝트 멤버 관리 시각 결함 보정
+   - 검색 아이콘 중복 제거
+   - 프로필/기본 아바타 겹침 제거
+   - 버튼 규격 통일
+   ======================================================================== */
+
+/* 검색창: 기존 HTML 아이콘만 사용하고 CSS 가상 아이콘 제거 */
+.project-wsmt-toolbar .member-search-box::before {
+    content: none !important;
+    display: none !important;
 }
 
-/* ===== MOYO project member row final alignment fix =====
-   기존 프로젝트 설정 전용 4컬럼 override가 워크스페이스형 5컬럼 배열을 덮어서
-   내보내기 버튼이 다음 줄로 밀리는 문제를 마지막에서 다시 고정한다. */
-body .project-settings-page .member-role-row.workspace-member-manage-row {
-    display: grid !important;
-    grid-template-columns: minmax(260px, 1fr) 110px 260px 82px 72px !important;
-    align-items: center !important;
-    column-gap: 10px !important;
-}
-
-body .project-settings-page .workspace-member-actions,
-body .project-settings-page .member-row-actions {
-    width: 72px !important;
-    min-width: 72px !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: flex-end !important;
-    grid-column: auto !important;
-}
-
-body .project-settings-page .workspace-member-kick-button,
-body .project-settings-page .member-remove-btn {
-    width: 72px !important;
-    min-width: 72px !important;
-    height: 36px !important;
-    padding: 0 10px !important;
-}
-
-body .project-settings-page .workspace-member-position-save,
-body .project-settings-page .member-save-btn,
-body .project-settings-page .workspace-member-position-save-placeholder {
-    width: 82px !important;
-    min-width: 82px !important;
-}
-
-@media (max-width: 1180px) {
-    body .project-settings-page .member-role-row.workspace-member-manage-row {
-        grid-template-columns: minmax(220px, 1fr) 105px 220px 82px 72px !important;
-    }
-}
-
-@media (max-width: 900px) {
-    body .project-settings-page .member-role-row.workspace-member-manage-row {
-        grid-template-columns: 1fr !important;
-    }
-
-    body .project-settings-page .workspace-member-actions,
-    body .project-settings-page .member-row-actions {
-        width: 100% !important;
-        min-width: 0 !important;
-        justify-content: flex-end !important;
-    }
-}
-
-
-/* =========================================================
-   Project settings workspace-style alignment v1
-   - workspace settings visual system reused without image block
-   - project fields, APIs and permissions remain unchanged
-   ========================================================= */
-body .project-settings-page {
-    width: min(1180px, calc(100% - 48px)) !important;
-    margin: 28px auto 24px !important;
-    min-height: calc(100vh - 214px) !important;
-}
-
-body .project-settings-page .settings-hero {
-    position: relative !important;
-    overflow: hidden !important;
-    width: 100% !important;
-    min-height: 116px !important;
-    padding: 24px 28px !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: space-between !important;
-    gap: 24px !important;
-    border: 1px solid #e5edf7 !important;
-    border-radius: 20px !important;
-    background: linear-gradient(135deg, #fff 0%, #f7fbff 100%) !important;
-    box-shadow: 0 10px 28px rgba(34, 91, 155, .05) !important;
-}
-
-body .project-settings-page .settings-hero::before {
-    content: "" !important;
-    position: absolute !important;
-    left: 0 !important;
-    top: 22px !important;
-    bottom: 22px !important;
-    width: 4px !important;
-    border-radius: 0 999px 999px 0 !important;
-    background: linear-gradient(180deg, #4a90e2, #39cdb5) !important;
-}
-
-body .project-settings-page .settings-hero::after {
-    content: "" !important;
-    position: absolute !important;
-    right: -66px !important;
-    top: -96px !important;
-    width: 210px !important;
-    height: 210px !important;
-    border-radius: 50% !important;
-    background: rgba(74, 144, 226, .045) !important;
-}
-
-body .project-settings-page .project-settings-hero-main {
-    position: relative !important;
-    z-index: 1 !important;
-    display: flex !important;
-    align-items: center !important;
-    min-width: 0 !important;
-}
-
-body .project-settings-page .settings-hero-copy {
-    position: relative !important;
-    z-index: 1 !important;
-    min-width: 0 !important;
-}
-
-body .project-settings-page .settings-kicker {
-    display: block !important;
-    margin-bottom: 5px !important;
-    color: #8a94a6 !important;
+.project-wsmt-toolbar .member-search-box input {
+    height: 40px !important;
+    padding: 0 14px 0 42px !important;
+    border: 1px solid #cfdceb !important;
+    border-radius: 11px !important;
+    background: rgba(255, 255, 255, .78) !important;
+    color: #30465f !important;
+    font-family: inherit !important;
     font-size: 12px !important;
-    font-style: italic !important;
-    font-weight: 600 !important;
+    font-weight: 500 !important;
+    line-height: 1 !important;
+    box-shadow: none !important;
 }
 
-body .project-settings-page .settings-hero h1 {
-    margin: 0 0 7px !important;
-    color: #111827 !important;
-    font-size: 25px !important;
-    font-weight: 900 !important;
-    letter-spacing: -.035em !important;
-}
-
-body .project-settings-page .settings-hero p {
-    margin: 0 !important;
-    color: #7b8798 !important;
-    font-size: 13px !important;
-}
-
-body .project-settings-page .settings-hero-actions {
+/* 실제 프로필 이미지와 기본 아바타를 단일 레이어로 표시 */
+.project-wsmt-avatar {
     position: relative !important;
+    width: 38px !important;
+    height: 38px !important;
+    min-width: 38px !important;
+    min-height: 38px !important;
+    flex: 0 0 38px !important;
+    padding: 0 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    overflow: hidden !important;
+    border: 0 !important;
+    border-radius: 11px !important;
+    background: linear-gradient(
+        135deg,
+        #55d6c2 0%,
+        #4a90e2 55%,
+        #8067f3 100%
+    ) !important;
+    color: #fff !important;
+    box-shadow: none !important;
+}
+
+.project-wsmt-avatar.has-image {
+    background: #eef3f8 !important;
+}
+
+.project-wsmt-avatar.has-image .project-wsmt-avatar-fallback {
+    display: none !important;
+}
+
+.project-wsmt-avatar img {
+    position: absolute !important;
+    inset: 0 !important;
+    z-index: 2 !important;
+    width: 100% !important;
+    height: 100% !important;
+    min-width: 100% !important;
+    min-height: 100% !important;
+    display: block !important;
+    border: 0 !important;
+    border-radius: inherit !important;
+    object-fit: cover !important;
+    object-position: center !important;
+    background: #eef3f8 !important;
+}
+
+.project-wsmt-avatar-fallback {
+    position: static !important;
     z-index: 1 !important;
-    display: flex !important;
+    width: 100% !important;
+    height: 100% !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    color: #fff !important;
+    font-size: 13px !important;
+    font-weight: 900 !important;
+    line-height: 1 !important;
+}
+
+/* 툴바 전체 세로 기준선 통일 */
+.project-wsmt-toolbar {
+    align-items: center !important;
+}
+
+.project-member-toolbar-actions,
+.project-member-view-actions,
+.project-member-edit-actions,
+.project-member-remove-actions {
+    min-height: 40px !important;
+    align-items: center !important;
+}
+
+/* 전체 인원/수정/내보내기/멤버 추가 버튼 동일 높이·라운드·타이포 */
+.project-member-total,
+.project-member-selected,
+.project-member-toolbar-button,
+#projectSettingsMembers .member-tab-invite {
+    box-sizing: border-box !important;
+    height: 36px !important;
+    min-height: 36px !important;
+    margin: 0 !important;
+    padding: 0 12px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-radius: 10px !important;
+    font-family: inherit !important;
+    font-size: 11px !important;
+    font-weight: 800 !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+}
+
+.project-member-total,
+.project-member-selected {
+    border: 1px solid #d8e2ed !important;
+    background: rgba(255, 255, 255, .76) !important;
+    color: #6f8095 !important;
+}
+
+.project-member-total strong {
+    margin: 0 2px 0 4px !important;
+    color: #405978 !important;
+    font-weight: 900 !important;
+}
+
+.project-member-toolbar-button {
+    min-width: 58px !important;
+    border: 1px solid #d8e2ed !important;
+    background: rgba(255, 255, 255, .80) !important;
+    color: #49627e !important;
+    box-shadow: none !important;
+    transform: none !important;
+}
+
+.project-member-toolbar-button:hover:not(:disabled) {
+    border-color: #aebfd1 !important;
+    background: #fff !important;
+    color: #304f70 !important;
+    box-shadow: none !important;
+    transform: none !important;
+}
+
+.project-member-toolbar-button.is-danger-ghost {
+    border-color: #ebc6cc !important;
+    background: rgba(255, 255, 255, .80) !important;
+    color: #c4515e !important;
+}
+
+.project-member-toolbar-button.is-danger-ghost:hover:not(:disabled) {
+    border-color: #df9fa9 !important;
+    background: #fff5f6 !important;
+    color: #b33d4b !important;
+}
+
+#projectSettingsMembers .member-tab-invite {
+    min-width: 92px !important;
+    border: 0 !important;
+    background: linear-gradient(
+        100deg,
+        #54c9c8 0%,
+        #4388ef 52%,
+        #5b55ec 100%
+    ) !important;
+    color: #fff !important;
+    box-shadow: 0 7px 16px rgba(71, 105, 220, .15) !important;
+    transform: none !important;
+}
+
+#projectSettingsMembers .member-tab-invite:hover:not(:disabled) {
+    color: #fff !important;
+    box-shadow: 0 9px 18px rgba(71, 105, 220, .20) !important;
+    transform: none !important;
+}
+
+/* 행 높이와 프로필 셀 정렬 안정화 */
+.project-wsmt-table tbody td {
+    height: 64px !important;
+}
+
+.project-wsmt-person {
+    min-height: 38px !important;
+    align-items: center !important;
+}
+
+.project-wsmt-person-cell {
+    overflow: hidden !important;
+}
+
+/* ========================================================================
+   프로젝트 멤버 수정 모드 — 검색 아이콘·팀장 배지 유지
+   ======================================================================== */
+
+/* 검색 아이콘은 가상 요소 대신 입력창 배경으로 하나만 표시 */
+.project-wsmt-toolbar .member-search-box input {
+    padding-left: 42px !important;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='17' height='17' viewBox='0 0 24 24' fill='none' stroke='%237890aa' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m20 20-3.5-3.5'/%3E%3C/svg%3E") !important;
+    background-repeat: no-repeat !important;
+    background-position: left 14px center !important;
+    background-size: 17px 17px !important;
+}
+
+/* 수정 모드에서도 팀장 배지는 계속 표시 */
+#projectSettingsMembers.is-member-editing
+.project-member-role-summary.is-leader {
+    display: inline-flex !important;
+}
+
+/* 팀장 권한은 고정이므로 수정 입력칸을 만들지 않음 */
+#projectSettingsMembers.is-member-editing
+.project-wsmt-row[data-is-leader="true"]
+.project-member-role-edit {
+    display: none !important;
+}
+
+/* 팀장 행 담당 역할 입력은 그대로 편집 가능 */
+#projectSettingsMembers.is-member-editing
+.project-wsmt-row[data-is-leader="true"]
+.project-member-position-summary {
+    display: none !important;
+}
+
+#projectSettingsMembers.is-member-editing
+.project-wsmt-row[data-is-leader="true"]
+.project-member-position-edit {
+    display: block !important;
+}
+
+/* ========================================================================
+   프로젝트 멤버 수정/내보내기 모드 상단 액션 및 버튼 최종 보정
+   ======================================================================== */
+
+body.project-member-editing #projectSettingsSaveButton,
+body.project-member-removing #projectSettingsSaveButton {
+    display: none !important;
+}
+
+#projectSettingsMembers .project-member-edit-actions {
     align-items: center !important;
     gap: 8px !important;
 }
 
-body .project-settings-page .settings-back-link {
-    min-height: 38px !important;
-    padding: 0 14px !important;
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    border: 1px solid #dbe5ef !important;
+#projectSettingsMembers .project-member-edit-actions
+.project-member-toolbar-button {
+    box-sizing: border-box !important;
+    min-width: 64px !important;
+    height: 36px !important;
+    min-height: 36px !important;
+    padding: 0 13px !important;
     border-radius: 10px !important;
-    background: #fff !important;
-    color: #516173 !important;
-    font: 800 12px/1 "Pretendard", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
-    text-decoration: none !important;
-    cursor: pointer !important;
+    font-family: inherit !important;
+    font-size: 11px !important;
+    font-weight: 800 !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+    transform: none !important;
 }
 
-body .project-settings-page .settings-tabs {
-    width: 100% !important;
-    margin: 12px 0 20px !important;
-    padding: 4px !important;
-    display: flex !important;
-    align-items: center !important;
-    gap: 4px !important;
-    border: 1px solid #e5edf7 !important;
-    border-radius: 12px !important;
-    background: #f8fbff !important;
+#projectSettingsMembers .project-member-edit-actions
+.project-member-toolbar-button:not(.is-primary) {
+    border: 1px solid #d8e2ed !important;
+    background: rgba(255, 255, 255, .82) !important;
+    color: #526b86 !important;
     box-shadow: none !important;
 }
 
-body .project-settings-page .settings-tab-button {
-    min-height: 34px !important;
-    padding: 0 13px !important;
+#projectSettingsMembers .project-member-edit-actions
+.project-member-toolbar-button:not(.is-primary):hover {
+    border-color: #aebfd1 !important;
+    background: #fff !important;
+    color: #304f70 !important;
+    box-shadow: none !important;
+    transform: none !important;
+}
+
+#projectSettingsMembers #projectMemberSaveButton.is-primary {
+    min-width: 104px !important;
     border: 0 !important;
-    border-radius: 9px !important;
-    background: transparent !important;
-    color: #68778a !important;
-    font-size: 12px !important;
-    font-weight: 800 !important;
-}
-
-body .project-settings-page .settings-tab-button.active {
-    background: #fff !important;
-    color: #347fcf !important;
-    box-shadow: 0 3px 10px rgba(49, 91, 142, .10) !important;
-}
-
-body .project-settings-page .settings-layout,
-body .project-settings-page .settings-tab-panel,
-body .project-settings-page .settings-card {
-    width: 100% !important;
-}
-
-body .project-settings-page .settings-card {
-    padding: 24px 28px !important;
-    border: 1px solid #e5edf7 !important;
-    border-radius: 18px !important;
-    background: #fff !important;
-    box-shadow: 0 10px 28px rgba(34, 91, 155, .04) !important;
-}
-
-body .project-settings-page .settings-card-head h2,
-body .project-settings-page .project-settings-link-head h2 {
-    color: #172033 !important;
-    font-size: 16px !important;
-    font-weight: 900 !important;
-}
-
-body .project-settings-page .settings-card-head p,
-body .project-settings-page .project-settings-link-head p {
-    color: #8491a3 !important;
-    font-size: 11px !important;
-}
-
-body .project-settings-page .field label {
-    color: #475569 !important;
-    font-size: 12px !important;
-    font-weight: 800 !important;
-}
-
-body .project-settings-page .field input,
-body .project-settings-page .field select,
-body .project-settings-page .field textarea,
-body .project-settings-page .project-settings-link-row input {
-    border-color: #dce6f0 !important;
-    border-radius: 11px !important;
-    background: #fff !important;
-}
-
-body .project-settings-page .field input:focus,
-body .project-settings-page .field select:focus,
-body .project-settings-page .field textarea:focus,
-body .project-settings-page .project-settings-link-row input:focus {
-    border-color: #73aae9 !important;
-    box-shadow: 0 0 0 3px rgba(74, 144, 226, .1) !important;
-    outline: 0 !important;
-}
-
-body .project-settings-page .settings-actions .btn.primary {
-    border: 0 !important;
-    background: linear-gradient(90deg, #39cdb5 0%, #4a90e2 52%, #7567f4 100%) !important;
+    background: linear-gradient(
+        100deg,
+        #54c9c8 0%,
+        #4388ef 52%,
+        #5b55ec 100%
+    ) !important;
     color: #fff !important;
+    box-shadow: 0 7px 16px rgba(71, 105, 220, .16) !important;
 }
 
-body .project-settings-page .danger-card {
-    border-color: #f2cfd4 !important;
-    background: #fffafa !important;
+#projectSettingsMembers #projectMemberSaveButton.is-primary:hover:not(:disabled) {
+    color: #fff !important;
+    box-shadow: 0 9px 18px rgba(71, 105, 220, .21) !important;
+    transform: none !important;
 }
 
-@media (max-width: 980px) {
-    body .project-settings-page {
-        width: min(100% - 28px, 1180px) !important;
-        min-height: auto !important;
+#projectSettingsMembers #projectMemberSaveButton.is-primary:disabled {
+    color: #fff !important;
+    background: linear-gradient(
+        100deg,
+        #54c9c8 0%,
+        #4388ef 52%,
+        #5b55ec 100%
+    ) !important;
+    opacity: .72 !important;
+    cursor: wait !important;
+}
+
+#projectSettingsMembers .project-member-remove-actions
+.project-member-toolbar-button,
+#projectSettingsMembers .project-member-remove-actions
+.project-member-selected {
+    height: 36px !important;
+    min-height: 36px !important;
+    border-radius: 10px !important;
+    font-size: 11px !important;
+    font-weight: 800 !important;
+}
+
+body:not(.project-member-editing):not(.project-member-removing)
+#projectSettingsSaveButton {
+    display: inline-flex !important;
+}
+
+/* ========================================================================
+   프로젝트 멤버 내보내기 모드 시각 보정
+   ======================================================================== */
+
+/* 체크박스: 브라우저 기본 검은 포커스 테두리 제거 */
+#projectSettingsMembers.is-member-removing
+.project-member-check-cell input[type="checkbox"] {
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    box-sizing: border-box !important;
+    width: 16px !important;
+    height: 16px !important;
+    margin: 0 !important;
+    display: inline-grid !important;
+    place-content: center !important;
+    border: 1px solid #bdcbd9 !important;
+    border-radius: 4px !important;
+    outline: none !important;
+    background: #fff !important;
+    box-shadow: none !important;
+    cursor: pointer !important;
+}
+
+#projectSettingsMembers.is-member-removing
+.project-member-check-cell input[type="checkbox"]::before {
+    content: "" !important;
+    width: 8px !important;
+    height: 5px !important;
+    border-left: 2px solid #fff !important;
+    border-bottom: 2px solid #fff !important;
+    transform: rotate(-45deg) scale(0) translateY(-1px) !important;
+    transform-origin: center !important;
+    transition: transform .12s ease !important;
+}
+
+#projectSettingsMembers.is-member-removing
+.project-member-check-cell input[type="checkbox"]:checked {
+    border-color: #4f92df !important;
+    background: #4f92df !important;
+}
+
+#projectSettingsMembers.is-member-removing
+.project-member-check-cell input[type="checkbox"]:checked::before {
+    transform: rotate(-45deg) scale(1) translateY(-1px) !important;
+}
+
+#projectSettingsMembers.is-member-removing
+.project-member-check-cell input[type="checkbox"]:focus-visible {
+    outline: none !important;
+    box-shadow: 0 0 0 3px rgba(79, 146, 223, .14) !important;
+}
+
+#projectSettingsMembers.is-member-removing
+.project-member-check-cell input[type="checkbox"]:disabled {
+    border-color: #d7e0ea !important;
+    background: #f3f6f9 !important;
+    cursor: not-allowed !important;
+}
+
+/* 선택 행: 너무 강한 배경 대신 옅은 블루로만 구분 */
+#projectSettingsMembers.is-member-removing
+.project-wsmt-row.is-selected td {
+    background: rgba(239, 247, 255, .62) !important;
+    box-shadow: inset 0 1px 0 rgba(116, 167, 220, .08),
+                inset 0 -1px 0 rgba(116, 167, 220, .08) !important;
+}
+
+/* 선택 인원은 상태 배지로 유지 */
+#projectSettingsMembers .project-member-remove-actions
+.project-member-selected {
+    border: 1px solid #d8e2ed !important;
+    background: rgba(255, 255, 255, .82) !important;
+    color: #667b93 !important;
+}
+
+/* 실제 내보내기 버튼은 위험 동작 스타일 */
+#projectSettingsMembers .project-member-remove-actions
+.project-member-toolbar-button.is-danger {
+    min-width: 92px !important;
+    border: 1px solid #e4aab2 !important;
+    background: #fff7f8 !important;
+    color: #bd4654 !important;
+    box-shadow: none !important;
+}
+
+#projectSettingsMembers .project-member-remove-actions
+.project-member-toolbar-button.is-danger:hover:not(:disabled) {
+    border-color: #d88792 !important;
+    background: #fff0f2 !important;
+    color: #ae3442 !important;
+    box-shadow: none !important;
+    transform: none !important;
+}
+
+#projectSettingsMembers .project-member-remove-actions
+.project-member-toolbar-button.is-danger:disabled {
+    border-color: #ead8dc !important;
+    background: #faf7f8 !important;
+    color: #bf9ea4 !important;
+    opacity: 1 !important;
+    cursor: default !important;
+}
+
+/* 내보내기 모드 취소 버튼은 중립 스타일 유지 */
+#projectSettingsMembers .project-member-remove-actions
+.project-member-toolbar-button:not(.is-danger) {
+    border: 1px solid #d8e2ed !important;
+    background: rgba(255, 255, 255, .82) !important;
+    color: #526b86 !important;
+    box-shadow: none !important;
+}
+
+#projectSettingsMembers .project-member-remove-actions
+.project-member-toolbar-button:not(.is-danger):hover {
+    border-color: #aebfd1 !important;
+    background: #fff !important;
+    color: #304f70 !important;
+    box-shadow: none !important;
+    transform: none !important;
+}
+
+/* ========================================================================
+   프로젝트 설정 저장 흐름 통일
+   - 기본 설정 탭에서만 상단 저장 버튼 표시
+   - 멤버 관리 탭은 자체 액션만 사용
+   ======================================================================== */
+body.project-settings-members-tab #projectSettingsSaveButton {
+    display: none !important;
+}
+
+body:not(.project-settings-members-tab)
+:not(.project-member-editing)
+:not(.project-member-removing)
+#projectSettingsSaveButton {
+    display: inline-flex !important;
+}
+
+/* 초기 진입이 멤버 관리 탭인 경우에도 상단 저장 버튼 즉시 숨김 */
+body.project-settings-members-tab
+.settings-page-heading #projectSettingsSaveButton,
+body.project-settings-members-tab
+.project-settings-header #projectSettingsSaveButton,
+body.project-settings-members-tab
+#projectSettingsSaveButton {
+    display: none !important;
+}
+
+
+/* 20-19~20-20 프로젝트 삭제 신청 UI */
+.settings-side-card.danger-zone.is-delete-pending {
+    border-color: #f1c9ce;
+    background: linear-gradient(135deg, rgba(255,250,250,.98), rgba(255,244,246,.9));
+}
+
+.settings-side-card.danger-zone.is-delete-pending strong {
+    color: #bf4f5c;
+}
+
+.btn-delete-cancel {
+    min-width: 118px;
+    min-height: 36px;
+    padding: 0 14px;
+    border: 1px solid #cad7e6;
+    border-radius: 10px;
+    background: #fff;
+    color: #4e647e;
+    font-size: 11px;
+    font-weight: 750;
+    cursor: pointer;
+}
+
+.btn-delete-cancel:hover {
+    border-color: #9eb4cd;
+    background: #f8fbff;
+}
+
+.project-delete-request-modal[hidden] {
+    display: none !important;
+}
+
+.project-delete-request-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 4200;
+    display: grid;
+    place-items: center;
+    padding: 24px;
+}
+
+.project-delete-request-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(23, 31, 44, .46);
+    backdrop-filter: none;
+}
+
+.project-delete-request-dialog {
+    position: relative;
+    z-index: 1;
+    width: min(460px, 100%);
+    box-sizing: border-box;
+    padding: 28px;
+    border: 1px solid #ebd5d8;
+    border-radius: 22px;
+    background: #fff;
+    box-shadow: 0 24px 60px rgba(37, 46, 62, .2);
+}
+
+.project-delete-request-close {
+    position: absolute;
+    top: 14px;
+    right: 16px;
+    width: 32px;
+    height: 32px;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: #8a94a6;
+    font-size: 24px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.project-delete-request-eyebrow {
+    display: block;
+    margin-bottom: 8px;
+    color: #c35360;
+    font-size: 11px;
+    font-weight: 800;
+}
+
+.project-delete-request-dialog h2 {
+    margin: 0 34px 10px 0;
+    color: #263447;
+    font-size: 21px;
+    line-height: 1.35;
+}
+
+.project-delete-request-description {
+    margin: 0;
+    color: #6f7c8f;
+    font-size: 12px;
+    line-height: 1.65;
+}
+
+.project-delete-request-notice {
+    margin-top: 18px;
+    padding: 13px 14px;
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    border: 1px solid #f0d9dc;
+    border-radius: 12px;
+    background: #fff8f9;
+    font-size: 11px;
+}
+
+.project-delete-request-notice strong {
+    color: #a84d59;
+}
+
+.project-delete-request-notice span {
+    color: #6d7786;
+}
+
+.project-delete-confirm-field {
+    margin-top: 18px;
+    display: grid;
+    gap: 7px;
+    color: #536174;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.project-delete-confirm-field input {
+    width: 100%;
+    height: 42px;
+    box-sizing: border-box;
+    padding: 0 12px;
+    border: 1px solid #d9e1eb;
+    border-radius: 10px;
+    outline: none;
+    font: inherit;
+    font-weight: 500;
+}
+
+.project-delete-confirm-field input:focus {
+    border-color: #d67883;
+    box-shadow: 0 0 0 3px rgba(214, 120, 131, .12);
+}
+
+.project-delete-request-actions {
+    margin-top: 22px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.project-delete-request-secondary,
+.project-delete-request-primary {
+    min-height: 40px;
+    padding: 0 16px;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.project-delete-request-secondary {
+    border: 1px solid #dbe3ed;
+    background: #fff;
+    color: #66758a;
+}
+
+.project-delete-request-primary {
+    border: 1px solid #d46a77;
+    background: linear-gradient(135deg, #df7a85, #c95d6b);
+    color: #fff;
+}
+
+.project-delete-request-primary:disabled {
+    opacity: .55;
+    cursor: wait;
+}
+
+body.project-delete-modal-open {
+    overflow: hidden;
+}
+
+/* ========================================================================
+   UI/UX 4단계 — 설정 화면 공통 기준
+   프로젝트 설정을 그룹 설정과 동일한 중립형 MOYO 설정 셸로 정리한다.
+   ======================================================================== */
+body {
+    background: var(--moyo-color-page, #F7F9FC);
+    color: var(--moyo-text, #1F2937);
+    font-family: var(--moyo-font-family, "Pretendard", sans-serif);
+}
+.project-settings-page {
+    width: min(1080px, calc(100% - 48px));
+    margin: 32px auto 56px;
+}
+.settings-page-header {
+    gap: 24px;
+    padding: 0 0 22px;
+}
+.settings-page-heading h1 {
+    margin-bottom: 7px;
+    color: var(--moyo-text, #1F2937);
+    font-size: 28px;
+    font-weight: var(--moyo-font-weight-heavy, 900);
+}
+.settings-page-heading p { color: var(--moyo-text-soft, #667085); font-size: var(--moyo-font-size-sm, 13px); }
+.settings-btn {
+    min-height: var(--moyo-control-height, 40px);
+    height: var(--moyo-control-height, 40px);
+    padding: 0 var(--moyo-control-padding-x, 16px);
+    border: var(--moyo-border-strong, 1px solid #D8E1EA);
+    border-radius: var(--moyo-radius-md, 12px);
+    background: var(--moyo-surface, #fff);
+    color: var(--moyo-text-soft, #667085);
+    font-size: var(--moyo-font-size-sm, 13px);
+    font-weight: var(--moyo-font-weight-bold, 800);
+}
+.settings-btn-primary,
+#projectSettingsSaveButton,
+.member-tab-invite {
+    border: 1px solid var(--moyo-primary, #4A90E2);
+    background: var(--moyo-primary, #4A90E2);
+    color: #fff;
+    box-shadow: var(--moyo-shadow-primary, 0 6px 14px rgba(74,144,226,.18));
+}
+.settings-btn-primary:hover,
+#projectSettingsSaveButton:hover,
+.member-tab-invite:hover {
+    border-color: var(--moyo-primary-hover, #397FCA);
+    background: var(--moyo-primary-hover, #397FCA);
+    box-shadow: var(--moyo-shadow-primary, 0 6px 14px rgba(74,144,226,.18));
+    transform: none;
+}
+.settings-tabs {
+    min-height: 48px;
+    gap: 24px;
+    border-bottom: var(--moyo-border, 1px solid #E5EBF1);
+}
+.settings-tab-button {
+    min-width: 0;
+    height: 48px;
+    padding: 0 2px;
+    color: var(--moyo-text-muted, #98A2B3);
+    font-size: var(--moyo-font-size-sm, 13px);
+    font-weight: var(--moyo-font-weight-bold, 800);
+}
+.settings-tab-button::after { left: 0; right: 0; height: 2px; }
+.settings-tab-button:hover,
+.settings-tab-button.is-active { color: var(--moyo-text, #1F2937); }
+.settings-tab-button.is-active::after { background: var(--moyo-primary, #4A90E2); }
+.settings-section {
+    padding: 28px 4px 30px;
+    border-bottom: var(--moyo-border, 1px solid #E5EBF1);
+}
+.settings-section-head { margin-bottom: 18px; }
+.settings-section-head h2 {
+    color: var(--moyo-text, #1F2937);
+    font-size: 18px;
+    font-weight: var(--moyo-font-weight-bold, 800);
+}
+.settings-section-head p { color: var(--moyo-text-muted, #98A2B3); font-size: var(--moyo-font-size-xs, 12px); }
+.settings-form-grid { gap: 16px; }
+.form-group { gap: 8px; }
+.form-group label {
+    color: var(--moyo-text, #1F2937);
+    font-size: var(--moyo-font-size-xs, 12px);
+    font-weight: var(--moyo-font-weight-bold, 800);
+}
+.form-control,
+.member-search-box input,
+.project-member-role-edit,
+.project-member-position-edit {
+    min-height: var(--moyo-control-height, 40px);
+    height: var(--moyo-control-height, 40px);
+    border: var(--moyo-border-strong, 1px solid #D8E1EA);
+    border-radius: var(--moyo-radius-md, 12px);
+    background: var(--moyo-surface, #fff);
+    color: var(--moyo-text, #1F2937);
+    font-size: var(--moyo-font-size-sm, 13px);
+}
+textarea.form-control { min-height: 96px; height: 96px; padding: 12px 14px; }
+.form-control:focus,
+.member-search-box input:focus,
+.project-member-role-edit:focus,
+.project-member-position-edit:focus {
+    border-color: var(--moyo-primary, #4A90E2);
+    box-shadow: var(--moyo-focus, 0 0 0 4px rgba(74,144,226,.12));
+}
+.project-settings-link-row .form-control { min-height: var(--moyo-control-height, 40px); height: var(--moyo-control-height, 40px); }
+.project-link-add,
+.project-member-row-button,
+.project-member-edit-trigger,
+.project-member-remove-trigger {
+    min-height: var(--moyo-control-height-compact, 34px);
+    border-radius: var(--moyo-radius-sm, 9px);
+}
+.settings-side-card.danger-zone {
+    border-top: 1px solid rgba(239,91,103,.28);
+    background: transparent;
+}
+.danger-zone h3 { color: var(--moyo-danger, #EF5B67); }
+.btn-delete {
+    min-height: var(--moyo-control-height, 40px);
+    height: var(--moyo-control-height, 40px);
+    border-radius: var(--moyo-radius-md, 12px);
+    border-color: rgba(239,91,103,.34);
+    color: var(--moyo-danger, #EF5B67);
+}
+.btn-delete:hover { border-color: var(--moyo-danger, #EF5B67); background: #FFF7F8; color: var(--moyo-danger-hover, #DC4554); }
+@media (max-width: 760px) {
+    .project-settings-page { width: calc(100% - 28px); margin: 20px auto 36px; }
+    .settings-page-header { grid-template-columns: 1fr; }
+    .settings-page-heading h1 { font-size: 25px; }
+}
+
+
+/* MOYO brand CTA gradient restoration - save/primary only */
+.settings-btn-primary,
+#projectSettingsSaveButton {
+    border-color: rgba(74, 144, 226, .18) !important;
+    background: linear-gradient(135deg, #55D6C2 0%, #4A90E2 54%, #7567F4 100%) !important;
+    color: #fff !important;
+    box-shadow: 0 8px 18px rgba(74, 144, 226, .22) !important;
+}
+.settings-btn-primary:hover,
+#projectSettingsSaveButton:hover {
+    border-color: rgba(63, 130, 212, .24) !important;
+    background: linear-gradient(135deg, #45C7B3 0%, #3F82D4 54%, #6758E6 100%) !important;
+    box-shadow: 0 10px 22px rgba(74, 144, 226, .26) !important;
+}
+.member-tab-invite {
+    border-color: var(--moyo-primary, #4A90E2) !important;
+    background: var(--moyo-primary, #4A90E2) !important;
+    box-shadow: var(--moyo-shadow-primary, 0 6px 14px rgba(74,144,226,.18)) !important;
+}
+.member-tab-invite:hover {
+    border-color: var(--moyo-primary-hover, #397FCA) !important;
+    background: var(--moyo-primary-hover, #397FCA) !important;
+}
+
+
+/* ========================================================================
+   Group settings parity — project settings final shell
+   그룹 설정의 최종 셸/폼/멤버 관리 리듬을 프로젝트 설정에도 동일하게 적용한다.
+   프로젝트 고유 기능(기간, 프로젝트 유형, 담당 역할)은 그대로 유지한다.
+   ======================================================================== */
+.project-settings-page .settings-page-header {
+    gap: 24px;
+    padding-bottom: 22px;
+}
+.project-settings-page .settings-page-actions {
+    align-self: start;
+}
+.project-settings-page .settings-tabs {
+    gap: 24px;
+    min-height: 48px;
+    margin-top: 0;
+    padding: 0;
+    border-bottom: var(--moyo-border, 1px solid #E5EBF1);
+}
+.project-settings-page .settings-tab-button {
+    min-height: 48px;
+    height: 48px;
+    padding: 0 2px;
+    color: var(--moyo-text-soft, #667085);
+    font-size: var(--moyo-font-size-sm, 13px);
+    font-weight: var(--moyo-font-weight-bold, 800);
+}
+.project-settings-page .settings-tab-button::after {
+    left: 0;
+    right: 0;
+    background: var(--moyo-primary, #4A90E2);
+}
+.project-settings-page .settings-section {
+    padding: 28px 4px 30px;
+    border-bottom: var(--moyo-border, 1px solid #E5EBF1);
+}
+.project-settings-page .settings-section-head { margin-bottom: 18px; }
+.project-settings-page .settings-form-grid { gap: 16px; }
+.project-settings-page .settings-link-section { padding-top: 28px; }
+.project-settings-page .settings-section-head-with-action {
+    align-items: flex-start;
+}
+.project-settings-page .project-link-add {
+    min-height: 34px;
+    height: 34px;
+    padding: 0 12px;
+    border-radius: 10px;
+}
+.project-settings-page .project-settings-link-row {
+    align-items: center;
+}
+.project-settings-page .project-setting-link-remove {
+    width: 34px;
+    height: 34px;
+    border-radius: 9px;
+}
+.project-settings-page .settings-side-card.danger-zone {
+    margin-top: 0;
+    padding: 24px 4px 6px;
+    border: 0;
+    border-top: 1px solid rgba(239,91,103,.28);
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+}
+.project-settings-page .settings-side-card.danger-zone .danger-zone-copy {
+    min-width: 0;
+}
+.project-settings-page .danger-zone h3 {
+    color: var(--moyo-danger, #EF5B67);
+}
+.project-settings-page .danger-zone .btn-delete,
+.project-settings-page .danger-zone .btn-delete-cancel {
+    min-height: 40px;
+    height: 40px;
+    border-radius: 12px;
+}
+
+/* 저장 버튼 상태도 그룹 설정과 동일: 변경 전 비활성 / 변경 후 브랜드 CTA */
+.project-settings-page #projectSettingsSaveButton.settings-btn-primary {
+    border: 0 !important;
+    outline: 0;
+    background-clip: padding-box !important;
+}
+.project-settings-page #projectSettingsSaveButton.settings-btn-primary:not(:disabled) {
+    background: linear-gradient(135deg, #55D6C2 0%, #4A90E2 54%, #7567F4 100%) !important;
+    color: #fff !important;
+    box-shadow: 0 8px 18px rgba(74,144,226,.22) !important;
+    cursor: pointer;
+}
+.project-settings-page #projectSettingsSaveButton.settings-btn-primary:not(:disabled):hover {
+    background: linear-gradient(135deg, #45C7B3 0%, #3F82D4 54%, #6758E6 100%) !important;
+    box-shadow: 0 10px 22px rgba(74,144,226,.26) !important;
+}
+.project-settings-page #projectSettingsSaveButton.settings-btn-primary:disabled:not([aria-busy="true"]) {
+    background: #E7EDF4 !important;
+    color: #9AA7B6 !important;
+    box-shadow: none !important;
+    opacity: 1 !important;
+    cursor: default;
+}
+.project-settings-page #projectSettingsSaveButton.settings-btn-primary[aria-busy="true"] {
+    background: linear-gradient(135deg, #55D6C2 0%, #4A90E2 54%, #7567F4 100%) !important;
+    color: rgba(255,255,255,.9) !important;
+    box-shadow: 0 5px 12px rgba(74,144,226,.14) !important;
+    opacity: .72 !important;
+    cursor: wait;
+}
+
+/* 멤버 관리: 그룹 설정과 같은 툴바/표 리듬 */
+.project-settings-page #projectSettingsMembers .settings-card {
+    padding: 0;
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+}
+.project-settings-page .project-member-toolbar {
+    grid-template-columns: minmax(260px, 1fr) auto;
+    align-items: center;
+    gap: 18px;
+    margin: 14px 0 16px;
+}
+.project-settings-page #projectSettingsMembers .member-search-box {
+    width: 100%;
+    max-width: none;
+    margin: 0;
+}
+.project-settings-page .project-member-toolbar-actions,
+.project-settings-page .project-member-view-actions,
+.project-settings-page .project-member-edit-actions,
+.project-settings-page .project-member-remove-actions {
+    gap: 8px;
+    white-space: nowrap;
+}
+.project-settings-page .project-member-total,
+.project-settings-page .project-member-selected {
+    min-height: 34px;
+    height: 34px;
+    padding: 0 10px;
+    border: 1px solid #dbe5f0;
+    border-radius: 10px;
+    background: rgba(255,255,255,.7);
+    color: #718096;
+    font-size: 11.5px;
+    font-weight: 700;
+}
+.project-settings-page .project-member-total strong {
+    margin: 0 2px 0 5px;
+    color: #253b53;
+}
+.project-settings-page .project-member-toolbar-button,
+.project-settings-page #projectSettingsMembers .member-tab-invite {
+    min-height: 36px;
+    height: 36px;
+    padding: 0 12px;
+    border-radius: 10px;
+    font-size: 11.5px;
+    font-weight: 800;
+}
+.project-settings-page #projectSettingsMembers .member-tab-invite,
+.project-settings-page .project-member-toolbar-button.is-primary {
+    border: 0 !important;
+    background: linear-gradient(135deg, #55D6C2 0%, #4A90E2 54%, #7567F4 100%) !important;
+    color: #fff !important;
+    box-shadow: 0 6px 14px rgba(74,144,226,.18) !important;
+}
+.project-settings-page #projectSettingsMembers .member-tab-invite:hover,
+.project-settings-page .project-member-toolbar-button.is-primary:hover:not(:disabled) {
+    background: linear-gradient(135deg, #45C7B3 0%, #3F82D4 54%, #6758E6 100%) !important;
+}
+.project-settings-page .project-wsmt-table th {
+    padding-top: 11px;
+    padding-bottom: 11px;
+}
+.project-settings-page .project-wsmt-table td {
+    padding-top: 13px;
+    padding-bottom: 13px;
+}
+.project-settings-page .project-member-avatar {
+    width: 38px;
+    height: 38px;
+    flex-basis: 38px;
+}
+.project-settings-page .project-member-role-summary {
+    min-height: 24px;
+    padding: 0 9px;
+}
+
+@media (max-width: 760px) {
+    .project-settings-page .project-member-toolbar {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+    .project-settings-page .project-member-toolbar-actions {
+        justify-content: flex-start;
+        flex-wrap: wrap;
     }
 }
 
-@media (max-width: 640px) {
-    body .project-settings-page {
-        width: calc(100% - 20px) !important;
-        margin-top: 18px !important;
-    }
-
-    body .project-settings-page .settings-hero {
-        min-height: 108px !important;
-        padding: 20px 22px !important;
-    }
-
-    body .project-settings-page .settings-card {
-        padding: 20px !important;
-    }
+/* Member avatar policy: person = circle; only fallback owns gradient. */
+.project-settings-page .moyo-member-avatar { border-radius:50% !important; }
+.project-settings-page .moyo-member-avatar.has-image { background:transparent !important; background-image:none !important; }
+.project-settings-page .moyo-member-avatar.has-image > img { border-radius:50% !important; background:transparent !important; }
+.project-settings-page .moyo-member-avatar.is-default-profile,
+.project-settings-page .moyo-member-avatar.is-default {
+    background:var(--moyo-avatar-gradient, linear-gradient(135deg, #55D5CE 0%, #4288EF 52%, #5A55EE 100%)) !important;
 }

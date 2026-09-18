@@ -1,6 +1,8 @@
 package com.springboot.project.controller;
 
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.HashMap;
@@ -11,7 +13,12 @@ import java.util.Map;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -32,14 +39,18 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import com.springboot.project.dao.IworkspaceDAO;
+import com.springboot.project.dao.IuserNoticeDAO;
 import com.springboot.project.dao.IfriendDAO;
 import com.springboot.project.dao.InoteFolderDAO;
+import com.springboot.project.dao.IcontentRecordDAO;
+import com.springboot.project.dao.IcontentRecordItemDAO;
 import com.springboot.project.dto.contentShareDTO;
 import com.springboot.project.dto.friendDTO;
 import com.springboot.project.dto.projectRequestDTO;
 import com.springboot.project.dto.usersDto;
 import com.springboot.project.dto.workspaceDTO;
 import com.springboot.project.service.IcontentShareService;
+import com.springboot.project.service.IcontentRecordService;
 import com.springboot.project.service.IphotoAlbumService;
 import com.springboot.project.service.IprojectService;
 import com.springboot.project.service.IworkspaceService;
@@ -47,30 +58,86 @@ import com.springboot.project.service.IworkspaceService;
 @Controller
 public class photoAlbumController {
 
+    @Value("${moyo.schema.runtime-ddl-enabled:false}")
+    private boolean runtimeDdlEnabled;
+
     private static final ObjectMapper PHOTO_EDIT_META_MAPPER = new ObjectMapper();
 
     private final IphotoAlbumService photoAlbumService;
     private final IworkspaceService workspaceService;
     private final IworkspaceDAO workspaceDAO;
+    private final IuserNoticeDAO userNoticeDAO;
     private final IfriendDAO friendDAO;
     private final IprojectService projectService;
     private final InoteFolderDAO noteFolderDAO;
     private final IcontentShareService contentShareService;
+    private final IcontentRecordDAO contentRecordDAO;
+    private final IcontentRecordItemDAO contentRecordItemDAO;
+    private final IcontentRecordService contentRecordService;
 
     public photoAlbumController(IphotoAlbumService photoAlbumService,
                                 IworkspaceService workspaceService,
                                 IworkspaceDAO workspaceDAO,
+                                IuserNoticeDAO userNoticeDAO,
                                 IfriendDAO friendDAO,
                                 IprojectService projectService,
                                 InoteFolderDAO noteFolderDAO,
-                                IcontentShareService contentShareService) {
+                                IcontentShareService contentShareService,
+                                IcontentRecordDAO contentRecordDAO,
+                                IcontentRecordItemDAO contentRecordItemDAO,
+                                IcontentRecordService contentRecordService) {
         this.photoAlbumService = photoAlbumService;
         this.workspaceService = workspaceService;
         this.workspaceDAO = workspaceDAO;
+        this.userNoticeDAO = userNoticeDAO;
         this.friendDAO = friendDAO;
         this.projectService = projectService;
         this.noteFolderDAO = noteFolderDAO;
         this.contentShareService = contentShareService;
+        this.contentRecordDAO = contentRecordDAO;
+        this.contentRecordItemDAO = contentRecordItemDAO;
+        this.contentRecordService = contentRecordService;
+    }
+
+    @GetMapping({"/photo/media/{photoId}", "/photo/media/{photoId}/raw"})
+    public ResponseEntity<?> photoMedia(@PathVariable("photoId") Long photoId,
+                                        HttpServletRequest request,
+                                        HttpSession session) throws Exception {
+        usersDto user = loginUser(session);
+        if (user == null) return error(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다.");
+
+        Map<String, Object> photo = photoAlbumService.getPhoto(photoId);
+        if (photo == null) return error(HttpStatus.NOT_FOUND, "사진을 찾을 수 없습니다.");
+        Long postId = toLong(value(photo, "postId", "POST_ID"));
+        if (postId == null) return error(HttpStatus.NOT_FOUND, "사진 게시물을 찾을 수 없습니다.");
+
+        Map<String, Object> post = photoAlbumService.getPost(postId);
+        boolean trashPost = false;
+        if (post == null) {
+            post = photoAlbumService.getTrashPost(postId, user.getUserId());
+            trashPost = post != null;
+        }
+        ResponseEntity<?> denied = trashPost ? authorizePostDelete(post, session) : authorizePost(post, session);
+        if (denied != null) return denied;
+
+        boolean raw = request.getRequestURI() != null && request.getRequestURI().endsWith("/raw");
+        Path path = photoAlbumService.getPhotoPath(photoId, raw);
+        String contentType = Files.probeContentType(path);
+        if (contentType == null || contentType.isBlank()) contentType = MediaType.APPLICATION_OCTET_STREAM_VALUE;
+
+        String originalName = string(value(photo, "originalName", "ORIGINAL_NAME"));
+        if (originalName == null || originalName.isBlank()) originalName = path.getFileName().toString();
+        ContentDisposition disposition = (raw ? ContentDisposition.attachment() : ContentDisposition.inline())
+                .filename(originalName, StandardCharsets.UTF_8)
+                .build();
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(contentType))
+                .contentLength(Files.size(path))
+                .header(HttpHeaders.CONTENT_DISPOSITION, disposition.toString())
+                .header("X-Content-Type-Options", "nosniff")
+                .header(HttpHeaders.CACHE_CONTROL, "private, no-store")
+                .body(new InputStreamResource(Files.newInputStream(path)));
     }
 
     @GetMapping("/photo-album")
@@ -92,18 +159,43 @@ public class photoAlbumController {
         ScopeViewData viewData = resolveViewData(normalizedType, scopeId, user);
         if (viewData == null) return "redirect:/";
 
-        model.addAttribute("scopeType", normalizedType);
+        String explorerScopeType = "WORKSPACE".equals(normalizedType) ? "GROUP" : normalizedType;
+        projectRequestDTO projectDetail = "PROJECT".equals(normalizedType)
+                ? projectService.getProjectById(scopeId) : null;
+        Long wsId = "WORKSPACE".equals(normalizedType)
+                ? scopeId
+                : (projectDetail == null ? null : projectDetail.getWsId());
+        workspaceDTO workspace = wsId == null ? null : workspaceService.getWorkspaceDetail(wsId);
+
+        List<Map<String, Object>> accessibleProjects = normalizeProjectRows(noteFolderDAO.selectAccessibleProjects(user.getUserId()));
+        List<Map<String, Object>> personalProjects = new ArrayList<>();
+        List<Map<String, Object>> groupProjects = new ArrayList<>();
+        for (Map<String, Object> project : accessibleProjects) {
+            Long projectWsId = toLong(project.get("wsId"));
+            if (projectWsId == null) personalProjects.add(project);
+            if (wsId != null && wsId.equals(projectWsId)) groupProjects.add(project);
+        }
+
+        model.addAttribute("contentType", "PHOTO");
+        model.addAttribute("scopeType", explorerScopeType);
         model.addAttribute("scopeId", scopeId);
-        model.addAttribute("scopeName", viewData.scopeName());
-        model.addAttribute("scopeLabel", viewData.scopeLabel());
-        model.addAttribute("scopeDescription", viewData.description());
-        model.addAttribute("backUrl", viewData.backUrl());
+        model.addAttribute("wsId", wsId);
+        model.addAttribute("projId", "PROJECT".equals(normalizedType) ? scopeId : null);
+        model.addAttribute("workspace", workspace);
+        model.addAttribute("projectDetail", projectDetail);
+        model.addAttribute("personalRoot", "PERSONAL".equals(normalizedType));
+        model.addAttribute("personalProjects", personalProjects);
+        model.addAttribute("groupProjects", groupProjects);
+        model.addAttribute("pageTitle", switch (normalizedType) {
+            case "WORKSPACE" -> "그룹 사진";
+            case "PROJECT" -> "프로젝트 사진";
+            default -> "내 사진";
+        });
         model.addAttribute("currentUserId", user.getUserId());
         model.addAttribute("isScopeAdmin", canManageScope(normalizedType, scopeId, user.getUserId()));
-        // 사진첩 탭의 친구/그룹/프로젝트 선택 영역에서 사용할 대상 목록.
-        // 작성/수정 화면뿐 아니라 목록 화면에서도 필요하다.
-        addPhotoShareModel(model, user.getUserId());
-        return "photo/photoAlbum";
+        model.addAttribute("isWorkspaceOwner", wsId != null && isWorkspaceOwner(wsId, user.getUserId()));
+        model.addAttribute("isWorkspaceAdmin", wsId != null && workspaceDAO.isWorkspaceAdmin(wsId, user.getUserId()) > 0);
+        return "common/contentExplorer";
     }
 
     @GetMapping("/photo-post/write")
@@ -182,7 +274,7 @@ public class photoAlbumController {
         if (user == null) return "redirect:/login";
 
         Map<String, Object> post = photoAlbumService.getPost(postId, user.getUserId());
-        ResponseEntity<?> denied = authorizePostManager(post, session);
+        ResponseEntity<?> denied = authorizePostEditor(post, session);
         if (denied != null) return "redirect:/";
 
         String scopeType = string(value(post, "scopeType", "SCOPE_TYPE"));
@@ -197,7 +289,7 @@ public class photoAlbumController {
         model.addAttribute("scopeName", viewData.scopeName());
         model.addAttribute("scopeLabel", viewData.scopeLabel());
         model.addAttribute("scopeDescription", viewData.description());
-        model.addAttribute("backUrl", "/photo-album?scopeType=" + normalizeScopeType(scopeType) + "&scopeId=" + scopeId);
+        model.addAttribute("backUrl", "/photo-album?scopeType=" + normalizeScopeType(scopeType) + "&scopeId=" + scopeId + "&postId=" + postId);
         model.addAttribute("currentUserId", user.getUserId());
         addPhotoShareModel(model, user.getUserId());
         model.addAttribute("photoShareList", contentShareService.getShares("PHOTO", postId, user.getUserId()));
@@ -209,9 +301,17 @@ public class photoAlbumController {
     public ResponseEntity<?> albums(@RequestParam("scopeType") String scopeType,
                                     @RequestParam("scopeId") Long scopeId,
                                     HttpSession session) {
+        usersDto user = loginUser(session);
+        if (user == null) return error(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다.");
+
         ResponseEntity<?> denied = authorizeScope(scopeType, scopeId, session);
         if (denied != null) return denied;
-        return ResponseEntity.ok(photoAlbumService.getAlbums(scopeType, scopeId));
+        return ResponseEntity.ok(
+                filterViewableRecordAlbums(
+                        photoAlbumService.getAlbums(scopeType, scopeId),
+                        user.getUserId()
+                )
+        );
     }
 
     @PostMapping("/api/photo-albums")
@@ -227,7 +327,7 @@ public class photoAlbumController {
 
         try {
             Long albumId = photoAlbumService.createAlbum(
-                    scopeType, scopeId, string(body.get("albumName")),
+                    scopeType, scopeId, toLong(body.get("parentAlbumId")), string(body.get("albumName")),
                     string(body.get("albumDescription")), user.getUserId());
             return ResponseEntity.ok(Map.of("status", "SUCCESS", "albumId", albumId));
         } catch (IllegalArgumentException e) {
@@ -242,9 +342,9 @@ public class photoAlbumController {
         ResponseEntity<?> denied = authorizeAlbum(album, session);
         if (denied != null) return denied;
         usersDto user = loginUser(session);
-        return ResponseEntity.ok(Map.of("album", album, "posts", photoAlbumService.getPosts(
+        return ResponseEntity.ok(Map.of("album", album, "posts", filterViewableRecordPosts(photoAlbumService.getPosts(
                 string(value(album, "scopeType", "SCOPE_TYPE")),
-                toLong(value(album, "scopeId", "SCOPE_ID")), albumId, user.getUserId())));
+                toLong(value(album, "scopeId", "SCOPE_ID")), albumId, user.getUserId()), user.getUserId())));
     }
 
     @PutMapping("/api/photo-albums/{albumId}")
@@ -264,11 +364,28 @@ public class photoAlbumController {
         }
     }
 
+
+    @PutMapping("/api/photo-albums/{albumId}/parent")
+    @ResponseBody
+    public ResponseEntity<?> moveAlbum(@PathVariable("albumId") Long albumId,
+                                       @RequestBody Map<String, Object> body,
+                                       HttpSession session) {
+        Map<String, Object> album = photoAlbumService.getAlbum(albumId);
+        ResponseEntity<?> denied = authorizeAlbumManager(album, session);
+        if (denied != null) return denied;
+        try {
+            boolean success = photoAlbumService.moveAlbum(albumId, toLong(body.get("parentAlbumId")));
+            return ResponseEntity.ok(Map.of("status", success ? "SUCCESS" : "FAIL"));
+        } catch (IllegalArgumentException e) {
+            return error(HttpStatus.BAD_REQUEST, e.getMessage());
+        }
+    }
+
     @DeleteMapping("/api/photo-albums/{albumId}")
     @ResponseBody
     public ResponseEntity<?> deleteAlbum(@PathVariable("albumId") Long albumId, HttpSession session) {
         Map<String, Object> album = photoAlbumService.getAlbum(albumId);
-        ResponseEntity<?> denied = authorizeAlbumManager(album, session);
+        ResponseEntity<?> denied = authorizeAlbumDelete(album, session);
         if (denied != null) return denied;
         return ResponseEntity.ok(Map.of("status", photoAlbumService.deleteAlbum(albumId) ? "SUCCESS" : "FAIL"));
     }
@@ -283,7 +400,20 @@ public class photoAlbumController {
         ResponseEntity<?> denied = authorizeScope(scopeType, scopeId, session);
         if (denied != null) return denied;
         usersDto user = loginUser(session);
-        return ResponseEntity.ok(photoAlbumService.getPosts(scopeType, scopeId, albumId, user.getUserId()));
+        return ResponseEntity.ok(filterViewableRecordPosts(photoAlbumService.getPosts(scopeType, scopeId, albumId, user.getUserId()), user.getUserId()));
+    }
+
+    @GetMapping("/api/photo-posts/friend-shares")
+    @ResponseBody
+    public ResponseEntity<?> friendSharedPosts(@RequestParam("ownerId") Long ownerId,
+                                               HttpSession session) {
+        usersDto user = loginUser(session);
+        if (user == null) return error(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다.");
+        if (ownerId == null || ownerId <= 0) return error(HttpStatus.BAD_REQUEST, "공유자를 선택해 주세요.");
+        return ResponseEntity.ok(Map.of(
+                "items",
+                filterViewableRecordPosts(photoAlbumService.getFriendSharedPosts(user.getUserId(), ownerId), user.getUserId())
+        ));
     }
 
     @GetMapping("/api/photo-posts/recent")
@@ -295,15 +425,26 @@ public class photoAlbumController {
         ResponseEntity<?> denied = authorizeScope(scopeType, scopeId, session);
         if (denied != null) return denied;
         usersDto user = loginUser(session);
-        return ResponseEntity.ok(photoAlbumService.getRecentPosts(scopeType, scopeId, limit, user.getUserId()));
+        return ResponseEntity.ok(filterViewableRecordPosts(
+                photoAlbumService.getRecentPosts(scopeType, scopeId, limit, user.getUserId()),
+                user.getUserId()));
     }
 
     @GetMapping("/api/photo-posts/trash")
     @ResponseBody
-    public ResponseEntity<?> trashPosts(HttpSession session) {
+    public ResponseEntity<?> trashPosts(@RequestParam("scopeType") String scopeType,
+                                        @RequestParam("scopeId") Long scopeId,
+                                        HttpSession session) {
         usersDto user = loginUser(session);
         if (user == null) return error(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다.");
-        return ResponseEntity.ok(photoAlbumService.getTrashPosts(user.getUserId()));
+        String normalizedType;
+        try { normalizedType = normalizeScopeType(scopeType); }
+        catch (IllegalArgumentException e) { return error(HttpStatus.BAD_REQUEST, e.getMessage()); }
+        ResponseEntity<?> denied = authorizeScope(normalizedType, scopeId, session);
+        if (denied != null) return denied;
+        List<Map<String, Object>> posts = photoAlbumService.getTrashPosts(normalizedType, scopeId, user.getUserId());
+        posts.forEach(post -> addPhotoPermissionFlags(post, user.getUserId()));
+        return ResponseEntity.ok(posts);
     }
 
     @GetMapping("/api/photo-posts/{postId}")
@@ -312,10 +453,17 @@ public class photoAlbumController {
         usersDto user = loginUser(session);
         if (user == null) return error(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다.");
         Map<String, Object> post = photoAlbumService.getPost(postId, user.getUserId());
-        ResponseEntity<?> denied = authorizePost(post, session);
+        boolean trashPost = false;
+        if (post == null) {
+            post = photoAlbumService.getTrashPost(postId, user.getUserId());
+            trashPost = post != null;
+        }
+        ResponseEntity<?> denied = trashPost ? authorizePostDelete(post, session) : authorizePost(post, session);
         if (denied != null) return denied;
         addPhotoPermissionFlags(post, user.getUserId());
-        return ResponseEntity.ok(Map.of("post", post, "photos", photoAlbumService.getPostPhotos(postId)));
+        List<Map<String, Object>> photos = photoAlbumService.getPostPhotos(postId);
+        applySecurePhotoMediaPaths(post, photos);
+        return ResponseEntity.ok(Map.of("post", post, "photos", photos));
     }
 
     @PostMapping("/api/photo-posts")
@@ -342,6 +490,19 @@ public class photoAlbumController {
                     || !scopeId.equals(toLong(value(album, "scopeId", "SCOPE_ID")))) {
                 return error(HttpStatus.BAD_REQUEST, "현재 공간의 앨범만 선택할 수 있습니다.");
             }
+            Long recordTargetId = contentRecordDAO.selectRecordTargetIdByPhotoAlbumId(albumId);
+            if (recordTargetId != null) {
+                try { contentRecordService.getEditableTarget(recordTargetId, user.getUserId()); }
+                catch (SecurityException e) { return error(HttpStatus.FORBIDDEN, "이 기록에 사진을 추가할 권한이 없습니다."); }
+                long currentSize = java.util.Optional.ofNullable(contentRecordItemDAO.sumActivePhotoSize(recordTargetId)).orElse(0L);
+                long incomingSize = files == null ? 0L : files.stream()
+                        .filter(file -> file != null && !file.isEmpty())
+                        .mapToLong(MultipartFile::getSize)
+                        .sum();
+                if (currentSize + incomingSize > 100L * 1024L * 1024L) {
+                    return error(HttpStatus.BAD_REQUEST, "이 기록에는 사진을 총 100MB까지 업로드할 수 있습니다.");
+                }
+            }
         }
         try {
             Long postId = photoAlbumService.createPost(scopeType, scopeId, albumId, title, description, visibilityType, files, rawFiles, normalizeEditMetas(request), user.getUserId());
@@ -358,7 +519,7 @@ public class photoAlbumController {
                                         @RequestBody Map<String, Object> body,
                                         HttpSession session) {
         Map<String, Object> post = photoAlbumService.getPost(postId);
-        ResponseEntity<?> denied = authorizePostManager(post, session);
+        ResponseEntity<?> denied = authorizePostEditor(post, session);
         if (denied != null) return denied;
         Long albumId = toLong(body.get("albumId"));
         if (!albumBelongsToPostScope(albumId, post)) {
@@ -371,7 +532,7 @@ public class photoAlbumController {
     @PostMapping("/api/photo-posts/{postId}/edit")
     @ResponseBody
     public ResponseEntity<?> updatePostWithPhotos(@PathVariable("postId") Long postId,
-                                                  @RequestParam(value = "albumId", required = false) Long albumId,
+                                                  @RequestParam(value = "albumId", required = false) String albumIdValue,
                                                   @RequestParam(value = "title", required = false) String title,
                                                   @RequestParam(value = "description", required = false) String description,
                                                   @RequestParam(value = "visibilityType", required = false) String visibilityType,
@@ -382,8 +543,13 @@ public class photoAlbumController {
         usersDto user = loginUser(session);
         if (user == null) return error(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다.");
         Map<String, Object> post = photoAlbumService.getPost(postId, user.getUserId());
-        ResponseEntity<?> denied = authorizePostManager(post, session);
+        ResponseEntity<?> denied = authorizePostEditor(post, session);
         if (denied != null) return denied;
+
+        Long albumId = toLong(albumIdValue);
+        if (albumIdValue != null && !albumIdValue.isBlank() && albumId == null) {
+            return error(HttpStatus.BAD_REQUEST, "앨범 정보가 올바르지 않습니다.");
+        }
         if (!albumBelongsToPostScope(albumId, post)) {
             return error(HttpStatus.BAD_REQUEST, "현재 공간의 앨범만 선택할 수 있습니다.");
         }
@@ -401,13 +567,37 @@ public class photoAlbumController {
         }
     }
 
+    @PutMapping("/api/photo-posts/{postId}/photos/{photoId}/metadata")
+    @ResponseBody
+    public ResponseEntity<?> updatePhotoMetadata(@PathVariable("postId") Long postId,
+                                                 @PathVariable("photoId") Long photoId,
+                                                 @RequestBody Map<String, Object> body,
+                                                 HttpSession session) {
+        usersDto user = loginUser(session);
+        if (user == null) return error(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다.");
+        Map<String, Object> post = photoAlbumService.getPost(postId, user.getUserId());
+        ResponseEntity<?> denied = authorizePostEditor(post, session);
+        if (denied != null) return denied;
+
+        Map<String, Object> photo = photoAlbumService.getPhoto(photoId);
+        if (photo == null || !postId.equals(toLong(value(photo, "postId", "POST_ID")))) {
+            return error(HttpStatus.NOT_FOUND, "사진 정보를 찾을 수 없습니다.");
+        }
+        try {
+            Map<String, Object> updated = photoAlbumService.updatePhotoMetadata(photoId, body == null ? Map.of() : body);
+            return ResponseEntity.ok(Map.of("status", "SUCCESS", "photo", updated == null ? Map.of() : updated));
+        } catch (RuntimeException e) {
+            return error(HttpStatus.BAD_REQUEST, e.getMessage());
+        }
+    }
+
     @PutMapping("/api/photo-posts/{postId}/album")
     @ResponseBody
     public ResponseEntity<?> movePostAlbum(@PathVariable("postId") Long postId,
                                            @RequestBody Map<String, Object> body,
                                            HttpSession session) {
         Map<String, Object> post = photoAlbumService.getPost(postId);
-        ResponseEntity<?> denied = authorizePostManager(post, session);
+        ResponseEntity<?> denied = authorizePostMover(post, session);
         if (denied != null) return denied;
 
         Long albumId = toLong(body.get("albumId"));
@@ -432,8 +622,9 @@ public class photoAlbumController {
 
         String postScopeType = string(value(post, "scopeType", "SCOPE_TYPE"));
         Long creatorId = toLong(value(post, "createdBy", "CREATED_BY"));
-        if (!"PERSONAL".equalsIgnoreCase(postScopeType)) {
-            return error(HttpStatus.BAD_REQUEST, "개인 사진만 MOYO 공개 여부를 변경할 수 있습니다.");
+        Long postScopeId = toLong(value(post, "scopeId", "SCOPE_ID"));
+        if (!canUsePhotoFriendShareScope(postScopeType, postScopeId)) {
+            return error(HttpStatus.BAD_REQUEST, "개인 영역의 사진만 MOYO 공개 여부를 변경할 수 있습니다.");
         }
         if (!user.getUserId().equals(creatorId)) {
             return error(HttpStatus.FORBIDDEN, "작성자만 공개 여부를 변경할 수 있습니다.");
@@ -449,6 +640,81 @@ public class photoAlbumController {
         Map<String, Object> updatedPost = success ? photoAlbumService.getPost(postId, user.getUserId()) : post;
         addPhotoPermissionFlags(updatedPost, user.getUserId());
         return ResponseEntity.ok(Map.of("status", success ? "SUCCESS" : "FAIL", "post", updatedPost));
+    }
+
+
+    @PostMapping("/api/photo-posts/{postId}/send")
+    @ResponseBody
+    public ResponseEntity<?> sendPublicPostToFriends(@PathVariable("postId") Long postId,
+                                                     @RequestBody(required = false) Map<String, Object> body,
+                                                     HttpSession session) {
+        usersDto user = loginUser(session);
+        if (user == null) return error(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다.");
+
+        Map<String, Object> post = photoAlbumService.getPost(postId, user.getUserId());
+        ResponseEntity<?> denied = authorizePost(post, session);
+        if (denied != null) return denied;
+
+        String scopeType = string(value(post, "scopeType", "SCOPE_TYPE"));
+        String visibilityType = string(value(post, "visibilityType", "VISIBILITY_TYPE"));
+        Long sendScopeId = toLong(value(post, "scopeId", "SCOPE_ID"));
+        if (!canUsePhotoFriendShareScope(scopeType, sendScopeId) || !"FRIENDS".equalsIgnoreCase(visibilityType)) {
+            return error(HttpStatus.BAD_REQUEST, "MOYO 공개 사진만 친구에게 보낼 수 있습니다.");
+        }
+
+        Object rawIds = body == null ? null : body.get("targetUserIds");
+        if (!(rawIds instanceof List<?> rawList) || rawList.isEmpty()) {
+            return error(HttpStatus.BAD_REQUEST, "보낼 친구를 선택해 주세요.");
+        }
+
+        List<Long> targetUserIds = new ArrayList<>();
+        for (Object rawId : rawList) {
+            Long targetUserId = toLong(rawId);
+            if (targetUserId == null || targetUserId.equals(user.getUserId()) || targetUserIds.contains(targetUserId)) continue;
+            targetUserIds.add(targetUserId);
+            if (targetUserIds.size() >= 100) break;
+        }
+        if (targetUserIds.isEmpty()) {
+            return error(HttpStatus.BAD_REQUEST, "보낼 친구를 선택해 주세요.");
+        }
+
+        if (runtimeDdlEnabled) {
+            try {
+                userNoticeDAO.ensureUserNoticeCommonColumns();
+            } catch (Exception ignored) {
+                // local 개발 DB의 호환 컬럼 보정 실패는 기존 흐름대로 무시합니다.
+            }
+        }
+
+        String senderName = user.getUserName() == null || user.getUserName().isBlank() ? "친구" : user.getUserName().trim();
+        String description = string(value(post, "description", "DESCRIPTION"));
+        String content = description == null || description.isBlank()
+                ? "MOYO 공개 사진을 확인해보세요."
+                : description.trim();
+        if (content.length() > 500) content = content.substring(0, 500);
+        Long creatorId = toLong(value(post, "createdBy", "CREATED_BY"));
+        String linkUrl = creatorId == null
+                ? "/photo-post/detail/" + postId
+                : "/users/profile?userId=" + creatorId + "&openPhotoId=" + postId;
+
+        int sentCount = 0;
+        for (Long targetUserId : targetUserIds) {
+            friendDTO relation = friendDAO.selectRelation(user.getUserId(), targetUserId);
+            if (relation == null || !"ACCEPTED".equalsIgnoreCase(relation.getStatus())) continue;
+            userNoticeDAO.insertPhotoSendAlarm(
+                    targetUserId,
+                    postId,
+                    senderName + "님이 사진을 보냈습니다.",
+                    content,
+                    linkUrl
+            );
+            sentCount++;
+        }
+
+        if (sentCount == 0) {
+            return error(HttpStatus.BAD_REQUEST, "보낼 수 있는 친구를 찾지 못했습니다.");
+        }
+        return ResponseEntity.ok(Map.of("status", "SUCCESS", "sentCount", sentCount));
     }
 
 
@@ -472,6 +738,14 @@ public class photoAlbumController {
             return error(HttpStatus.BAD_REQUEST, "내가 올린 사진은 이미 내 사진첩에 있습니다.");
         }
 
+        String collectScopeType = string(value(post, "scopeType", "SCOPE_TYPE"));
+        String collectVisibilityType = string(value(post, "visibilityType", "VISIBILITY_TYPE"));
+        Long collectScopeId = toLong(value(post, "scopeId", "SCOPE_ID"));
+        if (!canUsePhotoFriendShareScope(collectScopeType, collectScopeId)
+                || !"FRIENDS".equalsIgnoreCase(collectVisibilityType)) {
+            return error(HttpStatus.BAD_REQUEST, "MOYO 공개된 사진만 담을 수 있습니다.");
+        }
+
         Long albumId = body == null ? null : toLong(body.get("albumId"));
         if (albumId != null) {
             Map<String, Object> album = photoAlbumService.getAlbum(albumId);
@@ -484,7 +758,6 @@ public class photoAlbumController {
 
         try {
             Long collectedPostId = photoAlbumService.collectPost(postId, albumId, user.getUserId());
-            appendCollectCommentIfMissing(postId, user.getUserId());
             return ResponseEntity.ok(Map.of(
                     "status", "SUCCESS",
                     "postId", collectedPostId,
@@ -521,7 +794,7 @@ public class photoAlbumController {
         usersDto user = loginUser(session);
         if (user == null) return error(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다.");
         Map<String, Object> post = photoAlbumService.getPost(postId, user.getUserId());
-        ResponseEntity<?> denied = authorizePostManager(post, session);
+        ResponseEntity<?> denied = authorizePostDelete(post, session);
         if (denied != null) return denied;
         boolean success = photoAlbumService.movePostToTrash(postId, user.getUserId());
         return ResponseEntity.ok(Map.of("status", success ? "SUCCESS" : "FAIL"));
@@ -532,6 +805,9 @@ public class photoAlbumController {
     public ResponseEntity<?> restorePost(@PathVariable("postId") Long postId, HttpSession session) {
         usersDto user = loginUser(session);
         if (user == null) return error(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다.");
+        Map<String, Object> post = photoAlbumService.getTrashPost(postId, user.getUserId());
+        ResponseEntity<?> denied = authorizePostDelete(post, session);
+        if (denied != null) return denied;
         boolean success = photoAlbumService.restorePostFromTrash(postId, user.getUserId());
         return ResponseEntity.ok(Map.of("status", success ? "SUCCESS" : "FAIL"));
     }
@@ -541,6 +817,9 @@ public class photoAlbumController {
     public ResponseEntity<?> permanentlyDeletePost(@PathVariable("postId") Long postId, HttpSession session) {
         usersDto user = loginUser(session);
         if (user == null) return error(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다.");
+        Map<String, Object> post = photoAlbumService.getTrashPost(postId, user.getUserId());
+        ResponseEntity<?> denied = authorizePostDelete(post, session);
+        if (denied != null) return denied;
         if (!photoAlbumService.canPermanentlyDeletePost(postId, user.getUserId())) {
             return error(HttpStatus.FORBIDDEN, "영구 삭제할 권한이 없습니다.");
         }
@@ -785,69 +1064,171 @@ public class photoAlbumController {
         Long postId = toLong(value(post, "postId", "POST_ID"));
         boolean isCreator = userId.equals(ownerId);
         boolean isScopeManager = canManageScope(scopeType, scopeId, userId);
-        boolean canManage = isCreator || isScopeManager;
+        boolean deleted = "Y".equalsIgnoreCase(string(value(post, "deletedYn", "DELETED_YN")));
         String normalizedScope;
         try { normalizedScope = normalizeScopeType(scopeType); }
         catch (IllegalArgumentException e) { normalizedScope = ""; }
-        boolean canMoveAlbum = canManage && ("PERSONAL".equals(normalizedScope) || "WORKSPACE".equals(normalizedScope) || "PROJECT".equals(normalizedScope));
-        boolean canToggleVisibility = isCreator && "PERSONAL".equals(normalizedScope);
-        boolean canShare = isCreator;
-        if (!canShare && postId != null) {
-            String visibilityType = string(value(post, "visibilityType", "VISIBILITY_TYPE"));
-            canShare = "PERSONAL".equals(normalizedScope)
-                    && "FRIENDS".equalsIgnoreCase(visibilityType)
-                    && ownerId != null
-                    && isAcceptedFriend(ownerId, userId);
-        }
 
-        post.put("canManage", canManage);
-        post.put("canEdit", canManage);
-        post.put("canDelete", canManage);
+        boolean canEdit = !deleted && postId != null && contentShareService.canEdit("PHOTO", postId, userId);
+        boolean canMoveAlbum = !deleted && (isCreator || isScopeManager);
+        boolean canDelete = isCreator || isScopeManager;
+        boolean canToggleVisibility = !deleted && isCreator && canUsePhotoFriendShareScope(normalizedScope, scopeId);
+        // 개인 영역은 친구 공유, 그룹/그룹 프로젝트는 현재 멤버 접근·편집 권한 관리로 같은 버튼을 사용한다.
+        boolean canShare = !deleted && isCreator;
+
+        post.put("canManage", canEdit || canMoveAlbum || canDelete);
+        post.put("canEdit", !deleted && canEdit);
+        post.put("canDelete", !deleted && canDelete);
         post.put("canMoveAlbum", canMoveAlbum);
+        post.put("canRestore", deleted && canDelete);
+        post.put("canPermanentDelete", deleted && canDelete);
         post.put("canToggleVisibility", canToggleVisibility);
         post.put("canShare", canShare);
+    }
+
+    private List<Map<String, Object>> filterViewableRecordAlbums(List<Map<String, Object>> albums, Long userId) {
+        if (albums == null || albums.isEmpty()) return albums;
+        List<Map<String, Object>> result = new ArrayList<>();
+        for (Map<String, Object> album : albums) {
+            Long albumId = toLong(value(album, "albumId", "ALBUM_ID"));
+            Long targetId = albumId == null ? null : contentRecordDAO.selectRecordTargetIdByPhotoAlbumId(albumId);
+            if (targetId == null || canViewRecordTarget(targetId, userId)) result.add(album);
+        }
+        return result;
+    }
+
+    private List<Map<String, Object>> filterViewableRecordPosts(List<Map<String, Object>> posts, Long userId) {
+        if (posts == null || posts.isEmpty()) return posts;
+        List<Map<String, Object>> result = new ArrayList<>();
+        for (Map<String, Object> post : posts) {
+            Long postId = toLong(value(post, "postId", "POST_ID"));
+            if (postId == null) continue;
+            Long targetId = contentRecordDAO.selectRecordTargetIdByPhotoPostId(postId);
+            if (targetId != null) {
+                if (canViewRecordTarget(targetId, userId)) result.add(post);
+                continue;
+            }
+            if (contentShareService.canRead("PHOTO", postId, userId)) {
+                result.add(post);
+                continue;
+            }
+            String scopeType = string(value(post, "scopeType", "SCOPE_TYPE"));
+            String visibilityType = string(value(post, "visibilityType", "VISIBILITY_TYPE"));
+            Long ownerId = toLong(value(post, "createdBy", "CREATED_BY"));
+            // 개인 사진의 FRIENDS는 MOYO 공개이며 ACCEPTED 친구에게만 노출한다.
+            if ("PERSONAL".equalsIgnoreCase(scopeType)
+                    && "FRIENDS".equalsIgnoreCase(visibilityType)
+                    && isAcceptedFriend(ownerId, userId)) {
+                result.add(post);
+            }
+        }
+        return result;
+    }
+
+
+    private boolean canViewRecordTarget(Long recordTargetId, Long userId) {
+        try { contentRecordService.getViewableTarget(recordTargetId, userId); return true; }
+        catch (RuntimeException e) { return false; }
+    }
+
+    private ResponseEntity<?> authorizeRecordTarget(Long recordTargetId, Long userId, String action) {
+        if (recordTargetId == null) return null;
+        try {
+            if ("EDIT".equals(action)) contentRecordService.getEditableTarget(recordTargetId, userId);
+            else if ("DELETE".equals(action)) contentRecordService.getDeletableTarget(recordTargetId, userId);
+            else contentRecordService.getViewableTarget(recordTargetId, userId);
+            return null;
+        } catch (SecurityException e) {
+            return error(HttpStatus.FORBIDDEN, "이 기록 사진에 접근할 권한이 없습니다.");
+        }
     }
 
     private ResponseEntity<?> authorizePost(Map<String, Object> post, HttpSession session) {
         if (post == null) return error(HttpStatus.NOT_FOUND, "사진 게시물을 찾을 수 없습니다.");
         usersDto user = loginUser(session);
         if (user == null) return error(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다.");
+        Long linkedTargetId = contentRecordDAO.selectRecordTargetIdByPhotoPostId(toLong(value(post, "postId", "POST_ID")));
+        if (linkedTargetId != null) return authorizeRecordTarget(linkedTargetId, user.getUserId(), "VIEW");
         String postScopeType = string(value(post, "scopeType", "SCOPE_TYPE"));
         Long postScopeId = toLong(value(post, "scopeId", "SCOPE_ID"));
-        if (canAccess(postScopeType, postScopeId, user.getUserId())) return null;
         Long postId = toLong(value(post, "postId", "POST_ID"));
         if (contentShareService.canRead("PHOTO", postId, user.getUserId())) return null;
         String visibilityType = string(value(post, "visibilityType", "VISIBILITY_TYPE"));
         Long ownerId = toLong(value(post, "createdBy", "CREATED_BY"));
+        // 개인 사진의 FRIENDS는 MOYO 공개이며 ACCEPTED 친구에게만 노출한다.
+        // 특정 사용자 직접 공유는 위 contentShareService.canRead(...)에서 별도로 허용한다.
+        String creatorStatus = string(value(post, "creatorStatus", "CREATOR_STATUS"));
         if ("PERSONAL".equalsIgnoreCase(postScopeType)
                 && "FRIENDS".equalsIgnoreCase(visibilityType)
+                && "ACTIVE".equalsIgnoreCase(creatorStatus)
                 && isAcceptedFriend(ownerId, user.getUserId())) {
             return null;
         }
         return error(HttpStatus.FORBIDDEN, "이 사진에 접근할 권한이 없습니다.");
     }
 
-    private ResponseEntity<?> authorizePostManager(Map<String, Object> post, HttpSession session) {
+    private ResponseEntity<?> authorizePostEditor(Map<String, Object> post, HttpSession session) {
         ResponseEntity<?> denied = authorizePost(post, session);
         if (denied != null) return denied;
         usersDto user = loginUser(session);
+        Long linkedTargetId = contentRecordDAO.selectRecordTargetIdByPhotoPostId(toLong(value(post, "postId", "POST_ID")));
+        if (linkedTargetId != null) return authorizeRecordTarget(linkedTargetId, user.getUserId(), "EDIT");
+        Long postId = toLong(value(post, "postId", "POST_ID"));
+        return postId != null && contentShareService.canEdit("PHOTO", postId, user.getUserId())
+                ? null : error(HttpStatus.FORBIDDEN, "사진을 편집할 권한이 없습니다.");
+    }
+
+    private ResponseEntity<?> authorizePostMover(Map<String, Object> post, HttpSession session) {
+        ResponseEntity<?> denied = authorizePost(post, session);
+        if (denied != null) return denied;
+        usersDto user = loginUser(session);
+        Long linkedTargetId = contentRecordDAO.selectRecordTargetIdByPhotoPostId(toLong(value(post, "postId", "POST_ID")));
+        if (linkedTargetId != null) return authorizeRecordTarget(linkedTargetId, user.getUserId(), "EDIT");
         String scopeType = string(value(post, "scopeType", "SCOPE_TYPE"));
         Long scopeId = toLong(value(post, "scopeId", "SCOPE_ID"));
         boolean isCreator = user.getUserId().equals(toLong(value(post, "createdBy", "CREATED_BY")));
         boolean isAdmin = canManageScope(scopeType, scopeId, user.getUserId());
-        return isCreator || isAdmin ? null : error(HttpStatus.FORBIDDEN, "작성자 또는 공간 관리자만 수정할 수 있습니다.");
+        return isCreator || isAdmin ? null : error(HttpStatus.FORBIDDEN, "사진을 이동할 권한이 없습니다.");
+    }
+
+    private ResponseEntity<?> authorizePostDelete(Map<String, Object> post, HttpSession session) {
+        if (post == null) return error(HttpStatus.NOT_FOUND, "사진 게시물을 찾을 수 없습니다.");
+        usersDto user = loginUser(session);
+        if (user == null) return error(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다.");
+        Long linkedTargetId = contentRecordDAO.selectRecordTargetIdByPhotoPostId(toLong(value(post, "postId", "POST_ID")));
+        if (linkedTargetId != null) return authorizeRecordTarget(linkedTargetId, user.getUserId(), "DELETE");
+        String scopeType = string(value(post, "scopeType", "SCOPE_TYPE"));
+        Long scopeId = toLong(value(post, "scopeId", "SCOPE_ID"));
+        boolean isCreator = user.getUserId().equals(toLong(value(post, "createdBy", "CREATED_BY")));
+        boolean isAdmin = canManageScope(scopeType, scopeId, user.getUserId());
+        return isCreator || isAdmin ? null : error(HttpStatus.FORBIDDEN, "사진을 삭제할 권한이 없습니다.");
     }
 
     private ResponseEntity<?> authorizeAlbum(Map<String, Object> album, HttpSession session) {
         if (album == null) return error(HttpStatus.NOT_FOUND, "앨범을 찾을 수 없습니다.");
+        usersDto user = loginUser(session);
+        if (user == null) return error(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다.");
+        Long linkedTargetId = contentRecordDAO.selectRecordTargetIdByPhotoAlbumId(toLong(value(album, "albumId", "ALBUM_ID")));
+        if (linkedTargetId != null) return authorizeRecordTarget(linkedTargetId, user.getUserId(), "VIEW");
         return authorizeScope(string(value(album, "scopeType", "SCOPE_TYPE")),
                 toLong(value(album, "scopeId", "SCOPE_ID")), session);
+    }
+
+    private ResponseEntity<?> authorizeAlbumDelete(Map<String, Object> album, HttpSession session) {
+        if (album == null) return error(HttpStatus.NOT_FOUND, "앨범을 찾을 수 없습니다.");
+        usersDto user = loginUser(session);
+        if (user == null) return error(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다.");
+        Long linkedTargetId = contentRecordDAO.selectRecordTargetIdByPhotoAlbumId(toLong(value(album, "albumId", "ALBUM_ID")));
+        if (linkedTargetId != null) return authorizeRecordTarget(linkedTargetId, user.getUserId(), "DELETE");
+        return authorizeAlbumManager(album, session);
     }
 
     private ResponseEntity<?> authorizeAlbumManager(Map<String, Object> album, HttpSession session) {
         if (album == null) return error(HttpStatus.NOT_FOUND, "앨범을 찾을 수 없습니다.");
         usersDto user = loginUser(session);
         if (user == null) return error(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다.");
+        Long linkedTargetId = contentRecordDAO.selectRecordTargetIdByPhotoAlbumId(toLong(value(album, "albumId", "ALBUM_ID")));
+        if (linkedTargetId != null) return authorizeRecordTarget(linkedTargetId, user.getUserId(), "EDIT");
 
         String scopeType = string(value(album, "scopeType", "SCOPE_TYPE"));
         Long scopeId = toLong(value(album, "scopeId", "SCOPE_ID"));
@@ -892,6 +1273,16 @@ public class photoAlbumController {
         return relation != null && "ACCEPTED".equalsIgnoreCase(relation.getStatus());
     }
 
+    private boolean canUsePhotoFriendShareScope(String scopeType, Long scopeId) {
+        String type;
+        try { type = normalizeScopeType(scopeType); }
+        catch (IllegalArgumentException e) { return false; }
+        if ("PERSONAL".equals(type)) return true;
+        if (!"PROJECT".equals(type) || scopeId == null) return false;
+        projectRequestDTO project = projectService.getProjectById(scopeId);
+        return project != null && project.getWsId() == null;
+    }
+
     private boolean canManageScope(String scopeType, Long scopeId, Long userId) {
         if (scopeId == null || userId == null) return false;
         String type;
@@ -914,6 +1305,12 @@ public class photoAlbumController {
     }
 
     private boolean isProjectMember(Long projId, Long userId) {
+        if (projId == null || userId == null) return false;
+
+        // 개인 프로젝트는 별도의 멤버 행이 없을 수 있으므로 프로젝트 소유자도 접근 주체로 인정한다.
+        projectRequestDTO project = projectService.getProjectById(projId);
+        if (project != null && userId.equals(project.getLeaderId())) return true;
+
         List<Map<String, Object>> members = projectService.getProjectMembers(projId);
         if (members == null) return false;
         return members.stream().anyMatch(member -> userId.equals(toLong(value(member, "userId", "USER_ID"))));
@@ -1025,25 +1422,32 @@ public class photoAlbumController {
         return normalized;
     }
 
-    private void appendCollectCommentIfMissing(Long sourcePostId, Long userId) {
-        if (sourcePostId == null || userId == null) return;
-        final String collectMessage = "담아가요 :)";
-        try {
-            List<Map<String, Object>> comments = photoAlbumService.getPostComments(sourcePostId, userId);
-            boolean alreadyLeft = comments != null && comments.stream().anyMatch(comment ->
-                    userId.equals(toLong(value(comment, "userId", "USER_ID")))
-                            && collectMessage.equals(string(value(comment, "commentContent", "COMMENT_CONTENT")).trim())
-            );
-            if (!alreadyLeft) {
-                photoAlbumService.createPostComment(sourcePostId, null, collectMessage, userId);
-            }
-        } catch (RuntimeException ignored) {
-            // 담아가기 자체는 성공시킨다. 자동 댓글 생성 실패가 담아가기 흐름을 막으면 안 된다.
-        }
-    }
-
     private usersDto loginUser(HttpSession session) {
         return (usersDto) session.getAttribute("user");
+    }
+
+
+    private void applySecurePhotoMediaPaths(Map<String, Object> post, List<Map<String, Object>> photos) {
+        Long firstPhotoId = null;
+        if (photos != null) {
+            for (Map<String, Object> photo : photos) {
+                if (photo == null) continue;
+                Long photoId = toLong(value(photo, "photoId", "PHOTO_ID"));
+                if (photoId == null) continue;
+                if (firstPhotoId == null) firstPhotoId = photoId;
+                String mediaPath = "/photo/media/" + photoId;
+                photo.put("FILE_PATH", mediaPath);
+                photo.put("filePath", mediaPath);
+            }
+        }
+
+        if (post == null) return;
+        Long coverPhotoId = toLong(value(post, "coverPhotoId", "COVER_PHOTO_ID"));
+        if (coverPhotoId == null) coverPhotoId = firstPhotoId;
+        if (coverPhotoId == null) return;
+        String coverMediaPath = "/photo/media/" + coverPhotoId;
+        post.put("COVER_PATH", coverMediaPath);
+        post.put("coverPath", coverMediaPath);
     }
 
     private ResponseEntity<Map<String, Object>> error(HttpStatus status, String message) {

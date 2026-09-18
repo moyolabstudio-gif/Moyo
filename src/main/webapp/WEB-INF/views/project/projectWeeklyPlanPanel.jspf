@@ -1,0 +1,23 @@
+<%@ page pageEncoding="UTF-8" %>
+<section id="weeklyPlanPanel" class="project-plan-panel" data-plan-panel="WEEKLY" hidden>
+    <div class="project-timeline-header">
+        <div class="project-timeline-title-wrap">
+            <h3>주간 계획표</h3>
+            <p>공부나 운동처럼 요일마다 반복할 계획을 정리합니다.</p>
+        </div>
+        <div class="project-plan-header-actions">
+            <label class="project-plan-calendar-toggle" for="showWeeklyPlanDawnHours">
+                <input type="checkbox" id="showWeeklyPlanDawnHours" onchange="saveTimeScheduleDawnPreference(this.checked)">
+                <span>새벽 시간 보기</span>
+            </label>
+            <label class="project-plan-calendar-toggle" for="showWeeklyPlanOnCalendar">
+                <input type="checkbox" id="showWeeklyPlanOnCalendar" onchange="saveSingleProjectPlanCalendarPref('WEEKLY', this.checked)">
+                <span>달력에 표시</span>
+            </label>
+        </div>
+    </div>
+
+    <div id="projectWeeklyPlanPreview" class="gantt-box time-schedule-mode weekly-plan-mode" aria-live="polite" aria-busy="true">
+        <div class="gantt-empty">주간 계획표를 불러오는 중...</div>
+    </div>
+</section>

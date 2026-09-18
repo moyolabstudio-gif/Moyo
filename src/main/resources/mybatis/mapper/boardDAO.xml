@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.springboot.project.dao.IboardDAO">
 
     <select id="selectDashboardLatestPosts" resultType="com.springboot.project.dto.postDTO">
@@ -9,7 +9,7 @@
         p.PROJ_ID as projId,
         p.TITLE as title,
         p.USER_ID as userId,
-        u.USER_NAME as writerName,
+        CASE WHEN NVL(wmp.USE_ACCOUNT_PROFILE, 'Y') = 'N' THEN NVL(wmp.DISPLAY_NAME, u.USER_NAME) ELSE u.USER_NAME END as writerName,
         p.VIEW_COUNT as viewCount,
         p.BOARD_TYPE as boardType,
         CASE WHEN p.IS_PINNED = 'Y' AND (p.PIN_START_DT IS NULL OR p.PIN_START_DT &lt;= SYSDATE) AND (p.PIN_END_DT IS NULL OR p.PIN_END_DT >= TRUNC(SYSDATE)) THEN 'Y' ELSE 'N' END as isPinned,
@@ -29,6 +29,7 @@
             AND cr.REACTION_TYPE = 'LIKE') as likeCount
     FROM BOARD_POSTS p
     JOIN USERS u ON p.USER_ID = u.USER_ID
+    LEFT JOIN WS_MEMBER_PROFILES wmp ON wmp.WS_ID = p.WS_ID AND wmp.USER_ID = p.USER_ID
     WHERE p.WS_ID = #{wsId}
       AND p.BOARD_TYPE = #{boardType}
       AND p.PROJ_ID IS NULL
@@ -43,7 +44,7 @@
         p.PROJ_ID as projId,
         p.TITLE as title,
         p.USER_ID as userId,
-        u.USER_NAME as writerName,
+        CASE WHEN NVL(wmp.USE_ACCOUNT_PROFILE, 'Y') = 'N' THEN NVL(wmp.DISPLAY_NAME, u.USER_NAME) ELSE u.USER_NAME END as writerName,
         p.VIEW_COUNT as viewCount,
         p.BOARD_TYPE as boardType,
         CASE WHEN p.IS_PINNED = 'Y' AND (p.PIN_START_DT IS NULL OR p.PIN_START_DT &lt;= SYSDATE) AND (p.PIN_END_DT IS NULL OR p.PIN_END_DT >= TRUNC(SYSDATE)) THEN 'Y' ELSE 'N' END as isPinned,
@@ -63,6 +64,7 @@
             AND cr.REACTION_TYPE = 'LIKE') as likeCount
     FROM BOARD_POSTS p
     JOIN USERS u ON p.USER_ID = u.USER_ID
+    LEFT JOIN WS_MEMBER_PROFILES wmp ON wmp.WS_ID = p.WS_ID AND wmp.USER_ID = p.USER_ID
     WHERE p.WS_ID = #{wsId}
       AND p.BOARD_TYPE = #{boardType}
       AND p.PROJ_ID IS NULL
@@ -75,21 +77,13 @@
                 AND UPPER(p.CONTENT) LIKE '%' || UPPER(#{keyword}) || '%'
             </when>
             <when test="searchType == 'writer'">
-                AND UPPER(u.USER_NAME) LIKE '%' || UPPER(#{keyword}) || '%'
-            </when>
-            <when test="searchType == 'fileName'">
-                AND EXISTS (
-                    SELECT 1
-                    FROM ATTACHMENTS af
-                    WHERE af.POST_ID = p.POST_ID
-                      AND UPPER(af.FILE_ORIGINAL_NAME) LIKE '%' || UPPER(#{keyword}) || '%'
-                )
+                AND UPPER(CASE WHEN NVL(wmp.USE_ACCOUNT_PROFILE, 'Y') = 'N' THEN NVL(wmp.DISPLAY_NAME, u.USER_NAME) ELSE u.USER_NAME END) LIKE '%' || UPPER(#{keyword}) || '%'
             </when>
             <otherwise>
                 AND (
                     UPPER(p.TITLE) LIKE '%' || UPPER(#{keyword}) || '%'
                     OR UPPER(p.CONTENT) LIKE '%' || UPPER(#{keyword}) || '%'
-                    OR UPPER(u.USER_NAME) LIKE '%' || UPPER(#{keyword}) || '%'
+                    OR UPPER(CASE WHEN NVL(wmp.USE_ACCOUNT_PROFILE, 'Y') = 'N' THEN NVL(wmp.DISPLAY_NAME, u.USER_NAME) ELSE u.USER_NAME END) LIKE '%' || UPPER(#{keyword}) || '%'
                     OR EXISTS (
                         SELECT 1
                         FROM ATTACHMENTS af
@@ -108,6 +102,7 @@
     SELECT COUNT(*)
     FROM BOARD_POSTS p
     JOIN USERS u ON p.USER_ID = u.USER_ID
+    LEFT JOIN WS_MEMBER_PROFILES wmp ON wmp.WS_ID = p.WS_ID AND wmp.USER_ID = p.USER_ID
     WHERE p.WS_ID = #{wsId}
       AND p.BOARD_TYPE = #{boardType}
       AND p.PROJ_ID IS NULL
@@ -120,21 +115,13 @@
                 AND UPPER(p.CONTENT) LIKE '%' || UPPER(#{keyword}) || '%'
             </when>
             <when test="searchType == 'writer'">
-                AND UPPER(u.USER_NAME) LIKE '%' || UPPER(#{keyword}) || '%'
-            </when>
-            <when test="searchType == 'fileName'">
-                AND EXISTS (
-                    SELECT 1
-                    FROM ATTACHMENTS af
-                    WHERE af.POST_ID = p.POST_ID
-                      AND UPPER(af.FILE_ORIGINAL_NAME) LIKE '%' || UPPER(#{keyword}) || '%'
-                )
+                AND UPPER(CASE WHEN NVL(wmp.USE_ACCOUNT_PROFILE, 'Y') = 'N' THEN NVL(wmp.DISPLAY_NAME, u.USER_NAME) ELSE u.USER_NAME END) LIKE '%' || UPPER(#{keyword}) || '%'
             </when>
             <otherwise>
                 AND (
                     UPPER(p.TITLE) LIKE '%' || UPPER(#{keyword}) || '%'
                     OR UPPER(p.CONTENT) LIKE '%' || UPPER(#{keyword}) || '%'
-                    OR UPPER(u.USER_NAME) LIKE '%' || UPPER(#{keyword}) || '%'
+                    OR UPPER(CASE WHEN NVL(wmp.USE_ACCOUNT_PROFILE, 'Y') = 'N' THEN NVL(wmp.DISPLAY_NAME, u.USER_NAME) ELSE u.USER_NAME END) LIKE '%' || UPPER(#{keyword}) || '%'
                     OR EXISTS (
                         SELECT 1
                         FROM ATTACHMENTS af
@@ -195,7 +182,7 @@
             p.CONTENT as content,
             p.USER_ID as userId,
             p.PROJ_ID as projId,
-            u.USER_NAME as writerName,
+            CASE WHEN (CASE WHEN p.PROJ_ID IS NOT NULL THEN pr.WS_ID ELSE p.WS_ID END) IS NOT NULL AND NVL(wmp.USE_ACCOUNT_PROFILE, 'Y') = 'N' THEN NVL(wmp.DISPLAY_NAME, u.USER_NAME) ELSE u.USER_NAME END as writerName,
             p.VIEW_COUNT as viewCount,
             p.BOARD_TYPE as boardType,
             CASE WHEN p.IS_PINNED = 'Y' AND (p.PIN_START_DT IS NULL OR p.PIN_START_DT &lt;= SYSDATE) AND (p.PIN_END_DT IS NULL OR p.PIN_END_DT >= TRUNC(SYSDATE)) THEN 'Y' ELSE 'N' END as isPinned,
@@ -211,6 +198,10 @@
                 AND cr.REACTION_TYPE = 'LIKE') as likeCount
         FROM BOARD_POSTS p
         JOIN USERS u ON p.USER_ID = u.USER_ID
+        LEFT JOIN PROJECTS pr ON pr.PROJ_ID = p.PROJ_ID
+        LEFT JOIN WS_MEMBER_PROFILES wmp
+          ON wmp.WS_ID = CASE WHEN p.PROJ_ID IS NOT NULL THEN pr.WS_ID ELSE p.WS_ID END
+         AND wmp.USER_ID = p.USER_ID
         WHERE p.POST_ID = #{postId}
     </select>
 
@@ -222,14 +213,25 @@
             R.CONTENT,
             R.USER_ID,
             TO_CHAR(R.REG_DT, 'YYYY-MM-DD HH24:MI') AS REG_DT,
-            U.USER_NAME
+            CASE WHEN (CASE WHEN BP.PROJ_ID IS NOT NULL THEN PR.WS_ID ELSE BP.WS_ID END) IS NOT NULL AND NVL(WMP.USE_ACCOUNT_PROFILE, 'Y') = 'N' THEN NVL(WMP.DISPLAY_NAME, U.USER_NAME) ELSE U.USER_NAME END AS USER_NAME
         FROM BOARD_REPLIES R
+        JOIN BOARD_POSTS BP ON BP.POST_ID = R.POST_ID
         JOIN USERS U ON R.USER_ID = U.USER_ID
+        LEFT JOIN PROJECTS PR ON PR.PROJ_ID = BP.PROJ_ID
+        LEFT JOIN WS_MEMBER_PROFILES WMP
+          ON WMP.WS_ID = CASE WHEN BP.PROJ_ID IS NOT NULL THEN PR.WS_ID ELSE BP.WS_ID END
+         AND WMP.USER_ID = R.USER_ID
         WHERE R.POST_ID = #{postId}
         ORDER BY NVL(R.PARENT_REPLY_ID, R.REPLY_ID) ASC,
                  CASE WHEN R.PARENT_REPLY_ID IS NULL THEN 0 ELSE 1 END ASC,
                  R.REG_DT ASC
 	</select>
+
+    <select id="selectReplyById" resultType="map">
+        SELECT REPLY_ID, POST_ID, PARENT_REPLY_ID, USER_ID, CONTENT, REG_DT
+        FROM BOARD_REPLIES
+        WHERE REPLY_ID = #{replyId}
+    </select>
 
     <insert id="insertReply" parameterType="map">
         INSERT INTO BOARD_REPLIES (
@@ -314,7 +316,7 @@
         p.PROJ_ID as projId,
         p.TITLE as title,
         p.USER_ID as userId,
-        u.USER_NAME as writerName,
+        CASE WHEN pr.WS_ID IS NOT NULL AND NVL(wmp.USE_ACCOUNT_PROFILE, 'Y') = 'N' THEN NVL(wmp.DISPLAY_NAME, u.USER_NAME) ELSE u.USER_NAME END as writerName,
         p.VIEW_COUNT as viewCount,
         p.BOARD_TYPE as boardType,
         CASE WHEN p.IS_PINNED = 'Y' AND (p.PIN_START_DT IS NULL OR p.PIN_START_DT &lt;= SYSDATE) AND (p.PIN_END_DT IS NULL OR p.PIN_END_DT >= TRUNC(SYSDATE)) THEN 'Y' ELSE 'N' END as isPinned,
@@ -333,7 +335,9 @@
             AND cr.CONTENT_TYPE = CASE WHEN p.BOARD_TYPE = 'NOTICE' THEN 'NOTICE' ELSE 'BOARD' END
             AND cr.REACTION_TYPE = 'LIKE') as likeCount
     FROM BOARD_POSTS p
+    JOIN PROJECTS pr ON pr.PROJ_ID = p.PROJ_ID
     JOIN USERS u ON p.USER_ID = u.USER_ID
+    LEFT JOIN WS_MEMBER_PROFILES wmp ON wmp.WS_ID = pr.WS_ID AND wmp.USER_ID = p.USER_ID
     WHERE p.PROJ_ID = #{projId}
       AND p.BOARD_TYPE = #{boardType}
     <if test="keyword != null and keyword != ''">
@@ -345,21 +349,13 @@
                 AND UPPER(p.CONTENT) LIKE '%' || UPPER(#{keyword}) || '%'
             </when>
             <when test="searchType == 'writer'">
-                AND UPPER(u.USER_NAME) LIKE '%' || UPPER(#{keyword}) || '%'
-            </when>
-            <when test="searchType == 'fileName'">
-                AND EXISTS (
-                    SELECT 1
-                    FROM ATTACHMENTS af
-                    WHERE af.POST_ID = p.POST_ID
-                      AND UPPER(af.FILE_ORIGINAL_NAME) LIKE '%' || UPPER(#{keyword}) || '%'
-                )
+                AND UPPER(CASE WHEN pr.WS_ID IS NOT NULL AND NVL(wmp.USE_ACCOUNT_PROFILE, 'Y') = 'N' THEN NVL(wmp.DISPLAY_NAME, u.USER_NAME) ELSE u.USER_NAME END) LIKE '%' || UPPER(#{keyword}) || '%'
             </when>
             <otherwise>
                 AND (
                     UPPER(p.TITLE) LIKE '%' || UPPER(#{keyword}) || '%'
                     OR UPPER(p.CONTENT) LIKE '%' || UPPER(#{keyword}) || '%'
-                    OR UPPER(u.USER_NAME) LIKE '%' || UPPER(#{keyword}) || '%'
+                    OR UPPER(CASE WHEN pr.WS_ID IS NOT NULL AND NVL(wmp.USE_ACCOUNT_PROFILE, 'Y') = 'N' THEN NVL(wmp.DISPLAY_NAME, u.USER_NAME) ELSE u.USER_NAME END) LIKE '%' || UPPER(#{keyword}) || '%'
                     OR EXISTS (
                         SELECT 1
                         FROM ATTACHMENTS af
@@ -377,7 +373,9 @@
 <select id="countPostsByProject" resultType="int">
     SELECT COUNT(*)
     FROM BOARD_POSTS p
+    JOIN PROJECTS pr ON pr.PROJ_ID = p.PROJ_ID
     JOIN USERS u ON p.USER_ID = u.USER_ID
+    LEFT JOIN WS_MEMBER_PROFILES wmp ON wmp.WS_ID = pr.WS_ID AND wmp.USER_ID = p.USER_ID
     WHERE p.PROJ_ID = #{projId}
       AND p.BOARD_TYPE = #{boardType}
     <if test="keyword != null and keyword != ''">
@@ -389,21 +387,13 @@
                 AND UPPER(p.CONTENT) LIKE '%' || UPPER(#{keyword}) || '%'
             </when>
             <when test="searchType == 'writer'">
-                AND UPPER(u.USER_NAME) LIKE '%' || UPPER(#{keyword}) || '%'
-            </when>
-            <when test="searchType == 'fileName'">
-                AND EXISTS (
-                    SELECT 1
-                    FROM ATTACHMENTS af
-                    WHERE af.POST_ID = p.POST_ID
-                      AND UPPER(af.FILE_ORIGINAL_NAME) LIKE '%' || UPPER(#{keyword}) || '%'
-                )
+                AND UPPER(CASE WHEN pr.WS_ID IS NOT NULL AND NVL(wmp.USE_ACCOUNT_PROFILE, 'Y') = 'N' THEN NVL(wmp.DISPLAY_NAME, u.USER_NAME) ELSE u.USER_NAME END) LIKE '%' || UPPER(#{keyword}) || '%'
             </when>
             <otherwise>
                 AND (
                     UPPER(p.TITLE) LIKE '%' || UPPER(#{keyword}) || '%'
                     OR UPPER(p.CONTENT) LIKE '%' || UPPER(#{keyword}) || '%'
-                    OR UPPER(u.USER_NAME) LIKE '%' || UPPER(#{keyword}) || '%'
+                    OR UPPER(CASE WHEN pr.WS_ID IS NOT NULL AND NVL(wmp.USE_ACCOUNT_PROFILE, 'Y') = 'N' THEN NVL(wmp.DISPLAY_NAME, u.USER_NAME) ELSE u.USER_NAME END) LIKE '%' || UPPER(#{keyword}) || '%'
                     OR EXISTS (
                         SELECT 1
                         FROM ATTACHMENTS af

@@ -1,0 +1,75 @@
+/* MOYO CKEditor shared UI baseline
+   Used by BOARD / NOTE / RECORD profiles. Page CSS controls only width and height. */
+.moyo-ckeditor .ck.ck-editor__top,
+.moyo-ckeditor .ck.ck-sticky-panel,
+.moyo-ckeditor .ck.ck-sticky-panel__content {
+    max-width: 100% !important;
+    overflow: visible !important;
+}
+
+.moyo-ckeditor .ck.ck-toolbar {
+    display: flex !important;
+    align-items: center !important;
+    flex-wrap: nowrap !important;
+    max-width: 100% !important;
+    min-height: 42px !important;
+    overflow: visible !important;
+    --ck-spacing-small: 2px;
+}
+
+.moyo-ckeditor .ck.ck-toolbar > .ck-toolbar__items,
+.moyo-ckeditor .ck.ck-toolbar .ck-toolbar__items {
+    display: flex !important;
+    align-items: center !important;
+    flex-wrap: nowrap !important;
+    min-width: 0 !important;
+    overflow: visible !important;
+    white-space: nowrap !important;
+}
+
+.moyo-ckeditor .ck.ck-toolbar .ck-toolbar__items > *,
+.moyo-ckeditor .ck.ck-toolbar .ck-button,
+.moyo-ckeditor .ck.ck-toolbar .ck-dropdown__button {
+    flex: 0 0 auto !important;
+}
+
+/* CKEditor floating UI is mounted outside the editor container. */
+.ck-body-wrapper .ck.ck-balloon-panel,
+body > .ck.ck-balloon-panel,
+.ck.ck-balloon-panel.ck-balloon-panel_visible,
+.ck.ck-dropdown__panel {
+    z-index: 16050 !important;
+}
+
+.ck.ck-balloon-panel,
+.ck.ck-balloon-panel .ck.ck-toolbar,
+.ck.ck-balloon-panel .ck-form,
+.ck.ck-balloon-panel .ck-form__header,
+.ck.ck-balloon-panel .ck-form__row,
+.ck.ck-dropdown__panel {
+    overflow: visible !important;
+}
+
+/* Preserve CKEditor table/image widgets without introducing an outer scroll container. */
+.moyo-ckeditor .ck-content figure.image {
+    clear: both !important;
+    max-width: 100% !important;
+    height: auto !important;
+}
+
+.moyo-ckeditor .ck-content figure.image img {
+    display: block !important;
+    max-width: 100% !important;
+    height: auto !important;
+    object-fit: contain !important;
+}
+
+.moyo-ckeditor .ck-content figure.table {
+    max-width: 100% !important;
+}
+
+/* Keep the insert-table grid inside narrow note/record modals. */
+.moyo-ckeditor .ck.ck-dropdown:has(.ck-insert-table-dropdown-grid) > .ck-dropdown__panel {
+    left: auto !important;
+    right: 0 !important;
+}

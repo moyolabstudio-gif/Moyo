@@ -1,6 +1,7 @@
 package com.springboot.project.controller;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,8 +27,13 @@ import com.springboot.project.dto.workspaceUpdateRequest;
 import com.springboot.project.dto.workspaceUpdateResult;
 import com.springboot.project.service.IprojectService;
 import com.springboot.project.service.IworkspaceService;
+import com.springboot.project.service.WorkspaceAuthorizationService;
+import com.springboot.project.service.InoteService;
 import com.springboot.project.service.IcontentShareService;
 import com.springboot.project.service.fileUploadService;
+
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import jakarta.servlet.http.HttpSession;
 
@@ -51,12 +57,18 @@ public class workspaceController {
     private IprojectService projectService;
     @Autowired
     private IcontentShareService contentShareService;
+    @Autowired
+    private InoteService noteService;
     
     @Autowired
     private com.springboot.project.dao.IusersDao usersDao; // 유저 검색용
 
     @Autowired
     private com.springboot.project.dao.IworkspaceDAO workspaceDAO; // 멤버 초대 및 삭제 연동용
+    @Autowired
+    private WorkspaceAuthorizationService workspaceAuthorizationService;
+    @Autowired
+    private ObjectMapper objectMapper;
    
     @PostMapping("/api/create")
     @ResponseBody
@@ -74,7 +86,7 @@ public class workspaceController {
             @RequestParam(value = "positionName", required = false) String positionName,
             @RequestParam(value = "phoneNumber", required = false) String phoneNumber,
             @RequestParam(value = "profileImage", required = false) MultipartFile profileImage,
-            @RequestParam(value = "showPhone", defaultValue = "N") String showPhone,
+            @RequestParam(value = "showPhone", defaultValue = "Y") String showPhone,
             @RequestParam(value = "showBirth", defaultValue = "Y") String showBirth,
             HttpSession session) {
 
@@ -184,7 +196,7 @@ public class workspaceController {
             return "redirect:/users/mypage";
         }
 
-        boolean isMember = workspaceDAO.isWorkspaceMember(wsId, loginUser.getUserId()) > 0;
+        boolean isMember = workspaceAuthorizationService.isMember(wsId, loginUser.getUserId());
         if (!isMember && "INVITE_ONLY".equalsIgnoreCase(workspace.getJoinType())) {
             return "redirect:/users/mypage?groupAccess=inviteOnly";
         }
@@ -209,17 +221,38 @@ public class workspaceController {
         List<Map<String, Object>> memberList = workspaceService.getWorkspaceMembers(wsId);
         model.addAttribute("memberList", memberList);
 
-        boolean isWorkspaceAdmin = workspaceDAO.isWorkspaceAdmin(wsId, loginUser.getUserId()) > 0;
+        boolean isWorkspaceAdmin = workspaceAuthorizationService.canManage(wsId, loginUser.getUserId());
         model.addAttribute("isWorkspaceAdmin", isWorkspaceAdmin);
         model.addAttribute("currentUserIsOwner",
-                loginUser != null
-                && workspace.getOwnerId() != null
-                && workspace.getOwnerId().equals(loginUser.getUserId()));
+                workspaceAuthorizationService.isOwner(wsId, loginUser.getUserId()));
 
         List<Map<String, Object>> eventList = workspaceService.getEventsByWsId(wsId);
         model.addAttribute("eventList", eventList);
         model.addAttribute("communitySummary", workspaceService.getCommunitySummary(wsId));
         model.addAttribute("recentActivities", workspaceService.getRecentCommunityActivities(wsId));
+
+        List<com.springboot.project.dto.noteDTO> mainNoteSummaries = noteService.getNoteListPage(
+                "WS", wsId, null, loginUser.getUserId(), null, false, null, null, 0, 3);
+        List<com.springboot.project.dto.noteDTO> profilePublicNotes = new java.util.ArrayList<>();
+        if (mainNoteSummaries != null) {
+            for (com.springboot.project.dto.noteDTO summary : mainNoteSummaries) {
+                if (summary == null || summary.getNoteId() == null) continue;
+                com.springboot.project.dto.noteDTO detail = noteService.getNoteDetail(summary.getNoteId(), loginUser.getUserId());
+                if (detail == null) continue;
+                if (detail.getPreviewContent() == null || detail.getPreviewContent().isBlank()) {
+                    detail.setPreviewContent(summary.getPreviewContent());
+                }
+                if (detail.getUserName() == null || detail.getUserName().isBlank()) {
+                    detail.setUserName(summary.getUserName());
+                }
+                if (detail.getProfileImagePath() == null || detail.getProfileImagePath().isBlank()) {
+                    detail.setProfileImagePath(summary.getProfileImagePath());
+                }
+                profilePublicNotes.add(detail);
+            }
+        }
+        model.addAttribute("profilePublicNotes", profilePublicNotes);
+        model.addAttribute("displayName", loginUser.getUserName());
 
         return "workspace/workspaceMain";
     }
@@ -229,11 +262,17 @@ public class workspaceController {
     @GetMapping("/list")
     public String workspaceList(HttpSession session, Model model) {
         usersDto user = (usersDto) session.getAttribute("user");
-        
+
         if (user != null) {
-            System.out.println("현재 로그인 유저 ID: " + user.getUserId());
-            List<workspaceDTO> wsList = workspaceService.getWorkspaceList(user.getUserId());
-            model.addAttribute("wsList", wsList);
+            // 공통 사이드바에서 이미 조회한 동일 그룹 목록을 본문에서도 재사용한다.
+            // globalControllerAdvice의 userWorkspaces와 같은 selectWorkspaceList 결과이므로
+            // 그룹 목록 페이지 진입 시 동일 SQL이 두 번 실행되는 것을 막는다.
+            Object userWorkspaces = model.asMap().get("userWorkspaces");
+            if (userWorkspaces instanceof List<?>) {
+                model.addAttribute("wsList", userWorkspaces);
+            } else {
+                model.addAttribute("wsList", Collections.emptyList());
+            }
         }
         return "workspace/workspaceList";
     }
@@ -252,18 +291,15 @@ public class workspaceController {
             return "redirect:/workspace/list";
         }
 
-        boolean isOwner = workspace.getOwnerId() != null
-                && workspace.getOwnerId().equals(loginUser.getUserId());
-        boolean isAdmin = workspaceDAO.isWorkspaceAdmin(
-                wsId, loginUser.getUserId()) > 0;
-
+        boolean isOwner = workspaceAuthorizationService.isOwner(
+                wsId, loginUser.getUserId());
         // 그룹장은 OWNER_ID 기준으로, 관리자는 ADMIN 역할 기준으로 허용한다.
-        if (!isOwner && !isAdmin) {
+        if (!workspaceAuthorizationService.canManage(wsId, loginUser.getUserId())) {
             return "redirect:/workspace/main?wsId=" + wsId;
         }
 
-        // 삭제 대기 그룹은 정보가 더 변경되지 않도록 설정 진입을 막는다.
-        if ("DELETE_PENDING".equalsIgnoreCase(workspace.getStatus())) {
+        // 삭제 예정 그룹은 그룹장만 설정에 들어와 삭제 신청을 취소할 수 있다.
+        if ("DELETE_PENDING".equalsIgnoreCase(workspace.getStatus()) && !isOwner) {
             return "redirect:/workspace/main?wsId=" + wsId
                     + "&settingsBlocked=deletePending";
         }
@@ -271,6 +307,7 @@ public class workspaceController {
         model.addAttribute("workspace", workspace);
         model.addAttribute("workspaceLinks", workspaceService.getWorkspaceLinks(wsId));
         model.addAttribute("memberList", workspaceService.getWorkspaceMembers(wsId));
+        model.addAttribute("pendingInvitationList", workspaceService.getPendingInvitationsByWorkspace(wsId));
         model.addAttribute("currentUserId", loginUser.getUserId());
         model.addAttribute("currentUserIsOwner", isOwner);
         return "workspace/workspaceSettings";
@@ -291,12 +328,7 @@ public class workspaceController {
             return "redirect:/workspace/list";
         }
 
-        boolean isOwner = workspace.getOwnerId() != null
-                && workspace.getOwnerId().equals(loginUser.getUserId());
-        boolean isAdmin = workspaceDAO.isWorkspaceAdmin(
-                wsId, loginUser.getUserId()) > 0;
-
-        if (!isOwner && !isAdmin) {
+        if (!workspaceAuthorizationService.canManage(wsId, loginUser.getUserId())) {
             return "redirect:/workspace/main?wsId=" + wsId;
         }
         if ("DELETE_PENDING".equalsIgnoreCase(workspace.getStatus())) {
@@ -490,6 +522,9 @@ public class workspaceController {
                 || email == null || email.trim().length() < 2) {
             return result;
         }
+        if (!workspaceAuthorizationService.canManage(wsId, loginUser.getUserId())) {
+            return result;
+        }
 
         List<usersDto> users = usersDao.searchUsersByEmail(email.trim());
 
@@ -499,7 +534,7 @@ public class workspaceController {
             String memberStatus;
             if (loginUser.getUserId().equals(candidate.getUserId())) {
                 memberStatus = "SELF";
-            } else if (workspaceDAO.isWorkspaceMember(wsId, candidate.getUserId()) > 0) {
+            } else if (workspaceAuthorizationService.isMember(wsId, candidate.getUserId())) {
                 memberStatus = "ALREADY_MEMBER";
             } else if (workspaceDAO.checkInvitationExists(wsId, candidate.getUserId()) > 0) {
                 memberStatus = "PENDING";
@@ -521,16 +556,19 @@ public class workspaceController {
 
     @PostMapping("/api/invite-member")
     @ResponseBody
-    public String inviteMember(@RequestParam("wsId") Long wsId, @RequestParam("userId") Long userId) {
-        try {
-            workspaceDAO.insertWorkspaceMember(wsId, userId, "MEMBER");
-            return "success";
-        } catch (Exception e) {
-            e.printStackTrace();
-            return "fail";
+    public String inviteMemberLegacy(@RequestParam("wsId") Long wsId,
+                                     @RequestParam("userId") Long userId,
+                                     HttpSession session) {
+        usersDto loginUser = (usersDto) session.getAttribute("user");
+        if (loginUser == null) return "login_required";
+        if (wsId == null || userId == null) return "invalid_request";
+        if (!workspaceAuthorizationService.canManage(wsId, loginUser.getUserId())) {
+            return "forbidden";
         }
+        // 과거 API는 초대 수락 없이 WS_MEMBERS에 바로 추가했다.
+        // 그룹 초대는 /api/invite -> 요청함 수락 흐름으로만 처리한다.
+        return "legacy_disabled";
     }
-    
 
 
     @PostMapping("/api/update-member-position")
@@ -545,11 +583,11 @@ public class workspaceController {
         if (loginUser == null) return "login_required";
 
         // 팀장과 관리자 모두 그룹 역할을 부여·수정할 수 있다.
-        if (workspaceDAO.isWorkspaceAdmin(wsId, loginUser.getUserId()) < 1) {
+        if (!workspaceAuthorizationService.canManage(wsId, loginUser.getUserId())) {
             return "forbidden";
         }
 
-        if (workspaceDAO.isWorkspaceMember(wsId, targetUserId) < 1) {
+        if (!workspaceAuthorizationService.isMember(wsId, targetUserId)) {
             return "member_not_found";
         }
 
@@ -580,8 +618,11 @@ public class workspaceController {
 
         usersDto loginUser = (usersDto) session.getAttribute("user");
         if (loginUser == null) return "login_required";
-        if (workspaceDAO.isWorkspaceAdmin(wsId, loginUser.getUserId()) < 1) {
+        if (!workspaceAuthorizationService.canManage(wsId, loginUser.getUserId())) {
             return "forbidden";
+        }
+        if (loginUser.getUserId().equals(targetUserId)) {
+            return "self_role_locked";
         }
 
         workspaceDTO workspace = workspaceService.getWorkspaceDetail(wsId);
@@ -597,12 +638,55 @@ public class workspaceController {
             return "invalid_role";
         }
 
-        if (workspaceDAO.isWorkspaceMember(wsId, targetUserId) < 1) {
+        if (!workspaceAuthorizationService.isMember(wsId, targetUserId)) {
             return "member_not_found";
         }
 
         int updated = workspaceDAO.updateMemberRole(wsId, targetUserId, role);
         return updated > 0 ? "success" : "fail";
+    }
+
+    @PostMapping("/api/update-members")
+    @ResponseBody
+    public String updateWorkspaceMembers(
+            @RequestParam("wsId") Long wsId,
+            @RequestParam("changes") String changesJson,
+            HttpSession session) {
+
+        usersDto loginUser = (usersDto) session.getAttribute("user");
+        if (loginUser == null) return "login_required";
+        if (wsId == null || changesJson == null || changesJson.isBlank()) return "invalid_request";
+
+        try {
+            List<Map<String, Object>> changes = objectMapper.readValue(
+                    changesJson, new TypeReference<List<Map<String, Object>>>() {});
+            return workspaceService.updateWorkspaceMembers(wsId, loginUser.getUserId(), changes);
+        } catch (Exception e) {
+            return "invalid_request";
+        }
+    }
+
+    @PostMapping("/api/remove-members")
+    @ResponseBody
+    public String removeWorkspaceMembers(
+            @RequestParam("wsId") Long wsId,
+            @RequestParam("userIds") String userIdsText,
+            HttpSession session) {
+
+        usersDto loginUser = (usersDto) session.getAttribute("user");
+        if (loginUser == null) return "login_required";
+        if (wsId == null || userIdsText == null || userIdsText.isBlank()) return "invalid_request";
+
+        try {
+            List<Long> userIds = new ArrayList<>();
+            for (String token : userIdsText.split(",")) {
+                String value = token == null ? "" : token.trim();
+                if (!value.isEmpty()) userIds.add(Long.valueOf(value));
+            }
+            return workspaceService.removeWorkspaceMembers(wsId, loginUser.getUserId(), userIds);
+        } catch (Exception e) {
+            return "invalid_request";
+        }
     }
 
     @PostMapping("/api/remove-member")
@@ -614,7 +698,7 @@ public class workspaceController {
         if (loginUser == null) return "login_required";
         if (wsId == null || userId == null) return "fail";
         if (loginUser.getUserId().equals(userId)) return "fail";
-        if (workspaceDAO.isWorkspaceAdmin(wsId, loginUser.getUserId()) < 1) {
+        if (!workspaceAuthorizationService.canManage(wsId, loginUser.getUserId())) {
             return "forbidden";
         }
 
@@ -638,9 +722,8 @@ public class workspaceController {
             return "member_not_found";
         }
 
-        boolean requesterIsOwner =
-                workspace.getOwnerId() != null
-                && workspace.getOwnerId().equals(loginUser.getUserId());
+        boolean requesterIsOwner = workspaceAuthorizationService.isOwner(
+                wsId, loginUser.getUserId());
 
         String targetRole = String.valueOf(
                 targetProfile.getOrDefault("WS_ROLE", "")
@@ -649,6 +732,11 @@ public class workspaceController {
         // 일반 관리자는 일반 멤버만 내보낼 수 있다.
         if (!requesterIsOwner && !"MEMBER".equals(targetRole)) {
             return "forbidden";
+        }
+
+        // 활성 그룹 프로젝트의 팀장은 먼저 프로젝트 팀장을 위임해야 한다.
+        if (workspaceDAO.countLedActiveWorkspaceProjects(wsId, userId) > 0) {
+            return "project_leader_transfer_required";
         }
 
         boolean isRemoved = workspaceService.removeMember(wsId, userId);
@@ -671,17 +759,24 @@ public class workspaceController {
         if (oldAdminId.equals(newAdminId)) return "fail";
 
         workspaceDTO workspace = workspaceService.getWorkspaceDetail(wsId);
-        if (workspace == null
-                || workspace.getOwnerId() == null
-                || !workspace.getOwnerId().equals(oldAdminId)) {
+        if (workspace == null || !workspaceAuthorizationService.isOwner(wsId, oldAdminId)) {
             return "owner_only";
         }
+        if (!"ACTIVE".equalsIgnoreCase(workspace.getStatus())) {
+            return "unavailable";
+        }
+        if (!workspaceAuthorizationService.isMember(wsId, newAdminId)) {
+            return "member_not_found";
+        }
 
-        if (workspaceDAO.isWorkspaceMember(wsId, newAdminId) < 1) return "fail";
         System.out.println("위임 시작: WS=" + wsId + ", From=" + oldAdminId + ", To=" + newAdminId);
-        boolean success = workspaceService.transferAdmin(wsId, oldAdminId, newAdminId);
-        
-        return success ? "success" : "fail";
+        try {
+            boolean success = workspaceService.transferAdmin(wsId, oldAdminId, newAdminId);
+            return success ? "success" : "conflict";
+        } catch (RuntimeException e) {
+            System.err.println("그룹장 위임 실패: " + e.getMessage());
+            return "fail";
+        }
     }
     
     @PostMapping("/api/invite")
@@ -709,6 +804,11 @@ public class workspaceController {
 
             Long wsId = Long.valueOf(String.valueOf(wsIdValue));
             String email = String.valueOf(emailValue).trim();
+
+            if (!workspaceAuthorizationService.canManage(wsId, user.getUserId())) {
+                result.put("status", "FORBIDDEN");
+                return result;
+            }
 
             String status = workspaceService.inviteUserByEmail(
                     wsId, user.getUserId(), email);
@@ -747,7 +847,7 @@ public class workspaceController {
             return result;
         }
 
-        boolean member = workspaceDAO.isWorkspaceMember(wsId, user.getUserId()) > 0;
+        boolean member = workspaceAuthorizationService.isMember(wsId, user.getUserId());
         if (!member && "INVITE_ONLY".equalsIgnoreCase(workspace.getJoinType())) {
             // 초대 전용 그룹은 비멤버에게 존재와 가입 상태를 노출하지 않습니다.
             result.put("success", false);
@@ -819,8 +919,10 @@ public class workspaceController {
             @RequestParam(value = "displayName", required = false) String displayName,
             @RequestParam(value = "contactEmail", required = false) String contactEmail,
             @RequestParam(value = "positionName", required = false) String positionName,
+            @RequestParam(value = "introText", required = false) String introText,
             @RequestParam(value = "phoneNumber", required = false) String phoneNumber,
-            @RequestParam(value = "showPhone", defaultValue = "N") String showPhone,
+            @RequestParam(value = "showEmail", defaultValue = "Y") String showEmail,
+            @RequestParam(value = "showPhone", defaultValue = "Y") String showPhone,
             @RequestParam(value = "showBirth", defaultValue = "Y") String showBirth,
             @RequestParam(value = "profileImage", required = false) MultipartFile profileImage,
             @RequestParam(value = "profileImageOriginal", required = false) MultipartFile profileImageOriginal,
@@ -858,7 +960,9 @@ public class workspaceController {
             }
         }
         profile.put("positionName", positionName);
+        profile.put("introText", introText);
         profile.put("phoneNumber", phoneNumber);
+        profile.put("showEmail", showEmail);
         profile.put("showPhone", showPhone);
         profile.put("showBirth", showBirth);
 
@@ -947,8 +1051,10 @@ public class workspaceController {
             @RequestParam(value = "displayName", required = false) String displayName,
             @RequestParam(value = "contactEmail", required = false) String contactEmail,
             @RequestParam(value = "positionName", required = false) String positionName,
+            @RequestParam(value = "introText", required = false) String introText,
             @RequestParam(value = "phoneNumber", required = false) String phoneNumber,
-            @RequestParam(value = "showPhone", defaultValue = "N") String showPhone,
+            @RequestParam(value = "showEmail", defaultValue = "Y") String showEmail,
+            @RequestParam(value = "showPhone", defaultValue = "Y") String showPhone,
             @RequestParam(value = "showBirth", defaultValue = "Y") String showBirth,
             @RequestParam(value = "profileImage", required = false) MultipartFile profileImage,
             HttpSession session) {
@@ -981,7 +1087,9 @@ public class workspaceController {
             }
         }
         profile.put("positionName", positionName);
+        profile.put("introText", introText);
         profile.put("phoneNumber", phoneNumber);
+        profile.put("showEmail", showEmail);
         profile.put("showPhone", showPhone);
         profile.put("showBirth", showBirth);
 
@@ -1021,6 +1129,47 @@ public class workspaceController {
         return workspaceService.getPendingInvitations(user.getUserId());
     }
 
+    @PostMapping("/api/invitations/{inviteId}/cancel")
+    @ResponseBody
+    public Map<String, Object> cancelInvitation(
+            @PathVariable("inviteId") Long inviteId,
+            HttpSession session) {
+
+        Map<String, Object> result = new HashMap<>();
+        usersDto user = (usersDto) session.getAttribute("user");
+        if (user == null) {
+            result.put("success", false);
+            result.put("status", "LOGIN_REQUIRED");
+            return result;
+        }
+
+        Map<String, Object> inviteInfo = workspaceDAO.selectInvitationById(inviteId);
+        if (inviteInfo == null) {
+            result.put("success", false);
+            result.put("status", "NOT_FOUND");
+            return result;
+        }
+
+        Long wsId = Long.valueOf(String.valueOf(inviteInfo.get("WS_ID")));
+        if (!workspaceAuthorizationService.canManage(wsId, user.getUserId())) {
+            result.put("success", false);
+            result.put("status", "FORBIDDEN");
+            return result;
+        }
+
+        String inviteStatus = String.valueOf(inviteInfo.getOrDefault("STATUS", ""));
+        if (!"PENDING".equalsIgnoreCase(inviteStatus)) {
+            result.put("success", false);
+            result.put("status", "ALREADY_PROCESSED");
+            return result;
+        }
+
+        boolean success = workspaceService.cancelInvitation(inviteId, wsId);
+        result.put("success", success);
+        result.put("status", success ? "CANCELLED" : "ALREADY_PROCESSED");
+        return result;
+    }
+
     @PostMapping(value = "/api/invitation/process", consumes = org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE)
     @ResponseBody
     public Map<String, Object> processInvite(
@@ -1030,8 +1179,10 @@ public class workspaceController {
             @RequestParam(value = "displayName", required = false) String displayName,
             @RequestParam(value = "contactEmail", required = false) String contactEmail,
             @RequestParam(value = "positionName", required = false) String positionName,
+            @RequestParam(value = "introText", required = false) String introText,
             @RequestParam(value = "phoneNumber", required = false) String phoneNumber,
-            @RequestParam(value = "showPhone", defaultValue = "N") String showPhone,
+            @RequestParam(value = "showEmail", defaultValue = "Y") String showEmail,
+            @RequestParam(value = "showPhone", defaultValue = "Y") String showPhone,
             @RequestParam(value = "showBirth", defaultValue = "Y") String showBirth,
             @RequestParam(value = "profileImage", required = false) MultipartFile profileImage,
             HttpSession session) {
@@ -1060,8 +1211,10 @@ public class workspaceController {
             return result;
         }
 
+        String normalizedInviteStatus = status == null ? "" : status.trim().toUpperCase();
+
         Map<String, Object> profile = null;
-        if ("ACCEPTED".equals(status)) {
+        if ("ACCEPTED".equals(normalizedInviteStatus)) {
             if ("N".equals(useAccountProfile)
                     && (displayName == null || displayName.trim().isEmpty())) {
                 result.put("success", false);
@@ -1074,9 +1227,11 @@ public class workspaceController {
             profile.put("displayName", displayName);
             profile.put("contactEmail", contactEmail);
             profile.put("positionName", positionName);
+            profile.put("introText", introText);
             profile.put("phoneNumber", phoneNumber);
+            profile.put("showEmail", showEmail);
             profile.put("showPhone", showPhone);
-        profile.put("showBirth", showBirth);
+            profile.put("showBirth", showBirth);
 
             if (profileImage != null && !profileImage.isEmpty()) {
                 profile.put("profileImagePath", fileUploadService.upload(profileImage));
@@ -1085,12 +1240,12 @@ public class workspaceController {
 
         try {
             boolean success = workspaceService.processInvitation(
-                    inviteId, status, user.getUserId(), profile);
+                    inviteId, normalizedInviteStatus, user.getUserId(), profile);
 
             result.put("success", success);
-            result.put("status", status);
+            result.put("status", normalizedInviteStatus);
 
-            if (success && "ACCEPTED".equals(status)) {
+            if (success && "ACCEPTED".equals(normalizedInviteStatus)) {
                 Long wsId = Long.valueOf(inviteInfo.get("WS_ID").toString());
                 session.setAttribute("currentWsId", wsId);
                 result.put("wsId", wsId);
@@ -1110,10 +1265,31 @@ public class workspaceController {
     public String leaveWorkspace(@RequestParam("wsId") Long wsId, HttpSession session) {
         usersDto user = (usersDto) session.getAttribute("user");
         if (user == null) return "LOGIN_REQUIRED";
-        if (workspaceDAO.isWorkspaceAdmin(wsId, user.getUserId()) > 0) return "ADMIN_TRANSFER_REQUIRED";
+        if (wsId == null) return "FAIL";
+
+        workspaceDTO workspace = workspaceService.getWorkspaceDetail(wsId);
+        if (workspace == null) return "NOT_FOUND";
+        if (!workspaceAuthorizationService.isMember(wsId, user.getUserId())) return "NOT_MEMBER";
+
+        // 그룹장만 직접 탈퇴할 수 없다. ADMIN 역할 멤버는 일반 멤버와 동일하게 탈퇴 가능하다.
+        if (workspaceAuthorizationService.isOwner(wsId, user.getUserId())) {
+            return "OWNER_TRANSFER_REQUIRED";
+        }
+
+        String workspaceStatus = workspace.getStatus() == null
+                ? "ACTIVE"
+                : workspace.getStatus().trim().toUpperCase();
+        if (!"ACTIVE".equals(workspaceStatus) && !"DELETE_PENDING".equals(workspaceStatus)) {
+            return "WORKSPACE_NOT_ACTIVE";
+        }
+
+        // 활성 그룹 프로젝트의 팀장은 프로젝트 팀장을 먼저 위임해야 한다.
+        if (workspaceDAO.countLedActiveWorkspaceProjects(wsId, user.getUserId()) > 0) {
+            return "PROJECT_LEADER_TRANSFER_REQUIRED";
+        }
 
         boolean success = workspaceService.removeMember(wsId, user.getUserId());
-        return success ? "SUCCESS" : "FAIL";
+        return success ? "SUCCESS" : "NOT_MEMBER";
     }
 
     @GetMapping("/api/{wsId}/community-summary")
@@ -1152,15 +1328,15 @@ public class workspaceController {
     // 3. 투표 반영
     @PostMapping("/api/workspace/vote")
     @ResponseBody
-    public String vote(@RequestBody Map<String, Object> params) {
-        workspaceService.processVote(params);
-        return "success";
+    public String voteLegacy() {
+        // 신규 투표는 /api/polls/* 경로만 사용한다.
+        return "legacy_disabled";
     }
     @PostMapping("/api/poll/create")
     @ResponseBody
-    public String createPoll(@RequestBody Map<String, Object> params) {
-        workspaceService.createPoll(params);
-        return "success";
+    public String createPollLegacy() {
+        // 구형 투표 생성 경로로 권한 검증을 우회하지 못하도록 차단한다.
+        return "legacy_disabled";
     }
 
     @GetMapping("/api/saved-member-profile")
@@ -1207,6 +1383,42 @@ public class workspaceController {
         return org.springframework.http.ResponseEntity.ok(profile);
     }
 
+    @GetMapping("/api/{wsId}/members/{userId}/activity-profile/contributions")
+    @ResponseBody
+    public org.springframework.http.ResponseEntity<?> getWorkspaceMemberActivityContributions(
+            @PathVariable("wsId") Long wsId,
+            @PathVariable("userId") Long targetUserId,
+            HttpSession session) {
+        usersDto loginUser = (usersDto) session.getAttribute("user");
+        if (loginUser == null) {
+            return org.springframework.http.ResponseEntity.status(401).body(Map.of("status", "LOGIN_REQUIRED"));
+        }
+        Map<String, Object> profile = workspaceService.getWorkspaceMemberProfile(wsId, targetUserId, loginUser.getUserId());
+        if (profile == null || profile.isEmpty()) {
+            return org.springframework.http.ResponseEntity.status(403).body(Map.of("status", "FORBIDDEN"));
+        }
+        return org.springframework.http.ResponseEntity.ok(
+                workspaceService.getWorkspaceMemberContributions(wsId, targetUserId, loginUser.getUserId()));
+    }
+
+    @GetMapping("/api/{wsId}/members/{userId}/activity-profile/activities")
+    @ResponseBody
+    public org.springframework.http.ResponseEntity<?> getWorkspaceMemberActivityRecent(
+            @PathVariable("wsId") Long wsId,
+            @PathVariable("userId") Long targetUserId,
+            HttpSession session) {
+        usersDto loginUser = (usersDto) session.getAttribute("user");
+        if (loginUser == null) {
+            return org.springframework.http.ResponseEntity.status(401).body(Map.of("status", "LOGIN_REQUIRED"));
+        }
+        Map<String, Object> profile = workspaceService.getWorkspaceMemberProfile(wsId, targetUserId, loginUser.getUserId());
+        if (profile == null || profile.isEmpty()) {
+            return org.springframework.http.ResponseEntity.status(403).body(Map.of("status", "FORBIDDEN"));
+        }
+        return org.springframework.http.ResponseEntity.ok(
+                workspaceService.getWorkspaceMemberRecentActivities(wsId, targetUserId, loginUser.getUserId()));
+    }
+
     @PostMapping(value = "/api/{wsId}/members/me/profile",
                  consumes = org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE)
     @ResponseBody
@@ -1215,9 +1427,11 @@ public class workspaceController {
             @RequestParam(value = "useAccountProfile", defaultValue = "Y") String useAccountProfile,
             @RequestParam(value = "displayName", required = false) String displayName,
             @RequestParam(value = "contactEmail", required = false) String contactEmail,
+            @RequestParam(value = "introText", required = false) String introText,
             @RequestParam(value = "positionName", required = false) String positionName,
             @RequestParam(value = "phoneNumber", required = false) String phoneNumber,
-            @RequestParam(value = "showPhone", defaultValue = "N") String showPhone,
+            @RequestParam(value = "showEmail", defaultValue = "Y") String showEmail,
+            @RequestParam(value = "showPhone", defaultValue = "Y") String showPhone,
             @RequestParam(value = "showBirth", defaultValue = "Y") String showBirth,
             @RequestParam(value = "profileImage", required = false) MultipartFile profileImage,
             @RequestParam(value = "profileImageOriginal", required = false) MultipartFile profileImageOriginal,
@@ -1232,7 +1446,7 @@ public class workspaceController {
             return org.springframework.http.ResponseEntity.status(401)
                     .body(Map.of("success", false, "message", "로그인이 필요합니다."));
         }
-        if (wsId == null || workspaceDAO.isWorkspaceMember(wsId, loginUser.getUserId()) < 1) {
+        if (wsId == null || !workspaceAuthorizationService.isMember(wsId, loginUser.getUserId())) {
             return org.springframework.http.ResponseEntity.status(403)
                     .body(Map.of("success", false, "message", "그룹 멤버만 프로필을 수정할 수 있습니다."));
         }
@@ -1285,10 +1499,12 @@ public class workspaceController {
             profile.put("useAccountProfile", useAccountProfile);
             profile.put("displayName", displayName);
             profile.put("contactEmail", contactEmail);
+            profile.put("introText", introText);
             profile.put("positionName", positionName);
             profile.put("phoneNumber", phoneNumber);
+            profile.put("showEmail", showEmail);
             profile.put("showPhone", showPhone);
-        profile.put("showBirth", showBirth);
+            profile.put("showBirth", showBirth);
             profile.put("profileImagePath", uploadedPath);
             profile.put("profileImageOriginalPath", uploadedOriginalPath);
             profile.put("profileImageCropScale", profileImageCropScale);
@@ -1328,15 +1544,45 @@ public class workspaceController {
 
     @GetMapping("/api/members")
     @ResponseBody
-    public List<Map<String, Object>> getWorkspaceMembers(@RequestParam("wsId") Long wsId) {
-        return workspaceService.getWorkspaceMembers(wsId);
+    public org.springframework.http.ResponseEntity<?> getWorkspaceMembers(
+            @RequestParam("wsId") Long wsId, HttpSession session) {
+        org.springframework.http.ResponseEntity<?> denied = authorizeWorkspaceMember(wsId, session);
+        if (denied != null) return denied;
+
+        usersDto loginUser = (usersDto) session.getAttribute("user");
+        List<Map<String, Object>> members = workspaceService.getWorkspaceMembers(wsId);
+
+        // 일반 멤버용 목록 API에서는 계정 식별용 이메일을 노출하지 않는다.
+        // 공개 여부에 따른 이메일/연락처/생일은 공통 프로필 상세 API에서만 반환한다.
+        // 그룹장/관리자는 멤버 관리 화면의 계정 식별 목적으로 이메일을 유지한다.
+        if (loginUser == null || !workspaceAuthorizationService.canManage(wsId, loginUser.getUserId())) {
+            for (Map<String, Object> member : members) {
+                if (member == null) continue;
+                member.remove("EMAIL");
+                member.remove("email");
+                member.remove("CUSTOM_CONTACT_EMAIL");
+                member.remove("customContactEmail");
+            }
+        }
+
+        return org.springframework.http.ResponseEntity.ok(members);
+    }
+
+    @GetMapping("/api/member-leave-activities")
+    @ResponseBody
+    public org.springframework.http.ResponseEntity<?> getWorkspaceMemberLeaveActivities(
+            @RequestParam("wsId") Long wsId, HttpSession session) {
+        org.springframework.http.ResponseEntity<?> denied = authorizeWorkspaceMember(wsId, session);
+        if (denied != null) return denied;
+        return org.springframework.http.ResponseEntity.ok(
+                workspaceService.getWorkspaceMemberLeaveActivities(wsId));
     }
     private org.springframework.http.ResponseEntity<?> authorizeWorkspaceMember(Long wsId, HttpSession session) {
         usersDto loginUser = (usersDto) session.getAttribute("user");
         if (loginUser == null) {
             return org.springframework.http.ResponseEntity.status(401).body(Map.of("message", "LOGIN_REQUIRED"));
         }
-        if (wsId == null || workspaceDAO.isWorkspaceMember(wsId, loginUser.getUserId()) < 1) {
+        if (wsId == null || !workspaceAuthorizationService.isMember(wsId, loginUser.getUserId())) {
             return org.springframework.http.ResponseEntity.status(403).body(Map.of("message", "WORKSPACE_MEMBER_REQUIRED"));
         }
         return null;

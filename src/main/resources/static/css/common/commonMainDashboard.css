@@ -1,0 +1,110 @@
+/* =====================================================================
+   MOYO common main dashboard layout
+   - Owns dashboard/widget placement only.
+   - Page width/main-sidebar geometry belongs to commonMainShell.css.
+   - Widget surface/content belongs to commonWidgetBase.css and feature CSS.
+   - Future widget customization (order/span/visibility/drag/resize) extends here.
+   ===================================================================== */
+
+.moyo-main-dashboard {
+    --moyo-dashboard-gap: 16px;
+    --moyo-dashboard-compact-gap: 14px;
+}
+
+.moyo-main-dashboard__main,
+.moyo-main-dashboard__side,
+.moyo-dashboard-section,
+.moyo-dashboard-grid,
+.moyo-dashboard-slot {
+    min-width: 0;
+}
+
+/* A dashboard section groups one or more widget rows without owning widget visuals. */
+.moyo-dashboard-section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--moyo-dashboard-gap);
+}
+
+/* Generic placement primitive for shared widget rows. */
+.moyo-dashboard-grid {
+    display: grid;
+    gap: var(--moyo-dashboard-gap);
+    align-items: stretch;
+    width: 100%;
+}
+
+.moyo-dashboard-grid--2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.moyo-dashboard-grid--3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.moyo-dashboard-grid > *,
+.moyo-dashboard-slot {
+    min-width: 0;
+}
+
+/*
+ * Future customization contract.
+ * These classes are intentionally layout-only and currently opt-in.
+ */
+.moyo-dashboard-slot--wide {
+    grid-column: span 2;
+}
+
+.moyo-dashboard-slot--full {
+    grid-column: 1 / -1;
+}
+
+.moyo-dashboard-slot[hidden],
+.moyo-dashboard-slot--hidden {
+    display: none !important;
+}
+
+.moyo-dashboard-slot--dragging {
+    position: relative;
+    z-index: 2;
+}
+
+/* =====================================================================
+   Scope-only widget placement contract
+   - Workspace/project-exclusive features share placement primitives only.
+   - Their internal UI stays in workspaceMain.css / projectTask.css /
+     projectTimeline.css and must not leak across scopes.
+   ===================================================================== */
+.moyo-dashboard-slot--scope {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+}
+
+.moyo-main-shell__project-flow.moyo-dashboard-slot--scope {
+    width: 100%;
+    min-width: 0;
+}
+
+/* Responsive contract: preserve shared placement rules at tablet/mobile widths. */
+@media (max-width: 820px) {
+    .moyo-main-dashboard {
+        --moyo-dashboard-gap: 14px;
+    }
+
+    .moyo-dashboard-grid--2,
+    .moyo-dashboard-grid--3 {
+        grid-template-columns: minmax(0, 1fr) !important;
+    }
+
+    .moyo-dashboard-slot--wide,
+    .moyo-dashboard-slot--full {
+        grid-column: 1 / -1 !important;
+    }
+}
+
+@media (max-width: 520px) {
+    .moyo-main-dashboard {
+        --moyo-dashboard-gap: 12px;
+    }
+}

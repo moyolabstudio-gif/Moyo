@@ -5,12 +5,12 @@
     const openFriendProfileModal = async () => {
         const ownerId = shell?.dataset.profileOwnerId || '';
         if (!ownerId) return;
-        if (!window.CommonFriendPickerModal) {
+        if (!window.CommonFriendAdapter) {
             alert('친구 목록 모달을 불러오지 못했습니다.');
             return;
         }
 
-        window.CommonFriendPickerModal.open({
+        window.CommonFriendAdapter.open({
             title: '친구 목록',
             description: '',
             friends: [],
@@ -28,13 +28,8 @@
         });
 
         try {
-            const response = await fetch(`${contextPath}/users/profile/friends?userId=${encodeURIComponent(ownerId)}`, {
-                credentials: 'same-origin'
-            });
-            const result = await response.json();
-            if (!result.success) throw new Error(result.message || '친구 목록을 불러오지 못했습니다.');
-            const friends = result.friends || [];
-            window.CommonFriendPickerModal.open({
+            const friends = await window.CommonFriendAdapter.fetchProfileFriends(contextPath, ownerId);
+            window.CommonFriendAdapter.open({
                 title: '친구 목록',
                 description: '',
                 friends,
@@ -51,7 +46,7 @@
             });
         } catch (error) {
             console.error(error);
-            window.CommonFriendPickerModal.open({
+            window.CommonFriendAdapter.open({
                 title: '친구 목록',
                 description: '친구 목록을 불러오지 못했습니다.',
                 friends: [],
@@ -72,21 +67,51 @@
         try {
             let result;
             if (action === 'request') {
-                result = await postForm(`${contextPath}/friends/api/request`, { targetUserId: friend.id || friend.userId || '' });
+                result = await window.CommonFriendAdapter.requestFriend(contextPath, friend.id || friend.userId || '');
                 if (result.success) {
                     button.dataset.friendActionButton = 'sent';
-                    button.className = 'common-friend-picker-action is-muted';
+                    button.className = 'common-people-modal-action is-muted';
                     button.textContent = '요청 보냄';
                     button.disabled = true;
                     return;
                 }
             } else if (action === 'accept') {
-                result = await postForm(`${contextPath}/friends/api/accept`, { friendId: friend.friendId || friend.FRIEND_ID || '' });
+                result = await window.CommonFriendAdapter.acceptFriend(contextPath, friend.friendId || friend.FRIEND_ID || '');
                 if (result.success) {
-                    button.dataset.friendActionButton = 'friend';
-                    button.className = 'common-friend-picker-action is-friend';
-                    button.textContent = '친구';
-                    button.disabled = true;
+                    await openFriendProfileModal();
+                    return;
+                }
+            } else if (action === 'reject') {
+                if (!confirm(`${friend.name || '선택한 사용자'}님의 친구 요청을 거절할까요?`)) {
+                    button.disabled = false;
+                    button.textContent = originalText;
+                    return;
+                }
+                result = await window.CommonFriendAdapter.rejectFriend(contextPath, friend.friendId || friend.FRIEND_ID || '');
+                if (result.success) {
+                    await openFriendProfileModal();
+                    return;
+                }
+            } else if (action === 'cancel') {
+                if (!confirm(`${friend.name || '선택한 사용자'}님에게 보낸 친구 요청을 취소할까요?`)) {
+                    button.disabled = false;
+                    button.textContent = originalText;
+                    return;
+                }
+                result = await window.CommonFriendAdapter.cancelFriend(contextPath, friend.friendId || friend.FRIEND_ID || '');
+                if (result.success) {
+                    await openFriendProfileModal();
+                    return;
+                }
+            } else if (action === 'delete') {
+                if (!confirm(`${friend.name || '선택한 친구'}님과 친구 관계를 해제할까요?`)) {
+                    button.disabled = false;
+                    button.textContent = originalText;
+                    return;
+                }
+                result = await window.CommonFriendAdapter.deleteFriend(contextPath, friend.friendId || friend.FRIEND_ID || '');
+                if (result.success) {
+                    await openFriendProfileModal();
                     return;
                 }
             }
@@ -103,6 +128,12 @@
 
     document.querySelectorAll('[data-profile-friends]').forEach(button => {
         button.addEventListener('click', openFriendProfileModal);
+    });
+
+    document.querySelectorAll('[data-profile-friends-locked]').forEach(button => {
+        button.addEventListener('click', () => {
+            alert('친구 목록을 비공개로 설정한 사용자입니다.');
+        });
     });
 
     const postForm = async (url, params) => {
@@ -152,17 +183,35 @@
                 if (action === 'request') {
                     result = await postForm(`${contextPath}/friends/api/request`, { targetUserId: button.dataset.targetUserId || '' });
                     if (result.success) {
-                        button.classList.remove('is-primary');
-                        button.classList.add('is-muted');
-                        button.textContent = '요청 보냄';
+                        location.reload();
                         return;
                     }
                 } else if (action === 'accept') {
                     result = await postForm(`${contextPath}/friends/api/accept`, { friendId: button.dataset.friendId || '' });
                     if (result.success) {
-                        button.classList.remove('is-primary');
-                        button.classList.add('is-friend');
-                        button.textContent = '친구';
+                        location.reload();
+                        return;
+                    }
+                } else if (action === 'reject') {
+                    if (!confirm('친구 요청을 거절할까요?')) {
+                        button.disabled = false;
+                        button.textContent = originalText;
+                        return;
+                    }
+                    result = await postForm(`${contextPath}/friends/api/reject`, { friendId: button.dataset.friendId || '' });
+                    if (result.success) {
+                        location.reload();
+                        return;
+                    }
+                } else if (action === 'cancel') {
+                    if (!confirm('보낸 친구 요청을 취소할까요?')) {
+                        button.disabled = false;
+                        button.textContent = originalText;
+                        return;
+                    }
+                    result = await postForm(`${contextPath}/friends/api/cancel`, { friendId: button.dataset.friendId || '' });
+                    if (result.success) {
+                        location.reload();
                         return;
                     }
                 } else if (action === 'delete') {

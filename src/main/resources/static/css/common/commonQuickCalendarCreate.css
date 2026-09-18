@@ -1,0 +1,3119 @@
+/* Common modal isolation: do not depend on page-level box-sizing rules. */
+#calendarQuickCreateModal,
+#calendarQuickCreateModal *,
+#calendarQuickCreateModal *::before,
+#calendarQuickCreateModal *::after {
+    box-sizing: border-box;
+}
+
+        .moyo-quick-create-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 2400;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 22px;
+            background: rgba(15, 23, 42, 0.24);
+            backdrop-filter: none;
+        }
+
+        .moyo-quick-create-overlay[hidden] { display: none !important; }
+
+        .moyo-quick-create-panel {
+            width: min(520px, calc(100vw - 32px));
+            max-height: none;
+            overflow: visible;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid rgba(209, 222, 242, 0.96);
+            border-radius: 22px;
+            background: rgba(255, 255, 255, 0.98);
+            box-shadow: 0 24px 70px rgba(31, 51, 92, 0.20);
+        }
+
+        .moyo-quick-create-head {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            min-height: 58px;
+            padding: 14px 20px 13px;
+            border-bottom: 1px solid #e8eef8;
+        }
+
+        .moyo-quick-create-head::after {
+            content: "";
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: -1px;
+            height: 2px;
+            background: linear-gradient(90deg, rgba(85, 216, 198, 0.42), rgba(63, 124, 255, 0.38), rgba(139, 99, 246, 0.16));
+            pointer-events: none;
+        }
+
+        .moyo-quick-create-brand {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 11px;
+            min-width: 0;
+            width: 100%;
+        }
+
+        .moyo-quick-create-logo { display: none; }
+
+        .moyo-quick-create-titlebox {
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            text-align: center;
+        }
+
+        .moyo-quick-create-titlebox h2 {
+            margin: 0;
+            color: #14213d;
+            font-size: 17px;
+            font-weight: 820;
+            letter-spacing: -0.045em;
+            line-height: 1.15;
+        }
+
+        .moyo-quick-create-subtitle {
+            color: #7d8aa2;
+            font-size: 11.5px;
+            font-weight: 600;
+            letter-spacing: -0.025em;
+            line-height: 1.2;
+        }
+
+        .moyo-quick-create-close {
+            width: 32px;
+            height: 32px;
+            border: 0;
+            border-radius: 999px;
+            background: transparent;
+            color: #748198;
+            cursor: pointer;
+            font-size: 16px;
+            line-height: 1;
+            transition: background .15s ease, color .15s ease;
+        }
+
+        .moyo-quick-create-close:hover {
+            background: #f1f5fb;
+            color: #334155;
+        }
+
+        .moyo-quick-head-actions {
+            position: absolute;
+            top: 50%;
+            right: 14px;
+            transform: translateY(-50%);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            flex: 0 0 auto;
+        }
+
+        .moyo-quick-head-detail {
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            height: 32px;
+            padding: 0 12px;
+            border: 1px solid #dce8f6;
+            border-radius: 999px;
+            background: rgba(63, 124, 255, 0.035);
+            color: #3f74d8;
+            font-size: 10.8px;
+            font-weight: 650;
+            letter-spacing: -0.025em;
+            cursor: pointer;
+            transition: background .15s ease, border-color .15s ease, color .15s ease, box-shadow .15s ease;
+        }
+
+        .moyo-quick-head-detail:hover {
+            border-color: rgba(63, 124, 255, 0.30);
+            background: rgba(63, 124, 255, 0.07);
+            color: #2f6fe8;
+            box-shadow: 0 5px 12px rgba(31, 51, 92, 0.055);
+        }
+
+        .moyo-quick-create-body {
+            padding: 16px 20px 10px;
+            overflow: visible;
+        }
+
+        .moyo-quick-section {
+            padding: 0 0 15px;
+            margin: 0 0 15px;
+            border-bottom: 1px solid #e4edf8;
+        }
+
+        .moyo-quick-section:last-child {
+            border-bottom: 0;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .moyo-quick-label {
+            display: block;
+            margin: 0 0 8px;
+            color: #14213d;
+            font-size: 12px;
+            font-weight: 760;
+            letter-spacing: -0.025em;
+        }
+
+        .moyo-quick-title-row {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 92px;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .moyo-quick-input,
+        .moyo-quick-select {
+            width: 100%;
+            height: 40px;
+            border: 1px solid #cfddf1;
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.92);
+            color: #14213d;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+            outline: none;
+            transition: border-color .15s ease, box-shadow .15s ease, background .15s ease;
+        }
+
+        .moyo-quick-input {
+            padding: 0 13px;
+        }
+
+        .moyo-quick-input::placeholder {
+            color: #9aa8bc;
+            font-weight: 560;
+        }
+
+        .moyo-quick-select {
+            padding: 0 35px 0 13px;
+            appearance: none;
+            background-image: linear-gradient(45deg, transparent 50%, #6f7e95 50%), linear-gradient(135deg, #6f7e95 50%, transparent 50%);
+            background-position: calc(100% - 17px) 17px, calc(100% - 12px) 17px;
+            background-size: 5px 5px, 5px 5px;
+            background-repeat: no-repeat;
+        }
+
+        .moyo-quick-select-native {
+            display: none !important;
+        }
+
+        .moyo-quick-select-wrap {
+            position: relative;
+            min-width: 0;
+            overflow: visible !important;
+        }
+
+        .moyo-quick-select-button {
+            position: relative;
+            width: 100%;
+            height: 40px;
+            padding: 0 36px 0 13px;
+            border: 1px solid #cfddf1;
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.94);
+            color: #14213d;
+            font-size: 12px;
+            font-weight: 620;
+            letter-spacing: -0.03em;
+            text-align: left;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            cursor: pointer;
+            transition: border-color .15s ease, box-shadow .15s ease, background .15s ease;
+        }
+
+        #quickCreateLunar + .moyo-quick-select-button {
+            padding-left: 12px;
+            padding-right: 30px;
+            letter-spacing: -0.03em;
+        }
+
+        #quickCreateLunar + .moyo-quick-select-button::after {
+            right: 13px;
+        }
+
+        .moyo-quick-select-button::after {
+            content: "";
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            width: 7px;
+            height: 7px;
+            border-right: 1.8px solid #6f7e95;
+            border-bottom: 1.8px solid #6f7e95;
+            transform: translateY(-62%) rotate(45deg);
+            pointer-events: none;
+        }
+
+        .moyo-quick-select-button:hover,
+        .moyo-quick-select-button[aria-expanded="true"] {
+            border-color: #bfd0ea;
+            background: #fff;
+        }
+
+        .moyo-quick-select-button:focus-visible {
+            outline: none;
+            border-color: rgba(63, 124, 255, 0.45);
+            box-shadow: 0 0 0 2px rgba(63, 124, 255, 0.08);
+        }
+
+        #quickCreateTimezone + .moyo-quick-select-button {
+            padding-right: 31px;
+            letter-spacing: -0.045em;
+        }
+
+        .moyo-quick-select-menu {
+            position: absolute;
+            left: -1px;
+            top: calc(100% + 5px);
+            z-index: 2755;
+            width: calc(100% + 2px);
+            min-width: calc(100% + 2px);
+            max-height: 148px;
+            overflow-y: auto;
+            padding: 4px;
+            border: 1px solid #d6e3f5;
+            border-radius: 14px;
+            background: #fff;
+            box-shadow: 0 12px 24px rgba(31, 51, 92, 0.13);
+            box-sizing: border-box;
+        }
+
+        .moyo-quick-select-menu::-webkit-scrollbar { width: 6px; }
+        .moyo-quick-select-menu::-webkit-scrollbar-thumb { background: #b8c6d8; border-radius: 999px; }
+        .moyo-quick-select-menu::-webkit-scrollbar-track { background: transparent; }
+
+        .moyo-quick-select-menu button {
+            width: 100%;
+            height: 28px;
+            padding: 0 9px;
+            border: 0;
+            border-radius: 9px;
+            background: transparent;
+            color: #23385f;
+            font-size: 12px;
+            font-weight: 560;
+            letter-spacing: -0.025em;
+            text-align: left;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            cursor: pointer;
+        }
+
+        .moyo-quick-select-menu button:hover {
+            background: #f7faff;
+            color: #2563eb;
+        }
+
+        .moyo-quick-select-menu button.is-selected {
+            background: #eef5ff;
+            color: #2563eb;
+            font-weight: 680;
+        }
+
+        [data-quick-select-menu="quickCreateTimezone"] {
+            left: -1px;
+            right: auto;
+            width: calc(100% + 2px);
+            min-width: calc(100% + 2px);
+        }
+
+        [data-quick-select-menu="quickCreateTimezone"] button {
+            padding-right: 8px;
+        }
+
+        .moyo-quick-input:focus {
+            border-color: rgba(63, 124, 255, 0.72);
+            box-shadow: 0 0 0 3px rgba(63, 124, 255, 0.13);
+            background: #fff;
+        }
+
+        .moyo-quick-select:focus {
+            border-color: #cfddf1;
+            box-shadow: none;
+            background-color: rgba(255, 255, 255, 0.92);
+        }
+
+        .moyo-quick-select:focus-visible {
+            border-color: rgba(63, 124, 255, 0.45);
+            box-shadow: 0 0 0 2px rgba(63, 124, 255, 0.08);
+            background-color: #fff;
+        }
+
+        .moyo-quick-type-button {
+            width: 92px;
+            height: 40px;
+            border: 1px solid #d6e3f5;
+            border-radius: 14px;
+            background: #fff;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            cursor: pointer;
+            color: #1f3563;
+            font-size: 12px;
+            font-weight: 640;
+            letter-spacing: -0.03em;
+            box-shadow: none;
+            transition: border-color .15s ease, box-shadow .15s ease, background .15s ease;
+        }
+
+        .moyo-quick-type-button:hover,
+        .moyo-quick-type-button[aria-expanded="true"] {
+            border-color: rgba(63, 124, 255, 0.42);
+            background: #fff;
+            box-shadow: 0 0 0 2px rgba(63, 124, 255, 0.06);
+        }
+
+        .moyo-quick-type-button .moyo-quick-type-icon {
+            min-width: 17px;
+            font-size: 16px;
+            line-height: 1;
+            text-align: center;
+        }
+
+        .moyo-quick-type-button .moyo-quick-type-icon:empty {
+            display: none;
+        }
+
+        .moyo-quick-type-button .moyo-quick-type-text {
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
+
+        .moyo-quick-type-button i {
+            margin-left: 1px;
+            color: #7b8aa4;
+            font-size: 10px;
+        }
+
+        .moyo-quick-type-wrap { position: relative; }
+
+        .moyo-quick-type-popover {
+            position: absolute;
+            top: 46px;
+            right: 0;
+            z-index: 2760;
+            width: 338px;
+            max-width: calc(100vw - 58px);
+            padding: 14px 14px 15px;
+            border: 1px solid #d8e5f6;
+            border-radius: 18px;
+            background: #fff;
+            box-shadow: 0 18px 45px rgba(31, 51, 92, 0.18);
+        }
+
+        .moyo-quick-type-popover[hidden] { display: none !important; }
+
+        .moyo-quick-type-popover-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 11px;
+        }
+
+        .moyo-quick-type-popover-title {
+            color: #1f2c43;
+            font-size: 13px;
+            font-weight: 760;
+            letter-spacing: -0.035em;
+            line-height: 1.2;
+        }
+
+        .moyo-quick-type-popover-close {
+            width: 24px;
+            height: 24px;
+            border: 0;
+            border-radius: 999px;
+            background: transparent;
+            color: #8a9ab0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background .15s ease, color .15s ease;
+        }
+
+        .moyo-quick-type-popover-close:hover {
+            background: #f3f7fd;
+            color: #4d6382;
+        }
+
+        .moyo-quick-type-popover-close:focus-visible {
+            outline: 0;
+            box-shadow: 0 0 0 2px rgba(63, 124, 255, 0.12);
+        }
+
+        .moyo-quick-type-grid {
+            display: grid;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: 7px;
+        }
+
+        .moyo-quick-type-option {
+            border: 1px solid #d8e5f6;
+            border-radius: 12px;
+            min-height: 47px;
+            background: #fff;
+            color: #334155;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 3px;
+            font-size: 10.5px;
+            font-weight: 700;
+            letter-spacing: -0.025em;
+        }
+
+        .moyo-quick-type-option .emoji {
+            width: 18px;
+            min-width: 18px;
+            height: 18px;
+            min-height: 18px;
+            font-size: 17px;
+            line-height: 18px;
+            text-align: center;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .moyo-quick-type-option .emoji:empty::before {
+            content: "";
+            display: block;
+            width: 18px;
+            height: 18px;
+            background: transparent;
+        }
+
+        .moyo-quick-type-option.is-active {
+            border-color: rgba(63, 124, 255, 0.62);
+            background: #f6f9ff;
+            color: #2767ef;
+        }
+
+        .moyo-quick-public-row[hidden],
+        .moyo-quick-scope-row[hidden] {
+            display: none !important;
+        }
+
+        .moyo-quick-public-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-height: 36px;
+            margin-top: 12px;
+        }
+
+        .moyo-quick-public-toggle {
+            flex: 0 0 auto;
+            min-width: 114px;
+            height: 34px;
+            padding: 0 12px;
+            border: 1px solid #d4e2f4;
+            border-radius: 999px;
+            background: #fff;
+            color: #64748b;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+            font-size: 11px;
+            font-weight: 660;
+            letter-spacing: -0.025em;
+            cursor: pointer;
+            transition: border-color .15s ease, background .15s ease, color .15s ease, box-shadow .15s ease;
+        }
+
+        .moyo-quick-public-toggle img {
+            width: 18px;
+            height: 18px;
+            object-fit: contain;
+        }
+
+        .moyo-quick-public-toggle.is-active {
+            border-color: rgba(85, 216, 198, 0.56);
+            background: linear-gradient(135deg, rgba(85, 216, 198, 0.13), rgba(63, 124, 255, 0.09));
+            color: #2f6fe8;
+            box-shadow: 0 5px 13px rgba(63, 124, 255, 0.08);
+        }
+
+        .moyo-quick-help {
+            color: #8a97aa;
+            font-size: 11.5px;
+            font-weight: 540;
+            letter-spacing: -0.025em;
+            line-height: 1.35;
+        }
+
+        .moyo-quick-time-grid {
+            display: grid;
+            grid-template-columns: 42px minmax(0, 1fr) minmax(0, 1fr);
+            gap: 9px;
+            align-items: center;
+            margin-bottom: 9px;
+        }
+
+        .moyo-quick-time-grid.is-all-day {
+            grid-template-columns: 42px minmax(0, 1fr);
+        }
+
+        .moyo-quick-time-grid.is-all-day .moyo-quick-time-input {
+            display: none;
+        }
+
+        .moyo-quick-date-field,
+        .moyo-quick-time-field {
+            position: relative;
+            min-width: 0;
+        }
+
+        .moyo-quick-date-input {
+            padding-right: 40px;
+        }
+
+        .moyo-quick-date-trigger,
+        .moyo-quick-time-trigger {
+            position: absolute;
+            top: 50%;
+            right: 10px;
+            transform: translateY(-50%);
+            width: 26px;
+            height: 26px;
+            border: 0;
+            border-radius: 9px;
+            background: transparent;
+            color: #24415f;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .moyo-quick-date-trigger:hover,
+        .moyo-quick-time-trigger:hover {
+            background: #eef5ff;
+            color: #2f6dff;
+        }
+
+        .moyo-quick-date-trigger:focus,
+        .moyo-quick-time-trigger:focus {
+            outline: 0;
+            box-shadow: none;
+        }
+
+        .moyo-quick-date-trigger:focus-visible,
+        .moyo-quick-time-trigger:focus-visible {
+            outline: 0;
+            background: #eef5ff;
+            color: #2f6dff;
+            box-shadow: 0 0 0 2px rgba(63, 124, 255, 0.10);
+        }
+
+        .moyo-quick-time-field .moyo-quick-time-text {
+            padding: 0 40px 0 52px;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .moyo-quick-time-meridiem {
+            position: absolute;
+            left: 13px;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 1;
+            padding: 2px 7px;
+            border-radius: 999px;
+            background: #eff5ff;
+            color: #2f6dff;
+            font-size: 11px;
+            font-weight: 680;
+            letter-spacing: -0.03em;
+            pointer-events: none;
+            transition: background .14s ease, color .14s ease, border-color .14s ease;
+        }
+
+        .moyo-quick-time-meridiem.is-am {
+            background: #e9fbf7;
+            color: #0f9f8f;
+        }
+
+        .moyo-quick-time-meridiem.is-pm {
+            background: #eef4ff;
+            color: #245eea;
+        }
+
+        .moyo-quick-picker-menu {
+            position: fixed;
+            z-index: 10060;
+            width: 248px;
+            border: 1px solid rgba(126, 164, 255, 0.28);
+            border-radius: 17px;
+            background: #fff;
+            box-shadow: 0 14px 28px rgba(30, 64, 122, 0.12);
+            padding: 10px;
+            color: #1f2c43;
+            overflow: hidden;
+        }
+
+        .moyo-quick-picker-menu[hidden] { display: none !important; }
+
+        .moyo-quick-date-picker-head,
+        .moyo-quick-time-picker-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .moyo-quick-date-picker-title,
+        .moyo-quick-time-picker-title {
+            font-size: 13px;
+            font-weight: 900;
+            letter-spacing: -0.03em;
+            color: #0f1e33;
+        }
+
+        .moyo-quick-date-picker-nav {
+            display: inline-flex;
+            gap: 4px;
+        }
+
+        .moyo-quick-date-picker-nav button,
+        .moyo-quick-time-picker-now {
+            border: 1px solid #d7e3f4;
+            border-radius: 10px;
+            background: #fff;
+            color: #53657d;
+            font-size: 12px;
+            font-weight: 720;
+            cursor: pointer;
+        }
+
+        .moyo-quick-date-picker-nav button {
+            width: 28px;
+            height: 28px;
+        }
+
+        .moyo-quick-time-picker-now {
+            height: 28px;
+            padding: 0 9px;
+        }
+
+        .moyo-quick-date-picker-nav button:hover,
+        .moyo-quick-time-picker-now:hover {
+            border-color: #a9c5ff;
+            background: #f3f7ff;
+            color: #2563eb;
+        }
+
+        .moyo-quick-date-picker-weekdays,
+        .moyo-quick-date-picker-days {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+        }
+
+        .moyo-quick-date-picker-weekdays {
+            margin-bottom: 5px;
+        }
+
+        .moyo-quick-date-picker-weekdays span {
+            text-align: center;
+            color: #596a80;
+            font-size: 11px;
+            font-weight: 720;
+        }
+
+        .moyo-quick-date-picker-weekdays span:first-child { color: #ff6b87; }
+        .moyo-quick-date-picker-weekdays span:last-child { color: #4f7cff; }
+
+        .moyo-quick-date-picker-day {
+            height: 28px;
+            border: 0;
+            border-radius: 8px;
+            background: transparent;
+            color: #1f2c43;
+            font-size: 12px;
+            font-weight: 800;
+            cursor: pointer;
+        }
+
+        .moyo-quick-date-picker-day:nth-child(7n/**/+1) { color: #ff5d7a; }
+        .moyo-quick-date-picker-day:nth-child(7n) { color: #4f7cff; }
+        .moyo-quick-date-picker-day:hover { background: #eef5ff; color: #2563eb; }
+        .moyo-quick-date-picker-day.is-muted { color: #b1bdca !important; }
+        .moyo-quick-date-picker-day.is-today { box-shadow: inset 0 0 0 1px #9db9ff; }
+        .moyo-quick-date-picker-day.is-selected { background: #2f6dff; color: #fff !important; }
+
+        .moyo-quick-date-picker-foot {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 10px;
+        }
+
+        .moyo-quick-date-picker-today {
+            border: 0;
+            background: transparent;
+            color: #2f6dff;
+            font-size: 12px;
+            font-weight: 720;
+            cursor: pointer;
+        }
+
+        .moyo-quick-date-picker-menu {
+            padding: 10px;
+        }
+
+        .moyo-quick-date-picker-menu .moyo-quick-date-picker-head {
+            margin-bottom: 9px;
+        }
+
+        .moyo-quick-date-picker-menu .moyo-quick-date-picker-nav button,
+        .moyo-quick-date-picker-menu .moyo-quick-date-picker-today {
+            border: 1px solid #d7e4f5;
+            background: rgba(255, 255, 255, 0.78);
+            color: #55708f;
+            font-weight: 740;
+            transition: background .14s ease, border-color .14s ease, color .14s ease, box-shadow .14s ease;
+        }
+
+        .moyo-quick-date-picker-menu .moyo-quick-date-picker-nav button {
+            width: 25px;
+            height: 25px;
+            border-radius: 999px;
+        }
+
+        .moyo-quick-date-picker-menu .moyo-quick-date-picker-today {
+            height: 25px;
+            padding: 0 9px;
+            border-radius: 999px;
+            font-size: 11px;
+        }
+
+        .moyo-quick-date-picker-menu .moyo-quick-date-picker-nav button:hover,
+        .moyo-quick-date-picker-menu .moyo-quick-date-picker-today:hover {
+            border-color: #9fc0ff;
+            background: #f3f7ff;
+            color: #2563eb;
+            box-shadow: 0 5px 12px rgba(79, 124, 255, 0.12);
+        }
+
+        .moyo-quick-date-picker-menu .moyo-quick-date-picker-weekdays,
+        .moyo-quick-date-picker-menu .moyo-quick-date-picker-days {
+            gap: 2px;
+        }
+
+        .moyo-quick-date-picker-menu .moyo-quick-date-picker-weekdays span {
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #7c8aa0;
+            font-weight: 900;
+        }
+
+        .moyo-quick-date-picker-menu .moyo-quick-date-picker-day {
+            height: 27px;
+            border: 1px solid transparent;
+            border-radius: 10px;
+            font-weight: 720;
+            transition: background .14s ease, border-color .14s ease, color .14s ease, box-shadow .14s ease, transform .14s ease;
+        }
+
+        .moyo-quick-date-picker-menu .moyo-quick-date-picker-day:hover {
+            border-color: #aac7ff;
+            background: #f5f8ff;
+            color: #2563eb;
+            transform: translateY(-1px);
+        }
+
+        .moyo-quick-date-picker-menu .moyo-quick-date-picker-day.is-today {
+            border-color: #64d6ca;
+            color: #0f9f8f;
+            background: #eefcf9;
+            box-shadow: none;
+        }
+
+        .moyo-quick-date-picker-menu .moyo-quick-date-picker-day.is-selected {
+            border-color: transparent;
+            background: #5d7cff;
+            color: #fff !important;
+            box-shadow: 0 7px 14px rgba(79, 124, 255, 0.18);
+        }
+
+        .moyo-quick-time-picker-menu { width: 268px; }
+
+        .moyo-quick-time-picker-ampm {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 6px;
+            margin-bottom: 9px;
+        }
+
+        .moyo-quick-time-picker-ampm button,
+        .moyo-quick-time-picker-grid button {
+            height: 30px;
+            border: 1px solid #dbe6f5;
+            border-radius: 10px;
+            background: #fff;
+            color: #334155;
+            font-size: 12px;
+            font-weight: 720;
+            cursor: pointer;
+        }
+
+        .moyo-quick-time-picker-ampm button:hover,
+        .moyo-quick-time-picker-grid button:hover {
+            border-color: #aac7ff;
+            background: #f5f8ff;
+            color: #2563eb;
+        }
+
+        .moyo-quick-time-picker-ampm button[data-quick-meridiem="AM"] {
+            background: #fbfffe;
+        }
+
+        .moyo-quick-time-picker-ampm button[data-quick-meridiem="PM"] {
+            background: #fbfcff;
+        }
+
+        .moyo-quick-time-picker-ampm button[data-quick-meridiem="AM"]:hover {
+            border-color: #8adfd2;
+            background: #effdfa;
+            color: #0f9f8f;
+        }
+
+        .moyo-quick-time-picker-ampm button[data-quick-meridiem="PM"]:hover {
+            border-color: #aac7ff;
+            background: #f3f7ff;
+            color: #245eea;
+        }
+
+        .moyo-quick-time-picker-ampm button.is-selected,
+        .moyo-quick-time-picker-grid button.is-selected {
+            border-color: #5d86ff;
+            background: #eef4ff;
+            color: #245eea;
+            box-shadow: inset 0 0 0 1px rgba(93, 134, 255, .18);
+        }
+
+        .moyo-quick-time-picker-ampm button[data-quick-meridiem="AM"].is-selected {
+            border-color: #5ad0c0;
+            background: #e9fbf7;
+            color: #0f9f8f;
+            box-shadow: inset 0 0 0 1px rgba(90, 208, 192, .20);
+        }
+
+        .moyo-quick-time-picker-ampm button[data-quick-meridiem="PM"].is-selected {
+            border-color: #5d86ff;
+            background: #eef4ff;
+            color: #245eea;
+            box-shadow: inset 0 0 0 1px rgba(93, 134, 255, .18);
+        }
+
+        .moyo-quick-time-picker-grid button.is-selected {
+            border-color: #2f6dff;
+            background: #2f6dff;
+            color: #fff;
+            box-shadow: none;
+        }
+
+        .moyo-quick-time-picker-section { margin-top: 8px; }
+        .moyo-quick-time-picker-label {
+            margin-bottom: 5px;
+            color: #68778d;
+            font-size: 11px;
+            font-weight: 720;
+        }
+
+        .moyo-quick-time-picker-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 5px;
+        }
+
+        .moyo-quick-time-picker-foot {
+            margin-top: 9px;
+            color: #8a98aa;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .moyo-quick-row-label {
+            color: #526178;
+            font-size: 12px;
+            font-weight: 760;
+            letter-spacing: -0.025em;
+        }
+
+        .moyo-quick-setting-grid {
+            display: grid;
+            grid-template-columns: auto 82px 128px minmax(174px, 1fr);
+            gap: 8px;
+            align-items: center;
+        }
+
+        .moyo-quick-check-pill {
+            height: 40px;
+            padding: 0 13px;
+            border: 1px solid #d6e3f5;
+            border-radius: 999px;
+            background: #fff;
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            color: #14213d;
+            font-size: 12px;
+            font-weight: 720;
+            letter-spacing: -0.025em;
+            white-space: nowrap;
+        }
+
+        .moyo-quick-check-pill input {
+            width: 16px;
+            height: 16px;
+            margin: 0;
+            accent-color: var(--moyo-blue);
+        }
+
+        .moyo-quick-alert-row {
+            display: grid;
+            grid-template-columns: 150px minmax(0, 1fr);
+            gap: 10px;
+            align-items: center;
+        }
+
+        .moyo-quick-create-actions {
+            display: block;
+            padding: 12px 20px 16px;
+            border-top: 1px solid #e4edf8;
+            background: transparent;
+        }
+
+        .moyo-quick-btn {
+            height: 42px;
+            border-radius: 13px;
+            padding: 0 16px;
+            border: 1px solid #d6e3f5;
+            background: #fff;
+            color: #42526a;
+            font-size: 12px;
+            font-weight: 760;
+            letter-spacing: -0.025em;
+            cursor: pointer;
+            transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease, background .15s ease;
+        }
+
+        .moyo-quick-btn:hover {
+            transform: translateY(-1px);
+            border-color: rgba(63, 124, 255, 0.36);
+            box-shadow: 0 7px 16px rgba(31, 51, 92, 0.08);
+        }
+
+        .moyo-quick-btn.is-ghost {
+            color: #6f7e95;
+        }
+
+        .moyo-quick-btn.is-detail {
+            color: #2f6fe8;
+            background: rgba(63, 124, 255, 0.06);
+        }
+
+        .moyo-quick-btn.is-primary {
+            width: 100%;
+            min-width: 0;
+            border: 0;
+            color: #fff;
+            background: linear-gradient(135deg, var(--moyo-mint), var(--moyo-blue) 68%, var(--moyo-purple));
+            box-shadow: 0 12px 24px rgba(63, 124, 255, 0.18);
+        }
+
+        .moyo-quick-btn.is-primary:disabled {
+            cursor: wait;
+            opacity: .62;
+            transform: none;
+        }
+
+
+.moyo-quick-scope-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 36px;
+    margin-top: 12px;
+    padding: 8px 12px;
+    border: 1px solid #dce8f6;
+    border-radius: 13px;
+    background: linear-gradient(135deg, rgba(85, 216, 198, 0.08), rgba(63, 124, 255, 0.055));
+}
+
+.moyo-quick-scope-row[hidden] { display: none !important; }
+
+.moyo-quick-scope-badge {
+    flex: 0 0 auto;
+    min-width: 50px;
+    height: 24px;
+    padding: 0 10px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #e9fbf7;
+    color: #0f9f8f;
+    font-size: 10.5px;
+    font-weight: 760;
+    letter-spacing: -0.025em;
+}
+
+
+.moyo-quick-scope-badge[data-scope="PROJECT"] {
+    background: #f1edff;
+    color: #7456df;
+}
+
+.moyo-quick-scope-text {
+    min-width: 0;
+    color: #5f7088;
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: -0.025em;
+    line-height: 1.35;
+}
+
+        @media (max-width: 640px) {
+            .moyo-quick-create-overlay { padding: 12px; align-items: center; }
+            .moyo-quick-create-panel { width: 100%; max-height: none; }
+            .moyo-quick-create-logo { left: 16px; width: 64px; }
+            .moyo-quick-create-head { padding: 13px 16px 12px; }
+            .moyo-quick-create-titlebox h2 { font-size: 16px; }
+            .moyo-quick-head-detail { padding: 0 10px; }
+            .moyo-quick-create-body { padding: 14px 16px; }
+            .moyo-quick-time-grid { grid-template-columns: 36px minmax(0, 1fr); }
+            .moyo-quick-time-grid .moyo-quick-time-field { grid-column: 2; }
+            .moyo-quick-setting-grid { grid-template-columns: 1fr 1fr; }
+            .moyo-quick-alert-row { grid-template-columns: 1fr; }
+            .moyo-quick-create-actions { padding: 13px 16px 15px; }
+            .moyo-quick-btn.is-primary { min-width: 0; }
+        }
+
+
+/* 외부 기능이 주입한 날짜 선택 제한 */
+.moyo-quick-date-picker-day.is-disabled,
+.moyo-quick-date-picker-day:disabled {
+    color: #c7cfdb !important;
+    background: transparent !important;
+    border-color: transparent !important;
+    cursor: not-allowed !important;
+    opacity: .55;
+    pointer-events: none;
+}
+.moyo-quick-date-picker-day.is-disabled.is-today,
+.moyo-quick-date-picker-day:disabled.is-today {
+    box-shadow: none !important;
+}
+
+
+/* 통합 일정 모달: 참석자·기록·사용자 지정 반복 */
+.moyo-quick-create-panel{max-height:calc(100vh - 36px);overflow:hidden;}
+.moyo-quick-create-body{overflow-y:auto;}
+.moyo-quick-summary-row{display:grid;grid-template-columns:72px minmax(0,1fr) auto;align-items:center;gap:12px;min-height:54px;}
+.moyo-quick-summary-label{color:#718096;font-size:11px;font-weight:800;}
+.moyo-quick-summary-main{min-width:0;display:flex;align-items:center;gap:10px;padding:0;border:0;background:transparent;text-align:left;cursor:pointer;}
+.moyo-quick-summary-copy{min-width:0;display:flex;flex-direction:column;gap:3px;}
+.moyo-quick-summary-copy strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#243047;font-size:12px;font-weight:850;}
+.moyo-quick-summary-copy small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#8b98aa;font-size:10px;font-weight:650;}
+.moyo-quick-summary-action{height:32px;padding:0 12px;border:1px solid #d9e6f5;border-radius:10px;background:#fff;color:#3f7fd2;font-size:10.5px;font-weight:800;cursor:pointer;}
+.moyo-quick-attendee-stack{display:flex;align-items:center;min-width:58px;}
+.moyo-quick-attendee-avatar{display:grid;place-items:center;overflow:hidden;width:30px;height:30px;margin-left:-8px;border:2px solid #fff;border-radius:50%;background:linear-gradient(135deg,#55ddbf,#4a90e2,#7568d8);color:#fff;font-size:10px;font-weight:900;}
+.moyo-quick-attendee-avatar:first-child{margin-left:0;}
+.moyo-quick-attendee-avatar img{width:100%;height:100%;object-fit:cover;}
+.moyo-quick-record-counts{display:flex;align-items:center;gap:10px;color:#63738b;}
+.moyo-quick-record-counts span{display:inline-flex;align-items:center;gap:4px;font-size:12px;}
+.moyo-quick-record-counts b{font-size:11px;}
+.moyo-quick-repeat-custom{margin-top:10px;padding:12px;border:1px solid #e1eaf5;border-radius:14px;background:#f9fbfe;}
+.moyo-quick-repeat-custom-row,.moyo-quick-repeat-end{display:grid;grid-template-columns:72px 64px minmax(0,1fr);align-items:center;gap:8px;}
+.moyo-quick-repeat-custom label,.moyo-quick-repeat-days>span{color:#64748b;font-size:10.5px;font-weight:800;}
+.moyo-quick-repeat-custom input,.moyo-quick-repeat-custom select{height:34px;border:1px solid #d7e2ef;border-radius:10px;background:#fff;padding:0 9px;color:#25324a;font-size:11px;}
+.moyo-quick-repeat-days{display:grid;grid-template-columns:72px 1fr;align-items:center;gap:8px;margin:10px 0;}
+.moyo-quick-repeat-days>div{display:flex;gap:5px;}
+.moyo-quick-repeat-days button{width:29px;height:29px;border:1px solid #d9e4f0;border-radius:50%;background:#fff;color:#6f7e92;font-size:10px;font-weight:800;cursor:pointer;}
+.moyo-quick-repeat-days button.is-active{border-color:#61bfae;background:#eafaf6;color:#238d7c;}
+.common-people-modal-role.is-permission{border:1px solid #dce7f4;background:#fff;color:#477dc5;cursor:pointer;}
+
+/* 기록은 원본 일정 저장 후 작성: 생성 단계에서는 사용 여부만 설정 */
+.moyo-quick-record-setting__head{display:flex;align-items:center;justify-content:space-between;gap:18px;}
+.moyo-quick-record-setting__title{display:grid;gap:4px;}.moyo-quick-record-setting__title strong{font-size:13px;}.moyo-quick-record-setting__title small{font-size:11px;color:#8a97a8;}
+.moyo-quick-record-toggle{display:inline-flex;align-items:center;gap:9px;cursor:pointer;white-space:nowrap;}.moyo-quick-record-toggle>input{position:absolute;opacity:0;pointer-events:none;}
+.moyo-quick-record-toggle__track{position:relative;width:38px;height:22px;border-radius:999px;background:#dce3eb;transition:.18s;}.moyo-quick-record-toggle__track>span{position:absolute;left:3px;top:3px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 2px 5px rgba(38,52,73,.22);transition:.18s;}
+.moyo-quick-record-toggle>input:checked+.moyo-quick-record-toggle__track{background:linear-gradient(135deg,#55ddbf,#4a90e2);}.moyo-quick-record-toggle>input:checked+.moyo-quick-record-toggle__track>span{transform:translateX(16px);}
+.moyo-quick-record-toggle__text{font-size:12px;font-weight:800;color:#596a7f;}
+
+/* 2026-09 calendar detail: quick create viewport fit */
+.moyo-quick-create-overlay {
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+
+.moyo-quick-create-panel {
+    max-height: min(760px, calc(100dvh - 32px));
+    overflow: hidden;
+}
+
+.moyo-quick-create-head,
+.moyo-quick-create-actions {
+    flex: 0 0 auto;
+}
+
+.moyo-quick-create-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-gutter: auto;
+}
+
+.moyo-quick-create-actions {
+    position: relative;
+    z-index: 3;
+    background: rgba(255, 255, 255, 0.98);
+}
+
+@media (max-height: 760px) {
+    .moyo-quick-create-overlay {
+        align-items: center;
+        padding-top: 12px;
+        padding-bottom: 12px;
+    }
+
+    .moyo-quick-create-panel {
+        max-height: calc(100dvh - 24px);
+    }
+
+    .moyo-quick-create-head {
+        min-height: 50px;
+        padding-top: 10px;
+        padding-bottom: 10px;
+    }
+
+    .moyo-quick-create-body {
+        padding-top: 12px;
+        padding-bottom: 8px;
+    }
+
+    .moyo-quick-create-actions {
+        padding-top: 10px;
+        padding-bottom: 12px;
+    }
+}
+
+@media (max-width: 640px) {
+    .moyo-quick-create-panel {
+        max-height: calc(100dvh - 24px);
+    }
+}
+
+/* 2026-09 compact calendar edit mode */
+.moyo-quick-update-scope {
+    margin-right: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+.moyo-quick-update-scope[hidden] { display: none !important; }
+.moyo-quick-update-scope label {
+    font-size: 11px;
+    font-weight: 800;
+    color: #758196;
+}
+.moyo-quick-update-scope select {
+    height: 34px;
+    padding: 0 28px 0 10px;
+    border: 1px solid #dfe5ed;
+    border-radius: 9px;
+    background: #fff;
+    color: #42516a;
+    font-size: 11px;
+    font-weight: 750;
+}
+
+
+
+/* 2026-09 일정 등록 UI 마감 */
+.moyo-quick-title-row {
+    grid-template-columns: minmax(0, 1fr);
+}
+
+.moyo-quick-section-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    margin-bottom: 8px;
+}
+
+.moyo-quick-section-head .moyo-quick-label {
+    margin-bottom: 0;
+}
+
+.moyo-quick-all-day-toggle {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    flex: 0 0 auto;
+    color: #596a7f;
+    font-size: 11.5px;
+    font-weight: 760;
+    letter-spacing: -0.025em;
+    cursor: pointer;
+    user-select: none;
+}
+
+.moyo-quick-all-day-toggle > input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.moyo-quick-all-day-track {
+    position: relative;
+    width: 38px;
+    height: 22px;
+    border-radius: 999px;
+    background: #dce3eb;
+    transition: background .18s ease;
+}
+
+.moyo-quick-all-day-track > span {
+    position: absolute;
+    left: 3px;
+    top: 3px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 2px 5px rgba(38, 52, 73, .22);
+    transition: transform .18s ease;
+}
+
+.moyo-quick-all-day-toggle > input:checked + .moyo-quick-all-day-track {
+    background: linear-gradient(135deg, var(--moyo-mint), var(--moyo-blue));
+}
+
+.moyo-quick-all-day-toggle > input:checked + .moyo-quick-all-day-track > span {
+    transform: translateX(16px);
+}
+
+.moyo-quick-all-day-toggle > input:focus-visible + .moyo-quick-all-day-track {
+    box-shadow: 0 0 0 3px rgba(63, 124, 255, .12);
+}
+
+.moyo-quick-setting-grid {
+    grid-template-columns: 88px 132px minmax(0, 1fr);
+    margin-top: 9px;
+}
+
+.moyo-quick-time-section .moyo-quick-time-grid + .moyo-quick-time-grid {
+    margin-top: 8px;
+}
+
+.moyo-quick-link-section {
+    padding-top: 1px;
+}
+
+.moyo-quick-summary-main:hover .moyo-quick-summary-copy strong,
+.moyo-quick-summary-main:focus-visible .moyo-quick-summary-copy strong {
+    color: #2f6fe8;
+}
+
+.moyo-quick-summary-main:focus-visible {
+    outline: 2px solid rgba(63, 124, 255, .16);
+    outline-offset: 4px;
+    border-radius: 10px;
+}
+
+@media (max-width: 640px) {
+    .moyo-quick-section-head { align-items: center; }
+    .moyo-quick-setting-grid { grid-template-columns: 1fr 1fr; }
+    .moyo-quick-setting-grid > :last-child { grid-column: 1 / -1; }
+}
+
+/* 2026-09 일정 등록 UI 최종 보정: 옵션 폭 · 모요 공개 · 참석자 압축 */
+.moyo-quick-setting-grid {
+    grid-template-columns: 74px 116px minmax(210px, 1fr);
+    gap: 8px;
+}
+
+.moyo-quick-setting-grid .moyo-quick-select-button {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+#quickCreateLunar + .moyo-quick-select-button {
+    padding-left: 11px;
+    padding-right: 26px;
+}
+
+#quickCreateRepeat + .moyo-quick-select-button {
+    padding-left: 12px;
+    padding-right: 29px;
+}
+
+#quickCreateTimezone + .moyo-quick-select-button {
+    padding-left: 12px;
+    padding-right: 29px;
+    letter-spacing: -0.03em;
+}
+
+.moyo-quick-all-day-toggle {
+    gap: 6px;
+}
+
+.moyo-quick-public-section {
+    padding-top: 1px;
+    padding-bottom: 13px;
+    margin-bottom: 13px;
+}
+
+.moyo-quick-public-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    min-height: 42px;
+}
+
+.moyo-quick-public-copy {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.moyo-quick-public-copy strong {
+    color: #243047;
+    font-size: 12px;
+    font-weight: 850;
+}
+
+.moyo-quick-public-copy small {
+    overflow: hidden;
+    color: #8a98aa;
+    font-size: 10.5px;
+    font-weight: 650;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.moyo-quick-public-toggle {
+    position: relative;
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+}
+
+.moyo-quick-public-toggle > input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.moyo-quick-public-track {
+    position: relative;
+    width: 38px;
+    height: 22px;
+    border-radius: 999px;
+    background: #dce5f0;
+    transition: background .18s ease, box-shadow .18s ease;
+}
+
+.moyo-quick-public-track > span {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 1px 4px rgba(44, 62, 88, .18);
+    transition: transform .18s ease;
+}
+
+.moyo-quick-public-toggle > input:checked + .moyo-quick-public-track {
+    background: linear-gradient(135deg, var(--moyo-mint), var(--moyo-blue), var(--moyo-purple));
+}
+
+.moyo-quick-public-toggle > input:checked + .moyo-quick-public-track > span {
+    transform: translateX(16px);
+}
+
+.moyo-quick-public-toggle > input:focus-visible + .moyo-quick-public-track {
+    box-shadow: 0 0 0 3px rgba(63, 124, 255, .12);
+}
+
+.moyo-quick-link-section {
+    padding-top: 0;
+}
+
+.moyo-quick-summary-row {
+    grid-template-columns: 58px minmax(0, 1fr) auto;
+    gap: 10px;
+    min-height: 44px;
+}
+
+.moyo-quick-summary-main {
+    gap: 8px;
+}
+
+.moyo-quick-summary-copy {
+    gap: 0;
+}
+
+.moyo-quick-summary-copy small {
+    display: none;
+}
+
+.moyo-quick-attendee-stack {
+    min-width: 48px;
+}
+
+.moyo-quick-attendee-avatar {
+    width: 27px;
+    height: 27px;
+}
+
+.moyo-quick-summary-action {
+    height: 30px;
+    padding: 0 11px;
+}
+
+@media (max-width: 640px) {
+    .moyo-quick-setting-grid {
+        grid-template-columns: 74px minmax(0, 1fr);
+    }
+
+    .moyo-quick-setting-grid > :last-child {
+        grid-column: 1 / -1;
+    }
+
+    .moyo-quick-public-copy small {
+        max-width: 260px;
+    }
+}
+
+
+/* 2026-09 일정명 우측 MOYO 공개 마스코트 칩 */
+.moyo-quick-title-label-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 8px;
+}
+
+.moyo-quick-title-label-row .moyo-quick-label {
+    margin: 0;
+}
+
+.moyo-quick-moyo-public-chip[hidden] {
+    display: none !important;
+}
+
+/* 모요 공개: 마스코트는 브랜드 식별, 체크는 선택 상태를 표현 */
+.moyo-quick-moyo-public-chip {
+    position: relative;
+    flex: 0 0 auto;
+    min-height: 32px;
+    padding: 4px 7px 4px 6px;
+    border: 1px solid #dfe7f1;
+    border-radius: 999px;
+    background: #fff;
+    color: #566579;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    font-weight: 780;
+    letter-spacing: -0.025em;
+    line-height: 1;
+    cursor: pointer;
+    user-select: none;
+    opacity: 1;
+    transition: border-color .16s ease, background .16s ease, color .16s ease, box-shadow .16s ease, transform .16s ease;
+}
+
+.moyo-quick-moyo-public-chip:hover {
+    border-color: #cbd9e8;
+    background: #fbfdff;
+    color: #3f5066;
+    box-shadow: 0 2px 8px rgba(47, 84, 128, .06);
+}
+
+.moyo-quick-moyo-public-chip > input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.moyo-quick-moyo-public-icon {
+    width: 22px;
+    height: 22px;
+    flex: 0 0 22px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 1;
+    filter: none;
+    transition: transform .16s ease;
+}
+
+.moyo-quick-moyo-public-icon img {
+    display: block;
+    width: 22px;
+    height: 22px;
+    object-fit: contain;
+}
+
+.moyo-quick-moyo-public-text {
+    white-space: nowrap;
+}
+
+.moyo-quick-moyo-public-check {
+    width: 16px;
+    height: 16px;
+    flex: 0 0 16px;
+    border: 1.5px solid #c8d4e2;
+    border-radius: 50%;
+    background: #fff;
+    color: transparent;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 9px;
+    transition: border-color .16s ease, background .16s ease, color .16s ease, box-shadow .16s ease;
+}
+
+.moyo-quick-moyo-public-chip.is-active {
+    border-color: rgba(74, 144, 226, .30);
+    background: linear-gradient(135deg, rgba(79, 215, 190, .09), rgba(74, 144, 226, .07) 52%, rgba(121, 93, 226, .08));
+    color: #315fc3;
+    box-shadow: 0 3px 10px rgba(59, 111, 190, .08);
+}
+
+.moyo-quick-moyo-public-chip.is-active .moyo-quick-moyo-public-icon {
+    transform: translateY(-1px);
+}
+
+.moyo-quick-moyo-public-chip.is-active .moyo-quick-moyo-public-check {
+    border-color: transparent;
+    background: linear-gradient(135deg, #4fd7be, #4a90e2 55%, #795de2);
+    color: #fff;
+    box-shadow: 0 2px 6px rgba(74, 144, 226, .18);
+}
+
+.moyo-quick-moyo-public-chip:has(input:focus-visible) {
+    outline: 2px solid rgba(63, 124, 255, .18);
+    outline-offset: 2px;
+}
+
+/* 공개 설정을 별도 섹션으로 쓰지 않으므로 이전 섹션 공간 제거 */
+.moyo-quick-public-section {
+    display: none !important;
+}
+
+@media (max-width: 640px) {
+    .moyo-quick-title-label-row {
+        gap: 8px;
+    }
+
+    .moyo-quick-moyo-public-chip {
+        min-height: 28px;
+        padding: 3px 8px 3px 5px;
+        font-size: 10.5px;
+    }
+
+    .moyo-quick-moyo-public-icon,
+    .moyo-quick-moyo-public-icon img {
+        width: 19px;
+        height: 19px;
+        flex-basis: 19px;
+    }
+}
+
+
+/* 2026-09 일정 등록 모달: 업무 추가 모달과 UI 밀도/시간 지정 규칙 통일 */
+.moyo-quick-create-panel {
+    width: min(520px, calc(100vw - 32px));
+    border: 1px solid #d9e3ee;
+    border-radius: 20px;
+    background: #fff;
+    box-shadow: 0 24px 64px rgba(31, 51, 92, .18);
+}
+
+.moyo-quick-create-head {
+    min-height: 60px;
+    padding: 0 20px;
+    border-bottom: 1px solid #e6edf4;
+}
+
+.moyo-quick-create-head::after {
+    height: 2px;
+    background: linear-gradient(90deg, #55DDBF 0%, #4a90e2 56%, #7568d8 100%);
+    opacity: .82;
+}
+
+.moyo-quick-create-titlebox h2 {
+    color: #14213d;
+    font-size: 17px;
+    font-weight: 850;
+}
+
+.moyo-quick-create-body {
+    padding: 18px 20px 0;
+}
+
+.moyo-quick-section {
+    margin: 0 0 16px;
+    padding: 0 0 16px;
+    border-bottom-color: #e6edf4;
+}
+
+.moyo-quick-label,
+.moyo-quick-row-label,
+.moyo-quick-summary-label {
+    color: #344054;
+    font-size: 11px;
+    font-weight: 900;
+}
+
+.moyo-quick-input,
+.moyo-quick-select-button {
+    height: 42px;
+    border-color: #d9e3ee;
+    border-radius: 13px;
+    background: #fff;
+    color: #273142;
+    font-size: 12px;
+}
+
+.moyo-quick-input:focus,
+.moyo-quick-select-button:focus-visible {
+    border-color: #6baef0;
+    box-shadow: 0 0 0 3px rgba(74, 144, 226, .11);
+}
+
+.moyo-quick-section-head {
+    margin-bottom: 10px;
+}
+
+.moyo-quick-time-toggle {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    min-height: 32px;
+    padding: 0 10px;
+    border: 1px solid #d9e3ee;
+    border-radius: 12px;
+    background: #fff;
+    color: #475467;
+    font-size: 11px;
+    font-weight: 850;
+    cursor: pointer;
+    user-select: none;
+    transition: border-color .15s ease, background .15s ease, color .15s ease, box-shadow .15s ease;
+}
+
+.moyo-quick-time-toggle:hover {
+    border-color: #b9cbe0;
+    background: #f9fbfd;
+}
+
+.moyo-quick-time-toggle > input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.moyo-quick-time-toggle-box {
+    width: 16px;
+    height: 16px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #c9d5e4;
+    border-radius: 4px;
+    background: #fff;
+    color: transparent;
+    font-size: 9px;
+    transition: background .15s ease, border-color .15s ease, color .15s ease, box-shadow .15s ease;
+}
+
+.moyo-quick-time-toggle > input:checked + .moyo-quick-time-toggle-box {
+    border-color: #4a90e2;
+    background: #4a90e2;
+    color: #fff;
+}
+
+.moyo-quick-time-toggle > input:focus-visible + .moyo-quick-time-toggle-box {
+    box-shadow: 0 0 0 3px rgba(74, 144, 226, .13);
+}
+
+.moyo-quick-time-grid {
+    grid-template-columns: 42px minmax(0, 1fr) minmax(0, 1fr);
+    gap: 10px;
+    margin-bottom: 8px;
+}
+
+.moyo-quick-time-grid.is-all-day {
+    grid-template-columns: 42px minmax(0, 1fr);
+}
+
+.moyo-quick-setting-grid {
+    grid-template-columns: 74px 120px minmax(210px, 1fr);
+    gap: 9px;
+    margin-top: 10px;
+}
+
+.moyo-quick-link-section {
+    padding-top: 0;
+}
+
+.moyo-quick-reminder-row {
+    min-height: 44px;
+}
+
+.moyo-quick-summary-row {
+    grid-template-columns: 58px minmax(0, 1fr) auto;
+    gap: 10px;
+    min-height: 54px;
+}
+
+.moyo-quick-summary-main {
+    min-height: 40px;
+}
+
+.moyo-quick-summary-copy strong {
+    color: #344054;
+    font-size: 11.5px;
+    font-weight: 850;
+}
+
+.moyo-quick-summary-action {
+    height: 32px;
+    padding: 0 12px;
+    border-color: #d9e3ee;
+    border-radius: 10px;
+}
+
+.moyo-quick-create-actions {
+    margin-top: 0;
+    padding: 13px 20px 16px;
+    border-top: 1px solid #e6edf4;
+    background: #fff;
+}
+
+.moyo-quick-save {
+    height: 44px;
+    border-radius: 13px;
+    background: linear-gradient(90deg, #55DDBF 0%, #4a90e2 56%, #7568d8 100%);
+    font-size: 13px;
+    font-weight: 900;
+    box-shadow: none;
+}
+
+.moyo-quick-save:hover {
+    transform: none;
+    filter: brightness(.99);
+    box-shadow: 0 8px 18px rgba(74, 144, 226, .16);
+}
+
+@media (max-width: 640px) {
+    .moyo-quick-create-panel {
+        width: 100%;
+        max-height: calc(100dvh - 24px);
+        border-radius: 18px;
+    }
+
+    .moyo-quick-create-head {
+        min-height: 60px;
+        padding: 0 16px;
+    }
+
+    .moyo-quick-create-body {
+        padding: 16px 16px 0;
+    }
+
+    .moyo-quick-create-actions {
+        padding: 12px 16px 14px;
+    }
+
+    .moyo-quick-time-grid {
+        grid-template-columns: 38px minmax(0, 1fr);
+        gap: 8px;
+    }
+
+    .moyo-quick-time-grid:not(.is-all-day) .moyo-quick-time-field {
+        grid-column: 2;
+    }
+
+    .moyo-quick-setting-grid {
+        grid-template-columns: 74px minmax(0, 1fr);
+    }
+
+    .moyo-quick-setting-grid > :last-child {
+        grid-column: 1 / -1;
+    }
+}
+
+/* 2026-09 일정 등록 모달 최종 정렬: 업무 추가 기준 */
+#calendarQuickCreateModal .moyo-quick-create-head {
+    position: relative;
+    min-height: 64px;
+    padding: 0 20px;
+    border-bottom: 0 !important;
+}
+#calendarQuickCreateModal .moyo-quick-create-head::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 2px;
+    background: linear-gradient(90deg, #55DDBF 0%, #4a90e2 56%, #7568d8 100%);
+    opacity: 1;
+    pointer-events: none;
+}
+
+/* 모요 공개는 라벨 행에만 위치하고 일정명 입력 폭에는 영향을 주지 않음 */
+#calendarQuickCreateModal .moyo-quick-title-label-row {
+    width: 100%;
+}
+#calendarQuickCreateModal .moyo-quick-title-row {
+    display: block !important;
+    width: 100% !important;
+}
+#calendarQuickCreateModal .moyo-quick-title-row > .moyo-quick-input {
+    display: block;
+    width: 100% !important;
+    max-width: none !important;
+    box-sizing: border-box;
+}
+
+/* 양력 / 반복 / 시간대는 역할에 따라 폭 배분 */
+#calendarQuickCreateModal .moyo-quick-setting-grid {
+    display: grid;
+    grid-template-columns: 74px 112px minmax(0, 1fr);
+    gap: 9px;
+    width: 100%;
+}
+#calendarQuickCreateModal #quickCreateRepeat + .moyo-quick-select-button,
+#calendarQuickCreateModal #quickCreateTimezone + .moyo-quick-select-button {
+    text-overflow: clip;
+}
+#calendarQuickCreateModal #quickCreateTimezone + .moyo-quick-select-button {
+    padding-left: 12px;
+    padding-right: 32px;
+}
+
+/* 참석자: 업무 추가의 담당자 카드와 동일한 한 덩어리 구조 */
+#calendarQuickCreateModal .moyo-quick-link-section {
+    padding-top: 0;
+}
+#calendarQuickCreateModal .moyo-quick-attendee-field {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+#calendarQuickCreateModal .moyo-quick-attendee-field > .moyo-quick-summary-label {
+    display: block;
+    margin: 0;
+}
+#calendarQuickCreateModal .moyo-quick-attendee-summary {
+    width: 100%;
+    min-height: 64px;
+    padding: 10px 13px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    border: 1px solid #d9e3ee;
+    border-radius: 13px;
+    background: #fff;
+    color: #263247;
+    text-align: left;
+    cursor: pointer;
+    transition: border-color .16s ease, box-shadow .16s ease, background .16s ease;
+}
+#calendarQuickCreateModal .moyo-quick-attendee-summary:hover {
+    border-color: #9fc8eb;
+    background: #fbfdff;
+    box-shadow: 0 0 0 3px rgba(74,144,226,.07);
+}
+#calendarQuickCreateModal .moyo-quick-attendee-summary:focus-visible {
+    outline: none;
+    border-color: #6baef0;
+    box-shadow: 0 0 0 3px rgba(74,144,226,.11);
+}
+#calendarQuickCreateModal .moyo-quick-attendee-main {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 11px;
+}
+#calendarQuickCreateModal .moyo-quick-attendee-stack {
+    flex: 0 0 auto;
+    min-width: 0;
+}
+#calendarQuickCreateModal .moyo-quick-summary-copy {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+#calendarQuickCreateModal .moyo-quick-summary-copy strong {
+    overflow: hidden;
+    color: #1f2b3d;
+    font-size: 12px;
+    font-weight: 900;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+#calendarQuickCreateModal .moyo-quick-summary-copy small {
+    display: block;
+    overflow: hidden;
+    color: #718096;
+    font-size: 10px;
+    font-weight: 700;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+#calendarQuickCreateModal .moyo-quick-summary-action {
+    flex: 0 0 auto;
+    height: auto;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    color: #4a90e2;
+    font-size: 11px;
+    font-weight: 850;
+}
+
+@media (max-width: 640px) {
+    #calendarQuickCreateModal .moyo-quick-create-head {
+        min-height: 60px;
+        padding: 0 16px;
+    }
+    #calendarQuickCreateModal .moyo-quick-setting-grid {
+        grid-template-columns: 74px minmax(0, 1fr);
+    }
+    #calendarQuickCreateModal .moyo-quick-setting-grid > :last-child {
+        grid-column: 1 / -1;
+    }
+    #calendarQuickCreateModal .moyo-quick-attendee-summary {
+        min-height: 62px;
+        padding: 9px 11px;
+    }
+    #calendarQuickCreateModal .moyo-quick-summary-copy small {
+        white-space: normal;
+    }
+}
+
+
+/* 2026-09 일정 등록 최종 마감: 공개 상태 · 알림 · 참석자 */
+#calendarQuickCreateModal .moyo-quick-moyo-public-check {
+    width: 18px;
+    height: 18px;
+    flex: 0 0 18px;
+    border: 1.5px solid #cbd5e1;
+    border-radius: 999px;
+    background: #fff;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 900;
+    box-shadow: none;
+}
+#calendarQuickCreateModal .moyo-quick-moyo-public-chip.is-active .moyo-quick-moyo-public-check {
+    border-color: #4f7cff;
+    background: #4f7cff;
+    background-image: none;
+    color: #fff;
+    box-shadow: none;
+}
+#calendarQuickCreateModal .moyo-quick-alert-row {
+    display: block;
+}
+#calendarQuickCreateModal .moyo-quick-alert-row > .moyo-quick-select-wrap {
+    width: 150px;
+}
+#calendarQuickCreateModal .moyo-quick-alert-row .moyo-quick-help {
+    display: none !important;
+}
+#calendarQuickCreateModal .moyo-quick-attendee-summary {
+    min-height: 64px;
+    padding: 10px 13px;
+}
+#calendarQuickCreateModal .moyo-quick-attendee-main {
+    gap: 11px;
+}
+#calendarQuickCreateModal .moyo-quick-attendee-avatar {
+    width: 38px;
+    height: 38px;
+    margin-left: -10px;
+    border: 2px solid #fff;
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(37, 54, 78, .08);
+}
+#calendarQuickCreateModal .moyo-quick-attendee-avatar:first-child {
+    margin-left: 0;
+}
+#calendarQuickCreateModal .moyo-quick-attendee-avatar.is-default {
+    background: #fff;
+    color: #52657d;
+    border-color: #fff;
+}
+#calendarQuickCreateModal .moyo-quick-attendee-avatar img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: #fff;
+    object-fit: cover;
+}
+#calendarQuickCreateModal .moyo-quick-attendee-stack:empty {
+    display: none;
+}
+#calendarQuickCreateModal #quickCreateAttendeeMeta[hidden] {
+    display: none !important;
+}
+#calendarQuickCreateModal .moyo-quick-summary-copy {
+    gap: 2px;
+}
+#calendarQuickCreateModal .moyo-quick-summary-copy strong {
+    font-size: 12px;
+}
+/* 2026-09 일정 등록 미세 마감: 모요 공개 강조 완화 · 참석자 빈 상태 */
+#calendarQuickCreateModal .moyo-quick-moyo-public-chip.is-active {
+    border-color: #c9d8ef;
+    background: #fff;
+    color: #315fc3;
+    box-shadow: 0 1px 4px rgba(47, 84, 128, .05);
+}
+#calendarQuickCreateModal .moyo-quick-moyo-public-chip.is-active .moyo-quick-moyo-public-icon {
+    transform: none;
+}
+#calendarQuickCreateModal .moyo-quick-attendee-stack {
+    min-width: 38px;
+}
+#calendarQuickCreateModal .moyo-quick-attendee-stack:empty {
+    display: flex;
+}
+#calendarQuickCreateModal .moyo-quick-attendee-empty-avatar {
+    width: 38px;
+    height: 38px;
+    flex: 0 0 38px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #d8e4f0;
+    border-radius: 50%;
+    background: #f4f8fc;
+    color: #6f8aa8;
+    font-size: 14px;
+    box-shadow: 0 1px 3px rgba(37, 54, 78, .05);
+}
+
+
+/* 2026-09-12 MOYO profile policy: fallback avatar = brand gradient + initial, real PNG = white backing */
+#calendarQuickCreateModal .moyo-quick-attendee-avatar.is-default {
+    background: var(--moyo-avatar-gradient, linear-gradient(135deg, #55D5CE 0%, #4288EF 52%, #5A55EE 100%)) !important;
+    color: #fff !important;
+    border-color: #fff !important;
+    box-shadow: 0 1px 3px rgba(37, 54, 78, .08);
+}
+#calendarQuickCreateModal .moyo-quick-attendee-avatar:not(.is-default) {
+    background: #fff !important;
+    border-color: #fff !important;
+}
+#calendarQuickCreateModal .moyo-quick-attendee-avatar:not(.is-default) img {
+    background: #fff !important;
+}
+
+
+/* 2026-09-12 일정 등록 UI 마감: 시간 라디오 · 양/음력 라디오 · 알림 카드 */
+#calendarQuickCreateModal .moyo-quick-time-toggle-box {
+    width: 16px;
+    height: 16px;
+    border-radius: 999px;
+    border: 1.5px solid #c8d5e5;
+    background: #fff;
+    color: transparent;
+}
+#calendarQuickCreateModal .moyo-quick-time-toggle-box > i {
+    display: none;
+}
+#calendarQuickCreateModal .moyo-quick-time-toggle-box::after {
+    content: "";
+    width: 7px;
+    height: 7px;
+    border-radius: 999px;
+    background: transparent;
+    transition: background .15s ease, transform .15s ease;
+    transform: scale(.7);
+}
+#calendarQuickCreateModal .moyo-quick-time-toggle > input:checked + .moyo-quick-time-toggle-box {
+    border-color: #4f7cff;
+    background: #fff;
+    color: transparent;
+}
+#calendarQuickCreateModal .moyo-quick-time-toggle > input:checked + .moyo-quick-time-toggle-box::after {
+    background: #4f7cff;
+    transform: scale(1);
+}
+
+#calendarQuickCreateModal .moyo-quick-setting-grid {
+    grid-template-columns: 154px 120px minmax(210px, 1fr);
+    align-items: stretch;
+}
+#calendarQuickCreateModal .moyo-quick-calendar-system {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 5px;
+    min-width: 0;
+    height: 42px;
+    padding: 4px;
+    border: 1px solid #d9e3ee;
+    border-radius: 13px;
+    background: #f6f9fc;
+}
+#calendarQuickCreateModal .moyo-quick-calendar-system > select {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
+}
+#calendarQuickCreateModal .moyo-quick-calendar-system-option {
+    min-width: 0;
+    height: 32px;
+    padding: 0 7px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    border: 0;
+    border-radius: 9px;
+    background: transparent;
+    color: #66758a;
+    font-size: 11px;
+    font-weight: 850;
+    cursor: pointer;
+    transition: background .15s ease, color .15s ease, box-shadow .15s ease;
+}
+#calendarQuickCreateModal .moyo-quick-calendar-system-option > i {
+    font-size: 11px;
+    color: #7187a2;
+}
+#calendarQuickCreateModal .moyo-quick-calendar-system-option .moyo-quick-radio-dot {
+    width: 12px;
+    height: 12px;
+    flex: 0 0 12px;
+    border: 1.4px solid #c5d2e2;
+    border-radius: 50%;
+    background: #fff;
+    position: relative;
+}
+#calendarQuickCreateModal .moyo-quick-calendar-system-option.is-active {
+    background: #fff;
+    color: #315fc3;
+    box-shadow: 0 1px 4px rgba(47,84,128,.08);
+}
+#calendarQuickCreateModal .moyo-quick-calendar-system-option.is-active > i {
+    color: #4a90e2;
+}
+#calendarQuickCreateModal .moyo-quick-calendar-system-option.is-active .moyo-quick-radio-dot {
+    border-color: #4f7cff;
+}
+#calendarQuickCreateModal .moyo-quick-calendar-system-option.is-active .moyo-quick-radio-dot::after {
+    content: "";
+    position: absolute;
+    inset: 2.5px;
+    border-radius: 50%;
+    background: #4f7cff;
+}
+
+#calendarQuickCreateModal .moyo-quick-alert-row {
+    width: 100%;
+    min-height: 58px;
+    padding: 9px 12px;
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    border: 1px solid #d9e3ee;
+    border-radius: 13px;
+    background: #fff;
+}
+#calendarQuickCreateModal .moyo-quick-alert-icon {
+    width: 36px;
+    height: 36px;
+    flex: 0 0 36px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 11px;
+    background: #f3f7fd;
+    color: #4a90e2;
+    font-size: 14px;
+}
+#calendarQuickCreateModal .moyo-quick-alert-control {
+    min-width: 0;
+    flex: 1 1 auto;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+#calendarQuickCreateModal .moyo-quick-alert-control > .moyo-quick-select-wrap {
+    width: 152px;
+    flex: 0 0 152px;
+}
+#calendarQuickCreateModal .moyo-quick-alert-control .moyo-quick-select-button {
+    width: 100%;
+}
+#calendarQuickCreateModal .moyo-quick-alert-caption {
+    min-width: 0;
+    color: #8a99ad;
+    font-size: 10px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+    #calendarQuickCreateModal .moyo-quick-setting-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+    #calendarQuickCreateModal .moyo-quick-calendar-system {
+        grid-column: 1 / -1;
+    }
+    #calendarQuickCreateModal .moyo-quick-setting-grid > :last-child {
+        grid-column: 1 / -1;
+    }
+    #calendarQuickCreateModal .moyo-quick-alert-control {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 3px;
+    }
+    #calendarQuickCreateModal .moyo-quick-alert-control > .moyo-quick-select-wrap {
+        width: 100%;
+        flex-basis: auto;
+    }
+}
+/* 2026-09-12 일정 등록 옵션 순서/시간 지정 라디오 마감 */
+#calendarQuickCreateModal .moyo-quick-time-radio {
+    width: 16px;
+    height: 16px;
+    flex: 0 0 16px;
+    border: 1.5px solid #c8d5e5;
+    border-radius: 50%;
+    background: #fff;
+    position: relative;
+    box-sizing: border-box;
+    transition: border-color .15s ease, box-shadow .15s ease;
+}
+#calendarQuickCreateModal .moyo-quick-time-radio::after {
+    content: "";
+    position: absolute;
+    inset: 3px;
+    border-radius: 50%;
+    background: transparent;
+    transform: scale(.7);
+    transition: background .15s ease, transform .15s ease;
+}
+#calendarQuickCreateModal .moyo-quick-time-toggle > input:checked + .moyo-quick-time-radio {
+    border-color: #4f7cff;
+}
+#calendarQuickCreateModal .moyo-quick-time-toggle > input:checked + .moyo-quick-time-radio::after {
+    background: #4f7cff;
+    transform: scale(1);
+}
+#calendarQuickCreateModal .moyo-quick-time-toggle > input:focus-visible + .moyo-quick-time-radio {
+    box-shadow: 0 0 0 3px rgba(79,124,255,.13);
+}
+#calendarQuickCreateModal .moyo-quick-setting-grid {
+    grid-template-columns: 120px minmax(210px, 1fr) 154px;
+}
+@media (max-width: 640px) {
+    #calendarQuickCreateModal .moyo-quick-setting-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* 2026-09-12 일정 등록 마지막 미세 마감 */
+#calendarQuickCreateModal .moyo-quick-setting-grid {
+    grid-template-columns: 120px minmax(196px, 1fr) 166px;
+}
+
+#calendarQuickCreateModal .moyo-quick-time-toggle > input:not(:checked) + .moyo-quick-time-radio {
+    border-color: #aebed1;
+}
+#calendarQuickCreateModal .moyo-quick-time-toggle:hover > input:not(:checked) + .moyo-quick-time-radio {
+    border-color: #8297af;
+    box-shadow: 0 0 0 3px rgba(74, 144, 226, .07);
+}
+
+#calendarQuickCreateModal .moyo-quick-alert-row {
+    align-items: center;
+}
+#calendarQuickCreateModal .moyo-quick-alert-control {
+    align-items: center;
+}
+#calendarQuickCreateModal .moyo-quick-alert-caption {
+    display: flex;
+    align-items: center;
+    min-height: 42px;
+    line-height: 1.35;
+}
+
+@media (max-width: 640px) {
+    #calendarQuickCreateModal .moyo-quick-setting-grid {
+        grid-template-columns: 1fr;
+    }
+    #calendarQuickCreateModal .moyo-quick-alert-caption {
+        min-height: 0;
+    }
+}
+
+/* 2026-09-12 일정 등록 옵션 라인/라디오 미세 마감 */
+#calendarQuickCreateModal .moyo-quick-time-toggle {
+    gap: 6px;
+}
+#calendarQuickCreateModal .moyo-quick-time-toggle > span:last-child {
+    order: 1;
+}
+#calendarQuickCreateModal .moyo-quick-time-radio {
+    order: 2;
+    width: 12px;
+    height: 12px;
+    flex: 0 0 12px;
+    border-width: 1.4px;
+}
+#calendarQuickCreateModal .moyo-quick-time-radio::after {
+    inset: 2.5px;
+}
+
+#calendarQuickCreateModal .moyo-quick-setting-grid {
+    grid-template-columns: 118px minmax(162px, 1fr) 146px;
+    gap: 8px;
+}
+#calendarQuickCreateModal .moyo-quick-calendar-system {
+    gap: 3px;
+    padding: 3px;
+}
+#calendarQuickCreateModal .moyo-quick-calendar-system-option {
+    height: 34px;
+    padding: 0 5px;
+    gap: 4px;
+    font-size: 10.5px;
+}
+#calendarQuickCreateModal .moyo-quick-calendar-system-option > i {
+    font-size: 10px;
+}
+#calendarQuickCreateModal .moyo-quick-calendar-system-option .moyo-quick-radio-dot {
+    width: 11px;
+    height: 11px;
+    flex-basis: 11px;
+}
+#calendarQuickCreateModal .moyo-quick-calendar-system-option.is-active .moyo-quick-radio-dot::after {
+    inset: 2.2px;
+}
+
+@media (max-width: 640px) {
+    #calendarQuickCreateModal .moyo-quick-setting-grid {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+}
+
+
+/* 2026-09-12 일정 시간 지정: 기록 사용과 동일한 토글 스위치 */
+#calendarQuickCreateModal .moyo-quick-time-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 8px;
+    cursor: pointer;
+    user-select: none;
+}
+#calendarQuickCreateModal .moyo-quick-time-toggle > input {
+    position: absolute !important;
+    inline-size: 1px !important;
+    block-size: 1px !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    margin: 0 !important;
+}
+#calendarQuickCreateModal .moyo-quick-time-switch {
+    position: relative;
+    order: 1;
+    display: block;
+    inline-size: 38px;
+    block-size: 22px;
+    flex: 0 0 38px;
+    border: 0;
+    border-radius: 999px;
+    background: #dce3eb;
+    box-shadow: inset 0 0 0 1px rgba(47,62,83,.06);
+    transition: background .18s ease, box-shadow .18s ease;
+}
+#calendarQuickCreateModal .moyo-quick-time-switch > span {
+    position: absolute;
+    left: 3px;
+    top: 3px;
+    inline-size: 16px;
+    block-size: 16px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 2px 5px rgba(38,52,73,.22);
+    transition: transform .18s ease;
+}
+#calendarQuickCreateModal .moyo-quick-time-toggle > input:checked + .moyo-quick-time-switch {
+    background: linear-gradient(135deg,#55ddbf,#4a90e2);
+}
+#calendarQuickCreateModal .moyo-quick-time-toggle > input:checked + .moyo-quick-time-switch > span {
+    transform: translateX(16px);
+}
+#calendarQuickCreateModal .moyo-quick-time-toggle > input:focus-visible + .moyo-quick-time-switch {
+    outline: 3px solid rgba(74,144,226,.2);
+    outline-offset: 2px;
+}
+#calendarQuickCreateModal .moyo-quick-time-toggle:hover .moyo-quick-time-switch {
+    box-shadow: inset 0 0 0 1px rgba(47,62,83,.10), 0 0 0 3px rgba(74,144,226,.05);
+}
+#calendarQuickCreateModal .moyo-quick-time-toggle__text {
+    order: 2;
+    white-space: nowrap;
+}
+
+
+/* 2026-09-12 일정 시간 지정 토글 외곽 박스 제거 */
+#calendarQuickCreateModal .moyo-quick-time-toggle {
+    min-height: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+}
+#calendarQuickCreateModal .moyo-quick-time-toggle:hover {
+    border-color: transparent;
+    background: transparent;
+    box-shadow: none;
+}
+
+/* 2026-09-12 양력/음력 라디오 정렬 마감 */
+#calendarQuickCreateModal .moyo-quick-calendar-system-option {
+    justify-content: flex-start;
+    text-align: left;
+}
+#calendarQuickCreateModal .moyo-quick-calendar-system-option .moyo-quick-radio-dot {
+    margin-left: auto;
+    margin-right: 1px;
+    align-self: center;
+}
+
+/* 2026-09-12 calendar system segmented radio final alignment */
+#calendarQuickCreateModal .moyo-quick-calendar-system-option {
+    justify-content: center !important;
+    gap: 5px !important;
+    padding: 0 7px !important;
+    outline: none !important;
+}
+#calendarQuickCreateModal .moyo-quick-calendar-system-option:focus,
+#calendarQuickCreateModal .moyo-quick-calendar-system-option:focus-visible {
+    outline: none !important;
+    box-shadow: none !important;
+}
+#calendarQuickCreateModal .moyo-quick-calendar-system-option.is-active:focus,
+#calendarQuickCreateModal .moyo-quick-calendar-system-option.is-active:focus-visible {
+    background: #fff;
+    box-shadow: 0 0 0 2px rgba(74,144,226,.12), 0 1px 4px rgba(47,84,128,.08) !important;
+}
+#calendarQuickCreateModal .moyo-quick-calendar-system-option .moyo-quick-radio-dot {
+    margin: 0 !important;
+    transform: translateY(1.5px);
+}
+
+/* 2026-09-12 사용자 지정 반복 UI 마감 */
+#calendarQuickCreateModal .moyo-quick-repeat-custom {
+    margin-top: 6px;
+    padding: 10px 11px;
+    border: 1px solid #dfe8f3;
+    border-radius: 12px;
+    background: #fbfdff;
+    box-shadow: none;
+}
+
+#calendarQuickCreateModal .moyo-quick-repeat-custom-row {
+    grid-template-columns: 72px 96px minmax(0, 1fr);
+    gap: 8px;
+    min-height: 36px;
+}
+
+#calendarQuickCreateModal .moyo-quick-repeat-end {
+    grid-template-columns: 72px 96px minmax(0, 1fr);
+    gap: 8px;
+    min-height: 36px;
+}
+
+#calendarQuickCreateModal .moyo-quick-repeat-custom label,
+#calendarQuickCreateModal .moyo-quick-repeat-days > span {
+    color: #5f6f86;
+    font-size: 10.5px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+}
+
+#calendarQuickCreateModal .moyo-quick-repeat-custom input,
+#calendarQuickCreateModal .moyo-quick-repeat-custom select {
+    height: 34px;
+    border-color: #d3dfed;
+    border-radius: 10px;
+    background: #fff;
+    color: #243047;
+    font-size: 11px;
+    font-weight: 650;
+}
+
+#calendarQuickCreateModal #quickCreateRepeatInterval {
+    width: 96px;
+    min-width: 96px;
+    text-align: center;
+    padding: 0 6px;
+}
+
+#calendarQuickCreateModal #quickCreateRepeatUnit {
+    min-width: 0;
+    width: 100%;
+}
+
+#calendarQuickCreateModal .moyo-quick-repeat-days {
+    grid-template-columns: 72px minmax(0, 1fr);
+    gap: 8px;
+    margin: 8px 0;
+}
+
+#calendarQuickCreateModal .moyo-quick-repeat-days > div {
+    display: grid;
+    grid-template-columns: repeat(7, 32px);
+    gap: 6px;
+    align-items: center;
+}
+
+#calendarQuickCreateModal .moyo-quick-repeat-days button {
+    width: 32px;
+    height: 32px;
+    border: 1px solid #d5e1ef;
+    border-radius: 50%;
+    background: #fff;
+    color: #62738a;
+    font-size: 10.5px;
+    font-weight: 800;
+    line-height: 1;
+    transition: border-color .15s ease, background .15s ease, color .15s ease, box-shadow .15s ease;
+}
+
+#calendarQuickCreateModal .moyo-quick-repeat-days button:hover {
+    border-color: #aac2e4;
+    background: #f7faff;
+    color: #2f6fe8;
+}
+
+#calendarQuickCreateModal .moyo-quick-repeat-days button.is-active {
+    border-color: #4f7cff;
+    background: #4f7cff;
+    color: #fff;
+    box-shadow: 0 3px 8px rgba(79, 124, 255, .18);
+}
+
+#calendarQuickCreateModal .moyo-quick-repeat-end {
+    align-items: center;
+}
+
+#calendarQuickCreateModal #quickCreateRepeatEndType {
+    width: 96px;
+    min-width: 96px;
+}
+
+#calendarQuickCreateModal .moyo-quick-repeat-until-field:not([hidden]) {
+    grid-column: 3;
+    width: 100%;
+    margin-top: 0;
+}
+
+#calendarQuickCreateModal .moyo-quick-repeat-until-field #quickCreateRepeatUntil {
+    width: 100%;
+    padding-right: 38px;
+}
+
+@media (max-width: 640px) {
+    #calendarQuickCreateModal .moyo-quick-repeat-custom {
+        padding: 10px;
+    }
+    #calendarQuickCreateModal .moyo-quick-repeat-custom-row,
+    #calendarQuickCreateModal .moyo-quick-repeat-days {
+        grid-template-columns: 68px minmax(0, 1fr);
+    }
+    #calendarQuickCreateModal .moyo-quick-repeat-end {
+        grid-template-columns: 68px 96px minmax(0, 1fr);
+    }
+    #calendarQuickCreateModal .moyo-quick-repeat-custom-row > #quickCreateRepeatInterval {
+        grid-column: 2;
+        width: 96px;
+    }
+    #calendarQuickCreateModal .moyo-quick-repeat-custom-row > #quickCreateRepeatUnit {
+        grid-column: 2;
+        width: 100%;
+        margin-top: 6px;
+    }
+    #calendarQuickCreateModal .moyo-quick-repeat-days > div {
+        grid-template-columns: repeat(7, 30px);
+        gap: 5px;
+    }
+    #calendarQuickCreateModal .moyo-quick-repeat-days button {
+        width: 30px;
+        height: 30px;
+    }
+}
+
+/* 2026-09-12 반복 상세 셀렉트 공통 디자인 통일 */
+#calendarQuickCreateModal .moyo-quick-repeat-select-wrap {
+    width: 100%;
+    min-width: 0;
+}
+#calendarQuickCreateModal .moyo-quick-repeat-select-wrap .moyo-quick-select-button {
+    height: 34px;
+    padding: 0 31px 0 11px;
+    border: 1px solid #d3dfed;
+    border-radius: 10px;
+    background: #fff;
+    color: #243047;
+    font-size: 11px;
+    font-weight: 650;
+    letter-spacing: -0.02em;
+}
+#calendarQuickCreateModal .moyo-quick-repeat-select-wrap .moyo-quick-select-button::after {
+    right: 11px;
+}
+#calendarQuickCreateModal .moyo-quick-repeat-select-wrap .moyo-quick-select-button:hover,
+#calendarQuickCreateModal .moyo-quick-repeat-select-wrap .moyo-quick-select-button[aria-expanded="true"] {
+    border-color: #9fc0ef;
+    background: #fbfdff;
+    box-shadow: 0 0 0 3px rgba(74, 144, 226, .08);
+}
+#calendarQuickCreateModal .moyo-quick-repeat-select-wrap .moyo-quick-select-menu {
+    top: calc(100% + 4px);
+    max-height: 156px;
+    padding: 4px;
+    border-radius: 11px;
+}
+#calendarQuickCreateModal .moyo-quick-repeat-select-wrap .moyo-quick-select-menu button {
+    height: 30px;
+    padding: 0 9px;
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight: 600;
+}
+#calendarQuickCreateModal #quickCreateRepeatUnit + .moyo-quick-select-button,
+#calendarQuickCreateModal #quickCreateRepeatEndType + .moyo-quick-select-button {
+    width: 100%;
+}
+
+
+/* 2026-09-12 v33 일정 등록 — 업무 추가 모달 위계 기준 최종 정리 */
+#calendarQuickCreateModal.moyo-quick-create-overlay {
+    padding: 18px;
+    background: rgba(35, 44, 58, .44);
+    backdrop-filter: blur(6px);
+}
+#calendarQuickCreateModal .moyo-quick-create-panel {
+    width: min(520px, calc(100vw - 36px));
+    max-height: calc(100vh - 36px);
+    border: 1px solid rgba(226, 232, 240, .92);
+    border-radius: 20px;
+    background: #fff;
+    box-shadow: 0 24px 64px rgba(30, 41, 59, .24);
+    overflow: hidden;
+}
+#calendarQuickCreateModal .moyo-quick-create-head {
+    min-height: 64px;
+    padding: 0 20px;
+    border-bottom: 0;
+    background: #fff;
+}
+#calendarQuickCreateModal .moyo-quick-create-head::after {
+    bottom: 0;
+    height: 2px;
+    opacity: 1;
+    background: linear-gradient(90deg, #55DDBF 0%, #4a90e2 56%, #7568d8 100%);
+}
+#calendarQuickCreateModal .moyo-quick-create-titlebox h2 {
+    color: #182230;
+    font-size: 18px;
+    font-weight: 900;
+    letter-spacing: -.035em;
+}
+#calendarQuickCreateModal .moyo-quick-create-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 18px 20px 0;
+    scrollbar-gutter: auto;
+}
+
+/* 큰 섹션은 업무 추가처럼 독립된 정보 블록으로 읽히게 */
+#calendarQuickCreateModal .moyo-quick-section {
+    margin: 0;
+    padding: 0;
+    border: 0;
+}
+#calendarQuickCreateModal .moyo-quick-section + .moyo-quick-section {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid #edf1f6;
+}
+#calendarQuickCreateModal .moyo-quick-title-label-row {
+    margin-bottom: 7px;
+}
+#calendarQuickCreateModal .moyo-quick-title-row {
+    display: block;
+}
+#calendarQuickCreateModal .moyo-quick-title-row .moyo-quick-input {
+    width: 100%;
+}
+#calendarQuickCreateModal .moyo-quick-label,
+#calendarQuickCreateModal .moyo-quick-summary-label,
+#calendarQuickCreateModal .moyo-quick-section-head .moyo-quick-label {
+    color: #344054;
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: -.01em;
+}
+
+/* 일정 시간: 업무 추가의 진행 기간과 동일한 위계 */
+#calendarQuickCreateModal .moyo-quick-time-section {
+    padding-top: 16px;
+    border-top: 1px solid #edf1f6;
+}
+#calendarQuickCreateModal .moyo-quick-time-section .moyo-quick-section-head {
+    margin: 0 0 10px;
+}
+#calendarQuickCreateModal .moyo-quick-time-grid {
+    grid-template-columns: 42px minmax(0, 1fr) minmax(0, 1fr);
+    gap: 10px;
+    margin: 0 0 8px;
+}
+#calendarQuickCreateModal .moyo-quick-time-grid.is-all-day {
+    grid-template-columns: 42px minmax(0, 1fr);
+}
+#calendarQuickCreateModal .moyo-quick-row-label {
+    color: #667085;
+    font-size: 11px;
+    font-weight: 850;
+}
+#calendarQuickCreateModal .moyo-quick-date-field,
+#calendarQuickCreateModal .moyo-quick-time-field {
+    height: 42px;
+    border-color: #d7e2ee;
+    border-radius: 14px;
+    background: #fff;
+}
+#calendarQuickCreateModal .moyo-quick-date-input,
+#calendarQuickCreateModal .moyo-quick-time-text {
+    color: #27364a;
+    font-size: 13px;
+    font-weight: 700;
+}
+#calendarQuickCreateModal .moyo-quick-time-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+}
+
+/* 반복은 일정 시간 내부 옵션이 아니라 별도 하위 섹션 */
+#calendarQuickCreateModal .moyo-quick-repeat-section > .moyo-quick-label {
+    margin: 0 0 10px;
+}
+#calendarQuickCreateModal .moyo-quick-setting-grid {
+    display: grid;
+    grid-template-columns: 118px minmax(0, 1fr) 146px;
+    gap: 10px;
+    margin: 0;
+    align-items: center;
+}
+#calendarQuickCreateModal .moyo-quick-setting-grid .moyo-quick-select-button,
+#calendarQuickCreateModal .moyo-quick-calendar-system {
+    height: 42px;
+}
+#calendarQuickCreateModal .moyo-quick-calendar-system {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: stretch;
+    padding: 3px;
+    border: 1px solid #d9e3ee;
+    border-radius: 13px;
+    background: #f7f9fc;
+}
+#calendarQuickCreateModal .moyo-quick-calendar-system-option {
+    min-width: 0;
+    height: 34px;
+    padding: 0 8px !important;
+    border: 0 !important;
+    border-radius: 9px;
+    background: transparent;
+    color: #7a8798;
+    gap: 5px !important;
+    justify-content: center !important;
+    font-size: 11px;
+    font-weight: 800;
+    box-shadow: none !important;
+}
+#calendarQuickCreateModal .moyo-quick-calendar-system-option.is-active {
+    background: #fff;
+    color: #2f6fe8;
+    box-shadow: 0 1px 4px rgba(47, 84, 128, .08) !important;
+}
+#calendarQuickCreateModal .moyo-quick-calendar-system-option .moyo-quick-radio-dot {
+    display: none !important;
+}
+#calendarQuickCreateModal .moyo-quick-repeat-custom {
+    margin: 10px 0 0;
+    padding: 10px 11px;
+    border: 1px solid #e3ebf4;
+    border-radius: 12px;
+    background: #fbfcfe;
+}
+
+/* 알림 / 참석자 = 업무 추가의 상태·기록처럼 독립된 다음 단계 */
+#calendarQuickCreateModal .moyo-quick-alert-row,
+#calendarQuickCreateModal .moyo-quick-attendee-summary {
+    border-color: #d9e3ee;
+    border-radius: 13px;
+    background: #fff;
+}
+#calendarQuickCreateModal .moyo-quick-alert-row {
+    min-height: 60px;
+    padding: 9px 12px;
+}
+#calendarQuickCreateModal .moyo-quick-attendee-summary {
+    min-height: 64px;
+    padding: 10px 13px;
+}
+#calendarQuickCreateModal .moyo-quick-link-section {
+    padding-bottom: 16px;
+}
+
+/* 업무 추가와 같은 하단 저장 영역 */
+#calendarQuickCreateModal .moyo-quick-create-actions {
+    flex: 0 0 auto;
+    margin: 0;
+    padding: 13px 20px 16px;
+    border-top: 1px solid #e6edf4;
+    background: #fff;
+}
+#calendarQuickCreateModal .moyo-quick-btn.is-primary {
+    width: 100%;
+    height: 44px;
+    border-radius: 13px;
+    background: linear-gradient(90deg, #55DDBF 0%, #4a90e2 56%, #7568d8 100%);
+    font-size: 13px;
+    font-weight: 900;
+    box-shadow: none;
+}
+
+@media (max-width: 640px) {
+    #calendarQuickCreateModal.moyo-quick-create-overlay { padding: 12px; }
+    #calendarQuickCreateModal .moyo-quick-create-panel {
+        width: 100%;
+        max-height: calc(100dvh - 24px);
+        border-radius: 18px;
+    }
+    #calendarQuickCreateModal .moyo-quick-create-head { min-height: 60px; padding: 0 16px; }
+    #calendarQuickCreateModal .moyo-quick-create-body { padding: 16px 16px 0; }
+    #calendarQuickCreateModal .moyo-quick-create-actions { padding: 12px 16px 14px; }
+    #calendarQuickCreateModal .moyo-quick-setting-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+    #calendarQuickCreateModal .moyo-quick-calendar-system {
+        grid-column: 1 / -1;
+    }
+}
+
+/* 2026-09-13 일정 등록 모달 구조 정리: 스크롤/반복 컨트롤 최종 기준 */
+#calendarQuickCreateModal .moyo-quick-create-panel{
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+}
+#calendarQuickCreateModal .moyo-quick-create-head,
+#calendarQuickCreateModal .moyo-quick-create-actions{
+  flex:0 0 auto;
+}
+#calendarQuickCreateModal .moyo-quick-create-body{
+  flex:1 1 auto;
+  min-height:0;
+  overflow-x:hidden;
+  overflow-y:auto;
+  overscroll-behavior:contain;
+  scrollbar-gutter:auto;
+  scrollbar-width:none;
+  -ms-overflow-style:none;
+}
+#calendarQuickCreateModal .moyo-quick-create-body::-webkit-scrollbar{
+  width:0;
+  height:0;
+}
+
+/* 사용자 지정 반복: 라벨 + 하나의 완성된 컨트롤로 읽히게 */
+#calendarQuickCreateModal .moyo-quick-repeat-custom-row,
+#calendarQuickCreateModal .moyo-quick-repeat-end{
+  display:grid;
+  grid-template-columns:72px minmax(0,1fr);
+  align-items:center;
+  gap:10px;
+}
+#calendarQuickCreateModal .moyo-quick-repeat-interval-control{
+  display:grid;
+  grid-template-columns:74px minmax(0,1fr);
+  min-width:0;
+  height:36px;
+  border:1px solid #d7e2ef;
+  border-radius:10px;
+  background:#fff;
+  overflow:visible;
+  transition:border-color .16s ease,box-shadow .16s ease;
+}
+#calendarQuickCreateModal .moyo-quick-repeat-interval-control:focus-within{
+  border-color:#67a8f7;
+  box-shadow:0 0 0 3px rgba(79,145,236,.10);
+}
+#calendarQuickCreateModal .moyo-quick-repeat-interval-control #quickCreateRepeatInterval{
+  width:100%;
+  height:34px;
+  margin:0;
+  padding:0 12px;
+  border:0!important;
+  border-radius:9px 0 0 9px;
+  background:transparent;
+  box-shadow:none!important;
+  color:#27364a;
+  font-size:12px;
+  font-weight:800;
+  line-height:34px;
+  text-align:left;
+  outline:0;
+}
+#calendarQuickCreateModal .moyo-quick-repeat-interval-control .moyo-quick-repeat-select-wrap{
+  min-width:0;
+  height:34px;
+  border-left:1px solid #e4eaf1;
+}
+#calendarQuickCreateModal .moyo-quick-repeat-interval-control .moyo-quick-select-button{
+  width:100%;
+  height:34px;
+  min-height:34px;
+  border:0!important;
+  border-radius:0 9px 9px 0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  padding-left:12px;
+  padding-right:30px;
+}
+
+/* 반복 종료: 셀렉트와 날짜 입력을 동일한 36px 컨트롤 규격으로 */
+#calendarQuickCreateModal .moyo-quick-repeat-end .moyo-quick-repeat-select-wrap,
+#calendarQuickCreateModal .moyo-quick-repeat-end .moyo-quick-repeat-until-field{
+  grid-column:2;
+  width:100%;
+  min-width:0;
+  height:36px;
+  min-height:36px;
+}
+#calendarQuickCreateModal .moyo-quick-repeat-end .moyo-quick-select-button,
+#calendarQuickCreateModal .moyo-quick-repeat-end .moyo-quick-repeat-until-field{
+  height:36px;
+  min-height:36px;
+  border-radius:10px;
+}
+#calendarQuickCreateModal .moyo-quick-repeat-end .moyo-quick-repeat-until-field{
+  margin-top:8px;
+}
+#calendarQuickCreateModal .moyo-quick-repeat-end .moyo-quick-repeat-until-field #quickCreateRepeatUntil{
+  height:34px;
+  line-height:34px;
+  padding-top:0;
+  padding-bottom:0;
+}
+#calendarQuickCreateModal .moyo-quick-repeat-end .moyo-quick-date-trigger{
+  width:34px;
+  height:34px;
+  right:1px;
+}
+
+@media(max-width:640px){
+  #calendarQuickCreateModal .moyo-quick-repeat-custom-row,
+  #calendarQuickCreateModal .moyo-quick-repeat-end{
+    grid-template-columns:66px minmax(0,1fr);
+    gap:8px;
+  }
+  #calendarQuickCreateModal .moyo-quick-repeat-interval-control{
+    grid-template-columns:68px minmax(0,1fr);
+  }
+}
+
+
+/* 참석자 사람 기본 아바타: MOYO 공통 사람 프로필 정책 */
+.moyo-quick-attendee-avatar.is-default {
+    background: var(--moyo-avatar-gradient, linear-gradient(135deg, #55D5CE 0%, #4288EF 52%, #5A55EE 100%)) !important;
+    background-image: var(--moyo-avatar-gradient, linear-gradient(135deg, #55D5CE 0%, #4288EF 52%, #5A55EE 100%)) !important;
+    box-shadow: none !important;
+    color: #fff !important;
+}

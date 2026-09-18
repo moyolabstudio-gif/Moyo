@@ -1265,8 +1265,6 @@
     writing-mode: horizontal-tb !important;
     font-size: 11px !important;
     font-weight: 600 !important;
-}.project-note-photo-row .note-write-bottom-actions {
-    display: none !important;
 }@media (max-width: 1320px){
 .project-note-photo-row .note-main-list {
         grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
@@ -1583,3 +1581,793 @@
 body.personal-project-main .dashboard-container {
     align-items: flex-start;
 }
+
+/* ======================================================================
+   PROJECT MAIN LAYOUT v20
+   - 타임라인 아래 업무 우선 배치
+   - 본문 / 우측 사이드 명시적 2열 구조
+   - 개인 / 그룹 프로젝트 본문 분기 기반 정리
+   ====================================================================== */
+.dashboard-container.project-dashboard-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(300px, 336px);
+    align-items: start;
+    gap: 24px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.project-dashboard-layout > .project-main-content {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    min-width: 0;
+    width: 100%;
+}
+
+.project-dashboard-layout > .project-side-content {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-sizing: border-box;
+}
+
+.project-primary-work-section,
+.project-schedule-detail-section,
+.project-group-only-widgets,
+.project-dashboard-layout .note-main-section,
+.project-dashboard-layout .project-note-photo-row {
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+}
+
+.project-group-only-widgets > .project-widget-notice-poll {
+    margin: 0;
+}
+
+.project-dashboard-layout .project-calendar-panel,
+.project-dashboard-layout .project-member-panel {
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+}
+
+/* 개인 프로젝트도 같은 본문 폭을 사용하고 그룹 전용 영역만 JSP에서 제외합니다. */
+body.personal-project-main .dashboard-container.project-dashboard-layout {
+    grid-template-columns: minmax(0, 1fr) minmax(300px, 336px);
+}
+
+body.personal-project-main .project-dashboard-layout > .project-side-content {
+    display: flex;
+    width: 100%;
+}
+
+@media (max-width: 1180px) {
+    .dashboard-container.project-dashboard-layout,
+    body.personal-project-main .dashboard-container.project-dashboard-layout {
+        grid-template-columns: minmax(0, 1fr) 300px;
+        gap: 20px;
+    }
+}
+
+@media (max-width: 980px) {
+    .dashboard-container.project-dashboard-layout,
+    body.personal-project-main .dashboard-container.project-dashboard-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .project-dashboard-layout > .project-side-content,
+    body.personal-project-main .project-dashboard-layout > .project-side-content {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        align-items: start;
+        width: 100%;
+    }
+}
+
+@media (max-width: 700px) {
+    .dashboard-container.project-dashboard-layout {
+        gap: 16px;
+    }
+
+    .project-dashboard-layout > .project-main-content {
+        gap: 16px;
+    }
+
+    .project-dashboard-layout > .project-side-content,
+    body.personal-project-main .project-dashboard-layout > .project-side-content {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+}
+/* ===== End PROJECT MAIN LAYOUT v20 ===== */
+
+
+/* ===== 21-3 프로젝트 공유 노트 상태 및 동작 ===== */
+.project-note-card .project-note-list {
+    min-height: 286px;
+}
+
+.project-note-card .project-note-state {
+    min-height: 286px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    padding: 28px;
+    text-align: left;
+}
+
+.project-note-card .project-note-placeholder-icon {
+    flex: 0 0 auto;
+    font-size: 34px;
+    line-height: 1;
+}
+
+.project-note-card .project-note-placeholder-copy {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 7px;
+}
+
+.project-note-card .project-note-placeholder-copy strong,
+.project-note-card .project-note-placeholder-copy span {
+    overflow-wrap: anywhere;
+}
+
+.project-note-card .project-note-placeholder-copy strong {
+    font-size: 15px;
+    color: #24323f;
+}
+
+.project-note-card .project-note-placeholder-copy span {
+    font-size: 13px;
+    color: #7b8794;
+}
+
+.project-note-card .project-note-state-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 34px;
+    margin-top: 5px;
+    padding: 7px 13px;
+    border: 1px solid #d9e5e9;
+    border-radius: 10px;
+    background: #fff;
+    color: #38798a;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 700;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.project-note-card .project-note-state-action:hover {
+    border-color: #9fd8d3;
+    background: #f4fbfa;
+}
+
+.project-note-card .project-note-error .project-note-placeholder-icon {
+    filter: grayscale(0.45);
+    opacity: 0.8;
+}
+
+.project-note-card .project-note-paper-grid {
+    min-height: 286px;
+}
+
+@media (max-width: 640px) {
+    .project-note-card .project-note-list,
+    .project-note-card .project-note-state,
+    .project-note-card .project-note-paper-grid {
+        min-height: 238px;
+    }
+
+    .project-note-card .project-note-state {
+        padding: 22px 18px;
+    }
+}
+
+/* ===== 21-6 프로젝트 사진첩 상태 및 동작 ===== */
+.project-photo-card .project-photo-grid {
+    min-height: 286px;
+}
+
+.project-photo-card .project-photo-state {
+    min-height: 286px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    padding: 28px;
+    text-align: left;
+    box-sizing: border-box;
+}
+
+.project-photo-card .project-photo-state > div {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 7px;
+}
+
+.project-photo-card .project-photo-state strong,
+.project-photo-card .project-photo-state span {
+    overflow-wrap: anywhere;
+}
+
+.project-photo-card .project-photo-state strong {
+    font-size: 15px;
+    color: #24323f;
+}
+
+.project-photo-card .project-photo-state span {
+    font-size: 13px;
+    color: #7b8794;
+}
+
+.project-photo-card .project-photo-state-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 34px;
+    margin-top: 5px;
+    padding: 7px 13px;
+    border: 1px solid #d9e5e9;
+    border-radius: 10px;
+    background: #fff;
+    color: #38798a;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.2;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.project-photo-card .project-photo-state-action:hover {
+    border-color: #9fd8d3;
+    background: #f4fbfa;
+}
+
+.project-photo-card .project-photo-error .project-photo-empty-icon {
+    filter: grayscale(.35);
+    opacity: .85;
+}
+
+.project-photo-card .project-photo-post {
+    appearance: none;
+    border: 0;
+    padding: 0;
+    background: transparent;
+    cursor: pointer;
+}
+
+.project-photo-card .project-photo-post:focus-visible {
+    outline: 3px solid rgba(86, 185, 180, .35);
+    outline-offset: 3px;
+    border-radius: 12px;
+}
+
+.project-photo-card .project-photo-post-overlay {
+    justify-content: flex-end;
+}
+
+.project-photo-card .project-photo-post-overlay small {
+    display: inline-flex;
+    align-items: center;
+    min-height: 24px;
+    padding: 4px 8px;
+    border-radius: 999px;
+    background: rgba(19, 31, 43, .72);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .01em;
+}
+
+@media (max-width: 640px) {
+    .project-photo-card .project-photo-grid,
+    .project-photo-card .project-photo-state {
+        min-height: 238px;
+    }
+
+    .project-photo-card .project-photo-state {
+        padding: 22px 18px;
+    }
+}
+/* ===== End 21-6 프로젝트 사진첩 상태 및 동작 ===== */
+
+/* ===== 21-7 노트 3개 · 사진 2개 높이 정합 ===== */
+.project-note-photo-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 20px;
+    align-items: stretch;
+    min-width: 0;
+}
+
+.project-note-photo-row > .project-note-card,
+.project-note-photo-row > .project-photo-card {
+    width: 100%;
+    min-width: 0;
+    height: 360px;
+    min-height: 360px;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+}
+
+.project-note-photo-row > .project-note-card > .board-title,
+.project-note-photo-row > .project-photo-card > .board-title {
+    flex: 0 0 auto;
+}
+
+.project-note-photo-row #projectRecentNoteList,
+.project-note-photo-row #projectPhotoWidgetList {
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: 0;
+    height: auto;
+    margin-top: 14px;
+    box-sizing: border-box;
+}
+
+.project-note-photo-row #projectRecentNoteList[data-state="ready"] .project-note-items,
+.project-note-photo-row .project-note-paper-grid {
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+    align-items: stretch;
+}
+
+.project-note-photo-row .project-note-paper-card,
+.project-note-photo-row .project-note-paper {
+    min-width: 0;
+    height: 100%;
+}
+
+.project-note-photo-row .project-photo-grid:not(:has(.project-photo-state)) {
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    align-items: stretch;
+}
+
+.project-note-photo-row .project-photo-post,
+.project-note-photo-row .project-photo-post-thumb {
+    min-width: 0;
+    height: 100%;
+}
+
+.project-note-photo-row .project-note-loading,
+.project-note-photo-row .project-note-state,
+.project-note-photo-row .project-photo-state,
+.project-note-photo-row .project-photo-empty,
+.project-note-photo-row .project-photo-loading,
+.project-note-photo-row .project-photo-error {
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    box-sizing: border-box;
+}
+
+@media (max-width: 1180px) {
+    .project-note-photo-row {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .project-note-photo-row > .project-note-card,
+    .project-note-photo-row > .project-photo-card {
+        height: 348px;
+        min-height: 348px;
+    }
+}
+
+@media (max-width: 720px) {
+    .project-note-photo-row {
+        gap: 16px;
+    }
+
+    .project-note-photo-row > .project-note-card,
+    .project-note-photo-row > .project-photo-card {
+        height: auto;
+        min-height: 320px;
+    }
+
+    .project-note-photo-row #projectRecentNoteList[data-state="ready"] .project-note-items,
+    .project-note-photo-row .project-note-paper-grid {
+        grid-template-columns: minmax(0, 1fr);
+        grid-auto-rows: minmax(132px, auto);
+    }
+
+    .project-note-photo-row .project-photo-grid:not(:has(.project-photo-state)) {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        min-height: 220px;
+    }
+}
+
+@media (max-width: 480px) {
+    .project-note-photo-row .project-photo-grid:not(:has(.project-photo-state)) {
+        grid-template-columns: minmax(0, 1fr);
+        grid-auto-rows: minmax(220px, auto);
+    }
+}
+/* ===== End 21-7 노트 3개 · 사진 2개 높이 정합 ===== */
+
+/* ===== projectMain에서 이동한 프로젝트 콘텐츠 위젯 영역 ===== */
+.report-more-btn,
+.report-write-btn {
+            display:inline-flex;
+            align-items:center;
+            justify-content:center;
+            min-height:32px;
+            padding:0 12px;
+            border-radius:999px;
+            font-size:12px;
+            font-weight:800;
+            text-decoration:none;
+            border:1px solid transparent;
+            white-space:nowrap;
+        }
+
+.report-more-btn {
+            background:#fff;
+            border-color:#dde3ea;
+            color:#555;
+        }
+
+.report-more-btn:hover {
+            background:#f8fafc;
+            color:#4A90E2;
+        }
+
+.report-write-btn {
+            background:var(--moyo-primary-gradient, linear-gradient(135deg,#39CDB5 0%,#4A90E2 54%,#7358E8 100%));
+            color:#fff;
+            box-shadow:0 5px 12px rgba(57,205,181,0.16);
+        }
+
+@media (max-width:760px) {
+.report-more-btn,
+.report-write-btn {flex:1;}
+}
+
+.note-main-section {
+    margin-top: 18px !important;
+}
+
+.note-main-list {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 12px !important;
+}
+
+@media (max-width: 1050px) {
+.note-main-list {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+.note-section-header p {
+    margin: 6px 0 0 !important;
+    color: #7d8790 !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    line-height: 1.45 !important;
+}
+
+.note-write-bottom-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px solid #f0f2f5;
+}
+
+.note-write-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 32px;
+    padding: 0 13px;
+    border-radius: 999px;
+    background: var(--moyo-primary-gradient, linear-gradient(135deg, #39CDB5 0%, #4A90E2 54%, #7358E8 100%));
+    color: #fff !important;
+    font-size: 12px;
+    font-weight: 900;
+    text-decoration: none;
+    box-shadow: 0 5px 12px rgba(57,205,181,0.16);
+}
+
+.note-write-link:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 18px rgba(57,205,181,0.20);
+}
+
+.note-main-section {
+    padding-bottom: 18px !important;
+}
+
+.note-main-list {
+    margin-top: 12px !important;
+}
+
+.note-main-list .note-item {
+
+    min-height:128px;
+    padding:16px 16px 14px 18px;
+    border:1px solid #e9eef4;
+    border-radius:16px;
+    background:linear-gradient(180deg,#ffffff 0%, #fbfcfe 100%);
+    text-decoration:none;
+    color:inherit;
+    box-shadow:0 8px 20px rgba(15,23,42,0.04);
+    transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+}
+
+.note-main-list .note-item:hover {
+    transform:translateY(-2px);
+    border-color:#d8e7f4;
+    box-shadow:0 12px 24px rgba(74,144,226,0.10);
+}
+
+.note-main-list .note-item-title-row {
+    display:flex;
+    align-items:center;
+    gap:7px;
+    min-width:0;
+    margin-bottom:8px;
+}
+
+.note-main-list .note-item-title {
+    margin:0;
+    min-width:0;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+    font-size:14px;
+    font-weight:900;
+    color:#1f2937;
+    line-height:1.35;
+}
+
+.note-main-list .note-item-pin {
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    height:22px;
+    padding:0 8px;
+    border-radius:999px;
+    background:#eef1ff;
+    border:1px solid #d8ddff;
+    color:#4f63d9;
+    font-size:11px;
+    font-weight:900;
+    flex-shrink:0;
+}
+
+.note-section-header {
+    align-items: flex-start !important;
+}
+
+.note-main-list .note-item {
+    position: relative;
+    display: flex !important;
+    flex-direction: column;
+}
+
+.note-main-list .note-item-main-link {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+    color: inherit;
+    text-decoration: none;
+}
+
+.note-main-list .note-item-pin.is-inactive {
+    background: #f6f7f9;
+    border-color: #e5e7eb;
+    color: #a0a7b0;
+    opacity: .78;
+}
+
+.note-main-list .note-item-pin.is-active {
+    background: #eef1ff;
+    border-color: #d8ddff;
+    color: #4f63d9;
+    opacity: 1;
+}
+
+.note-preview-toggle {
+    align-self: flex-end;
+    margin-top: 10px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: #4A90E2;
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 900;
+    cursor: pointer;
+}
+
+.note-preview-toggle:hover {
+    text-decoration: underline;
+}
+
+.note-section-actions { display:flex; align-items:center; gap:12px; flex-shrink:0; }
+
+.note-main-list.is-all-expanded { align-items:start; }
+
+.note-preview-toggle { display:none !important; }
+
+.note-item-images {
+    display:none;
+    grid-template-columns:repeat(3, minmax(0, 1fr));
+    gap:7px;
+    margin-top:12px;
+}
+
+.note-item-image {
+    position:relative;
+    display:block;
+    aspect-ratio:16 / 10;
+    overflow:hidden;
+    border:1px solid #e4ebf2;
+    border-radius:10px;
+    background:#f4f7fa;
+}
+
+.note-item-image img {
+    display:block;
+    width:100%;
+    height:100%;
+    object-fit:cover;
+}
+
+.note-item-image-more {
+    position:absolute;
+    inset:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:rgba(17,24,39,.52);
+    color:#fff;
+    font-size:15px;
+    font-weight:900;
+}
+
+.note-main-list.is-all-expanded .note-item {
+    min-height:0;
+}
+
+@media (max-width:760px) {
+.note-write-bottom-actions {
+        align-items:stretch;
+    }
+}
+
+.note-main-list .note-item-images {
+    display: none;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-top: 12px !important;
+    overflow: hidden !important;
+}
+
+.note-main-list.is-all-expanded .note-item-images {
+    display: grid !important;
+}
+
+.note-main-list .note-item-image {
+    position: relative !important;
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 84px !important;
+    min-height: 84px !important;
+    max-height: 84px !important;
+    aspect-ratio: auto !important;
+    overflow: hidden !important;
+    border: 1px solid #e4ebf2 !important;
+    border-radius: 10px !important;
+    background: #f4f7fa !important;
+}
+
+.note-main-list .note-item-image img {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 84px !important;
+    min-height: 84px !important;
+    max-height: 84px !important;
+    object-fit: cover !important;
+    object-position: center !important;
+    border: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.note-main-list .note-item-image-more {
+    position: absolute !important;
+    inset: 0 !important;
+}
+
+@media (max-width: 760px) {
+.note-main-list .note-item-images {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+.note-main-list .note-item-image,
+.note-main-list .note-item-image img {
+        height: 78px !important;
+        min-height: 78px !important;
+        max-height: 78px !important;
+    }
+}
+
+.note-main-list:has(> .note-item:only-child) {
+    grid-template-columns: minmax(0, 1fr) !important;
+}
+
+.note-main-list:has(> .note-item:nth-child(2):last-child) {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+}
+
+.note-main-list:has(> .note-item:nth-child(3):last-child) {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+}
+
+@media (max-width: 1050px) {
+.note-main-list:has(> .note-item:nth-child(2):last-child),
+.note-main-list:has(> .note-item:nth-child(3):last-child) {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+.shared-note-ready-section .note-section-header .section-more-link,
+.shared-note-ready-section .note-write-link,
+.shared-note-ready-section .note-write-bottom-actions,
+.shared-note-ready-section a[href*="/note/write"] {
+    display: none !important;
+}
+
+.note-main-list .shared-note-placeholder strong {
+    font-size: 16px !important;
+    font-weight: 900 !important;
+}
+
+.note-main-list .shared-note-placeholder span {
+    font-size: 13px !important;
+    color: #6f7f8f !important;
+}
+
+body.personal-project-main .note-main-section {
+    order: 1;
+}
+/* ===== End projectMain에서 이동한 프로젝트 콘텐츠 위젯 영역 ===== */
+

@@ -51,8 +51,11 @@ public class userNoticeController {
     // 2. 읽음 처리 POST 메서드
     @PostMapping("/api/alarm/read")
     @ResponseBody
-    public String readAlarm(@RequestParam("alarmId") Long alarmId) {
-        userNoticeService.markAsRead(alarmId);
+    public String readAlarm(@RequestParam("alarmId") Long alarmId, HttpSession session) {
+        usersDto user = (usersDto) session.getAttribute("user");
+        if (user == null) return "login_required";
+
+        userNoticeService.markAsRead(alarmId, user.getUserId());
         return "success";
     }
 }

@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="/css/note.css?v=note-toolbar-boundary-v40">
     <link rel="stylesheet" href="/css/commonFolderModal.css?v=common-folder-modal-final-v15">
-    <link rel="stylesheet" href="/css/commonShareModal.css?v=note-share-edit-inline-v1">
+    <link rel="stylesheet" href="/css/commonPeopleModal.css?v=20260810-inline-share-state-popover-2">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/commonRichContent.css?v=rich-content-v3">
 </head>
 <body class="note-page-body">
@@ -224,17 +224,17 @@
                             <div class="note-attachment-card">
                                 <c:choose>
                                     <c:when test="${isImageFile}">
-                                        <a class="note-attachment-preview" href="/note/view?fileId=${file.fileId}" target="_blank" rel="noopener" title="${file.originFileName}">
-                                            <img src="/note/view?fileId=${file.fileId}" alt="${file.originFileName}">
+                                        <a class="note-attachment-preview" href="/note/view?fileId=${file.fileId}" target="_blank" rel="noopener" title="${fn:escapeXml(file.originFileName)}">
+                                            <img src="/note/view?fileId=${file.fileId}" alt="${fn:escapeXml(file.originFileName)}">
                                         </a>
                                     </c:when>
                                     <c:otherwise>
-                                        <a class="note-attachment-preview note-attachment-file-icon" href="/note/download?fileId=${file.fileId}" title="${file.originFileName}">
+                                        <a class="note-attachment-preview note-attachment-file-icon" href="/note/download?fileId=${file.fileId}" title="${fn:escapeXml(file.originFileName)}">
                                             <span>📎</span>
                                         </a>
                                     </c:otherwise>
                                 </c:choose>
-                                <a class="note-attachment-info" href="/note/download?fileId=${file.fileId}" title="${file.originFileName}">
+                                <a class="note-attachment-info" href="/note/download?fileId=${file.fileId}" title="${fn:escapeXml(file.originFileName)}">
                                     <span class="note-file-name"><c:out value="${file.originFileName}" /></span>
                                     <span class="note-file-meta">
                                         <c:if test="${not empty file.fileExt}"><span class="note-file-ext">${fn:toUpperCase(file.fileExt)}</span><span aria-hidden="true">·</span></c:if>
@@ -449,12 +449,7 @@
                 </div>
                 <button type="button" class="note-write-share-close" data-note-share-close aria-label="닫기">×</button>
             </div>
-            <div class="note-write-share-tabs" role="tablist" aria-label="공유 대상 유형">
-                <button type="button" class="note-write-share-tab is-active" data-share-tab="FRIEND">친구</button>
-                <button type="button" class="note-write-share-tab" data-share-tab="WORKSPACE">그룹</button>
-                <button type="button" class="note-write-share-tab" data-share-tab="PROJECT">프로젝트</button>
-            </div>
-            <div class="note-write-share-toolbar">
+<div class="note-write-share-toolbar">
                 <select id="noteDetailShareContext" class="note-write-share-select" aria-label="공유 범위 선택" hidden></select>
                 <input type="text" id="noteDetailShareKeyword" class="note-write-share-input" placeholder="친구 이름 또는 이메일 검색">
             </div>
@@ -480,16 +475,17 @@
 
 
 
-<script src="/js/commonShareModal.js?v=note-share-edit-inline-v1"></script>
+<script src="/js/commonPeopleModal.js?v=20260906-share-policy-cleanup-61"></script>
 <script src="/js/noteFolderAdapter.js?v=note-folder-adapter-v2"></script>
 <script src="/js/commonFolderModal.js?v=common-folder-modal-final-v16"></script>
 <script>
 (function () {
     function initNoteDetailShare() {
-        if (!window.MoyoShareModal || typeof window.MoyoShareModal.init !== 'function') return;
+        if (!window.CommonPeopleModal || typeof window.CommonPeopleModal.init !== 'function') return;
         if (!document.getElementById('noteDetailShareModal')) return;
-        window.MoyoShareModal.init({
+        window.CommonPeopleModal.init({
             contentType: 'NOTE',
+            friendOnly: true,
             contentId: document.getElementById('openNoteDetailShareModal')?.dataset.shareContentId || '',
             persist: true,
             reloadOnPersist: true,

@@ -1,0 +1,118 @@
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<div class="project-task-modal-overlay" id="projectTaskModal" aria-hidden="true">
+    <div class="project-task-modal" role="dialog" aria-modal="true" aria-labelledby="projectTaskModalTitle">
+        <div class="project-task-modal-head">
+            <div><h3 id="projectTaskModalTitle">업무 추가</h3></div>
+            <div class="project-task-modal-head-actions">
+                <button type="button" class="project-task-edit-btn" id="projectTaskEditBtn" onclick="enterProjectTaskEditMode()" hidden aria-label="업무 수정" title="수정"><i class="fa-regular fa-pen-to-square"></i></button>
+                <button type="button" class="project-task-delete-btn" id="projectTaskDeleteBtn" onclick="deleteProjectTask()" hidden aria-label="업무 삭제" title="삭제"><i class="fa-regular fa-trash-can"></i></button>
+                <button type="button" class="project-task-close-btn" onclick="closeProjectTaskModal()" aria-label="닫기">&times;</button>
+            </div>
+        </div>
+        <section id="projectTaskDetailView" class="project-task-detail" hidden>
+            <div class="project-task-detail__item project-task-detail__item--title">
+                <span class="project-task-detail__label">업무명</span>
+                <div class="project-task-detail__title-row">
+                    <strong id="projectTaskDetailTitle" class="project-task-detail__title">-</strong>
+                    <span id="projectTaskDetailStatus" class="project-task-detail__status">-</span>
+                </div>
+            </div>
+            <div class="project-task-detail__item project-task-detail__item--assignees">
+                <span class="project-task-detail__label">담당자</span>
+                <div class="project-task-detail__assignee-wrap">
+                    <div class="project-task-detail__assignee-head">
+                        <div id="projectTaskDetailAssignees" class="project-task-detail__assignees project-task-person">-</div>
+                        <button type="button" class="project-task-detail__assignee-more" id="projectTaskDetailAssigneeMore" onclick="toggleProjectTaskAssigneeList()" aria-expanded="false" hidden>전체 보기</button>
+                    </div>
+                    <div class="project-task-detail__assignee-list" id="projectTaskDetailAssigneeList" hidden></div>
+                </div>
+            </div>
+            <div class="project-task-detail__item project-task-detail__item--scope">
+                <span class="project-task-detail__label">소속</span>
+                <strong id="projectTaskDetailScope" class="project-task-detail__scope">-</strong>
+            </div>
+            <div class="project-task-detail__item">
+                <span class="project-task-detail__label">진행 기간</span>
+                <span id="projectTaskDetailPeriod" class="project-task-detail__period">-</span>
+            </div>
+            <section class="project-task-record-summary" id="projectTaskRecords" hidden>
+                <span class="project-task-detail__label">기록</span>
+                <div class="project-task-record-summary__content">
+                    <div class="project-task-record-summary__counts" id="projectTaskRecordSummaryCounts" aria-label="기록 개수"></div>
+                    <button type="button" class="project-task-record-view-btn" id="projectTaskRecordViewBtn" onclick="openProjectTaskRecordViewer()">기록 보기</button>
+                </div>
+            </section>
+        </section>
+        <form id="projectTaskForm" class="project-task-form" onsubmit="submitProjectTask(event)">
+            <input type="hidden" id="projectTaskId">
+            <label class="project-task-field project-task-field-wide"><span>업무명</span><input type="text" id="projectTaskTitle" maxlength="200" required placeholder="업무 내용을 명확하게 입력하세요"></label>
+            <div class="project-task-field project-task-field-wide project-task-assignee-field">
+                <span>담당자</span>
+                <button type="button" class="project-task-assignee-summary" id="projectTaskAssigneeSummary" onclick="openProjectTaskAssigneeSelector()" aria-label="담당자 선택"></button>
+            </div>
+            <section class="project-task-period project-task-field-wide" id="projectTaskPeriod">
+                <div class="project-task-period-head"><div class="project-task-period-title">진행 기간</div><label class="project-task-time-toggle"><input type="checkbox" id="projectTaskUseTime"><span class="project-task-time-toggle__track" aria-hidden="true"><span></span></span><span class="project-task-time-toggle__text">시간 지정</span></label></div>
+                <div class="project-task-period-row">
+                    <span class="project-task-period-label">시작</span>
+                    <div class="project-task-period-controls">
+                        <div class="project-task-date-control moyo-quick-date-field">
+                            <input type="text" class="project-task-picker-input moyo-quick-input moyo-quick-date-input project-task-date-raw" id="projectTaskStartDate" inputmode="numeric" autocomplete="off" placeholder="YYYY-MM-DD" data-quick-date-picker>
+                            <input type="text" class="project-task-date-display" id="projectTaskStartDateDisplay" readonly aria-label="시작 날짜" tabindex="0">
+                            <button type="button" class="moyo-quick-date-trigger" data-quick-date-target="projectTaskStartDate" aria-label="시작 날짜 선택"><i class="fa-regular fa-calendar" aria-hidden="true"></i></button>
+                        </div>
+                        <div class="project-task-time-control moyo-quick-time-field">
+                            <span class="moyo-quick-time-meridiem is-am" data-quick-time-meridiem-for="projectTaskStartTime">오전</span>
+                            <input type="text" class="project-task-picker-input moyo-quick-input moyo-quick-time-text" id="projectTaskStartTime" inputmode="numeric" autocomplete="off" placeholder="09:00" data-quick-time-picker>
+                            <button type="button" class="moyo-quick-time-trigger" data-quick-time-target="projectTaskStartTime" aria-label="시작 시간 선택"><i class="fa-regular fa-clock" aria-hidden="true"></i></button>
+                        </div>
+                    </div>
+                </div>
+                <div class="project-task-period-row">
+                    <span class="project-task-period-label">종료</span>
+                    <div class="project-task-period-controls">
+                        <div class="project-task-date-control moyo-quick-date-field">
+                            <input type="text" class="project-task-picker-input moyo-quick-input moyo-quick-date-input project-task-date-raw" id="projectTaskEndDate" inputmode="numeric" autocomplete="off" placeholder="YYYY-MM-DD" data-quick-date-picker>
+                            <input type="text" class="project-task-date-display" id="projectTaskEndDateDisplay" readonly aria-label="종료 날짜" tabindex="0">
+                            <button type="button" class="moyo-quick-date-trigger" data-quick-date-target="projectTaskEndDate" aria-label="종료 날짜 선택"><i class="fa-regular fa-calendar" aria-hidden="true"></i></button>
+                        </div>
+                        <div class="project-task-time-control moyo-quick-time-field">
+                            <span class="moyo-quick-time-meridiem is-pm" data-quick-time-meridiem-for="projectTaskEndTime">오후</span>
+                            <input type="text" class="project-task-picker-input moyo-quick-input moyo-quick-time-text" id="projectTaskEndTime" inputmode="numeric" autocomplete="off" placeholder="06:00" data-quick-time-picker>
+                            <button type="button" class="moyo-quick-time-trigger" data-quick-time-target="projectTaskEndTime" aria-label="종료 시간 선택"><i class="fa-regular fa-clock" aria-hidden="true"></i></button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            <div class="project-task-field project-task-field-wide project-task-status-field">
+                <span>상태</span>
+                <input type="hidden" id="projectTaskStatus" value="TODO">
+                <div class="project-task-status-segment" role="radiogroup" aria-label="업무 상태">
+                    <button type="button" class="project-task-status-option is-selected" data-task-status="TODO" role="radio" aria-checked="true"><i class="fa-solid fa-clipboard-list" aria-hidden="true"></i><span>할 일</span></button>
+                    <button type="button" class="project-task-status-option" data-task-status="IN_PROGRESS" role="radio" aria-checked="false"><i class="fa-regular fa-circle-play" aria-hidden="true"></i><span>진행 중</span></button>
+                    <button type="button" class="project-task-status-option" data-task-status="DONE" role="radio" aria-checked="false"><i class="fa-regular fa-circle-check" aria-hidden="true"></i><span>완료</span></button>
+                </div>
+            </div>
+
+            <div class="project-task-field project-task-field-wide project-task-record-setting project-task-record-setting--visibility-only">
+                <div id="projectTaskRecordVisibilityWrap" class="project-task-record-visibility">
+                    <span class="project-task-record-visibility__label">기록 공개 범위</span>
+                    <input type="hidden" id="projectTaskRecordVisibility" value="PROJECT">
+                    <div class="project-task-record-visibility-options" role="radiogroup" aria-label="기록 공개 범위">
+                        <button type="button" class="project-task-record-visibility-option is-selected" data-record-visibility="PROJECT" role="radio" aria-checked="true">
+                            <i class="fa-solid fa-users" aria-hidden="true"></i>
+                            <span>프로젝트 전체 공개</span>
+                        </button>
+                        <button type="button" class="project-task-record-visibility-option" data-record-visibility="ASSIGNEE_MANAGER" role="radio" aria-checked="false">
+                            <i class="fa-solid fa-user-group" aria-hidden="true"></i>
+                            <span>담당자 공개</span>
+                        </button>
+                    </div>
+                    <small id="projectTaskRecordVisibilityHelp"><i class="fa-solid fa-lock-open" aria-hidden="true"></i> 프로젝트 멤버가 연결된 기록을 확인할 수 있습니다.</small>
+                </div>
+            </div>
+            <div class="project-task-modal-actions">
+                <button type="submit" class="project-task-submit-btn" id="projectTaskSubmitBtn">저장</button>
+            </div>
+        </form>
+    </div>
+</div>

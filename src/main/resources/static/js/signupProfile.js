@@ -131,12 +131,19 @@
     };
 
 
+    const syncAvatarSelectionState = (useImage) => {
+        imageButton?.classList.toggle('is-active', useImage);
+        removeButton.classList.toggle('is-active', !useImage);
+        removeButton.setAttribute('aria-pressed', useImage ? 'false' : 'true');
+    };
+
     const showImage = () => {
         canvas.hidden = false;
         fallback.hidden = true;
         viewport.classList.add('has-image');
         viewport.closest('.signup-profile-editor')?.classList.add('has-photo-selected');
         if (imageButton) imageButton.textContent = '사진 조정';
+        syncAvatarSelectionState(true);
     };
 
     const showFallback = () => {
@@ -155,6 +162,7 @@
         draftOriginalDataUrl = '';
         draftUsesCommitted = false;
         if (imageButton) imageButton.textContent = '사진 선택';
+        syncAvatarSelectionState(false);
         if (committedImageUrl) URL.revokeObjectURL(committedImageUrl);
         committedImageUrl = '';
         canvas.hidden = true;

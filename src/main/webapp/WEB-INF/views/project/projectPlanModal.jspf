@@ -1,0 +1,145 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<div id="ganttPlanCreateModal" class="gantt-plan-modal" hidden>
+        <section class="gantt-plan-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="ganttPlanCreateTitle">
+            <header class="gantt-plan-modal__header">
+                <h3 id="ganttPlanCreateTitle">기간별 계획 등록</h3>
+                <div class="gantt-plan-modal__header-actions">
+                    <button type="button" id="ganttPlanEditButton" class="gantt-plan-modal__edit" aria-label="계획 수정" title="수정" hidden>
+                        <i class="fa-regular fa-pen-to-square" aria-hidden="true"></i>
+                    </button>
+                    <button type="button" id="ganttPlanDeleteButton" class="gantt-plan-modal__delete" aria-label="기간별 계획 삭제" title="삭제" hidden>
+                        <i class="fa-regular fa-trash-can" aria-hidden="true"></i>
+                    </button>
+                    <button type="button" class="gantt-plan-modal__close" data-gantt-plan-modal-close aria-label="닫기">
+                        <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+                    </button>
+                </div>
+            </header>
+
+            <form id="ganttPlanCreateForm" class="gantt-plan-modal__form">
+                <section id="ganttPlanReadonlySummary" class="gantt-plan-readonly" hidden aria-live="polite">
+                    <div class="gantt-plan-readonly__item gantt-plan-readonly__item--title">
+                        <span id="ganttPlanReadonlyTitleLabel" class="gantt-plan-readonly__label">계획명</span>
+                        <div class="gantt-plan-readonly__title-row">
+                            <strong id="ganttPlanReadonlyTitle" class="gantt-plan-readonly__value gantt-plan-readonly__title">-</strong>
+                            <span class="gantt-plan-readonly__type-badge">
+                                <span id="ganttPlanReadonlyTypeColor" class="gantt-plan-readonly__type-color" aria-hidden="true"></span>
+                                <span id="ganttPlanReadonlyTypeText">기간별</span>
+                            </span>
+                        </div>
+                    </div>
+                    <div id="ganttPlanReadonlyAuthorRow" class="gantt-plan-readonly__item">
+                        <span class="gantt-plan-readonly__label">작성자</span>
+                        <div id="ganttPlanReadonlyAuthor" class="gantt-plan-readonly__person">-</div>
+                    </div>
+                    <div id="ganttPlanReadonlyScopeRow" class="gantt-plan-readonly__item">
+                        <span class="gantt-plan-readonly__label">소속</span>
+                        <strong id="ganttPlanReadonlyScope" class="gantt-plan-readonly__scope">-</strong>
+                    </div>
+                    <div class="gantt-plan-readonly__item">
+                        <span id="ganttPlanReadonlyPeriodLabel" class="gantt-plan-readonly__label">계획 기간</span>
+                        <span class="gantt-plan-readonly__value gantt-plan-readonly__period-wrap">
+                            <span class="gantt-plan-readonly__period-icon" aria-hidden="true"><i class="fa-regular fa-calendar"></i></span>
+                            <span id="ganttPlanReadonlyPeriod" class="gantt-plan-readonly__period">-</span>
+                        </span>
+                    </div>
+                    <div id="ganttPlanReadonlyEditorRow" class="gantt-plan-readonly__item gantt-plan-readonly__item--editors" hidden>
+                        <span class="gantt-plan-readonly__label">편집 권한</span>
+                        <div id="ganttPlanReadonlyEditors" class="gantt-plan-readonly__people-summary">-</div>
+                    </div>
+                    <section id="ganttPlanRecordDetailRow" class="gantt-plan-record-summary" hidden>
+                        <span class="gantt-plan-readonly__label">기록</span>
+                        <div class="gantt-plan-record-summary__content">
+                            <div id="ganttPlanRecordSummaryCounts" class="gantt-plan-record-summary__counts" aria-label="기록 개수"></div>
+                            <button type="button" id="ganttPlanRecordViewButton" class="gantt-plan-record-summary__view">기록 보기</button>
+                        </div>
+                    </section>
+                </section>
+                <section class="gantt-plan-modal__section">
+                    <label class="gantt-plan-modal__field gantt-plan-modal__field--full">
+                        <span>제목</span>
+                        <input type="text" id="ganttPlanTitle" maxlength="100" required autocomplete="off" placeholder="예: 여행 준비, 장소 예약, 준비물 챙기기">
+                    </label>
+                    <div class="gantt-plan-modal__color-field">
+                        <span class="gantt-plan-modal__color-label">색상</span>
+                        <div id="ganttPlanColorPicker" class="gantt-plan-modal__color-picker">
+                            <div class="gantt-plan-modal__color-options" id="ganttPlanColorOptions" role="group" aria-label="기간별 계획 색상 선택"></div>
+                            <label class="gantt-plan-modal__custom-color" title="사용자 지정 색상" aria-label="사용자 지정 색상">
+                                <i class="fa-solid fa-palette" aria-hidden="true"></i>
+                                <input type="color" id="ganttPlanCustomColor" value="#4A90E2" aria-label="사용자 지정 색상">
+                            </label>
+                        </div>
+                        <input type="hidden" id="ganttPlanColor" value="#4A90E2">
+                    </div>
+                </section>
+
+                <section class="gantt-plan-modal__section gantt-plan-modal__schedule-section">
+                    <span id="ganttPlanPeriodSectionTitle" class="gantt-plan-modal__section-title">계획 기간</span>
+                    <div id="ganttPlanWeeklyFields" class="gantt-plan-modal__weekly-fields" hidden>
+                        <div class="gantt-plan-modal__weekday-row" role="group" aria-labelledby="ganttPlanWeekdayLabel">
+                            <span id="ganttPlanWeekdayLabel" class="gantt-plan-modal__row-label">요일</span>
+                            <div id="ganttPlanWeekdayOptions" class="gantt-plan-modal__weekday-options">
+                                <button type="button" class="gantt-plan-modal__weekday" data-weekly-day="7" aria-pressed="false">일</button>
+                                <button type="button" class="gantt-plan-modal__weekday" data-weekly-day="1" aria-pressed="false">월</button>
+                                <button type="button" class="gantt-plan-modal__weekday" data-weekly-day="2" aria-pressed="false">화</button>
+                                <button type="button" class="gantt-plan-modal__weekday" data-weekly-day="3" aria-pressed="false">수</button>
+                                <button type="button" class="gantt-plan-modal__weekday" data-weekly-day="4" aria-pressed="false">목</button>
+                                <button type="button" class="gantt-plan-modal__weekday" data-weekly-day="5" aria-pressed="false">금</button>
+                                <button type="button" class="gantt-plan-modal__weekday" data-weekly-day="6" aria-pressed="false">토</button>
+                            </div>
+                            <input type="hidden" id="ganttPlanDayOfWeek" value="7">
+                        </div>
+                    </div>
+                    <div class="gantt-plan-modal__date-row">
+                        <span class="gantt-plan-modal__row-label">시작</span>
+                        <div class="gantt-plan-modal__date-field">
+                            <input type="text" id="ganttPlanStartDate" inputmode="numeric" autocomplete="off" placeholder="YYYY-MM-DD" required data-gantt-date-picker>
+                            <button type="button" class="gantt-plan-modal__date-trigger" data-gantt-date-target="ganttPlanStartDate" aria-label="시작 날짜 선택"><i class="fa-regular fa-calendar" aria-hidden="true"></i></button>
+                        </div>
+                        <div class="gantt-plan-modal__time-field" data-gantt-time-field hidden>
+                            <span class="gantt-plan-modal__time-meridiem is-am" data-gantt-time-meridiem-for="ganttPlanStartTime">오전</span>
+                            <input type="text" id="ganttPlanStartTime" inputmode="numeric" autocomplete="off" placeholder="09:00" aria-label="시작 시간" data-gantt-time-picker>
+                            <button type="button" class="gantt-plan-modal__time-trigger" data-gantt-time-target="ganttPlanStartTime" aria-label="시작 시간 선택"><i class="fa-regular fa-clock" aria-hidden="true"></i></button>
+                        </div>
+                    </div>
+                    <div class="gantt-plan-modal__date-row">
+                        <span class="gantt-plan-modal__row-label">종료</span>
+                        <div class="gantt-plan-modal__date-field">
+                            <input type="text" id="ganttPlanEndDate" inputmode="numeric" autocomplete="off" placeholder="YYYY-MM-DD" required data-gantt-date-picker>
+                            <button type="button" class="gantt-plan-modal__date-trigger" data-gantt-date-target="ganttPlanEndDate" aria-label="종료 날짜 선택"><i class="fa-regular fa-calendar" aria-hidden="true"></i></button>
+                        </div>
+                        <div class="gantt-plan-modal__time-field" data-gantt-time-field hidden>
+                            <span class="gantt-plan-modal__time-meridiem is-am" data-gantt-time-meridiem-for="ganttPlanEndTime">오전</span>
+                            <input type="text" id="ganttPlanEndTime" inputmode="numeric" autocomplete="off" placeholder="10:00" aria-label="종료 시간" data-gantt-time-picker>
+                            <button type="button" class="gantt-plan-modal__time-trigger" data-gantt-time-target="ganttPlanEndTime" aria-label="종료 시간 선택"><i class="fa-regular fa-clock" aria-hidden="true"></i></button>
+                        </div>
+                    </div>
+                    <div id="ganttPlanDualCalendar" class="gantt-plan-dual-calendar" hidden></div>
+                    <div id="ganttPlanRangePicker" class="gantt-plan-range-picker gantt-plan-range-picker--inline" hidden></div>
+                </section>
+
+                <section id="ganttPlanEditorSection" class="gantt-plan-modal__section gantt-plan-modal__section--last gantt-plan-editor-section">
+                    <div class="gantt-plan-editor-summary">
+                        <span class="gantt-plan-modal__section-title">편집 권한</span>
+                        <button type="button" id="ganttPlanEditorToggle" class="gantt-plan-editor-summary__main" aria-expanded="false">
+                            <span class="gantt-plan-editor-summary__content">
+                                <span id="ganttPlanEditorAvatars" class="gantt-plan-editor-avatars" aria-hidden="true"></span>
+                                <span class="gantt-plan-editor-summary__copy">
+                                    <strong id="ganttPlanEditorSummary">편집 멤버를 선택하세요</strong>
+                                    <small id="ganttPlanEditorMeta" hidden></small>
+                                </span>
+                            </span>
+                            <span class="gantt-plan-editor-change" id="ganttPlanEditorAction">선택</span>
+                        </button>
+                    </div>
+                    <div id="ganttPlanEditorPanel" class="gantt-plan-editor-panel" hidden>
+                        <div id="ganttPlanEditorList" class="gantt-plan-editor-list"></div>
+                    </div>
+                </section>
+
+                <footer class="gantt-plan-modal__footer">
+                    <button type="submit" class="gantt-plan-modal__save" aria-disabled="false">등록</button>
+                </footer>
+            </form>
+        </section>
+</div>

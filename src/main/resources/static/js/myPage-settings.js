@@ -3,6 +3,8 @@
     const contextPath = shell?.dataset.contextPath || '';
 
     let profileEditSession = { begin() {}, cancel() {}, commit() {} };
+    let privacySession = { begin() {}, cancel() {}, commit() {} };
+    let notificationSession = { begin() {}, cancel() {}, commit() {} };
 
     const panels = {
         edit: document.getElementById('profileEditPanel'),
@@ -18,6 +20,8 @@
             if (item && item !== panel) item.hidden = true;
         });
         if (key === 'edit') profileEditSession.begin();
+        if (key === 'privacy') privacySession.begin();
+        if (key === 'notification') notificationSession.begin();
         panel.hidden = false;
         document.body.classList.add('profile-sheet-open');
         panel.querySelector('input, button, [href]')?.focus({ preventScroll: true });
@@ -25,6 +29,8 @@
 
     const closePanels = () => {
         if (panels.edit && !panels.edit.hidden) profileEditSession.cancel();
+        if (panels.privacy && !panels.privacy.hidden) privacySession.cancel();
+        if (panels.notification && !panels.notification.hidden) notificationSession.cancel();
         Object.values(panels).forEach(panel => {
             if (panel) panel.hidden = true;
         });
@@ -564,6 +570,11 @@
     const updateDraftScaleText = () => {
         if (!modalScaleValue || !modalScale) return;
         modalScaleValue.textContent = `${modalScale.value}%`;
+        const min = Number(modalScale.min || 0);
+        const max = Number(modalScale.max || 100);
+        const value = Number(modalScale.value || min);
+        const progress = max > min ? ((value - min) / (max - min)) * 100 : 0;
+        modalScale.style.setProperty('--moyo-range-progress', `${progress}%`);
     };
 
     const syncProfileHiddenFields = () => {
@@ -983,7 +994,6 @@
                     profileLinks: collectProfileLinks(),
                     birthDate: document.getElementById('birthDate')?.value || '',
                     birthCalendarType: document.getElementById('birthCalendarType')?.value || 'SOLAR',
-                    birthPublicYn: document.getElementById('birthPublicYn')?.checked ? 'Y' : 'N',
                     profileAvatarType: avatarTypeHidden.value,
                     profileImageHistoryId: historyIdHidden.value,
                     profileImageData: hidden.value,
@@ -1029,11 +1039,9 @@
         const birthDateInput = document.getElementById('birthDate');
         const birthTypeInput = document.getElementById('birthCalendarType');
         const birthDisplay = document.getElementById('birthDateDisplay');
-        const birthPublic = document.getElementById('birthPublicYn');
         if (birthDateInput) birthDateInput.value = snapshot.birthDate;
         if (birthTypeInput) birthTypeInput.value = snapshot.birthCalendarType;
         if (birthDisplay) birthDisplay.value = formatBirthDateLabel(snapshot.birthDate);
-        if (birthPublic) birthPublic.checked = snapshot.birthPublic;
         document.querySelectorAll('[data-birth-type]').forEach(button => {
             const isActive = button.dataset.birthType === snapshot.birthCalendarType;
             button.classList.toggle('is-active', isActive);
@@ -1102,7 +1110,6 @@
         links: snapshotProfileLinks(),
         birthDate: document.getElementById('birthDate')?.value || '',
         birthCalendarType: document.getElementById('birthCalendarType')?.value || 'SOLAR',
-        birthPublic: Boolean(document.getElementById('birthPublicYn')?.checked),
         image,
         scale,
         offsetX,
@@ -1156,7 +1163,25 @@
         }
     };
 
+    const createCheckboxFormSession = (form, selector = 'input[type="checkbox"]') => {
+        let snapshot = null;
+        const capture = () => Array.from(form?.querySelectorAll(selector) || []).map(input => ({
+            id: input.id,
+            checked: input.checked
+        }));
+        const restore = items => (items || []).forEach(item => {
+            const input = item.id ? document.getElementById(item.id) : null;
+            if (input) input.checked = item.checked;
+        });
+        return {
+            begin() { if (!snapshot) snapshot = capture(); },
+            cancel() { if (!snapshot) return; restore(snapshot); snapshot = null; },
+            commit() { snapshot = null; }
+        };
+    };
+
     const privacyForm = document.getElementById('profilePrivacyForm');
+    privacySession = createCheckboxFormSession(privacyForm);
     privacyForm?.addEventListener('submit', async event => {
         event.preventDefault();
         const submitButton = privacyForm.querySelector('button[type="submit"]');
@@ -1166,16 +1191,19 @@
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
+                    birthPublicYn: document.getElementById('birthPublicYn')?.checked ? 'Y' : 'N',
                     profilePhotosPublicYn: document.getElementById('profilePhotosPublicYn')?.checked ? 'Y' : 'N',
                     profileNotesPublicYn: document.getElementById('profileNotesPublicYn')?.checked ? 'Y' : 'N',
                     profileCalendarPublicYn: document.getElementById('profileCalendarPublicYn')?.checked ? 'Y' : 'N',
-                    profileGroupsPublicYn: document.getElementById('profileGroupsPublicYn')?.checked ? 'Y' : 'N'
+                    profileGroupsPublicYn: document.getElementById('profileGroupsPublicYn')?.checked ? 'Y' : 'N',
+                    profileFriendsPublicYn: document.getElementById('profileFriendsPublicYn')?.checked ? 'Y' : 'N'
                 })
             });
             const result = await response.json();
             if (result.status !== 'success') {
                 throw new Error(result.message || '공개 설정 저장에 실패했습니다.');
             }
+            privacySession.commit();
             location.reload();
         } catch (error) {
             alert(error.message || '공개 설정 저장 중 오류가 발생했습니다.');
@@ -1186,6 +1214,7 @@
 
 
     const notificationForm = document.getElementById('profileNotificationForm');
+    notificationSession = createCheckboxFormSession(notificationForm);
     notificationForm?.addEventListener('submit', async event => {
         event.preventDefault();
         const submitButton = notificationForm.querySelector('button[type="submit"]');
@@ -1206,6 +1235,7 @@
             if (result.status !== 'success') {
                 throw new Error(result.message || '알림 설정 저장에 실패했습니다.');
             }
+            notificationSession.commit();
             location.reload();
         } catch (error) {
             alert(error.message || '알림 설정 저장 중 오류가 발생했습니다.');
@@ -1220,13 +1250,80 @@
     const passwordCard = document.querySelector('.profile-password-card');
     const passwordToggleButton = document.querySelector('[data-toggle-password-form]');
     const passwordCancelButton = document.querySelector('[data-cancel-password-form]');
+    const passwordVisibilityButtons = Array.from(document.querySelectorAll('[data-password-visibility]'));
+    const newPasswordLiveInput = document.getElementById('newPassword');
+    const confirmPasswordLiveInput = document.getElementById('confirmPassword');
+    const passwordRuleElements = {
+        length: document.querySelector('[data-password-rule="length"]'),
+        letter: document.querySelector('[data-password-rule="letter"]'),
+        number: document.querySelector('[data-password-rule="number"]'),
+        special: document.querySelector('[data-password-rule="special"]')
+    };
+    const passwordMatchElement = document.getElementById('profilePasswordMatch');
+
+    const setPasswordVisibility = (button, visible) => {
+        const targetId = button?.dataset.passwordVisibility;
+        const input = targetId ? document.getElementById(targetId) : null;
+        if (!button || !input) return;
+        input.type = visible ? 'text' : 'password';
+        button.setAttribute('aria-pressed', String(visible));
+        button.setAttribute('aria-label', `${input.labels?.[0]?.textContent?.trim() || '비밀번호'} ${visible ? '숨기기' : '보기'}`);
+        button.classList.toggle('is-visible', visible);
+    };
+
+    passwordVisibilityButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            setPasswordVisibility(button, button.getAttribute('aria-pressed') !== 'true');
+        });
+    });
+
+    const resetPasswordVisibility = scope => {
+        const buttons = scope
+            ? Array.from(scope.querySelectorAll('[data-password-visibility]'))
+            : passwordVisibilityButtons;
+        buttons.forEach(button => setPasswordVisibility(button, false));
+    };
+
+    const updatePasswordRules = () => {
+        const value = newPasswordLiveInput?.value || '';
+        const rules = {
+            length: value.length >= 8 && value.length <= 72,
+            letter: /[A-Za-z]/.test(value),
+            number: /[0-9]/.test(value),
+            special: /[^A-Za-z0-9\s]/.test(value)
+        };
+        Object.entries(rules).forEach(([key, passed]) => {
+            passwordRuleElements[key]?.classList.toggle('is-valid', passed);
+        });
+
+        if (!passwordMatchElement) return;
+        const confirmValue = confirmPasswordLiveInput?.value || '';
+        passwordMatchElement.classList.remove('is-valid', 'is-error');
+        if (!confirmValue) {
+            passwordMatchElement.textContent = '';
+        } else if (value && value === confirmValue) {
+            passwordMatchElement.textContent = '새 비밀번호가 일치합니다.';
+            passwordMatchElement.classList.add('is-valid');
+        } else {
+            passwordMatchElement.textContent = '새 비밀번호가 일치하지 않습니다.';
+            passwordMatchElement.classList.add('is-error');
+        }
+    };
+
+    newPasswordLiveInput?.addEventListener('input', updatePasswordRules);
+    confirmPasswordLiveInput?.addEventListener('input', updatePasswordRules);
 
     const setPasswordFormOpen = open => {
         if (!passwordForm || !passwordToggleButton) return;
         passwordForm.hidden = !open;
         passwordCard?.classList.toggle('is-open', open);
         passwordToggleButton.setAttribute('aria-expanded', open ? 'true' : 'false');
-        passwordToggleButton.textContent = open ? '접기' : '변경하기';
+        passwordToggleButton.textContent = open ? '접기 ↑' : '변경하기';
+        passwordToggleButton.classList.toggle('is-collapse', open);
+        if (!open) {
+            resetPasswordVisibility(passwordForm);
+            updatePasswordRules();
+        }
         if (open) {
             window.setTimeout(() => document.getElementById('currentPassword')?.focus(), 80);
         }
@@ -1239,6 +1336,7 @@
 
     passwordCancelButton?.addEventListener('click', () => {
         passwordForm?.reset();
+        updatePasswordRules();
         setPasswordFormOpen(false);
     });
 
@@ -1256,8 +1354,13 @@
             currentPasswordInput?.focus();
             return;
         }
-        if (newPassword.length < 4) {
-            alert('새 비밀번호는 4자리 이상 입력해주세요.');
+        const passwordValid = newPassword.length >= 8
+            && newPassword.length <= 72
+            && /[A-Za-z]/.test(newPassword)
+            && /[0-9]/.test(newPassword)
+            && /[^A-Za-z0-9\s]/.test(newPassword);
+        if (!passwordValid) {
+            alert('새 비밀번호는 8자 이상이며 영문, 숫자, 특수문자를 각각 1자 이상 포함해주세요.');
             newPasswordInput?.focus();
             return;
         }
@@ -1287,6 +1390,7 @@
             }
             alert('비밀번호가 변경되었습니다.');
             passwordForm.reset();
+            updatePasswordRules();
             setPasswordFormOpen(false);
         } catch (error) {
             alert(error.message || '비밀번호 변경 중 오류가 발생했습니다.');
@@ -1304,6 +1408,7 @@
         withdrawModal.hidden = true;
         document.body.classList.remove('profile-confirm-open');
         if (withdrawPasswordInput) withdrawPasswordInput.value = '';
+        resetPasswordVisibility(withdrawModal);
     };
 
     const openWithdrawModal = () => {

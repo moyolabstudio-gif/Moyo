@@ -1,0 +1,89 @@
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
+
+<c:set var="miniCalendarProjectMode" value="${mainShellMode eq 'GROUP_PROJECT' or mainShellMode eq 'PERSONAL_PROJECT'}" />
+<c:set var="miniCalendarTitleId" value="${miniCalendarProjectMode ? 'projectCalendarTitle' : 'calendarTitle'}" />
+<c:set var="miniCalendarGridId" value="${miniCalendarProjectMode ? 'projectCalendarGrid' : 'calendarGrid'}" />
+<c:set var="miniCalendarChangeFunction" value="${miniCalendarProjectMode ? 'changeProjectMonth' : 'changeMonth'}" />
+
+<section class="mini-calendar moyo-mini-calendar ${miniCalendarProjectMode ? 'project-calendar-panel' : 'workspace-calendar-panel'} moyo-calendar-widget moyo-dashboard-slot"
+         data-mini-calendar-mode="${miniCalendarProjectMode ? 'PROJECT' : 'WORKSPACE'}" data-dashboard-widget="mini-calendar">
+    <div class="calendar-header moyo-calendar-head">
+        <div class="moyo-calendar-title-row">
+            <button type="button"
+                    class="moyo-calendar-nav-btn"
+                    onclick="${miniCalendarChangeFunction}(-1)"
+                    aria-label="이전 달">‹</button>
+            <span id="${miniCalendarTitleId}" class="moyo-calendar-month-title" aria-live="polite"></span>
+            <button type="button"
+                    class="moyo-calendar-nav-btn"
+                    onclick="${miniCalendarChangeFunction}(1)"
+                    aria-label="다음 달">›</button>
+        </div>
+        <c:choose>
+            <c:when test="${miniCalendarProjectMode}">
+                <c:choose>
+                    <c:when test="${isPersonalProject}">
+                        <a class="moyo-calendar-more" href="${pageContext.request.contextPath}/calendar?scope=PROJ&amp;calendarContext=PROJECT&amp;projectScope=PERSONAL&amp;projId=${projectDetail.projId}">전체보기</a>
+                    </c:when>
+                    <c:otherwise>
+                        <a class="moyo-calendar-more" href="${pageContext.request.contextPath}/calendar?scope=PROJ&amp;calendarContext=PROJECT&amp;projectScope=GROUP&amp;wsId=${projectDetail.wsId}&amp;projId=${projectDetail.projId}">전체보기</a>
+                    </c:otherwise>
+                </c:choose>
+            </c:when>
+            <c:otherwise>
+                <a class="moyo-calendar-more" href="${pageContext.request.contextPath}/calendar?scope=WS&amp;calendarContext=GROUP&amp;wsId=${workspace.wsId}">전체보기</a>
+            </c:otherwise>
+        </c:choose>
+    </div>
+
+    <div class="calendar-grid moyo-calendar-grid" id="${miniCalendarGridId}" role="grid" aria-label="미니 달력">
+        <div class="day-name sun" role="columnheader">일</div>
+        <div class="day-name" role="columnheader">월</div>
+        <div class="day-name" role="columnheader">화</div>
+        <div class="day-name" role="columnheader">수</div>
+        <div class="day-name" role="columnheader">목</div>
+        <div class="day-name" role="columnheader">금</div>
+        <div class="day-name sat" role="columnheader">토</div>
+    </div>
+
+    <div class="calendar-legend moyo-calendar-legend">
+        <c:choose>
+            <c:when test="${miniCalendarProjectMode}">
+                <span class="calendar-legend-item period-legend"><span class="legend-box"></span>기간</span>
+                <span class="calendar-legend-item schedule-legend"><span class="legend-box schedule"></span>일정</span>
+            </c:when>
+            <c:otherwise>
+                <span class="calendar-legend-item group-legend"><span class="legend-dot group"></span>그룹 일정</span>
+                <span class="calendar-legend-item project-legend"><span class="legend-range"></span>프로젝트 기간</span>
+            </c:otherwise>
+        </c:choose>
+    </div>
+
+    <c:choose>
+        <c:when test="${miniCalendarProjectMode}">
+            <c:if test="${isPersonalProject or canManageProject}">
+                <button type="button"
+                        class="ws-btn ws-btn-primary workspace-calendar-add-btn moyo-calendar-add-btn"
+                        data-project-calendar-create>+ 프로젝트 일정 등록</button>
+            </c:if>
+        </c:when>
+        <c:otherwise>
+            <c:if test="${isWorkspaceAdmin}">
+                <button type="button" class="ws-btn ws-btn-primary workspace-calendar-add-btn moyo-calendar-add-btn" data-workspace-calendar-create>+ 그룹 일정 등록</button>
+            </c:if>
+        </c:otherwise>
+    </c:choose>
+
+    <section class="moyo-calendar-selected" aria-live="polite" hidden>
+        <div class="moyo-calendar-selected-head">
+            <div>
+                <span class="moyo-calendar-selected-label">선택한 날짜</span>
+                <strong class="moyo-calendar-selected-date"></strong>
+            </div>
+            <span class="moyo-calendar-selected-count"></span>
+        </div>
+        <div class="moyo-calendar-selected-list"></div>
+    </section>
+
+</section>

@@ -1,0 +1,685 @@
+.moyo-note-modal__content-meta{display:flex;align-items:center;gap:12px;padding:8px 4px 3px;color:#9aa4b3;font-size:11px;font-weight:650;}
+.moyo-note-modal__content-meta[hidden]{display:none!important;}
+.moyo-note-modal__meta-item{display:inline-flex;align-items:center;gap:4px;white-space:nowrap;}
+.moyo-note-modal__meta-item[hidden]{display:none!important;}
+.moyo-note-modal__meta-item strong{font:inherit;color:#6f7b8d;}
+.moyo-note-modal__title-wrap{display:flex;align-items:center;gap:10px;padding:2px 4px 14px;border-bottom:1px solid #f1f3f6;}
+.moyo-note-modal__title-wrap[hidden]{display:none!important;}
+.moyo-note-modal__title{flex:1;min-width:0;border:0;outline:0;background:transparent;padding:4px 0;font-size:25px;line-height:1.35;font-weight:760;letter-spacing:-.025em;color:#202838;}
+.moyo-note-modal__title::placeholder{color:#c1c7d0;}
+.moyo-note-modal__title-hint{flex:0 0 auto;font-size:11px;font-weight:600;color:#a2abb8;white-space:nowrap;}
+.moyo-note-modal__title-wrap.is-manual .moyo-note-modal__title-hint{display:none;}
+.moyo-note-modal[hidden]{display:none!important;}
+.moyo-note-modal{position:fixed;inset:0;z-index:2140;display:flex;align-items:center;justify-content:center;padding:28px;}
+.moyo-note-modal__backdrop{position:absolute;inset:0;background:rgba(20,26,38,.42);backdrop-filter:blur(4px);}
+.moyo-note-modal__panel{position:relative;width:min(1010px,calc(100vw - 56px));height:min(700px,calc(100vh - 72px));display:flex;flex-direction:column;overflow:hidden;border:1px solid rgba(148,163,184,.20);border-radius:22px;background:#fff;box-shadow:0 24px 70px rgba(15,23,42,.22);}
+.moyo-note-modal__header{height:56px;flex:0 0 56px;display:flex;align-items:center;justify-content:space-between;padding:0 16px 0 22px;border-bottom:1px solid #eef1f5;}
+.moyo-note-modal__status-wrap{display:flex;align-items:center;gap:9px;min-width:0;}
+.moyo-note-modal__library{max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;font-weight:700;color:#586579;}
+.moyo-note-modal__status-separator{flex:0 0 auto;color:#c4cbd5;font-size:12px;}
+.moyo-note-modal__eyebrow{font-size:10px;font-weight:800;letter-spacing:.14em;color:#929bad;}
+.moyo-note-modal__status{font-size:12px;font-weight:600;color:#98a3b4;}
+.moyo-note-modal__status.is-saving{color:#738198;}.moyo-note-modal__status.is-saved{color:#24a27a;}.moyo-note-modal__status.is-error{color:#e05b65;}
+.moyo-note-modal__retry{flex:0 0 auto;border:0;background:transparent;padding:2px 0;color:#d44f5b;font-size:11px;font-weight:750;cursor:pointer;}
+.moyo-note-modal__retry:hover{text-decoration:underline;}
+.moyo-note-modal__retry[hidden]{display:none!important;}
+
+.moyo-note-modal__close{width:36px;height:36px;display:grid;place-items:center;border:0;border-radius:50%;background:transparent;color:#667085;cursor:pointer;transition:background .15s ease,color .15s ease;}
+.moyo-note-modal__close:hover{background:#f2f5f8;color:#273142;}
+.moyo-note-modal__close svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;}
+.moyo-note-modal__body{flex:1;min-height:0;overflow:auto;padding:0 30px 28px;scrollbar-gutter:stable;}
+.moyo-note-modal__body::-webkit-scrollbar{width:8px;}.moyo-note-modal__body::-webkit-scrollbar-thumb{background:transparent;border-radius:999px;}.moyo-note-modal__body:hover::-webkit-scrollbar-thumb{background:#d9dee7;}
+.moyo-note-modal__editor-wrap{width:min(770px,100%);min-height:0;margin:0 auto;}
+.moyo-note-modal .ck.ck-editor{border:0;}
+.moyo-note-modal .ck.ck-editor__top{position:sticky;top:-14px;z-index:4;background:#fff;padding:0 0 7px;transition:opacity .16s ease;}
+.moyo-note-modal .ck.ck-toolbar{min-height:42px;border:0!important;border-bottom:1px solid #f0f2f5!important;border-radius:0!important;background:#fff!important;padding:2px 0 7px!important;box-shadow:none!important;}
+.moyo-note-modal .ck.ck-toolbar .ck-button{min-width:30px;min-height:30px;border-radius:7px!important;color:#4f5c6d;}
+.moyo-note-modal .ck.ck-toolbar .ck-button:hover{background:#f4f6f8!important;}
+.moyo-note-modal .ck.ck-editor__main>.ck-editor__editable{min-height:465px;border:0!important;box-shadow:none!important;padding:17px 4px 72px!important;font-size:16px;line-height:1.78;color:#2f3747;}
+.moyo-note-modal .ck.ck-editor__main>.ck-editor__editable.ck-focused{border:0!important;box-shadow:none!important;}
+.moyo-note-modal .ck-placeholder:before{color:#b3bbc8!important;font-weight:450;}
+.moyo-note-modal.is-empty .ck.ck-editor__top{opacity:.48;}
+.moyo-note-modal.is-empty .ck.ck-editor__top:hover{opacity:1;}
+.moyo-note-modal:not(.is-empty) .ck.ck-editor__top{opacity:.82;}
+.moyo-note-modal:not(.is-empty) .ck.ck-editor__top:hover{opacity:1;}
+@media(max-width:760px){
+ .moyo-note-modal{padding:0;}
+ .moyo-note-modal__panel{width:100vw;height:100vh;border:0;border-radius:0;}
+ .moyo-note-modal__header{height:54px;flex-basis:54px;padding:0 12px 0 17px;}
+ .moyo-note-modal__body{padding:0 18px 24px;}
+ .moyo-note-modal__editor-wrap{width:100%;}
+ .moyo-note-modal .ck.ck-editor__top{top:0;}
+ .moyo-note-modal .ck.ck-editor__main>.ck-editor__editable{min-height:calc(100vh - 122px);padding:15px 2px 72px!important;}
+}
+.moyo-note-modal__document-meta{display:flex;align-items:center;gap:7px;margin:0 0 8px;padding:0 4px;color:#98a3b4;font-size:12px;line-height:1.4;}
+.moyo-note-modal__document-meta[hidden]{display:none!important;}
+.moyo-note-modal__readonly{margin-left:3px;padding:2px 7px;border-radius:999px;background:#f2f4f7;color:#7b8494;font-size:11px;font-weight:700;}
+.moyo-note-modal__header-actions{display:flex;align-items:center;gap:4px;flex:0 0 auto;}
+.moyo-note-modal__mode-toggle{height:32px;padding:0 11px;border:1px solid #e7eaf0;border-radius:9px;background:#fff;color:#596579;font-size:12px;font-weight:700;cursor:pointer;transition:background .15s ease,border-color .15s ease,color .15s ease;}
+.moyo-note-modal__mode-toggle:hover{background:#f6f8fa;border-color:#dce1e8;color:#2e394a;}
+.moyo-note-modal__mode-toggle[hidden]{display:none!important;}
+.moyo-note-modal__title-hint[hidden]{display:none!important;}
+.moyo-note-modal.is-view .ck.ck-editor__top{display:none!important;}
+.moyo-note-modal.is-view .ck.ck-editor__main>.ck-editor__editable{padding-top:10px!important;cursor:default;}
+.moyo-note-modal.is-view .moyo-note-modal__title{cursor:default;}
+
+.moyo-note-modal__icon-action{width:34px;height:34px;display:grid;place-items:center;border:0;border-radius:9px;background:transparent;color:#687386;cursor:pointer;}
+.moyo-note-modal__icon-action:hover,.moyo-note-modal__icon-action.is-active{background:#f3f5f8;color:#273142;}
+.moyo-note-modal__icon-action[hidden]{display:none!important;}
+.moyo-note-modal__icon-action svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
+.moyo-note-modal__shell{position:relative;z-index:1;display:flex;align-items:stretch;width:min(1010px,calc(100vw - 56px));height:min(700px,calc(100vh - 72px));transition:width .18s ease;}
+.moyo-note-modal__panel{width:100%;height:100%;flex:0 0 100%;}
+.moyo-note-modal.is-info-open .moyo-note-modal__shell{width:min(1302px,calc(100vw - 56px));}
+.moyo-note-modal.is-info-open .moyo-note-modal__panel{flex-basis:min(1010px,calc(100vw - 348px));}
+.moyo-note-modal__info-panel{position:relative;flex:0 0 292px;width:292px;height:100%;min-width:0;border-left:1px solid #e6eaf0;background:#fbfcfd;display:flex;flex-direction:column;overflow:hidden;border-radius:0 22px 22px 0;box-shadow:18px 20px 48px rgba(15,23,42,.14);}
+.moyo-note-modal.is-info-open .moyo-note-modal__panel{border-radius:22px 0 0 22px;}
+.moyo-note-modal__info-panel[hidden]{display:none!important;}
+.moyo-note-modal__info-head{height:52px;display:flex;align-items:center;justify-content:space-between;padding:0 18px;border-bottom:1px solid #edf0f4;color:#364153;font-size:13px;}
+.moyo-note-modal__info-close{width:30px;height:30px;border:0;border-radius:8px;background:transparent;color:#7d8796;font-size:22px;line-height:1;cursor:pointer;}
+.moyo-note-modal__info-close:hover{background:#f0f3f6;color:#374151;}
+.moyo-note-modal__info-body{padding:16px 18px;display:flex;flex-direction:column;gap:16px;overflow:auto;}
+.moyo-note-modal__info-field{display:flex;flex-direction:column;gap:7px;}
+.moyo-note-modal__info-field>span,.moyo-note-modal__info-row>span{font-size:11px;font-weight:700;color:#9aa4b3;}
+.moyo-note-modal__info-field input{width:100%;height:36px;border:1px solid #e4e8ee;border-radius:9px;background:#fff;padding:0 10px;color:#303949;font-size:13px;outline:none;}
+.moyo-note-modal__info-field input:focus{border-color:#aab5c4;box-shadow:0 0 0 3px rgba(148,163,184,.12);}
+.moyo-note-modal__info-field input[readonly]{background:#f6f7f9;color:#7d8794;}
+.moyo-note-modal__info-value-action{width:100%;min-height:38px;display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid #e4e8ee;border-radius:9px;background:#fff;padding:0 10px;color:#4b5769;font-size:13px;text-align:left;cursor:pointer;}
+.moyo-note-modal__info-value-action:disabled{cursor:default;background:#f6f7f9;color:#7d8794;}
+.moyo-note-modal__info-value-action i{font-size:10px;color:#a7afbb;}
+.moyo-note-modal__info-row{display:flex;align-items:center;justify-content:space-between;gap:14px;min-height:25px;}
+.moyo-note-modal__info-row strong{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#596579;font-size:12px;font-weight:650;}
+.moyo-note-modal__info-footer{margin-top:auto;padding:14px 18px 18px;border-top:1px solid #edf0f4;}
+.moyo-note-modal__danger-action{width:100%;height:36px;border:0;border-radius:9px;background:#fff1f2;color:#d24d59;font-size:12px;font-weight:750;cursor:pointer;}
+.moyo-note-modal__danger-action:hover{background:#ffe7e9;}
+.moyo-note-modal__danger-action[hidden]{display:none!important;}
+@media(max-width:1357px){
+ .moyo-note-modal.is-info-open .moyo-note-modal__shell{width:min(1010px,calc(100vw - 56px));}
+ .moyo-note-modal.is-info-open .moyo-note-modal__panel{flex-basis:100%;border-radius:22px;}
+ .moyo-note-modal__info-panel{position:absolute;z-index:8;top:0;right:0;bottom:0;width:min(320px,88vw);height:100%;border-radius:0 22px 22px 0;box-shadow:-16px 0 40px rgba(15,23,42,.12);}
+}
+@media(max-width:760px){
+ .moyo-note-modal__shell{width:100vw;height:100vh;}
+ .moyo-note-modal.is-info-open .moyo-note-modal__shell{width:100vw;}
+ .moyo-note-modal__info-panel{width:min(320px,88vw);border-radius:0;}
+ .moyo-note-modal.is-info-open .moyo-note-modal__panel{border-radius:0;}
+}
+
+/* 변경 기록: 기능 확인용 1차 UI */
+.moyo-note-modal__info-footer{gap:8px;}
+.moyo-note-modal__history-action{width:100%;display:flex;align-items:center;justify-content:center;gap:8px;border:1px solid #dfe5ee;border-radius:10px;background:#fff;color:#536174;padding:10px 12px;font-size:13px;font-weight:700;cursor:pointer;}
+.moyo-note-modal__history-action:hover{background:#f6f8fb;border-color:#cfd8e5;color:#344054;}
+.moyo-note-modal__history-action:disabled{opacity:.55;cursor:wait;}
+
+/* 공유/권한: 기능 확인용 1차 UI */
+.moyo-note-modal__info-footer{display:flex;flex-direction:column;gap:8px;}
+
+/* 공유/편집 권한 통합: 기능 확인용 1차 UI */
+.moyo-note-modal__editors-field{gap:8px;}
+.moyo-note-modal__editors{display:flex;flex-wrap:wrap;gap:6px;}
+.moyo-note-modal__editor-chip{display:inline-flex;align-items:center;gap:6px;max-width:100%;padding:6px 8px;border:1px solid #e4e8ee;border-radius:999px;background:#fff;color:#465366;font-size:12px;line-height:1;}
+.moyo-note-modal__editor-chip>span{max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.moyo-note-modal__editor-chip small{color:#98a2b3;font-size:10px;font-weight:700;}
+.moyo-note-modal__editors-empty{color:#98a2b3;font-size:12px;}
+#moyoNoteShareModal{z-index:2147483000!important;}
+#moyoNoteShareModal .note-write-share-panel{position:relative;z-index:1;}
+
+/* 그룹/프로젝트 공개 범위 + 권한 멤버 */
+.moyo-note-modal__access-field{gap:9px;}
+.moyo-note-modal__access-options{display:grid;grid-template-columns:1fr 1fr;gap:7px;}
+.moyo-note-modal__access-options button{height:34px;border:1px solid #e5e9ef;border-radius:9px;background:#fff;color:#697386;font-size:12px;font-weight:750;cursor:pointer;}
+.moyo-note-modal__access-options button.is-selected{border-color:#4f7cff;background:#f3f7ff;color:#4f7cff;box-shadow:0 0 0 1px rgba(79,124,255,.08) inset;}
+.moyo-note-modal__access-options button:disabled{cursor:default;opacity:.58;}
+.moyo-note-modal__access-field small{color:#929baa;font-size:11px;line-height:1.45;}
+
+
+/* 20260811 note info state fix */
+.moyo-note-modal__access-field[hidden],
+.moyo-note-modal__editors-field[hidden]{
+  display:none!important;
+}
+.moyo-note-modal__info-body{
+  overflow-y:auto;
+  overflow-x:hidden;
+}
+.moyo-note-modal__info-field,
+.moyo-note-modal__access-options,
+.moyo-note-modal__editors{
+  min-width:0;
+  max-width:100%;
+}
+.moyo-note-modal__access-options{
+  width:100%;
+}
+.moyo-note-modal__access-options button{
+  min-width:0;
+}
+.moyo-note-modal__editor-chip{
+  max-width:100%;
+}
+
+
+/* 20260822 NOTE toolbar regression fix
+   - 노트 툴바의 CKEditor overflow(...) 그룹을 사용하지 않는다.
+   - 노트 작성 폭 안에서 한 줄 툴바를 유지하고 기본 CKEditor 테두리/그림자를 제거한다. */
+.moyo-note-modal__editor-wrap{
+    width:min(930px,100%)!important;
+}
+
+.moyo-note-modal .moyo-ckeditor .ck.ck-editor__top,
+.moyo-note-modal .moyo-ckeditor .ck.ck-sticky-panel,
+.moyo-note-modal .moyo-ckeditor .ck.ck-sticky-panel__content{
+    width:100%!important;
+    max-width:100%!important;
+}
+
+.moyo-note-modal .moyo-ckeditor .ck.ck-toolbar{
+    width:100%!important;
+    max-width:100%!important;
+    min-height:42px!important;
+    display:flex!important;
+    align-items:center!important;
+    flex-wrap:nowrap!important;
+    padding:2px 0 7px!important;
+    border:0!important;
+    border-bottom:1px solid #f0f2f5!important;
+    border-radius:0!important;
+    background:#fff!important;
+    box-shadow:none!important;
+    overflow:visible!important;
+}
+
+.moyo-note-modal .moyo-ckeditor .ck.ck-toolbar > .ck-toolbar__items,
+.moyo-note-modal .moyo-ckeditor .ck.ck-toolbar .ck-toolbar__items{
+    width:100%!important;
+    min-width:0!important;
+    display:flex!important;
+    align-items:center!important;
+    flex-wrap:nowrap!important;
+    gap:0!important;
+    overflow:visible!important;
+}
+
+.moyo-note-modal .moyo-ckeditor .ck.ck-toolbar .ck-button,
+.moyo-note-modal .moyo-ckeditor .ck.ck-toolbar .ck-dropdown__button{
+    flex:0 0 auto!important;
+    min-width:28px!important;
+    min-height:30px!important;
+}
+
+@media(max-width:980px){
+    .moyo-note-modal__editor-wrap{width:100%!important;}
+    .moyo-note-modal .moyo-ckeditor .ck.ck-toolbar{
+        overflow-x:auto!important;
+        overflow-y:hidden!important;
+        scrollbar-width:none;
+    }
+    .moyo-note-modal .moyo-ckeditor .ck.ck-toolbar::-webkit-scrollbar{display:none;}
+}
+
+
+/* 20260822 NOTE toolbar layout fix v2
+   - 툴바를 본문 위에 정상 배치하고 본문과 겹치지 않게 한다.
+   - 툴바 투명도 효과를 제거해 스크롤된 본문이 비쳐 보이지 않게 한다. */
+.moyo-note-modal .ck.ck-editor__top{
+    position:relative!important;
+    top:auto!important;
+    z-index:2!important;
+    padding:0!important;
+    background:#fff!important;
+    opacity:1!important;
+}
+
+.moyo-note-modal.is-empty .ck.ck-editor__top,
+.moyo-note-modal:not(.is-empty) .ck.ck-editor__top,
+.moyo-note-modal .ck.ck-editor__top:hover{
+    opacity:1!important;
+}
+
+.moyo-note-modal .moyo-ckeditor .ck.ck-toolbar{
+    position:relative!important;
+    z-index:2!important;
+    margin:0!important;
+    background:#fff!important;
+}
+
+.moyo-note-modal .ck.ck-editor__main{
+    position:relative!important;
+    z-index:1!important;
+}
+
+.moyo-note-modal .ck.ck-editor__main>.ck-editor__editable{
+    margin-top:0!important;
+    padding-top:17px!important;
+}
+
+
+/* 20260822 NOTE toolbar overflow fix v3
+   CKEditor sticky panel이 viewport 기준 fixed 폭을 잡으면서 모달 밖으로 튀어나오는 현상 제거 */
+.moyo-note-modal .moyo-ckeditor .ck.ck-sticky-panel,
+.moyo-note-modal .moyo-ckeditor .ck.ck-sticky-panel__content,
+.moyo-note-modal .moyo-ckeditor .ck.ck-sticky-panel__content_sticky{
+    position:static!important;
+    top:auto!important;
+    left:auto!important;
+    right:auto!important;
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    transform:none!important;
+    box-sizing:border-box!important;
+}
+
+.moyo-note-modal .moyo-ckeditor .ck.ck-sticky-panel__placeholder{
+    display:none!important;
+    width:0!important;
+    height:0!important;
+}
+
+.moyo-note-modal .moyo-ckeditor .ck.ck-toolbar{
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    box-sizing:border-box!important;
+    overflow:visible!important;
+    scrollbar-width:none;
+}
+
+.moyo-note-modal .moyo-ckeditor .ck.ck-toolbar::-webkit-scrollbar{
+    display:none;
+}
+
+.moyo-note-modal .moyo-ckeditor .ck.ck-toolbar > .ck-toolbar__items{
+    width:max-content!important;
+    min-width:100%!important;
+    max-width:none!important;
+    flex-wrap:nowrap!important;
+}
+
+
+/* 20260822 NOTE toolbar sticky fix v4
+   - 노트 본문을 스크롤해도 툴바는 모달 본문 상단에 유지
+   - CKEditor의 viewport fixed sticky-panel은 사용하지 않고 모달 스크롤 컨테이너 기준 sticky만 사용 */
+.moyo-note-modal .ck.ck-editor__top{
+    position:sticky!important;
+    top:0!important;
+    left:auto!important;
+    right:auto!important;
+    z-index:8!important;
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    margin:0!important;
+    padding:0!important;
+    background:#fff!important;
+    box-sizing:border-box!important;
+}
+
+.moyo-note-modal .moyo-ckeditor .ck.ck-sticky-panel,
+.moyo-note-modal .moyo-ckeditor .ck.ck-sticky-panel__content,
+.moyo-note-modal .moyo-ckeditor .ck.ck-sticky-panel__content_sticky{
+    position:static!important;
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    transform:none!important;
+}
+
+.moyo-note-modal .moyo-ckeditor .ck.ck-toolbar{
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    box-sizing:border-box!important;
+}
+
+
+/* 20260822 NOTE toolbar visual polish v5
+   - 툴바를 별도 떠있는 박스가 아니라 노트 편집 영역의 상단 바처럼 보이게 정리
+   - 본문 폭과 정확히 맞추고 그림자/둥근 테두리 제거
+   - sticky 동작은 유지 */
+.moyo-note-modal .moyo-ckeditor .ck.ck-editor__top{
+    width:100%!important;
+    max-width:100%!important;
+    margin:0!important;
+    padding:0!important;
+    background:#fff!important;
+}
+
+.moyo-note-modal .moyo-ckeditor .ck.ck-toolbar{
+    width:100%!important;
+    max-width:100%!important;
+    min-height:44px!important;
+    margin:0!important;
+    padding:4px 8px!important;
+    border:0!important;
+    border-top:1px solid #eef2f6!important;
+    border-bottom:1px solid #e7edf4!important;
+    border-radius:0!important;
+    background:#fff!important;
+    box-shadow:none!important;
+    box-sizing:border-box!important;
+}
+
+.moyo-note-modal .moyo-ckeditor .ck.ck-toolbar > .ck-toolbar__items{
+    min-height:34px!important;
+    align-items:center!important;
+}
+
+.moyo-note-modal .moyo-ckeditor .ck.ck-toolbar .ck-button,
+.moyo-note-modal .moyo-ckeditor .ck.ck-toolbar .ck-dropdown__button{
+    min-width:30px!important;
+    min-height:30px!important;
+    border-radius:7px!important;
+}
+
+.moyo-note-modal .moyo-ckeditor .ck.ck-toolbar .ck-button:hover:not(.ck-disabled),
+.moyo-note-modal .moyo-ckeditor .ck.ck-toolbar .ck-dropdown__button:hover:not(.ck-disabled){
+    background:#f3f7fb!important;
+}
+
+.moyo-note-modal .moyo-ckeditor .ck.ck-toolbar .ck-button.ck-on,
+.moyo-note-modal .moyo-ckeditor .ck.ck-toolbar .ck-dropdown__button.ck-on{
+    background:#edf4ff!important;
+    color:#2f6fe4!important;
+}
+
+.moyo-note-modal .moyo-ckeditor .ck.ck-toolbar .ck-toolbar__separator{
+    height:22px!important;
+    margin:0 4px!important;
+    background:#e3e9f0!important;
+}
+
+.moyo-note-modal .moyo-ckeditor .ck.ck-editor__main{
+    width:100%!important;
+    max-width:100%!important;
+    margin:0!important;
+    background:#fff!important;
+}
+
+.moyo-note-modal .moyo-ckeditor .ck.ck-editor__main>.ck-editor__editable{
+    width:100%!important;
+    max-width:100%!important;
+    margin:0!important;
+    padding:18px 20px 28px!important;
+    border:0!important;
+    border-radius:0!important;
+    box-shadow:none!important;
+    background:#fff!important;
+    box-sizing:border-box!important;
+}
+
+.moyo-note-modal .moyo-ckeditor .ck.ck-editor__main>.ck-editor__editable:focus{
+    border:0!important;
+    box-shadow:none!important;
+    outline:0!important;
+}
+
+/* 툴바가 상단에 붙어 있을 때도 별도 카드처럼 떠 보이지 않게 한다. */
+.moyo-note-modal .moyo-ckeditor .ck.ck-editor__top{
+    box-shadow:none!important;
+}
+
+/* 좁은 화면에서는 한 줄 유지 + 모달 내부 가로 스크롤만 허용 */
+@media(max-width:980px){
+    .moyo-note-modal .moyo-ckeditor .ck.ck-toolbar{
+        padding-left:6px!important;
+        padding-right:6px!important;
+    }
+
+    .moyo-note-modal .moyo-ckeditor .ck.ck-editor__main>.ck-editor__editable{
+        padding-left:16px!important;
+        padding-right:16px!important;
+    }
+}
+
+
+/* ==========================================================================
+   NOTE CKEditor dropdown floating fix
+   - 표/색상 등의 dropdown panel은 툴바 레이아웃에 참여하지 않고
+     CKEditor 기본 방식처럼 버튼 아래에 떠야 한다.
+   ========================================================================== */
+.moyo-note-modal .moyo-ckeditor .ck.ck-toolbar,
+.moyo-note-modal .moyo-ckeditor .ck.ck-toolbar__items {
+    overflow: visible !important;
+}
+
+.moyo-note-modal .moyo-ckeditor .ck.ck-dropdown {
+    position: relative !important;
+}
+
+.moyo-note-modal .moyo-ckeditor .ck.ck-dropdown > .ck.ck-dropdown__panel {
+    position: absolute !important;
+    top: calc(100% + 4px) !important;
+    left: 0 !important;
+    right: auto !important;
+    margin: 0 !important;
+    z-index: 20050 !important;
+}
+
+/* 오른쪽 끝의 dropdown은 패널이 모달 밖으로 빠지지 않도록 우측 정렬 */
+.moyo-note-modal .moyo-ckeditor .ck.ck-toolbar__items > .ck.ck-dropdown:last-of-type > .ck.ck-dropdown__panel {
+    left: auto !important;
+    right: 0 !important;
+}
+
+/* =========================================================
+   NOTE modal CKEditor table picker scope fix
+   - original v41 picker sizing retained exactly
+   - only selector scope changed so library modal also receives it
+   ========================================================= */
+.moyo-note-modal .moyo-ckeditor .ck.ck-dropdown__panel .ck-insert-table-dropdown__grid,
+.moyo-note-modal .moyo-ckeditor .ck.ck-dropdown__panel .ck-insert-table-dropdown__grid.ck-grid {
+    display: grid !important;
+    grid-template-columns: repeat(10, 18px) !important;
+    grid-auto-rows: 18px !important;
+    gap: 3px !important;
+    width: max-content !important;
+    max-width: none !important;
+    max-height: none !important;
+    overflow: visible !important;
+    padding: 10px !important;
+    box-sizing: content-box !important;
+}
+
+.moyo-note-modal .moyo-ckeditor .ck.ck-dropdown__panel .ck-insert-table-dropdown-grid-box,
+.moyo-note-modal .moyo-ckeditor .ck.ck-dropdown__panel .ck-insert-table-dropdown__grid .ck-button,
+.moyo-note-modal .moyo-ckeditor .ck.ck-dropdown__panel .ck-insert-table-dropdown__grid button {
+    display: block !important;
+    flex: none !important;
+    width: 18px !important;
+    min-width: 18px !important;
+    max-width: 18px !important;
+    height: 18px !important;
+    min-height: 18px !important;
+    max-height: 18px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border-radius: 3px !important;
+    box-sizing: border-box !important;
+}
+
+.moyo-note-modal .moyo-ckeditor .ck.ck-dropdown__panel .ck-insert-table-dropdown__label {
+    display: block !important;
+    width: max-content !important;
+    min-width: 0 !important;
+    padding: 0 10px 10px !important;
+    white-space: nowrap !important;
+}
+
+.moyo-note-modal .moyo-ckeditor .ck.ck-dropdown__panel .ck-insert-table-dropdown,
+.moyo-note-modal .moyo-ckeditor .ck.ck-dropdown__panel .ck-insert-table-dropdown__button,
+.moyo-note-modal .moyo-ckeditor .ck.ck-dropdown__panel .ck-insert-table-dropdown__grid-wrapper {
+    width: max-content !important;
+    max-width: none !important;
+    overflow: visible !important;
+}
+
+
+
+/* ==========================================================================
+   NOTE modal cumulative polish
+   - 문서형 제목 UI 고정
+   - 작성자/날짜/콘텐츠 메타 한 줄
+   - PDF/인쇄 액션
+   ========================================================================== */
+#moyoNoteModal #moyoNoteModalTitle.moyo-note-modal__title{
+    width:100% !important;
+    height:auto !important;
+    min-height:0 !important;
+    margin:0 !important;
+    padding:4px 0 !important;
+    border:0 !important;
+    border-radius:0 !important;
+    outline:0 !important;
+    background:transparent !important;
+    box-shadow:none !important;
+    appearance:none !important;
+    -webkit-appearance:none !important;
+}
+#moyoNoteModal #moyoNoteModalTitle.moyo-note-modal__title:focus{
+    border:0 !important;
+    outline:0 !important;
+    box-shadow:none !important;
+    background:transparent !important;
+}
+.moyo-note-modal__document-meta{
+    min-width:0;
+    flex-wrap:nowrap;
+    white-space:nowrap;
+}
+.moyo-note-modal__content-meta{
+    display:inline-flex;
+    align-items:center;
+    gap:9px;
+    min-width:0;
+    padding:0;
+    margin-left:5px;
+    color:#a0a9b7;
+    font-size:11px;
+    font-weight:650;
+}
+.moyo-note-modal__content-meta[hidden]{display:none!important;}
+.moyo-note-modal__meta-item{
+    display:inline-flex;
+    align-items:center;
+    gap:4px;
+    line-height:1;
+    white-space:nowrap;
+}
+.moyo-note-modal__meta-item i{
+    font-size:11px;
+    color:#9aa6b7;
+}
+.moyo-note-modal__meta-item strong{
+    font:inherit;
+    color:#7d899a;
+}
+.moyo-note-modal__header-actions #moyoNoteModalPdf,
+.moyo-note-modal__header-actions #moyoNoteModalPrint{
+    flex:0 0 auto;
+}
+.moyo-note-modal__export-stage{
+    position:fixed;
+    left:-100000px;
+    top:0;
+    width:794px;
+    padding:0 64px;
+    background:#fff;
+    color:#202838;
+    z-index:-1;
+}
+.moyo-note-modal__export-title{
+    margin:0 0 22px;
+    font-size:28px;
+    line-height:1.35;
+    font-weight:760;
+    letter-spacing:-.025em;
+}
+.moyo-note-modal__export-content{
+    font-size:15px;
+    line-height:1.75;
+    color:#2f3747;
+    overflow-wrap:anywhere;
+}
+.moyo-note-modal__export-content img{display:block;max-width:100%;max-height:930px;width:auto;height:auto;object-fit:contain;break-inside:avoid;page-break-inside:avoid;}
+.moyo-note-modal__export-content table{width:100%;border-collapse:collapse;}
+.moyo-note-modal__export-content th,
+.moyo-note-modal__export-content td{border:1px solid #dfe4ea;padding:7px 9px;vertical-align:top;}
+.moyo-note-modal__export-content figure{max-width:100%;margin-left:0;margin-right:0;break-inside:avoid;page-break-inside:avoid;}
+.moyo-note-modal__export-content blockquote,
+.moyo-note-modal__export-content pre,
+.moyo-note-modal__export-content tr{break-inside:avoid;page-break-inside:avoid;}
+.moyo-note-modal__export-content iframe{max-width:100%;}
+@media(max-width:760px){
+    .moyo-note-modal__document-meta{overflow-x:auto;scrollbar-width:none;}
+    .moyo-note-modal__document-meta::-webkit-scrollbar{display:none;}
+}
+
+/* 표 선택창은 툴바 오른쪽에서 모달 밖으로 빠지지 않도록 안쪽 정렬 */
+.moyo-note-modal .moyo-ckeditor .ck.ck-dropdown > .ck.ck-dropdown__panel:has(.ck-insert-table-dropdown){
+    left:auto !important;
+    right:0 !important;
+}
+
+/* 20260918 NOTE sticky toolbar shadow fix
+   - 모달 스크롤 중 CKEditor sticky 상태에서 생기는 기본 그림자 제거
+   - 떠있는 카드 느낌 대신 얇은 하단 구분선만 유지 */
+#moyoNoteModal .moyo-ckeditor .ck.ck-sticky-panel__content_sticky,
+#moyoNoteModal .moyo-ckeditor .ck.ck-sticky-panel__content_sticky .ck.ck-toolbar,
+#moyoNoteModal .moyo-ckeditor .ck.ck-editor__top {
+    box-shadow:none !important;
+    filter:none !important;
+}
+
+#moyoNoteModal .moyo-ckeditor .ck.ck-sticky-panel__content_sticky .ck.ck-toolbar {
+    border-bottom:1px solid #e7edf4 !important;
+}
+
+
+/* 2026-09-18 노트 정보 패널 위계 정리 */
+.moyo-note-modal__info-section{display:flex;flex-direction:column;gap:9px;min-width:0;}
+.moyo-note-modal__document-info{padding:2px 0 4px;}
+.moyo-note-modal__document-info .moyo-note-modal__info-row{align-items:flex-start;min-height:0;}
+.moyo-note-modal__document-info .moyo-note-modal__info-row strong{display:flex;flex-direction:column;align-items:flex-end;gap:3px;max-width:175px;}
+.moyo-note-modal__document-info .moyo-note-modal__info-row strong>span{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#4f5c70;font-size:12px;font-weight:750;}
+.moyo-note-modal__document-info .moyo-note-modal__info-row strong>small{color:#8f99aa;font-size:10.5px;font-weight:650;line-height:1.3;}
+.moyo-note-modal__info-section-title{display:flex;align-items:center;gap:6px;color:#7b8799;font-size:11px;font-weight:800;}
+.moyo-note-modal__info-section-title i{width:13px;text-align:center;color:#8b96a7;font-size:11px;}
+.moyo-note-modal__permissions-section{padding-top:2px;gap:10px;}
+.moyo-note-modal__permissions-section[hidden]{display:none!important;}
+.moyo-note-modal__access-field{display:flex;flex-direction:column;gap:9px;}
+.moyo-note-modal__access-options button{display:flex;align-items:center;justify-content:center;gap:6px;}
+.moyo-note-modal__access-options button i{font-size:11px;color:#8b96a7;}
+.moyo-note-modal__access-options button.is-selected i{color:currentColor;}
+.moyo-note-modal__editors-field{display:flex;flex-direction:column;gap:7px;padding-top:10px;border-top:1px solid #edf0f4;}
+.moyo-note-modal__editors-field[hidden]{display:none!important;}
+.moyo-note-modal__editors-label{display:flex;align-items:center;gap:6px;color:#8d97a7;font-size:11px;font-weight:750;}
+.moyo-note-modal__editors-label i{font-size:11px;}
+
+/* 20260918 NOTE toolbar narrow-width fallback
+   Keep the toolbar on one row and clip only the controls that no longer fit.
+   No floating/grouped more menu and no horizontal scrollbar. */
+.moyo-note-modal .moyo-ckeditor--note .ck.ck-toolbar {
+    width:100% !important;
+    max-width:100% !important;
+    min-width:0 !important;
+    display:flex !important;
+    flex-wrap:nowrap !important;
+    align-items:center !important;
+    overflow:hidden !important;
+    box-sizing:border-box !important;
+}
+.moyo-note-modal .moyo-ckeditor--note .ck.ck-toolbar .ck-toolbar__items {
+    width:max-content !important;
+    min-width:max-content !important;
+    max-width:none !important;
+    flex:0 0 auto !important;
+    flex-wrap:nowrap !important;
+    overflow:visible !important;
+    white-space:nowrap !important;
+}
+.moyo-note-modal .moyo-ckeditor--note .ck.ck-toolbar .ck-toolbar__items > * {
+    flex:0 0 auto !important;
+}
+.moyo-note-modal .moyo-ckeditor--note .ck.ck-toolbar .ck-toolbar__grouped-dropdown {
+    display:none !important;
+}

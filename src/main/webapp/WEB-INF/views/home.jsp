@@ -6,9 +6,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MOYO - MOYO에 모여</title>
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/home.css?v=moyo-home-brand-v35">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/home.css?v=moyo-home-final-v38">
 </head>
-<body class="moyo-home-body">
+<body class="moyo-home-body ${empty sessionScope.user ? 'is-guest' : 'is-auth'}">
     <%@ include file="common/header.jsp"%>
 
     <main class="moyo-home-main">
@@ -29,21 +29,21 @@
 
                     <h1 id="moyoHomeTitle" class="moyo-home-title">
                         <span class="title-emphasis">MOYO에 모여,</span>
-                        <span class="title-main">일정·기록·사진</span>
-                        <span class="title-main">그리고 프로젝트까지</span>
+                        <span class="title-main">일정·기록·사람</span>
+                        <span class="title-main">그룹과 프로젝트까지</span>
                         <span class="title-gradient">함께 이어지는 공간</span>
                     </h1>
 
                     <p class="moyo-home-subtitle">
-                        개인 일정은 조용히, 그룹 일정은 함께.<br>
-                        노트와 사진, 프로젝트까지 필요한 사람들과 자연스럽게 이어보세요.
+                        일정과 기록부터 친구, 그룹, 프로젝트까지.<br>
+                        필요한 사람과 자료, 소통과 실행의 흐름을 한곳에서 자연스럽게 이어보세요.
                     </p>
 
                     <div class="moyo-home-actions">
                         <c:choose>
                             <c:when test="${not empty sessionScope.user}">
-                                <a href="${pageContext.request.contextPath}/calendar" class="moyo-home-btn primary">내 캘린더 열기</a>
-                                <a href="${pageContext.request.contextPath}/requests" class="moyo-home-btn ghost">요청 확인하기</a>
+                                <a href="${pageContext.request.contextPath}/calendar?scope=PRIVATE&amp;calendarContext=PERSONAL" class="moyo-home-btn primary">내 캘린더 열기</a>
+                                <a href="${pageContext.request.contextPath}/requests" class="moyo-home-btn ghost">요청함 확인</a>
                             </c:when>
                             <c:otherwise>
                                 <a href="${pageContext.request.contextPath}/users/joinForm" class="moyo-home-btn primary">지금 시작하기</a>
@@ -53,9 +53,10 @@
                     </div>
 
                     <div class="moyo-home-proof-row" aria-label="MOYO 주요 기능">
-                        <span><b>Calendar</b> 일정 공유</span>
-                        <span><b>Note</b> 권한 기록</span>
-                        <span><b>Photo</b> 추억 공유</span>
+                        <span><b>Calendar</b> 일정·계획</span>
+                        <span><b>Record</b> 기록·자료</span>
+                        <span><b>Group</b> 친구·그룹</span>
+                        <span><b>Project</b> 협업·실행</span>
                     </div>
                 </div>
 
@@ -85,23 +86,23 @@
                             <article class="moyo-home-preview-card note-card">
                                 <div class="preview-head">
                                     <span class="preview-icon">📝</span>
-                                    <strong>공유 노트</strong>
+                                    <strong>기록과 자료</strong>
                                 </div>
                                 <div class="note-lines">
                                     <span></span><span></span><span></span>
                                 </div>
-                                <p>보기 · 편집 권한 관리</p>
+                                <p>노트 · 파일 · 링크를 한곳에</p>
                             </article>
 
                             <article class="moyo-home-preview-card photo-card">
                                 <div class="preview-head">
                                     <span class="preview-icon">🖼️</span>
-                                    <strong>MOYO 사진첩</strong>
+                                    <strong>친구와 그룹</strong>
                                 </div>
                                 <div class="photo-stack">
                                     <span></span><span></span><span></span>
                                 </div>
-                                <p>친구와 함께 남기는 순간</p>
+                                <p>필요한 사람들과 함께 연결</p>
                             </article>
 
                             <article class="moyo-home-preview-card project-card">
@@ -128,7 +129,7 @@
                 <div class="moyo-home-section-head centered">
                     <span class="moyo-home-eyebrow">MOYO SPACE</span>
                     <h2>혼자 기록하고, 친구와 나누고,<br>그룹과 프로젝트로 함께 이어져요.</h2>
-                    <p>개인·친구·그룹·프로젝트라는 공간에 따라 일정, 노트, 사진의 맥락이 자연스럽게 달라집니다.</p>
+                    <p>개인·친구·그룹·프로젝트라는 공간에 따라 일정, 기록, 자료와 소통의 맥락이 자연스럽게 달라집니다.</p>
                 </div>
 
                 <div class="moyo-home-scope-grid">
@@ -145,7 +146,7 @@
                     <article class="moyo-home-scope-card group">
                         <div class="scope-visual"><span class="scope-icon group-icon" aria-hidden="true"></span></div>
                         <h3>그룹</h3>
-                        <p>멤버들과 일정, 노트, 사진을<br>한 공간에서 함께 관리해요.</p>
+                        <p>멤버들과 일정, 기록, 게시판과 투표를<br>한 공간에서 함께 관리해요.</p>
                     </article>
                     <article class="moyo-home-scope-card project">
                         <div class="scope-visual"><span class="scope-icon project-icon" aria-hidden="true"></span></div>
@@ -156,7 +157,7 @@
 
                 <div class="moyo-home-scope-bridge">
                     <span></span>
-                    <p>이제 일정, 노트, 사진이 하나의 흐름으로 이어집니다.</p>
+                    <p>일정, 기록, 사람과 프로젝트가 하나의 흐름으로 이어집니다.</p>
                     <span></span>
                 </div>
             </div>
@@ -168,17 +169,17 @@
                     <span class="moyo-home-eyebrow">ALL IN ONE FLOW</span>
                     <h2>따로 흩어진 기능이 아니라,<br>하나의 흐름으로 모입니다.</h2>
                     <p>
-                        일정에서 시작한 약속이 노트로 정리되고,<br>
-                        사진으로 남고, 프로젝트 안에서 다시 실행됩니다.<br>
-                        MOYO는 그 흐름을 한 화면 안에 담습니다.
+                        일정에서 시작한 일이 기록과 자료로 남고,<br>
+                        친구와 그룹의 소통을 거쳐 프로젝트 실행으로 이어집니다.<br>
+                        MOYO는 그 흐름을 한곳에 연결합니다.
                     </p>
                 </div>
 
                 <div class="moyo-home-feature-wall">
                     <article class="moyo-home-feature-card big calendar">
-                        <span class="feature-badge">Calendar</span>
-                        <h3>공유 일정 관리</h3>
-                        <p>개인·그룹·프로젝트 일정을 색과 범위로 구분해요.</p>
+                        <span class="feature-badge">Schedule</span>
+                        <h3>일정과 계획</h3>
+                        <p>개인·그룹·프로젝트 일정을 한 캘린더에서 구분하고 계획까지 이어가요.</p>
                         <div class="feature-art calendar-art" aria-hidden="true">
                             <div class="calendar-art-top">
                                 <span></span><span></span><span></span>
@@ -193,28 +194,38 @@
                         </div>
                     </article>
                     <article class="moyo-home-feature-card note">
-                        <span class="feature-badge">Note</span>
-                        <h3>권한 기반 노트</h3>
-                        <p>보기와 편집 권한을 나눠 기록을 안전하게 공유해요.</p>
+                        <span class="feature-badge">Record</span>
+                        <h3>기록과 자료</h3>
+                        <p>노트·사진·파일·링크·장소를 폴더로 정리하고 필요한 범위에 공유해요.</p>
                         <div class="feature-art note-art" aria-hidden="true">
                             <span></span><span></span><span></span>
-                            <em>보기</em><em>편집</em>
+                            <em>기록</em><em>자료</em>
                         </div>
                     </article>
                     <article class="moyo-home-feature-card photo">
-                        <span class="feature-badge">Photo</span>
-                        <h3>MOYO 사진첩</h3>
-                        <p>공개 피드와 앨범으로 함께한 순간을 정리해요.</p>
+                        <span class="feature-badge">People</span>
+                        <h3>친구와 그룹</h3>
+                        <p>친구의 업데이트를 확인하고, 그룹에서는 멤버들과 같은 맥락으로 함께해요.</p>
                         <div class="feature-art photo-art" aria-hidden="true">
                             <span></span><span></span><span></span>
                         </div>
                     </article>
                     <article class="moyo-home-feature-card share">
-                        <span class="feature-badge">Share</span>
-                        <h3>공유와 요청</h3>
-                        <p>초대, 수락, 권한 변경까지 흐름이 끊기지 않아요.</p>
+                        <span class="feature-badge">Notice</span>
+                        <h3>알림과 소통</h3>
+                        <p>요청과 알림을 확인하고, 공지·자유글·자료실·투표로 의견과 소식을 나눠요.</p>
                         <div class="feature-art share-art" aria-hidden="true">
                             <span></span><i></i><span></span><i></i><span></span>
+                        </div>
+                    </article>
+                    <article class="moyo-home-feature-card project-flow">
+                        <span class="feature-badge">Project</span>
+                        <h3>프로젝트 협업</h3>
+                        <p>개인 프로젝트부터 그룹 프로젝트까지, 기간 계획·주간 계획·업무와 기록을 실제 실행 흐름으로 연결해요.</p>
+                        <div class="feature-art project-flow-art" aria-hidden="true">
+                            <span><i></i></span>
+                            <span><i></i></span>
+                            <span><i></i></span>
                         </div>
                     </article>
                 </div>
@@ -340,7 +351,7 @@
                 </div>
                 <c:choose>
                     <c:when test="${not empty sessionScope.user}">
-                        <a href="${pageContext.request.contextPath}/note/list?scope=PRIVATE" class="moyo-home-btn primary">노트 보러가기</a>
+                        <a href="${pageContext.request.contextPath}/calendar?scope=PRIVATE&amp;calendarContext=PERSONAL" class="moyo-home-btn primary">내 캘린더 열기</a>
                     </c:when>
                     <c:otherwise>
                         <a href="${pageContext.request.contextPath}/users/joinForm" class="moyo-home-btn primary">MOYO 시작하기</a>

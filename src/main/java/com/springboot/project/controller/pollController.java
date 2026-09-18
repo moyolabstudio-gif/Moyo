@@ -2,6 +2,7 @@ package com.springboot.project.controller;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.UUID;
 import java.util.HashMap;
 import java.util.List;
@@ -10,6 +11,7 @@ import java.util.Map;
 import jakarta.servlet.http.HttpSession;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.http.MediaType;
@@ -23,6 +25,8 @@ import org.springframework.web.bind.annotation.RestController;
 import com.springboot.project.dto.usersDto;
 import com.springboot.project.dao.IworkspaceDAO;
 import com.springboot.project.service.IpollService;
+import com.springboot.project.service.IprojectAuthorizationService;
+import com.springboot.project.service.UploadSecurityService;
 
 @RestController
 public class pollController {
@@ -33,6 +37,16 @@ public class pollController {
     @Autowired
     private IworkspaceDAO workspaceDAO;
 
+    @Autowired
+    private IprojectAuthorizationService projectAuthorizationService;
+
+    @Autowired
+    private UploadSecurityService uploadSecurityService;
+
+
+    @Value("${moyo.upload.poll-dir:C:/uploads/polls/}")
+    private String pollUploadDir;
+
     @GetMapping("/api/polls/active")
     public Map<String, Object> getActivePoll(@RequestParam("scope") String scope,
                                              @RequestParam("wsId") Long wsId,
@@ -41,9 +55,8 @@ public class pollController {
         usersDto loginUser = (usersDto) session.getAttribute("user");
         if (loginUser == null) return Map.of("message", "LOGIN_REQUIRED");
         Long userId = loginUser.getUserId();
-        if ("WORKSPACE".equalsIgnoreCase(scope)
-                && (wsId == null || workspaceDAO.isWorkspaceMember(wsId, userId) < 1)) {
-            return Map.of("message", "WORKSPACE_MEMBER_REQUIRED");
+        if (!hasRequestedScopeAccess(scope, wsId, projId, userId)) {
+            return Map.of("message", "POLL_SCOPE_ACCESS_DENIED");
         }
 
         Map<String, Object> data = pollService.getActivePoll(scope, wsId, projId, userId);
@@ -62,11 +75,8 @@ public class pollController {
 
         Map<String, Object> data = pollService.getPoll(pollId, loginUser.getUserId());
         if (data == null || data.isEmpty()) return ResponseEntity.ok(new HashMap<>());
-        Long wsId = mapLong(data, "wsId", "WS_ID");
-        String scope = mapString(data, "scope", "SCOPE", "scopeType", "SCOPE_TYPE");
-        if (("WORKSPACE".equalsIgnoreCase(scope) || (scope == null && wsId != null))
-                && (wsId == null || workspaceDAO.isWorkspaceMember(wsId, loginUser.getUserId()) < 1)) {
-            return ResponseEntity.status(403).body(Map.of("message", "WORKSPACE_MEMBER_REQUIRED"));
+        if (!hasPollScopeAccess(data, loginUser.getUserId())) {
+            return ResponseEntity.status(403).body(Map.of("message", "POLL_SCOPE_ACCESS_DENIED"));
         }
         return ResponseEntity.ok(data);
     }
@@ -80,9 +90,8 @@ public class pollController {
         if (loginUser == null) {
             return ResponseEntity.status(401).body(Map.of("message", "LOGIN_REQUIRED"));
         }
-        if ("WORKSPACE".equalsIgnoreCase(scope)
-                && (wsId == null || workspaceDAO.isWorkspaceMember(wsId, loginUser.getUserId()) < 1)) {
-            return ResponseEntity.status(403).body(Map.of("message", "WORKSPACE_MEMBER_REQUIRED"));
+        if (!hasRequestedScopeAccess(scope, wsId, projId, loginUser.getUserId())) {
+            return ResponseEntity.status(403).body(Map.of("message", "POLL_SCOPE_ACCESS_DENIED"));
         }
         return ResponseEntity.ok(pollService.getPollList(scope, wsId, projId));
     }
@@ -101,12 +110,14 @@ public class pollController {
 
         Long pollId = toLong(params.get("pollId"));
         Map<String, Object> poll = pollId == null ? null : pollService.getPoll(pollId, loginUser.getUserId());
-        Long wsId = mapLong(poll, "wsId", "WS_ID");
-        String scope = mapString(poll, "scope", "SCOPE", "scopeType", "SCOPE_TYPE");
-        if (("WORKSPACE".equalsIgnoreCase(scope) || (scope == null && wsId != null))
-                && (wsId == null || workspaceDAO.isWorkspaceMember(wsId, loginUser.getUserId()) < 1)) {
+        if (poll == null || poll.isEmpty()) {
             result.put("success", false);
-            result.put("message", "WORKSPACE_MEMBER_REQUIRED");
+            result.put("message", "POLL_NOT_FOUND");
+            return result;
+        }
+        if (!hasPollScopeAccess(poll, loginUser.getUserId())) {
+            result.put("success", false);
+            result.put("message", "POLL_SCOPE_ACCESS_DENIED");
             return result;
         }
 
@@ -143,22 +154,18 @@ public class pollController {
             return result;
         }
 
-        String contentType = image.getContentType();
-        if (contentType == null || !contentType.startsWith("image/")) {
+        final String extension;
+        try {
+            uploadSecurityService.validateImage(image, 10L * 1024L * 1024L, true);
+            extension = "." + uploadSecurityService.safeExtension(image.getOriginalFilename());
+        } catch (IllegalArgumentException e) {
             result.put("success", false);
-            result.put("message", "IMAGE_ONLY");
+            result.put("message", e.getMessage());
             return result;
         }
 
-        String originalName = image.getOriginalFilename();
-        String extension = "";
-
-        if (originalName != null && originalName.lastIndexOf('.') >= 0) {
-            extension = originalName.substring(originalName.lastIndexOf('.'));
-        }
-
         String savedName = UUID.randomUUID().toString().replace("-", "") + extension;
-        String uploadDir = "C:/MoyoLab.Studio/upload/polls/";
+        String uploadDir = pollUploadDir;
         File directory = new File(uploadDir);
 
         if (!directory.exists() && !directory.mkdirs()) {
@@ -192,41 +199,22 @@ public class pollController {
             return result;
         }
 
-        String contentType = media.getContentType() == null ? "" : media.getContentType().toLowerCase();
-        String originalName = media.getOriginalFilename() == null ? "" : media.getOriginalFilename();
-        String lowerName = originalName.toLowerCase();
-
-        boolean audio = contentType.startsWith("audio/")
-                || lowerName.matches(".*\\.(mp3|wav|m4a|aac|ogg|flac)$");
-        boolean video = contentType.startsWith("video/")
-                || lowerName.matches(".*\\.(mp4|webm|ogg|mov|m4v)$");
-
-        if (!audio && !video) {
-            result.put("success", false);
-            result.put("message", "AUDIO_OR_VIDEO_ONLY");
-            return result;
-        }
-
-        // 현재는 기능 제공을 위한 안전 상한입니다. 요금제별 한도는 이후 정책에서 분리할 수 있습니다.
+        String originalName = uploadSecurityService.safeOriginalName(media.getOriginalFilename());
+        String mediaExtension = uploadSecurityService.safeExtension(originalName);
+        boolean video = java.util.Set.of("mp4", "webm", "mov", "mkv").contains(mediaExtension);
         long maxBytes = video ? 500L * 1024L * 1024L : 100L * 1024L * 1024L;
-        if (media.getSize() > maxBytes) {
+        try {
+            uploadSecurityService.validateAudioVideo(media, maxBytes);
+        } catch (IllegalArgumentException e) {
             result.put("success", false);
-            result.put("message", video ? "영상 파일은 500MB 이하만 업로드할 수 있습니다." : "음악 파일은 100MB 이하만 업로드할 수 있습니다.");
+            result.put("message", e.getMessage());
             return result;
         }
-
-        String extension = "";
-        int dotIndex = originalName.lastIndexOf('.');
-        if (dotIndex >= 0) {
-            extension = originalName.substring(dotIndex).toLowerCase();
-        }
-        if (extension.isBlank()) {
-            extension = video ? ".mp4" : ".mp3";
-        }
+        String extension = "." + mediaExtension;
 
         String mediaFolder = video ? "video" : "audio";
         String savedName = UUID.randomUUID().toString().replace("-", "") + extension;
-        String uploadDir = "C:/MoyoLab.Studio/upload/polls/" + mediaFolder + "/";
+        String uploadDir = Path.of(pollUploadDir, mediaFolder).toString() + File.separator;
         File directory = new File(uploadDir);
 
         if (!directory.exists() && !directory.mkdirs()) {
@@ -253,6 +241,14 @@ public class pollController {
             return result;
         }
 
+        Long pollId = toLong(params.get("pollId"));
+        Map<String, Object> poll = pollId == null ? null : pollService.getPoll(pollId, loginUser.getUserId());
+        if (poll == null || poll.isEmpty() || !hasPollScopeAccess(poll, loginUser.getUserId())) {
+            result.put("success", false);
+            result.put("message", "POLL_SCOPE_ACCESS_DENIED");
+            return result;
+        }
+
         try {
             params.put("userId", loginUser.getUserId());
             pollService.updatePoll(params);
@@ -270,6 +266,15 @@ public class pollController {
         usersDto loginUser = (usersDto) session.getAttribute("user");
         Map<String, Object> result = new HashMap<>();
         if (loginUser == null) { result.put("success", false); result.put("message", "LOGIN_REQUIRED"); return result; }
+
+        Long pollId = toLong(params.get("pollId"));
+        Map<String, Object> poll = pollId == null ? null : pollService.getPoll(pollId, loginUser.getUserId());
+        if (poll == null || poll.isEmpty() || !hasPollScopeAccess(poll, loginUser.getUserId())) {
+            result.put("success", false);
+            result.put("message", "POLL_SCOPE_ACCESS_DENIED");
+            return result;
+        }
+
         try {
             params.put("userId", loginUser.getUserId());
             pollService.extendPoll(params);
@@ -298,6 +303,13 @@ public class pollController {
                     ? ((Number) pollIdValue).longValue()
                     : Long.valueOf(String.valueOf(pollIdValue));
 
+            Map<String, Object> poll = pollService.getPoll(pollId, loginUser.getUserId());
+            if (poll == null || poll.isEmpty() || !hasPollScopeAccess(poll, loginUser.getUserId())) {
+                result.put("success", false);
+                result.put("message", "POLL_SCOPE_ACCESS_DENIED");
+                return result;
+            }
+
             pollService.deletePoll(pollId, loginUser.getUserId());
             result.put("success", true);
         } catch (IllegalStateException | IllegalArgumentException e) {
@@ -323,6 +335,15 @@ public class pollController {
 
         params.put("userId", loginUser.getUserId());
 
+        String scope = mapString(params, "scope", "SCOPE");
+        Long wsId = mapLong(params, "wsId", "WS_ID");
+        Long projId = mapLong(params, "projId", "PROJ_ID");
+        if (!hasRequestedScopeAccess(scope, wsId, projId, loginUser.getUserId())) {
+            result.put("success", false);
+            result.put("message", "POLL_SCOPE_ACCESS_DENIED");
+            return result;
+        }
+
         try {
             Long pollId = pollService.createPoll(params);
             result.put("success", true);
@@ -336,6 +357,33 @@ public class pollController {
         }
         return result;
     }
+    private boolean hasRequestedScopeAccess(String scope, Long wsId, Long projId, Long userId) {
+        if (userId == null) return false;
+
+        String normalizedScope = scope == null ? "" : scope.trim().toUpperCase();
+        if ("PROJECT".equals(normalizedScope)) {
+            return projId != null && projectAuthorizationService.canAccessProject(projId, wsId, userId);
+        }
+        if ("WORKSPACE".equals(normalizedScope)) {
+            return wsId != null && workspaceDAO.isWorkspaceMember(wsId, userId) > 0;
+        }
+        return false;
+    }
+
+    private boolean hasPollScopeAccess(Map<String, Object> poll, Long userId) {
+        if (poll == null || poll.isEmpty() || userId == null) return false;
+        String scope = mapString(poll, "scope", "SCOPE", "scopeType", "SCOPE_TYPE");
+        Long wsId = mapLong(poll, "wsId", "WS_ID");
+        Long projId = mapLong(poll, "projId", "PROJ_ID");
+
+        // 과거 데이터는 scope가 비어 있어도 projId/wsId로 스코프를 복원한다.
+        if (scope == null || scope.isBlank()) {
+            if (projId != null) scope = "PROJECT";
+            else if (wsId != null) scope = "WORKSPACE";
+        }
+        return hasRequestedScopeAccess(scope, wsId, projId, userId);
+    }
+
     private Object mapValue(Map<String, Object> map, String... keys) {
         if (map == null) return null;
         for (String key : keys) {

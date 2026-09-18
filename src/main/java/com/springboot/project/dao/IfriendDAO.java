@@ -12,6 +12,7 @@ public interface IfriendDAO {
     List<friendDTO> selectFriends(@Param("userId") Long userId, @Param("keyword") String keyword);
     List<friendDTO> selectReceivedRequests(@Param("userId") Long userId);
     List<friendDTO> selectSentRequests(@Param("userId") Long userId);
+    List<friendDTO> selectRecommendations(@Param("userId") Long userId);
     int countPendingReceived(@Param("userId") Long userId);
     friendDTO selectRelation(@Param("userId") Long userId, @Param("targetUserId") Long targetUserId);
     int insertRequest(@Param("requesterId") Long requesterId, @Param("addresseeId") Long addresseeId);

@@ -1,0 +1,268 @@
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+
+<div id="memberActivityProfileComponent" class="member-activity-profile" hidden>
+    <div class="member-activity-profile__overlay" data-member-activity-close></div>
+
+    <section id="memberActivityProfileModal"
+             class="member-activity-profile__modal"
+             role="dialog"
+             aria-modal="true"
+             aria-labelledby="memberActivityProfileTitle">
+        <header class="member-activity-profile__head">
+            <div>
+                <span class="member-activity-profile__kicker">프로젝트 프로필</span>
+                <h3 id="memberActivityProfileTitle">멤버 활동</h3>
+            </div>
+            <button type="button"
+                    class="member-activity-profile__close"
+                    data-member-activity-close
+                    aria-label="멤버 활동 프로필 닫기">&times;</button>
+        </header>
+
+        <div id="memberActivityProfileLoading" class="member-activity-profile__loading">
+            멤버 활동 프로필을 불러오는 중입니다.
+        </div>
+
+        <div id="memberActivityProfileContent" class="member-activity-profile__content" hidden>
+            <section class="member-activity-profile__summary" aria-label="멤버 기본 정보">
+                <div class="member-activity-profile__avatar-slot">
+                    <div id="memberActivityProfileAvatar" class="member-activity-profile__avatar" aria-hidden="true"></div>
+                    <button type="button"
+                            id="memberActivityProfileImageSelectButton"
+                            class="member-activity-profile__avatar-change"
+                            data-group-inline-edit
+                            hidden>이미지 변경</button>
+                </div>
+
+                <div class="member-activity-profile__identity">
+                    <div class="member-activity-profile__name-line">
+                        <strong id="memberActivityProfileName"></strong>
+                        <input type="text" id="memberActivityProfileDisplayName" class="member-activity-profile__inline-name-input" maxlength="50" placeholder="그룹 표시 이름" data-group-inline-edit hidden>
+                        <span id="memberActivityProfileRole" class="member-activity-profile__role"></span>
+                    </div>
+                    <div class="member-activity-profile__position-line">
+                        <span id="memberActivityProfilePosition">담당 역할 미지정</span>
+                        <input type="text" id="memberActivityProfileGroupPosition" class="member-activity-profile__inline-position-input" maxlength="50" placeholder="직책 · 담당" data-group-inline-edit hidden>
+                        <button type="button"
+                                id="memberActivityProfileEditPositionButton"
+                                class="member-activity-profile__edit-position"
+                                hidden>담당 역할 수정</button>
+                    </div>
+                    <label class="member-activity-profile__inline-account-toggle" data-group-inline-edit hidden>
+                        <input type="checkbox" id="memberActivityProfileUseAccount" aria-label="계정 프로필 사용">
+                        <span><strong>계정 프로필 사용</strong><small>계정의 이름과 이미지를 이 그룹에서도 사용합니다.</small></span>
+                    </label>
+                    <span id="memberActivityProfileJoinedAt" class="member-activity-profile__joined"></span>
+                </div>
+
+                <div id="memberActivityProfileAdminActions"
+                     class="member-activity-profile__admin-actions"
+                     hidden>
+                    <button type="button"
+                            id="memberActivityProfileAdminMenuButton"
+                            class="member-activity-profile__admin-menu-button"
+                            aria-haspopup="menu"
+                            aria-expanded="false"
+                            aria-label="멤버 관리 메뉴">•••</button>
+                    <div id="memberActivityProfileAdminMenu"
+                         class="member-activity-profile__admin-menu"
+                         role="menu"
+                         hidden>
+                        <button type="button"
+                                id="memberActivityProfileRoleAction"
+                                class="member-activity-profile__admin-menu-item"
+                                role="menuitem">관리자로 변경</button>
+                        <button type="button"
+                                id="memberActivityProfileRemoveAction"
+                                class="member-activity-profile__admin-menu-item is-danger"
+                                role="menuitem">내보내기</button>
+                    </div>
+                </div>
+            </section>
+
+            <form id="memberActivityProfilePositionForm"
+                  class="member-activity-profile__position-form"
+                  hidden>
+                <label for="memberActivityProfilePositionInput">프로젝트 담당 역할</label>
+                <div class="member-activity-profile__position-edit-row">
+                    <input type="text"
+                           id="memberActivityProfilePositionInput"
+                           maxlength="100"
+                           placeholder="예: 기획, 백엔드 개발, 디자인">
+                    <button type="submit" class="member-activity-profile__save">저장</button>
+                    <button type="button" id="memberActivityProfilePositionCancel" class="member-activity-profile__cancel">취소</button>
+                </div>
+                <small>프로젝트에서 실제로 맡고 있는 역할을 표시합니다.</small>
+            </form>
+
+            <form id="memberActivityProfileGroupEditForm"
+                  class="member-activity-profile__group-edit member-activity-profile__group-edit--details"
+                  enctype="multipart/form-data"
+                  hidden>
+                <div class="member-activity-profile__group-edit-grid">
+                    <label class="member-activity-profile__edit-field member-activity-profile__edit-field--full">
+                        <span>한 줄 소개</span>
+                        <input type="text" id="memberActivityProfileIntro" maxlength="120" placeholder="그룹에서의 역할이나 소개를 입력하세요">
+                    </label>
+
+                    <div class="member-activity-profile__edit-field">
+                        <span>연락 이메일</span>
+                        <div class="member-activity-profile__edit-input-with-option">
+                            <input type="email" id="memberActivityProfileEmail" maxlength="100" autocomplete="email">
+                            <label class="member-activity-profile__check-line"><input type="checkbox" id="memberActivityProfileShowEmail"><span>공개</span></label>
+                        </div>
+                    </div>
+                    <div class="member-activity-profile__edit-field">
+                        <span>전화번호</span>
+                        <div class="member-activity-profile__edit-input-with-option">
+                            <input type="tel" id="memberActivityProfilePhone" maxlength="30" inputmode="tel" autocomplete="tel" placeholder="010-0000-0000">
+                            <label class="member-activity-profile__check-line"><input type="checkbox" id="memberActivityProfileShowPhone"><span>공개</span></label>
+                        </div>
+                    </div>
+
+                    <div class="member-activity-profile__edit-field">
+                        <span>생일</span>
+                        <div class="member-activity-profile__birth-edit-line">
+                            <strong id="memberActivityProfileBirthText">등록된 생일 없음</strong>
+                            <label class="member-activity-profile__check-line"><input type="checkbox" id="memberActivityProfileShowBirth"><span>공개</span></label>
+                        </div>
+                        <small>생일 정보는 계정 프로필에서 변경할 수 있습니다.</small>
+                    </div>
+                </div>
+
+                <div class="member-activity-profile__group-edit-actions">
+                    <button type="button" id="memberActivityProfileGroupEditCancel" class="member-activity-profile__cancel">취소</button>
+                    <button type="submit" class="member-activity-profile__save">저장</button>
+                </div>
+            </form>
+
+            <nav class="member-activity-profile__tabs" aria-label="멤버 활동 프로필 보기">
+                <button type="button"
+                        class="member-activity-profile__tab is-active"
+                        data-member-activity-tab="TASKS"
+                        aria-selected="true">업무</button>
+                <button type="button"
+                        class="member-activity-profile__tab"
+                        data-member-activity-tab="CONTENT"
+                        aria-selected="false">콘텐츠</button>
+                <button type="button"
+                        class="member-activity-profile__tab"
+                        data-member-activity-tab="ACTIVITY"
+                        aria-selected="false">최근 활동</button>
+            </nav>
+
+            <div class="member-activity-profile__panels">
+                <!-- 11단계: 프로젝트 담당 업무 -->
+                <section id="memberActivityProfileTasksSection"
+                         class="member-activity-profile__section member-activity-profile__section--tasks member-activity-profile__panel is-active"
+                         data-member-activity-panel="TASKS"
+                         hidden>
+                    <div class="member-activity-profile__section-head">
+                        <div>
+                            <h4>담당 업무</h4>
+                            <p>이 멤버가 프로젝트에서 맡은 업무입니다.</p>
+                        </div>
+                    </div>
+                    <div id="memberActivityProfileTaskSummary" class="member-activity-profile__task-summary"></div>
+                    <div id="memberActivityProfileTaskList" class="member-activity-profile__task-list"></div>
+                </section>
+
+                <!-- 12단계: 프로젝트 콘텐츠 기여 -->
+                <section id="memberActivityProfileContentSection"
+                         class="member-activity-profile__section member-activity-profile__section--contributions member-activity-profile__panel"
+                         data-member-activity-panel="CONTENT"
+                         hidden>
+                    <div class="member-activity-profile__section-head">
+                        <div>
+                            <h4>활동 콘텐츠</h4>
+                            <p id="memberActivityProfileContentDescription">이 범위에서 작성하거나 업로드한 기록입니다.</p>
+                        </div>
+                    </div>
+                    <div id="memberActivityProfileContributionSummary" class="member-activity-profile__contribution-summary"></div>
+                    <div id="memberActivityProfileContributionList" class="member-activity-profile__contribution-list"></div>
+                </section>
+
+                <!-- 13단계: 최근 프로젝트 활동 -->
+                <section id="memberActivityProfileActivitySection"
+                         class="member-activity-profile__section member-activity-profile__section--activity member-activity-profile__panel"
+                         data-member-activity-panel="ACTIVITY"
+                         hidden>
+                    <div class="member-activity-profile__section-head">
+                        <div>
+                            <h4>최근 활동</h4>
+                            <p id="memberActivityProfileActivityDescription">이 범위에서의 최근 변경과 참여 기록입니다.</p>
+                        </div>
+                    </div>
+                    <div id="memberActivityProfileActivityList" class="member-activity-profile__activity-list"></div>
+                </section>
+            </div>
+        </div>
+    </section>
+
+    <div id="memberActivityProfileRoleModal" class="member-activity-profile__role-modal" hidden>
+        <div class="member-activity-profile__role-modal-overlay" data-member-role-modal-close></div>
+        <section class="member-activity-profile__role-dialog" role="dialog" aria-modal="true" aria-labelledby="memberActivityProfileRoleModalTitle">
+            <header class="member-activity-profile__role-dialog-head">
+                <div>
+                    <span class="member-activity-profile__kicker">멤버 권한</span>
+                    <h4 id="memberActivityProfileRoleModalTitle">권한 변경</h4>
+                </div>
+                <button type="button" class="member-activity-profile__role-dialog-close" data-member-role-modal-close aria-label="권한 변경 닫기">&times;</button>
+            </header>
+            <div class="member-activity-profile__role-dialog-body">
+                <p id="memberActivityProfileRoleTarget" class="member-activity-profile__role-target"></p>
+                <div class="member-activity-profile__role-flow" aria-label="권한 변경 내용">
+                    <div class="member-activity-profile__role-box">
+                        <span>현재 권한</span>
+                        <strong id="memberActivityProfileRoleCurrent"></strong>
+                    </div>
+                    <span class="member-activity-profile__role-arrow" aria-hidden="true">→</span>
+                    <div class="member-activity-profile__role-box is-next">
+                        <span>변경 권한</span>
+                        <strong id="memberActivityProfileRoleNext"></strong>
+                    </div>
+                </div>
+                <p id="memberActivityProfileRoleDescription" class="member-activity-profile__role-description"></p>
+            </div>
+            <footer class="member-activity-profile__role-dialog-actions">
+                <button type="button" class="member-activity-profile__cancel" data-member-role-modal-close>취소</button>
+                <button type="button" id="memberActivityProfileRoleConfirm" class="member-activity-profile__save">권한 변경</button>
+            </footer>
+        </section>
+    </div>
+
+    <div id="memberActivityProfileImageEditor" class="member-activity-profile__image-editor" hidden>
+        <div class="member-activity-profile__image-editor-overlay" data-group-image-editor-close></div>
+        <section class="member-activity-profile__image-editor-dialog" role="dialog" aria-modal="true" aria-labelledby="memberActivityProfileImageEditorTitle">
+            <header class="member-activity-profile__image-editor-head">
+                <div>
+                    <span class="member-activity-profile__kicker">프로필 이미지</span>
+                    <h4 id="memberActivityProfileImageEditorTitle">이미지 조정</h4>
+                </div>
+                <button type="button" class="member-activity-profile__image-editor-close" data-group-image-editor-close aria-label="이미지 조정 닫기">&times;</button>
+            </header>
+            <div class="member-activity-profile__image-editor-body">
+                <div id="memberActivityProfileCropViewport" class="member-activity-profile__crop-viewport member-activity-profile__crop-viewport--large">
+                    <div id="memberActivityProfileCropPlaceholder" class="member-activity-profile__crop-placeholder"></div>
+                    <img id="memberActivityProfileCropImage" hidden alt="그룹 프로필 이미지 조정 미리보기">
+                </div>
+                <p class="member-activity-profile__image-editor-guide">사진을 드래그해 위치를 맞추고 크기를 조절하세요.</p>
+                <input type="file" id="memberActivityProfileImage" class="member-activity-profile__image-file-input" accept="image/png,image/jpeg,image/webp">
+                <div class="member-activity-profile__image-editor-source-actions">
+                    <button type="button" id="memberActivityProfileImageFileSelectButton" class="member-activity-profile__image-select">새 이미지 선택</button>
+                    <button type="button" id="memberActivityProfileRemoveImageButton" class="member-activity-profile__image-remove">기본 아바타</button>
+                    <span id="memberActivityProfileImageFileName" class="member-activity-profile__image-file-name" hidden>현재 프로필 이미지</span>
+                </div>
+                <label class="member-activity-profile__crop-zoom member-activity-profile__crop-zoom--large">
+                    <span>축소</span>
+                    <input type="range" id="memberActivityProfileCropZoom" min="1" max="3" step="0.05" value="1" aria-label="프로필 이미지 크기">
+                    <span>확대</span>
+                </label>
+            </div>
+            <footer class="member-activity-profile__image-editor-actions">
+                <button type="button" id="memberActivityProfileImageEditorCancel" class="member-activity-profile__cancel">취소</button>
+                <button type="button" id="memberActivityProfileImageEditorApply" class="member-activity-profile__save">적용</button>
+            </footer>
+        </section>
+    </div>
+</div>

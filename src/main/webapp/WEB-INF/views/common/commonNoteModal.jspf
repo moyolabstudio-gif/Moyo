@@ -1,0 +1,124 @@
+<%@ page contentType="text/html; charset=UTF-8" %>
+<div id="moyoNoteModal" class="moyo-note-modal" hidden aria-hidden="true">
+ <div class="moyo-note-modal__backdrop" data-note-modal-close></div>
+ <div class="moyo-note-modal__shell">
+ <section class="moyo-note-modal__panel" role="dialog" aria-modal="true" aria-label="노트 작성">
+  <header class="moyo-note-modal__header">
+   <div class="moyo-note-modal__status-wrap">
+    <span class="moyo-note-modal__eyebrow">NOTE</span>
+    <span id="moyoNoteModalLibrary" class="moyo-note-modal__library" title="저장 라이브러리">내 라이브러리</span>
+    <span class="moyo-note-modal__status-separator" aria-hidden="true">·</span>
+    <span id="moyoNoteModalStatus" class="moyo-note-modal__status" aria-live="polite">바로 적어보세요</span>
+    <button id="moyoNoteModalRetry" type="button" class="moyo-note-modal__retry" hidden>다시 저장</button>
+   </div>
+   <div class="moyo-note-modal__header-actions">
+    <button id="moyoNoteModalPdf" type="button" class="moyo-note-modal__icon-action" hidden aria-label="PDF 저장" title="PDF 저장">
+     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3.5h7l3 3V20.5H7z"/><path d="M14 3.5v3h3M9.2 16.8h5.6M9.2 13.8h5.6"/></svg>
+    </button>
+    <button id="moyoNoteModalPrint" type="button" class="moyo-note-modal__icon-action" hidden aria-label="인쇄" title="인쇄">
+     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 8V4.5h10V8M7 16H5.5A2.5 2.5 0 0 1 3 13.5v-3A2.5 2.5 0 0 1 5.5 8h13a2.5 2.5 0 0 1 2.5 2.5v3a2.5 2.5 0 0 1-2.5 2.5H17"/><path d="M7 13h10v7H7z"/></svg>
+    </button>
+    <button id="moyoNoteModalInfoToggle" type="button" class="moyo-note-modal__icon-action" hidden aria-label="노트 정보" title="노트 정보">
+     <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 10.5v5M12 7.7h.01"/></svg>
+    </button>
+    <button id="moyoNoteModalModeToggle" type="button" class="moyo-note-modal__mode-toggle" hidden>편집</button>
+    <button type="button" class="moyo-note-modal__close" data-note-modal-close aria-label="닫기" title="닫기">
+     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </button>
+   </div>
+  </header>
+  <div class="moyo-note-modal__body">
+   <div class="moyo-note-modal__editor-wrap">
+    <div id="moyoNoteModalTitleWrap" class="moyo-note-modal__title-wrap" hidden>
+     <input id="moyoNoteModalTitle" class="moyo-note-modal__title" type="text" maxlength="120"
+            autocomplete="off" spellcheck="false" aria-label="노트 제목"
+            placeholder="제목" />
+     <span id="moyoNoteModalTitleHint" class="moyo-note-modal__title-hint">본문에서 자동으로 만들었어요</span>
+    </div>
+    <div id="moyoNoteModalDocumentMeta" class="moyo-note-modal__document-meta" hidden>
+     <span id="moyoNoteModalAuthor">작성자</span>
+     <span aria-hidden="true">·</span>
+     <span id="moyoNoteModalDate">작성일</span>
+     <span id="moyoNoteModalContentMeta" class="moyo-note-modal__content-meta" hidden aria-live="polite">
+      <span class="moyo-note-modal__meta-item" data-note-meta="image" title="이미지" aria-label="이미지"><i class="fa-regular fa-image" aria-hidden="true"></i><strong>0</strong></span>
+      <span class="moyo-note-modal__meta-item" data-note-meta="table" title="표" aria-label="표"><i class="fa-solid fa-table-cells" aria-hidden="true"></i><strong>0</strong></span>
+      <span class="moyo-note-modal__meta-item" data-note-meta="link" title="링크" aria-label="링크"><i class="fa-solid fa-link" aria-hidden="true"></i><strong>0</strong></span>
+      <span class="moyo-note-modal__meta-item" data-note-meta="video" title="동영상" aria-label="동영상"><i class="fa-regular fa-circle-play" aria-hidden="true"></i><strong>0</strong></span>
+     </span>
+     <span id="moyoNoteModalReadonly" class="moyo-note-modal__readonly" hidden>읽기 전용</span>
+    </div>
+    <textarea id="moyoNoteModalEditor" aria-label="노트 내용"></textarea>
+   </div>
+  </div>
+ </section>
+ <aside id="moyoNoteModalInfoPanel" class="moyo-note-modal__info-panel" hidden aria-label="노트 정보">
+  <div class="moyo-note-modal__info-head">
+   <strong>노트 정보</strong>
+   <button id="moyoNoteModalInfoClose" type="button" class="moyo-note-modal__info-close" aria-label="정보 닫기">×</button>
+  </div>
+  <div class="moyo-note-modal__info-body">
+   <label class="moyo-note-modal__info-field">
+    <span>제목</span>
+    <input id="moyoNoteModalInfoTitle" type="text" maxlength="120" autocomplete="off" />
+   </label>
+   <div class="moyo-note-modal__info-field">
+    <span><i class="fa-regular fa-folder-open" aria-hidden="true"></i> 위치</span>
+    <button id="moyoNoteModalMoveLibrary" type="button" class="moyo-note-modal__info-value-action"><span id="moyoNoteModalInfoLibrary"><i class="fa-regular fa-folder-open" aria-hidden="true"></i> 라이브러리</span><i class="fa-solid fa-chevron-right" aria-hidden="true"></i></button>
+   </div>
+   <div class="moyo-note-modal__info-section moyo-note-modal__document-info" aria-label="작성 정보">
+    <div class="moyo-note-modal__info-row"><span>작성</span><strong><span id="moyoNoteModalInfoAuthor">-</span><small id="moyoNoteModalInfoCreated">-</small></strong></div>
+    <div class="moyo-note-modal__info-row"><span>최근 수정</span><strong><span id="moyoNoteModalInfoUpdatedBy">-</span><small id="moyoNoteModalInfoUpdated">-</small></strong></div>
+   </div>
+   <div id="moyoNoteModalPermissionsSection" class="moyo-note-modal__info-section moyo-note-modal__permissions-section" hidden>
+    <div class="moyo-note-modal__info-section-title"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i><span>공개 및 권한</span></div>
+    <div id="moyoNoteModalAccessField" class="moyo-note-modal__access-field" hidden>
+     <div class="moyo-note-modal__access-options" role="radiogroup" aria-label="공개 범위">
+      <button id="moyoNoteModalAccessScope" type="button" data-note-access-mode="SCOPE"><i class="fa-solid fa-users" aria-hidden="true"></i><span>전체 공개</span></button>
+      <button id="moyoNoteModalAccessRestricted" type="button" data-note-access-mode="RESTRICTED"><i class="fa-solid fa-lock" aria-hidden="true"></i><span>비밀글</span></button>
+     </div>
+     <small id="moyoNoteModalAccessHelp">현재 그룹/프로젝트 멤버가 확인할 수 있습니다.</small>
+    </div>
+    <div id="moyoNoteModalEditorsField" class="moyo-note-modal__editors-field" hidden>
+     <span class="moyo-note-modal__editors-label"><i class="fa-solid fa-user-pen" aria-hidden="true"></i> 편집 가능</span>
+     <div id="moyoNoteModalEditors" class="moyo-note-modal__editors"><span class="moyo-note-modal__editors-empty">작성자만</span></div>
+    </div>
+   </div>
+  </div>
+  <div class="moyo-note-modal__info-footer">
+   <button id="moyoNoteModalShareManage" type="button" class="moyo-note-modal__history-action" hidden><i class="fa-solid fa-user-pen" aria-hidden="true"></i> 권한 멤버 관리</button>
+   <button id="moyoNoteModalHistory" type="button" class="moyo-note-modal__history-action" hidden><i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i> 변경 기록</button>
+   <button id="moyoNoteModalDelete" type="button" class="moyo-note-modal__danger-action" hidden><i class="fa-regular fa-trash-can" aria-hidden="true"></i> 휴지통으로 이동</button>
+  </div>
+ </aside>
+ </div>
+</div>
+
+
+<button type="button" id="moyoNoteShareOpenHidden" data-share-content-id="" hidden>공유</button>
+<button type="button" id="moyoNotePermissionOpenHidden" hidden>권한</button>
+<span id="moyoNoteShareCount" hidden>0</span>
+<span id="moyoNotePermissionCount" hidden>0</span>
+<div id="moyoNoteShareHiddenFields" hidden></div>
+<div id="moyoNoteShareInitialSource" hidden></div>
+<div id="moyoNoteWorkspaceMemberSource" hidden></div>
+<div id="moyoNoteProjectMemberSource" hidden></div>
+<div id="moyoNoteWorkspaceTargetSource" hidden></div>
+<div id="moyoNoteProjectTargetSource" hidden></div>
+<div id="moyoNoteShareModal" class="note-write-share-modal moyo-share-modal" data-share-mode-type="PERMISSION" hidden>
+ <div class="note-write-share-backdrop" data-note-share-close></div>
+ <section class="note-write-share-panel" role="dialog" aria-modal="true" aria-labelledby="moyoNoteShareModalTitle">
+  <div class="note-write-share-modal-head">
+   <div><h3 id="moyoNoteShareModalTitle">공유하기</h3><p>친구·그룹·프로젝트를 선택하고 보기/편집 권한을 관리합니다.</p></div>
+   <button type="button" class="note-write-share-close" data-note-share-close aria-label="닫기">×</button>
+  </div>
+<div class="note-write-share-toolbar">
+   <select id="moyoNoteShareContext" class="note-write-share-select" aria-label="공유 범위 선택" hidden></select>
+   <input type="text" id="moyoNoteShareKeyword" class="note-write-share-input" placeholder="이름 또는 이메일 검색">
+  </div>
+  <div class="note-write-share-body note-write-share-body-simple">
+   <div><div class="note-write-share-subtitle">대상</div><div id="moyoNoteShareCandidates" class="note-write-share-list"></div></div>
+   <div><div class="note-write-share-subtitle">현재 공유 <span id="moyoNoteShareModalCount" class="note-share-modal-count" hidden>0</span></div><div id="moyoNoteShareSelected" class="note-write-share-selected"></div></div>
+  </div>
+  <div class="note-write-share-modal-actions"><div><button type="button" class="note-soft-btn" data-note-share-close>닫기</button><button type="button" id="moyoNoteShareApply" class="note-gradient-btn">적용</button></div></div>
+ </section>
+</div>

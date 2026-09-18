@@ -5,7 +5,7 @@ body {
     min-height: 100vh;
     background: #f4f7fb;
     color: #111827;
-    font-family: 'Pretendard', sans-serif;
+    font-family: "Pretendard", sans-serif;
     overflow-x: hidden;
     overflow-y: auto;
     display: flex;
@@ -17,7 +17,7 @@ body {
 .project-create-page select,
 .project-create-page textarea,
 .project-create-page button {
-    font-family: 'Pretendard', sans-serif !important;
+    font-family: "Pretendard", sans-serif !important;
 }
 .project-create-page {
     width: 100%;
@@ -786,7 +786,7 @@ body > footer *, .moyo-footer *, footer.common-footer *, .footer * {
     cursor: pointer;
     transition: .14s ease;
 }
-.project-date-picker-day:nth-child(7n+1) { color: #ff5d7a; }
+.project-date-picker-day:nth-child(7n/**/+1) { color: #ff5d7a; }
 .project-date-picker-day:nth-child(7n) { color: #4f7cff; }
 .project-date-picker-day:hover {
     border-color: #b6d7ff;
@@ -835,4 +835,183 @@ body > footer *, .moyo-footer *, footer.common-footer *, .footer * {
     background-clip: border-box;
     box-shadow: 0 7px 15px rgba(83, 111, 222, .24);
     transform: none;
+}
+
+/* ========================================================================
+   프로젝트 생성 날짜 입력 아이콘 — 설정 화면과 동일 규격
+   ======================================================================== */
+.project-create-page .date-row .project-date-input,
+.project-create-page input.project-date-input[data-project-date-picker] {
+    padding-right: 42px !important;
+    cursor: pointer !important;
+    background-color: #fff !important;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%2355708f' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='4'/%3E%3Cpath d='M16 2v4M8 2v4M3 10h18'/%3E%3C/svg%3E") !important;
+    background-repeat: no-repeat !important;
+    background-position: right 13px center !important;
+    background-size: 18px 18px !important;
+}
+
+.project-create-page .date-row .project-date-input:focus,
+.project-create-page input.project-date-input[data-project-date-picker]:focus {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%234a90e2' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='4'/%3E%3Cpath d='M16 2v4M8 2v4M3 10h18'/%3E%3C/svg%3E") !important;
+}
+
+
+/* ========================================================================
+   UI/UX 4단계 — 생성 화면 공통 기준
+   Design Token + 공통 컨트롤 기준을 프로젝트 생성 화면에 적용한다.
+   ======================================================================== */
+body {
+    background: var(--moyo-color-page, #F7F9FC);
+    color: var(--moyo-text, #1F2937);
+    font-family: var(--moyo-font-family, "Pretendard", sans-serif);
+}
+.project-create-page {
+    min-height: calc(100vh - 138px);
+    padding: 32px 20px 48px;
+    align-items: flex-start;
+    background: var(--moyo-color-page, #F7F9FC);
+}
+.project-create-shell { width: min(100%, 820px); }
+.project-create-card {
+    padding: 32px;
+    border: var(--moyo-border, 1px solid #E5EBF1);
+    border-radius: var(--moyo-radius-xl, 20px);
+    background: var(--moyo-surface, #fff);
+    box-shadow: var(--moyo-shadow-md, 0 8px 24px rgba(15,23,42,.07));
+}
+.create-step {
+    margin-bottom: 10px;
+    color: var(--moyo-primary, #4A90E2);
+    font-size: var(--moyo-font-size-xs, 12px);
+    font-weight: var(--moyo-font-weight-heavy, 900);
+}
+.create-title-row { margin-bottom: 24px; }
+.create-title-row h1 {
+    color: var(--moyo-text, #1F2937);
+    font-size: 28px;
+    font-weight: var(--moyo-font-weight-heavy, 900);
+    letter-spacing: -.04em;
+}
+.create-title-row p {
+    margin-top: 7px;
+    color: var(--moyo-text-soft, #667085);
+    font-size: var(--moyo-font-size-sm, 13px);
+    font-weight: var(--moyo-font-weight-medium, 500);
+}
+.create-card-head { margin-bottom: 18px; }
+.create-card-head h2 {
+    color: var(--moyo-text, #1F2937);
+    font-size: 18px;
+    font-weight: var(--moyo-font-weight-bold, 800);
+}
+.create-card-head p { color: var(--moyo-text-muted, #98A2B3); font-weight: 500; }
+.create-form-grid { gap: 16px; }
+.field label, .field-label {
+    margin-bottom: 8px;
+    color: var(--moyo-text, #1F2937);
+    font-size: var(--moyo-font-size-xs, 12px);
+    font-weight: var(--moyo-font-weight-bold, 800);
+}
+.required { color: var(--moyo-primary, #4A90E2); }
+.field input,
+.field select,
+.project-link-row input,
+.member-position,
+.member-role {
+    min-height: var(--moyo-control-height, 40px);
+    height: var(--moyo-control-height, 40px);
+    padding-left: 14px;
+    padding-right: 14px;
+    border: var(--moyo-border-strong, 1px solid #D8E1EA);
+    border-radius: var(--moyo-radius-md, 12px);
+    background: var(--moyo-surface, #fff);
+    color: var(--moyo-text, #1F2937);
+    font-size: var(--moyo-font-size-sm, 13px);
+    font-weight: var(--moyo-font-weight-medium, 500);
+}
+.field textarea {
+    min-height: 96px;
+    height: 96px;
+    max-height: 160px;
+    padding: 12px 14px;
+    border: var(--moyo-border-strong, 1px solid #D8E1EA);
+    border-radius: var(--moyo-radius-md, 12px);
+    resize: vertical;
+}
+.field input:focus,
+.field select:focus,
+.field textarea:focus,
+.project-link-row input:focus,
+.member-role:focus,
+.member-position:focus {
+    border-color: var(--moyo-primary, #4A90E2);
+    box-shadow: var(--moyo-focus, 0 0 0 4px rgba(74,144,226,.12));
+}
+.scope-card {
+    min-height: 64px;
+    border: var(--moyo-border, 1px solid #E5EBF1);
+    border-radius: var(--moyo-radius-lg, 18px);
+    background: var(--moyo-color-surface-soft, #F8FAFC);
+}
+.scope-card.active {
+    border-color: var(--moyo-primary, #4A90E2);
+    background: var(--moyo-color-surface-hover, #F7FBFF);
+    box-shadow: inset 0 0 0 1px rgba(74,144,226,.12);
+}
+.project-link-add-btn,
+.member-add-btn,
+.member-search-clear {
+    min-height: var(--moyo-control-height-compact, 34px);
+    border-radius: var(--moyo-radius-md, 12px);
+}
+.project-link-remove-btn { border-radius: var(--moyo-radius-sm, 9px); }
+.create-actions {
+    margin-top: 26px;
+    padding-top: 22px;
+    border-top: var(--moyo-border, 1px solid #E5EBF1);
+}
+.btn {
+    min-height: var(--moyo-control-height, 40px);
+    height: var(--moyo-control-height, 40px);
+    padding: 0 var(--moyo-control-padding-x, 16px);
+    border-radius: var(--moyo-radius-md, 12px);
+    font-size: var(--moyo-font-size-sm, 13px);
+    font-weight: var(--moyo-font-weight-bold, 800);
+}
+.btn.small { min-height: var(--moyo-control-height-compact, 34px); height: var(--moyo-control-height-compact, 34px); }
+.btn.primary {
+    border-color: var(--moyo-primary, #4A90E2);
+    background: var(--moyo-primary, #4A90E2);
+    box-shadow: var(--moyo-shadow-primary, 0 6px 14px rgba(74,144,226,.18));
+}
+.btn.primary:hover {
+    background: var(--moyo-primary-hover, #397FCA);
+    border-color: var(--moyo-primary-hover, #397FCA);
+    box-shadow: var(--moyo-shadow-primary, 0 6px 14px rgba(74,144,226,.18));
+}
+.btn.ghost {
+    border-color: var(--moyo-line-strong, #D8E1EA);
+    background: var(--moyo-surface, #fff);
+    color: var(--moyo-text-soft, #667085);
+}
+@media (max-width: 720px) {
+    .project-create-page { padding: 18px 14px 28px; }
+    .project-create-card { padding: 24px 20px; border-radius: var(--moyo-radius-lg, 18px); }
+    .create-title-row h1 { font-size: 25px; }
+    .create-form-grid, .date-row { grid-template-columns: 1fr; }
+}
+
+
+/* MOYO brand CTA gradient restoration */
+.btn.primary {
+    border-color: rgba(74, 144, 226, .18) !important;
+    background: linear-gradient(135deg, #55D6C2 0%, #4A90E2 54%, #7567F4 100%) !important;
+    color: #fff !important;
+    box-shadow: 0 8px 18px rgba(74, 144, 226, .22) !important;
+}
+.btn.primary:hover {
+    border-color: rgba(63, 130, 212, .24) !important;
+    background: linear-gradient(135deg, #45C7B3 0%, #3F82D4 54%, #6758E6 100%) !important;
+    box-shadow: 0 10px 22px rgba(74, 144, 226, .26) !important;
 }

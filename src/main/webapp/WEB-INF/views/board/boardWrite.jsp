@@ -7,6 +7,7 @@
     <title>글쓰기</title>
     <script src="https://cdn.ckeditor.com/ckeditor5/41.1.0/super-build/ckeditor.js"></script>
     <script src="https://cdn.ckeditor.com/ckeditor5/41.1.0/super-build/translations/ko.js"></script>
+    <script src="${pageContext.request.contextPath}/js/commonCkeditor.js?v=20260907-image-guard-1"></script>
     
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
@@ -423,26 +424,27 @@
 
 </style>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/boardUi.css?v=board-editor-picker-v10">
+<link rel="stylesheet" href="${pageContext.request.contextPath}/css/common/commonCkeditor.css?v=moyo-ckeditor-common-v2">
 </head>
 <body class="moyo-board-body">
     <jsp:include page="/WEB-INF/views/common/header.jsp" />
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/boardUi.css?v=board-editor-picker-v10">
 
-    <div class="write-page ${boardType eq 'FILE' ? 'board-file-form-page' : ''}">
+    <div class="write-page ">
         <div class="write-card">
             <div class="write-header">
                 <div>
                     <h1 class="write-title">
                         <c:choose>
                             <c:when test="${boardType eq 'NOTICE'}">공지사항 작성</c:when>
-                            <c:when test="${boardType eq 'FILE'}">자료 등록</c:when>
+                            <c:when test="${false}">자료 등록</c:when>
                             <c:otherwise>게시글 작성</c:otherwise>
                         </c:choose>
                     </h1>
                     <p class="write-desc">
                         <c:choose>
                             <c:when test="${boardType eq 'NOTICE'}">중요한 소식과 안내를 구성원들과 공유합니다.</c:when>
-                            <c:when test="${boardType eq 'FILE'}">필요한 자료와 설명을 함께 등록합니다.</c:when>
+                            <c:when test="${false}">필요한 자료와 설명을 함께 등록합니다.</c:when>
                             <c:otherwise>구성원들과 자유롭게 의견을 나눕니다.</c:otherwise>
                         </c:choose>
                     </p>
@@ -456,8 +458,8 @@
                 <input type="hidden" id="projId" value="${projId}">
 
                 <div class="form-group">
-                    <label class="form-label" for="title"><c:choose><c:when test="${boardType eq 'FILE'}">자료명</c:when><c:otherwise>제목</c:otherwise></c:choose></label>
-                    <input type="text" id="title" class="title-input" placeholder="<c:choose><c:when test='${boardType eq "FILE"}'>자료명을 입력하세요</c:when><c:otherwise>제목을 입력하세요</c:otherwise></c:choose>" required>
+                    <label class="form-label" for="title"><c:choose><c:when test="${false}">자료명</c:when><c:otherwise>제목</c:otherwise></c:choose></label>
+                    <input type="text" id="title" class="title-input" placeholder="<c:choose><c:when test='${false}'>자료명을 입력하세요</c:when><c:otherwise>제목을 입력하세요</c:otherwise></c:choose>" required>
                 </div>
 
 
@@ -483,24 +485,24 @@
                 </c:if>
 
                 <div class="form-group">
-                    <label class="form-label" for="editor"><c:choose><c:when test="${boardType eq 'FILE'}">자료 설명</c:when><c:otherwise>내용</c:otherwise></c:choose></label>
+                    <label class="form-label" for="editor"><c:choose><c:when test="${false}">자료 설명</c:when><c:otherwise>내용</c:otherwise></c:choose></label>
                     <textarea id="editor" name="content" autocomplete="off" spellcheck="false"></textarea>
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label" for="fileInput"><c:choose><c:when test="${boardType eq 'FILE'}">자료 파일</c:when><c:otherwise>파일 첨부</c:otherwise></c:choose></label>
-                    <div id="fileDropZone" class="board-file-dropzone ${boardType eq 'FILE' ? 'is-file-board' : ''}">
+                    <label class="form-label" for="fileInput"><c:choose><c:when test="${false}">자료 파일</c:when><c:otherwise>파일 첨부</c:otherwise></c:choose></label>
+                    <div id="fileDropZone" class="board-file-dropzone ">
                         <input type="file" id="fileInput" name="files" multiple class="file-input board-file-hidden">
                         <div class="dropzone-icon">📎</div>
-                        <div class="dropzone-main"><c:choose><c:when test="${boardType eq 'FILE'}">자료 파일을 끌어다 놓거나 클릭해서 선택하세요</c:when><c:otherwise>파일을 끌어다 놓거나 클릭해서 선택하세요</c:otherwise></c:choose></div>
-                        <div class="dropzone-sub"><c:choose><c:when test="${boardType eq 'FILE'}">자료실 글은 파일 첨부를 권장합니다.</c:when><c:otherwise>여러 파일을 한 번에 추가할 수 있습니다.</c:otherwise></c:choose></div>
+                        <div class="dropzone-main"><c:choose><c:when test="${false}">자료 파일을 끌어다 놓거나 클릭해서 선택하세요</c:when><c:otherwise>파일을 끌어다 놓거나 클릭해서 선택하세요</c:otherwise></c:choose></div>
+                        <div class="dropzone-sub"><c:choose><c:when test="${false}">자료실 글은 파일 첨부를 권장합니다.</c:when><c:otherwise>여러 파일을 한 번에 추가할 수 있습니다.</c:otherwise></c:choose></div>
                     </div>
                     <ul id="selectedFileList" class="selected-file-list"></ul>
                 </div>
 
                 <div class="action-row">
                     <a id="cancelLink" href="javascript:history.back();" class="btn-cancel">취소</a>
-                    <button type="button" class="btn-submit" onclick="submitPost()"><c:choose><c:when test="${boardType eq 'FILE'}">자료 등록</c:when><c:otherwise>등록하기</c:otherwise></c:choose></button>
+                    <button type="button" class="btn-submit" onclick="submitPost()"><c:choose><c:when test="${false}">자료 등록</c:when><c:otherwise>등록하기</c:otherwise></c:choose></button>
                 </div>
             </form>
         </div>
@@ -720,166 +722,16 @@
             syncPinState();
         }
 
-        function MyCustomUploadAdapterPlugin(editor) {
-            editor._boardUploadCount = 0;
-            editor._boardUploadWaiters = [];
-
-            editor.waitForBoardUploads = function() {
-                if (editor._boardUploadCount === 0) return Promise.resolve();
-                return new Promise(resolve => editor._boardUploadWaiters.push(resolve));
-            };
-
-            function completeUpload() {
-                editor._boardUploadCount = Math.max(0, editor._boardUploadCount - 1);
-                if (editor._boardUploadCount !== 0) return;
-                editor._boardUploadWaiters.splice(0).forEach(resolve => resolve());
-            }
-
-            editor.plugins.get('FileRepository').createUploadAdapter = (loader) => {
-                let xhr = null;
-                let active = false;
-
-                return {
-                    upload() {
-                        if (!active) {
-                            active = true;
-                            editor._boardUploadCount += 1;
-                        }
-
-                        return loader.file.then(file => new Promise((resolve, reject) => {
-                            if (!BOARD_EDITOR_IMAGE_TYPES.includes(file.type)) {
-                                reject('본문 이미지는 jpg, png, gif, webp 형식만 업로드할 수 있습니다.');
-                                return;
-                            }
-                            if (file.size > BOARD_EDITOR_MAX_IMAGE_SIZE) {
-                                reject('본문 이미지는 5MB 이하만 업로드할 수 있습니다.');
-                                return;
-                            }
-
-                            const formData = new FormData();
-                            formData.append('upload', file);
-
-                            xhr = $.ajax({
-                                url: '/api/workspace/board/image-upload',
-                                type: 'POST',
-                                data: formData,
-                                processData: false,
-                                contentType: false,
-                                success: function(res) {
-                                    if (res.uploaded && res.url) resolve({ default: res.url });
-                                    else reject(res.error ? res.error.message : '이미지 업로드에 실패했습니다.');
-                                },
-                                error: function(xhr) {
-                                    const message = xhr.responseJSON && xhr.responseJSON.error
-                                        ? xhr.responseJSON.error.message
-                                        : '이미지 업로드 중 서버 통신 오류가 발생했습니다.';
-                                    reject(message);
-                                }
-                            });
-                        })).finally(() => {
-                            if (active) {
-                                active = false;
-                                completeUpload();
-                            }
-                        });
-                    },
-                    abort() {
-                        if (xhr && typeof xhr.abort === 'function') xhr.abort();
-                    }
-                };
-            };
-        }
-
-        const BoardClassicEditor = window.CKEDITOR && window.CKEDITOR.ClassicEditor ? window.CKEDITOR.ClassicEditor : window.ClassicEditor;
-
-        const MOYO_EDITOR_COLORS = [
-            { color: 'hsl(0, 0%, 0%)', label: 'Black' },
-            { color: 'hsl(0, 0%, 30%)', label: 'Dim gray' },
-            { color: 'hsl(0, 0%, 60%)', label: 'Gray' },
-            { color: 'hsl(0, 0%, 90%)', label: 'Light gray' },
-            { color: 'hsl(0, 75%, 60%)', label: 'Red' },
-            { color: 'hsl(25, 90%, 55%)', label: 'Orange' },
-            { color: 'hsl(45, 95%, 55%)', label: 'Yellow' },
-            { color: 'hsl(145, 65%, 42%)', label: 'Green' },
-            { color: 'hsl(200, 85%, 50%)', label: 'Sky blue' },
-            { color: 'hsl(221, 83%, 53%)', label: 'Blue' },
-            { color: 'hsl(260, 85%, 62%)', label: 'Purple' },
-            { color: 'hsl(330, 80%, 60%)', label: 'Pink' }
-        ];
-
-                const boardEditorConfig = {
-            language: 'ko',
+        window.MoyoCkeditor.create(document.querySelector('#editor'), {
+            profile: 'BOARD',
+            uploadUrl: '/api/workspace/board/image-upload',
             placeholder: '내용을 입력하세요.',
-            toolbar: {
-                items: [
-                    'heading', '|',
-                    'bold', 'italic', 'underline', '|',
-                    'fontColor', 'fontBackgroundColor', '|',
-                    'alignment', '|',
-                    'numberedList', 'bulletedList', '|',
-                    'link', 'uploadImage', 'mediaEmbed', 'insertTable', 'blockQuote', '|',
-                    'removeFormat', 'undo', 'redo'
-                ],
-                shouldNotGroupWhenFull: false
-            },
-            fontColor: {
-                columns: 6,
-                colors: MOYO_EDITOR_COLORS,
-                documentColors: 0,
-                colorPicker: false
-            },
-            fontBackgroundColor: {
-                columns: 6,
-                colors: MOYO_EDITOR_COLORS,
-                documentColors: 0,
-                colorPicker: false
-            },
-            image: {
-                upload: { types: ['jpeg', 'jpg', 'png', 'gif', 'webp'] },
-                resizeUnit: '%',
-                styles: [ 'inline', 'alignLeft', 'alignCenter', 'alignRight', 'side' ],
-                toolbar: [
-                    'imageTextAlternative', 'toggleImageCaption', '|',
-                    'imageStyle:inline', 'imageStyle:alignLeft', 'imageStyle:alignCenter', 'imageStyle:alignRight', 'imageStyle:side', '|',
-                    'resizeImage'
-                ]
-            },
-            table: {
-                contentToolbar: [
-                    'tableColumn', 'tableRow', 'mergeTableCells', '|',
-                    'tableProperties', 'tableCellProperties'
-                ],
-                defaultHeadings: { rows: 0, columns: 0 }
-            },
-            link: {
-                addTargetToExternalLinks: true,
-                defaultProtocol: 'https://'
-            },
-            extraPlugins: [MyCustomUploadAdapterPlugin],
-            removePlugins: [
-                'CKBox', 'CKFinder', 'EasyImage', 'RealTimeCollaborativeComments',
-                'RealTimeCollaborativeTrackChanges', 'RealTimeCollaborativeRevisionHistory',
-                'PresenceList', 'Comments', 'TrackChanges', 'TrackChangesData',
-                'RevisionHistory', 'Pagination', 'WProofreader', 'MathType',
-                'SlashCommand', 'Template', 'DocumentOutline', 'FormatPainter',
-                'TableOfContents', 'PasteFromOfficeEnhanced',
-                'AIAssistant', 'AIAdapter', 'OpenAITextAdapter', 'AzureOpenAITextAdapter',
-                'CKBoxImageEdit', 'ExportPdf', 'ExportWord', 'ImportWord', 'ImportFromWord',
-                'MultiLevelList', 'CaseChange',
-                'ListProperties', 'TodoList',
-                'TableColumnResize', 'TableCaption'
-            ]
-        };
-
-        BoardClassicEditor
-            .create(document.querySelector('#editor'), boardEditorConfig)
-            .then(editor => {
-                myEditor = editor;
-                myEditor.setData('');
-            })
-            .catch(error => {
-                console.error("에디터 초기화 실패:", error);
-            });
+            initialData: ''
+        }).then(function (editor) {
+            myEditor = editor;
+        }).catch(function (error) {
+            console.error('에디터 초기화 실패:', error);
+        });
 
         document.querySelector('form').addEventListener('submit', function(e) {
             if (myEditor) {
@@ -910,10 +762,28 @@
                     submitButton.textContent = '이미지 업로드 중...';
                 }
                 await myEditor.waitForBoardUploads();
+            }
+
+            if (myEditor && typeof myEditor.flushBoardDataImages === 'function') {
                 if (submitButton) {
-                    submitButton.disabled = false;
-                    submitButton.textContent = originalSubmitText;
+                    submitButton.disabled = true;
+                    submitButton.textContent = '이미지 업로드 중...';
                 }
+                try {
+                    await myEditor.flushBoardDataImages();
+                } catch (error) {
+                    if (submitButton) {
+                        submitButton.disabled = false;
+                        submitButton.textContent = originalSubmitText;
+                    }
+                    alert(error && error.message ? error.message : '이미지 업로드에 실패했습니다.');
+                    return;
+                }
+            }
+
+            if (submitButton) {
+                submitButton.disabled = false;
+                submitButton.textContent = originalSubmitText;
             }
 
             const content = sanitizeEditorHtml(myEditor ? myEditor.getData() : '');

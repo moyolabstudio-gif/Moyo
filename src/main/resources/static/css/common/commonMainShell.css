@@ -1,0 +1,194 @@
+/* MOYO group/project common main shell
+ * This file exclusively owns page width, body columns and sidebar geometry.
+ */
+.moyo-main-shell {
+    --moyo-shell-gap: 24px;
+    --moyo-shell-row-gap: 20px;
+    --moyo-shell-side-width: 332px;
+    width: 100%;
+    container-name: moyo-main-layout;
+    container-type: inline-size;
+    max-width: 1600px;
+    min-width: 0;
+    margin: 0 auto;
+    padding: 28px 32px 72px;
+}
+
+.moyo-main-shell__hero,
+.moyo-main-shell__body,
+.moyo-main-shell__main,
+.moyo-main-shell__side {
+    min-width: 0;
+}
+
+.moyo-main-shell__body {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) var(--moyo-shell-side-width);
+    align-items: start;
+    gap: var(--moyo-shell-gap);
+    width: 100%;
+}
+
+.moyo-main-shell__main,
+.moyo-main-shell__side {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.moyo-main-shell__main {
+    gap: var(--moyo-shell-row-gap);
+}
+
+.moyo-main-shell__side {
+    align-self: start;
+    gap: var(--moyo-shell-row-gap);
+    width: 100%;
+    padding: 0;
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+}
+
+.moyo-main-shell--pending {
+    display: none;
+}
+
+
+/* 그룹 메인 공통 셸 연결 훅 */
+.moyo-main-shell-page {
+    min-width: 0;
+}
+
+.moyo-main-shell--workspace .moyo-main-shell__body {
+    width: 100%;
+}
+
+.moyo-main-shell--workspace .moyo-main-shell__main,
+.moyo-main-shell--workspace .moyo-main-shell__side {
+    min-width: 0;
+}
+
+/* 프로젝트 메인 공통 셸 연결 훅 */
+.moyo-main-shell--project .moyo-main-shell__project-flow {
+    min-width: 0;
+}
+
+.moyo-main-shell--project .moyo-main-shell__body {
+    width: 100%;
+}
+
+.moyo-main-shell--project .moyo-main-shell__main,
+.moyo-main-shell--project .moyo-main-shell__side {
+    min-width: 0;
+}
+
+/* Common main hero: workspace / group project / personal project */
+.moyo-main-shell__hero {
+    min-width: 0;
+}
+
+.moyo-main-shell__hero h1,
+.moyo-main-shell__hero p,
+.moyo-main-shell__hero a,
+.moyo-main-shell__hero span {
+    overflow-wrap: anywhere;
+}
+
+.moyo-main-shell--workspace .moyo-main-shell__hero,
+.moyo-main-shell--group-project .moyo-main-shell__hero,
+.moyo-main-shell--personal-project .moyo-main-shell__hero {
+    width: 100%;
+}
+
+.moyo-main-shell__hero {
+    margin-bottom: 22px;
+}
+
+.moyo-main-shell__main > *,
+.moyo-main-shell__side > * {
+    min-width: 0;
+    margin-block: 0;
+}
+
+/* =====================================================================
+   Responsive ownership
+   - Desktop rail: > 1040px of actual shell width
+   - Stacked main/side: <= 1040px
+   - Side widgets: 2 columns until 820px, then 1 column
+   ===================================================================== */
+@media (max-width: 1280px) {
+    .moyo-main-shell {
+        --moyo-shell-side-width: 310px;
+        --moyo-shell-gap: 20px;
+        padding-inline: 24px;
+    }
+}
+
+@container moyo-main-layout (max-width: 1040px) {
+    .moyo-main-shell__body {
+        grid-template-columns: minmax(0, 1fr) !important;
+    }
+
+    .moyo-main-shell__side {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        align-items: start;
+        width: 100%;
+    }
+
+    .moyo-main-shell__side > * {
+        width: 100%;
+        min-width: 0;
+        max-width: none;
+        height: auto;
+    }
+}
+
+@container moyo-main-layout (max-width: 820px) {
+    .moyo-main-shell__side {
+        grid-template-columns: minmax(0, 1fr) !important;
+    }
+}
+
+@media (max-width: 920px) {
+    .moyo-main-shell {
+        padding-top: 24px;
+        padding-bottom: 64px;
+    }
+}
+
+@media (max-width: 820px) {
+    .moyo-main-shell {
+        --moyo-shell-row-gap: 16px;
+        padding-inline: 20px;
+    }
+
+    .moyo-main-shell__hero {
+        margin-bottom: 16px;
+    }
+}
+
+@media (max-width: 640px) {
+    .moyo-main-shell {
+        padding: 18px 14px 44px;
+    }
+}
+
+/* Fallback only for engines without container queries. */
+@supports not (container-type: inline-size) {
+    @media (max-width: 1180px) {
+        .moyo-main-shell__body {
+            grid-template-columns: minmax(0, 1fr) !important;
+        }
+        .moyo-main-shell__side {
+            display: grid !important;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+    @media (max-width: 820px) {
+        .moyo-main-shell__side {
+            grid-template-columns: minmax(0, 1fr) !important;
+        }
+    }
+}

@@ -28,9 +28,6 @@ body.moyo-app-sidebar-enabled > .moyo-header {
     margin-left: 0;
 }
 
-body.moyo-app-sidebar-enabled > .moyo-header .moyo-header-inner {
-    padding-left: 14px;
-}
 
 /* ===== App sidebar ===== */
 .moyo-app-sidebar {
@@ -48,7 +45,7 @@ body.moyo-app-sidebar-enabled > .moyo-header .moyo-header-inner {
     box-shadow: 8px 0 28px rgba(15, 23, 42, .035);
     transform: translateX(0);
     transition: transform .22s ease;
-    font-family: 'Pretendard', sans-serif;
+    font-family: "Pretendard", sans-serif;
 }
 
 body.moyo-app-sidebar-collapsed .moyo-app-sidebar {
@@ -66,7 +63,7 @@ body.moyo-app-sidebar-collapsed .moyo-app-sidebar {
     min-height: 0;
     flex: 1;
     overflow-y: auto;
-    padding: 18px 14px 14px;
+    padding: 8px 14px 14px;
 }
 
 .moyo-app-sidebar-fixed { display: none; }
@@ -93,6 +90,57 @@ body.moyo-app-sidebar-collapsed .moyo-app-sidebar {
     font-weight: 900;
     letter-spacing: .06em;
     text-transform: uppercase;
+}
+
+.moyo-app-sidebar-section-title-link {
+    display: inline-flex;
+    align-items: center;
+    text-decoration: none;
+    cursor: pointer;
+    transition: color .16s ease;
+}
+
+.moyo-app-sidebar-section-title-link:hover,
+.moyo-app-sidebar-section-title-link:focus-visible {
+    color: var(--moyo-blue-strong);
+}
+
+.moyo-app-sidebar-section-title-link:focus-visible {
+    outline: 2px solid rgba(74, 144, 226, .22);
+    outline-offset: 3px;
+    border-radius: 4px;
+}
+
+.moyo-app-sidebar-add-action {
+    width: 24px;
+    height: 24px;
+    flex: 0 0 24px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 0;
+    border-radius: 7px;
+    background: transparent;
+    color: #98a2b3;
+    font: inherit;
+    font-size: 18px;
+    font-weight: 500;
+    line-height: 1;
+    text-decoration: none;
+    cursor: pointer;
+    transition: color .16s ease, background .16s ease;
+}
+
+.moyo-app-sidebar-add-action:hover,
+.moyo-app-sidebar-add-action:focus-visible {
+    color: var(--moyo-blue-strong);
+    background: #f1f7fd;
+}
+
+.moyo-app-sidebar-add-action:focus-visible {
+    outline: 2px solid rgba(74, 144, 226, .22);
+    outline-offset: 2px;
 }
 
 .moyo-app-sidebar-section-action {
@@ -164,8 +212,23 @@ body.moyo-app-sidebar-collapsed .moyo-app-sidebar {
     text-align: left;
 }
 
-.moyo-app-workspace-toggle:hover,
-.moyo-app-workspace.current > .moyo-app-workspace-toggle { background: #f5f8fb; }
+.moyo-app-workspace-toggle:hover {
+    background: #f6fafb;
+}
+
+.moyo-app-workspace.current > .moyo-app-workspace-toggle {
+    background: linear-gradient(90deg, rgba(57, 205, 181, .08), rgba(139, 92, 246, .06));
+    color: #2f3d4f;
+}
+
+.moyo-app-workspace-toggle:focus {
+    outline: none;
+}
+
+.moyo-app-workspace-toggle:focus-visible {
+    outline: 2px solid rgba(57, 205, 181, .24);
+    outline-offset: 1px;
+}
 
 .moyo-app-workspace-avatar {
     position: relative;
@@ -193,7 +256,7 @@ body.moyo-app-sidebar-collapsed .moyo-app-sidebar {
     display: none;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(135deg, #45d6c8 0%, #4a90e2 52%, #7868f8 100%);
+    background: var(--moyo-avatar-gradient, linear-gradient(135deg, #55D5CE 0%, #4288EF 52%, #5A55EE 100%));
     color: #fff;
     font-size: 12px;
     font-weight: 900;
@@ -212,9 +275,24 @@ body.moyo-app-sidebar-collapsed .moyo-app-sidebar {
 }
 
 .moyo-app-workspace-chevron {
-    color: #98a2b3;
-    font-size: 15px;
-    transition: transform .18s ease;
+    width: 24px;
+    height: 24px;
+    margin-right: -3px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 24px;
+    border-radius: 8px;
+    color: #8090a6;
+    font-size: 16px;
+    font-weight: 900;
+    line-height: 1;
+    transition: transform .18s ease, color .16s ease, background .16s ease;
+}
+.moyo-app-workspace-toggle:hover .moyo-app-workspace-chevron,
+.moyo-app-workspace.current > .moyo-app-workspace-toggle .moyo-app-workspace-chevron {
+    color: #65758a;
+    background: #f0f5f7;
 }
 .moyo-app-workspace.open .moyo-app-workspace-chevron { transform: rotate(180deg); }
 
@@ -310,24 +388,49 @@ body.moyo-app-sidebar-collapsed .moyo-app-sidebar {
 }
 
 .moyo-app-sidebar-bottom {
-    display: grid;
-    gap: 7px;
-    padding: 13px 14px 16px;
+    flex: 0 0 auto;
+    padding: 10px 14px 11px;
     border-top: 1px solid #edf1f5;
-    background: #fbfcfd;
+    background: rgba(251, 252, 253, .96);
+}
+
+.moyo-app-sidebar-bottom-links {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    flex-wrap: nowrap;
 }
 
 .moyo-app-sidebar-bottom-link {
-    display: flex;
+    display: inline-flex;
     align-items: center;
-    min-height: 36px;
-    padding: 0 12px;
-    border-radius: 10px;
-    color: var(--moyo-muted);
-    font-size: 12px;
-    font-weight: 800;
+    min-height: 22px;
+    padding: 0 5px;
+    border-radius: 6px;
+    color: #7f8997;
+    font-size: 10px;
+    font-weight: 750;
+    white-space: nowrap;
 }
-.moyo-app-sidebar-bottom-link:hover { background: #eef6ff; color: var(--moyo-blue-strong); }
+
+.moyo-app-sidebar-bottom-link + .moyo-app-sidebar-bottom-link::before {
+    content: "·";
+    margin-right: 7px;
+    color: #c2c9d2;
+}
+
+.moyo-app-sidebar-bottom-link:hover {
+    color: var(--moyo-blue-strong);
+    background: #eef6ff;
+}
+
+.moyo-app-sidebar-bottom-copy {
+    margin-top: 5px;
+    padding-left: 5px;
+    color: #a5adb8;
+    font-size: 9.5px;
+    font-weight: 650;
+}
 
 .moyo-app-sidebar-toggle-btn {
     display: inline-flex;
@@ -356,99 +459,7 @@ body.moyo-app-sidebar-collapsed .moyo-app-sidebar {
     transition: opacity .18s ease;
 }
 
-/* ===== Footer 공통 ===== */
-.moyo-footer {
-    position: relative;
-    z-index: 1;
-    width: 100%;
-    margin: 48px 0 0;
-    padding: 0;
-    box-sizing: border-box;
-    border-top: 0;
-    background: transparent;
-    overflow: visible;
-    color: #7b8491;
-    font-family: 'Pretendard', sans-serif;
-}
-
-.moyo-footer::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 50%;
-    width: 100vw;
-    height: 1px;
-    transform: translateX(-50%);
-    background: linear-gradient(90deg, transparent 0%, rgba(226, 232, 240, .78) 12%, rgba(226, 232, 240, .78) 88%, transparent 100%);
-    pointer-events: none;
-}
-
-.moyo-footer-inner {
-    width: 100%;
-    min-height: 76px;
-    margin: 0;
-    padding: 0 28px;
-    box-sizing: border-box;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 24px;
-}
-
-.moyo-footer-message {
-    min-width: 0;
-    color: #667085;
-    font-size: 12px;
-    font-weight: 700;
-    line-height: 1.5;
-    white-space: nowrap;
-}
-
-.moyo-footer-right {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    gap: 18px;
-    flex-shrink: 0;
-}
-
-.moyo-footer-links {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    gap: 14px;
-    flex-wrap: wrap;
-}
-
-.moyo-footer-links a {
-    display: inline-flex;
-    align-items: center;
-    min-height: 26px;
-    padding: 0 6px;
-    border-radius: 999px;
-    color: #7b8491;
-    font-size: 12px;
-    font-weight: 700;
-    line-height: 1.5;
-    text-decoration: none;
-    white-space: nowrap;
-    transition: color .16s ease, background .16s ease;
-}
-
-.moyo-footer-links a:hover {
-    color: #2878d0;
-    background: rgba(74, 144, 226, .08);
-    text-decoration: none;
-}
-
-.moyo-footer-copy {
-    color: #a0a8b3;
-    font-size: 11px;
-    font-weight: 600;
-    white-space: nowrap;
-}
-
-@media (max-width: 900px) {
+@media (max-width: 1200px) {
     body.moyo-app-sidebar-enabled,
     body.moyo-app-sidebar-enabled.moyo-app-sidebar-collapsed {
         padding-left: 0;
@@ -469,12 +480,9 @@ body.moyo-app-sidebar-collapsed .moyo-app-sidebar {
         pointer-events: auto;
     }
 
-    body.moyo-app-sidebar-enabled > .moyo-header .moyo-header-inner {
-        padding-left: 12px;
-    }
 }
 
-@media (min-width: 901px) {
+@media (min-width: 1201px) {
     body.moyo-app-sidebar-enabled .moyo-app-sidebar-backdrop,
     body.moyo-app-sidebar-enabled.moyo-app-sidebar-mobile-open .moyo-app-sidebar-backdrop {
         display: none;
@@ -484,23 +492,6 @@ body.moyo-app-sidebar-collapsed .moyo-app-sidebar {
 }
 
 @media (max-width: 820px) {
-    .moyo-footer-inner {
-        min-height: 92px;
-        padding: 18px;
-        flex-direction: column;
-        align-items: flex-start;
-        justify-content: center;
-        gap: 10px;
-    }
-
-    .moyo-footer-message { white-space: normal; }
-
-    .moyo-footer-right {
-        width: 100%;
-        justify-content: space-between;
-        align-items: flex-start;
-        gap: 14px;
-    }
 }
 
 @media (max-width: 720px) {
@@ -510,16 +501,6 @@ body.moyo-app-sidebar-collapsed .moyo-app-sidebar {
 }
 
 @media (max-width: 520px) {
-    .moyo-footer-right {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-
-    .moyo-footer-links {
-        justify-content: flex-start;
-        gap: 8px 10px;
-        flex-wrap: wrap;
-    }
 }
 
 /* ===== Sidebar friend modal + group list entry ===== */
@@ -548,361 +529,6 @@ body.moyo-app-sidebar-collapsed .moyo-app-sidebar {
     color: var(--moyo-blue-strong);
 }
 
-.moyo-friend-modal {
-    position: fixed;
-    inset: 0;
-    z-index: 1300;
-    display: none;
-    align-items: center;
-    justify-content: center;
-    padding: 24px;
-    font-family: 'Pretendard', sans-serif;
-}
-
-.moyo-friend-modal.open { display: flex; }
-
-.moyo-friend-modal-dim {
-    position: absolute;
-    inset: 0;
-    background: rgba(15, 23, 42, .34);
-    backdrop-filter: blur(3px);
-}
-
-.moyo-friend-modal-panel {
-    position: relative;
-    z-index: 1;
-    width: min(720px, calc(100vw - 48px));
-    max-height: min(760px, calc(100vh - 48px));
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    border: 1px solid #e5ebf3;
-    border-radius: 24px;
-    background: #fff;
-    box-shadow: 0 28px 80px rgba(15, 23, 42, .20);
-    color: var(--moyo-text);
-}
-
-.moyo-friend-modal-head {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 16px;
-    padding: 22px 24px 14px;
-    border-bottom: 1px solid #edf1f6;
-    background: linear-gradient(135deg, #f8fbff 0%, #f4fffc 100%);
-}
-
-.moyo-friend-modal-eyebrow {
-    display: block;
-    margin-bottom: 5px;
-    color: var(--moyo-blue-strong);
-    font-size: 11px;
-    font-weight: 900;
-    letter-spacing: .06em;
-}
-
-.moyo-friend-modal-head h2 {
-    margin: 0;
-    color: #172033;
-    font-size: 22px;
-    line-height: 1.2;
-    letter-spacing: -.045em;
-}
-
-.moyo-friend-modal-head p {
-    margin: 5px 0 0;
-    color: #667085;
-    font-size: 12px;
-    font-weight: 600;
-}
-
-.moyo-friend-modal-close {
-    width: 34px;
-    height: 34px;
-    border: 1px solid #dde7f2;
-    border-radius: 12px;
-    background: #fff;
-    color: #64748b;
-    font-size: 22px;
-    line-height: 1;
-    cursor: pointer;
-}
-
-.moyo-friend-modal-close:hover {
-    background: #f5faff;
-    color: var(--moyo-blue-strong);
-}
-
-.moyo-friend-modal-summary {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 12px 24px 0;
-}
-
-.moyo-friend-modal-summary span {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    min-height: 30px;
-    padding: 0 11px;
-    border: 1px solid #e0e8f2;
-    border-radius: 999px;
-    background: #fbfdff;
-    color: #718099;
-    font-size: 11px;
-    font-weight: 800;
-}
-
-.moyo-friend-modal-summary strong {
-    color: #172033;
-    font-size: 14px;
-}
-
-.moyo-friend-modal-tabs {
-    display: flex;
-    gap: 7px;
-    padding: 12px 24px 10px;
-    border-bottom: 1px solid #edf1f6;
-}
-
-.moyo-friend-modal-tabs button {
-    min-height: 34px;
-    padding: 0 13px;
-    border: 1px solid #dde7f2;
-    border-radius: 999px;
-    background: #fff;
-    color: #667085;
-    font-family: inherit;
-    font-size: 12px;
-    font-weight: 900;
-    cursor: pointer;
-}
-
-.moyo-friend-modal-tabs button.active {
-    border-color: #bfdbfe;
-    background: #eef6ff;
-    color: var(--moyo-blue-strong);
-}
-
-.moyo-friend-modal-body {
-    min-height: 0;
-    flex: 1;
-    overflow-y: auto;
-    padding: 16px 24px 22px;
-}
-
-.moyo-friend-panel { display: none; }
-.moyo-friend-panel.active { display: block; }
-
-.moyo-friend-panel-head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    margin-bottom: 9px;
-}
-
-.moyo-friend-panel-head strong {
-    color: #253044;
-    font-size: 14px;
-    font-weight: 900;
-}
-
-.moyo-friend-ghost-btn,
-.moyo-friend-row-actions button {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 30px;
-    padding: 0 10px;
-    border: 1px solid #dbe7f4;
-    border-radius: 10px;
-    background: #fff;
-    color: var(--moyo-blue-strong);
-    font-family: inherit;
-    font-size: 11px;
-    font-weight: 900;
-    cursor: pointer;
-}
-
-.moyo-friend-row-actions button.primary {
-    border-color: transparent;
-    background: linear-gradient(135deg, #4f8df7 0%, #52c7d9 100%);
-    color: #fff;
-}
-
-.moyo-friend-row-actions button.danger {
-    color: #ef4444;
-    border-color: #fee2e2;
-    background: #fff7f7;
-}
-
-.moyo-friend-row-actions button:hover,
-.moyo-friend-ghost-btn:hover {
-    background: #f5faff;
-}
-
-.moyo-friend-search-row {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 12px;
-}
-
-.moyo-friend-search-row input {
-    flex: 1;
-    min-width: 0;
-    height: 38px;
-    border: 1px solid #dde5ef;
-    border-radius: 12px;
-    padding: 0 12px;
-    background: #fbfcfe;
-    color: #263247;
-    font-family: inherit;
-    font-size: 12px;
-    outline: none;
-}
-
-.moyo-friend-search-row input:focus {
-    border-color: #4f8df7;
-    background: #fff;
-    box-shadow: 0 0 0 4px rgba(79, 141, 247, .10);
-}
-
-.moyo-friend-search-row button {
-    min-width: 72px;
-    border: 0;
-    border-radius: 12px;
-    background: linear-gradient(135deg, #4f8df7 0%, #52c7d9 100%);
-    color: #fff;
-    font-family: inherit;
-    font-size: 12px;
-    font-weight: 900;
-    cursor: pointer;
-}
-
-.moyo-friend-modal-list {
-    display: grid;
-    gap: 8px;
-}
-
-.moyo-friend-modal-list.compact { gap: 7px; }
-
-.moyo-friend-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    min-height: 58px;
-    padding: 10px 12px;
-    border: 1px solid #e5ebf3;
-    border-radius: 15px;
-    background: #fff;
-}
-
-.moyo-friend-avatar {
-    width: 36px;
-    height: 36px;
-    flex: 0 0 auto;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #45d6c8 0%, #4a90e2 52%, #7868f8 100%);
-    color: #fff;
-    font-size: 13px;
-    font-weight: 900;
-}
-
-
-.moyo-friend-avatar img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-    border-radius: 50%;
-}
-
-.moyo-friend-info {
-    min-width: 0;
-    flex: 1;
-}
-
-.moyo-friend-info strong {
-    display: block;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    color: #253044;
-    font-size: 13px;
-    font-weight: 900;
-}
-
-.moyo-friend-info span {
-    display: block;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    margin-top: 2px;
-    color: #7b8794;
-    font-size: 11px;
-    font-weight: 700;
-}
-
-.moyo-friend-row-actions {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    flex: 0 0 auto;
-}
-
-.moyo-friend-status-chip {
-    display: inline-flex;
-    align-items: center;
-    min-height: 28px;
-    padding: 0 9px;
-    border-radius: 999px;
-    background: #f1f5f9;
-    color: #64748b;
-    font-size: 11px;
-    font-weight: 900;
-}
-
-.moyo-friend-empty {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 90px;
-    border: 1px dashed #dbe4ee;
-    border-radius: 15px;
-    background: #fbfdff;
-    color: #98a2b3;
-    font-size: 12px;
-    font-weight: 800;
-}
-
-.moyo-friend-request-grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 14px;
-}
-
-@media (max-width: 720px) {
-    .moyo-friend-modal {
-        align-items: flex-end;
-        padding: 0;
-    }
-
-    .moyo-friend-modal-panel {
-        width: 100%;
-        max-height: calc(100vh - 24px);
-        border-radius: 22px 22px 0 0;
-    }
-
-    .moyo-friend-request-grid {
-        grid-template-columns: 1fr;
-    }
-}
 
 
 /* ===== Sidebar relation/group tune ===== */
@@ -936,8 +562,7 @@ body.moyo-app-sidebar-collapsed .moyo-app-sidebar {
 }
 
 .moyo-app-sidebar-friends-section {
-    padding-bottom: 11px;
-    border-bottom: 1px solid #f4f7fa;
+    padding-bottom: 4px;
 }
 
 .moyo-app-sidebar-friend-preview {
@@ -1084,12 +709,18 @@ body.moyo-app-sidebar-collapsed .moyo-app-sidebar {
     align-items: center;
     justify-content: center;
     overflow: hidden;
-    background: linear-gradient(135deg, #eef6ff, #edfbf8);
-    color: #2563eb;
+    background: var(--moyo-avatar-gradient, linear-gradient(135deg, #55D5CE 0%, #4288EF 52%, #5A55EE 100%));
+    color: #fff;
     font-size: 12px;
     font-weight: 900;
-    border: 1px solid #e8eef6;
+    border: 1px solid rgba(255, 255, 255, .78);
     box-sizing: border-box;
+}
+
+.moyo-app-sidebar-friend-avatar.has-image {
+    background: #fff;
+    color: transparent;
+    border-color: #e8eef6;
 }
 
 .moyo-app-sidebar-friend-avatar img {
@@ -1207,6 +838,21 @@ body.moyo-app-sidebar-enabled .photo-ui-shell {
     gap: 4px;
 }
 
+.moyo-app-sidebar-personal-project-list {
+    display: grid;
+    gap: 2px;
+}
+
+.moyo-app-personal-project-link {
+    color: #49647f;
+}
+
+.moyo-app-personal-project-link:hover,
+.moyo-app-personal-project-link.active {
+    color: var(--moyo-blue-strong);
+    background: #eef6ff;
+}
+
 .moyo-app-sidebar-project-entry {
     position: relative;
 }
@@ -1232,7 +878,7 @@ body.moyo-app-sidebar-enabled .photo-ui-shell {
 }
 
 .moyo-app-sidebar-project-icon.personal::before {
-    content: '';
+    content: "";
     position: absolute;
     inset: 3px;
     border-radius: 50%;
@@ -1241,7 +887,7 @@ body.moyo-app-sidebar-enabled .photo-ui-shell {
 }
 
 .moyo-app-sidebar-project-icon.personal::after {
-    content: '';
+    content: "";
     position: absolute;
     left: 2px;
     right: 2px;
@@ -1255,7 +901,7 @@ body.moyo-app-sidebar-enabled .photo-ui-shell {
 
 .moyo-app-sidebar-project-icon.manage::before,
 .moyo-app-sidebar-project-icon.manage::after {
-    content: '';
+    content: "";
     position: absolute;
     width: 8px;
     height: 8px;
@@ -1273,4 +919,379 @@ body.moyo-app-sidebar-enabled .photo-ui-shell {
     right: 0;
     bottom: 0;
     background: var(--moyo-purple);
+}
+
+/* ========================================================================
+   사이드바 반응형 본문 폭 보호
+   - 사이드바 272px 때문에 본문이 찌그러지기 전에 오버레이 모드 전환
+   ======================================================================== */
+@media (max-width: 1200px) {
+    html,
+    body {
+        min-width: 0 !important;
+    }
+
+    body.moyo-app-sidebar-enabled,
+    body.moyo-app-sidebar-enabled.moyo-app-sidebar-collapsed,
+    body.moyo-app-sidebar-enabled.moyo-app-sidebar-mobile-open {
+        padding-left: 0 !important;
+    }
+
+    body.moyo-app-sidebar-enabled > .moyo-header {
+        left: 0 !important;
+        width: 100% !important;
+        margin-left: 0 !important;
+    }
+
+    .moyo-app-sidebar {
+        transform: translateX(-100%) !important;
+    }
+
+    body.moyo-app-sidebar-mobile-open .moyo-app-sidebar {
+        transform: translateX(0) !important;
+    }
+
+    body.moyo-app-sidebar-mobile-open .moyo-app-sidebar-backdrop {
+        display: block !important;
+        opacity: 1 !important;
+        pointer-events: auto !important;
+    }
+}
+
+@media (min-width: 1201px) {
+    body.moyo-app-sidebar-enabled:not(.moyo-app-sidebar-collapsed) {
+        padding-left: var(--moyo-app-sidebar-width);
+    }
+
+    body.moyo-app-sidebar-enabled.moyo-app-sidebar-collapsed {
+        padding-left: 0;
+    }
+}
+
+
+/* ===== Sidebar top sections unified system =====
+   개인 프로젝트 / 업데이트한 친구 / 그룹을 같은 레벨의 섹션으로 통일한다. */
+.moyo-app-sidebar-scroll > .moyo-app-sidebar-section {
+    margin-top: 0;
+}
+
+.moyo-app-sidebar-scroll > .moyo-app-sidebar-section + .moyo-app-sidebar-section {
+    margin-top: 12px;
+}
+
+.moyo-app-sidebar-projects-section,
+.moyo-app-sidebar-friends-section,
+.moyo-app-sidebar-groups-section {
+    padding-bottom: 0;
+    border-bottom: 0;
+}
+
+.moyo-app-sidebar-projects-section {
+    margin-top: 0;
+}
+
+.moyo-app-sidebar-projects-section .moyo-app-sidebar-section-heading,
+.moyo-app-sidebar-friends-section .moyo-app-sidebar-section-heading,
+.moyo-app-sidebar-groups-section .moyo-app-sidebar-section-heading {
+    min-height: 34px;
+    box-sizing: border-box;
+    padding: 0 4px;
+    margin: 0 0 2px;
+    gap: 6px;
+}
+
+.moyo-app-sidebar-projects-section .moyo-app-sidebar-section-title,
+.moyo-app-sidebar-friends-section .moyo-app-sidebar-section-title,
+.moyo-app-sidebar-groups-section .moyo-app-sidebar-section-title {
+    color: #7f8da1;
+    font-size: 11px;
+    font-weight: 900;
+    line-height: 1;
+    letter-spacing: .01em;
+    text-transform: none;
+}
+
+.moyo-app-sidebar-projects-section .moyo-app-sidebar-section-title-link,
+.moyo-app-sidebar-friends-section .moyo-app-sidebar-section-title-link,
+.moyo-app-sidebar-groups-section .moyo-app-sidebar-section-title-link {
+    min-width: 0;
+    min-height: 30px;
+    flex: 1;
+    box-sizing: border-box;
+    padding: 0 6px;
+    border-radius: 8px;
+    color: #7f8da1;
+    transition: background .16s ease, color .16s ease;
+}
+
+.moyo-app-sidebar-projects-section .moyo-app-sidebar-section-title-link:hover,
+.moyo-app-sidebar-friends-section .moyo-app-sidebar-section-title-link:hover,
+.moyo-app-sidebar-groups-section .moyo-app-sidebar-section-title-link:hover {
+    color: #52637a;
+    background: #f6f8fb;
+}
+
+.moyo-app-sidebar-projects-section .moyo-app-sidebar-section-title-link:focus-visible,
+.moyo-app-sidebar-friends-section .moyo-app-sidebar-section-title-link:focus-visible,
+.moyo-app-sidebar-groups-section .moyo-app-sidebar-section-title-link:focus-visible {
+    color: #52637a;
+    background: #f6f8fb;
+    outline: 2px solid rgba(74, 144, 226, .18);
+    outline-offset: 1px;
+}
+
+.moyo-app-sidebar-projects-section .moyo-app-sidebar-add-action,
+.moyo-app-sidebar-friends-section .moyo-app-sidebar-add-action,
+.moyo-app-sidebar-groups-section .moyo-app-sidebar-add-action {
+    width: 28px;
+    height: 28px;
+    flex: 0 0 28px;
+    border-radius: 8px;
+    color: #8a98aa;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.moyo-app-sidebar-projects-section .moyo-app-sidebar-add-action:hover,
+.moyo-app-sidebar-friends-section .moyo-app-sidebar-add-action:hover,
+.moyo-app-sidebar-groups-section .moyo-app-sidebar-add-action:hover {
+    color: #52637a;
+    background: #f6f8fb;
+}
+
+/* 프로젝트 없음 / 최근 업데이트 없음의 빈 상태 톤을 동일하게 맞춘다. */
+.moyo-app-sidebar-projects-section .moyo-app-sidebar-empty,
+.moyo-app-sidebar-friends-section .moyo-app-sidebar-friend-chip.skeleton {
+    min-height: 28px;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 5px 10px;
+    color: #a3adb8;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1.45;
+}
+
+.moyo-app-sidebar-projects-section .moyo-app-sidebar-empty.nested {
+    padding-left: 10px;
+}
+
+.moyo-app-sidebar-friends-section .moyo-app-sidebar-friend-avatar-strip {
+    min-height: 28px;
+    box-sizing: border-box;
+    padding: 0;
+}
+
+.moyo-app-sidebar-friends-section .moyo-app-sidebar-friend-chip.skeleton {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 0;
+    justify-content: flex-start;
+    cursor: default;
+}
+
+.moyo-app-sidebar-friends-section .moyo-app-sidebar-friend-chip.skeleton .moyo-app-sidebar-friend-avatar {
+    display: none;
+}
+
+.moyo-app-sidebar-friends-section .moyo-app-sidebar-friend-chip.skeleton span:last-child {
+    max-width: none;
+    color: #a3adb8;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1.45;
+}
+
+/* 실제 친구 항목도 프로젝트/그룹 하위 항목과 같은 부드러운 hover 언어를 사용한다. */
+.moyo-app-sidebar-friend-chip:not(.skeleton),
+.moyo-app-sidebar-friend-item:not(.skeleton),
+.moyo-app-workspace-toggle,
+.moyo-app-project-link,
+.moyo-app-workspace-home {
+    transition: background .16s ease, color .16s ease, box-shadow .16s ease, transform .16s ease;
+}
+
+.moyo-app-sidebar-friend-item:not(.skeleton):hover,
+.moyo-app-workspace-toggle:hover {
+    background: #f6f8fb;
+}
+
+/* ===== Updated friends: compact activity rows ===== */
+.moyo-app-sidebar-friends-section .moyo-app-sidebar-friend-avatar-strip {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 2px;
+    max-height: 142px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    overscroll-behavior: contain;
+    padding: 0 2px 0 0;
+    scrollbar-width: thin;
+    scrollbar-color: #d7e1ea transparent;
+}
+
+.moyo-app-sidebar-friends-section .moyo-app-sidebar-friend-avatar-strip::-webkit-scrollbar {
+    width: 4px;
+}
+
+.moyo-app-sidebar-friends-section .moyo-app-sidebar-friend-avatar-strip::-webkit-scrollbar-thumb {
+    background: #d7e1ea;
+    border-radius: 999px;
+}
+
+.moyo-app-sidebar-friends-section .moyo-app-sidebar-friend-avatar-strip::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.moyo-app-sidebar-friends-section .moyo-app-sidebar-friend-chip:not(.skeleton) {
+    width: 100%;
+    min-width: 0;
+    min-height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 7px;
+    box-sizing: border-box;
+    padding: 3px 6px;
+    border-radius: 9px;
+    color: #344054;
+    text-decoration: none;
+    overflow: hidden;
+}
+
+.moyo-app-sidebar-friends-section .moyo-app-sidebar-friend-chip:not(.skeleton):hover {
+    background: #f6f8fb;
+}
+
+.moyo-app-sidebar-friends-section .moyo-app-sidebar-friend-chip:not(.skeleton):focus-visible {
+    outline: 2px solid rgba(74, 144, 226, .18);
+    outline-offset: -1px;
+    background: #f6f8fb;
+}
+
+.moyo-app-sidebar-friends-section .moyo-app-sidebar-friend-chip:not(.skeleton) .moyo-app-sidebar-friend-avatar {
+    width: 26px;
+    height: 26px;
+    flex: 0 0 26px;
+    border-radius: 50%;
+    font-size: 11px;
+}
+
+.moyo-app-sidebar-friends-section .moyo-app-sidebar-friend-chip:not(.skeleton) .moyo-app-sidebar-friend-avatar img {
+    width: 100%;
+    height: 100%;
+    border-radius: inherit;
+    object-fit: cover;
+}
+
+.moyo-app-sidebar-friend-name {
+    min-width: 0;
+    flex: 1 1 auto;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: #344054;
+    font-size: 11.5px;
+    font-weight: 800;
+    line-height: 1.25;
+}
+
+.moyo-app-sidebar-friend-reason {
+    min-width: 54px;
+    max-width: 92px;
+    flex: 0 0 auto;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: #98a2b3;
+    font-size: 10px;
+    font-weight: 650;
+    line-height: 1.25;
+    text-align: right;
+}
+
+/* ===== Sidebar final detail pass ===== */
+.moyo-app-sidebar-scroll {
+    scrollbar-gutter: stable;
+}
+
+.moyo-app-sidebar-section-title-link.active {
+    color: #52637a;
+    background: #f6f8fb;
+}
+
+.moyo-app-sidebar-personal-project-list,
+.moyo-app-workspace-menu {
+    min-width: 0;
+}
+
+.moyo-app-project-link,
+.moyo-app-workspace-home,
+.moyo-app-workspace-toggle {
+    box-sizing: border-box;
+}
+
+.moyo-app-workspace-toggle:active,
+.moyo-app-project-link:active,
+.moyo-app-workspace-home:active,
+.moyo-app-sidebar-bottom-link:active {
+    transform: translateY(1px);
+}
+
+.moyo-app-sidebar-bottom-link:focus-visible {
+    outline: 2px solid rgba(74, 144, 226, .20);
+    outline-offset: 1px;
+}
+
+.moyo-app-sidebar-bottom-link.active {
+    color: var(--moyo-blue-strong);
+    background: #eef6ff;
+    font-weight: 850;
+}
+
+.moyo-app-sidebar-admin-link {
+    color: #74638f;
+}
+
+.moyo-app-sidebar-admin-link:hover,
+.moyo-app-sidebar-admin-link.active {
+    color: #6d45d8;
+    background: #f4f0ff;
+}
+
+@media (max-height: 760px) {
+    .moyo-app-sidebar-scroll {
+        padding-top: 6px;
+        padding-bottom: 8px;
+    }
+
+    .moyo-app-sidebar-scroll > .moyo-app-sidebar-section + .moyo-app-sidebar-section {
+        margin-top: 8px;
+    }
+
+    .moyo-app-sidebar-friends-section .moyo-app-sidebar-friend-avatar-strip {
+        max-height: 108px;
+    }
+
+    .moyo-app-sidebar-bottom {
+        padding-top: 8px;
+        padding-bottom: 8px;
+    }
+}
+
+
+/* MOYO personal default avatar policy - 2026-09-07 */
+.moyo-app-sidebar-friend-avatar:not(.has-image),
+.moyo-app-sidebar-friends-section .moyo-app-sidebar-friend-chip:not(.skeleton) .moyo-app-sidebar-friend-avatar:not(.has-image) {
+    background: var(--moyo-avatar-gradient, linear-gradient(135deg, #55D5CE 0%, #4288EF 52%, #5A55EE 100%)) !important;
+    color: #fff !important;
+    border-color: rgba(255, 255, 255, .82) !important;
+}
+.moyo-app-sidebar-friend-avatar.has-image,
+.moyo-app-sidebar-friends-section .moyo-app-sidebar-friend-chip:not(.skeleton) .moyo-app-sidebar-friend-avatar.has-image {
+    background: #fff !important;
+    color: transparent !important;
+    border-color: #e5ebf3 !important;
 }

@@ -245,26 +245,6 @@
         return groupEntry ? initialWsId : '';
     }
 
-    function resetMemberSelection() {
-        loadedWorkspaceId = '';
-        if (memberList) {
-            memberList.innerHTML = '<div class="member-loading">그룹 멤버를 불러오는 중입니다.</div>';
-        }
-    }
-
-    function updateCategoryUI() {
-        const categorySelect = document.getElementById('projCategory');
-        const customField = document.getElementById('customCategoryField');
-        const customInput = document.getElementById('projCategoryDetail');
-        const isEtc = categorySelect && categorySelect.value === 'ETC';
-
-        if (customField) customField.hidden = !isEtc;
-        if (customInput) {
-            customInput.required = isEtc;
-            if (!isEtc) customInput.value = '';
-        }
-    }
-
     function setVisible(button, visible) {
         if (!button) return;
         button.hidden = !visible;
@@ -435,16 +415,10 @@
     function validateBasic() {
         const projName = document.getElementById('projName').value.trim();
         const projCategory = document.getElementById('projCategory').value;
-        const projCategoryDetail = document.getElementById('projCategoryDetail').value.trim();
         const startDate = document.getElementById('startDate').value;
         const endDate = document.getElementById('endDate').value;
 
         if (!projName) { alert('프로젝트명을 입력해주세요.'); document.getElementById('projName').focus(); return false; }
-        if (projCategory === 'ETC' && !projCategoryDetail) {
-            alert('기타 카테고리명을 입력해주세요.');
-            document.getElementById('projCategoryDetail').focus();
-            return false;
-        }
         if (!startDate || !endDate) { alert('프로젝트 기간을 입력해주세요.'); return false; }
         if (startDate > endDate) { alert('종료일은 시작일보다 빠를 수 없습니다.'); return false; }
         return true;
@@ -454,7 +428,6 @@
         const projName = document.getElementById('projName').value.trim();
         const projScope = getScope();
         const projCategory = document.getElementById('projCategory').value;
-        const projCategoryDetail = document.getElementById('projCategoryDetail').value.trim();
         const startDate = document.getElementById('startDate').value;
         const endDate = document.getElementById('endDate').value;
         const projDesc = document.getElementById('projDesc').value.trim();
@@ -487,7 +460,7 @@
             projDesc: projDesc,
             projScope: projScope,
             projCategory: projCategory,
-            projCategoryDetail: projCategory === 'ETC' ? projCategoryDetail : null,
+            projCategoryDetail: null,
             projType: projCategory,
             leaderId: Number(leaderId),
             wsId: projScope === 'GROUP' ? Number(getSelectedWorkspaceId()) : null,
@@ -538,8 +511,6 @@
     }
 
     document.addEventListener('change', function (event) {
-        if (event.target.matches('#projCategory')) updateCategoryUI();
-
         if (event.target.matches('.member-check')) {
             const row = event.target.closest('.member-row');
             const role = row.querySelector('.member-role');
@@ -580,13 +551,33 @@
         }
     });
 
-    document.addEventListener('input', function (event) {
-        if (event.target === memberSearchInput) {
-            applyMemberFilters();
-            return;
-        }
-        if (event.target.matches('.member-position')) {
+    function bindDebouncedInput(input, handler, delay) {
+        if (!input || input.dataset.moyoSearchBound === 'true') return;
+        input.dataset.moyoSearchBound = 'true';
+        let timer = null;
+        let composing = false;
+        const schedule = function () {
+            window.clearTimeout(timer);
+            timer = window.setTimeout(handler, delay);
+        };
+        input.addEventListener('compositionstart', function () { composing = true; });
+        input.addEventListener('compositionend', function () {
+            composing = false;
+            schedule();
+        });
+        input.addEventListener('input', function () {
+            if (!composing) schedule();
+        });
+    }
+
+    bindDebouncedInput(memberSearchInput, applyMemberFilters, 160);
+
+    if (memberList && memberList.dataset.moyoMemberInputBound !== 'true') {
+        memberList.dataset.moyoMemberInputBound = 'true';
+        memberList.addEventListener('input', function (event) {
+            if (!event.target.matches('.member-position')) return;
             const row = event.target.closest('.member-row');
+            if (!row) return;
             const checkbox = row.querySelector('.member-check');
             const role = row.querySelector('.member-role');
             if (checkbox) checkbox.checked = true;
@@ -594,10 +585,11 @@
             event.target.disabled = false;
             row.classList.remove('is-disabled');
             updateMemberSelectionUI();
-        }
-    });
+        });
+    }
 
-    if (memberSelectedFilter) {
+    if (memberSelectedFilter && memberSelectedFilter.dataset.moyoSelectedFilterBound !== 'true') {
+        memberSelectedFilter.dataset.moyoSelectedFilterBound = 'true';
         memberSelectedFilter.addEventListener('click', function() {
             showSelectedMembersOnly = !showSelectedMembersOnly;
             memberSelectedFilter.setAttribute('aria-pressed', String(showSelectedMembersOnly));
@@ -636,7 +628,6 @@
     submitButton.addEventListener('click', submitProject);
 
     setDefaultDates();
-    updateCategoryUI();
     setStep(1);
     if (groupEntry && canCreateGroupProject) loadMembers();
 })();

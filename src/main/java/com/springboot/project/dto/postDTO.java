@@ -26,8 +26,5 @@ public class postDTO {
     private int replyCount;    // 대시보드용 댓글 수 카운트
     private int likeCount;     // 공통 좋아요 수
     private int fileCount;     // 첨부파일 개수
- // 추가: 첨부파일 관련 정보
-    private String fileName;    // 파일 원본 이름
-    private String filePath;    // 파일 저장 경로
     private boolean hasFile;    // 파일 존재 여부 (리스트에서 아이콘 표시용)
 }

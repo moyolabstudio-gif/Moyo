@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.springboot.project.dao.IcontentFileFolderDAO">
+ <resultMap id="folderMap" type="com.springboot.project.dto.contentFileFolderDTO">
+  <id property="folderId" column="FOLDER_ID"/><result property="scopeType" column="SCOPE_TYPE"/>
+  <result property="ownerUserId" column="OWNER_USER_ID"/><result property="wsId" column="WS_ID"/><result property="projId" column="PROJ_ID"/>
+  <result property="parentFolderId" column="PARENT_FOLDER_ID"/><result property="folderName" column="FOLDER_NAME"/>
+  <result property="sortOrder" column="SORT_ORDER"/><result property="createdBy" column="CREATED_BY"/><result property="createdAt" column="CREATED_AT"/>
+  <result property="updatedBy" column="UPDATED_BY"/><result property="updatedAt" column="UPDATED_AT"/>
+  <result property="childFolderCount" column="CHILD_FOLDER_COUNT"/><result property="fileCount" column="FILE_COUNT"/>
+ </resultMap>
+ <insert id="insert" parameterType="com.springboot.project.dto.contentFileFolderDTO">
+  <selectKey keyProperty="folderId" resultType="long" order="BEFORE">SELECT SEQ_CONTENT_FILE_FOLDER_ID.NEXTVAL FROM DUAL</selectKey>
+  INSERT INTO CONTENT_FILE_FOLDERS(FOLDER_ID,SCOPE_TYPE,OWNER_USER_ID,WS_ID,PROJ_ID,PARENT_FOLDER_ID,FOLDER_NAME,SORT_ORDER,CREATED_BY,CREATED_AT,UPDATED_BY,UPDATED_AT,DELETED_YN)
+  VALUES(#{folderId},#{scopeType},#{ownerUserId,jdbcType=NUMERIC},#{wsId,jdbcType=NUMERIC},#{projId,jdbcType=NUMERIC},#{parentFolderId,jdbcType=NUMERIC},#{folderName},0,#{createdBy},SYSDATE,#{createdBy},SYSDATE,'N')
+ </insert>
+ <sql id="scope">f.SCOPE_TYPE=#{scopeType}<choose><when test="scopeType=='PERSONAL'"> AND f.OWNER_USER_ID=#{ownerUserId}</when><when test="scopeType=='GROUP'"> AND f.WS_ID=#{wsId}</when><otherwise> AND f.PROJ_ID=#{projId}</otherwise></choose></sql>
+ <select id="selectById" resultMap="folderMap">SELECT f.* FROM CONTENT_FILE_FOLDERS f WHERE f.FOLDER_ID=#{folderId} AND f.DELETED_YN='N'</select>
+ <select id="selectTree" resultMap="folderMap">
+  SELECT f.*,(SELECT COUNT(*) FROM CONTENT_FILE_FOLDERS c WHERE c.PARENT_FOLDER_ID=f.FOLDER_ID AND c.DELETED_YN='N') CHILD_FOLDER_COUNT,
+   (SELECT COUNT(*) FROM CONTENT_FILES x WHERE x.FOLDER_ID=f.FOLDER_ID AND x.DELETED_YN='N') FILE_COUNT
+  FROM CONTENT_FILE_FOLDERS f WHERE <include refid="scope"/> AND f.DELETED_YN='N' ORDER BY f.PARENT_FOLDER_ID NULLS FIRST,f.SORT_ORDER,f.FOLDER_NAME
+ </select>
+ <select id="selectChildren" resultMap="folderMap">
+  SELECT f.*,(SELECT COUNT(*) FROM CONTENT_FILE_FOLDERS c WHERE c.PARENT_FOLDER_ID=f.FOLDER_ID AND c.DELETED_YN='N') CHILD_FOLDER_COUNT,
+   (SELECT COUNT(*) FROM CONTENT_FILES x WHERE x.FOLDER_ID=f.FOLDER_ID AND x.DELETED_YN='N') FILE_COUNT
+  FROM CONTENT_FILE_FOLDERS f WHERE <include refid="scope"/> AND f.DELETED_YN='N'
+  <choose><when test="parentFolderId==null">AND f.PARENT_FOLDER_ID IS NULL</when><otherwise>AND f.PARENT_FOLDER_ID=#{parentFolderId}</otherwise></choose>
+  ORDER BY f.SORT_ORDER,f.FOLDER_NAME
+ </select>
+ <select id="countName" resultType="int">SELECT COUNT(*) FROM CONTENT_FILE_FOLDERS f WHERE <include refid="scope"/> AND f.DELETED_YN='N' AND UPPER(f.FOLDER_NAME)=UPPER(#{folderName}) <choose><when test="parentFolderId==null">AND f.PARENT_FOLDER_ID IS NULL</when><otherwise>AND f.PARENT_FOLDER_ID=#{parentFolderId}</otherwise></choose><if test="excludeFolderId!=null">AND f.FOLDER_ID&lt;&gt;#{excludeFolderId}</if></select>
+ <update id="updateName">UPDATE CONTENT_FILE_FOLDERS SET FOLDER_NAME=#{folderName},UPDATED_BY=#{userId},UPDATED_AT=SYSDATE WHERE FOLDER_ID=#{folderId} AND DELETED_YN='N'</update>
+ <update id="move">UPDATE CONTENT_FILE_FOLDERS SET PARENT_FOLDER_ID=#{parentFolderId,jdbcType=NUMERIC},UPDATED_BY=#{userId},UPDATED_AT=SYSDATE WHERE FOLDER_ID=#{folderId} AND DELETED_YN='N'</update>
+ <update id="softDelete">UPDATE CONTENT_FILE_FOLDERS SET DELETED_YN='Y',DELETED_BY=#{userId},DELETED_AT=SYSDATE,UPDATED_BY=#{userId},UPDATED_AT=SYSDATE WHERE FOLDER_ID=#{folderId} AND DELETED_YN='N'</update>
+ <select id="countDescendant" resultType="int">
+  SELECT COUNT(*)
+  FROM (
+   SELECT FOLDER_ID
+   FROM CONTENT_FILE_FOLDERS
+   WHERE DELETED_YN = 'N'
+   START WITH FOLDER_ID = #{folderId}
+   CONNECT BY PRIOR FOLDER_ID = PARENT_FOLDER_ID
+  )
+  WHERE FOLDER_ID = #{candidateId}
+ </select>
+ <select id="countChildren" resultType="int">SELECT COUNT(*) FROM CONTENT_FILE_FOLDERS WHERE PARENT_FOLDER_ID=#{folderId} AND DELETED_YN='N'</select>
+ <select id="countFiles" resultType="int">SELECT COUNT(*) FROM CONTENT_FILES WHERE FOLDER_ID=#{folderId} AND DELETED_YN='N'</select>
+ <select id="countForeignFilesInTree" resultType="int">
+  SELECT COUNT(*)
+  FROM CONTENT_FILES
+  WHERE DELETED_YN = 'N'
+    AND NVL(CREATED_BY, -1) &lt;&gt; #{userId}
+    AND FOLDER_ID IN (
+      SELECT FOLDER_ID
+      FROM CONTENT_FILE_FOLDERS
+      WHERE DELETED_YN = 'N'
+      START WITH FOLDER_ID = #{folderId}
+      CONNECT BY PRIOR FOLDER_ID = PARENT_FOLDER_ID
+    )
+ </select>
+</mapper>

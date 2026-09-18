@@ -1,0 +1,316 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.springboot.project.dao.IcontentFileExplorerDAO">
+
+    <resultMap id="fileMap" type="com.springboot.project.dto.contentFileDTO">
+        <id property="contentFileId" column="CONTENT_FILE_ID"/>
+        <result property="folderId" column="FOLDER_ID"/>
+        <result property="scopeType" column="SCOPE_TYPE"/>
+        <result property="ownerUserId" column="OWNER_USER_ID"/>
+        <result property="wsId" column="WS_ID"/>
+        <result property="projId" column="PROJ_ID"/>
+        <result property="originalName" column="ORIGINAL_NAME"/>
+        <result property="displayName" column="DISPLAY_NAME"/>
+        <result property="storedName" column="STORED_NAME"/>
+        <result property="filePath" column="FILE_PATH"/>
+        <result property="fileExt" column="FILE_EXT"/>
+        <result property="mimeType" column="MIME_TYPE"/>
+        <result property="fileSize" column="FILE_SIZE"/>
+        <result property="description" column="DESCRIPTION"/>
+        <result property="createdBy" column="CREATED_BY"/>
+        <result property="creatorName" column="CREATOR_NAME"/>
+        <result property="creatorProfileImagePath" column="CREATOR_PROFILE_IMAGE_PATH"/>
+        <result property="creatorProfileAvatarType" column="CREATOR_PROFILE_AVATAR_TYPE"/>
+        <result property="createdAt" column="CREATED_AT"/>
+        <result property="updatedAt" column="UPDATED_AT"/>
+        <result property="lastAccessedAt" column="LAST_ACCESSED_AT"/>
+        <result property="sharedYn" column="SHARED_YN"/>
+    </resultMap>
+
+    <sql id="groupAccessWhere">
+        <choose>
+            <when test="scopeType == 'GROUP' or scopeType == 'PROJECT'">
+                AND (
+                    NOT EXISTS (
+                        SELECT 1
+                          FROM CONTENT_SHARES secret_marker
+                         WHERE secret_marker.CONTENT_TYPE = 'FILE'
+                           AND secret_marker.CONTENT_ID = f.CONTENT_FILE_ID
+                           AND secret_marker.TARGET_TYPE = 'USER'
+                           AND secret_marker.TARGET_ID = secret_marker.OWNER_ID
+                           AND secret_marker.SHARED_BY = secret_marker.OWNER_ID
+                           AND UPPER(NVL(secret_marker.PERMISSION_TYPE, 'VIEW')) = 'VIEW'
+                           AND secret_marker.ACTIVE_YN = 'Y'
+                           AND NVL(secret_marker.SHARE_STATUS, 'ACCEPTED') = 'ACCEPTED'
+                    )
+                    OR f.CREATED_BY = #{userId}
+                    OR EXISTS (
+                        SELECT 1
+                          FROM CONTENT_SHARES edit_share
+                         WHERE edit_share.CONTENT_TYPE = 'FILE'
+                           AND edit_share.CONTENT_ID = f.CONTENT_FILE_ID
+                           AND edit_share.TARGET_TYPE = 'USER'
+                           AND edit_share.TARGET_ID = #{userId}
+                           AND UPPER(NVL(edit_share.PERMISSION_TYPE, 'VIEW')) = 'EDIT'
+                           AND edit_share.ACTIVE_YN = 'Y'
+                           AND NVL(edit_share.SHARE_STATUS, 'ACCEPTED') = 'ACCEPTED'
+                           AND (edit_share.EXPIRES_AT IS NULL OR edit_share.EXPIRES_AT >= SYSDATE)
+                    )
+                    OR (
+                        #{scopeType} = 'GROUP'
+                        AND EXISTS (
+                            SELECT 1
+                              FROM WORKSPACES w_mgr
+                              LEFT JOIN WS_MEMBERS wm_mgr
+                                ON wm_mgr.WS_ID = w_mgr.WS_ID
+                               AND wm_mgr.USER_ID = #{userId}
+                             WHERE w_mgr.WS_ID = f.WS_ID
+                               AND (w_mgr.OWNER_ID = #{userId}
+                                    OR UPPER(NVL(wm_mgr.WS_ROLE, 'MEMBER')) = 'ADMIN')
+                        )
+                    )
+                    OR (
+                        #{scopeType} = 'PROJECT'
+                        AND EXISTS (
+                            SELECT 1
+                              FROM PROJECTS p_mgr
+                              LEFT JOIN PROJ_MEMBERS pm_mgr
+                                ON pm_mgr.PROJ_ID = p_mgr.PROJ_ID
+                               AND pm_mgr.USER_ID = #{userId}
+                             WHERE p_mgr.PROJ_ID = f.PROJ_ID
+                               AND p_mgr.WS_ID IS NOT NULL
+                               AND (p_mgr.LEADER_ID = #{userId}
+                                    OR UPPER(NVL(pm_mgr.PROJ_ROLE, 'MEMBER')) IN ('ADMIN', 'LEADER', 'OWNER', 'PM'))
+                        )
+                    )
+                )
+            </when>
+        </choose>
+    </sql>
+
+    <select id="selectFiles" resultMap="fileMap">
+        SELECT f.*,
+               CASE
+                   WHEN REGEXP_LIKE(
+                       f.ORIGINAL_NAME,
+                       '^[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}(\.[^.]*)?$'
+                   )
+                   THEN NVL((
+                       SELECT MAX(NULLIF(TRIM(i.TITLE), ''))
+                              KEEP (DENSE_RANK LAST ORDER BY i.RECORD_ITEM_ID)
+                         FROM CONTENT_RECORD_ITEMS i
+                        WHERE i.RECORD_TYPE = 'FILE'
+                          AND i.CONTENT_ID = f.CONTENT_FILE_ID
+                          AND NVL(i.DELETED_YN, 'N') = 'N'
+                   ), f.ORIGINAL_NAME)
+                   ELSE f.ORIGINAL_NAME
+               END AS DISPLAY_NAME,
+               CASE
+                   WHEN f.SCOPE_TYPE IN ('GROUP', 'PROJECT')
+                    AND NVL(wmp.USE_ACCOUNT_PROFILE, 'Y') = 'N'
+                       THEN NVL(wmp.DISPLAY_NAME, u.USER_NAME)
+                   ELSE u.USER_NAME
+               END AS CREATOR_NAME,
+               CASE
+                   WHEN f.SCOPE_TYPE IN ('GROUP', 'PROJECT')
+                    AND NVL(wmp.USE_ACCOUNT_PROFILE, 'Y') = 'N'
+                       THEN wmp.PROFILE_IMAGE_PATH
+                   WHEN NVL(u.PROFILE_AVATAR_TYPE, 'DEFAULT') = 'IMAGE'
+                       THEN u.PROFILE_IMAGE_PATH
+                   ELSE NULL
+               END AS CREATOR_PROFILE_IMAGE_PATH,
+               CASE
+                   WHEN f.SCOPE_TYPE IN ('GROUP', 'PROJECT')
+                    AND NVL(wmp.USE_ACCOUNT_PROFILE, 'Y') = 'N'
+                       THEN CASE
+                                WHEN wmp.PROFILE_IMAGE_PATH IS NOT NULL THEN 'IMAGE'
+                                ELSE 'DEFAULT'
+                            END
+                   ELSE NVL(u.PROFILE_AVATAR_TYPE, 'DEFAULT')
+               END AS CREATOR_PROFILE_AVATAR_TYPE,
+               CASE WHEN EXISTS (
+                   SELECT 1
+                     FROM CONTENT_SHARES s
+                    WHERE s.CONTENT_TYPE = 'FILE'
+                      AND s.CONTENT_ID = f.CONTENT_FILE_ID
+                      AND s.ACTIVE_YN = 'Y'
+                      AND NVL(s.SHARE_STATUS, 'ACCEPTED') = 'ACCEPTED'
+                      AND (s.EXPIRES_AT IS NULL OR s.EXPIRES_AT >= SYSDATE)
+               ) THEN 'Y' ELSE 'N' END AS SHARED_YN
+          FROM CONTENT_FILES f
+          LEFT JOIN USERS u
+            ON u.USER_ID = f.CREATED_BY
+          LEFT JOIN PROJECTS p
+            ON p.PROJ_ID = f.PROJ_ID
+          LEFT JOIN WS_MEMBER_PROFILES wmp
+            ON wmp.WS_ID = CASE
+                               WHEN f.SCOPE_TYPE = 'GROUP' THEN f.WS_ID
+                               WHEN f.SCOPE_TYPE = 'PROJECT' THEN p.WS_ID
+                               ELSE NULL
+                           END
+           AND wmp.USER_ID = f.CREATED_BY
+         WHERE f.DELETED_YN = 'N'
+           AND f.SCOPE_TYPE = #{scopeType}
+        <choose>
+            <when test="scopeType == 'PERSONAL'">
+                AND f.OWNER_USER_ID = #{ownerUserId}
+            </when>
+            <when test="scopeType == 'GROUP'">
+                AND f.WS_ID = #{wsId}
+            </when>
+            <otherwise>
+                AND f.PROJ_ID = #{projId}
+            </otherwise>
+        </choose>
+        <include refid="groupAccessWhere"/>
+        <choose>
+            <when test="folderId == null">
+                AND f.FOLDER_ID IS NULL
+            </when>
+            <otherwise>
+                AND f.FOLDER_ID = #{folderId}
+            </otherwise>
+        </choose>
+        <if test="keyword != null and keyword != ''">
+            AND (
+                UPPER(f.ORIGINAL_NAME) LIKE '%' || UPPER(#{keyword}) || '%'
+                OR UPPER(u.USER_NAME) LIKE '%' || UPPER(#{keyword}) || '%'
+            )
+        </if>
+        ORDER BY
+        <choose>
+            <when test="sort == 'LATEST'">f.CREATED_AT DESC</when>
+            <when test="sort == 'SIZE_DESC'">f.FILE_SIZE DESC</when>
+            <otherwise>LOWER(f.ORIGINAL_NAME), f.CONTENT_FILE_ID</otherwise>
+        </choose>
+    </select>
+
+    <select id="selectRecentFiles" resultMap="fileMap">
+        SELECT * FROM (
+            SELECT f.*,
+                   f.ORIGINAL_NAME AS DISPLAY_NAME,
+                   u.USER_NAME AS CREATOR_NAME,
+                   CASE WHEN NVL(u.PROFILE_AVATAR_TYPE, 'DEFAULT') = 'IMAGE' THEN u.PROFILE_IMAGE_PATH END AS CREATOR_PROFILE_IMAGE_PATH,
+                   NVL(u.PROFILE_AVATAR_TYPE, 'DEFAULT') AS CREATOR_PROFILE_AVATAR_TYPE,
+                   CAST(NULL AS DATE) AS LAST_ACCESSED_AT,
+                   CASE WHEN EXISTS (
+                       SELECT 1
+                         FROM CONTENT_SHARES cs
+                        WHERE cs.CONTENT_TYPE = 'FILE'
+                          AND cs.CONTENT_ID = f.CONTENT_FILE_ID
+                          AND cs.ACTIVE_YN = 'Y'
+                          AND NVL(cs.SHARE_STATUS, 'ACCEPTED') = 'ACCEPTED'
+                          AND (cs.EXPIRES_AT IS NULL OR cs.EXPIRES_AT >= SYSDATE)
+                   ) THEN 'Y' ELSE 'N' END AS SHARED_YN
+              FROM CONTENT_FILES f
+              LEFT JOIN USERS u ON u.USER_ID = f.CREATED_BY
+             WHERE f.DELETED_YN = 'N'
+               AND f.SCOPE_TYPE = #{scopeType}
+            <choose>
+                <when test="scopeType == 'PERSONAL'">AND f.OWNER_USER_ID = #{ownerUserId}</when>
+                <when test="scopeType == 'GROUP'">AND f.WS_ID = #{wsId}</when>
+                <otherwise>AND f.PROJ_ID = #{projId}</otherwise>
+            </choose>
+            <include refid="groupAccessWhere"/>
+             ORDER BY f.CREATED_AT DESC, f.CONTENT_FILE_ID DESC
+        ) WHERE ROWNUM &lt;= 30
+    </select>
+
+    <select id="selectFriendShareOwners" resultType="map">
+        SELECT s.OWNER_ID AS "ownerId",
+               u.USER_NAME AS "ownerName",
+               COUNT(DISTINCT s.CONTENT_ID) AS "fileCount"
+          FROM CONTENT_SHARES s
+          JOIN CONTENT_FILES f
+            ON f.CONTENT_FILE_ID = s.CONTENT_ID
+           AND s.CONTENT_TYPE = 'FILE'
+          JOIN USERS u
+            ON u.USER_ID = s.OWNER_ID
+         WHERE s.TARGET_TYPE = 'USER'
+           AND s.TARGET_ID = #{userId}
+           AND s.ACTIVE_YN = 'Y'
+           AND NVL(s.SHARE_STATUS, 'ACCEPTED') = 'ACCEPTED'
+           AND (s.EXPIRES_AT IS NULL OR s.EXPIRES_AT >= SYSDATE)
+           AND f.DELETED_YN = 'N'
+           AND f.SCOPE_TYPE = 'PERSONAL'
+         GROUP BY s.OWNER_ID, u.USER_NAME
+         ORDER BY LOWER(u.USER_NAME), s.OWNER_ID
+    </select>
+
+    <select id="selectFriendSharedFiles" resultMap="fileMap">
+        SELECT f.*,
+               f.ORIGINAL_NAME AS DISPLAY_NAME,
+               u.USER_NAME AS CREATOR_NAME,
+               CASE WHEN NVL(u.PROFILE_AVATAR_TYPE, 'DEFAULT') = 'IMAGE' THEN u.PROFILE_IMAGE_PATH END AS CREATOR_PROFILE_IMAGE_PATH,
+               NVL(u.PROFILE_AVATAR_TYPE, 'DEFAULT') AS CREATOR_PROFILE_AVATAR_TYPE,
+               CAST(NULL AS DATE) AS LAST_ACCESSED_AT,
+               'Y' AS SHARED_YN
+          FROM CONTENT_FILES f
+          LEFT JOIN CONTENT_SHARES s
+            ON s.CONTENT_ID = f.CONTENT_FILE_ID
+           AND s.CONTENT_TYPE = 'FILE'
+          LEFT JOIN USERS u
+            ON u.USER_ID = f.CREATED_BY
+         WHERE f.DELETED_YN = 'N'
+           AND f.SCOPE_TYPE = 'PERSONAL'
+           AND f.OWNER_USER_ID = #{ownerId}
+           AND (
+                (s.TARGET_TYPE = 'USER'
+                 AND s.TARGET_ID = #{userId}
+                 AND s.OWNER_ID = #{ownerId}
+                 AND s.ACTIVE_YN = 'Y'
+                 AND NVL(s.SHARE_STATUS, 'ACCEPTED') = 'ACCEPTED'
+                 AND (s.EXPIRES_AT IS NULL OR s.EXPIRES_AT >= SYSDATE))
+                OR EXISTS (
+                    SELECT 1
+                      FROM CONTENT_RECORD_ITEMS cri
+                      JOIN CONTENT_RECORD_TARGETS crt
+                        ON crt.RECORD_TARGET_ID = cri.RECORD_TARGET_ID
+                      JOIN EVENTS e
+                        ON crt.TARGET_TYPE = 'EVENT'
+                       AND crt.TARGET_ID = e.EVENT_ID
+                     WHERE cri.RECORD_TYPE = 'FILE'
+                       AND cri.CONTENT_ID = f.CONTENT_FILE_ID
+                       AND cri.DELETED_YN = 'N'
+                       AND crt.TARGET_STATUS = 'ACTIVE'
+                       AND crt.SCOPE_TYPE = 'PERSONAL'
+                       AND e.ITEM_TYPE = 'PRIVATE'
+                       AND e.USER_ID = #{ownerId}
+                       AND NVL(e.RECORD_ENABLED_YN, 'N') = 'Y'
+                       AND (
+                            EXISTS (SELECT 1 FROM EVENT_ATTENDEES ea WHERE ea.EVENT_ID = e.EVENT_ID AND ea.USER_ID = #{userId})
+                            OR EXISTS (
+                                SELECT 1 FROM CONTENT_SHARES ecs
+                                 WHERE ecs.CONTENT_TYPE = 'CALENDAR'
+                                   AND ecs.CONTENT_ID = e.EVENT_ID
+                                   AND ecs.TARGET_TYPE = 'USER'
+                                   AND ecs.TARGET_ID = #{userId}
+                                   AND ecs.ACTIVE_YN = 'Y'
+                                   AND NVL(ecs.SHARE_STATUS, 'ACCEPTED') = 'ACCEPTED'
+                                   AND (ecs.EXPIRES_AT IS NULL OR ecs.EXPIRES_AT >= SYSDATE)
+                            )
+                       )
+                )
+           )
+         ORDER BY f.UPDATED_AT DESC, f.CONTENT_FILE_ID DESC
+    </select>
+
+    <update id="touchRecentAccess">
+        MERGE INTO CONTENT_FILE_RECENT_ACCESS t
+        USING (SELECT #{userId} USER_ID, #{contentFileId} CONTENT_FILE_ID FROM DUAL) s
+           ON (t.USER_ID = s.USER_ID AND t.CONTENT_FILE_ID = s.CONTENT_FILE_ID)
+        WHEN MATCHED THEN UPDATE SET t.LAST_ACCESSED_AT = SYSDATE
+        WHEN NOT MATCHED THEN INSERT (USER_ID, CONTENT_FILE_ID, LAST_ACCESSED_AT)
+             VALUES (s.USER_ID, s.CONTENT_FILE_ID, SYSDATE)
+    </update>
+
+    <update id="updateFolder">
+        UPDATE CONTENT_FILES
+           SET FOLDER_ID = #{folderId,jdbcType=NUMERIC},
+               UPDATED_BY = #{userId},
+               UPDATED_AT = SYSDATE
+         WHERE CONTENT_FILE_ID = #{contentFileId}
+           AND DELETED_YN = 'N'
+    </update>
+
+</mapper>

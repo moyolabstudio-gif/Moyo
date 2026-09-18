@@ -15,6 +15,7 @@ import javax.imageio.ImageIO;
 import org.springframework.web.multipart.MultipartFile;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,9 +29,13 @@ import com.springboot.project.dto.workspaceUpdateRequest;
 import com.springboot.project.dto.workspaceUpdateResult;
 import com.springboot.project.service.fileUploadService;
 import com.springboot.project.service.IworkspaceService;
+import com.springboot.project.service.WorkspaceAuthorizationService;
 
 @Service
 public class workspaceServiceImpl implements IworkspaceService {
+
+    @Value("${moyo.schema.runtime-ddl-enabled:false}")
+    private boolean runtimeDdlEnabled;
 
     @Autowired
     private IworkspaceDAO workspaceDao;
@@ -43,6 +48,9 @@ public class workspaceServiceImpl implements IworkspaceService {
 
     @Autowired
     private PlatformTransactionManager transactionManager;
+
+    @Autowired
+    private WorkspaceAuthorizationService workspaceAuthorizationService;
 
     private static final int WORKSPACE_NAME_MAX_LENGTH = 60;
     private static final int WORKSPACE_DESCRIPTION_MAX_LENGTH = 300;
@@ -118,13 +126,8 @@ public class workspaceServiceImpl implements IworkspaceService {
                     "NOT_FOUND", "그룹 정보를 찾을 수 없습니다.");
         }
 
-        boolean isOwner = currentData.getOwnerId() != null
-                && currentData.getOwnerId().equals(userId);
-        boolean isAdmin = workspaceDao.isWorkspaceAdmin(
-                request.getWsId(), userId) > 0;
-
         // 그룹장은 OWNER_ID로, 관리자는 ADMIN 역할로 수정 권한을 확인한다.
-        if (!isOwner && !isAdmin) {
+        if (!workspaceAuthorizationService.canManage(request.getWsId(), userId)) {
             return workspaceUpdateResult.fail(
                     "FORBIDDEN", "그룹 정보를 수정할 권한이 없습니다.");
         }
@@ -631,7 +634,14 @@ public class workspaceServiceImpl implements IworkspaceService {
     
     @Override
     public List<Map<String, Object>> getWorkspaceMembers(Long wsId) {
+        if (runtimeDdlEnabled) workspaceDao.ensureWorkspaceMemberActivityHistory();
         return workspaceDao.selectWorkspaceMembers(wsId);
+    }
+
+    @Override
+    public List<Map<String, Object>> getWorkspaceMemberLeaveActivities(Long wsId) {
+        if (runtimeDdlEnabled) workspaceDao.ensureWorkspaceMemberActivityHistory();
+        return workspaceDao.selectWorkspaceMemberLeaveActivities(wsId);
     }
 
     @Override
@@ -657,6 +667,35 @@ public class workspaceServiceImpl implements IworkspaceService {
     }
 
     @Override
+    public Map<String, Object> getWorkspaceMemberContributions(Long wsId, Long userId, Long viewerUserId) {
+        if (wsId == null || userId == null || viewerUserId == null) {
+            return java.util.Collections.emptyMap();
+        }
+        if (workspaceDao.isWorkspaceMember(wsId, viewerUserId) < 1 || workspaceDao.isWorkspaceMember(wsId, userId) < 1) {
+            return java.util.Collections.emptyMap();
+        }
+        Map<String, Object> counts = workspaceDao.selectWorkspaceMemberContributionCounts(wsId, userId, viewerUserId);
+        Map<String, Object> result = new java.util.HashMap<>();
+        result.put("summary", counts == null ? java.util.Collections.emptyMap() : counts);
+        result.put("notes", workspaceDao.selectWorkspaceMemberRecentNotes(wsId, userId, viewerUserId));
+        result.put("photos", workspaceDao.selectWorkspaceMemberRecentPhotos(wsId, userId, viewerUserId));
+        result.put("files", workspaceDao.selectWorkspaceMemberRecentFiles(wsId, userId, viewerUserId));
+        return result;
+    }
+
+    @Override
+    public List<Map<String, Object>> getWorkspaceMemberRecentActivities(Long wsId, Long userId, Long viewerUserId) {
+        if (wsId == null || userId == null || viewerUserId == null) {
+            return java.util.Collections.emptyList();
+        }
+        if (workspaceDao.isWorkspaceMember(wsId, viewerUserId) < 1 || workspaceDao.isWorkspaceMember(wsId, userId) < 1) {
+            return java.util.Collections.emptyList();
+        }
+        List<Map<String, Object>> rows = workspaceDao.selectWorkspaceMemberRecentActivities(wsId, userId, viewerUserId);
+        return rows == null ? java.util.Collections.emptyList() : rows;
+    }
+
+    @Override
     @Transactional
     public boolean saveMyWorkspaceProfile(Long wsId, Long userId, Map<String, Object> profile) {
         if (wsId == null || userId == null || profile == null) return false;
@@ -667,6 +706,7 @@ public class workspaceServiceImpl implements IworkspaceService {
                 String.valueOf(profile.getOrDefault("useAccountProfile", "Y"))) ? "N" : "Y";
         String displayName = trimToNull(profile.get("displayName"), 50);
         String contactEmail = trimToNull(profile.get("contactEmail"), 100);
+        String introText = trimToNull(profile.get("introText"), 120);
         String positionName = trimToNull(profile.get("positionName"), 50);
         String phoneNumber = trimToNull(profile.get("phoneNumber"), 30);
         String profileImagePath = trimToNull(profile.get("profileImagePath"), 500);
@@ -678,8 +718,10 @@ public class workspaceServiceImpl implements IworkspaceService {
                 profile.get("profileImageCropX"));
         Double profileImageCropY = toNullableDouble(
                 profile.get("profileImageCropY"));
-        String showPhone = "Y".equalsIgnoreCase(
-                String.valueOf(profile.getOrDefault("showPhone", "N"))) ? "Y" : "N";
+        String showEmail = "N".equalsIgnoreCase(
+                String.valueOf(profile.getOrDefault("showEmail", "Y"))) ? "N" : "Y";
+        String showPhone = "N".equalsIgnoreCase(
+                String.valueOf(profile.getOrDefault("showPhone", "Y"))) ? "N" : "Y";
         String showBirth = "N".equalsIgnoreCase(
                 String.valueOf(profile.getOrDefault("showBirth", "Y"))) ? "N" : "Y";
         String removeProfileImage = "Y".equalsIgnoreCase(
@@ -689,7 +731,8 @@ public class workspaceServiceImpl implements IworkspaceService {
 
         validateMaxLength(profile.get("displayName"), 50, "그룹 표시 이름");
         validateMaxLength(profile.get("contactEmail"), 100, "그룹 이메일");
-        validateMaxLength(profile.get("positionName"), 50, "그룹에서의 역할");
+        validateMaxLength(profile.get("introText"), 120, "한 줄 소개");
+        validateMaxLength(profile.get("positionName"), 50, "직책 · 담당");
         validateMaxLength(profile.get("phoneNumber"), 30, "전화번호");
         validateProfileCropValue(profileImageCropScale, 0.1D, 5D, "이미지 확대값");
         validateProfileCropValue(profileImageCropX, -2000D, 2000D, "이미지 가로 위치");
@@ -728,8 +771,10 @@ public class workspaceServiceImpl implements IworkspaceService {
         params.put("profileImageCropY", profileImageCropY);
         params.put("removeProfileImage", removeProfileImage);
         params.put("contactEmail", contactEmail);
+        params.put("introText", introText);
         params.put("positionName", positionName);
         params.put("phoneNumber", phoneNumber);
+        params.put("showEmail", showEmail);
         params.put("showPhone", showPhone);
         params.put("showBirth", showBirth);
 
@@ -784,16 +829,21 @@ public class workspaceServiceImpl implements IworkspaceService {
 
         String useAccount =
                 String.valueOf(source.getOrDefault("useAccountProfile", "Y"));
+        String showEmail =
+                String.valueOf(source.getOrDefault("showEmail", "Y"));
         String showPhone =
-                String.valueOf(source.getOrDefault("showPhone", "N"));
+                String.valueOf(source.getOrDefault("showPhone", "Y"));
         String showBirth =
                 String.valueOf(source.getOrDefault("showBirth", "Y"));
 
         if (!"Y".equals(useAccount) && !"N".equals(useAccount)) {
             useAccount = "Y";
         }
+        if (!"Y".equals(showEmail) && !"N".equals(showEmail)) {
+            showEmail = "Y";
+        }
         if (!"Y".equals(showPhone) && !"N".equals(showPhone)) {
-            showPhone = "N";
+            showPhone = "Y";
         }
         if (!"Y".equals(showBirth) && !"N".equals(showBirth)) {
             showBirth = "Y";
@@ -828,8 +878,10 @@ public class workspaceServiceImpl implements IworkspaceService {
         params.put("removeProfileImage", removeProfileImage);
 
         params.put("contactEmail", trimToNull(source.get("contactEmail"), 100));
+        params.put("introText", trimToNull(source.get("introText"), 120));
         params.put("positionName", trimToNull(source.get("positionName"), 50));
         params.put("phoneNumber", trimToNull(source.get("phoneNumber"), 30));
+        params.put("showEmail", showEmail);
         params.put("showPhone", showPhone);
         params.put("showBirth", showBirth);
         return params;
@@ -849,6 +901,18 @@ public class workspaceServiceImpl implements IworkspaceService {
     public String inviteUserByEmail(Long wsId, Long inviterId, String inviteeEmail) {
         if (wsId == null || inviterId == null || inviteeEmail == null) {
             return "INVALID_REQUEST";
+        }
+
+        if (!workspaceAuthorizationService.canManage(wsId, inviterId)) {
+            return "FORBIDDEN";
+        }
+
+        workspaceDTO workspace = workspaceDao.selectWorkspaceDetail(wsId);
+        if (workspace == null) {
+            return "NOT_FOUND";
+        }
+        if (!"ACTIVE".equalsIgnoreCase(workspace.getStatus())) {
+            return "UNAVAILABLE";
         }
 
         String normalizedEmail = inviteeEmail.trim().toLowerCase();
@@ -877,7 +941,16 @@ public class workspaceServiceImpl implements IworkspaceService {
         int inserted = workspaceDao.insertInvitation(
                 wsId, inviterId, invitee.getUserId());
 
-        return inserted > 0 ? "SUCCESS" : "ERROR";
+        if (inserted > 0) {
+            return "SUCCESS";
+        }
+        if (workspaceDao.isWorkspaceMember(wsId, invitee.getUserId()) > 0) {
+            return "ALREADY_MEMBER";
+        }
+        if (workspaceDao.checkInvitationExists(wsId, invitee.getUserId()) > 0) {
+            return "ALREADY_EXISTS";
+        }
+        return "ERROR";
     }
     
     private void upsertWorkspaceMemberProfile(
@@ -931,7 +1004,11 @@ public class workspaceServiceImpl implements IworkspaceService {
         if (workspaceDao.countPendingJoinRequest(wsId, userId) > 0) return "ALREADY_PENDING";
 
         int inserted = workspaceDao.insertJoinRequest(wsId, userId);
-        if (inserted < 1) return "ERROR";
+        if (inserted < 1) {
+            return workspaceDao.countPendingJoinRequest(wsId, userId) > 0
+                    ? "ALREADY_PENDING"
+                    : "ERROR";
+        }
         workspaceDao.insertJoinRequestNotices(wsId, userId);
         return "SUCCESS";
     }
@@ -958,6 +1035,11 @@ public class workspaceServiceImpl implements IworkspaceService {
     }
 
     @Override
+    public int countPendingJoinRequestsForAdmin(Long userId) {
+        return userId == null ? 0 : workspaceDao.countPendingJoinRequestsForAdmin(userId);
+    }
+
+    @Override
     @Transactional
     public String respondJoinRequest(Long requestId, String status, Long reviewerId, String rejectionReason) {
         if (requestId == null || reviewerId == null || status == null) {
@@ -979,7 +1061,7 @@ public class workspaceServiceImpl implements IworkspaceService {
                 : (request.get("WS_ID") != null ? request.get("WS_ID") : request.get("wsId"));
         if (wsValue == null) return "NOT_FOUND";
         Long wsId = Long.valueOf(String.valueOf(wsValue));
-        if (workspaceDao.isWorkspaceAdmin(wsId, reviewerId) < 1) return "FORBIDDEN";
+        if (!workspaceAuthorizationService.canManage(wsId, reviewerId)) return "FORBIDDEN";
 
         String normalizedReason = null;
         if ("REJECTED".equals(normalizedStatus) && rejectionReason != null) {
@@ -1093,6 +1175,25 @@ public class workspaceServiceImpl implements IworkspaceService {
     public List<Map<String, Object>> getPendingInvitations(Long userId) {
         return workspaceDao.selectPendingInvitations(userId);
     }
+
+    @Override
+    public List<Map<String, Object>> getPendingInvitationsByWorkspace(Long wsId) {
+        if (wsId == null) return new java.util.ArrayList<>();
+        List<Map<String, Object>> invites = workspaceDao.selectPendingInvitationsByWorkspace(wsId);
+        return invites != null ? invites : new java.util.ArrayList<>();
+    }
+
+    @Override
+    public int countPendingInvitations(Long userId) {
+        return userId == null ? 0 : workspaceDao.countPendingInvitations(userId);
+    }
+
+    @Override
+    @Transactional
+    public boolean cancelInvitation(Long inviteId, Long wsId) {
+        if (inviteId == null || wsId == null) return false;
+        return workspaceDao.cancelInvitation(inviteId, wsId) > 0;
+    }
     
     @Override
     @Transactional
@@ -1108,15 +1209,26 @@ public class workspaceServiceImpl implements IworkspaceService {
             return false;
         }
 
-        if (!"ACCEPTED".equals(status) && !"REJECTED".equals(status)) {
+        String normalizedStatus = status == null ? "" : status.trim().toUpperCase();
+        if (!"ACCEPTED".equals(normalizedStatus) && !"REJECTED".equals(normalizedStatus)) {
             return false;
         }
 
-        int updated = workspaceDao.updateInvitationStatus(inviteId, status);
+        Object inviteStatusValue = inviteInfo.get("STATUS");
+        if (inviteStatusValue == null || !"PENDING".equalsIgnoreCase(String.valueOf(inviteStatusValue))) {
+            return false;
+        }
+
+        Long wsId = Long.valueOf(inviteInfo.get("WS_ID").toString());
+        workspaceDTO workspace = workspaceDao.selectWorkspaceDetail(wsId);
+        if (workspace == null || !"ACTIVE".equalsIgnoreCase(workspace.getStatus())) {
+            return false;
+        }
+
+        int updated = workspaceDao.updateInvitationStatus(inviteId, normalizedStatus);
         if (updated < 1) return false;
 
-        if ("ACCEPTED".equals(status)) {
-            Long wsId = Long.valueOf(inviteInfo.get("WS_ID").toString());
+        if ("ACCEPTED".equals(normalizedStatus)) {
             if (workspaceDao.isWorkspaceMember(wsId, userId) < 1) {
                 workspaceDao.insertWorkspaceMember(wsId, userId, "MEMBER");
             }
@@ -1130,30 +1242,177 @@ public class workspaceServiceImpl implements IworkspaceService {
     }
 
     @Override
-    @Transactional // 중요: 하나라도 실패하면 전체 롤백
+    @Transactional
+    public String updateWorkspaceMembers(Long wsId, Long requesterId, List<Map<String, Object>> changes) {
+        if (wsId == null || requesterId == null || changes == null || changes.isEmpty()) {
+            return "invalid_request";
+        }
+        if (changes.size() > 100) return "too_many_changes";
+        if (!workspaceAuthorizationService.canManage(wsId, requesterId)) return "forbidden";
+
+        workspaceDTO workspace = workspaceDao.selectWorkspaceDetail(wsId);
+        if (workspace == null) return "workspace_not_found";
+        if (!"ACTIVE".equalsIgnoreCase(workspace.getStatus())) return "workspace_unavailable";
+
+        List<Map<String, Object>> normalizedChanges = new ArrayList<>();
+        Set<Long> seen = new HashSet<>();
+
+        for (Map<String, Object> change : changes) {
+            if (change == null || change.get("userId") == null) return "invalid_request";
+
+            Long targetUserId;
+            try {
+                targetUserId = Long.valueOf(String.valueOf(change.get("userId")));
+            } catch (Exception e) {
+                return "invalid_request";
+            }
+            if (!seen.add(targetUserId)) return "duplicate_member";
+            if (workspaceDao.isWorkspaceMember(wsId, targetUserId) < 1) return "member_not_found";
+
+            boolean hasRole = change.containsKey("role");
+            String role = !hasRole || change.get("role") == null
+                    ? null
+                    : String.valueOf(change.get("role")).trim().toUpperCase();
+            if (hasRole) {
+                if (!"ADMIN".equals(role) && !"MEMBER".equals(role)) return "invalid_role";
+                if (workspace.getOwnerId() != null && workspace.getOwnerId().equals(targetUserId)) {
+                    return "owner_role_locked";
+                }
+                if (requesterId.equals(targetUserId)) return "self_role_locked";
+            }
+
+            boolean hasPosition = change.containsKey("positionName");
+            String position = !hasPosition || change.get("positionName") == null
+                    ? null
+                    : String.valueOf(change.get("positionName")).trim();
+            if (position != null && position.length() > 50) {
+                position = position.substring(0, 50);
+            }
+            if (position != null && position.isEmpty()) position = null;
+
+            Map<String, Object> normalized = new HashMap<>();
+            normalized.put("userId", targetUserId);
+            normalized.put("hasRole", hasRole);
+            normalized.put("role", role);
+            normalized.put("hasPosition", hasPosition);
+            normalized.put("positionName", position);
+            normalizedChanges.add(normalized);
+        }
+
+        for (Map<String, Object> change : normalizedChanges) {
+            Long targetUserId = (Long) change.get("userId");
+            boolean hasRole = Boolean.TRUE.equals(change.get("hasRole"));
+            String role = (String) change.get("role");
+            boolean hasPosition = Boolean.TRUE.equals(change.get("hasPosition"));
+            String position = (String) change.get("positionName");
+
+            if (hasRole && workspaceDao.updateMemberRole(wsId, targetUserId, role) < 1) {
+                throw new IllegalStateException("ROLE_UPDATE_FAILED");
+            }
+            if (hasPosition && workspaceDao.updateMemberPosition(wsId, targetUserId, position) < 1) {
+                throw new IllegalStateException("POSITION_UPDATE_FAILED");
+            }
+        }
+        return "success";
+    }
+
+    @Override
+    @Transactional
+    public String removeWorkspaceMembers(Long wsId, Long requesterId, List<Long> userIds) {
+        if (wsId == null || requesterId == null || userIds == null || userIds.isEmpty()) {
+            return "invalid_request";
+        }
+        if (userIds.size() > 100) return "too_many_members";
+        if (!workspaceAuthorizationService.canManage(wsId, requesterId)) return "forbidden";
+
+        workspaceDTO workspace = workspaceDao.selectWorkspaceDetail(wsId);
+        if (workspace == null) return "workspace_not_found";
+        if (!"ACTIVE".equalsIgnoreCase(workspace.getStatus())) return "workspace_unavailable";
+
+        boolean requesterIsOwner = workspaceAuthorizationService.isOwner(wsId, requesterId);
+        Set<Long> uniqueIds = new HashSet<>();
+
+        for (Long targetUserId : userIds) {
+            if (targetUserId == null || !uniqueIds.add(targetUserId)) return "invalid_request";
+            if (requesterId.equals(targetUserId)) return "self_remove_locked";
+            if (workspace.getOwnerId() != null && workspace.getOwnerId().equals(targetUserId)) {
+                return "owner_protected";
+            }
+            Map<String, Object> target = workspaceDao.selectWorkspaceMemberProfile(
+                    wsId, targetUserId, requesterId);
+            if (target == null || target.isEmpty()) return "member_not_found";
+
+            String targetRole = String.valueOf(target.getOrDefault("WS_ROLE", "MEMBER")).toUpperCase();
+            if (!requesterIsOwner && !"MEMBER".equals(targetRole)) return "forbidden";
+
+            // 일괄 내보내기도 단일 내보내기/자진 탈퇴와 동일한 프로젝트 보호 규칙을 적용한다.
+            if (workspaceDao.countLedActiveWorkspaceProjects(wsId, targetUserId) > 0) {
+                return "project_leader_transfer_required";
+            }
+        }
+
+        // 단일 removeMember 경로를 재사용해 프로젝트 업무 이관, 프로젝트 멤버십 제거,
+        // 탈퇴 이력 저장, WS_MEMBERS 삭제를 모두 같은 트랜잭션 안에서 처리한다.
+        for (Long targetUserId : uniqueIds) {
+            if (!removeMember(wsId, targetUserId)) {
+                throw new IllegalStateException("MEMBER_REMOVE_FAILED");
+            }
+        }
+        return "success";
+    }
+
+    @Override
+    @Transactional // 하나라도 실패하면 멤버/프로젝트 정리가 모두 롤백된다.
     public boolean removeMember(Long wsId, Long userId) {
-        // 해당 워크스페이스에서 특정 멤버 삭제
+        if (wsId == null || userId == null) return false;
+
+        // 동시 탈퇴/내보내기 요청을 직렬화한다. 이미 제거된 멤버면 이력을 중복 생성하지 않는다.
+        Long lockedUserId = workspaceDao.lockWorkspaceMemberForLeave(wsId, userId);
+        if (lockedUserId == null) return false;
+
+        // 프로젝트 팀장은 컨트롤러에서 먼저 위임을 요구하지만 서비스에서도 한 번 더 방어한다.
+        if (workspaceDao.countLedActiveWorkspaceProjects(wsId, userId) > 0) {
+            return false;
+        }
+
+        // 그룹 프로필은 과거 콘텐츠 표시와 재가입 복구를 위해 물리 삭제하지 않는다.
+        // 활성 그룹 프로젝트에서 맡고 있던 업무는 해당 프로젝트 팀장에게 이관하고 멤버십만 제거한다.
+        workspaceDao.reassignWorkspaceProjectTasksToLeaders(wsId, userId);
+        workspaceDao.deleteActiveWorkspaceProjectMemberships(wsId, userId);
+
+        // 멤버 행을 삭제하기 전에 이름/프로필과 탈퇴 시각을 영구 이력으로 남긴다.
+        if (runtimeDdlEnabled) workspaceDao.ensureWorkspaceMemberActivityHistory();
+        workspaceDao.insertWorkspaceMemberLeaveActivity(wsId, userId);
+
         return workspaceDao.deleteWorkspaceMember(wsId, userId) > 0;
     }
 
     @Override
     @Transactional
     public boolean transferAdmin(Long wsId, Long currentAdminId, Long newAdminId) {
-        try {
-            // 1. 기존 그룹장은 관리자 권한을 유지
-            workspaceDao.updateMemberRole(wsId, currentAdminId, "ADMIN");
-            
-            // 2. 새로운 그룹장의 역할을 'ADMIN'으로 변경
-            workspaceDao.updateMemberRole(wsId, newAdminId, "ADMIN");
-            
-            // 3. WORKSPACES 테이블의 OWNER_ID도 새로운 그룹장로 변경
-            workspaceDao.updateWorkspaceOwner(wsId, newAdminId);
-            
-            return true;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false; 
+        if (wsId == null || currentAdminId == null || newAdminId == null
+                || currentAdminId.equals(newAdminId)) {
+            return false;
         }
+
+        // OWNER_ID를 조건부로 먼저 바꿔 동시에 두 번 위임되는 경쟁 상태를 막는다.
+        // 그룹이 ACTIVE가 아니거나 이미 다른 요청이 먼저 위임했다면 0건이므로 아무 것도 변경하지 않는다.
+        int ownerUpdated = workspaceDao.updateWorkspaceOwnerIfCurrent(
+                wsId, currentAdminId, newAdminId);
+        if (ownerUpdated != 1) {
+            return false;
+        }
+
+        // 기존 그룹장은 관리자로 남고, 새 그룹장도 WS_ROLE=ADMIN을 유지한다.
+        // 실제 그룹장 판정은 WORKSPACES.OWNER_ID를 단일 기준으로 사용한다.
+        if (workspaceDao.updateMemberRole(wsId, currentAdminId, "ADMIN") != 1) {
+            throw new IllegalStateException("기존 그룹장 역할 갱신에 실패했습니다.");
+        }
+        if (workspaceDao.updateMemberRole(wsId, newAdminId, "ADMIN") != 1) {
+            throw new IllegalStateException("새 그룹장 역할 갱신에 실패했습니다.");
+        }
+
+        return true;
     }
 
     @Override
@@ -1202,27 +1461,5 @@ public class workspaceServiceImpl implements IworkspaceService {
         
         return result;
     }
-    // 3. 투표 반영하기
-    @Override
-    @Transactional
-    public void processVote(Map<String, Object> params) {
-        // 투표 이력을 저장하기만 하면 됩니다.
-        // 데이터가 insert 될 때마다 위의 selectPollOptions 쿼리가 자동으로 최신 투표수를 계산합니다.
-        workspaceDao.insertVote(params);
-    }
-    @Override
-    @Transactional
-    public void createPoll(Map<String, Object> params) {
-        workspaceDao.insertPoll(params); // 이제 정상적으로 IworkspaceDAO를 탐색함
-        Long pollId = ((Number) params.get("pollId")).longValue();
-        
-        List<String> options = (List<String>) params.get("options");
-        for (String text : options) {
-            Map<String, Object> option = new HashMap<>();
-            option.put("pollId", pollId);
-            option.put("text", text);
-            option.put("count", 0);
-            workspaceDao.insertPollOption(option);
-        }
-    }
+
 }

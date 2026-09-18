@@ -37,12 +37,8 @@
         formTitle: $('photoFormTitle'),
         formHeroDescription: $('photoFormHeroDescription'),
         targetButtons: Array.from(document.querySelectorAll('[data-photo-target]')),
-        targetGuide: $('photoFormTargetGuide'),
-        workspaceTargetRow: $('photoWorkspaceTargetRow'),
         workspaceTargetSelect: $('photoWorkspaceTargetSelect'),
-        projectWorkspaceTargetRow: $('photoProjectWorkspaceTargetRow'),
         projectWorkspaceTargetSelect: $('photoProjectWorkspaceTargetSelect'),
-        projectTargetRow: $('photoProjectTargetRow'),
         projectTargetSelect: $('photoProjectTargetSelect'),
         visibilityField: $('photoFormVisibilityField'),
         visibilityLabel: $('photoFormVisibilityLabel'),
@@ -53,13 +49,22 @@
         album: $('photoFormAlbum'),
         albumLabel: $('photoFormAlbumLabel'),
         albumCount: $('photoFormAlbumCount'),
+        albumPath: $('photoFormAlbumPath'),
         openAlbumModal: $('openPhotoAlbumModal'),
-        shareHiddenFields: $('photoPostShareHiddenFields'),
+        togetherButton: $('openPhotoTogetherPeople'),
+        togetherTitle: $('photoFormTogetherTitle'),
+        togetherGuide: $('photoTogetherGuide'),
+        togetherSummary: $('photoTogetherSummary'),
+        togetherViewAll: $('photoTogetherViewAll'),
+        togetherAction: $('photoTogetherAction'),
+        togetherExpandedList: $('photoTogetherExpandedList'),
+        togetherAvatarStack: $('photoTogetherAvatarStack'),
+        togetherIcon: $('photoFormTogetherIcon'),
         submit: $('photoFormSubmit'),
         toast: $('photoToast')
     };
 
-    const state = { files: [], edits: [], activeIndex: 0, previewUrls: [], post: null, photos: [], albums: [], albumModal: null, targetMode: 'PERSONAL', workspaces: [], projects: [] };
+    const state = { files: [], edits: [], activeIndex: 0, previewUrls: [], post: null, photos: [], albums: [], targetMode: 'PERSONAL', workspaces: [], projects: [], togetherPeople: [], togetherExpanded: false };
 
     function toast(message, error) {
         if (!el.toast) {
@@ -214,14 +219,18 @@
 
     function resetAlbumForTarget() {
         if (el.album) el.album.value = '';
-        if (el.albumLabel) el.albumLabel.textContent = '앨범 없이 등록';
+        if (el.albumLabel) {
+            el.albumLabel.textContent = '앨범 없이 등록';
+            el.albumLabel.hidden = true;
+        }
+        if (el.albumCount) el.albumCount.hidden = true;
+        renderAlbumPath('');
         if (el.albumCount) {
             el.albumCount.textContent = '0';
             el.albumCount.classList.add('is-empty');
         }
-        if (state.albumModal && typeof state.albumModal.setScope === 'function') {
-            state.albumModal.setScope(activeScopeType, activeScopeId, '');
-        }
+        state.togetherPeople = [];
+        renderTogetherField();
         loadAlbums().catch(() => {});
     }
 
@@ -241,7 +250,6 @@
         page.dataset.activeScopeId = activeScopeId;
         updateFormCopy();
         fillVisibility();
-        updateTargetGuide();
         if (resetAlbum) resetAlbumForTarget();
     }
 
@@ -250,33 +258,15 @@
         const action = mode === 'edit' ? '수정' : '등록';
         const scopeName = activeScopeDisplayName();
         const copy = {
-            PERSONAL: ['개인 사진', '큰 화면에서 사진을 확인하면서 설명과 앨범, MOYO 공개 여부를 정리합니다.'],
+            PERSONAL: ['개인 사진', mode === 'edit' ? '사진을 확인하고 편집하면서 사진 내용과 함께한 사람, 사진 위치를 정리합니다.' : '큰 화면에서 사진을 확인하면서 사진 내용과 함께한 사람, 사진 위치를 정리합니다.'],
             FRIEND: ['개인 사진', '친구 탭에서 시작한 사진도 개인 사진으로 등록합니다.'],
             WORKSPACE: ['그룹 사진', `${scopeName} 공간에 사진을 ${action}합니다.`],
             PROJECT: ['프로젝트 사진', `${scopeName} 공간에 사진을 ${action}합니다.`]
-        }[state.targetMode] || ['개인 사진', '큰 화면에서 사진을 확인하면서 설명과 앨범을 정리합니다.'];
+        }[state.targetMode] || ['개인 사진', mode === 'edit' ? '사진을 확인하고 편집하면서 사진 내용과 함께한 사람, 사진 위치를 정리합니다.' : '큰 화면에서 사진을 확인하면서 사진 내용과 함께한 사람, 사진 위치를 정리합니다.'];
         if (el.formTitle) el.formTitle.textContent = `${copy[0]} ${action}`;
         if (el.formHeroDescription) el.formHeroDescription.textContent = copy[1];
     }
 
-    function updateTargetGuide() {
-        if (!el.targetGuide) return;
-        if (state.targetMode === 'FRIEND') {
-            el.targetGuide.textContent = '친구를 선택하면 등록 완료 후 공유 요청이 전송됩니다.';
-            return;
-        }
-        if (state.targetMode === 'WORKSPACE') {
-            const name = el.workspaceTargetSelect && el.workspaceTargetSelect.selectedOptions[0] ? el.workspaceTargetSelect.selectedOptions[0].textContent : '그룹';
-            el.targetGuide.textContent = `${name} 그룹 공간에 사진을 등록합니다.`;
-            return;
-        }
-        if (state.targetMode === 'PROJECT') {
-            const name = el.projectTargetSelect && el.projectTargetSelect.selectedOptions[0] ? el.projectTargetSelect.selectedOptions[0].textContent : '프로젝트';
-            el.targetGuide.textContent = `${name} 프로젝트 공간에 사진을 등록합니다.`;
-            return;
-        }
-        el.targetGuide.textContent = '지정하지 않으면 개인 사진으로 등록됩니다.';
-    }
 
     function setTargetMode(targetMode, resetAlbum) {
         const target = normalizeTargetMode(targetMode);
@@ -287,21 +277,6 @@
                 button.classList.toggle('is-active', active);
                 button.setAttribute('aria-selected', active ? 'true' : 'false');
             });
-        }
-        if (el.workspaceTargetRow) el.workspaceTargetRow.hidden = target !== 'WORKSPACE';
-        if (el.projectWorkspaceTargetRow) el.projectWorkspaceTargetRow.hidden = target !== 'PROJECT';
-        if (el.projectTargetRow) el.projectTargetRow.hidden = target !== 'PROJECT';
-        const shareField = document.querySelector('.photo-share-field');
-        if (shareField) {
-            shareField.hidden = target === 'WORKSPACE' || target === 'PROJECT';
-            const label = shareField.querySelector(':scope > span');
-            const small = shareField.querySelector('small');
-            const buttonText = shareField.querySelector('#openPhotoPostShareModal span:nth-child(2)');
-            if (label) label.textContent = target === 'FRIEND' ? '공유 대상' : '공유';
-            if (buttonText) buttonText.textContent = target === 'FRIEND' ? '친구 선택' : '공유 대상';
-            if (small) small.textContent = target === 'FRIEND'
-                ? '등록 완료 후 선택한 친구에게 공유 요청이 전송됩니다.'
-                : '친구, 그룹, 프로젝트를 선택해 이 사진을 함께 볼 수 있습니다.';
         }
         if (target === 'PROJECT') renderProjectOptions();
         syncTargetScope(resetAlbum !== false);
@@ -319,11 +294,9 @@
         return true;
     }
 
-    function setVisibilityTitle(title, chip) {
+    function setVisibilityTitle(title) {
         if (!el.visibilityLabel) return;
-        el.visibilityLabel.innerHTML = chip
-            ? `${esc(title)} <span class="post-visibility-chip photo-feed-public-title-chip">${esc(chip)}</span>`
-            : esc(title);
+        el.visibilityLabel.textContent = title || '공개 상태';
     }
 
     function fillVisibility() {
@@ -341,7 +314,7 @@
         if (mode === 'edit') {
             const label = pick(state.post, 'visibilityType', 'VISIBILITY_TYPE') || (activeScopeType === 'WORKSPACE' ? 'WORKSPACE' : activeScopeType === 'PROJECT' ? 'PROJECT' : 'PRIVATE');
             if (activeScopeType === 'PERSONAL') {
-                setVisibilityTitle('피드 공개', 'MOYO');
+                setVisibilityTitle('공개 상태', '');
                 el.visibility.innerHTML = '<option value="PRIVATE">나만 보기</option>';
                 el.visibility.hidden = true;
                 el.visibility.disabled = false;
@@ -392,7 +365,7 @@
             if (el.visibilityGuide) el.visibilityGuide.textContent = `${activeScopeDisplayName()} 팀원이 함께 볼 수 있습니다.`;
             return;
         }
-        setVisibilityTitle('피드 공개', 'MOYO');
+        setVisibilityTitle('공개 상태', '');
         el.visibility.innerHTML = '<option value="PRIVATE">나만 보기</option>';
         el.visibility.hidden = true;
         el.visibility.disabled = false;
@@ -413,32 +386,399 @@
         return '나만 보기';
     }
 
-    function initAlbumModal() {
-        if (!window.MoyoPhotoAlbumModal || !el.openAlbumModal) return;
-        state.albumModal = window.MoyoPhotoAlbumModal.create({
-            modalId: 'commonPhotoAlbumModal',
-            contextPath,
-            scopeType: activeScopeType,
-            scopeId: activeScopeId,
-            currentUserId: document.getElementById('commonPhotoAlbumModal')?.dataset.currentUserId || '',
-            selectedAlbumId: selectedAlbumId || (el.album ? el.album.value : ''),
-            toast,
-            onChange(selection) {
-                state.albums = selection.albums || state.albums;
-                setAlbumSelection(selection.albumId, selection.albumName, selection.albumCount);
+    function ensureAlbumSelectOptions() {
+        if (!el.album) return;
+        const selectedValue = String(el.album.value || '');
+        el.album.innerHTML = '';
+
+        const root = document.createElement('option');
+        root.value = '';
+        root.textContent = '내 사진';
+        root.dataset.depth = '0';
+        root.dataset.root = 'true';
+        el.album.appendChild(root);
+
+        (state.albums || []).forEach(album => {
+            const id = String(pick(album, 'albumId', 'ALBUM_ID') || '');
+            if (!id) return;
+            const option = document.createElement('option');
+            option.value = id;
+            option.textContent = String(pick(album, 'albumName', 'ALBUM_NAME') || '이름 없는 앨범');
+            option.dataset.depth = String(Number(pick(album, 'depth', 'DEPTH') || 0));
+            const parentId = pick(album, 'parentAlbumId', 'PARENT_ALBUM_ID');
+            option.dataset.parentId = parentId == null ? '' : String(parentId);
+            el.album.appendChild(option);
+        });
+
+        const preferredValue = selectedValue || String(selectedAlbumId || '');
+        el.album.value = Array.from(el.album.options).some(option => option.value === preferredValue)
+            ? preferredValue
+            : '';
+    }
+
+    function albumModalAdapter() {
+        return {
+            create: async (context, payload) => {
+                const albumName = String(payload.folderName || '').trim();
+                const result = await request('/api/photo-albums', {
+                    method: 'POST',
+                    headers: {'Content-Type':'application/json'},
+                    body: JSON.stringify({
+                        scopeType: activeScopeType,
+                        scopeId: activeScopeId,
+                        albumName,
+                        albumDescription: ''
+                    })
+                });
+                await loadAlbums();
+                return {
+                    folderId: String(pick(result, 'albumId', 'ALBUM_ID') || ''),
+                    folderName: albumName,
+                    depth: 0
+                };
             },
-            onApply(selection) {
-                state.albums = selection.albums || state.albums;
-                setAlbumSelection(selection.albumId, selection.albumName, selection.albumCount);
+            rename: async (context, payload) => {
+                const id = Number(payload.folderId || 0);
+                if (!id) return;
+                const album = (state.albums || []).find(item => Number(pick(item, 'albumId', 'ALBUM_ID')) === id);
+                await request(`/api/photo-albums/${id}`, {
+                    method: 'PUT',
+                    headers: {'Content-Type':'application/json'},
+                    body: JSON.stringify({
+                        albumName: String(payload.folderName || '').trim(),
+                        albumDescription: pick(album, 'albumDescription', 'ALBUM_DESCRIPTION') || ''
+                    })
+                });
+                await loadAlbums();
+            },
+            remove: async (context, payload) => {
+                const id = Number(payload.folderId || 0);
+                if (!id) return;
+                await request(`/api/photo-albums/${id}`, { method: 'DELETE' });
+                if (String(el.album?.value || '') === String(id)) {
+                    setAlbumSelection('', '내 사진', state.albums.length);
+                }
+                await loadAlbums();
+            }
+        };
+    }
+
+    function openAlbumSelector() {
+        if (!window.CommonFolderModal || typeof window.CommonFolderModal.openSelect !== 'function') {
+            toast('공통 선택 모달을 불러오지 못했습니다.', true);
+            return;
+        }
+        if (!el.album || el.album.tagName !== 'SELECT') {
+            toast('사진 위치 선택 요소를 초기화하지 못했습니다.', true);
+            return;
+        }
+        ensureAlbumSelectOptions();
+        window.CommonFolderModal.openSelect({
+            selectElement: el.album,
+            trigger: el.openAlbumModal,
+            adapter: albumModalAdapter(),
+            context: {
+                scopeType: activeScopeType,
+                scopeId: activeScopeId
+            },
+            title: '사진 위치 선택',
+            description: '사진이 저장될 위치를 선택하세요.',
+            confirmLabel: '선택',
+            canManage: true,
+            showManageActions: true,
+            instantSelect: false,
+            showCurrent: true,
+            showCloseButton: true,
+            treeMode: false,
+            unclassifiedLabel: '내 사진',
+            unclassifiedDescription: '앨범 없이 사진 영역에 보관',
+            folderDescription: '이 앨범에 저장',
+            rootIcon: 'fa-regular fa-images',
+            folderIcon: 'fa-regular fa-folder',
+            itemDescription: ({ folderId, isCurrent }) => {
+                if (isCurrent) return '현재 사진 위치';
+                if (!folderId) return '앨범 없이 사진 영역에 보관';
+                return '이 앨범에 저장';
+            },
+            onConfirm: ({ folderId, folderName }) => {
+                setAlbumSelection(folderId || '', folderName || '내 사진', state.albums.length);
             }
         });
-        el.openAlbumModal.addEventListener('click', () => state.albumModal.open());
+    }
+
+    function initAlbumModal() {
+        if (!el.openAlbumModal) return;
+        el.openAlbumModal.addEventListener('click', openAlbumSelector);
+    }
+
+
+    const FORM_ICONS = {
+        user: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>',
+        users: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>'
+    };
+
+    function activeProjectInfo() {
+        return state.projects.find(item => String(item.id) === String(activeScopeId)) || null;
+    }
+
+    function togetherPolicy() {
+        const project = activeScopeType === 'PROJECT' ? activeProjectInfo() : null;
+        const isGroupScope = activeScopeType === 'WORKSPACE';
+        const isGroupProject = activeScopeType === 'PROJECT' && !!String(project?.wsId || '').trim();
+        const useMembers = isGroupScope || isGroupProject;
+
+        return {
+            group: useMembers,
+            peopleLabel: useMembers ? '멤버' : '친구',
+            togetherLabel: useMembers ? '함께 찍은 멤버' : '함께 찍은 친구'
+        };
+    }
+
+    function togetherAvatarMarkup(person, extraClass) {
+        const item = person || {};
+        const name = String(item.name || '사용자').trim() || '사용자';
+        const profile = resolvePath(item.profile || '');
+        const initial = Array.from(name)[0] || '사';
+        const extra = extraClass ? ` ${extraClass}` : '';
+        return profile
+            ? `<span class="photo-together-avatar${extra}"><img src="${esc(profile)}" alt="${esc(name)}"></span>`
+            : `<span class="photo-together-avatar is-fallback${extra}" aria-hidden="true">${esc(initial)}</span>`;
+    }
+
+    function renderTogetherExpandedList(people) {
+        if (!el.togetherExpandedList) return;
+        const list = Array.isArray(people) ? people : [];
+        if (!list.length || !state.togetherExpanded) {
+            el.togetherExpandedList.hidden = true;
+            el.togetherExpandedList.innerHTML = '';
+            return;
+        }
+
+        el.togetherExpandedList.hidden = false;
+        el.togetherExpandedList.innerHTML = list.map(person => {
+            const name = String(person?.name || '사용자').trim() || '사용자';
+            const email = String(person?.email || '').trim();
+            return `<div class="photo-together-expanded-item">
+                ${togetherAvatarMarkup(person, 'is-list')}
+                <span class="photo-together-expanded-copy">
+                    <strong>${esc(name)}</strong>
+                    ${email ? `<small>${esc(email)}</small>` : ''}
+                </span>
+            </div>`;
+        }).join('');
+    }
+
+    function renderTogetherField() {
+        const policy = togetherPolicy();
+        if (el.togetherTitle) el.togetherTitle.textContent = policy.togetherLabel;
+        if (el.togetherGuide) el.togetherGuide.textContent = `사진에 함께 나온 ${policy.peopleLabel}를 선택할 수 있습니다.`;
+        if (el.togetherIcon) el.togetherIcon.innerHTML = FORM_ICONS[policy.group ? 'users' : 'user'];
+
+        const people = state.togetherPeople || [];
+        const hasPeople = people.length > 0;
+
+        if (people.length < 2) state.togetherExpanded = false;
+
+        if (el.togetherSummary) {
+            el.togetherSummary.textContent = hasPeople
+                ? (people.length === 1 ? people[0].name : `${people[0].name} 외 ${people.length - 1}명`)
+                : `함께 찍은 ${policy.peopleLabel}를 선택하세요`;
+        }
+
+        if (el.togetherViewAll) {
+            el.togetherViewAll.hidden = people.length < 2;
+            el.togetherViewAll.setAttribute('aria-expanded', state.togetherExpanded ? 'true' : 'false');
+            el.togetherViewAll.innerHTML = state.togetherExpanded
+                ? '접기 <span aria-hidden="true">⌃</span>'
+                : '전체 보기 <span aria-hidden="true">⌄</span>';
+        }
+
+        if (el.togetherAction) {
+            el.togetherAction.textContent = hasPeople ? '변경' : '선택';
+        }
+
+        if (el.togetherAvatarStack) {
+            const visible = people.slice(0, 3).map((person, index) =>
+                `<span class="photo-together-avatar-wrap" style="z-index:${10-index}">${togetherAvatarMarkup(person, '')}</span>`
+            );
+            if (people.length > 3) {
+                visible.push(`<span class="photo-together-avatar photo-together-avatar-more" style="z-index:6">+${people.length - 3}</span>`);
+            }
+            el.togetherAvatarStack.innerHTML = visible.join('');
+            el.togetherAvatarStack.classList.toggle('is-empty', !hasPeople);
+        }
+
+        if (el.togetherButton) {
+            el.togetherButton.textContent = hasPeople ? '변경' : '선택';
+        }
+
+        renderTogetherExpandedList(people);
+    }
+
+    function toggleTogetherExpanded(event) {
+        if (event) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+        if ((state.togetherPeople || []).length < 2) return;
+        state.togetherExpanded = !state.togetherExpanded;
+        renderTogetherField();
+    }
+
+    function normalizeTogetherPerson(source) {
+        source = source || {};
+        const raw = source.raw || source;
+        return {
+            id: String(source.id || raw.userId || raw.USER_ID || '').trim(),
+            name: String(source.name || raw.name || raw.displayName || raw.DISPLAY_NAME || raw.userName || raw.USER_NAME || '사용자').trim(),
+            email: String(source.email || raw.email || raw.EMAIL || '').trim(),
+            profile: String(source.profile || source.profileImagePath || raw.profileImage || raw.profileImagePath || raw.PROFILE_IMAGE_PATH || '').trim(),
+            raw
+        };
+    }
+
+    function photoMetaOf(photo) {
+        let raw = pick(photo, 'editMeta', 'EDIT_META', 'photoEditMeta', 'PHOTO_EDIT_META');
+        if (!raw) return {};
+        if (typeof raw === 'object') return raw;
+        try {
+            const parsed = JSON.parse(String(raw));
+            return parsed && typeof parsed === 'object' ? parsed : {};
+        } catch (e) {
+            return {};
+        }
+    }
+
+    function loadTogetherFromPhotos() {
+        const first = (state.photos || [])[0];
+        const meta = photoMetaOf(first);
+        const people = Array.isArray(meta.people) ? meta.people : [];
+        state.togetherPeople = people.map(normalizeTogetherPerson).filter(person => person.id);
+        renderTogetherField();
+    }
+
+    async function loadTogetherCandidates() {
+        const policy = togetherPolicy();
+        let source = [];
+        if (policy.group && activeScopeType === 'PROJECT' && activeScopeId) {
+            source = await request(`/project/api/members?projId=${encodeURIComponent(activeScopeId)}`);
+        } else if (policy.group && activeScopeType === 'WORKSPACE' && activeScopeId) {
+            source = await request(`/workspace/api/members?wsId=${encodeURIComponent(activeScopeId)}`);
+        } else {
+            if (!window.CommonFriendAdapter || typeof window.CommonFriendAdapter.fetchList !== 'function') {
+                throw new Error('친구 목록을 불러오지 못했습니다.');
+            }
+            source = await window.CommonFriendAdapter.fetchList(contextPath);
+        }
+        const rows = Array.isArray(source) ? source : (Array.isArray(source?.members) ? source.members : []);
+        return rows.map(normalizeTogetherPerson)
+            .filter(person => person.id && String(person.id) !== String(currentUserId));
+    }
+
+    async function openTogetherSelector() {
+        if (!window.CommonPeopleModal || typeof window.CommonPeopleModal.open !== 'function') {
+            toast('친구/멤버 선택 모달을 불러오지 못했습니다.', true);
+            return;
+        }
+        try {
+            const policy = togetherPolicy();
+            const people = await loadTogetherCandidates();
+            window.CommonPeopleModal.open({
+                title: policy.togetherLabel,
+                description: `사진에 함께 나온 ${policy.peopleLabel}를 선택하세요.`,
+                mode: 'SELECT_MULTIPLE',
+                people,
+                selectedIds: state.togetherPeople.map(person => person.id),
+                selectedPeople: state.togetherPeople,
+                confirmText: '선택 완료',
+                searchPlaceholder: `${policy.peopleLabel} 이름 또는 이메일 검색`,
+                emptyText: `선택할 ${policy.peopleLabel}가 없습니다.`,
+                emptySubText: `${policy.peopleLabel} 목록을 확인해주세요.`,
+                onSelect(selected) {
+                    state.togetherPeople = (Array.isArray(selected) ? selected : [])
+                        .map(normalizeTogetherPerson)
+                        .filter(person => person.id);
+                    renderTogetherField();
+                }
+            });
+        } catch (e) {
+            toast(e.message || '친구/멤버 목록을 불러오지 못했습니다.', true);
+        }
+    }
+
+    function scopeRootParts() {
+        if (activeScopeType === 'WORKSPACE') {
+            const ws = state.workspaces.find(item => String(item.id) === String(activeScopeId));
+            return ['그룹'].concat(ws?.name ? [ws.name] : []).concat(['사진']);
+        }
+        if (activeScopeType === 'PROJECT') {
+            const project = activeProjectInfo();
+            return ['프로젝트'].concat(project?.name ? [project.name] : []).concat(['사진']);
+        }
+        return ['개인', '내 사진'];
+    }
+
+    function albumPathParts(albumId) {
+        const parts = [];
+        const byId = new Map();
+        (state.albums || []).forEach(album => {
+            const id = Number(pick(album, 'albumId', 'ALBUM_ID') || 0);
+            if (id) byId.set(id, album);
+        });
+        let cursor = Number(albumId || 0) || null;
+        const seen = new Set();
+        while (cursor && byId.has(cursor) && !seen.has(cursor)) {
+            seen.add(cursor);
+            const album = byId.get(cursor);
+            parts.push(String(pick(album, 'albumName', 'ALBUM_NAME') || '이름 없는 앨범'));
+            cursor = Number(pick(album, 'parentAlbumId', 'PARENT_ALBUM_ID') || 0) || null;
+        }
+        parts.reverse();
+        return scopeRootParts().concat(parts);
+    }
+
+    function renderAlbumPath(albumId) {
+        if (!el.albumPath) return;
+        const parts = albumPathParts(albumId);
+        el.albumPath.title = parts.join(' > ');
+        el.albumPath.innerHTML = parts.map((part, index) =>
+            `${index ? '<span class="photo-location-path-sep" aria-hidden="true">›</span>' : ''}<span class="photo-location-path-part${index === parts.length - 1 ? ' is-current' : ''}">${esc(part)}</span>`
+        ).join('');
+    }
+
+    async function syncTogetherPeopleMetadata(targetPostId) {
+        const id = Number(targetPostId || 0);
+        if (!id) return;
+        const detail = await request(`/api/photo-posts/${id}`);
+        const photos = Array.isArray(detail?.photos) ? detail.photos : [];
+        const people = (state.togetherPeople || []).map(person => ({
+            id: person.id,
+            name: person.name,
+            email: person.email || '',
+            profile: person.profile || ''
+        }));
+        await Promise.all(photos.map(photo => {
+            const photoId = Number(pick(photo, 'photoId', 'PHOTO_ID') || 0);
+            if (!photoId) return Promise.resolve();
+            const meta = photoMetaOf(photo);
+            const capture = meta && meta.capture && typeof meta.capture === 'object' ? meta.capture : {};
+            return request(`/api/photo-posts/${id}/photos/${photoId}/metadata`, {
+                method: 'PUT',
+                headers: {'Content-Type':'application/json'},
+                body: JSON.stringify({ capture, people })
+            });
+        }));
     }
 
     function setAlbumSelection(albumId, albumName, albumCount) {
         const value = albumId == null || albumId === '' ? '' : String(albumId);
         if (el.album) el.album.value = value;
-        if (el.albumLabel) el.albumLabel.textContent = albumName || '앨범 없이 등록';
+        if (el.albumLabel) {
+            el.albumLabel.textContent = albumName || '앨범 없이 등록';
+            el.albumLabel.hidden = true;
+        }
+        if (el.albumCount) el.albumCount.hidden = true;
+        renderAlbumPath(value);
         if (el.albumCount && albumCount != null) {
             el.albumCount.textContent = String(albumCount);
             el.albumCount.classList.toggle('is-empty', Number(albumCount) <= 0);
@@ -448,26 +788,29 @@
     async function loadAlbums() {
         if (!activeScopeId) {
             state.albums = [];
-            setAlbumSelection('', '앨범 없이 등록', 0);
+            setAlbumSelection('', '내 사진', 0);
+            ensureAlbumSelectOptions();
             return state.albums;
         }
-        if (state.albumModal && typeof state.albumModal.load === 'function') {
-            const albums = await state.albumModal.load();
-            state.albums = albums || [];
-            const currentAlbumId = el.album && el.album.value ? Number(el.album.value) : (selectedAlbumId ? Number(selectedAlbumId) : null);
-            const currentAlbum = currentAlbumId ? state.albums.find(album => Number(pick(album, 'albumId', 'ALBUM_ID')) === currentAlbumId) : null;
-            if (currentAlbum) {
-                state.albumModal.setSelected(currentAlbumId);
-                setAlbumSelection(currentAlbumId, pick(currentAlbum, 'albumName', 'ALBUM_NAME') || '이름 없는 앨범', state.albums.length);
-            } else {
-                state.albumModal.setSelected(null);
-                setAlbumSelection('', '앨범 없이 등록', state.albums.length);
-            }
-            return albums;
-        }
         const albums = await request(`/api/photo-albums?scopeType=${encodeURIComponent(activeScopeType)}&scopeId=${encodeURIComponent(activeScopeId)}`);
-        state.albums = albums || [];
-        setAlbumSelection(selectedAlbumId || '', '앨범 없이 등록', state.albums.length);
+        state.albums = Array.isArray(albums) ? albums : [];
+        ensureAlbumSelectOptions();
+
+        const currentAlbumId = String(el.album?.value || selectedAlbumId || '');
+        const currentAlbum = currentAlbumId
+            ? state.albums.find(album => String(pick(album, 'albumId', 'ALBUM_ID')) === currentAlbumId)
+            : null;
+
+        if (currentAlbum) {
+            setAlbumSelection(
+                currentAlbumId,
+                pick(currentAlbum, 'albumName', 'ALBUM_NAME') || '이름 없는 앨범',
+                state.albums.length
+            );
+        } else {
+            setAlbumSelection('', '내 사진', state.albums.length);
+        }
+        ensureAlbumSelectOptions();
         return state.albums;
     }
 
@@ -482,9 +825,9 @@
         if (albumId) {
             const currentAlbum = state.albums.find(album => Number(pick(album, 'albumId', 'ALBUM_ID')) === Number(albumId));
             const name = currentAlbum ? (pick(currentAlbum, 'albumName', 'ALBUM_NAME') || '이름 없는 앨범') : '선택된 앨범';
-            if (state.albumModal) state.albumModal.setSelected(albumId);
             setAlbumSelection(albumId, name, state.albums.length);
         }
+        loadTogetherFromPhotos();
         await loadExistingPhotosIntoEditor();
     }
 
@@ -494,6 +837,22 @@
         return name.includes('.') ? name : `${name}.jpg`;
     }
 
+    function extensionForImageType(type) {
+        const normalized = String(type || '').toLowerCase();
+        if (normalized === 'image/png') return '.png';
+        if (normalized === 'image/gif') return '.gif';
+        if (normalized === 'image/webp') return '.webp';
+        return '.jpg';
+    }
+
+    function fileNameForBlob(path, index, originalName, type) {
+        const fallback = originalName || fileNameFromPath(path, index);
+        const baseName = String(fallback || `photo_${index + 1}`)
+            .replace(/[\\/]/g, '_')
+            .replace(/\.[^.]+$/, '') || `photo_${index + 1}`;
+        return `${baseName}${extensionForImageType(type)}`;
+    }
+
     async function imageUrlToFile(path, index, originalName) {
         const url = resolvePath(path);
         if (!url) return null;
@@ -501,7 +860,7 @@
         if (!response.ok) throw new Error('기존 사진을 불러오지 못했습니다.');
         const blob = await response.blob();
         const type = blob.type || 'image/jpeg';
-        const name = originalName || fileNameFromPath(path, index);
+        const name = fileNameForBlob(path, index, originalName, type);
         return new File([blob], name, { type, lastModified: Date.now() - (state.photos.length - index) });
     }
 
@@ -546,7 +905,7 @@
     }
 
     function defaultEdit() {
-        return { rotation: 0, crop: 'original', scale: 1, offsetX: 0, offsetY: 0, filter: 'none' };
+        return { rotation: 0, flipX: 1, crop: 'original', scale: 1, offsetX: 0, offsetY: 0, filter: 'none' };
     }
 
     function normalizeEditMeta(meta, index) {
@@ -575,8 +934,11 @@
         const offsetY = source.offsetY ?? source.positionY ?? source.posY ?? source.y ?? source.translateY ?? 0;
         const rotation = source.rotation ?? source.rotate ?? source.angle ?? 0;
 
+        const flipX = Number(source.flipX ?? source.flipHorizontal ?? source.mirrorX ?? 1) === -1 ? -1 : 1;
+
         return {
             rotation: normalRotation(Number(rotation || 0)),
+            flipX,
             crop,
             scale: clamp(Number(scale == null ? 1 : scale), 1, 2.2),
             offsetX: clamp(Number(offsetX || 0), -50, 50),
@@ -670,14 +1032,21 @@
             el.editorToolbar.querySelectorAll('[data-editor-action^="filter-"]').forEach(button => {
                 button.classList.toggle('is-active', button.dataset.editorAction === `filter-${edit.filter || 'none'}`);
             });
+            const flipButton = el.editorToolbar.querySelector('[data-editor-action="flip-horizontal"]');
+            if (flipButton) {
+                const flipped = Number(edit.flipX) === -1;
+                flipButton.classList.toggle('is-active', flipped);
+                flipButton.setAttribute('aria-pressed', flipped ? 'true' : 'false');
+            }
         }
     }
 
     function editorTransform(edit) {
         const scale = edit.scale || 1;
+        const flipX = Number(edit.flipX) === -1 ? -1 : 1;
         const offsetX = edit.offsetX || 0;
         const offsetY = edit.offsetY || 0;
-        return `translate(${offsetX}%, ${offsetY}%) rotate(${normalRotation(edit.rotation)}deg) scale(${scale})`;
+        return `translate(${offsetX}%, ${offsetY}%) rotate(${normalRotation(edit.rotation)}deg) scale(${scale}) scaleX(${flipX})`;
     }
 
     function editorFilter(filter) {
@@ -717,9 +1086,17 @@
         const stageWidth = Math.max(1, parts.stage.clientWidth);
         const stageHeight = Math.max(1, parts.stage.clientHeight);
         const compact = window.matchMedia('(max-width: 900px)').matches;
-        const sidePadding = compact ? 28 : 56;
-        const maxFrameWidth = Math.max(220, Math.min(stageWidth - sidePadding, compact ? stageWidth - sidePadding : 760));
-        const maxFrameHeight = Math.max(220, Math.min(stageHeight - sidePadding, compact ? stageHeight - sidePadding : 460));
+        // 데스크톱에서는 체커보드 여백보다 실제 사진 프레임을 우선한다.
+        // 모바일 규격은 기존 값을 유지해 화면 가장자리와 조작 영역을 보호한다.
+        const sidePadding = compact ? 28 : 40;
+        const maxFrameWidth = Math.max(220, Math.min(
+            stageWidth - sidePadding,
+            compact ? stageWidth - sidePadding : 820
+        ));
+        const maxFrameHeight = Math.max(220, Math.min(
+            stageHeight - sidePadding,
+            compact ? stageHeight - sidePadding : 520
+        ));
         const frameBoxAspect = maxFrameWidth / maxFrameHeight;
         let frameWidth;
         let frameHeight;
@@ -794,10 +1171,19 @@
         requestAnimationFrame(() => urls.forEach(url => URL.revokeObjectURL(url)));
     }
 
+    function updateSubmitAvailability() {
+        if (!el.submit) return;
+        // CREATE는 실제 등록할 사진이 있을 때만 완료 액션을 활성화한다.
+        // EDIT는 기존 사진을 불러오는 흐름을 유지한다.
+        el.submit.disabled = mode === 'create' && state.files.length === 0;
+        el.submit.setAttribute('aria-disabled', el.submit.disabled ? 'true' : 'false');
+    }
+
     function renderSelectedFiles() {
         clearPreviewUrls();
         const preview = document.getElementById('photoFormPreview');
         const hasFiles = state.files.length > 0;
+        updateSubmitAvailability();
         if (preview) {
             preview.classList.toggle('has-files', hasFiles);
             preview.classList.toggle('is-single-file', state.files.length === 1);
@@ -863,6 +1249,7 @@
         const edit = currentEdit(state.activeIndex);
         if (action === 'rotate-left') edit.rotation = normalRotation(edit.rotation - 90);
         if (action === 'rotate-right') edit.rotation = normalRotation(edit.rotation + 90);
+        if (action === 'flip-horizontal') edit.flipX = Number(edit.flipX) === -1 ? 1 : -1;
         if (action === 'square') edit.crop = 'square';
         if (action === 'original') {
             state.edits[state.activeIndex] = defaultEdit();
@@ -895,19 +1282,6 @@
         return new Promise(resolve => canvas.toBlob(resolve, type, quality));
     }
 
-    function drawRotatedImage(image, rotation) {
-        const angle = normalRotation(rotation);
-        const rad = angle * Math.PI / 180;
-        const swap = angle === 90 || angle === 270;
-        const canvas = document.createElement('canvas');
-        canvas.width = swap ? image.naturalHeight : image.naturalWidth;
-        canvas.height = swap ? image.naturalWidth : image.naturalHeight;
-        const ctx = canvas.getContext('2d');
-        ctx.translate(canvas.width / 2, canvas.height / 2);
-        ctx.rotate(rad);
-        ctx.drawImage(image, -image.naturalWidth / 2, -image.naturalHeight / 2);
-        return canvas;
-    }
 
     function cropEditedCanvas(image, edit) {
         const safeEdit = normalizeEditMeta(edit);
@@ -942,7 +1316,7 @@
 
         ctx.translate(canvas.width / 2 + translateX, canvas.height / 2 + translateY);
         ctx.rotate(rotation * Math.PI / 180);
-        ctx.scale(safeEdit.scale, safeEdit.scale);
+        ctx.scale(safeEdit.scale * (Number(safeEdit.flipX) === -1 ? -1 : 1), safeEdit.scale);
         ctx.drawImage(image, -drawWidth / 2, -drawHeight / 2, drawWidth, drawHeight);
         ctx.restore();
         return canvas;
@@ -962,51 +1336,6 @@
         const ext = type === 'image/png' ? '.png' : '.jpg';
         const baseName = file.name.replace(/\.[^.]+$/, '') || 'photo';
         return new File([blob], `${baseName}_display${ext}`, { type, lastModified: Date.now() });
-    }
-
-    function appendShareFields(fd) {
-        if (!fd || !el.shareHiddenFields) return;
-        const types = Array.from(el.shareHiddenFields.querySelectorAll('input[name="shareTargetType"]')).map(input => input.value);
-        const ids = Array.from(el.shareHiddenFields.querySelectorAll('input[name="shareTargetId"]')).map(input => input.value);
-        types.forEach((type, index) => {
-            if (!type || !ids[index]) return;
-            if (state.targetMode === 'FRIEND' && String(type).toUpperCase() !== 'FRIEND') return;
-            fd.append('shareTargetType', type);
-            fd.append('shareTargetId', ids[index]);
-            fd.append('sharePermissionType', 'VIEW');
-        });
-    }
-
-    function initPhotoShareModal() {
-        if (!window.MoyoShareModal || typeof window.MoyoShareModal.init !== 'function') return;
-        if (!document.getElementById('photoPostShareModal')) return;
-        window.MoyoShareModal.init({
-            contentType: 'PHOTO',
-            enablePermission: false,
-            contentId: postId,
-            persist: mode === 'edit' && !!postId,
-            reloadOnPersist: false,
-            bodyOpenClass: 'note-share-modal-open',
-            currentUserId: document.getElementById('photoPostShareModal')?.dataset.currentUserId || document.body?.dataset.userId || '',
-            ids: {
-                openButton: 'openPhotoPostShareModal',
-                modal: 'photoPostShareModal',
-                keyword: 'photoPostShareKeyword',
-                applyButton: 'applyPhotoPostShareModal',
-                title: 'photoPostShareModalTitle',
-                context: 'photoPostShareContext',
-                candidates: 'photoPostShareCandidates',
-                selected: 'photoPostShareSelected',
-                hiddenFields: 'photoPostShareHiddenFields',
-                count: 'photoPostShareCount',
-                modalCount: 'photoPostShareModalCount',
-                initialSharesSource: 'photoPostShareInitialSource',
-                workspaceMemberSource: 'photoPostWorkspaceMemberSource',
-                projectMemberSource: 'photoPostProjectMemberSource',
-                workspaceTargetSource: 'photoPostWorkspaceTargetSource',
-                projectTargetSource: 'photoPostProjectTargetSource'
-            }
-        });
     }
 
     async function submit() {
@@ -1036,6 +1365,7 @@
                     fd.append('photoEditMetas', metaJson);
                 });
                 await request(`/api/photo-posts/${postId}/edit`, { method: 'POST', body: fd });
+                await syncTogetherPeopleMetadata(postId);
                 toast('사진을 수정했습니다.');
                 setTimeout(goBack, 350);
                 return;
@@ -1053,7 +1383,6 @@
             const visibilityValue = (activeScopeType === 'PERSONAL' && el.moyoPublic && el.moyoPublic.checked) ? 'FRIENDS' : (el.visibility && el.visibility.value ? el.visibility.value : 'PRIVATE');
             if (visibilityValue) fd.append('visibilityType', visibilityValue);
             if (el.album.value) fd.append('albumId', el.album.value);
-            appendShareFields(fd);
             const uploadFiles = await Promise.all(state.files.map((file, index) => buildUploadFile(file, currentEdit(index))));
             uploadFiles.forEach((file, index) => {
                 fd.append('files', file);
@@ -1064,13 +1393,14 @@
                     fd.append('editMeta', metaJson);
                     fd.append('photoEditMetas', metaJson);
             });
-            await request('/api/photo-posts', { method: 'POST', body: fd });
+            const created = await request('/api/photo-posts', { method: 'POST', body: fd });
+            if (created && created.postId) await syncTogetherPeopleMetadata(created.postId);
             toast('사진을 등록했습니다.');
             setTimeout(goBack, 350);
         } catch (e) {
             toast(e.message, true);
         } finally {
-            el.submit.disabled = false;
+            updateSubmitAvailability();
         }
     }
 
@@ -1079,6 +1409,8 @@
     if (el.projectWorkspaceTargetSelect) el.projectWorkspaceTargetSelect.addEventListener('change', () => { renderProjectOptions(); syncTargetScope(true); });
     if (el.projectTargetSelect) el.projectTargetSelect.addEventListener('change', () => syncTargetScope(true));
 
+    if (el.togetherButton) el.togetherButton.addEventListener('click', openTogetherSelector);
+    if (el.togetherViewAll) el.togetherViewAll.addEventListener('click', toggleTogetherExpanded);
     el.description.addEventListener('input', updateCount);
     el.submit.addEventListener('click', submit);
     el.drop.addEventListener('click', () => el.files.click());
@@ -1256,10 +1588,12 @@
         fitEditorFrame.timer = setTimeout(fitEditorFrame, 80);
     });
 
+    updateSubmitAvailability();
     renderTargetOptions();
     setTargetMode(entryTarget, false);
     initAlbumModal();
-    initPhotoShareModal();
+    renderTogetherField();
+    renderAlbumPath(el.album ? el.album.value : '');
     loadAlbums().then(loadPost).then(fillVisibility).catch(e => toast(e.message, true));
     updateCount();
 })();

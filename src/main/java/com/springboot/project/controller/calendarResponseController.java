@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.springboot.project.dto.calendarResponseDTO;
 import com.springboot.project.dto.usersDto;
 import com.springboot.project.service.IcalendarResponseService;
+import com.springboot.project.service.IprojectAuthorizationService;
 import com.springboot.project.util.LunarUtil;
 
 import jakarta.servlet.http.HttpSession;
@@ -30,6 +31,7 @@ import lombok.RequiredArgsConstructor;
 public class calendarResponseController {
 
     private final IcalendarResponseService calendarService;
+    private final IprojectAuthorizationService projectAuthorizationService;
 
     // 1. 달력 데이터 조회 API
     @GetMapping("/monthly")
@@ -37,26 +39,95 @@ public class calendarResponseController {
             @RequestParam(value = "userId", required = false) Long userId,
             @RequestParam(value = "wsId", required = false) Long wsId,
             @RequestParam(value = "projId", required = false) Long projId,
-            @RequestParam(value = "types") List<String> types,
+            @RequestParam(value = "scope", required = false) String scope,
+            @RequestParam(value = "friendId", required = false) Long friendId,
+            @RequestParam(value = "types", required = false) List<String> types,
             @RequestParam(value = "startDate") String startDate,
             @RequestParam(value = "endDate") String endDate,
             HttpSession session
         ) {
         usersDto loginUser = (usersDto) session.getAttribute("user");
-        
-        if (userId == null && loginUser != null) {
-            userId = loginUser.getUserId();
+        if (loginUser == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "로그인이 필요합니다."));
         }
 
-        List<calendarResponseDTO> list = calendarService.getMonthlyCalendar(userId, projId, wsId, types, startDate, endDate);
+        // 달력 조회 권한은 요청 파라미터 userId가 아니라 로그인 세션 사용자로만 판단한다.
+        // 클라이언트가 임의의 userId를 넘겨 다른 사용자의 개인/공유 달력을 조회하는 것을 방지한다.
+        userId = loginUser.getUserId();
+
+        List<calendarResponseDTO> list = calendarService.getMonthlyCalendar(
+                userId, scope, friendId, projId, wsId, types, startDate, endDate);
         return ResponseEntity.ok(list);
     }
 
+    @GetMapping("/friend-birthdays")
+    public ResponseEntity<?> getFriendBirthdays(
+            @RequestParam("year") int year,
+            @RequestParam("month") int month,
+            HttpSession session
+        ) {
+        usersDto loginUser = (usersDto) session.getAttribute("user");
+        if (loginUser == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "로그인이 필요합니다."));
+        }
+        try {
+            return ResponseEntity.ok(calendarService.getFriendBirthdays(loginUser.getUserId(), year, month));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        }
+    }
+
+
+    @GetMapping("/group-member-birthdays")
+    public ResponseEntity<?> getGroupMemberBirthdays(
+            @RequestParam("wsId") Long wsId,
+            @RequestParam("year") int year,
+            @RequestParam("month") int month,
+            HttpSession session
+        ) {
+        usersDto loginUser = (usersDto) session.getAttribute("user");
+        if (loginUser == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "로그인이 필요합니다."));
+        }
+        try {
+            return ResponseEntity.ok(calendarService.getWorkspaceMemberBirthdays(loginUser.getUserId(), wsId, year, month));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        }
+    }
+
+    @GetMapping("/project-task-summary")
+    public ResponseEntity<?> getProjectTaskSummary(
+            @RequestParam(value = "projId", required = false) Long projId,
+            HttpSession session
+        ) {
+        usersDto loginUser = (usersDto) session.getAttribute("user");
+        if (loginUser == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "로그인이 필요합니다."));
+        }
+        return ResponseEntity.ok(calendarService.getProjectTaskSummary(loginUser.getUserId(), projId));
+    }
+
     // 2. 공휴일 수동 업데이트 API
-    @GetMapping("/init-holidays")
-    public ResponseEntity<String> initHolidays(@RequestParam("year") String year) {
-        calendarService.fetchAndSaveHolidays(year);
-        return ResponseEntity.ok(year + "년 공휴일 데이터 세팅 요청 완료");
+    @PostMapping("/init-holidays")
+    public ResponseEntity<String> initHolidays(@RequestParam("year") String year, HttpSession session) {
+        usersDto loginUser = (usersDto) session.getAttribute("user");
+        if (loginUser == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인이 필요합니다.");
+        }
+        if (!"ADMIN".equalsIgnoreCase(loginUser.getUserRole())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("관리자만 공휴일 데이터를 갱신할 수 있습니다.");
+        }
+        String normalizedYear = year == null ? "" : year.trim();
+        if (!normalizedYear.matches("\\d{4}")) {
+            return ResponseEntity.badRequest().body("연도는 4자리 숫자로 입력해 주세요.");
+        }
+        int yearNumber = Integer.parseInt(normalizedYear);
+        if (yearNumber < 2000 || yearNumber > 2100) {
+            return ResponseEntity.badRequest().body("지원하는 연도 범위를 벗어났습니다.");
+        }
+        calendarService.fetchAndSaveHolidays(normalizedYear);
+        return ResponseEntity.ok(normalizedYear + "년 공휴일 데이터 세팅 요청 완료");
     }
     
     // 3. 일정 등록 API (권한 검증 포함)
@@ -79,6 +150,14 @@ public class calendarResponseController {
             if (!"ADMIN".equals(role)) {
                 result.put("success", false);
                 result.put("message", "그룹 일정 등록 권한이 없습니다.");
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(result);
+            }
+        }
+
+        if ("PROJ".equals(dto.getItemType())) {
+            if (dto.getProjId() == null || !projectAuthorizationService.isProjectAdmin(dto.getProjId(), loginUser.getUserId())) {
+                result.put("success", false);
+                result.put("message", "프로젝트 일정 등록 권한이 없습니다.");
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(result);
             }
         }
@@ -125,6 +204,10 @@ public class calendarResponseController {
         params.put("deleteScope", deleteScope);
         params.put("occurrenceDate", occurrenceDate);
         params.put("userId", loginUser.getUserId());
+
+        if (!calendarService.canEditEvent((long) eventId, loginUser.getUserId())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("일정을 삭제할 권한이 없습니다.");
+        }
 
         try {
             if (calendarService.deleteEvent(params)) {

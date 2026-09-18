@@ -1,0 +1,709 @@
+/* =====================================================================
+   Common content widgets
+   - Shared note and photo widget row, empty state and photo reactions.
+   ===================================================================== */
+.common-content-widget-row {
+    align-items: stretch;
+}
+
+.common-content-widget-row > .workspace-note-feature-card,
+.common-content-widget-row > .workspace-photo-feature-card {
+    display: flex;
+    flex-direction: column;
+}
+
+.common-content-widget-row .board-title {
+    flex: 0 0 auto;
+}
+
+.common-content-widget-row .workspace-note-list,
+.common-content-widget-row .workspace-photo-grid {
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+.common-content-widget-row .workspace-note-list:has(> .workspace-content-empty),
+.common-content-widget-row .workspace-photo-grid:has(> .workspace-content-empty) {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.common-content-widget-row .workspace-content-empty {
+    min-height: 0;
+    height: auto;
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    border: 0;
+    border-radius: 12px;
+    background: transparent;
+    color: inherit;
+    box-shadow: none;
+}
+
+.common-content-widget-row .workspace-content-empty__icon {
+    width: 36px;
+    height: 36px;
+    flex: 0 0 36px;
+    display: grid;
+    place-items: center;
+    border-radius: 10px;
+    background: #f3f6fa;
+    font-size: 18px;
+    font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
+    line-height: 1;
+}
+
+.common-content-widget-row .workspace-content-empty__copy {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+}
+
+.common-content-widget-row .workspace-content-empty__title {
+    color: #26364d;
+    font-size: 12px;
+    font-weight: 800;
+    line-height: 1.45;
+}
+
+.common-content-widget-row .workspace-content-empty__description {
+    color: #94a0b3;
+    font-size: 10.5px;
+    line-height: 1.45;
+}
+
+.common-content-widget-row .workspace-content-empty__action {
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: #2f78df;
+    font: inherit;
+    font-size: 10.5px;
+    font-weight: 800;
+    line-height: 1.45;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.common-content-widget-row .workspace-content-empty__action:hover {
+    color: #235fbe;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+/* Photo reaction controls belong to the photo/content area, not the shell. */
+.workspace-photo-feature-card .workspace-photo-post {
+    cursor: pointer;
+}
+
+.workspace-photo-feature-card .workspace-photo-post-overlay {
+    align-items: flex-start !important;
+}
+
+.workspace-photo-feature-card .workspace-photo-post-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.workspace-photo-feature-card .workspace-photo-post-actions {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    margin-top: 5px;
+}
+
+.workspace-photo-feature-card .workspace-photo-post-actions button {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: #fff;
+    font: inherit;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.workspace-photo-feature-card .workspace-photo-post-actions button:hover,
+.workspace-photo-feature-card .workspace-photo-post-actions button:focus-visible {
+    transform: translateY(-1px);
+}
+
+.workspace-photo-feature-card .workspace-photo-post-actions .workspace-photo-like-button.is-liked {
+    color: #ff5b78;
+}
+
+.workspace-photo-feature-card .workspace-photo-post-actions i {
+    width: 14px;
+    text-align: center;
+    font-size: 13px;
+}
+
+.workspace-photo-feature-card .workspace-photo-post-actions span {
+    font-size: 11px;
+    font-weight: 700;
+}
+
+/* =====================================================================
+   Canonical note/photo widget geometry v2
+   - Shared content widgets no longer depend on workspace-only geometry.
+   ===================================================================== */
+.moyo-main-shell .common-content-widget-row > .moyo-widget-card {
+    min-height: 344px !important;
+    padding: 18px 20px 18px !important;
+    border: 1px solid var(--moyo-widget-card-border);
+    border-radius: var(--moyo-widget-card-radius);
+    background: #fff;
+    box-shadow: var(--moyo-widget-card-shadow);
+}
+
+.moyo-main-shell .common-content-widget-row > .moyo-widget-card::after {
+    display: none !important;
+}
+
+.moyo-main-shell .common-content-widget-row .board-title.moyo-widget-head {
+    flex: 0 0 auto;
+    height: 43px !important;
+    min-height: 43px !important;
+    margin: 0 !important;
+    padding: 0 0 11px !important;
+    border-bottom: 1px solid #edf1f6 !important;
+}
+
+.moyo-main-shell .common-content-widget-row .board-title .moyo-widget-title {
+    font-size: 16px;
+    font-weight: 900;
+    line-height: 1;
+}
+
+.moyo-main-shell .common-content-widget-row .workspace-note-list,
+.moyo-main-shell .common-content-widget-row .workspace-photo-grid {
+    margin-top: 12px !important;
+}
+
+.moyo-main-shell .common-content-widget-row .workspace-note-list:not(.is-ready),
+.moyo-main-shell .common-content-widget-row .workspace-photo-grid:not(.is-ready),
+.moyo-main-shell .common-content-widget-row .workspace-photo-grid.is-empty {
+    min-height: 100px;
+    height: 100px;
+    padding: 0;
+}
+
+.moyo-main-shell .common-content-widget-row.is-all-empty > .moyo-widget-card {
+    min-height: 214px !important;
+    height: 214px !important;
+}
+
+.moyo-main-shell .common-content-widget-row:not(.is-all-empty) > .moyo-widget-card:has(.workspace-note-list.is-ready),
+.moyo-main-shell .common-content-widget-row:not(.is-all-empty) > .moyo-widget-card:has(.workspace-photo-grid.is-ready) {
+    min-height: 352px !important;
+    padding-bottom: 20px !important;
+}
+
+.moyo-main-shell .common-content-widget-row .workspace-note-items.workspace-note-paper-grid {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+}
+
+@media (max-width: 760px) {
+    .moyo-main-shell .common-content-widget-row > .moyo-widget-card,
+    .moyo-main-shell .common-content-widget-row.is-all-empty > .moyo-widget-card {
+        min-height: auto !important;
+        height: auto !important;
+        padding: 16px !important;
+    }
+}
+
+/* MOYO common content widgets: isolated ownership v8
+   This block owns the group/project NOTE + PHOTO widgets.
+   Do not style these from workspaceMain.css or project CSS. */
+.moyo-content-widget-row {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 20px !important;
+    align-items: stretch !important;
+    width: 100%;
+    min-width: 0;
+}
+
+.moyo-content-widget {
+    display: block !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    height: auto !important;
+    max-height: none !important;
+    align-self: stretch !important;
+    margin: 0 !important;
+    padding: 18px 24px 20px !important;
+    border: 1px solid #dfe7f1 !important;
+    border-radius: 22px !important;
+    background: #fff !important;
+    box-shadow: 0 10px 28px rgba(15, 23, 42, .035) !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+}
+
+.moyo-content-widget__head {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 12px !important;
+    min-height: 48px !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 0 0 12px !important;
+    border-bottom: 1px solid #edf1f6 !important;
+    box-sizing: border-box !important;
+}
+
+.moyo-content-widget__body {
+    display: block !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    height: auto !important;
+    max-height: none !important;
+    margin: 14px 0 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+}
+
+/* Note/photo both begin immediately below the same header line.
+   No vertical centering and no flex-grow. */
+.moyo-content-note-grid {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 14px !important;
+    align-items: start !important;
+    align-content: start !important;
+    justify-content: start !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.moyo-content-widget__body--photo.is-ready {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 14px !important;
+    align-items: start !important;
+    align-content: start !important;
+    justify-content: start !important;
+}
+
+.moyo-content-photo-card {
+    position: relative;
+    display: block;
+    min-width: 0;
+    width: 100%;
+    margin: 0;
+    border-radius: 14px;
+    overflow: hidden;
+    cursor: pointer;
+    background: #f4f7fb;
+}
+
+.moyo-content-photo-thumb {
+    position: relative;
+    display: block;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    background: #edf2f8 center / cover no-repeat;
+    overflow: hidden;
+}
+
+.moyo-content-photo-thumb::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(10,18,32,.68), transparent 56%);
+    opacity: 0;
+    transition: opacity .18s ease;
+}
+
+.moyo-content-photo-overlay {
+    position: absolute;
+    z-index: 2;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 12px;
+    color: #fff;
+    opacity: 0;
+    transform: translateY(4px);
+    transition: opacity .18s ease, transform .18s ease;
+}
+
+.moyo-content-photo-card:hover .moyo-content-photo-thumb::after,
+.moyo-content-photo-card:focus-visible .moyo-content-photo-thumb::after,
+.moyo-content-photo-card:hover .moyo-content-photo-overlay,
+.moyo-content-photo-card:focus-visible .moyo-content-photo-overlay {
+    opacity: 1;
+    transform: none;
+}
+
+.moyo-content-photo-count {
+    position: absolute;
+    z-index: 3;
+    top: 9px;
+    right: 9px;
+    padding: 5px 8px;
+    border-radius: 999px;
+    background: rgba(15,23,42,.72);
+    color: #fff;
+    font-size: 12px;
+}
+
+.moyo-content-photo-meta,
+.moyo-content-photo-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.moyo-content-photo-meta {
+    justify-content: space-between;
+}
+
+.moyo-content-photo-actions button {
+    border: 0;
+    padding: 0;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+}
+
+.moyo-content-empty {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 12px !important;
+    width: 100% !important;
+    min-height: 120px !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 20px !important;
+    text-align: center;
+    box-sizing: border-box;
+}
+
+.moyo-content-empty__copy {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.moyo-content-empty__title {
+    color: #26364d;
+    font-weight: 800;
+}
+
+.moyo-content-empty__description {
+    color: #8391a7;
+    font-size: 13px;
+}
+
+.moyo-content-empty__action {
+    margin-top: 8px;
+    border: 0;
+    background: none;
+    color: #4d73dc;
+    font-weight: 700;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+/* Keep common note cards top-aligned even when the shared paper component
+   brings its own internal classes. */
+.moyo-content-note-grid > * {
+    align-self: start !important;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+}
+
+@media (max-width: 760px) {
+    .moyo-content-widget-row {
+        grid-template-columns: minmax(0, 1fr) !important;
+        gap: 16px !important;
+    }
+
+    .moyo-content-widget {
+        padding: 16px 18px 18px !important;
+    }
+
+    .moyo-content-note-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+
+    .moyo-content-widget__body--photo.is-ready {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .moyo-content-note-grid,
+    .moyo-content-widget__body--photo.is-ready {
+        grid-template-columns: minmax(0, 1fr) !important;
+    }
+}
+
+
+/* Equal-height pair v9
+   The taller NOTE/PHOTO widget defines the grid row height.
+   The other widget stretches to the same outer height.
+   Inner cards stay top-aligned and do not vertically center. */
+.moyo-content-widget-row {
+    align-items: stretch !important;
+}
+
+.moyo-content-widget-row > .moyo-content-widget {
+    min-height: 0 !important;
+    height: auto !important;
+    align-self: stretch !important;
+}
+
+.moyo-content-widget__body,
+.moyo-content-note-grid,
+.moyo-content-widget__body--photo.is-ready {
+    align-content: start !important;
+    align-items: start !important;
+}
+
+
+/* Responsive shared preview height v10
+   NOTE and PHOTO preview cards use one responsive height token.
+   The token is based on each common widget's own width, so both cards
+   grow/shrink smoothly together without viewport-specific hard jumps. */
+.moyo-content-widget {
+    container-type: inline-size;
+    --moyo-content-preview-height: clamp(150px, 42cqw, 205px);
+}
+
+/* NOTE: keep the paper proportions/contents but let the outer preview height
+   follow the same responsive token as PHOTO. */
+.moyo-content-note-grid > * {
+    height: var(--moyo-content-preview-height) !important;
+    min-height: 0 !important;
+    max-height: var(--moyo-content-preview-height) !important;
+    overflow: hidden !important;
+}
+
+.moyo-content-note-grid > * > .workspace-note-paper-button,
+.moyo-content-note-grid > * > .project-note-paper-button {
+    height: 100% !important;
+    min-height: 0 !important;
+    max-height: 100% !important;
+}
+
+.moyo-content-note-grid .workspace-note-paper,
+.moyo-content-note-grid .project-note-paper {
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    max-height: 100% !important;
+    aspect-ratio: auto !important;
+    box-sizing: border-box !important;
+}
+
+.moyo-content-note-grid .workspace-note-paper-inner,
+.moyo-content-note-grid .project-note-paper-inner {
+    height: 100% !important;
+    min-height: 0 !important;
+    max-height: 100% !important;
+    box-sizing: border-box !important;
+}
+
+/* PHOTO: crop the image naturally into the exact same responsive height. */
+.moyo-content-photo-card,
+.moyo-content-photo-thumb {
+    height: var(--moyo-content-preview-height) !important;
+    min-height: 0 !important;
+    max-height: var(--moyo-content-preview-height) !important;
+}
+
+.moyo-content-photo-thumb {
+    aspect-ratio: auto !important;
+    background-size: cover !important;
+    background-position: center !important;
+}
+
+/* The pair remains equal-height outside, while both inner preview types
+   begin at the same top line and consume the same natural responsive height. */
+.moyo-content-widget-row {
+    align-items: stretch !important;
+}
+
+.moyo-content-widget-row > .moyo-content-widget {
+    align-self: stretch !important;
+}
+
+@container (max-width: 360px) {
+    .moyo-content-widget {
+        --moyo-content-preview-height: clamp(145px, 46cqw, 175px);
+    }
+}
+
+
+/* Compact note title protection v11
+   When the shared preview shrinks, title space is protected first.
+   Secondary metadata/body/decorations compress before the title does. */
+.moyo-content-note-grid > * {
+    container-type: inline-size;
+}
+
+.moyo-content-note-inner {
+    padding: clamp(12px, 10cqw, 18px) clamp(10px, 8cqw, 16px) 12px !important;
+    overflow: hidden !important;
+}
+
+.moyo-content-note-title {
+    position: relative !important;
+    z-index: 3 !important;
+    display: -webkit-box !important;
+    flex: 0 0 auto !important;
+    min-height: 0 !important;
+    max-height: 2.7em !important;
+    margin: 0 0 clamp(4px, 4cqw, 7px) !important;
+    overflow: hidden !important;
+    color: #17243a !important;
+    font-size: clamp(10px, 8.2cqw, 12px) !important;
+    font-weight: 900 !important;
+    line-height: 1.35 !important;
+    white-space: normal !important;
+    text-overflow: clip !important;
+    word-break: break-word !important;
+    -webkit-line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
+}
+
+.moyo-content-note-meta {
+    flex: 0 0 auto !important;
+    min-height: 12px !important;
+    height: 12px !important;
+    margin: clamp(2px, 2.5cqw, 5px) 0 2px !important;
+    font-size: clamp(8px, 6.8cqw, 10px) !important;
+    line-height: 12px !important;
+}
+
+.moyo-content-note-rule {
+    flex: 0 0 auto !important;
+    margin-top: clamp(3px, 3cqw, 5px) !important;
+}
+
+.moyo-content-note-body {
+    flex: 0 0 auto !important;
+    min-height: 0 !important;
+    max-height: 3.1em !important;
+    margin-top: clamp(7px, 7cqw, 13px) !important;
+    overflow: hidden !important;
+    font-size: clamp(8.5px, 7.2cqw, 10px) !important;
+    line-height: 1.5 !important;
+}
+
+.moyo-content-note-lines {
+    margin-top: auto !important;
+    gap: clamp(3px, 3.6cqw, 6px) !important;
+}
+
+/* Very narrow cards: keep the title readable and sacrifice secondary detail first. */
+@container (max-width: 118px) {
+    .moyo-content-note-inner {
+        padding: 11px 9px 9px !important;
+    }
+
+    .moyo-content-note-title {
+        font-size: 10px !important;
+        line-height: 1.3 !important;
+        max-height: 2.6em !important;
+        margin-bottom: 5px !important;
+    }
+
+    .moyo-content-note-meta {
+        display: none !important;
+    }
+
+    .moyo-content-note-body {
+        margin-top: 8px !important;
+        max-height: 3em !important;
+    }
+
+    .moyo-content-note-lines span:nth-child(n+4) {
+        display: none !important;
+    }
+}
+
+
+/* Compact photo hover typography v12
+   Keep overlay text proportional to the responsive photo preview. */
+.moyo-content-photo-overlay {
+    padding: clamp(8px, 4cqw, 10px) clamp(9px, 4.5cqw, 12px) !important;
+    gap: 3px !important;
+}
+
+.moyo-content-photo-meta strong {
+    font-size: clamp(11px, 4.2cqw, 12px) !important;
+    line-height: 1.2 !important;
+    font-weight: 800 !important;
+}
+
+.moyo-content-photo-meta small {
+    font-size: clamp(9px, 3.5cqw, 10px) !important;
+    line-height: 1.2 !important;
+    font-weight: 600 !important;
+}
+
+.moyo-content-photo-actions {
+    gap: 6px !important;
+    font-size: clamp(10px, 3.8cqw, 11px) !important;
+    line-height: 1.2 !important;
+}
+
+.moyo-content-photo-actions button {
+    gap: 2px !important;
+    font-size: inherit !important;
+    line-height: inherit !important;
+}
+
+.moyo-content-photo-actions i {
+    font-size: .95em !important;
+}
+
+
+/* Photo like color v13
+   Unliked stays neutral/white on overlay; liked state is clearly distinguished. */
+.moyo-content-photo-like-button {
+    color: rgba(255, 255, 255, .92) !important;
+}
+
+.moyo-content-photo-like-button.is-liked {
+    color: #ff5f7e !important;
+}
+
+.moyo-content-photo-like-button.is-liked i {
+    color: #ff5f7e !important;
+}
+
+.moyo-content-photo-like-button:hover {
+    color: #ffd1dc !important;
+}
+
+.moyo-content-photo-like-button.is-liked:hover {
+    color: #ff4f72 !important;
+}

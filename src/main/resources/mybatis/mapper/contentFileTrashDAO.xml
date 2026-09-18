@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.springboot.project.dao.IcontentFileTrashDAO">
+ <resultMap id="fileMap" type="com.springboot.project.dto.contentFileDTO">
+  <id property="contentFileId" column="CONTENT_FILE_ID"/><result property="folderId" column="FOLDER_ID"/><result property="originalFolderId" column="ORIGINAL_FOLDER_ID"/>
+  <result property="scopeType" column="SCOPE_TYPE"/><result property="ownerUserId" column="OWNER_USER_ID"/><result property="wsId" column="WS_ID"/><result property="projId" column="PROJ_ID"/>
+  <result property="originalName" column="ORIGINAL_NAME"/><result property="fileExt" column="FILE_EXT"/><result property="fileSize" column="FILE_SIZE"/><result property="filePath" column="FILE_PATH"/>
+  <result property="createdBy" column="CREATED_BY"/>
+  <result property="creatorName" column="CREATOR_NAME"/>
+  <result property="creatorProfileImagePath" column="CREATOR_PROFILE_IMAGE_PATH"/>
+  <result property="creatorProfileAvatarType" column="CREATOR_PROFILE_AVATAR_TYPE"/>
+  <result property="deletedBy" column="DELETED_BY"/>
+  <result property="deletedAt" column="DELETED_AT"/>
+ </resultMap>
+ <resultMap id="folderMap" type="com.springboot.project.dto.contentFileFolderDTO">
+  <id property="folderId" column="FOLDER_ID"/><result property="parentFolderId" column="PARENT_FOLDER_ID"/><result property="originalParentFolderId" column="ORIGINAL_PARENT_FOLDER_ID"/>
+  <result property="scopeType" column="SCOPE_TYPE"/><result property="ownerUserId" column="OWNER_USER_ID"/><result property="wsId" column="WS_ID"/><result property="projId" column="PROJ_ID"/>
+  <result property="folderName" column="FOLDER_NAME"/><result property="deletedBy" column="DELETED_BY"/><result property="deletedAt" column="DELETED_AT"/>
+ </resultMap>
+ <sql id="scope">SCOPE_TYPE=#{scopeType}<choose><when test="scopeType=='PERSONAL'"> AND OWNER_USER_ID=#{ownerUserId}</when><when test="scopeType=='GROUP'"> AND WS_ID=#{wsId}</when><otherwise> AND PROJ_ID=#{projId}</otherwise></choose></sql>
+ <sql id="fileScope">f.SCOPE_TYPE=#{scopeType}<choose><when test="scopeType=='PERSONAL'"> AND f.OWNER_USER_ID=#{ownerUserId}</when><when test="scopeType=='GROUP'"> AND f.WS_ID=#{wsId}</when><otherwise> AND f.PROJ_ID=#{projId}</otherwise></choose></sql>
+ <select id="selectTrashFiles" resultMap="fileMap">
+  SELECT f.*,
+         CASE
+             WHEN f.SCOPE_TYPE IN ('GROUP', 'PROJECT')
+              AND NVL(wmp.USE_ACCOUNT_PROFILE, 'Y') = 'N'
+                 THEN NVL(wmp.DISPLAY_NAME, u.USER_NAME)
+             ELSE u.USER_NAME
+         END AS CREATOR_NAME,
+         CASE
+             WHEN f.SCOPE_TYPE IN ('GROUP', 'PROJECT')
+              AND NVL(wmp.USE_ACCOUNT_PROFILE, 'Y') = 'N'
+                 THEN wmp.PROFILE_IMAGE_PATH
+             WHEN NVL(u.PROFILE_AVATAR_TYPE, 'DEFAULT') = 'IMAGE'
+                 THEN u.PROFILE_IMAGE_PATH
+             ELSE NULL
+         END AS CREATOR_PROFILE_IMAGE_PATH,
+         CASE
+             WHEN f.SCOPE_TYPE IN ('GROUP', 'PROJECT')
+              AND NVL(wmp.USE_ACCOUNT_PROFILE, 'Y') = 'N'
+                 THEN CASE
+                          WHEN wmp.PROFILE_IMAGE_PATH IS NOT NULL THEN 'IMAGE'
+                          ELSE 'DEFAULT'
+                      END
+             ELSE NVL(u.PROFILE_AVATAR_TYPE, 'DEFAULT')
+         END AS CREATOR_PROFILE_AVATAR_TYPE
+    FROM CONTENT_FILES f
+    LEFT JOIN USERS u
+      ON u.USER_ID = f.CREATED_BY
+    LEFT JOIN PROJECTS p
+      ON p.PROJ_ID = f.PROJ_ID
+    LEFT JOIN WS_MEMBER_PROFILES wmp
+      ON wmp.WS_ID = CASE
+                         WHEN f.SCOPE_TYPE = 'GROUP' THEN f.WS_ID
+                         WHEN f.SCOPE_TYPE = 'PROJECT' THEN p.WS_ID
+                         ELSE NULL
+                     END
+     AND wmp.USER_ID = f.CREATED_BY
+   WHERE <include refid="fileScope"/>
+     AND f.DELETED_YN = 'Y'
+     AND f.DELETED_BY = #{userId}
+   ORDER BY f.DELETED_AT DESC
+ </select>
+ <select id="selectTrashFolders" resultMap="folderMap">SELECT * FROM CONTENT_FILE_FOLDERS WHERE <include refid="scope"/> AND DELETED_YN='Y' AND DELETED_BY=#{userId} AND (PARENT_FOLDER_ID IS NULL OR PARENT_FOLDER_ID NOT IN (SELECT FOLDER_ID FROM CONTENT_FILE_FOLDERS WHERE DELETED_YN='Y' AND DELETED_BY=#{userId})) ORDER BY DELETED_AT DESC</select>
+ <update id="trashFile">UPDATE CONTENT_FILES SET ORIGINAL_FOLDER_ID=FOLDER_ID,FOLDER_ID=NULL,DELETED_YN='Y',DELETED_BY=#{userId},DELETED_AT=SYSDATE,UPDATED_BY=#{userId},UPDATED_AT=SYSDATE WHERE CONTENT_FILE_ID=#{id} AND DELETED_YN='N'</update>
+ <update id="restoreFile">
+  UPDATE CONTENT_FILES f
+     SET FOLDER_ID=CASE WHEN EXISTS(SELECT 1 FROM CONTENT_FILE_FOLDERS x WHERE x.FOLDER_ID=f.ORIGINAL_FOLDER_ID AND x.DELETED_YN='N') THEN f.ORIGINAL_FOLDER_ID ELSE NULL END,
+         ORIGINAL_FOLDER_ID=NULL,DELETED_YN='N',DELETED_BY=NULL,DELETED_AT=NULL,UPDATED_BY=#{userId},UPDATED_AT=SYSDATE
+   WHERE CONTENT_FILE_ID=#{id} AND DELETED_YN='Y' AND DELETED_BY=#{userId}
+   <if test="scopeType != null">AND <include refid="scope"/></if>
+ </update>
+ <update id="trashFolderTree">UPDATE CONTENT_FILE_FOLDERS SET ORIGINAL_PARENT_FOLDER_ID=CASE WHEN FOLDER_ID=#{id} THEN PARENT_FOLDER_ID ELSE ORIGINAL_PARENT_FOLDER_ID END,DELETED_YN='Y',DELETED_BY=#{userId},DELETED_AT=SYSDATE,UPDATED_BY=#{userId},UPDATED_AT=SYSDATE WHERE FOLDER_ID IN (SELECT FOLDER_ID FROM CONTENT_FILE_FOLDERS START WITH FOLDER_ID=#{id} CONNECT BY PRIOR FOLDER_ID=PARENT_FOLDER_ID)</update>
+ <update id="trashFilesInFolderTree">UPDATE CONTENT_FILES SET ORIGINAL_FOLDER_ID=FOLDER_ID,FOLDER_ID=NULL,DELETED_YN='Y',DELETED_BY=#{userId},DELETED_AT=SYSDATE,UPDATED_BY=#{userId},UPDATED_AT=SYSDATE WHERE FOLDER_ID IN (SELECT FOLDER_ID FROM CONTENT_FILE_FOLDERS START WITH FOLDER_ID=#{id} CONNECT BY PRIOR FOLDER_ID=PARENT_FOLDER_ID) AND DELETED_YN='N'</update>
+ <update id="restoreFolderTree">
+  UPDATE CONTENT_FILE_FOLDERS
+     SET PARENT_FOLDER_ID=CASE WHEN FOLDER_ID=#{id} AND EXISTS(SELECT 1 FROM CONTENT_FILE_FOLDERS x WHERE x.FOLDER_ID=CONTENT_FILE_FOLDERS.ORIGINAL_PARENT_FOLDER_ID AND x.DELETED_YN='N') THEN ORIGINAL_PARENT_FOLDER_ID WHEN FOLDER_ID=#{id} THEN NULL ELSE PARENT_FOLDER_ID END,
+         ORIGINAL_PARENT_FOLDER_ID=NULL,DELETED_YN='N',DELETED_BY=NULL,DELETED_AT=NULL,UPDATED_BY=#{userId},UPDATED_AT=SYSDATE
+   WHERE FOLDER_ID IN (SELECT FOLDER_ID FROM CONTENT_FILE_FOLDERS START WITH FOLDER_ID=#{id} CONNECT BY PRIOR FOLDER_ID=PARENT_FOLDER_ID)
+     AND DELETED_BY=#{userId}
+     <if test="scopeType != null">AND <include refid="scope"/></if>
+ </update>
+ <update id="restoreFilesInFolderTree">
+  UPDATE CONTENT_FILES
+     SET FOLDER_ID=ORIGINAL_FOLDER_ID,ORIGINAL_FOLDER_ID=NULL,DELETED_YN='N',DELETED_BY=NULL,DELETED_AT=NULL,UPDATED_BY=#{userId},UPDATED_AT=SYSDATE
+   WHERE ORIGINAL_FOLDER_ID IN (SELECT FOLDER_ID FROM CONTENT_FILE_FOLDERS START WITH FOLDER_ID=#{id} CONNECT BY PRIOR FOLDER_ID=PARENT_FOLDER_ID)
+     AND DELETED_BY=#{userId}
+     <if test="scopeType != null">AND <include refid="scope"/></if>
+ </update>
+ <select id="selectFilesForPermanentDelete" resultMap="fileMap">
+  SELECT * FROM CONTENT_FILES
+   WHERE DELETED_YN='Y'
+   <if test="userId != null">AND DELETED_BY=#{userId}</if>
+   <if test="scopeType != null">AND <include refid="scope"/></if>
+   AND CONTENT_FILE_ID IN <foreach collection="fileIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+ </select>
+ <select id="selectFilesInFolderTreeForPermanentDelete" resultMap="fileMap">
+  SELECT * FROM CONTENT_FILES
+   WHERE DELETED_YN='Y'
+   <if test="userId != null">AND DELETED_BY=#{userId}</if>
+   <if test="scopeType != null">AND <include refid="scope"/></if>
+   AND ORIGINAL_FOLDER_ID IN (SELECT FOLDER_ID FROM CONTENT_FILE_FOLDERS START WITH FOLDER_ID=#{folderId} CONNECT BY PRIOR FOLDER_ID=PARENT_FOLDER_ID)
+ </select>
+ <delete id="deleteRecordItemsByFileIds">DELETE FROM CONTENT_RECORD_ITEMS WHERE RECORD_TYPE='FILE' AND CONTENT_ID IN <foreach collection="fileIds" item="id" open="(" separator="," close=")">#{id}</foreach></delete>
+ <delete id="deleteFilesByIds">
+  DELETE FROM CONTENT_FILES
+   WHERE DELETED_YN='Y'
+   <if test="userId != null">AND DELETED_BY=#{userId}</if>
+   <if test="scopeType != null">AND <include refid="scope"/></if>
+   AND CONTENT_FILE_ID IN <foreach collection="fileIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+ </delete>
+ <delete id="deleteFolderTree">
+  DELETE FROM CONTENT_FILE_FOLDERS
+   WHERE DELETED_YN='Y'
+   <if test="userId != null">AND DELETED_BY=#{userId}</if>
+   <if test="scopeType != null">AND <include refid="scope"/></if>
+   AND FOLDER_ID IN (SELECT FOLDER_ID FROM CONTENT_FILE_FOLDERS START WITH FOLDER_ID=#{id} CONNECT BY PRIOR FOLDER_ID=PARENT_FOLDER_ID)
+ </delete>
+ <update id="hideRecordItems">UPDATE CONTENT_RECORD_ITEMS SET DELETED_YN='Y',UPDATED_AT=SYSDATE WHERE RECORD_TYPE='FILE' AND CONTENT_ID IN <foreach collection="fileIds" item="id" open="(" separator="," close=")">#{id}</foreach></update>
+ <update id="restoreRecordItems">UPDATE CONTENT_RECORD_ITEMS SET DELETED_YN='N',UPDATED_AT=SYSDATE WHERE RECORD_TYPE='FILE' AND CONTENT_ID IN <foreach collection="fileIds" item="id" open="(" separator="," close=")">#{id}</foreach></update>
+ <select id="selectExpiredFiles" resultMap="fileMap">SELECT * FROM CONTENT_FILES WHERE DELETED_YN='Y' AND DELETED_AT&lt;SYSDATE-30</select>
+ <select id="selectExpiredRootFolders" resultType="long">SELECT FOLDER_ID FROM CONTENT_FILE_FOLDERS f WHERE DELETED_YN='Y' AND DELETED_AT&lt;SYSDATE-30 AND NOT EXISTS(SELECT 1 FROM CONTENT_FILE_FOLDERS p WHERE p.FOLDER_ID=f.PARENT_FOLDER_ID AND p.DELETED_YN='Y')</select>
+</mapper>

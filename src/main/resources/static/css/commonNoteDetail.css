@@ -8,7 +8,7 @@
     position: absolute;
     inset: 0;
     background: rgba(15, 23, 42, .54);
-    backdrop-filter: blur(8px);
+    backdrop-filter: none;
 }
 
 .profile-note-detail-dialog {
@@ -764,7 +764,7 @@
 .profile-note-detail-modal .profile-note-detail-backdrop {
     background:
         radial-gradient(circle at 50% 48%, rgba(30, 41, 59, .62) 0%, rgba(15, 23, 42, .88) 58%, rgba(8, 13, 22, .94) 100%);
-    backdrop-filter: blur(8px);
+    backdrop-filter: none;
 }
 
 .profile-note-detail-modal .profile-note-detail-dialog {
@@ -1203,10 +1203,7 @@
 }
 
 /* Profile note detail - modal scroll lock and stable reading size calculation */
-html.profile-note-modal-open,
 body.profile-note-modal-open {
-    width: 100%;
-    height: 100%;
     overflow: hidden !important;
     overscroll-behavior: none;
 }
@@ -3873,3 +3870,21 @@ body.profile-note-modal-open {
 .profile-note-social-stat.is-like:hover { color: #ff6b86; }
 .profile-note-social-stat.is-like.is-active { color: #ff5f7f; }
 .profile-note-social-stat.is-like:disabled { opacity: .55; cursor: wait; }
+
+
+/* MOYO Stage 7 - Common note detail alignment */
+.profile-note-detail-dialog,
+.profile-note-document,
+.profile-note-review-panel {
+    border-color: var(--moyo-border-color, #e5ebf1) !important;
+    border-radius: var(--moyo-radius-lg, 18px) !important;
+    background: var(--moyo-color-surface, #fff) !important;
+}
+.profile-note-page-mini-btn,
+.profile-note-review-toggle,
+.profile-note-page-turn {
+    border-color: var(--moyo-border-color, #e5ebf1) !important;
+    border-radius: var(--moyo-radius-md, 12px) !important;
+    background: var(--moyo-color-surface, #fff) !important;
+    color: var(--moyo-color-text-soft, #667085) !important;
+}

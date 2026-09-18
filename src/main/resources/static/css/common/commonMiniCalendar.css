@@ -1,0 +1,587 @@
+.moyo-mini-calendar {
+    --mini-calendar-border: #e3eaf4;
+    --mini-calendar-muted: #8a98ad;
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    padding: 18px 16px 16px;
+    border: 1px solid var(--mini-calendar-border);
+    border-radius: 20px;
+    background: #fff;
+    box-shadow: 0 10px 26px rgba(31, 53, 86, .045);
+}
+
+.moyo-mini-calendar .moyo-calendar-head {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    min-height: 30px;
+    margin-bottom: 10px;
+}
+
+.moyo-mini-calendar .moyo-calendar-title-row {
+    grid-column: 2;
+    display: grid;
+    grid-template-columns: 28px 72px 28px;
+    align-items: center;
+    gap: 7px;
+}
+
+.moyo-mini-calendar .moyo-calendar-month-title {
+    text-align: center;
+    color: #111827;
+    font-size: 14px;
+    font-weight: 900;
+    letter-spacing: -.035em;
+}
+
+.moyo-mini-calendar .moyo-calendar-nav-btn {
+    width: 28px;
+    height: 28px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 1px solid #dbe5f1;
+    border-radius: 10px;
+    color: #53657d;
+    background: #f8fbff;
+    font: inherit;
+    font-size: 17px;
+    font-weight: 850;
+    line-height: 1;
+    cursor: pointer;
+    transition: border-color .16s ease, background .16s ease, color .16s ease, transform .16s ease;
+}
+
+.moyo-mini-calendar .moyo-calendar-nav-btn:hover {
+    border-color: #a9c8ee;
+    color: #2f78ca;
+    background: #eef6ff;
+    transform: translateY(-1px);
+}
+
+.moyo-mini-calendar .moyo-calendar-more {
+    grid-column: 3;
+    justify-self: end;
+    color: #5e6f87;
+    font-size: 11px;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.moyo-mini-calendar .moyo-calendar-more:hover { color: #2f78ca; }
+
+.moyo-mini-calendar .moyo-calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    grid-template-rows: 22px repeat(var(--mini-calendar-week-rows, 5), 30px);
+    gap: 3px 3px;
+    text-align: center;
+}
+
+.moyo-mini-calendar .day-name,
+.moyo-mini-calendar .day-num,
+.moyo-mini-calendar .empty-slot {
+    min-width: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+}
+
+.moyo-mini-calendar .day-name {
+    color: #94a3b8;
+    font-size: 10px;
+    font-weight: 800;
+}
+.moyo-mini-calendar .day-name.sun { color: #ef4444; }
+.moyo-mini-calendar .day-name.sat { color: #2563eb; }
+
+.moyo-mini-calendar button.day-num {
+    position: relative;
+    appearance: none;
+    padding: 0;
+    border: 0;
+    border-radius: 10px;
+    color: #17233a;
+    background: transparent;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background .14s ease, color .14s ease, box-shadow .14s ease;
+}
+
+.moyo-mini-calendar button.day-num:hover { background: #f3f8ff; }
+.moyo-mini-calendar button.day-num.is-sunday { color: #ef4444; }
+.moyo-mini-calendar button.day-num.is-saturday { color: #2563eb; }
+.moyo-mini-calendar button.day-num.is-selected { box-shadow: inset 0 0 0 1px rgba(68, 145, 237, .35); }
+.moyo-mini-calendar button.day-num.today {
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+    min-height: 0;
+    justify-self: stretch;
+    align-self: stretch;
+    border-radius: 10px;
+    color: #fff;
+    background: linear-gradient(135deg, #35d5bc 0%, #438cf4 56%, #7a5cff 100%);
+    box-shadow: 0 6px 13px rgba(70, 121, 230, .21);
+}
+
+
+.moyo-mini-calendar .moyo-calendar-selected {
+    margin-top: 12px;
+    padding: 13px 0 0;
+    border-top: 1px solid #edf2f7;
+}
+.moyo-mini-calendar .moyo-calendar-selected[hidden] { display: none; }
+.moyo-mini-calendar .moyo-calendar-selected-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 9px;
+    padding: 0 2px;
+}
+.moyo-mini-calendar .moyo-calendar-selected-label {
+    display: block;
+    margin-bottom: 2px;
+    color: #4b84d3;
+    font-size: 10px;
+    font-weight: 800;
+}
+.moyo-mini-calendar .moyo-calendar-selected-date { color: #17233a; font-size: 13px; font-weight: 850; }
+.moyo-mini-calendar .moyo-calendar-selected-count { color: #8190a5; font-size: 10px; font-weight: 700; }
+.moyo-mini-calendar .moyo-calendar-selected-list {
+    display: grid;
+    gap: 5px;
+    max-height: 142px;
+    padding-right: 5px;
+    overflow-y: auto;
+    margin-bottom: 0;
+    scrollbar-width: thin;
+    scrollbar-color: #b8c5d6 transparent;
+}
+.moyo-mini-calendar .moyo-calendar-selected-item {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: 8px;
+    position: relative;
+    height: 44px;
+    min-height: 44px;
+    padding: 7px 9px 7px 12px;
+    border: 1px solid #e2eaf4;
+    border-radius: 11px;
+    color: #26364d;
+    background: #fff;
+    text-align: left;
+    cursor: pointer;
+}
+.moyo-mini-calendar .moyo-calendar-selected-item::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 7px;
+    bottom: 7px;
+    width: 3px;
+    border-radius: 0 999px 999px 0;
+    background: var(--item-color, #4a90e2);
+}
+.moyo-mini-calendar .moyo-calendar-selected-item:hover { background: var(--item-soft-color, #f8fbff); border-color: var(--item-soft-border, #cfe0f4); }
+.moyo-mini-calendar .moyo-calendar-selected-type {
+    padding: 3px 6px;
+    border: 1px solid var(--item-soft-border, rgba(74, 144, 226, .24));
+    border-radius: 999px;
+    color: var(--item-color, #3778c7);
+    background: var(--item-soft-color, #edf5ff);
+    font-size: 9px;
+    font-weight: 800;
+}
+.moyo-mini-calendar .moyo-calendar-selected-content {
+    min-width: 0;
+    display: grid;
+    gap: 2px;
+}
+.moyo-mini-calendar .moyo-calendar-selected-item strong { overflow: hidden; font-size: 11px; line-height: 1.25; white-space: nowrap; text-overflow: ellipsis; }
+.moyo-mini-calendar .moyo-calendar-selected-time {
+    color: #8190a5;
+    font-size: 9.5px;
+    font-weight: 700;
+    line-height: 1.2;
+}
+.moyo-mini-calendar .moyo-calendar-selected-empty { margin: 0; padding: 10px 0 2px; color: #8b98aa; font-size: 11px; text-align: center; }
+
+.moyo-mini-calendar .moyo-calendar-legend {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid #edf2f7;
+}
+.moyo-mini-calendar .moyo-calendar-legend > span {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    min-height: 22px;
+    padding: 0 8px;
+    border: 1px solid #e2eaf4;
+    border-radius: 999px;
+    color: #64748b;
+    background: #f8fbff;
+    font-size: 10px;
+    font-weight: 700;
+}
+
+.moyo-mini-calendar .workspace-calendar-add-btn {
+    width: 100%;
+    min-height: 38px;
+    margin-top: 7px;
+    border: 0;
+    border-radius: 11px;
+    color: #fff;
+    background: var(--moyo-primary-gradient, linear-gradient(135deg, #39CDB5 0%, #4A90E2 54%, #7358E8 100%));
+    box-shadow: 0 8px 18px rgba(75, 113, 229, .16);
+    font-size: 12px;
+    font-weight: 800;
+}
+
+@media (max-width: 560px) {
+    .moyo-mini-calendar { padding: 17px 15px 21px; }
+    .moyo-mini-calendar .moyo-calendar-title-row { grid-template-columns: 28px 70px 28px; }
+    .moyo-mini-calendar .moyo-calendar-nav-btn { width: 28px; height: 28px; }
+    .moyo-mini-calendar .moyo-calendar-grid { grid-template-rows: 23px repeat(var(--mini-calendar-week-rows, 6), 30px); }
+}
+
+
+/* =========================================================
+   공통 미니 달력 시각 규격
+   - 그룹/프로젝트 공통
+   - 범례/등록 버튼은 달력 바로 아래 고정
+   - 선택 일정은 정확히 3개 높이에서 내부 스크롤
+   ========================================================= */
+.moyo-mini-calendar button.day-num,
+.moyo-mini-calendar .moyo-calendar-selected-item {
+    -webkit-appearance: none;
+    appearance: none;
+    outline: 0;
+}
+
+.moyo-mini-calendar button.day-num:focus,
+.moyo-mini-calendar .moyo-calendar-selected-item:focus {
+    outline: 0;
+}
+
+.moyo-mini-calendar button.day-num:focus-visible {
+    box-shadow: inset 0 0 0 2px rgba(67, 140, 244, .38);
+}
+
+.moyo-mini-calendar button.day-num.today:focus-visible {
+    box-shadow: 0 5px 12px rgba(70, 121, 230, .20), 0 0 0 3px rgba(67, 140, 244, .14);
+}
+
+.moyo-mini-calendar .moyo-calendar-selected-item:focus-visible {
+    border-color: #8abcf1;
+    box-shadow: 0 0 0 3px rgba(67, 140, 244, .10);
+}
+
+.moyo-mini-calendar .moyo-calendar-selected-item strong,
+.moyo-mini-calendar .moyo-calendar-selected-time,
+.moyo-mini-calendar .moyo-calendar-selected-type {
+    font-family: Pretendard, "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+}
+
+.moyo-mini-calendar .moyo-calendar-selected-list {
+    scrollbar-gutter: stable;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(128, 146, 170, .42) transparent;
+    overscroll-behavior: contain;
+}
+
+.moyo-mini-calendar .moyo-calendar-selected-list::-webkit-scrollbar {
+    width: 4px;
+}
+
+.moyo-mini-calendar .moyo-calendar-selected-list::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.moyo-mini-calendar .moyo-calendar-selected-list::-webkit-scrollbar-thumb {
+    min-height: 28px;
+    border-radius: 999px;
+    background: rgba(128, 146, 170, .42);
+}
+
+.moyo-mini-calendar .moyo-calendar-selected-list::-webkit-scrollbar-button,
+.moyo-mini-calendar .moyo-calendar-selected-list::-webkit-scrollbar-button:single-button {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+}
+
+.moyo-mini-calendar .moyo-calendar-selected-count {
+    flex: 0 0 auto;
+    align-self: center;
+    padding-bottom: 0;
+    line-height: 1;
+}
+
+.moyo-mini-calendar .moyo-calendar-selected-empty {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+}
+
+@media (max-width: 560px) {
+    .moyo-mini-calendar { padding: 16px 14px; }
+    .moyo-mini-calendar .moyo-calendar-selected-list { max-height: 142px; }
+}
+
+
+/* Mini calendar final density / legend standard */
+.moyo-mini-calendar {
+    padding: 20px 18px 18px;
+}
+.moyo-mini-calendar .moyo-calendar-head {
+    margin-bottom: 14px;
+}
+.moyo-mini-calendar .moyo-calendar-grid {
+    column-gap: 3px;
+    row-gap: 3px;
+    grid-template-rows: 24px repeat(var(--mini-calendar-week-rows, 5), 33px);
+}
+.moyo-mini-calendar .day-num {
+    min-width: 30px;
+    min-height: 30px;
+}
+.moyo-mini-calendar .moyo-calendar-legend {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 7px;
+    margin-top: 14px;
+    padding-top: 10px;
+    border-top: 1px solid #e7eef8;
+}
+.moyo-mini-calendar .today-legend,
+.moyo-mini-calendar .event-legend,
+.moyo-mini-calendar .calendar-legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    min-height: 24px;
+    padding: 3px 9px;
+    border: 1px solid #dce8f7;
+    border-radius: 999px;
+    background: rgba(255,255,255,.92);
+    color: #52657f;
+    font-size: 10px;
+    font-weight: 800;
+}
+.moyo-mini-calendar .workspace-calendar-add-btn {
+    margin-top: 8px;
+    min-height: 40px;
+    border-radius: 12px;
+}
+.moyo-mini-calendar .moyo-calendar-selected {
+    margin-top: 12px;
+    padding-top: 12px;
+    padding-bottom: 14px;
+}
+.moyo-mini-calendar .moyo-calendar-selected-list {
+    max-height: 142px;
+}
+.moyo-mini-calendar .moyo-calendar-selected-item {
+    min-height: 44px;
+}
+
+/* Mini calendar legend: mode-scoped canonical rendering */
+.moyo-mini-calendar .calendar-legend-item::before { content: none; }
+
+.moyo-mini-calendar[data-mini-calendar-mode="WORKSPACE"] .calendar-legend-item .legend-dot {
+    flex: 0 0 auto;
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    box-shadow: 0 0 0 2px rgba(67, 140, 244, .08);
+}
+.moyo-mini-calendar[data-mini-calendar-mode="WORKSPACE"] .calendar-legend-item .legend-dot.today {
+    background: linear-gradient(135deg, #35d5bc 0%, #438cf4 55%, #7a5cff 100%);
+}
+.moyo-mini-calendar[data-mini-calendar-mode="WORKSPACE"] .calendar-legend-item .legend-dot.group { background: #35c9b7; }
+.moyo-mini-calendar[data-mini-calendar-mode="WORKSPACE"] .calendar-legend-item .legend-dot.project { background: #7a5cff; }
+.moyo-mini-calendar[data-mini-calendar-mode="WORKSPACE"] .calendar-legend-item.group-legend {
+    border-color: rgba(53, 201, 183, .28);
+    background: rgba(53, 201, 183, .07);
+}
+.moyo-mini-calendar[data-mini-calendar-mode="WORKSPACE"] .calendar-legend-item.project-legend {
+    border-color: rgba(122, 92, 255, .24);
+    background: rgba(122, 92, 255, .06);
+}
+.moyo-mini-calendar[data-mini-calendar-mode="WORKSPACE"] .calendar-legend-item .legend-range {
+    flex: 0 0 auto;
+    width: 14px;
+    height: 12px;
+    box-sizing: border-box;
+    border: 1px solid rgba(122, 92, 255, .20);
+    border-radius: 5px;
+    background: rgba(122, 92, 255, .10);
+}
+
+.moyo-mini-calendar[data-mini-calendar-mode="PROJECT"] .calendar-legend-item.period-legend,
+.moyo-mini-calendar[data-mini-calendar-mode="PROJECT"] .calendar-legend-item.schedule-legend {
+    color: #6d52df;
+    border-color: rgba(122, 92, 255, .20);
+    background: rgba(122, 92, 255, .07);
+}
+.moyo-mini-calendar[data-mini-calendar-mode="PROJECT"] .period-legend .legend-box {
+    flex: 0 0 14px;
+    width: 14px;
+    height: 12px;
+    box-sizing: border-box;
+    border: 1px solid rgba(122, 92, 255, .20);
+    border-radius: 5px;
+    background: rgba(122, 92, 255, .10);
+}
+.moyo-mini-calendar[data-mini-calendar-mode="PROJECT"] .schedule-legend .legend-box.schedule {
+    flex: 0 0 6px;
+    width: 6px;
+    height: 6px;
+    border: 0;
+    border-radius: 999px;
+    background: #7a5cff;
+    box-shadow: none;
+}
+
+.moyo-mini-calendar .moyo-calendar-selected-item.is-group {
+    --item-color: #35c9b7;
+    --item-soft-color: rgba(53, 201, 183, .10);
+    --item-soft-border: rgba(53, 201, 183, .24);
+}
+
+/* =========================================================
+   Mini calendar canonical states
+   - Workspace schedule: mint dot
+   - Project schedule: purple dot
+   - Project period: soft purple cell background
+   - Today: MOYO gradient with white schedule dot
+   ========================================================= */
+.moyo-mini-calendar[data-mini-calendar-mode="PROJECT"] button.day-num.has-project-period {
+    background: var(--project-period-background, rgba(122, 92, 255, .10));
+    box-shadow: inset 0 0 0 1px var(--project-period-border, rgba(122, 92, 255, .18));
+}
+
+.moyo-mini-calendar[data-mini-calendar-mode="PROJECT"] button.day-num.has-project-period:hover {
+    filter: saturate(1.08) brightness(.99);
+}
+
+.moyo-mini-calendar[data-mini-calendar-mode="PROJECT"] button.day-num.has-project-period.is-selected {
+    box-shadow:
+        inset 0 0 0 2px rgba(67, 140, 244, .52),
+        0 3px 8px rgba(67, 140, 244, .10);
+}
+
+/* 기간별 계획이 없는 프로젝트 진행일은 기본 연보라 배경으로 프로젝트 진행 범위를 유지한다. */
+.moyo-mini-calendar[data-mini-calendar-mode="PROJECT"] button.day-num.project-range-day:not(.has-project-period) {
+    background: rgba(122, 92, 255, .08);
+    box-shadow: inset 0 0 0 1px rgba(122, 92, 255, .16);
+}
+
+/* Workspace and project share the same centered month navigation layout. */
+.moyo-mini-calendar .moyo-calendar-head {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    min-height: 30px;
+}
+
+.moyo-mini-calendar .moyo-calendar-title-row {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    display: grid;
+    grid-template-columns: 28px 72px 28px;
+    align-items: center;
+    gap: 7px;
+    transform: translate(-50%, -50%);
+}
+
+.moyo-mini-calendar .moyo-calendar-more { margin-left: auto; }
+
+.moyo-mini-calendar .moyo-calendar-add-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 40px;
+    margin-top: 8px;
+    box-sizing: border-box;
+    border: 0;
+    border-radius: 12px;
+    color: #fff;
+    background: var(--moyo-primary-gradient, linear-gradient(135deg, #39CDB5 0%, #4A90E2 54%, #7358E8 100%));
+    box-shadow: 0 8px 18px rgba(75, 113, 229, .16);
+    font-size: 12px;
+    font-weight: 800;
+    line-height: 1;
+    text-decoration: none;
+}
+
+.moyo-mini-calendar .moyo-calendar-add-btn:hover {
+    color: #fff;
+    background: var(--moyo-primary-gradient, linear-gradient(135deg, #39CDB5 0%, #4A90E2 54%, #7358E8 100%));
+    box-shadow: 0 10px 22px rgba(75, 113, 229, .22);
+}
+
+/* A registered project schedule is represented only by a dot. */
+.moyo-mini-calendar[data-mini-calendar-mode="PROJECT"] button.day-num.schedule-range-day,
+.moyo-mini-calendar[data-mini-calendar-mode="PROJECT"] button.day-num.schedule-range-day.schedule-boundary {
+    background: transparent;
+    box-shadow: none;
+    color: inherit;
+}
+
+.moyo-mini-calendar[data-mini-calendar-mode="PROJECT"] button.day-num.has-project-period.schedule-range-day {
+    background: var(--project-period-background, rgba(122, 92, 255, .10));
+    box-shadow: inset 0 0 0 1px var(--project-period-border, rgba(122, 92, 255, .18));
+}
+
+/* Today keeps the common gradient, including when it overlaps a period. */
+.moyo-mini-calendar button.day-num.today,
+.moyo-mini-calendar button.day-num.today.has-event,
+.moyo-mini-calendar button.day-num.today.has-project-period,
+.moyo-mini-calendar button.day-num.today.schedule-range-day,
+.moyo-mini-calendar button.day-num.today.has-project-period.schedule-range-day {
+    color: #fff !important;
+    background: linear-gradient(135deg, #35d5bc 0%, #438cf4 56%, #7a5cff 100%) !important;
+    box-shadow: 0 6px 13px rgba(70, 121, 230, .21), inset 0 0 0 1px rgba(255, 255, 255, .42) !important;
+}
+
+
+/* Common schedule marker geometry. */
+.moyo-mini-calendar button.day-num.has-event::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: calc(50% + 7px);
+    width: 4px;
+    height: 4px;
+    border-radius: 999px;
+    transform: translateX(-50%);
+    background: var(--schedule-solid, #4a90e2);
+    pointer-events: none;
+}
+
+.moyo-mini-calendar[data-mini-calendar-mode="WORKSPACE"] button.day-num.has-event::after { background: #35c9b7; }
+.moyo-mini-calendar[data-mini-calendar-mode="PROJECT"] button.day-num.has-event::after { background: #7a5cff; }
+.moyo-mini-calendar button.day-num.today.has-event::after { background: #fff; }

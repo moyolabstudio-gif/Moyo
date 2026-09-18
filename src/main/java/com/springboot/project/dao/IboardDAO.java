@@ -48,12 +48,12 @@ public interface IboardDAO {
 
     // 댓글
     List<Map<String, Object>> selectReplyList(int postId);
+    Map<String, Object> selectReplyById(@Param("replyId") Long replyId);
     int updateReply(Map<String, Object> replyData);
     int deleteReply(int replyId);
     int insertReply(Map<String, Object> replyData);
 
     // 캘린더
-    List<Map<String, Object>> selectWorkspaceCalendar(Long wsId);
 
     // 게시판 권한
     String selectWorkspaceBoardRole(@Param("wsId") Long wsId, @Param("userId") Long userId);

@@ -83,10 +83,17 @@
         </div>
 
         <div class="join-profile-field">
-            <label for="joinProfilePosition">그룹에서의 역할</label>
+            <label for="joinProfilePosition">직책 · 담당</label>
             <input id="joinProfilePosition"
                    maxlength="50"
-                   placeholder="예: 운영진, 발표 담당">
+                   placeholder="예: 개발, 운영, 기록, 발표 등">
+        </div>
+
+        <div class="join-profile-field full">
+            <label for="joinProfileIntro">한 줄 소개</label>
+            <input id="joinProfileIntro"
+                   maxlength="120"
+                   placeholder="이 그룹에서 나를 간단히 소개해보세요">
         </div>
 
         <div class="join-profile-field full">
@@ -108,7 +115,11 @@
 
         <div class="join-profile-field full join-profile-privacy-options">
             <label class="join-profile-check">
-                <input type="checkbox" id="joinProfileShowPhone">
+                <input type="checkbox" id="joinProfileShowEmail" checked>
+                다른 그룹 멤버에게 이메일 공개
+            </label>
+            <label class="join-profile-check">
+                <input type="checkbox" id="joinProfileShowPhone" checked>
                 다른 그룹 멤버에게 전화번호 공개
             </label>
             <label class="join-profile-check">

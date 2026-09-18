@@ -6,7 +6,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MOYO - 새 프로젝트 생성</title>
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/projectCreate.css?v=project-create-member-display-v6">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/moyoUi.css?v=moyo-ui-controls-v2">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/projectCreate.css?v=project-create-ui-unify-v1">
 </head>
 <body>
 <jsp:include page="/WEB-INF/views/common/header.jsp" />
@@ -79,11 +80,7 @@
                             </select>
                         </div>
 
-                        <div id="customCategoryField" class="field full" hidden>
-                            <label for="projCategoryDetail">기타 카테고리명 <span class="required">*</span></label>
-                            <input type="text" id="projCategoryDetail" maxlength="30"
-                                   placeholder="예: 가족여행 준비, 동호회 공연, 이사 준비">
-                        </div>
+                        
 
                         <div class="date-row field full">
                             <div class="field">
@@ -160,6 +157,6 @@
 </div>
 
 <jsp:include page="/WEB-INF/views/common/footer.jsp" />
-<script src="${pageContext.request.contextPath}/js/projectCreate.js?v=project-create-member-display-v6"></script>
+<script src="${pageContext.request.contextPath}/js/projectCreate.js?v=20260910-category-regression-fix-1"></script>
 </body>
 </html>

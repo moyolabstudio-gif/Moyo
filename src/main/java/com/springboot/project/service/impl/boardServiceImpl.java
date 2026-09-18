@@ -2,6 +2,9 @@ package com.springboot.project.service.impl;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -9,6 +12,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -16,6 +20,8 @@ import org.springframework.web.multipart.MultipartFile;
 import com.springboot.project.dao.IboardDAO;
 import com.springboot.project.dto.postDTO;
 import com.springboot.project.service.IboardService;
+import com.springboot.project.service.ContentInputSecurityService;
+import com.springboot.project.service.UploadSecurityService;
 
 @Service
 public class boardServiceImpl implements IboardService {
@@ -23,6 +29,18 @@ public class boardServiceImpl implements IboardService {
     @Autowired
     private IboardDAO iboardDAO;
 
+    @Autowired
+    private ContentInputSecurityService contentInputSecurityService;
+
+    @Autowired
+    private UploadSecurityService uploadSecurityService;
+
+    @Value("${moyo.upload.board-dir:C:/uploads/board/}")
+    private String boardUploadDir;
+
+    private Path boardUploadRoot() {
+        return Path.of(boardUploadDir).toAbsolutePath().normalize();
+    }
 
     private static final Pattern SCRIPT_BLOCK_PATTERN = Pattern.compile("(?is)<\\s*(script|style|iframe|object|embed|form|input|button|meta|link)[^>]*>.*?<\\s*/\\s*\\1\\s*>");
     private static final Pattern DANGEROUS_SINGLE_TAG_PATTERN = Pattern.compile("(?is)<\\s*(script|style|iframe|object|embed|form|input|button|meta|link)[^>]*>");
@@ -95,7 +113,8 @@ public class boardServiceImpl implements IboardService {
 
     private void sanitizePostContent(postDTO post) {
         if (post != null) {
-            post.setContent(sanitizeBoardHtml(post.getContent()));
+            post.setTitle(contentInputSecurityService.singleLine(post.getTitle(), 200, true));
+            post.setContent(contentInputSecurityService.richHtml(post.getContent()));
         }
     }
 
@@ -186,6 +205,7 @@ public class boardServiceImpl implements IboardService {
 
     @Override
     public boolean modifyReply(Map<String, Object> replyData) {
+        sanitizeReplyContent(replyData);
         return iboardDAO.updateReply(replyData) > 0;
     }
 
@@ -196,12 +216,8 @@ public class boardServiceImpl implements IboardService {
 
     @Override
     public boolean registerReply(Map<String, Object> replyData) {
+        sanitizeReplyContent(replyData);
         return iboardDAO.insertReply(replyData) > 0;
-    }
-
-    @Override
-    public List<Map<String, Object>> selectWorkspaceCalendar(Long wsId) {
-        return iboardDAO.selectWorkspaceCalendar(wsId);
     }
 
     @Override
@@ -341,8 +357,9 @@ public class boardServiceImpl implements IboardService {
         Map<String, Object> fileInfo = iboardDAO.selectFileById(String.valueOf(fileId));
         if (fileInfo == null) return false;
 
-        String filePath = "C:/MoyoLab.Studio/upload/" + fileInfo.get("FILE_NAME");
-        File file = new File(filePath);
+        Path filePath = boardUploadRoot().resolve(String.valueOf(fileInfo.get("FILE_NAME"))).normalize();
+        if (!filePath.startsWith(boardUploadRoot())) return false;
+        File file = filePath.toFile();
         if (file.exists()) {
             file.delete();
         }
@@ -352,21 +369,31 @@ public class boardServiceImpl implements IboardService {
 
     @Override
     public String saveFile(MultipartFile file) {
+        final long maxBytes = 20L * 1024L * 1024L;
+        uploadSecurityService.validateAttachment(file, maxBytes);
+
         try {
-            String uploadPath = "C:/MoyoLab.Studio/upload/";
-            File folder = new File(uploadPath);
-            if (!folder.exists()) folder.mkdirs();
+            Path uploadRoot = boardUploadRoot();
+            Files.createDirectories(uploadRoot);
 
-            String originalFileName = file.getOriginalFilename();
-            String extension = originalFileName.substring(originalFileName.lastIndexOf("."));
-            String savedFileName = UUID.randomUUID().toString() + extension;
+            String originalFileName = uploadSecurityService.safeOriginalName(file.getOriginalFilename());
+            String extension = "." + uploadSecurityService.safeExtension(originalFileName);
+            String savedFileName = UUID.randomUUID().toString().replace("-", "") + extension;
 
-            File targetFile = new File(uploadPath + savedFileName);
-            file.transferTo(targetFile);
-
+            Path targetFile = uploadRoot.resolve(savedFileName).normalize();
+            if (!targetFile.startsWith(uploadRoot)) {
+                throw new SecurityException("허용되지 않은 업로드 경로입니다.");
+            }
+            Files.copy(file.getInputStream(), targetFile, StandardCopyOption.REPLACE_EXISTING);
             return savedFileName;
         } catch (IOException e) {
-            throw new RuntimeException("파일 저장 실패: " + e.getMessage());
+            throw new RuntimeException("파일 저장에 실패했습니다.", e);
         }
     }
+    private void sanitizeReplyContent(Map<String, Object> replyData) {
+        if (replyData == null) throw new IllegalArgumentException("댓글 내용을 확인해주세요.");
+        String content = replyData.get("content") == null ? "" : String.valueOf(replyData.get("content"));
+        replyData.put("content", contentInputSecurityService.multiLine(content, 2000, true));
+    }
+
 }

@@ -1,6 +1,8 @@
 package com.springboot.project.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -11,7 +13,6 @@ import com.springboot.project.dto.noticeDTO;
 import com.springboot.project.dto.usersDto;
 import com.springboot.project.service.noticeService;
 
-import jakarta.servlet.http.HttpSession;
 
 @Controller
 public class noticeController {
@@ -25,33 +26,27 @@ public class noticeController {
         return "common/noticeList"; 
     }
     
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/admin/notice/writeForm")
     public String writeForm() {
         return "admin/noticeWrite"; 
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/admin/notice/save")
-    public String saveNotice(noticeDTO notice, HttpSession session) {
-        usersDto user = (usersDto) session.getAttribute("user");
-        
-        if (user != null) {
-            // 객체에 ID값 직접 주입
-            notice.setUserId(user.getUserId()); 
-            System.out.println("디버깅: 세팅된 userId = " + notice.getUserId());
-        } else {
-            System.out.println("경고: 세션에 유저 정보가 없습니다!");
-            return "redirect:/users/loginForm"; // 로그인 안 되어 있으면 로그인으로 돌려보내기
+    public String saveNotice(noticeDTO notice, Authentication authentication) {
+        Object principal = authentication == null ? null : authentication.getPrincipal();
+        if (!(principal instanceof usersDto user)) {
+            throw new IllegalStateException("관리자 인증 정보를 확인할 수 없습니다.");
         }
-        
-        // 여기서 notice 객체의 userId를 한 번 더 체크하고 서비스 호출
-        if (notice.getUserId() == null) {
-            throw new RuntimeException("userId가 null이라서 공지를 등록할 수 없습니다.");
-        }
-        
+
+        // 공지 작성자는 요청값이 아니라 현재 인증된 관리자 ID로 강제한다.
+        notice.setUserId(user.getUserId());
         noticeService.writeNotice(notice);
         return "redirect:/common/noticeList";
     }
  // 수정 페이지 진입
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/admin/notice/noticeEdit")
     public String noticeEdit(@RequestParam("noticeId") Long noticeId, Model model) {
         model.addAttribute("notice", noticeService.getNoticeById(noticeId));
@@ -59,6 +54,7 @@ public class noticeController {
     }
 
     // 수정 처리
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/admin/notice/noticeUpdate")
     public String noticeUpdate(noticeDTO notice) {
         noticeService.updateNotice(notice);
@@ -66,7 +62,8 @@ public class noticeController {
     }
 
     // 삭제 처리
-    @GetMapping("/admin/notice/delete")
+    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping("/admin/notice/delete")
     public String deleteNotice(@RequestParam("noticeId") Long noticeId) {
         noticeService.deleteNotice(noticeId);
         return "redirect:/common/noticeList";

@@ -30,7 +30,30 @@ public interface IworkspaceDAO {
     int requestWorkspaceDeletion(@Param("wsId") Long wsId, @Param("ownerId") Long ownerId);
     int cancelWorkspaceDeletion(@Param("wsId") Long wsId, @Param("ownerId") Long ownerId);
     List<Long> selectExpiredWorkspaceDeletionIds();
+    List<Long> selectWorkspaceProjectIdsForFinalDelete(@Param("wsId") Long wsId);
+    int deleteWorkspaceTargetShares(@Param("wsId") Long wsId);
+    int deleteWorkspaceNativeNotes(@Param("wsId") Long wsId);
+    int deleteWorkspaceNoteFolders(@Param("wsId") Long wsId);
+    int deleteWorkspacePhotoPosts(@Param("wsId") Long wsId);
+    int deleteWorkspacePhotoAlbums(@Param("wsId") Long wsId);
+    int deleteWorkspaceBoardPosts(@Param("wsId") Long wsId);
+    int deleteWorkspacePolls(@Param("wsId") Long wsId);
+    int deleteWorkspaceEvents(@Param("wsId") Long wsId);
+    int deleteWorkspaceContentReactions(@Param("wsId") Long wsId);
+    int deleteWorkspaceContentFileRecentAccess(@Param("wsId") Long wsId);
+    int deleteWorkspaceContentRecordFileItems(@Param("wsId") Long wsId);
+    int deleteWorkspaceContentFiles(@Param("wsId") Long wsId);
+    int deleteWorkspaceContentFileFolders(@Param("wsId") Long wsId);
+    int deleteWorkspaceJoinRequests(@Param("wsId") Long wsId);
+    int deleteWorkspaceInvitations(@Param("wsId") Long wsId);
+    int deleteWorkspaceMemberProfiles(@Param("wsId") Long wsId);
+    int deleteWorkspaceLinksForFinalDelete(@Param("wsId") Long wsId);
+    int deleteWorkspaceMembersForFinalDelete(@Param("wsId") Long wsId);
+    int deleteWorkspaceRow(@Param("wsId") Long wsId);
     List<Map<String, Object>> selectWorkspaceMembers(Long wsId);
+    int ensureWorkspaceMemberActivityHistory();
+    int insertWorkspaceMemberLeaveActivity(@Param("wsId") Long wsId, @Param("userId") Long userId);
+    List<Map<String, Object>> selectWorkspaceMemberLeaveActivities(@Param("wsId") Long wsId);
 
     Map<String, Object> selectWorkspaceMemberProfile(
         @Param("wsId") Long wsId,
@@ -41,6 +64,11 @@ public interface IworkspaceDAO {
         @Param("wsId") Long wsId,
         @Param("userId") Long userId
     );
+    Map<String, Object> selectWorkspaceMemberContributionCounts(@Param("wsId") Long wsId, @Param("userId") Long userId, @Param("viewerUserId") Long viewerUserId);
+    List<Map<String, Object>> selectWorkspaceMemberRecentNotes(@Param("wsId") Long wsId, @Param("userId") Long userId, @Param("viewerUserId") Long viewerUserId);
+    List<Map<String, Object>> selectWorkspaceMemberRecentPhotos(@Param("wsId") Long wsId, @Param("userId") Long userId, @Param("viewerUserId") Long viewerUserId);
+    List<Map<String, Object>> selectWorkspaceMemberRecentFiles(@Param("wsId") Long wsId, @Param("userId") Long userId, @Param("viewerUserId") Long viewerUserId);
+    List<Map<String, Object>> selectWorkspaceMemberRecentActivities(@Param("wsId") Long wsId, @Param("userId") Long userId, @Param("viewerUserId") Long viewerUserId);
     int updateWorkspaceMemberProfile(Map<String, Object> params);
     int insertWorkspaceMemberProfile(Map<String, Object> params);
     int insertDefaultWorkspaceMemberProfile(@Param("wsId") Long wsId, @Param("userId") Long userId);
@@ -54,6 +82,7 @@ public interface IworkspaceDAO {
     int insertJoinRequestNotices(@Param("wsId") Long wsId, @Param("userId") Long userId);
     int deleteJoinRequestManagerNotices(@Param("requestId") Long requestId);
     List<Map<String, Object>> selectPendingJoinRequestsForAdmin(@Param("userId") Long userId);
+    int countPendingJoinRequestsForAdmin(@Param("userId") Long userId);
     Map<String, Object> selectJoinRequestById(@Param("requestId") Long requestId);
     int updateJoinRequestStatus(@Param("requestId") Long requestId,
                                 @Param("status") String status,
@@ -78,12 +107,19 @@ public interface IworkspaceDAO {
     int insertJoinCompletedNotice(@Param("requestId") Long requestId);
 
  // IworkspaceDAO.java
+    Long lockWorkspaceMemberForLeave(@Param("wsId") Long wsId, @Param("userId") Long userId);
+    int countLedActiveWorkspaceProjects(@Param("wsId") Long wsId, @Param("userId") Long userId);
+    int reassignWorkspaceProjectTasksToLeaders(@Param("wsId") Long wsId, @Param("userId") Long userId);
+    int deleteActiveWorkspaceProjectMemberships(@Param("wsId") Long wsId, @Param("userId") Long userId);
     int deleteWorkspaceMember(@Param("wsId") Long wsId, @Param("userId") Long userId);
     int updateMemberRole(@Param("wsId") Long wsId, @Param("userId") Long userId, @Param("role") String role);
     int updateMemberPosition(@Param("wsId") Long wsId,
                              @Param("userId") Long userId,
                              @Param("positionName") String positionName);
     int updateWorkspaceOwner(@Param("wsId") Long wsId, @Param("ownerId") Long ownerId);
+    int updateWorkspaceOwnerIfCurrent(@Param("wsId") Long wsId,
+                                      @Param("currentOwnerId") Long currentOwnerId,
+                                      @Param("newOwnerId") Long newOwnerId);
     
  // 중복 초대 및 멤버 확인
     int checkInvitationExists(@Param("wsId") Long wsId, @Param("inviteeId") Long inviteeId);
@@ -95,8 +131,11 @@ public interface IworkspaceDAO {
                          
     // 내게 온 초대 목록 조회 (알림용)
     List<Map<String, Object>> selectPendingInvitations(@Param("userId") Long userId);
+    List<Map<String, Object>> selectPendingInvitationsByWorkspace(@Param("wsId") Long wsId);
+    int countPendingInvitations(@Param("userId") Long userId);
     
     int updateInvitationStatus(@Param("inviteId") Long inviteId, @Param("status") String status);
+    int cancelInvitation(@Param("inviteId") Long inviteId, @Param("wsId") Long wsId);
     Map<String, Object> selectInvitationById(Long inviteId);
     List<Map<String, Object>> selectEventsByWsId(@Param("wsId") Long wsId);
     Map<String, Object> selectCommunitySummary(@Param("wsId") Long wsId);
@@ -104,9 +143,6 @@ public interface IworkspaceDAO {
     List<Map<String, Object>> selectTodayEvents(Long wsId);
     Map<String, Object> selectActivePoll(Long wsId);
     List<Map<String, Object>> selectPollOptions(Long pollId); // String에서 Long으로 변경 권장
-    void insertVote(Map<String, Object> params);
-    void insertPoll(Map<String, Object> params);
-    void insertPollOption(Map<String, Object> optionMap);
     
     
 }

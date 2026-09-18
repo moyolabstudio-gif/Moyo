@@ -6,7 +6,7 @@ body.workspace-invite-open { overflow: hidden; }
     inset: 0;
     z-index: 2300;
     background: rgba(37, 48, 69, .52);
-    backdrop-filter: blur(4px);
+    backdrop-filter: none;
 }
 
 .workspace-invite-modal {
@@ -142,12 +142,13 @@ body.workspace-invite-open { overflow: hidden; }
     height: 42px;
     overflow: hidden;
     border-radius: 50%;
-    background: linear-gradient(135deg, #57cfc4, #5f78ee);
+    background: var(--moyo-avatar-gradient, linear-gradient(135deg, #55D5CE 0%, #4288EF 52%, #5A55EE 100%));
     color: #fff;
     font-size: 16px;
     font-weight: 900;
 }
-.workspace-invite-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.workspace-invite-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius:50%; background:transparent; }
+.workspace-invite-avatar:has(img) { background:transparent; background-image:none; }
 
 .workspace-invite-info { min-width: 0; }
 .workspace-invite-info strong,

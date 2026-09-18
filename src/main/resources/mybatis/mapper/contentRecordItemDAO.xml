@@ -1,0 +1,279 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.springboot.project.dao.IcontentRecordItemDAO">
+  <resultMap id="itemMap" type="com.springboot.project.dto.contentRecordItemDTO">
+    <id property="recordItemId" column="RECORD_ITEM_ID"/><result property="recordTargetId" column="RECORD_TARGET_ID"/>
+    <result property="recordType" column="RECORD_TYPE"/><result property="contentId" column="CONTENT_ID"/>
+    <result property="title" column="TITLE"/><result property="sortOrder" column="SORT_ORDER"/>
+    <result property="createdBy" column="CREATED_BY"/><result property="createdAt" column="CREATED_AT"/>
+    <result property="updatedAt" column="UPDATED_AT"/><result property="deletedYn" column="DELETED_YN"/>
+    <result property="userId" column="NOTE_USER_ID"/><result property="userName" column="USER_NAME"/>
+    <result property="regDt" column="REG_DT"/><result property="updatedBy" column="UPDATED_BY"/>
+    <result property="updatedByName" column="UPDATED_BY_NAME"/><result property="updDt" column="UPD_DT"/>
+    <result property="linkUrl" column="LINK_URL"/><result property="description" column="DESCRIPTION"/>
+    <result property="locationText" column="LOCATION_TEXT"/><result property="locationAddress" column="LOCATION_ADDRESS"/>
+    <result property="locationLat" column="LOCATION_LAT"/><result property="locationLng" column="LOCATION_LNG"/>
+    <result property="locationPlaceId" column="LOCATION_PLACE_ID"/><result property="memo" column="LOCATION_MEMO"/>
+    <result property="locationDescription" column="LOCATION_DESCRIPTION"/>
+    <result property="primaryYn" column="PRIMARY_YN"/>
+    <result property="previewContent" column="PREVIEW_CONTENT"/>
+    <result property="thumbnailUrl" column="THUMBNAIL_URL"/>
+    <result property="creatorName" column="CREATOR_NAME"/>
+    <result property="likeCount" column="LIKE_COUNT"/>
+    <result property="commentCount" column="COMMENT_COUNT"/>
+    <result property="likedByMe" column="LIKED_BY_ME"/>
+    <result property="photoCount" column="PHOTO_COUNT"/>
+    <result property="fileOriginalName" column="FILE_ORIGINAL_NAME"/>
+    <result property="fileContentType" column="FILE_CONTENT_TYPE"/>
+    <result property="fileExtension" column="FILE_EXTENSION"/>
+    <result property="fileSize" column="FILE_SIZE"/>
+    <result property="fileDownloadUrl" column="FILE_DOWNLOAD_URL"/>
+    <result property="fileCanRename" column="FILE_CAN_RENAME"/>
+  </resultMap>
+  <insert id="insertItem" parameterType="com.springboot.project.dto.contentRecordItemDTO">
+    <selectKey keyProperty="recordItemId" resultType="long" order="BEFORE">SELECT SEQ_CONTENT_RECORD_ITEM_ID.NEXTVAL FROM DUAL</selectKey>
+    INSERT INTO CONTENT_RECORD_ITEMS (RECORD_ITEM_ID,RECORD_TARGET_ID,RECORD_TYPE,CONTENT_ID,TITLE,SORT_ORDER,CREATED_BY)
+    VALUES (#{recordItemId},#{recordTargetId},#{recordType},#{contentId,jdbcType=NUMERIC},#{title,jdbcType=VARCHAR},NVL(#{sortOrder,jdbcType=NUMERIC},1),#{createdBy})
+  </insert>
+
+  <insert id="insertNoteContent" parameterType="com.springboot.project.dto.contentRecordItemDTO">
+    <selectKey keyProperty="contentId" resultType="long" order="BEFORE">SELECT SEQ_NOTE_ID.NEXTVAL FROM DUAL</selectKey>
+    INSERT INTO NOTES (NOTE_ID,FOLDER_ID,SCOPE_TYPE,WS_ID,PROJ_ID,USER_ID,NOTE_TITLE,MEMO,CATEGORY,REG_DT,UPDATED_BY,DELETED_YN)
+    SELECT #{contentId},t.NOTE_FOLDER_ID,
+           CASE WHEN t.SCOPE_TYPE='PERSONAL' THEN 'PRIVATE' WHEN t.SCOPE_TYPE='GROUP' THEN 'WS' ELSE 'PROJ' END,
+           t.WS_ID,t.PROJ_ID,#{createdBy},NVL(NULLIF(TRIM(#{title}),''),'새 노트'),#{previewContent,jdbcType=CLOB},'TASK_RECORD',SYSDATE,#{createdBy},'N'
+      FROM CONTENT_RECORD_TARGETS t WHERE t.RECORD_TARGET_ID=#{recordTargetId}
+  </insert>
+  <update id="updateNoteContent">
+    UPDATE NOTES n SET n.NOTE_TITLE=NVL(NULLIF(TRIM(#{title}),''),SUBSTR(REGEXP_REPLACE(#{content},'[[:space:]]+',' '),1,30)),
+                       n.MEMO=#{content,jdbcType=CLOB},n.UPD_DT=SYSDATE,n.UPDATED_BY=#{userId}
+     WHERE n.NOTE_ID=(SELECT i.CONTENT_ID FROM CONTENT_RECORD_ITEMS i WHERE i.RECORD_ITEM_ID=#{recordItemId} AND i.RECORD_TARGET_ID=#{recordTargetId} AND i.RECORD_TYPE='NOTE' AND i.DELETED_YN='N')
+  </update>
+  <update id="updateItemTitle">
+    UPDATE CONTENT_RECORD_ITEMS
+       SET TITLE=#{title,jdbcType=VARCHAR},UPDATED_AT=SYSDATE
+     WHERE RECORD_TARGET_ID=#{recordTargetId} AND RECORD_ITEM_ID=#{recordItemId} AND RECORD_TYPE='NOTE' AND DELETED_YN='N'
+  </update>
+  <update id="softDeleteNoteContent">
+    UPDATE NOTES
+       SET DELETED_YN='Y',UPD_DT=SYSDATE,UPDATED_BY=#{userId}
+     WHERE NOTE_ID=(SELECT CONTENT_ID FROM CONTENT_RECORD_ITEMS WHERE RECORD_TARGET_ID=#{recordTargetId} AND RECORD_ITEM_ID=#{recordItemId} AND RECORD_TYPE='NOTE' AND DELETED_YN='N')
+  </update>
+  <update id="softDeleteNoteItem">
+    UPDATE CONTENT_RECORD_ITEMS
+       SET DELETED_YN='Y',UPDATED_AT=SYSDATE
+     WHERE RECORD_TARGET_ID=#{recordTargetId} AND RECORD_ITEM_ID=#{recordItemId} AND RECORD_TYPE='NOTE' AND DELETED_YN='N'
+  </update>
+  <update id="updateNoteSortOrder">
+    UPDATE CONTENT_RECORD_ITEMS
+       SET SORT_ORDER=#{sortOrder},UPDATED_AT=SYSDATE
+     WHERE RECORD_TARGET_ID=#{recordTargetId}
+       AND RECORD_ITEM_ID=#{recordItemId}
+       AND RECORD_TYPE='NOTE'
+       AND DELETED_YN='N'
+  </update>
+  <insert id="insertLink" parameterType="com.springboot.project.dto.contentRecordItemDTO">
+    INSERT INTO CONTENT_RECORD_LINKS (RECORD_ITEM_ID,LINK_URL,LINK_TITLE,DESCRIPTION)
+    VALUES (#{recordItemId},#{linkUrl},#{title,jdbcType=VARCHAR},#{description,jdbcType=VARCHAR})
+  </insert>
+  <update id="updateLink">
+    UPDATE CONTENT_RECORD_LINKS l
+       SET l.LINK_URL=#{linkUrl},l.LINK_TITLE=#{title,jdbcType=VARCHAR},l.DESCRIPTION=#{description,jdbcType=VARCHAR}
+     WHERE l.RECORD_ITEM_ID=#{recordItemId}
+       AND EXISTS (SELECT 1 FROM CONTENT_RECORD_ITEMS i WHERE i.RECORD_ITEM_ID=l.RECORD_ITEM_ID AND i.RECORD_TARGET_ID=#{recordTargetId} AND i.RECORD_TYPE='LINK' AND i.DELETED_YN='N')
+  </update>
+  <update id="updateLinkItemMetadata">
+    UPDATE CONTENT_RECORD_ITEMS
+       SET TITLE=#{title,jdbcType=VARCHAR},UPDATED_AT=SYSDATE
+     WHERE RECORD_TARGET_ID=#{recordTargetId} AND RECORD_ITEM_ID=#{recordItemId} AND RECORD_TYPE='LINK' AND DELETED_YN='N'
+  </update>
+  <update id="softDeleteLinkItem">
+    UPDATE CONTENT_RECORD_ITEMS
+       SET DELETED_YN='Y',UPDATED_AT=SYSDATE
+     WHERE RECORD_TARGET_ID=#{recordTargetId} AND RECORD_ITEM_ID=#{recordItemId} AND RECORD_TYPE='LINK' AND DELETED_YN='N'
+  </update>
+  <select id="countActiveLinkByUrl" resultType="int">
+    SELECT COUNT(*)
+      FROM CONTENT_RECORD_ITEMS i
+      JOIN CONTENT_RECORD_LINKS l ON l.RECORD_ITEM_ID=i.RECORD_ITEM_ID
+     WHERE i.RECORD_TARGET_ID=#{recordTargetId} AND i.RECORD_TYPE='LINK' AND i.DELETED_YN='N'
+       AND LOWER(TRIM(l.LINK_URL))=LOWER(TRIM(#{linkUrl}))
+       <if test="excludeRecordItemId != null">AND i.RECORD_ITEM_ID&lt;&gt;#{excludeRecordItemId}</if>
+  </select>
+  <insert id="insertLocation" parameterType="com.springboot.project.dto.contentRecordItemDTO">
+    INSERT INTO CONTENT_RECORD_LOCATIONS (RECORD_ITEM_ID,LOCATION_TEXT,LOCATION_ADDRESS,LOCATION_LAT,LOCATION_LNG,LOCATION_PLACE_ID,MEMO,DESCRIPTION,PRIMARY_YN)
+    VALUES (#{recordItemId},#{locationText,jdbcType=VARCHAR},#{locationAddress,jdbcType=VARCHAR},#{locationLat,jdbcType=NUMERIC},#{locationLng,jdbcType=NUMERIC},#{locationPlaceId,jdbcType=VARCHAR},#{memo,jdbcType=VARCHAR},#{locationDescription,jdbcType=VARCHAR},NVL(#{primaryYn,jdbcType=CHAR},'N'))
+  </insert>
+  <update id="updateLocation">
+    UPDATE CONTENT_RECORD_LOCATIONS p
+       SET p.LOCATION_TEXT=#{locationText,jdbcType=VARCHAR},p.LOCATION_ADDRESS=#{locationAddress,jdbcType=VARCHAR},
+           p.LOCATION_LAT=#{locationLat,jdbcType=NUMERIC},p.LOCATION_LNG=#{locationLng,jdbcType=NUMERIC},
+           p.LOCATION_PLACE_ID=#{locationPlaceId,jdbcType=VARCHAR},p.MEMO=#{memo,jdbcType=VARCHAR},
+           p.DESCRIPTION=#{locationDescription,jdbcType=VARCHAR}
+     WHERE p.RECORD_ITEM_ID=#{recordItemId}
+       AND EXISTS (SELECT 1 FROM CONTENT_RECORD_ITEMS i WHERE i.RECORD_ITEM_ID=p.RECORD_ITEM_ID AND i.RECORD_TARGET_ID=#{recordTargetId} AND i.RECORD_TYPE='LOCATION' AND i.DELETED_YN='N')
+  </update>
+  <update id="updateLocationItemMetadata">
+    UPDATE CONTENT_RECORD_ITEMS SET TITLE=#{title,jdbcType=VARCHAR},UPDATED_AT=SYSDATE
+     WHERE RECORD_TARGET_ID=#{recordTargetId} AND RECORD_ITEM_ID=#{recordItemId} AND RECORD_TYPE='LOCATION' AND DELETED_YN='N'
+  </update>
+  <update id="softDeleteLocationItem">
+    UPDATE CONTENT_RECORD_ITEMS SET DELETED_YN='Y',UPDATED_AT=SYSDATE
+     WHERE RECORD_TARGET_ID=#{recordTargetId} AND RECORD_ITEM_ID=#{recordItemId} AND RECORD_TYPE='LOCATION' AND DELETED_YN='N'
+  </update>
+
+  <update id="softDeleteFileItem">
+    UPDATE CONTENT_RECORD_ITEMS SET DELETED_YN='Y',UPDATED_AT=SYSTIMESTAMP
+     WHERE RECORD_TARGET_ID=#{recordTargetId} AND RECORD_ITEM_ID=#{recordItemId} AND RECORD_TYPE='FILE' AND DELETED_YN='N'
+  </update>
+  <select id="countActiveFileInTarget" resultType="int">
+    SELECT COUNT(*) FROM CONTENT_RECORD_ITEMS
+     WHERE RECORD_TARGET_ID=#{recordTargetId} AND RECORD_TYPE='FILE' AND CONTENT_ID=#{contentFileId} AND DELETED_YN='N'
+  </select>
+  <select id="countActiveLocations" resultType="int">
+    SELECT COUNT(*) FROM CONTENT_RECORD_ITEMS
+     WHERE RECORD_TARGET_ID=#{recordTargetId} AND RECORD_TYPE='LOCATION' AND DELETED_YN='N'
+  </select>
+  <update id="clearPrimaryLocation">
+    UPDATE CONTENT_RECORD_LOCATIONS p SET p.PRIMARY_YN='N'
+     WHERE EXISTS (SELECT 1 FROM CONTENT_RECORD_ITEMS i WHERE i.RECORD_ITEM_ID=p.RECORD_ITEM_ID AND i.RECORD_TARGET_ID=#{recordTargetId} AND i.RECORD_TYPE='LOCATION' AND i.DELETED_YN='N')
+  </update>
+  <update id="setPrimaryLocation">
+    UPDATE CONTENT_RECORD_LOCATIONS p SET p.PRIMARY_YN='Y'
+     WHERE p.RECORD_ITEM_ID=#{recordItemId}
+       AND EXISTS (SELECT 1 FROM CONTENT_RECORD_ITEMS i WHERE i.RECORD_ITEM_ID=p.RECORD_ITEM_ID AND i.RECORD_TARGET_ID=#{recordTargetId} AND i.RECORD_TYPE='LOCATION' AND i.DELETED_YN='N')
+  </update>
+  <select id="selectFirstActiveLocationId" resultType="long">
+    SELECT RECORD_ITEM_ID FROM (
+      SELECT i.RECORD_ITEM_ID FROM CONTENT_RECORD_ITEMS i
+       WHERE i.RECORD_TARGET_ID=#{recordTargetId} AND i.RECORD_TYPE='LOCATION' AND i.DELETED_YN='N'
+       ORDER BY i.SORT_ORDER,i.RECORD_ITEM_ID
+    ) WHERE ROWNUM=1
+  </select>
+  <select id="countPrimaryLocation" resultType="int">
+    SELECT COUNT(*) FROM CONTENT_RECORD_ITEMS i JOIN CONTENT_RECORD_LOCATIONS p ON p.RECORD_ITEM_ID=i.RECORD_ITEM_ID
+     WHERE i.RECORD_TARGET_ID=#{recordTargetId} AND i.RECORD_ITEM_ID=#{recordItemId} AND i.RECORD_TYPE='LOCATION' AND i.DELETED_YN='N' AND NVL(p.PRIMARY_YN,'N')='Y'
+  </select>
+  <sql id="selectItemColumns">
+    i.RECORD_ITEM_ID,i.RECORD_TARGET_ID,i.RECORD_TYPE,i.CONTENT_ID,NVL(n.NOTE_TITLE,i.TITLE) AS TITLE,i.SORT_ORDER,
+    i.CREATED_BY,i.CREATED_AT,i.UPDATED_AT,i.DELETED_YN,
+    n.USER_ID AS NOTE_USER_ID,nu.USER_NAME,n.REG_DT,n.UPDATED_BY,uu.USER_NAME AS UPDATED_BY_NAME,n.UPD_DT,
+    n.MEMO AS PREVIEW_CONTENT,
+    l.LINK_URL,l.LINK_TITLE,l.DESCRIPTION,
+    p.LOCATION_TEXT,p.LOCATION_ADDRESS,p.LOCATION_LAT,p.LOCATION_LNG,p.LOCATION_PLACE_ID,p.MEMO AS LOCATION_MEMO,p.DESCRIPTION AS LOCATION_DESCRIPTION,NVL(p.PRIMARY_YN,'N') AS PRIMARY_YN,
+    f.ORIGINAL_NAME AS FILE_ORIGINAL_NAME,f.MIME_TYPE AS FILE_CONTENT_TYPE,f.FILE_EXT AS FILE_EXTENSION,f.FILE_SIZE,
+    CASE WHEN i.RECORD_TYPE='FILE' AND f.CONTENT_FILE_ID IS NOT NULL THEN '/api/files/'||f.CONTENT_FILE_ID||'/download' END AS FILE_DOWNLOAD_URL,
+    CASE WHEN i.RECORD_TYPE='FILE' AND f.CREATED_BY=#{userId,jdbcType=NUMERIC} THEN 1 ELSE 0 END AS FILE_CAN_RENAME,
+    CASE WHEN i.RECORD_TYPE='PHOTO' THEN (
+        SELECT '/photo/media/' || TO_CHAR(MIN(ph.PHOTO_ID) KEEP (DENSE_RANK FIRST ORDER BY NVL(ph.SORT_ORDER,0), ph.PHOTO_ID))
+          FROM PHOTOS ph
+         WHERE ph.POST_ID=i.CONTENT_ID
+    ) END AS THUMBNAIL_URL,
+    CASE WHEN i.RECORD_TYPE='PHOTO' THEN ppu.USER_NAME WHEN i.RECORD_TYPE='FILE' THEN fu.USER_NAME ELSE iu.USER_NAME END AS CREATOR_NAME,
+    CASE WHEN i.RECORD_TYPE='PHOTO' THEN (
+        SELECT COUNT(1) FROM PHOTOS phc WHERE phc.POST_ID=i.CONTENT_ID
+    ) ELSE 0 END AS PHOTO_COUNT,
+    CASE WHEN i.RECORD_TYPE='PHOTO' THEN (
+        SELECT COUNT(1) FROM CONTENT_REACTIONS cr
+         WHERE cr.CONTENT_TYPE='PHOTO_POST' AND cr.CONTENT_ID=i.CONTENT_ID AND cr.REACTION_TYPE='LIKE'
+    ) ELSE 0 END AS LIKE_COUNT,
+    CASE WHEN i.RECORD_TYPE='PHOTO' THEN (
+        SELECT COUNT(1) FROM PHOTO_POST_COMMENTS pc
+         WHERE pc.POST_ID=i.CONTENT_ID AND NVL(pc.DELETED_YN,'N')='N'
+    ) ELSE 0 END AS COMMENT_COUNT,
+    CASE WHEN i.RECORD_TYPE='PHOTO' AND #{userId,jdbcType=NUMERIC} IS NOT NULL AND EXISTS (
+        SELECT 1 FROM CONTENT_REACTIONS cr
+         WHERE cr.CONTENT_TYPE='PHOTO_POST'
+           AND cr.CONTENT_ID=i.CONTENT_ID
+           AND cr.USER_ID=#{userId,jdbcType=NUMERIC}
+           AND cr.REACTION_TYPE='LIKE'
+    ) THEN 1 ELSE 0 END AS LIKED_BY_ME
+  </sql>
+  <sql id="selectItemJoins">
+    LEFT JOIN NOTES n ON i.RECORD_TYPE='NOTE' AND n.NOTE_ID=i.CONTENT_ID
+    LEFT JOIN USERS nu ON nu.USER_ID=n.USER_ID
+    LEFT JOIN USERS uu ON uu.USER_ID=n.UPDATED_BY
+    LEFT JOIN CONTENT_RECORD_LINKS l ON l.RECORD_ITEM_ID=i.RECORD_ITEM_ID
+    LEFT JOIN CONTENT_RECORD_LOCATIONS p ON p.RECORD_ITEM_ID=i.RECORD_ITEM_ID
+    LEFT JOIN CONTENT_FILES f ON i.RECORD_TYPE='FILE' AND f.CONTENT_FILE_ID=i.CONTENT_ID AND f.DELETED_YN='N'
+    LEFT JOIN USERS fu ON fu.USER_ID=f.CREATED_BY
+    LEFT JOIN PHOTO_POSTS pp ON i.RECORD_TYPE='PHOTO' AND pp.POST_ID=i.CONTENT_ID
+    LEFT JOIN USERS ppu ON ppu.USER_ID=pp.CREATED_BY
+    LEFT JOIN USERS iu ON iu.USER_ID=i.CREATED_BY
+  </sql>
+  <select id="selectItems" resultMap="itemMap">
+    SELECT <include refid="selectItemColumns"/>
+      FROM CONTENT_RECORD_ITEMS i
+      <include refid="selectItemJoins"/>
+     WHERE i.RECORD_TARGET_ID=#{recordTargetId} AND i.DELETED_YN='N'
+     ORDER BY CASE WHEN i.RECORD_TYPE='LOCATION' AND NVL(p.PRIMARY_YN,'N')='Y' THEN 0 ELSE 1 END,i.SORT_ORDER,i.RECORD_ITEM_ID
+  </select>
+  <select id="selectItem" resultMap="itemMap">
+    SELECT <include refid="selectItemColumns"/>
+      FROM CONTENT_RECORD_ITEMS i
+      <include refid="selectItemJoins"/>
+     WHERE i.RECORD_TARGET_ID=#{recordTargetId} AND i.RECORD_ITEM_ID=#{recordItemId} AND i.DELETED_YN='N'
+  </select>
+  <select id="countByType" resultType="int">SELECT COUNT(*) FROM CONTENT_RECORD_ITEMS WHERE RECORD_TARGET_ID=#{recordTargetId} AND RECORD_TYPE=#{recordType} AND DELETED_YN='N'</select>
+  <update id="softDelete">UPDATE CONTENT_RECORD_ITEMS SET DELETED_YN='Y',UPDATED_AT=SYSDATE WHERE RECORD_ITEM_ID=#{recordItemId} AND CREATED_BY=#{userId} AND DELETED_YN='N'</update>
+  <update id="softDeletePhotoItem">UPDATE CONTENT_RECORD_ITEMS SET DELETED_YN='Y',UPDATED_AT=SYSDATE WHERE RECORD_TARGET_ID=#{recordTargetId} AND RECORD_ITEM_ID=#{recordItemId} AND RECORD_TYPE='PHOTO' AND DELETED_YN='N'</update>
+  <update id="softDeleteByTargetAndType">UPDATE CONTENT_RECORD_ITEMS SET DELETED_YN='Y',UPDATED_AT=SYSDATE WHERE RECORD_TARGET_ID=#{recordTargetId} AND RECORD_TYPE=#{recordType} AND DELETED_YN='N'</update>
+
+
+  <update id="updatePhotoItemsDeletedByPostId">
+    UPDATE CONTENT_RECORD_ITEMS
+       SET DELETED_YN = #{deletedYn},
+           UPDATED_AT = SYSTIMESTAMP
+     WHERE RECORD_TYPE = 'PHOTO'
+       AND CONTENT_ID = #{postId}
+  </update>
+
+
+  <select id="selectRecordFileFolderId" resultType="long">
+    SELECT FOLDER_ID FROM (
+      SELECT f.FOLDER_ID
+        FROM CONTENT_RECORD_ITEMS i
+        JOIN CONTENT_FILES f ON f.CONTENT_FILE_ID=i.CONTENT_ID
+       WHERE i.RECORD_TARGET_ID=#{recordTargetId}
+         AND i.RECORD_TYPE='FILE'
+         AND i.DELETED_YN='N'
+         AND f.DELETED_YN='N'
+         AND f.FOLDER_ID IS NOT NULL
+       ORDER BY i.RECORD_ITEM_ID
+    ) WHERE ROWNUM=1
+  </select>
+
+  <update id="moveRecordFilesToFolder">
+    UPDATE CONTENT_FILES f
+       SET f.FOLDER_ID=#{folderId}, f.UPDATED_BY=#{userId}, f.UPDATED_AT=SYSDATE
+     WHERE f.CONTENT_FILE_ID IN (
+       SELECT i.CONTENT_ID FROM CONTENT_RECORD_ITEMS i
+        WHERE i.RECORD_TARGET_ID=#{recordTargetId}
+          AND i.RECORD_TYPE='FILE'
+          AND i.DELETED_YN='N'
+     )
+       AND f.DELETED_YN='N'
+       AND NVL(f.FOLDER_ID,-1)&lt;&gt;NVL(#{folderId},-1)
+  </update>
+
+  <select id="sumActiveFileSize" resultType="long">
+    SELECT NVL(SUM(f.FILE_SIZE), 0)
+      FROM CONTENT_RECORD_ITEMS i
+      JOIN CONTENT_FILES f ON f.CONTENT_FILE_ID = i.CONTENT_ID AND f.DELETED_YN = 'N'
+     WHERE i.RECORD_TARGET_ID = #{recordTargetId}
+       AND i.RECORD_TYPE = 'FILE'
+       AND i.DELETED_YN = 'N'
+  </select>
+
+  <select id="sumActivePhotoSize" resultType="long">
+    SELECT NVL(SUM(p.FILE_SIZE), 0)
+      FROM CONTENT_RECORD_ITEMS i
+      JOIN PHOTO_POSTS pp ON pp.POST_ID = i.CONTENT_ID
+      JOIN PHOTOS p ON p.POST_ID = pp.POST_ID
+     WHERE i.RECORD_TARGET_ID = #{recordTargetId}
+       AND i.RECORD_TYPE = 'PHOTO'
+       AND i.DELETED_YN = 'N'
+       AND NVL(pp.DELETED_YN, 'N') = 'N'
+  </select>
+
+</mapper>

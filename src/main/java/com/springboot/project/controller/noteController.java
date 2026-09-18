@@ -4,16 +4,24 @@ import com.springboot.project.dto.noteDTO;
 import com.springboot.project.dto.noteFileDTO;
 import com.springboot.project.dto.noteReplyDTO;
 import com.springboot.project.dto.noteFolderDTO;
+import com.springboot.project.dto.projectRequestDTO;
 import com.springboot.project.dto.contentShareDTO;
 import com.springboot.project.dao.InoteFolderDAO;
 import com.springboot.project.dao.IworkspaceDAO;
+import com.springboot.project.dao.IprojectDAO;
+import com.springboot.project.dao.IfriendDAO;
+import com.springboot.project.dao.IuserNoticeDAO;
+import com.springboot.project.dto.friendDTO;
 import com.springboot.project.dto.usersDto;
 import com.springboot.project.service.InoteService;
 import com.springboot.project.service.IcontentShareService;
+import com.springboot.project.service.IprojectAuthorizationService;
+import com.springboot.project.service.UserService;
 
 import jakarta.servlet.http.HttpSession;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.http.ContentDisposition;
@@ -26,8 +34,11 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.util.HtmlUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -48,7 +59,18 @@ import java.util.UUID;
 @RequestMapping("/note")
 public class noteController {
 
-    private static final String NOTE_UPLOAD_PATH = "C:/MoyoLab.Studio/note/";
+    @Value("${moyo.schema.runtime-ddl-enabled:false}")
+    private boolean runtimeDdlEnabled;
+
+    @Value("${moyo.upload.note-dir:C:/uploads/notes/}")
+    private String noteUploadPath;
+
+    @Value("${moyo.upload.note-editor-dir:C:/uploads/note-editor/}")
+    private String noteEditorUploadPath;
+
+    private Path noteUploadRoot() {
+        return Path.of(noteUploadPath).toAbsolutePath().normalize();
+    }
 
     @Autowired
     private InoteService inoteService;
@@ -61,6 +83,21 @@ public class noteController {
 
     @Autowired
     private IworkspaceDAO workspaceDAO;
+
+    @Autowired
+    private IprojectDAO projectDAO;
+
+    @Autowired
+    private IprojectAuthorizationService projectAuthorizationService;
+
+    @Autowired
+    private UserService userService;
+
+    @Autowired
+    private IfriendDAO friendDAO;
+
+    @Autowired
+    private IuserNoticeDAO userNoticeDAO;
 
     @GetMapping("/list")
     public String noteList(
@@ -78,58 +115,49 @@ public class noteController {
         usersDto loginUser = getLoginUser(session);
         if (loginUser == null) return "redirect:/users/loginForm";
 
-        // 리스트는 완전 초기화: 개인/워크스페이스/프로젝트 탐색기를 붙이지 않고,
-        // 권한이 있는 최근 노트만 noteList 하나로 렌더링한다.
         String normalizedScope = normalizeScope(scope, scopeType, wsId, projId);
-        if ("FRIEND".equals(normalizedScope)) {
-            folderId = null;
+        if (!isValidScopeContext(normalizedScope, wsId, projId)) return "redirect:/";
+
+        List<Map<String, Object>> workspaceList = normalizeWorkspaceRows(noteFolderDAO.selectAccessibleWorkspaces(loginUser.getUserId()));
+        List<Map<String, Object>> projectList = normalizeProjectRows(noteFolderDAO.selectAccessibleProjects(loginUser.getUserId()));
+        Map<String, Object> workspace = findRow(workspaceList, "wsId", wsId);
+        Map<String, Object> projectDetail = findRow(projectList, "projId", projId);
+        List<Map<String, Object>> personalProjects = new ArrayList<>();
+        List<Map<String, Object>> groupProjects = new ArrayList<>();
+        for (Map<String, Object> project : projectList) {
+            Long projectWsId = toLong(project.get("wsId"));
+            if (projectWsId == null) personalProjects.add(project);
+            if (wsId != null && wsId.equals(projectWsId)) groupProjects.add(project);
         }
-        // 그룹/프로젝트 탭은 서로 섞지 않는다.
-        // 선택 ID가 없으면 참여 중인 전체 그룹 또는 전체 프로젝트 노트를 보여준다.
 
-        final int pageSize = 20;
-
-        // 친구 선택 영역은 작성자 전체 목록이 필요하므로 별도로 조회한다.
-        List<noteDTO> friendSource = "FRIEND".equals(normalizedScope)
-                ? inoteService.getNoteList(normalizedScope, wsId, projId, loginUser.getUserId(), keyword)
-                : new ArrayList<noteDTO>();
-        List<Map<String, Object>> friendList = "FRIEND".equals(normalizedScope)
-                ? buildSharedFriendList(friendSource)
-                : new ArrayList<Map<String, Object>>();
-
-        List<noteDTO> fetchedNotes = inoteService.getNoteListPage(
-                normalizedScope, wsId, projId, loginUser.getUserId(), keyword,
-                importantOnly, friendUserId, folderId, 0, pageSize + 1);
-        boolean hasMore = fetchedNotes.size() > pageSize;
-        List<noteDTO> noteList = hasMore
-                ? new ArrayList<>(fetchedNotes.subList(0, pageSize))
-                : fetchedNotes;
-
-        addScopeModel(model, normalizedScope, wsId, projId);
-        addNoteNavigationModel(model, loginUser.getUserId());
-        if ("PRIVATE".equals(normalizedScope)) {
-            model.addAttribute("folderList", getFolderList("PRIVATE", null, null, loginUser.getUserId()));
-        } else if ("FRIEND".equals(normalizedScope)) {
-            model.addAttribute("folderList", new ArrayList<noteFolderDTO>());
-        } else if ("WS".equals(normalizedScope) && wsId != null) {
-            model.addAttribute("folderList", getFolderList("WS", wsId, null, loginUser.getUserId()));
-        } else if ("PROJ".equals(normalizedScope) && projId != null) {
-            model.addAttribute("folderList", getFolderList("PROJ", wsId, projId, loginUser.getUserId()));
-        } else {
-            model.addAttribute("folderList", new ArrayList<noteFolderDTO>());
+        String explorerScopeType = "PERSONAL";
+        Long scopeId = loginUser.getUserId();
+        if ("WS".equals(normalizedScope)) {
+            explorerScopeType = "GROUP";
+            scopeId = wsId;
+        } else if ("PROJ".equals(normalizedScope)) {
+            explorerScopeType = "PROJECT";
+            scopeId = projId;
         }
+
+        model.addAttribute("contentType", "NOTE");
+        model.addAttribute("scopeType", explorerScopeType);
+        model.addAttribute("scopeId", scopeId);
+        model.addAttribute("wsId", wsId);
+        model.addAttribute("projId", projId);
+        model.addAttribute("workspace", workspace);
+        model.addAttribute("projectDetail", projectDetail);
+        model.addAttribute("personalRoot", "PRIVATE".equals(normalizedScope));
+        model.addAttribute("personalProjects", personalProjects);
+        model.addAttribute("groupProjects", groupProjects);
+        model.addAttribute("pageTitle", switch (normalizedScope) {
+            case "WS" -> "그룹 노트";
+            case "PROJ" -> "프로젝트 노트";
+            default -> "내 노트";
+        });
+        model.addAttribute("currentUserId", loginUser.getUserId());
         model.addAttribute("selectedFolderId", folderId);
-        model.addAttribute("friendUserId", friendUserId);
-        model.addAttribute("friendList", friendList);
-        model.addAttribute("importantOnly", importantOnly);
-        model.addAttribute("noteList", noteList);
-        model.addAttribute("keyword", keyword == null ? "" : keyword.trim());
-        model.addAttribute("loginUserId", loginUser.getUserId());
-        model.addAttribute("hasMore", hasMore);
-        model.addAttribute("nextPage", 1);
-        model.addAttribute("pageSize", pageSize);
-
-        return "note/noteList";
+        return "common/contentExplorer";
     }
 
     @GetMapping("/dual")
@@ -182,6 +210,9 @@ public class noteController {
         String normalizedScope = normalizeScope(scope, scopeType, wsId, projId);
         if (!isValidScopeContext(normalizedScope, wsId, projId)) {
             return "redirect:/";
+        }
+        if (!canAccessNoteScope(normalizedScope, wsId, projId, loginUser.getUserId())) {
+            return "redirect:/?authError=note-scope";
         }
 
         addScopeModel(model, normalizedScope, wsId, projId);
@@ -299,10 +330,140 @@ public class noteController {
             response.put("message", "노트 위치를 먼저 선택해 주세요.");
             return response;
         }
+        if (!canAccessNoteScope(normalizedScope, wsId, projId, loginUser.getUserId())) {
+            response.put("success", false);
+            response.put("message", "이 위치의 폴더를 볼 권한이 없습니다.");
+            return response;
+        }
 
         response.put("success", true);
         response.put("folders", getFolderList(normalizedScope, wsId, projId, loginUser.getUserId()));
         return response;
+    }
+
+    @GetMapping("/api/detail")
+    @ResponseBody
+    public ResponseEntity<?> getNoteModalDetail(
+            @RequestParam("noteId") Long noteId,
+            HttpSession session) {
+
+        usersDto loginUser = getLoginUser(session);
+        if (loginUser == null) {
+            return ResponseEntity.status(401).body(Map.of("success", false, "message", "로그인이 필요합니다."));
+        }
+
+        noteDTO note = inoteService.getNoteDetail(noteId, loginUser.getUserId());
+        if (note == null) {
+            return ResponseEntity.status(404).body(Map.of("success", false, "message", "노트를 찾을 수 없거나 열람 권한이 없습니다."));
+        }
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("noteId", note.getNoteId());
+        response.put("noteTitle", note.getNoteTitle() == null ? "" : note.getNoteTitle());
+        response.put("memo", note.getMemo() == null ? "" : note.getMemo());
+        String detailScopeType = note.getScopeType() == null ? "PRIVATE" : note.getScopeType();
+        Long effectiveWsId = note.getWsId();
+        boolean groupContent = "WS".equalsIgnoreCase(detailScopeType) && effectiveWsId != null;
+        if (("PROJ".equalsIgnoreCase(detailScopeType) || "PROJECT".equalsIgnoreCase(detailScopeType))
+                && note.getProjId() != null) {
+            // 과거 데이터에 NOTES.WS_ID가 비어 있어도 프로젝트의 실제 소속 그룹을 기준으로 판단한다.
+            // 비밀글 가능 여부의 단일 원본은 PROJECTS.WS_ID다.
+            projectRequestDTO project = projectDAO.selectProjectById(note.getProjId());
+            if (project != null) {
+                effectiveWsId = project.getWsId();
+                groupContent = effectiveWsId != null;
+            }
+        }
+        response.put("scopeType", detailScopeType);
+        response.put("wsId", effectiveWsId);
+        response.put("projId", note.getProjId());
+        response.put("groupContent", groupContent);
+        response.put("folderId", note.getFolderId());
+        response.put("folderName", note.getFolderName() == null || note.getFolderName().isBlank() ? "라이브러리" : note.getFolderName());
+        response.put("userId", note.getUserId());
+        response.put("userName", note.getUserName() == null || note.getUserName().isBlank() ? "작성자" : note.getUserName());
+        response.put("profileImagePath", note.getProfileImagePath());
+        response.put("regDt", note.getRegDt());
+        response.put("updDt", note.getUpdDt());
+        response.put("moyoPublicYn", note.getMoyoPublicYn() == null ? "N" : note.getMoyoPublicYn());
+        response.put("canEdit", note.isCanEdit());
+        response.put("canManageShare", note.getUserId() != null && note.getUserId().equals(loginUser.getUserId()));
+        response.put("canDelete", inoteService.canDeleteNote(noteId, loginUser.getUserId()));
+        response.put("ownedByMe", note.isOwnedByMe());
+        response.put("viewCount", note.getViewCount() == null ? 0 : note.getViewCount());
+        response.put("likeCount", note.getLikeCount() == null ? 0 : note.getLikeCount());
+        response.put("imageCount", note.getImageCount());
+        response.put("tableCount", note.getTableCount());
+        response.put("linkCount", note.getLinkCount());
+        response.put("videoCount", note.getVideoCount());
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/api/quick-create")
+    @ResponseBody
+    public ResponseEntity<?> quickCreateNote(
+            @RequestParam(value = "scope", required = false) String scope,
+            @RequestParam(value = "scopeType", required = false) String scopeType,
+            @RequestParam(value = "wsId", required = false) Long wsId,
+            @RequestParam(value = "projId", required = false) Long projId,
+            @RequestParam(value = "folderId", required = false) Long folderId,
+            @RequestParam(value = "noteTitle", required = false) String noteTitle,
+            @RequestParam(value = "memo", required = false) String memo,
+            HttpSession session) {
+
+        usersDto loginUser = getLoginUser(session);
+        if (loginUser == null) {
+            return ResponseEntity.status(401).body(Map.of("success", false, "message", "로그인이 필요합니다."));
+        }
+
+        String normalizedScope = normalizeScope(scope, scopeType, wsId, projId);
+        if (!isValidScopeContext(normalizedScope, wsId, projId)) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "message", "노트 위치를 확인해 주세요."));
+        }
+        if (!canAccessNoteScope(normalizedScope, wsId, projId, loginUser.getUserId())) {
+            return ResponseEntity.status(403).body(Map.of("success", false, "message", "이 위치에 노트를 작성할 권한이 없습니다."));
+        }
+
+        String safeMemo = memo == null ? "" : memo.trim();
+        if (safeMemo.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "message", "작성된 내용이 없습니다."));
+        }
+
+        if (folderId != null) {
+            boolean folderMatchesScope = getFolderList(normalizedScope, wsId, projId, loginUser.getUserId()).stream()
+                    .anyMatch(folder -> folderId.equals(folder.getFolderId()));
+            if (!folderMatchesScope) {
+                return ResponseEntity.badRequest().body(Map.of("success", false, "message", "저장할 라이브러리를 확인해 주세요."));
+            }
+        }
+
+        noteDTO note = new noteDTO();
+        note.setScopeType(normalizedScope);
+        note.setWsId(wsId);
+        note.setProjId(projId);
+        note.setUserId(loginUser.getUserId());
+        note.setNoteTitle(normalizeAutoNoteTitle(noteTitle, memo));
+        note.setMemo(memo);
+        note.setDoneContent(memo);
+        note.setCategory("GENERAL");
+        note.setIcon("📝");
+        note.setFolderId(folderId);
+        note.setMoyoPublicYn("N");
+        note.setNextContent(null);
+        note.setIssueContent(null);
+        note.setChangeLog(null);
+
+        if (!inoteService.registerNote(note) || note.getNoteId() == null) {
+            return ResponseEntity.status(500).body(Map.of("success", false, "message", "노트를 만들지 못했습니다."));
+        }
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("noteId", note.getNoteId());
+        response.put("noteTitle", note.getNoteTitle());
+        response.put("folderId", note.getFolderId());
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/add")
@@ -330,6 +491,9 @@ public class noteController {
         String normalizedScope = normalizeScope(scope, scopeType, wsId, projId);
         if (!isValidScopeContext(normalizedScope, wsId, projId)) {
             return "redirect:/";
+        }
+        if (!canAccessNoteScope(normalizedScope, wsId, projId, loginUser.getUserId())) {
+            return "redirect:/?authError=note-scope";
         }
 
         noteDTO note = new noteDTO();
@@ -448,7 +612,7 @@ public class noteController {
         }
 
         try {
-            String uploadPath = "C:/MoyoLab.Studio/upload/note-editor/";
+            String uploadPath = noteEditorUploadPath;
             File folder = new File(uploadPath);
             if (!folder.exists() && !folder.mkdirs()) {
                 throw new IOException("업로드 폴더를 생성할 수 없습니다.");
@@ -471,14 +635,35 @@ public class noteController {
         return Set.of(".jpg", ".jpeg", ".png", ".gif", ".webp").contains(extension) ? extension : null;
     }
 
+    @PostMapping("/api/history/checkpoint")
+    @ResponseBody
+    public Map<String, Object> checkpointNoteHistory(
+            @RequestParam("noteId") Long noteId,
+            HttpSession session) {
+        Map<String, Object> response = new HashMap<>();
+        usersDto loginUser = getLoginUser(session);
+        if (loginUser == null) {
+            response.put("success", false);
+            response.put("message", "로그인이 필요합니다.");
+            return response;
+        }
+        noteDTO note = inoteService.getNoteDetail(noteId, loginUser.getUserId());
+        if (note == null || !note.isCanEdit()) {
+            response.put("success", false);
+            response.put("message", "편집 권한이 없습니다.");
+            return response;
+        }
+        inoteService.recordCurrentNoteVersion(noteId, loginUser.getUserId(), "UPDATE", null);
+        response.put("success", true);
+        return response;
+    }
+
     @PostMapping("/autosave")
     @ResponseBody
     public Map<String, Object> autosaveNote(
             @RequestParam("noteId") Long noteId,
             @RequestParam("noteTitle") String noteTitle,
             @RequestParam(value = "memo", required = false) String memo,
-            @RequestParam(value = "category", defaultValue = "GENERAL") String category,
-            @RequestParam(value = "icon", defaultValue = "📝") String icon,
             @RequestParam(value = "folderId", required = false) Long folderId,
             HttpSession session) {
         Map<String, Object> response = new HashMap<>();
@@ -496,14 +681,38 @@ public class noteController {
         }
         noteDTO note = new noteDTO();
         note.setNoteId(noteId);
-        note.setNoteTitle(noteTitle == null || noteTitle.isBlank() ? "제목 없음" : noteTitle.trim());
+        note.setNoteTitle(normalizeAutoNoteTitle(noteTitle, memo));
         note.setMemo(memo);
         note.setDoneContent(memo);
-        note.setCategory(category);
-        note.setIcon(icon);
         note.setFolderId(folderId != null ? folderId : savedNote.getFolderId());
-        response.put("success", inoteService.modifyNote(note));
+        note.setUpdatedBy(loginUser.getUserId());
+        boolean success = inoteService.autosaveNote(note);
+        response.put("success", success);
+        if (success) response.put("noteTitle", note.getNoteTitle());
+        if (!success) response.put("message", "노트를 저장하지 못했습니다.");
         return response;
+    }
+
+    private String normalizeAutoNoteTitle(String requestedTitle, String memo) {
+        String title = requestedTitle == null ? "" : requestedTitle.replaceAll("\\s+", " ").trim();
+        if (title.isEmpty()) {
+            String html = memo == null ? "" : memo;
+            html = html.replaceAll("(?i)<br\\s*/?>", "\n")
+                       .replaceAll("(?i)</(p|div|li|h[1-6]|blockquote|tr)>", "\n")
+                       .replaceAll("<[^>]+>", " ");
+            String text = HtmlUtils.htmlUnescape(html).replace('\u00A0', ' ');
+            for (String line : text.split("\\R")) {
+                String candidate = line.replaceAll("\\s+", " ").trim();
+                if (!candidate.isEmpty()) {
+                    title = candidate;
+                    break;
+                }
+            }
+        }
+        if (title.isEmpty()) title = "새 노트";
+        final int maxLength = 60;
+        if (title.length() > maxLength) title = title.substring(0, maxLength).trim() + "…";
+        return title;
     }
 
     @PostMapping("/delete")
@@ -567,8 +776,16 @@ public class noteController {
         if (loginUser == null) return ResponseEntity.status(401).build();
         noteFileDTO file = inoteService.getNoteFile(fileId);
         if (file == null || file.getFilePath() == null) return ResponseEntity.notFound().build();
-        Path filePath = Path.of(file.getFilePath());
-        if (!Files.exists(filePath)) return ResponseEntity.notFound().build();
+        if (file.getNoteId() == null || inoteService.getNoteDetail(file.getNoteId(), loginUser.getUserId()) == null) {
+            return ResponseEntity.status(403).build();
+        }
+        Path filePath;
+        try {
+            filePath = resolveNoteAttachmentPath(file.getFilePath());
+        } catch (SecurityException e) {
+            return ResponseEntity.status(403).build();
+        }
+        if (!Files.isRegularFile(filePath)) return ResponseEntity.notFound().build();
         Resource resource = new UrlResource(filePath.toUri());
         String encodedFileName = URLEncoder.encode(file.getOriginFileName(), StandardCharsets.UTF_8).replaceAll("\\+", "%20");
         String contentType = Files.probeContentType(filePath);
@@ -576,6 +793,8 @@ public class noteController {
         return ResponseEntity.ok()
                 .contentType(MediaType.parseMediaType(contentType))
                 .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.attachment().filename(encodedFileName, StandardCharsets.UTF_8).build().toString())
+                .header("X-Content-Type-Options", "nosniff")
+                .header(HttpHeaders.CACHE_CONTROL, "private, no-store")
                 .body(resource);
     }
 
@@ -585,12 +804,25 @@ public class noteController {
         if (loginUser == null) return ResponseEntity.status(401).build();
         noteFileDTO file = inoteService.getNoteFile(fileId);
         if (file == null || file.getFilePath() == null) return ResponseEntity.notFound().build();
-        Path filePath = Path.of(file.getFilePath());
-        if (!Files.exists(filePath)) return ResponseEntity.notFound().build();
+        if (file.getNoteId() == null || inoteService.getNoteDetail(file.getNoteId(), loginUser.getUserId()) == null) {
+            return ResponseEntity.status(403).build();
+        }
+        Path filePath;
+        try {
+            filePath = resolveNoteAttachmentPath(file.getFilePath());
+        } catch (SecurityException e) {
+            return ResponseEntity.status(403).build();
+        }
+        if (!Files.isRegularFile(filePath)) return ResponseEntity.notFound().build();
         Resource resource = new UrlResource(filePath.toUri());
         String contentType = Files.probeContentType(filePath);
         if (contentType == null) contentType = MediaType.APPLICATION_OCTET_STREAM_VALUE;
-        return ResponseEntity.ok().contentType(MediaType.parseMediaType(contentType)).header(HttpHeaders.CONTENT_DISPOSITION, "inline").body(resource);
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(contentType))
+                .header(HttpHeaders.CONTENT_DISPOSITION, "inline")
+                .header("X-Content-Type-Options", "nosniff")
+                .header(HttpHeaders.CACHE_CONTROL, "private, no-store")
+                .body(resource);
     }
 
     @GetMapping("/api/main")
@@ -611,7 +843,10 @@ public class noteController {
                 && (wsId == null || workspaceDAO.isWorkspaceMember(wsId, loginUser.getUserId()) < 1)) {
             return ResponseEntity.status(403).body(Map.of("message", "WORKSPACE_MEMBER_REQUIRED"));
         }
-        int safeLimit = Math.min(Math.max(limit, 1), 3);
+        if ("PROJ".equals(normalizedScope) && projId == null) {
+            return ResponseEntity.badRequest().body(Map.of("message", "PROJECT_ID_REQUIRED"));
+        }
+        int safeLimit = Math.min(Math.max(limit, 1), 51);
 
         // 전용 메인 쿼리(selectMainNoteList)에서 Oracle 500이 발생하므로,
         // 실제 노트 목록 화면에서 사용 중인 검증된 조회 경로를 그대로 사용합니다.
@@ -630,55 +865,107 @@ public class noteController {
         );
         if (widgetNotes == null) widgetNotes = java.util.Collections.emptyList();
 
+        List<noteDTO> hydratedNotes = new java.util.ArrayList<>();
+        for (int i = 0; i < widgetNotes.size(); i++) {
+            noteDTO summary = widgetNotes.get(i);
+            if (summary == null || summary.getNoteId() == null) continue;
+
+            // 카드에 실제로 표시하는 상위 3건만 상세 조회한다.
+            // 최근활동 계산용 추가 행까지 건별 상세 조회하면 limit이 커질수록 N+1이 발생한다.
+            if (i >= 3) {
+                hydratedNotes.add(summary);
+                continue;
+            }
+
+            noteDTO detail = inoteService.getNoteDetail(summary.getNoteId(), loginUser.getUserId());
+            if (detail == null) continue;
+            if (detail.getPreviewContent() == null || detail.getPreviewContent().isBlank()) {
+                detail.setPreviewContent(summary.getPreviewContent());
+            }
+            if (detail.getUserName() == null || detail.getUserName().isBlank()) {
+                detail.setUserName(summary.getUserName());
+            }
+            if ((detail.getUserName() == null || detail.getUserName().isBlank()) && detail.getUserId() != null) {
+                usersDto author = userService.findById(detail.getUserId());
+                if (author != null && author.getUserName() != null && !author.getUserName().isBlank()) {
+                    detail.setUserName(author.getUserName());
+                }
+            }
+            if (detail.getProfileImagePath() == null || detail.getProfileImagePath().isBlank()) {
+                detail.setProfileImagePath(summary.getProfileImagePath());
+            }
+            hydratedNotes.add(detail);
+        }
+
+        List<Map<String, Object>> noteItems = new java.util.ArrayList<>();
+        for (noteDTO note : hydratedNotes) {
+            if (note == null || note.getNoteId() == null) continue;
+
+            Map<String, Object> item = new java.util.LinkedHashMap<>();
+            item.put("noteId", note.getNoteId());
+            item.put("noteTitle", note.getNoteTitle());
+            item.put("previewContent", note.getPreviewContent());
+            item.put("memo", note.getMemo());
+            item.put("regDt", note.getRegDt());
+            item.put("updDt", note.getUpdDt());
+            item.put("moyoPublicAt", note.getMoyoPublicAt());
+            item.put("viewCount", note.getViewCount() == null ? 0 : note.getViewCount());
+            item.put("likeCount", note.getLikeCount() == null ? 0 : note.getLikeCount());
+            item.put("feedbackCount", note.getFeedbackCount() == null ? 0 : note.getFeedbackCount());
+            item.put("imageCount", note.getImageCount());
+            item.put("tableCount", note.getTableCount());
+            item.put("linkCount", note.getLinkCount());
+            item.put("videoCount", note.getVideoCount());
+            item.put("likedByMe", note.isLikedByMe());
+            item.put("userId", note.getUserId());
+            item.put("authorName", note.getUserName());
+            item.put("userName", note.getUserName());
+            item.put("profileImagePath", note.getProfileImagePath());
+            noteItems.add(item);
+        }
+
         Map<String, Object> response = new HashMap<>();
-        response.put("notes", widgetNotes);
-        response.put("count", widgetNotes.size());
+        response.put("notes", noteItems);
+        response.put("count", noteItems.size());
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/api/list")
-    public String noteListApi(
+    @GetMapping("/api/explorer")
+    @ResponseBody
+    public ResponseEntity<?> noteExplorerApi(
             @RequestParam(value = "scope", required = false) String scope,
             @RequestParam(value = "scopeType", required = false) String scopeType,
             @RequestParam(value = "wsId", required = false) Long wsId,
             @RequestParam(value = "projId", required = false) Long projId,
             @RequestParam(value = "folderId", required = false) Long folderId,
-            @RequestParam(value = "friendUserId", required = false) Long friendUserId,
             @RequestParam(value = "keyword", required = false) String keyword,
-            @RequestParam(value = "importantOnly", defaultValue = "false") boolean importantOnly,
-            @RequestParam(value = "page", defaultValue = "0") int page,
-            @RequestParam(value = "size", defaultValue = "20") int size,
-            Model model,
-            jakarta.servlet.http.HttpServletResponse response,
+            @RequestParam(value = "size", defaultValue = "500") int size,
             HttpSession session) {
         usersDto loginUser = getLoginUser(session);
-        if (loginUser == null) {
-            response.setStatus(401);
-            return "note/noteListCards";
-        }
-
+        if (loginUser == null) return ResponseEntity.status(401).body(Map.of("message", "로그인이 필요합니다."));
         String normalizedScope = normalizeScope(scope, scopeType, wsId, projId);
-        if ("FRIEND".equals(normalizedScope)) {
-            folderId = null;
+        if (!"TRASH".equals(normalizedScope) && !isValidScopeContext(normalizedScope, wsId, projId)) {
+            return ResponseEntity.badRequest().body(Map.of("message", "노트 위치를 먼저 선택해 주세요."));
         }
-        int safePage = Math.max(page, 0);
-        int safeSize = Math.min(Math.max(size, 1), 50);
-        int offset = safePage * safeSize;
-
-        List<noteDTO> fetchedNotes = inoteService.getNoteListPage(
+        int safeSize = Math.min(Math.max(size, 1), 1000);
+        List<noteDTO> notes = inoteService.getNoteListPage(
                 normalizedScope, wsId, projId, loginUser.getUserId(), keyword,
-                importantOnly, friendUserId, folderId, offset, safeSize + 1);
-        boolean hasMore = fetchedNotes.size() > safeSize;
-        List<noteDTO> noteList = hasMore
-                ? new ArrayList<>(fetchedNotes.subList(0, safeSize))
-                : fetchedNotes;
+                false, null, "TRASH".equals(normalizedScope) ? null : folderId, 0, safeSize);
+        return ResponseEntity.ok(Map.of("notes", notes == null ? java.util.Collections.emptyList() : notes));
+    }
 
-        model.addAttribute("noteList", noteList);
-        model.addAttribute("scope", normalizedScope);
-        model.addAttribute("scopeQuery", buildScopeQuery(normalizedScope, wsId, projId));
-        response.setHeader("X-Has-More", String.valueOf(hasMore));
-        response.setHeader("X-Next-Page", String.valueOf(safePage + 1));
-        return "note/noteListCards";
+    @GetMapping("/api/friend-shares/notes")
+    @ResponseBody
+    public ResponseEntity<?> friendSharedNotes(
+            @RequestParam("ownerId") Long ownerId,
+            HttpSession session) {
+        usersDto loginUser = getLoginUser(session);
+        if (loginUser == null) return ResponseEntity.status(401).body(Map.of("message", "로그인이 필요합니다."));
+        if (ownerId == null || ownerId <= 0) return ResponseEntity.badRequest().body(Map.of("message", "공유자를 선택해 주세요."));
+        List<noteDTO> notes = inoteService.getNoteListPage(
+                "FRIEND", null, null, loginUser.getUserId(), null,
+                false, ownerId, null, 0, 500);
+        return ResponseEntity.ok(Map.of("items", notes == null ? java.util.Collections.emptyList() : notes));
     }
 
     @PostMapping("/reply/add")
@@ -692,6 +979,9 @@ public class noteController {
             HttpSession session) {
         usersDto loginUser = getLoginUser(session);
         if (loginUser == null) return "redirect:/users/loginForm";
+        if (!canAccessNote(noteId, loginUser.getUserId())) {
+            return "redirect:/note/list?scope=PRIVATE&authError=read";
+        }
         if (replyContent != null && !replyContent.trim().isEmpty()) {
             noteReplyDTO reply = new noteReplyDTO();
             reply.setNoteId(noteId);
@@ -718,6 +1008,9 @@ public class noteController {
             HttpSession session) {
         usersDto loginUser = getLoginUser(session);
         if (loginUser == null) return "redirect:/users/loginForm";
+        if (!canAccessNote(noteId, loginUser.getUserId())) {
+            return "redirect:/note/list?scope=PRIVATE&authError=read";
+        }
 
         if (replyContent != null && !replyContent.trim().isEmpty()) {
             noteReplyDTO reply = new noteReplyDTO();
@@ -746,6 +1039,9 @@ public class noteController {
             HttpSession session) {
         usersDto loginUser = getLoginUser(session);
         if (loginUser == null) return "redirect:/users/loginForm";
+        if (!canAccessNote(noteId, loginUser.getUserId())) {
+            return "redirect:/note/list?scope=PRIVATE&authError=read";
+        }
         inoteService.removeNoteReply(replyId, loginUser.getUserId());
         noteDTO note = inoteService.getNoteDetail(noteId, loginUser.getUserId());
         String normalizedScope = note != null ? note.getScopeType() : normalizeScope(scope, scopeType, wsId, projId);
@@ -767,7 +1063,7 @@ public class noteController {
             response.put("message", "로그인이 필요합니다.");
             return response;
         }
-        if (!inoteService.isMoyoPublicNote(noteId)) {
+        if (!canAccessNote(noteId, loginUser.getUserId())) {
             response.put("success", false);
             response.put("message", "공개 노트를 찾을 수 없습니다.");
             return response;
@@ -779,15 +1075,7 @@ public class noteController {
             return response;
         }
 
-        // 작성자 본인의 열람은 조회수에 포함하지 않는다.
-        if (note.getUserId() != null && note.getUserId().equals(loginUser.getUserId())) {
-            response.put("success", true);
-            response.put("counted", false);
-            response.put("viewCount", inoteService.getNoteReactionStatus(noteId, loginUser.getUserId()).get("viewCount"));
-            return response;
-        }
-
-        final String viewedNoteIdsKey = "moyoPublicViewedNoteIds";
+        final String viewedNoteIdsKey = "commonViewedNoteIdsV2";
         Object viewedValue = session.getAttribute(viewedNoteIdsKey);
         Set<Long> viewedNoteIds;
         if (viewedValue instanceof Set<?>) {
@@ -831,7 +1119,7 @@ public class noteController {
             response.put("message", "로그인이 필요합니다.");
             return response;
         }
-        if (!inoteService.isMoyoPublicNote(noteId)) {
+        if (!canAccessNote(noteId, loginUser.getUserId())) {
             response.put("success", false);
             response.put("message", "공개 노트를 찾을 수 없습니다.");
             return response;
@@ -853,7 +1141,7 @@ public class noteController {
             response.put("message", "로그인이 필요합니다.");
             return response;
         }
-        if (!inoteService.isMoyoPublicNote(noteId)) {
+        if (!canAccessNote(noteId, loginUser.getUserId())) {
             response.put("success", false);
             response.put("message", "공개 노트를 찾을 수 없습니다.");
             return response;
@@ -875,7 +1163,7 @@ public class noteController {
             response.put("message", "로그인이 필요합니다.");
             return response;
         }
-        if (!inoteService.isMoyoPublicNote(noteId)) {
+        if (!canAccessNote(noteId, loginUser.getUserId())) {
             response.put("success", false);
             response.put("message", "공개 노트를 찾을 수 없습니다.");
             return response;
@@ -903,7 +1191,7 @@ public class noteController {
             response.put("message", "로그인이 필요합니다.");
             return response;
         }
-        if (!inoteService.isMoyoPublicNote(noteId)) {
+        if (!canAccessNote(noteId, loginUser.getUserId())) {
             response.put("success", false);
             response.put("message", "공개 노트를 찾을 수 없습니다.");
             return response;
@@ -957,7 +1245,7 @@ public class noteController {
             response.put("message", "로그인이 필요합니다.");
             return response;
         }
-        if (!inoteService.isMoyoPublicNote(noteId)) {
+        if (!canAccessNote(noteId, loginUser.getUserId())) {
             response.put("success", false);
             response.put("message", "공개 노트를 찾을 수 없습니다.");
             return response;
@@ -996,7 +1284,7 @@ public class noteController {
             response.put("message", "로그인이 필요합니다.");
             return response;
         }
-        if (!inoteService.isMoyoPublicNote(noteId)) {
+        if (!canAccessNote(noteId, loginUser.getUserId())) {
             response.put("success", false);
             response.put("message", "공개 노트를 찾을 수 없습니다.");
             return response;
@@ -1027,7 +1315,7 @@ public class noteController {
             response.put("message", "로그인이 필요합니다.");
             return response;
         }
-        if (!inoteService.isMoyoPublicNote(noteId)) {
+        if (!canAccessNote(noteId, loginUser.getUserId())) {
             response.put("success", false);
             response.put("message", "공개 노트를 찾을 수 없습니다.");
             return response;
@@ -1382,6 +1670,7 @@ public class noteController {
 
     private List<noteFolderDTO> getFolderList(String scopeType,Long wsId,Long projId,Long userId){
         if ("ALL".equals(scopeType)) return new ArrayList<>();
+        if (!canAccessNoteScope(scopeType, wsId, projId, userId)) return new ArrayList<>();
         Map<String,Object> p=new HashMap<>();p.put("scopeType",scopeType);p.put("wsId",wsId);p.put("projId",projId);p.put("userId",userId);
         return noteFolderDAO.selectFolderList(p);
     }
@@ -1498,6 +1787,14 @@ public class noteController {
         }
     }
 
+    private Map<String, Object> findRow(List<Map<String, Object>> rows, String key, Long id) {
+        if (rows == null || id == null) return null;
+        for (Map<String, Object> row : rows) {
+            if (id.equals(toLong(row.get(key)))) return row;
+        }
+        return null;
+    }
+
     private Long toLong(Object value) {
         if (value == null) return null;
 
@@ -1510,6 +1807,99 @@ public class noteController {
         } catch (NumberFormatException e) {
             return null;
         }
+    }
+
+
+    @PostMapping("/api/{noteId}/moyo-public")
+    @ResponseBody
+    public ResponseEntity<?> updateNoteMoyoPublic(@PathVariable("noteId") Long noteId,
+                                                   @RequestBody(required = false) Map<String, Object> body,
+                                                   HttpSession session) {
+        usersDto user = getLoginUser(session);
+        if (user == null) return ResponseEntity.status(401).body(Map.of("message", "로그인이 필요합니다."));
+
+        noteDTO note = inoteService.getNoteDetail(noteId, user.getUserId());
+        if (note == null) return ResponseEntity.status(404).body(Map.of("message", "노트를 찾을 수 없습니다."));
+        if (note.getUserId() == null || !note.getUserId().equals(user.getUserId()) || !"PRIVATE".equalsIgnoreCase(note.getScopeType())) {
+            return ResponseEntity.status(403).body(Map.of("message", "개인 노트 작성자만 MOYO 공개 여부를 변경할 수 있습니다."));
+        }
+
+        Object raw = body == null ? null : body.get("moyoPublic");
+        boolean moyoPublic = raw instanceof Boolean ? (Boolean) raw : "Y".equalsIgnoreCase(String.valueOf(raw)) || "TRUE".equalsIgnoreCase(String.valueOf(raw));
+        boolean updated = inoteService.updateMoyoPublic(noteId, user.getUserId(), moyoPublic);
+        if (!updated) return ResponseEntity.badRequest().body(Map.of("message", "MOYO 공개 상태를 변경하지 못했습니다."));
+        return ResponseEntity.ok(Map.of("success", true, "moyoPublicYn", moyoPublic ? "Y" : "N"));
+    }
+
+
+    @PostMapping("/api/{noteId}/send")
+    @ResponseBody
+    public ResponseEntity<?> sendPublicNoteToFriends(@PathVariable("noteId") Long noteId,
+                                                      @RequestBody(required = false) Map<String, Object> body,
+                                                      HttpSession session) {
+        usersDto user = (usersDto) session.getAttribute("loginUser");
+        if (user == null) return ResponseEntity.status(401).body(Map.of("message", "로그인이 필요합니다."));
+
+        noteDTO note = inoteService.getNoteDetail(noteId, user.getUserId());
+        if (note == null) return ResponseEntity.status(404).body(Map.of("message", "노트를 찾을 수 없습니다."));
+        if (!note.isMoyoPublic()) return ResponseEntity.badRequest().body(Map.of("message", "MOYO 공개 노트만 친구에게 보낼 수 있습니다."));
+
+        Object rawIds = body == null ? null : body.get("targetUserIds");
+        if (!(rawIds instanceof List<?> rawList) || rawList.isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("message", "보낼 친구를 선택해 주세요."));
+        }
+
+        List<Long> targetUserIds = new ArrayList<>();
+        for (Object rawId : rawList) {
+            Long targetUserId = null;
+            if (rawId instanceof Number number) targetUserId = number.longValue();
+            else try { targetUserId = Long.valueOf(String.valueOf(rawId)); } catch (Exception ignored) {}
+            if (targetUserId == null || targetUserId.equals(user.getUserId()) || targetUserIds.contains(targetUserId)) continue;
+            targetUserIds.add(targetUserId);
+            if (targetUserIds.size() >= 100) break;
+        }
+        if (targetUserIds.isEmpty()) return ResponseEntity.badRequest().body(Map.of("message", "보낼 친구를 선택해 주세요."));
+
+        if (runtimeDdlEnabled) {
+            try { userNoticeDAO.ensureUserNoticeCommonColumns(); } catch (Exception ignored) {}
+        }
+        String senderName = user.getUserName() == null || user.getUserName().isBlank() ? "친구" : user.getUserName().trim();
+        String content = note.getPreviewContent();
+        if (content == null || content.isBlank()) content = note.getNoteTitle();
+        if (content == null || content.isBlank()) content = "MOYO 공개 노트를 확인해보세요.";
+        if (content.length() > 500) content = content.substring(0, 500);
+        String linkUrl = "/users/profile?userId=" + note.getUserId() + "&openNoteId=" + noteId;
+
+        int sentCount = 0;
+        for (Long targetUserId : targetUserIds) {
+            friendDTO relation = friendDAO.selectRelation(user.getUserId(), targetUserId);
+            if (relation == null || !"ACCEPTED".equalsIgnoreCase(relation.getStatus())) continue;
+            userNoticeDAO.insertContentSendAlarm(targetUserId, "NOTE_SEND", "NOTE", noteId, senderName + "님이 노트를 보냈습니다.", content, linkUrl);
+            sentCount++;
+        }
+        if (sentCount == 0) return ResponseEntity.badRequest().body(Map.of("message", "보낼 수 있는 친구를 찾지 못했습니다."));
+        return ResponseEntity.ok(Map.of("status", "SUCCESS", "sentCount", sentCount));
+    }
+
+    private boolean canAccessNoteScope(String scopeType, Long wsId, Long projId, Long userId) {
+        if (scopeType == null || userId == null) return false;
+        String normalized = scopeType.trim().toUpperCase();
+        if ("PRIVATE".equals(normalized)) return true;
+        if ("WS".equals(normalized)) {
+            return wsId != null && workspaceDAO.isWorkspaceMember(wsId, userId) > 0;
+        }
+        if ("PROJ".equals(normalized)) {
+            return projId != null && projectAuthorizationService.canAccessProject(projId, wsId, userId);
+        }
+        // ALL/IMPORTANT/FRIEND/TRASH are virtual browsing scopes, not native write/folder scopes.
+        return false;
+    }
+
+    private boolean canAccessNote(Long noteId, Long userId) {
+        if (noteId == null || userId == null) return false;
+        // selectNoteDetail 자체가 작성자/공유/그룹/프로젝트 권한을 반영해
+        // 접근 가능한 노트만 반환하므로 공개 여부가 아니라 실제 접근 권한으로 판단한다.
+        return inoteService.getNoteDetail(noteId, userId) != null;
     }
 
     private usersDto getLoginUser(HttpSession session) {
@@ -1543,7 +1933,7 @@ public class noteController {
         if ("ALL".equals(scopeType) || "IMPORTANT".equals(scopeType) || "TRASH".equals(scopeType)) return true;
         if ("PRIVATE".equals(scopeType) || "FRIEND".equals(scopeType)) return true;
         if ("WS".equals(scopeType)) return wsId != null;
-        if ("PROJ".equals(scopeType)) return wsId != null && projId != null;
+        if ("PROJ".equals(scopeType)) return projId != null;
         return false;
     }
 
@@ -1567,7 +1957,7 @@ public class noteController {
     private List<noteFileDTO> saveNoteFiles(List<MultipartFile> files) {
         List<noteFileDTO> fileList = new ArrayList<>();
         if (files == null || files.isEmpty()) return fileList;
-        File folder = new File(NOTE_UPLOAD_PATH);
+        File folder = new File(noteUploadPath);
         if (!folder.exists()) folder.mkdirs();
         for (MultipartFile multipartFile : files) {
             if (multipartFile == null || multipartFile.isEmpty()) continue;
@@ -1594,11 +1984,19 @@ public class noteController {
         return fileList;
     }
 
+    private Path resolveNoteAttachmentPath(String filePath) {
+        if (filePath == null || filePath.isBlank()) throw new IllegalArgumentException("파일 경로가 없습니다.");
+        Path candidate = Path.of(filePath).toAbsolutePath().normalize();
+        if (!candidate.startsWith(noteUploadRoot())) {
+            throw new SecurityException("허용되지 않은 노트 첨부파일 경로입니다.");
+        }
+        return candidate;
+    }
+
     private void deletePhysicalFile(String filePath) {
         if (filePath == null || filePath.isBlank()) return;
         try {
-            File file = new File(filePath);
-            if (file.exists()) file.delete();
+            Files.deleteIfExists(resolveNoteAttachmentPath(filePath));
         } catch (Exception e) {
             e.printStackTrace();
         }

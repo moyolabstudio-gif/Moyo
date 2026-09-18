@@ -21,6 +21,12 @@
         <result property="profileAvatarType" column="PROFILE_AVATAR_TYPE"/>
         <result property="relationStatus" column="RELATION_STATUS"/>
         <result property="direction" column="DIRECTION"/>
+        <result property="mutualFriendCount" column="MUTUAL_FRIEND_COUNT"/>
+        <result property="latestProfileAt" column="LATEST_PROFILE_AT"/>
+        <result property="latestPhotoAt" column="LATEST_PHOTO_AT"/>
+        <result property="latestPhotoPostId" column="LATEST_PHOTO_POST_ID"/>
+        <result property="latestNoteAt" column="LATEST_NOTE_AT"/>
+        <result property="latestNoteId" column="LATEST_NOTE_ID"/>
     </resultMap>
 
     <select id="searchUsers" resultMap="friendResultMap">
@@ -29,15 +35,23 @@
             SELECT u.USER_ID,
                    NVL(u.USER_NAME, u.EMAIL) AS USER_NAME,
                    u.EMAIL,
-                   NVL(u.PROFILE_IMAGE_PATH, pi.CROPPED_IMAGE_PATH) AS PROFILE_IMAGE_PATH,
-                   NVL(u.PROFILE_ORIGINAL_IMAGE_PATH, pi.ORIGINAL_IMAGE_PATH) AS PROFILE_ORIGINAL_IMAGE_PATH,
+                   CASE
+                       WHEN UPPER(NVL(u.PROFILE_AVATAR_TYPE, 'DEFAULT')) = 'DEFAULT' THEN NULL
+                       ELSE NVL(u.PROFILE_IMAGE_PATH, pi.CROPPED_IMAGE_PATH)
+                   END AS PROFILE_IMAGE_PATH,
+                   CASE
+                       WHEN UPPER(NVL(u.PROFILE_AVATAR_TYPE, 'DEFAULT')) = 'DEFAULT' THEN NULL
+                       ELSE NVL(u.PROFILE_ORIGINAL_IMAGE_PATH, pi.ORIGINAL_IMAGE_PATH)
+                   END AS PROFILE_ORIGINAL_IMAGE_PATH,
                    NVL(u.PROFILE_CROP_SCALE, pi.CROP_SCALE) AS PROFILE_CROP_SCALE,
                    NVL(u.PROFILE_CROP_X, pi.CROP_X) AS PROFILE_CROP_X,
                    NVL(u.PROFILE_CROP_Y, pi.CROP_Y) AS PROFILE_CROP_Y,
                    CASE
+                       WHEN UPPER(NVL(u.PROFILE_AVATAR_TYPE, 'DEFAULT')) = 'DEFAULT' THEN 'DEFAULT'
+                       WHEN UPPER(u.PROFILE_AVATAR_TYPE) = 'IMAGE' THEN 'IMAGE'
                        WHEN NVL(u.PROFILE_IMAGE_PATH, pi.CROPPED_IMAGE_PATH) IS NOT NULL
                          OR NVL(u.PROFILE_ORIGINAL_IMAGE_PATH, pi.ORIGINAL_IMAGE_PATH) IS NOT NULL THEN 'IMAGE'
-                       ELSE NVL(u.PROFILE_AVATAR_TYPE, 'DEFAULT')
+                       ELSE 'DEFAULT'
                    END AS PROFILE_AVATAR_TYPE,
                    f.FRIEND_ID,
                    f.REQUESTER_ID,
@@ -68,8 +82,15 @@
               WHERE RN = 1
           ) pi ON pi.USER_ID = u.USER_ID
               LEFT JOIN USER_FRIENDS f
-                ON ((f.REQUESTER_ID = #{userId} AND f.ADDRESSEE_ID = u.USER_ID)
-                 OR (f.ADDRESSEE_ID = #{userId} AND f.REQUESTER_ID = u.USER_ID))
+                ON f.FRIEND_ID = (
+                    SELECT MAX(ff.FRIEND_ID) KEEP (
+                               DENSE_RANK LAST ORDER BY NVL(ff.UPDATED_AT, ff.REQUESTED_AT), ff.FRIEND_ID
+                           )
+                      FROM USER_FRIENDS ff
+                     WHERE ((ff.REQUESTER_ID = #{userId} AND ff.ADDRESSEE_ID = u.USER_ID)
+                        OR (ff.ADDRESSEE_ID = #{userId} AND ff.REQUESTER_ID = u.USER_ID))
+                       AND ff.STATUS IN ('PENDING', 'ACCEPTED', 'BLOCKED')
+                )
              WHERE u.USER_ID != #{userId}
                AND NVL(u.STATUS, 'ACTIVE') = 'ACTIVE'
                <if test="keyword != null and keyword != ''">
@@ -94,18 +115,53 @@
                u.USER_ID,
                NVL(u.USER_NAME, u.EMAIL) AS USER_NAME,
                u.EMAIL,
-               NVL(u.PROFILE_IMAGE_PATH, pi.CROPPED_IMAGE_PATH) AS PROFILE_IMAGE_PATH,
-               NVL(u.PROFILE_ORIGINAL_IMAGE_PATH, pi.ORIGINAL_IMAGE_PATH) AS PROFILE_ORIGINAL_IMAGE_PATH,
+               CASE
+                   WHEN UPPER(NVL(u.PROFILE_AVATAR_TYPE, 'DEFAULT')) = 'DEFAULT' THEN NULL
+                   ELSE NVL(u.PROFILE_IMAGE_PATH, pi.CROPPED_IMAGE_PATH)
+               END AS PROFILE_IMAGE_PATH,
+               CASE
+                   WHEN UPPER(NVL(u.PROFILE_AVATAR_TYPE, 'DEFAULT')) = 'DEFAULT' THEN NULL
+                   ELSE NVL(u.PROFILE_ORIGINAL_IMAGE_PATH, pi.ORIGINAL_IMAGE_PATH)
+               END AS PROFILE_ORIGINAL_IMAGE_PATH,
                NVL(u.PROFILE_CROP_SCALE, pi.CROP_SCALE) AS PROFILE_CROP_SCALE,
                NVL(u.PROFILE_CROP_X, pi.CROP_X) AS PROFILE_CROP_X,
                NVL(u.PROFILE_CROP_Y, pi.CROP_Y) AS PROFILE_CROP_Y,
                CASE
+                   WHEN UPPER(NVL(u.PROFILE_AVATAR_TYPE, 'DEFAULT')) = 'DEFAULT' THEN 'DEFAULT'
+                   WHEN UPPER(u.PROFILE_AVATAR_TYPE) = 'IMAGE' THEN 'IMAGE'
                    WHEN NVL(u.PROFILE_IMAGE_PATH, pi.CROPPED_IMAGE_PATH) IS NOT NULL
                      OR NVL(u.PROFILE_ORIGINAL_IMAGE_PATH, pi.ORIGINAL_IMAGE_PATH) IS NOT NULL THEN 'IMAGE'
-                   ELSE NVL(u.PROFILE_AVATAR_TYPE, 'DEFAULT')
+                   ELSE 'DEFAULT'
                END AS PROFILE_AVATAR_TYPE,
                f.STATUS AS RELATION_STATUS,
-               CASE WHEN f.REQUESTER_ID = #{userId} THEN 'SENT' ELSE 'RECEIVED' END AS DIRECTION
+               CASE WHEN f.REQUESTER_ID = #{userId} THEN 'SENT' ELSE 'RECEIVED' END AS DIRECTION,
+               (SELECT MAX(p2.CREATED_AT)
+                  FROM USER_PROFILE_IMAGES p2
+                 WHERE p2.USER_ID = u.USER_ID) AS LATEST_PROFILE_AT,
+               (SELECT MAX(NVL(pp.UPDATED_AT, pp.CREATED_AT))
+                  FROM PHOTO_POSTS pp
+                 WHERE pp.CREATED_BY = u.USER_ID
+                   AND NVL(pp.DELETED_YN, 'N') = 'N'
+                   AND UPPER(NVL(pp.SCOPE_TYPE, 'PERSONAL')) = 'PERSONAL'
+                   AND UPPER(NVL(pp.VISIBILITY_TYPE, 'PRIVATE')) = 'FRIENDS') AS LATEST_PHOTO_AT,
+               (SELECT MAX(pp.POST_ID) KEEP (DENSE_RANK LAST ORDER BY NVL(pp.UPDATED_AT, pp.CREATED_AT), pp.POST_ID)
+                  FROM PHOTO_POSTS pp
+                 WHERE pp.CREATED_BY = u.USER_ID
+                   AND NVL(pp.DELETED_YN, 'N') = 'N'
+                   AND UPPER(NVL(pp.SCOPE_TYPE, 'PERSONAL')) = 'PERSONAL'
+                   AND UPPER(NVL(pp.VISIBILITY_TYPE, 'PRIVATE')) = 'FRIENDS') AS LATEST_PHOTO_POST_ID,
+               (SELECT MAX(NVL(n.UPD_DT, n.REG_DT))
+                  FROM NOTES n
+                 WHERE n.USER_ID = u.USER_ID
+                   AND UPPER(NVL(n.SCOPE_TYPE, 'PRIVATE')) = 'PRIVATE'
+                   AND NVL(n.DELETED_YN, 'N') = 'N'
+                   AND NVL(n.MOYO_PUBLIC_YN, 'N') = 'Y') AS LATEST_NOTE_AT,
+               (SELECT MAX(n.NOTE_ID) KEEP (DENSE_RANK LAST ORDER BY NVL(n.UPD_DT, n.REG_DT), n.NOTE_ID)
+                  FROM NOTES n
+                 WHERE n.USER_ID = u.USER_ID
+                   AND UPPER(NVL(n.SCOPE_TYPE, 'PRIVATE')) = 'PRIVATE'
+                   AND NVL(n.DELETED_YN, 'N') = 'N'
+                   AND NVL(n.MOYO_PUBLIC_YN, 'N') = 'Y') AS LATEST_NOTE_ID
           FROM USER_FRIENDS f
           JOIN USERS u
             ON u.USER_ID = CASE WHEN f.REQUESTER_ID = #{userId} THEN f.ADDRESSEE_ID ELSE f.REQUESTER_ID END
@@ -125,6 +181,16 @@
           ) pi ON pi.USER_ID = u.USER_ID
          WHERE f.STATUS = 'ACCEPTED'
            AND (f.REQUESTER_ID = #{userId} OR f.ADDRESSEE_ID = #{userId})
+           AND NVL(u.STATUS, 'ACTIVE') = 'ACTIVE'
+           AND f.FRIEND_ID = (
+               SELECT MAX(ff.FRIEND_ID) KEEP (
+                          DENSE_RANK LAST ORDER BY NVL(ff.UPDATED_AT, ff.REQUESTED_AT), ff.FRIEND_ID
+                      )
+                 FROM USER_FRIENDS ff
+                WHERE ff.STATUS = 'ACCEPTED'
+                  AND ((ff.REQUESTER_ID = #{userId} AND ff.ADDRESSEE_ID = u.USER_ID)
+                   OR  (ff.REQUESTER_ID = u.USER_ID AND ff.ADDRESSEE_ID = #{userId}))
+           )
            <if test="keyword != null and keyword != ''">
              AND (
                  UPPER(NVL(u.USER_NAME, u.EMAIL)) LIKE '%' || UPPER(#{keyword}) || '%'
@@ -132,6 +198,88 @@
              )
            </if>
          ORDER BY NVL(u.USER_NAME, u.EMAIL), u.EMAIL
+    </select>
+
+    <select id="selectRecommendations" resultMap="friendResultMap">
+        WITH MY_FRIENDS AS (
+            SELECT DISTINCT
+                   CASE
+                       WHEN f.REQUESTER_ID = #{userId} THEN f.ADDRESSEE_ID
+                       ELSE f.REQUESTER_ID
+                   END AS FRIEND_USER_ID
+              FROM USER_FRIENDS f
+             WHERE f.STATUS = 'ACCEPTED'
+               AND (f.REQUESTER_ID = #{userId} OR f.ADDRESSEE_ID = #{userId})
+        ),
+        CANDIDATE_MUTUAL AS (
+            SELECT CANDIDATE_ID, COUNT(DISTINCT MUTUAL_USER_ID) AS MUTUAL_FRIEND_COUNT
+              FROM (
+                    SELECT CASE
+                               WHEN cf.REQUESTER_ID = mf.FRIEND_USER_ID THEN cf.ADDRESSEE_ID
+                               ELSE cf.REQUESTER_ID
+                           END AS CANDIDATE_ID,
+                           mf.FRIEND_USER_ID AS MUTUAL_USER_ID
+                      FROM MY_FRIENDS mf
+                      JOIN USER_FRIENDS cf
+                        ON cf.STATUS = 'ACCEPTED'
+                       AND (cf.REQUESTER_ID = mf.FRIEND_USER_ID OR cf.ADDRESSEE_ID = mf.FRIEND_USER_ID)
+                   )
+             WHERE CANDIDATE_ID != #{userId}
+             GROUP BY CANDIDATE_ID
+        )
+        SELECT *
+          FROM (
+                SELECT u.USER_ID,
+                       NVL(u.USER_NAME, u.EMAIL) AS USER_NAME,
+                       u.EMAIL,
+                       CASE
+                           WHEN UPPER(NVL(u.PROFILE_AVATAR_TYPE, 'DEFAULT')) = 'DEFAULT' THEN NULL
+                           ELSE NVL(u.PROFILE_IMAGE_PATH, pi.CROPPED_IMAGE_PATH)
+                       END AS PROFILE_IMAGE_PATH,
+                       CASE
+                           WHEN UPPER(NVL(u.PROFILE_AVATAR_TYPE, 'DEFAULT')) = 'DEFAULT' THEN NULL
+                           ELSE NVL(u.PROFILE_ORIGINAL_IMAGE_PATH, pi.ORIGINAL_IMAGE_PATH)
+                       END AS PROFILE_ORIGINAL_IMAGE_PATH,
+                       NVL(u.PROFILE_CROP_SCALE, pi.CROP_SCALE) AS PROFILE_CROP_SCALE,
+                       NVL(u.PROFILE_CROP_X, pi.CROP_X) AS PROFILE_CROP_X,
+                       NVL(u.PROFILE_CROP_Y, pi.CROP_Y) AS PROFILE_CROP_Y,
+                       CASE
+                           WHEN UPPER(NVL(u.PROFILE_AVATAR_TYPE, 'DEFAULT')) = 'DEFAULT' THEN 'DEFAULT'
+                           WHEN UPPER(u.PROFILE_AVATAR_TYPE) = 'IMAGE' THEN 'IMAGE'
+                           WHEN NVL(u.PROFILE_IMAGE_PATH, pi.CROPPED_IMAGE_PATH) IS NOT NULL
+                             OR NVL(u.PROFILE_ORIGINAL_IMAGE_PATH, pi.ORIGINAL_IMAGE_PATH) IS NOT NULL THEN 'IMAGE'
+                           ELSE 'DEFAULT'
+                       END AS PROFILE_AVATAR_TYPE,
+                       cm.MUTUAL_FRIEND_COUNT,
+                       'NONE' AS RELATION_STATUS,
+                       'NONE' AS DIRECTION
+                  FROM CANDIDATE_MUTUAL cm
+                  JOIN USERS u ON u.USER_ID = cm.CANDIDATE_ID
+                  LEFT JOIN (
+                      SELECT USER_ID, ORIGINAL_IMAGE_PATH, CROPPED_IMAGE_PATH, CROP_SCALE, CROP_X, CROP_Y
+                        FROM (
+                              SELECT p.*,
+                                     ROW_NUMBER() OVER (
+                                         PARTITION BY p.USER_ID
+                                         ORDER BY CASE WHEN p.IS_CURRENT = 'Y' THEN 0 ELSE 1 END,
+                                                  p.CREATED_AT DESC,
+                                                  p.PROFILE_IMAGE_ID DESC
+                                     ) AS RN
+                                FROM USER_PROFILE_IMAGES p
+                             )
+                       WHERE RN = 1
+                  ) pi ON pi.USER_ID = u.USER_ID
+                 WHERE NVL(u.STATUS, 'ACTIVE') = 'ACTIVE'
+                   AND NOT EXISTS (
+                       SELECT 1
+                         FROM USER_FRIENDS rf
+                        WHERE ((rf.REQUESTER_ID = #{userId} AND rf.ADDRESSEE_ID = u.USER_ID)
+                           OR  (rf.REQUESTER_ID = u.USER_ID AND rf.ADDRESSEE_ID = #{userId}))
+                          AND rf.STATUS IN ('PENDING', 'ACCEPTED', 'BLOCKED')
+                   )
+                 ORDER BY cm.MUTUAL_FRIEND_COUNT DESC, NVL(u.USER_NAME, u.EMAIL), u.USER_ID
+               )
+         WHERE ROWNUM &lt;= 8
     </select>
 
     <select id="selectReceivedRequests" resultMap="friendResultMap">
@@ -145,15 +293,23 @@
                u.USER_ID,
                NVL(u.USER_NAME, u.EMAIL) AS USER_NAME,
                u.EMAIL,
-               NVL(u.PROFILE_IMAGE_PATH, pi.CROPPED_IMAGE_PATH) AS PROFILE_IMAGE_PATH,
-               NVL(u.PROFILE_ORIGINAL_IMAGE_PATH, pi.ORIGINAL_IMAGE_PATH) AS PROFILE_ORIGINAL_IMAGE_PATH,
+               CASE
+                   WHEN UPPER(NVL(u.PROFILE_AVATAR_TYPE, 'DEFAULT')) = 'DEFAULT' THEN NULL
+                   ELSE NVL(u.PROFILE_IMAGE_PATH, pi.CROPPED_IMAGE_PATH)
+               END AS PROFILE_IMAGE_PATH,
+               CASE
+                   WHEN UPPER(NVL(u.PROFILE_AVATAR_TYPE, 'DEFAULT')) = 'DEFAULT' THEN NULL
+                   ELSE NVL(u.PROFILE_ORIGINAL_IMAGE_PATH, pi.ORIGINAL_IMAGE_PATH)
+               END AS PROFILE_ORIGINAL_IMAGE_PATH,
                NVL(u.PROFILE_CROP_SCALE, pi.CROP_SCALE) AS PROFILE_CROP_SCALE,
                NVL(u.PROFILE_CROP_X, pi.CROP_X) AS PROFILE_CROP_X,
                NVL(u.PROFILE_CROP_Y, pi.CROP_Y) AS PROFILE_CROP_Y,
                CASE
+                   WHEN UPPER(NVL(u.PROFILE_AVATAR_TYPE, 'DEFAULT')) = 'DEFAULT' THEN 'DEFAULT'
+                   WHEN UPPER(u.PROFILE_AVATAR_TYPE) = 'IMAGE' THEN 'IMAGE'
                    WHEN NVL(u.PROFILE_IMAGE_PATH, pi.CROPPED_IMAGE_PATH) IS NOT NULL
                      OR NVL(u.PROFILE_ORIGINAL_IMAGE_PATH, pi.ORIGINAL_IMAGE_PATH) IS NOT NULL THEN 'IMAGE'
-                   ELSE NVL(u.PROFILE_AVATAR_TYPE, 'DEFAULT')
+                   ELSE 'DEFAULT'
                END AS PROFILE_AVATAR_TYPE,
                f.STATUS AS RELATION_STATUS,
                'RECEIVED' AS DIRECTION
@@ -189,15 +345,23 @@
                u.USER_ID,
                NVL(u.USER_NAME, u.EMAIL) AS USER_NAME,
                u.EMAIL,
-               NVL(u.PROFILE_IMAGE_PATH, pi.CROPPED_IMAGE_PATH) AS PROFILE_IMAGE_PATH,
-               NVL(u.PROFILE_ORIGINAL_IMAGE_PATH, pi.ORIGINAL_IMAGE_PATH) AS PROFILE_ORIGINAL_IMAGE_PATH,
+               CASE
+                   WHEN UPPER(NVL(u.PROFILE_AVATAR_TYPE, 'DEFAULT')) = 'DEFAULT' THEN NULL
+                   ELSE NVL(u.PROFILE_IMAGE_PATH, pi.CROPPED_IMAGE_PATH)
+               END AS PROFILE_IMAGE_PATH,
+               CASE
+                   WHEN UPPER(NVL(u.PROFILE_AVATAR_TYPE, 'DEFAULT')) = 'DEFAULT' THEN NULL
+                   ELSE NVL(u.PROFILE_ORIGINAL_IMAGE_PATH, pi.ORIGINAL_IMAGE_PATH)
+               END AS PROFILE_ORIGINAL_IMAGE_PATH,
                NVL(u.PROFILE_CROP_SCALE, pi.CROP_SCALE) AS PROFILE_CROP_SCALE,
                NVL(u.PROFILE_CROP_X, pi.CROP_X) AS PROFILE_CROP_X,
                NVL(u.PROFILE_CROP_Y, pi.CROP_Y) AS PROFILE_CROP_Y,
                CASE
+                   WHEN UPPER(NVL(u.PROFILE_AVATAR_TYPE, 'DEFAULT')) = 'DEFAULT' THEN 'DEFAULT'
+                   WHEN UPPER(u.PROFILE_AVATAR_TYPE) = 'IMAGE' THEN 'IMAGE'
                    WHEN NVL(u.PROFILE_IMAGE_PATH, pi.CROPPED_IMAGE_PATH) IS NOT NULL
                      OR NVL(u.PROFILE_ORIGINAL_IMAGE_PATH, pi.ORIGINAL_IMAGE_PATH) IS NOT NULL THEN 'IMAGE'
-                   ELSE NVL(u.PROFILE_AVATAR_TYPE, 'DEFAULT')
+                   ELSE 'DEFAULT'
                END AS PROFILE_AVATAR_TYPE,
                f.STATUS AS RELATION_STATUS,
                'SENT' AS DIRECTION
@@ -241,8 +405,9 @@
                    f.UPDATED_AT,
                    CASE WHEN f.REQUESTER_ID = #{userId} THEN 'SENT' ELSE 'RECEIVED' END AS DIRECTION
               FROM USER_FRIENDS f
-             WHERE (f.REQUESTER_ID = #{userId} AND f.ADDRESSEE_ID = #{targetUserId})
-                OR (f.REQUESTER_ID = #{targetUserId} AND f.ADDRESSEE_ID = #{userId})
+             WHERE ((f.REQUESTER_ID = #{userId} AND f.ADDRESSEE_ID = #{targetUserId})
+                OR (f.REQUESTER_ID = #{targetUserId} AND f.ADDRESSEE_ID = #{userId}))
+               AND f.STATUS IN ('PENDING', 'ACCEPTED', 'BLOCKED')
              ORDER BY f.UPDATED_AT DESC, f.FRIEND_ID DESC
         )
         WHERE ROWNUM = 1

@@ -56,14 +56,20 @@
             </div>
 
             <div id="memberProfileView" class="workspace-profile-view">
+                <c:if test="${not isProjectProfileScope}">
+                    <p id="memberProfileIntro" class="workspace-profile-intro" hidden></p>
+                </c:if>
                 <dl class="workspace-profile-detail-list">
-                    <div><dt>이메일</dt><dd id="memberProfileEmail"></dd></div>
+                    <div id="memberProfileEmailRow">
+                        <dt>이메일</dt>
+                        <dd id="memberProfileEmail"></dd>
+                    </div>
                     <div id="memberProfilePhoneRow"><dt>연락처</dt><dd id="memberProfilePhone"></dd></div>
-                    <div><dt>가입일</dt><dd id="memberProfileJoinedAt"></dd></div>
                     <div id="memberProfileBirthRow" hidden>
                         <dt>생일</dt>
                         <dd id="memberProfileBirth"></dd>
                     </div>
+                    <div><dt>가입일</dt><dd id="memberProfileJoinedAt"></dd></div>
                 </dl>
             </div>
 
@@ -108,39 +114,62 @@
                         <input type="text" id="profileDisplayName" maxlength="50">
                     </label>
                     <label>
-                        <span>${profileScopeLabel}에서의 역할</span>
+                        <span>${isProjectProfileScope ? '프로젝트에서의 역할' : '직책 · 담당'}</span>
                         <input type="text"
                                id="profilePositionName"
                                maxlength="50"
-                               placeholder="${isProjectProfileScope ? '예: 기획, 디자인' : '예: 운영진, 발표 담당'}">
+                               placeholder="${isProjectProfileScope ? '예: 기획, 디자인' : '예: 개발, 운영, 기록, 발표 등'}">
                     </label>
-                    <label class="workspace-profile-full-field">
-                        <span>${profileScopeLabel} 이메일</span>
+                    <c:if test="${not isProjectProfileScope}">
+                        <label class="workspace-profile-full-field">
+                            <span>한 줄 소개</span>
+                            <input type="text" id="profileIntroText" maxlength="120" placeholder="그룹에서 나를 간단히 소개해보세요.">
+                        </label>
+                    </c:if>
+                    <div class="workspace-profile-field-block workspace-profile-full-field">
+                        <div class="workspace-profile-field-head">
+                            <label for="profileContactEmail" class="workspace-profile-field-title">${profileScopeLabel} 이메일</label>
+                            <c:if test="${not isProjectProfileScope}">
+                                <label class="workspace-profile-check-row workspace-profile-inline-privacy">
+                                    <input type="checkbox" id="profileShowEmail">
+                                    <span>공개</span>
+                                </label>
+                            </c:if>
+                        </div>
                         <input type="email"
                                id="profileContactEmail"
                                maxlength="100"
                                autocomplete="email"
                                required>
-                        <small class="workspace-profile-helper-text">${profileScopeLabel} 멤버에게 표시되는 활동용 이메일입니다.</small>
-                    </label>
-                    <label class="workspace-profile-full-field">
-                        <span>전화번호</span>
+                        <small class="workspace-profile-helper-text">${profileScopeLabel}에서 표시할 연락용 이메일</small>
+                    </div>
+                    <div class="workspace-profile-field-block workspace-profile-full-field">
+                        <div class="workspace-profile-field-head">
+                            <label for="profilePhoneNumber" class="workspace-profile-field-title">전화번호</label>
+                            <label class="workspace-profile-check-row workspace-profile-inline-privacy">
+                                <input type="checkbox" id="profileShowPhone">
+                                <span>공개</span>
+                            </label>
+                        </div>
                         <input type="tel"
                                id="profilePhoneNumber"
                                maxlength="30"
                                inputmode="tel"
                                autocomplete="tel"
                                placeholder="예: 010-0000-0000">
-                    </label>
-                    <div class="workspace-profile-privacy-options workspace-profile-full-field">
-                        <label class="workspace-profile-check-row">
-                            <input type="checkbox" id="profileShowPhone">
-                            <span>다른 ${profileScopeLabel} 멤버에게 전화번호 공개</span>
-                        </label>
-                        <label class="workspace-profile-check-row">
-                            <input type="checkbox" id="profileShowBirth">
-                            <span>다른 ${profileScopeLabel} 멤버에게 생일 공개</span>
-                        </label>
+                    </div>
+                    <div class="workspace-profile-field-block workspace-profile-full-field workspace-profile-birth-block">
+                        <div class="workspace-profile-field-head">
+                            <span class="workspace-profile-field-title">생일</span>
+                            <label class="workspace-profile-check-row workspace-profile-inline-privacy">
+                                <input type="checkbox" id="profileShowBirth">
+                                <span>공개</span>
+                            </label>
+                        </div>
+                        <div class="workspace-profile-birth-display">
+                            <strong id="profileBirthValue">등록된 생일 없음</strong>
+                            <small class="workspace-profile-helper-text">계정 프로필 생일 · 여기서는 공개 여부만 설정</small>
+                        </div>
                     </div>
                 </div>
             </form>

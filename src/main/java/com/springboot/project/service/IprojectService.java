@@ -4,6 +4,11 @@ import java.util.List;
 import java.util.Map;
 
 import com.springboot.project.dto.projectRequestDTO;
+import com.springboot.project.dto.projectPeriodPlanDTO;
+import com.springboot.project.dto.projectPlanFeatureDTO;
+import com.springboot.project.dto.projectPlanCalendarPrefDTO;
+import com.springboot.project.dto.projectTimePlanDTO;
+import com.springboot.project.dto.projectWeeklyPlanDTO;
 
 public interface IprojectService {
     // 프로젝트를 생성하고, 생성한 유저를 팀장으로 등록하는 표준 메서드
@@ -25,10 +30,13 @@ public interface IprojectService {
     boolean updateProjectMemberSetting(Long projId, Long userId, String projPosition, String projRole);
     Map<String, Object> getProjectTaskSummary(Long projId);
     List<Map<String, Object>> getProjectTasks(Long projId);
+    Map<String, Object> getProjectMemberTasks(Long projId, Long userId);
+    Map<String, Object> getProjectMemberContributions(Long projId, Long userId, Long viewerUserId);
+    List<Map<String, Object>> getProjectMemberRecentActivities(Long projId, Long userId, Long viewerUserId);
     boolean addTask(
             Long projId,
-            Long wsId,
-            Long userId,
+            List<Long> assigneeIds,
+            Long createdBy,
             String title,
             String startDate,
             String endDate,
@@ -36,18 +44,23 @@ public interface IprojectService {
             String startTime,
             String endTime,
             String startTimeSlot,
-            String endTimeSlot
+            String endTimeSlot,
+            Integer sortOrder,
+            String recordEnabledYn,
+            String recordVisibility
     );
     projectRequestDTO getProjectById(Long projId);
     List<Map<String, Object>> getProjectLinks(Long projId);
     Map<String, Object> getTaskDetail(Long taskId);
  // IprojectService.java
-    boolean updateTask(Long taskId, String title, String startDate, String endDate, String status, Long userId, String startTime, String endTime, String startTimeSlot, String endTimeSlot);
+    boolean updateTask(Long taskId, String title, String startDate, String endDate, String status, List<Long> assigneeIds, Long assignedBy, String startTime, String endTime, String startTimeSlot, String endTimeSlot, Integer sortOrder, String recordEnabledYn, String recordVisibility);
     boolean deleteTask(Long taskId);
     boolean updateProject(projectRequestDTO dto);
-    boolean deleteProject(Long projId, Long userId);
-    boolean updateTaskStatus(Long taskId, String status);
+    boolean requestProjectDeletion(Long projId, Long userId);
+    boolean cancelProjectDeletion(Long projId, Long userId);
+boolean updateTaskStatus(Long taskId, String status);
     List<Map<String, Object>> getProjectSchedules(Long projId);
+    List<Map<String, Object>> getProjectSchedules(Long projId, String startDate, String endDate);
     boolean addProjectSchedule(
             Long projId,
             Long wsId,
@@ -78,4 +91,43 @@ public interface IprojectService {
     );
 
     boolean deleteProjectSchedule(Long scheduleId);
+
+    // 프로젝트 기간별 계획
+    List<projectPeriodPlanDTO> getProjectPeriodPlans(Long projId, String startDate, String endDate);
+    projectPeriodPlanDTO getProjectPeriodPlan(Long periodPlanId);
+    projectPeriodPlanDTO addProjectPeriodPlan(projectPeriodPlanDTO dto);
+    boolean updateProjectPeriodPlan(projectPeriodPlanDTO dto);
+    boolean deleteProjectPeriodPlan(Long periodPlanId, Long projId);
+    boolean reorderProjectPeriodPlans(Long projId, List<Long> periodPlanIds);
+    int countTasksOutsidePeriodPlanRange(Long periodPlanId, String startDate, String endDate);
+
+    // 프로젝트 시간별 계획: 시작·종료 일시 기준
+    List<projectTimePlanDTO> getProjectTimePlans(Long projId, String startDate, String endDate, Long taskId);
+    projectTimePlanDTO getProjectTimePlan(Long timePlanId);
+    projectTimePlanDTO addProjectTimePlan(projectTimePlanDTO dto);
+    boolean updateProjectTimePlan(projectTimePlanDTO dto);
+    boolean deleteProjectTimePlan(Long timePlanId, Long projId);
+    boolean reorderProjectTimePlans(Long projId, String planDate, List<Long> timePlanIds);
+
+    // 프로젝트 주간 계획: 요일 기준 반복
+    List<projectWeeklyPlanDTO> getProjectWeeklyPlans(Long projId, Integer dayOfWeek, String activeYn, Long taskId);
+    projectWeeklyPlanDTO getProjectWeeklyPlan(Long weeklyPlanId);
+    projectWeeklyPlanDTO addProjectWeeklyPlan(projectWeeklyPlanDTO dto);
+    boolean updateProjectWeeklyPlan(projectWeeklyPlanDTO dto);
+    boolean deleteProjectWeeklyPlan(Long weeklyPlanId, Long projId);
+    boolean reorderProjectWeeklyPlans(Long projId, Integer dayOfWeek, List<Long> weeklyPlanIds);
+
+
+    // 프로젝트 계획 별도 편집 권한
+    List<Long> getProjectPlanEditorUserIds(Long projId, String planType, Long planId);
+    boolean isProjectPlanEditor(Long projId, String planType, Long planId, Long userId);
+    void replaceProjectPlanEditors(Long projId, String planType, Long planId, List<Long> userIds, Long grantedBy);
+
+    projectPlanFeatureDTO getOrCreateProjectPlanFeature(Long projId);
+    projectPlanFeatureDTO updateProjectPlanFeature(projectPlanFeatureDTO dto);
+    projectPlanFeatureDTO removeProjectPlanFeature(Long projId, String type);
+
+    projectPlanCalendarPrefDTO getProjectPlanCalendarPref(Long userId, Long projId);
+    projectPlanCalendarPrefDTO saveProjectPlanCalendarPref(projectPlanCalendarPrefDTO dto);
+
 }

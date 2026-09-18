@@ -22,7 +22,7 @@ html {
 }
 
 body.signup-body {
-    min-height: 100vh;
+    
     min-height: 100svh;
     margin: 0;
     padding: 30px 0;
@@ -150,6 +150,94 @@ button {
     font-weight: 700;
 }
 
+/* 회원가입 brand panel: 관계/공간은 텍스트, 기록은 일정/노트/사진/파일 아이콘으로 구분 */
+.signup-feature-row--structured {
+    align-items: flex-end;
+    justify-content: flex-start;
+    flex-wrap: nowrap;
+    gap: 16px;
+}
+
+.signup-feature-spaces {
+    display: flex;
+    flex-wrap: nowrap;
+    flex-shrink: 0;
+    gap: 10px;
+}
+
+.signup-feature-row--structured .signup-feature-spaces > span {
+    padding: 8px 13px;
+    border: 1px solid rgba(255, 255, 255, .35);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, .08);
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.signup-feature-records {
+    position: relative;
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    gap: 14px;
+    padding-left: 16px;
+}
+
+.signup-feature-records::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 2px;
+    bottom: 2px;
+    width: 1px;
+    background: rgba(255, 255, 255, .18);
+}
+
+.signup-feature-records-label {
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    color: rgba(255, 255, 255, .78);
+    font-size: 11px !important;
+    font-weight: 800 !important;
+    letter-spacing: .02em;
+    white-space: nowrap;
+}
+
+.signup-feature-contents {
+    display: flex;
+    align-items: flex-end;
+    flex-wrap: nowrap;
+    gap: 14px;
+}
+
+.signup-feature-row--structured .signup-feature-content {
+    min-width: 30px;
+    padding: 0;
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    color: rgba(255, 255, 255, .94);
+}
+
+.signup-feature-content i {
+    font-size: 19px;
+    line-height: 1;
+}
+
+.signup-feature-content small {
+    color: rgba(255, 255, 255, .82);
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 1;
+    white-space: nowrap;
+}
+
 .signup-card {
     position: relative;
     min-width: 0;
@@ -179,7 +267,7 @@ button {
 
 .signup-progress {
     width: max-content;
-    margin: 0 auto 24px;
+    margin: 0 auto 14px;
     display: grid;
     grid-template-columns: 30px 44px 30px;
     align-items: center;
@@ -508,7 +596,7 @@ button {
 }
 
 .signup-card-profile .signup-progress {
-    margin-bottom: 18px;
+    margin-bottom: 14px;
 }
 
 .signup-card-profile .signup-field {
@@ -576,7 +664,7 @@ button {
     overflow: hidden;
     border: 4px solid #fff;
     border-radius: 50%;
-    background: linear-gradient(135deg, #4a90e2 0%, #39cdb5 100%);
+    background: #f5f8fc;
     box-shadow: 0 10px 22px rgba(48, 75, 130, .14), 0 0 0 1px #dce6f1;
     cursor: default;
     touch-action: none;
@@ -625,6 +713,7 @@ button {
     position: absolute;
     inset: 0;
     font-size: 50px;
+    background: linear-gradient(135deg, var(--moyo-cyan) 0%, var(--moyo-blue) 55%, var(--moyo-indigo) 100%);
 }
 
 .signup-profile-editor-bottom .signup-avatar-preview {
@@ -1154,7 +1243,7 @@ button {
     position: absolute;
     inset: 0;
     background: rgba(15, 23, 42, .34);
-    backdrop-filter: blur(6px);
+    backdrop-filter: none;
 }
 
 .signup-profile-modal-dialog {
@@ -1290,7 +1379,27 @@ button {
 .signup-profile-modal-actions .signup-profile-apply {
     width: 100%;
 }
+.recovery-description {
+    text-align: center;
+}
 
+.recovery-description .line {
+    display: block;
+}
+
+.recovery-description-main {
+    white-space: nowrap;
+}
+
+.recovery-deadline-alert {
+    text-align: center;
+    color: #4569ed;
+}
+
+.recovery-deadline-alert strong {
+    color: #315ed8;
+    font-weight: 900;
+}
 /* Responsive */
 @media (max-width: 980px) {
     body.signup-body {
@@ -1434,6 +1543,10 @@ button {
 }
 
 @media (max-width: 640px) {
+    .recovery-description-main {
+        white-space: normal;
+    }
+
     body.signup-body {
         padding: 22px 12px 34px;
     }
@@ -1624,4 +1737,162 @@ button {
     .signup-card-profile {
         padding: 32px 20px 46px;
     }
+}
+
+/* Email verification */
+.signup-verification-field[hidden] {
+    display: none !important;
+}
+
+.signup-verification-field {
+    margin-top: -2px;
+}
+
+/* Password reset */
+.login-password-label-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.login-password-label-row a {
+    color: #6f7f96;
+    font-size: 12px;
+    font-weight: 800;
+    text-decoration: none;
+}
+
+.login-password-label-row a:hover {
+    color: #315ed8;
+    text-decoration: underline;
+}
+
+.signup-alert.login-success {
+    border: 1px solid #ccefe9;
+    color: #25786f;
+    background: #f1fcfa;
+}
+
+.password-reset-message[hidden] {
+    display: none;
+}
+
+.password-reset-card .signup-field-help {
+    margin: 7px 2px 0;
+    color: #8a97aa;
+    font-size: 12px;
+}
+
+.password-reset-card #resetPasswordForm[hidden],
+.password-reset-card #resetStepEmail[hidden],
+.password-reset-card #resetCodeArea[hidden] {
+    display: none;
+}
+
+
+/* Login convenience */
+.login-email-label-row {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+}
+.login-password-input-wrap { position: relative; }
+.login-password-input-wrap input { padding-right: 52px; }
+.login-password-toggle {
+    position: absolute; top: 50%; right: 14px; width: 34px; height: 34px;
+    display: inline-flex; align-items: center; justify-content: center;
+    transform: translateY(-50%); border: 0; border-radius: 10px; background: transparent;
+    color: #8a97aa; font-size: 16px; cursor: pointer;
+    transition: color .16s ease, background-color .16s ease;
+}
+.login-password-toggle:hover { color: #315ed8; background: #f3f6ff; }
+.login-password-toggle:focus-visible { outline: 2px solid rgba(67,127,239,.35); outline-offset: 2px; }
+.login-password-toggle[aria-pressed="true"] { color: #526fbe; }
+.login-password-eye {
+    width: 20px;
+    height: 20px;
+    display: block;
+    overflow: visible;
+}
+.login-password-eye__shape,
+.login-password-eye__pupil,
+.login-password-eye__slash {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.55;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    vector-effect: non-scaling-stroke;
+}
+.login-password-eye__pupil {
+    fill: currentColor;
+    stroke: none;
+    opacity: .72;
+}
+.login-password-eye__slash {
+    opacity: 0;
+    transform-origin: 12px 12px;
+    transition: opacity .16s ease;
+}
+.login-password-toggle.is-visible .login-password-eye__slash { opacity: .78; }
+.login-password-toggle:hover {
+    color: #6b7fb0;
+    background: #f7f9fd;
+}
+.login-remember-email {
+    display: inline-flex; align-items: center; gap: 8px; color: #6f7f96;
+    font-size: 12px; font-weight: 800; cursor: pointer; user-select: none;
+    transition: color .16s ease;
+}
+.login-remember-email:hover { color: #526fbe; }
+.login-remember-email input {
+    position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden;
+    clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+}
+.login-remember-check {
+    width: 18px; height: 18px; display: inline-flex; align-items: center; justify-content: center;
+    flex: 0 0 18px; box-sizing: border-box; overflow: hidden;
+    border: 0; border-radius: 6px; background: #fff;
+    box-shadow: inset 0 0 0 1px #d6dfed;
+    color: transparent; font-size: 10px;
+    transform: translateY(-1px);
+    transition: background .16s ease, color .16s ease, box-shadow .16s ease;
+}
+.login-remember-email:hover .login-remember-check {
+    box-shadow: inset 0 0 0 1px #b9c8e2;
+}
+.login-remember-email input:checked + .login-remember-check {
+    border: 0; outline: 0;
+    background: linear-gradient(135deg, #55d5ce 0%, #4288ef 52%, #5a55ee 100%);
+    color: #fff;
+    box-shadow: none;
+}
+.login-remember-email input:focus-visible + .login-remember-check { outline: 0; box-shadow: none; }
+.login-remember-email input:checked + .login-remember-check i {
+    display: block;
+    border: 0; outline: 0; box-shadow: none;
+}
+
+
+/* 2026-09-06: remember-email checkbox visual balance
+   텍스트 위계는 유지하고 체크 아이콘만 살짝 가볍게 정리한다. */
+.login-remember-email {
+    gap: 6px;
+}
+
+.login-remember-check {
+    width: 16px;
+    height: 16px;
+    flex-basis: 16px;
+    border-radius: 5px;
+}
+
+.login-remember-email input:checked + .login-remember-check {
+    background: linear-gradient(135deg, #5bc8c5 0%, #4f8df1 58%, #6661ef 100%);
+    box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,.20),
+        0 2px 7px rgba(79, 125, 243, .16);
+}
+
+.login-remember-check i {
+    font-size: 9px;
 }

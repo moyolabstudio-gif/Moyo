@@ -1,23 +1,21 @@
+/* Group list: consolidated effective styles. Shared CTA priority is intentional. */
+
 .workspace-list-body {
     display: flex;
-    min-height: 100vh;
     min-height: 100dvh;
     flex-direction: column;
     box-sizing: border-box;
-    background:
-        radial-gradient(circle at 8% 7%, rgba(63, 211, 190, .18) 0, rgba(63, 211, 190, 0) 34%),
-        radial-gradient(circle at 92% 5%, rgba(94, 146, 244, .17) 0, rgba(94, 146, 244, 0) 38%),
-        linear-gradient(180deg, #f9fcff 0%, #f5f9fd 52%, #f8fafc 100%);
-    background-attachment: fixed;
-    color: #243041;
+    background: var(--moyo-color-page);
+    color: var(--moyo-color-text);
+    font-family: var(--moyo-font-family);
 }
 
 .workspace-list-page {
-    width: min(1180px, calc(100% - 64px));
     flex: 1 1 auto;
     margin: 0 auto;
-    padding: 46px 0 36px;
     box-sizing: border-box;
+    width: min(1220px, calc(100% - 48px));
+    padding: 26px 0 42px;
 }
 
 .workspace-list-body > .moyo-footer {
@@ -26,67 +24,74 @@
 }
 
 .workspace-list-hero {
-    position: relative;
     display: flex;
-    align-items: flex-end;
     justify-content: space-between;
     gap: 28px;
-    padding: 0 2px 22px;
-    border-bottom: 1px solid #e5ebf2;
+    position: relative;
+    overflow: hidden;
+    align-items: center;
+    border: var(--moyo-border);
+    background: var(--moyo-color-surface);
+    min-height: 96px;
+    padding: 16px 22px;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(31, 53, 86, .045);
 }
-
-
-
 
 .workspace-list-hero h1 {
     margin: 0;
-    color: #1f2937;
-    font-size: clamp(32px, 4vw, 44px);
-    line-height: 1.1;
     letter-spacing: -.04em;
+    color: var(--moyo-color-text);
+    line-height: 1.15;
+    font-size: 30px;
 }
 
 .workspace-list-hero p {
-    margin: 12px 0 0;
-    color: #697586;
-    font-size: 15px;
-    line-height: 1.65;
+    color: var(--moyo-color-text-soft);
+    font-size: var(--moyo-font-size-md);
+    line-height: 1.55;
+    margin: 5px 0 0;
+    margin-top: 5px;
+    max-width: 610px;
 }
 
 .workspace-create-btn {
+    box-sizing: border-box;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 7px;
-    min-height: 46px;
-    padding: 0 18px;
-    border: 0;
-    border-radius: 13px;
-    background: linear-gradient(135deg, #38CDB6 0%, #3D7FE9 58%, #7368F6 100%);
-    color: #fff;
-    box-shadow: 0 18px 36px rgba(57, 123, 232, .26);
-    font-size: 14px;
-    font-weight: 800;
     text-decoration: none;
     white-space: nowrap;
     transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+    font-weight: var(--moyo-font-weight-bold);
+    min-height: 42px;
+    padding: 0 17px;
+    font-size: 13px;
+    border-radius: 12px;
+    flex: 0 0 auto;
 }
 
 .workspace-create-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 22px 42px rgba(57, 123, 232, .31);
+    transform: translateY(-1px);
 }
 
 .workspace-list-section {
-    padding-top: 26px;
+    padding-top: 16px;
+    padding: 16px;
+    margin-top: 14px;
+    border: var(--moyo-border);
+    border-radius: 18px;
+    background: var(--moyo-color-surface);
+    box-shadow: 0 6px 20px rgba(31, 53, 86, .028);
 }
 
 .workspace-list-section-head {
     display: flex;
-    align-items: flex-end;
     justify-content: flex-start;
     gap: 10px;
-    margin-bottom: 16px;
+    align-items: center;
+    margin-bottom: 12px;
 }
 
 .workspace-list-section-title-row {
@@ -97,63 +102,70 @@
 
 .workspace-list-section-head h2 {
     margin: 0;
-    color: #273244;
-    font-size: 21px;
     letter-spacing: -.025em;
+    color: var(--moyo-color-text);
+    font-weight: var(--moyo-font-weight-heavy);
+    font-size: 18px;
+    line-height: 1.22;
 }
 
 .workspace-list-section-head p {
-    margin: 7px 0 0;
-    color: #8a95a5;
     font-size: 13px;
+    margin: 4px 0 0;
+    color: var(--moyo-color-text-soft);
 }
 
 .workspace-list-count {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: 28px;
-    height: 24px;
-    padding: 0 9px;
     border-radius: 999px;
-    background: #eaf2fd;
-    color: #397fca;
-    font-size: 11px;
     font-weight: 900;
+    min-width: 26px;
+    height: var(--moyo-badge-height);
+    padding: 0 var(--moyo-badge-padding-x);
+    font-size: var(--moyo-font-size-xs);
+    border: 1px solid rgba(57, 205, 181, .18);
+    background: rgba(57, 205, 181, .08);
+    color: #278f80;
 }
 
 .workspace-card-grid {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 18px;
+    /* Use available content width, including space occupied by the sidebar. */
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+    grid-auto-rows: 1fr;
+    gap: 12px;
 }
 
 .workspace-card {
+    display: flex;
+    flex-direction: column;
     position: relative;
     min-width: 0;
     overflow: hidden;
-    border: 1px solid #e2e8f0;
-    border-radius: 20px;
     background: #fff;
-    box-shadow: 0 8px 24px rgba(15, 23, 42, .045);
     transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease;
+    border: var(--moyo-border);
+    border-radius: 14px;
+    box-shadow: none;
 }
 
 .workspace-card:hover {
     transform: translateY(-2px);
-    border-color: #c7d9f1;
-    box-shadow: 0 14px 32px rgba(15, 23, 42, .08);
+    box-shadow: var(--moyo-shadow-md);
+    border-color: var(--moyo-border-color-strong);
 }
 
 .workspace-card-main {
     display: flex;
     align-items: flex-start;
     gap: 15px;
-    min-height: 126px;
-    padding: 18px 82px 18px 20px;
+    min-height: 0;
     color: inherit;
     text-decoration: none;
     box-sizing: border-box;
+    padding: 18px 18px 12px;
 }
 
 .workspace-card-image {
@@ -162,8 +174,8 @@
     height: 58px;
     overflow: hidden;
     border: 1px solid #dfe7f1;
-    border-radius: 16px;
     background: #f2f6fb;
+    border-radius: var(--moyo-radius-md);
 }
 
 .workspace-card-image img,
@@ -182,13 +194,15 @@
     align-items: center;
     justify-content: center;
     color: #fff;
-    background: linear-gradient(135deg, #65d2c7 0%, #62a4e7 52%, #8b80ef 100%);
     text-transform: uppercase;
     font-size: 21px;
-    font-weight: 800;
+    font-weight: 900;
+    background: var(--moyo-avatar-gradient, linear-gradient(135deg, #55D5CE 0%, #4288EF 52%, #5A55EE 100%));
 }
 
-.workspace-card-fallback.show { display: flex; }
+.workspace-card-fallback.show {
+    display: flex;
+}
 
 .workspace-card-content {
     min-width: 0;
@@ -199,7 +213,7 @@
 
 .workspace-card-type {
     margin-bottom: 5px;
-    color: #6f7f92;
+    color: #566579;
     font-size: 11px;
     font-weight: 800;
 }
@@ -222,29 +236,32 @@
     line-height: 1.55;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
+    overflow-wrap: anywhere;
 }
 
 .workspace-card-footer {
-    position: absolute;
-    right: 16px;
-    bottom: 14px;
-    z-index: 2;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    justify-content: flex-end;
+    margin-top: auto;
+    padding: 0 18px 14px;
 }
-
 
 .workspace-enter-btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: 64px;
-    height: 32px;
     border: 1px solid #D8E8FA;
-    border-radius: 10px;
     background: rgba(255, 255, 255, .74);
     color: #2878D0;
-    font-size: 12px;
     font-weight: 900;
     text-decoration: none;
+    min-width: 64px;
+    height: var(--moyo-control-height-compact);
+    font-size: 12px;
+    border-radius: 10px;
 }
 
 .workspace-enter-btn:hover {
@@ -254,16 +271,17 @@
 
 .workspace-list-empty {
     display: flex;
-    min-height: 300px;
     align-items: center;
     justify-content: center;
     flex-direction: column;
     padding: 36px;
     border: 1px dashed #cfdbe6;
-    border-radius: 22px;
-    background: rgba(255,255,255,.7);
     text-align: center;
     box-sizing: border-box;
+    min-height: 260px;
+    border-color: var(--moyo-border-color-strong);
+    border-radius: var(--moyo-radius-lg);
+    background: var(--moyo-color-surface);
 }
 
 .workspace-list-empty-mark {
@@ -273,9 +291,9 @@
     width: 64px;
     height: 64px;
     margin-bottom: 18px;
-    border-radius: 20px;
     background: linear-gradient(145deg, #edf7f7 0%, #edf3fd 55%, #f1edfc 100%);
     font-size: 27px;
+    border-radius: var(--moyo-radius-lg);
 }
 
 .workspace-list-empty strong {
@@ -296,29 +314,195 @@
     min-height: 40px;
     padding: 0 16px;
     border-radius: 11px;
-    background: linear-gradient(135deg, #38CDB6 0%, #3D7FE9 58%, #7368F6 100%);
-    color: #fff;
     font-size: 13px;
     font-weight: 800;
     text-decoration: none;
 }
 
-
-@media (max-width: 1040px) {
-    .workspace-card-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.workspace-card-status-line {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 5px;
+    min-width: 0;
+    margin-bottom: 6px;
 }
 
-@media (max-width: 720px) {
+.workspace-card-status-line .workspace-card-type,
+.workspace-card-member-count,
+.workspace-card-role {
+    display: inline-flex;
+    align-items: center;
+    min-height: 20px;
+    padding: 0 7px;
+    border: 1px solid #e7edf4;
+    border-radius: 999px;
+    background: #f8fafc;
+    color: #708094;
+    font-size: 10px;
+    font-weight: 750;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+.workspace-card-status-line .workspace-card-type {
+    min-width: 0;
+    margin-bottom: 0;
+}
+
+.workspace-card-user-meta {
+    display: inline-flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 5px;
+}
+
+.workspace-card-role {
+    border-color: #e7e2f6;
+    background: #fbfaff;
+    color: #7666a6;
+}
+
+.workspace-card-delete-pending {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 8px;
+    flex: 1 1 160px;
+    min-width: 0;
+    margin-top: 0;
+    padding: 6px 8px;
+    border-radius: 8px;
+    background: #fff4f5;
+    color: #91414c;
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.workspace-card-delete-date {
+    overflow-wrap: anywhere;
+}
+
+.workspace-card-delete-date time {
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+}
+
+.workspace-card-delete-badge {
+    min-height: 20px;
+    padding: 0 7px;
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid #efc6cb;
+    border-radius: 999px;
+    background: #fff4f5;
+    color: #bc5260;
+    font-size: 11px;
+    font-weight: 800;
+    flex: 0 0 auto;
+    white-space: nowrap;
+}
+
+.workspace-list-hero::before {
+    content: "";
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 3px;
+    background: linear-gradient(180deg, #55d5ce 0%, #4288ef 52%, #5a55ee 100%);
+    opacity: 1;
+}
+
+.workspace-create-btn,
+.workspace-list-empty a {
+    background: linear-gradient(135deg, #38CDB6 0%, #4A90E2 56%, #7368F6 100%) !important;
+    color: #fff !important;
+    box-shadow: 0 8px 18px rgba(74, 144, 226, .22) !important;
+    border: 0 !important;
+    background-clip: padding-box !important;
+    -webkit-background-clip: padding-box !important;
+}
+
+.workspace-create-btn:hover,
+.workspace-list-empty a:hover {
+    border: 0 !important;
+    background: linear-gradient(135deg, #32BFA9 0%, #3F82D4 56%, #6758E6 100%) !important;
+    box-shadow: 0 10px 22px rgba(74, 144, 226, .26) !important;
+    background-clip: padding-box !important;
+    -webkit-background-clip: padding-box !important;
+}
+
+/* Card columns follow available width; compact screens use one column. */
+
+@media (max-width: 760px) {
     .workspace-list-page {
-        width: min(100% - 30px, 620px);
-        padding-top: 26px;
+        width: calc(100% - 24px);
+        padding-top: 16px;
     }
 
     .workspace-list-hero {
-        align-items: flex-start;
+        min-height: 0;
+        align-items: stretch;
+        padding: 20px;
         flex-direction: column;
     }
 
-    .workspace-create-btn { width: 100%; box-sizing: border-box; }
-    .workspace-card-grid { grid-template-columns: 1fr; }
+    .workspace-create-btn {
+        width: 100%;
+    }
+}
+
+@media (max-width: 720px) {
+    .workspace-card-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .workspace-enter-btn {
+        min-height: 44px;
+        box-sizing: border-box;
+    }
+}
+
+@media (max-width: 360px) {
+    .workspace-card-main {
+        gap: 10px;
+        padding: 14px 14px 10px;
+    }
+
+    .workspace-card-image {
+        width: 46px;
+        height: 46px;
+    }
+
+    .workspace-card-footer {
+        padding: 0 14px 14px;
+    }
+}
+
+/* Labels shared visually with the friend page, scoped to the group list. */
+.workspace-list-eyebrow,
+.workspace-list-label {
+    display: block;
+    margin-bottom: 4px;
+    color: var(--moyo-color-text-muted);
+    font-size: var(--moyo-font-size-xs);
+    font-weight: var(--moyo-font-weight-bold);
+    letter-spacing: .045em;
+}
+
+@media (max-width: 760px) {
+    .workspace-list-page { padding: 16px 0 28px; }
+    .workspace-list-hero { padding: 16px; gap: 14px; }
+    .workspace-list-hero h1 { font-size: 27px; }
+    .workspace-list-section { padding: 14px; }
+}
+
+
+@media (max-width: 520px) {
+    .workspace-card-status-line {
+        flex-wrap: wrap;
+    }
+
+    .workspace-card-user-meta {
+        margin-left: 0;
+    }
 }

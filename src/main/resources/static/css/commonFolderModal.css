@@ -1,35 +1,376 @@
-.note-folder-native-select{position:absolute!important;width:1px!important;height:1px!important;margin:-1px!important;padding:0!important;overflow:hidden!important;clip:rect(0 0 0 0)!important;white-space:nowrap!important;border:0!important}
-.common-folder-modal[hidden]{display:none!important}
-.common-folder-modal{position:fixed;inset:0;z-index:2147483200;display:grid;place-items:center;padding:24px;background:rgba(15,23,42,.48);backdrop-filter:blur(4px)}
-.nl-move-modal{display:flex;width:min(430px,calc(100vw - 32px));max-height:min(680px,calc(100vh - 40px));flex-direction:column;overflow:hidden;border:1px solid #dbe5f1;border-radius:22px;background:#fff;box-shadow:0 28px 90px rgba(15,23,42,.28)}
-.nl-modal-head{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;padding:22px 20px 16px;border-bottom:1px solid #edf1f6}
-.nl-modal-head h2{margin:0;color:#0f172a;font-size:20px;font-weight:850;line-height:1.25;letter-spacing:-.04em}
-.nl-modal-head p{margin:7px 0 0;color:#8492a6;font-size:12px;font-weight:650;line-height:1.45}
-.nl-modal-close{display:inline-grid;width:34px;height:34px;place-items:center;flex:0 0 auto;border:1px solid #d8e2ee;border-radius:50%;color:#718096;background:#fff;font-size:21px;line-height:1;cursor:pointer}
-.nl-modal-close:hover{color:#334155;background:#f7f9fc}
-.nl-move-folder-tools{padding:12px 16px 0}
-.nl-modal-folder-create{display:flex;width:100%;height:38px;align-items:center;justify-content:center;gap:7px;border:1px solid #cfe2ff;border-radius:12px;color:#2563eb;background:linear-gradient(90deg,#f0fffd,#f5f6ff);font:inherit;font-size:12px;font-weight:850;cursor:pointer}
-.nl-modal-folder-create:hover{border-color:#a9c9ff;background:#eef7ff}
-.nl-folder-choice-list{flex:1 1 auto;min-height:180px;max-height:390px;overflow:auto;padding:12px 16px 14px}
-.nl-folder-choice-row{position:relative}
-.nl-folder-choice-row+.nl-folder-choice-row{margin-top:8px}
-.nl-folder-choice{display:grid;width:100%;min-height:64px;grid-template-columns:40px minmax(0,1fr) 24px;align-items:center;gap:12px;padding:10px 12px;border:1px solid #dbe4ef;border-radius:15px;color:#334155;background:#fff;font:inherit;text-align:left;cursor:pointer;transition:border-color .15s ease,background .15s ease,box-shadow .15s ease}
-.nl-folder-choice:hover{border-color:#bfd2ef;background:#fbfdff}
-.nl-folder-choice-row.is-selected .nl-folder-choice{border-color:#9fc3ff;background:#f7fbff;box-shadow:0 0 0 1px rgba(79,123,255,.06)}
-.nl-folder-choice-icon{display:inline-grid;width:34px;height:34px;place-items:center;border-radius:10px;color:#8193aa;background:#f3f6fa;font-size:14px}
-.nl-folder-choice-row.is-selected .nl-folder-choice-icon{color:#4f7bff;background:#eef4ff}
-.nl-folder-choice-copy{display:flex;min-width:0;flex-direction:column;gap:4px}
-.nl-folder-choice-copy strong{overflow:hidden;color:#263548;font-size:13px;font-weight:800;text-overflow:ellipsis;white-space:nowrap}
-.nl-folder-choice-copy small{overflow:hidden;color:#8b98aa;font-size:11px;font-weight:600;text-overflow:ellipsis;white-space:nowrap}
-.nl-folder-choice-check{display:inline-grid;width:22px;height:22px;place-items:center;color:#4f7bff;font-size:13px;opacity:0}
-.nl-folder-choice-row.is-selected .nl-folder-choice-check{opacity:1}
-.nl-modal-folder-actions{position:absolute;right:46px;top:50%;display:flex;gap:3px;transform:translateY(-50%);opacity:0;pointer-events:none}
-.nl-folder-choice-row:hover .nl-modal-folder-actions,.nl-folder-choice-row:focus-within .nl-modal-folder-actions{opacity:1;pointer-events:auto}
-.nl-modal-folder-actions button{display:grid;width:27px;height:27px;place-items:center;border:0;border-radius:8px;color:#8090a5;background:#fff;cursor:pointer}
-.nl-modal-folder-actions button:hover{color:#2563eb;background:#eaf2ff}
-.nl-modal-actions{padding:12px 16px 16px;border-top:1px solid #edf1f6}
-.nl-modal-confirm{width:100%;height:44px;border:0;border-radius:12px;color:#fff;background:linear-gradient(90deg,#34c5c8,#5f5cff);font:inherit;font-size:13px;font-weight:850;cursor:pointer;box-shadow:0 8px 20px rgba(79,123,255,.18)}
-.nl-modal-confirm:hover{filter:brightness(.98)}
-.nl-modal-confirm:disabled{opacity:.55;cursor:wait}
-body.nl-modal-open{overflow:hidden}
-@media(max-width:520px){.common-folder-modal{padding:12px}.nl-move-modal{width:100%;max-height:calc(100vh - 24px)}.nl-modal-head{padding:18px 16px 14px}.nl-folder-choice-list{padding:10px 12px 12px}.nl-move-folder-tools,.nl-modal-actions{padding-left:12px;padding-right:12px}}
+.note-folder-native-select{
+    position:absolute!important;
+    width:1px!important;
+    height:1px!important;
+    margin:-1px!important;
+    padding:0!important;
+    overflow:hidden!important;
+    clip:rect(0 0 0 0)!important;
+    white-space:nowrap!important;
+    border:0!important;
+}
+
+.common-folder-modal[hidden]{display:none!important;}
+
+.common-folder-modal{
+    position:fixed;
+    inset:0;
+    z-index:2147483200;
+    display:grid;
+    place-items:center;
+    padding:24px;
+    background:rgba(15,23,42,.48);
+}
+
+.common-folder-modal .nl-move-modal{
+    display:flex;
+    width:min(430px,calc(100vw - 32px));
+    max-height:min(680px,calc(100vh - 40px));
+    flex-direction:column;
+    overflow:hidden;
+    border:1px solid #dbe5f1;
+    border-radius:22px;
+    background:#fff;
+    box-shadow:0 28px 90px rgba(15,23,42,.28);
+}
+
+/* Header shell: identical in MOVE / SELECT */
+.common-folder-modal .nl-modal-head{
+    position:relative;
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:16px;
+    padding:20px 20px 17px;
+    border:0;
+}
+.common-folder-modal .nl-modal-head::after{
+    content:"";
+    position:absolute;
+    left:0;
+    right:0;
+    bottom:0;
+    height:2px;
+    background:linear-gradient(90deg,#34d2c1 0%,#4a89ff 52%,#7e5bff 100%);
+}
+.common-folder-modal .nl-modal-head-copy{min-width:0;}
+.common-folder-modal .nl-modal-head h2{
+    margin:0;
+    color:#0f172a;
+    font-size:20px;
+    font-weight:850;
+    line-height:1.25;
+    letter-spacing:-.04em;
+}
+.common-folder-modal .nl-modal-head p{
+    margin:7px 0 0;
+    color:#8492a6;
+    font-size:12px;
+    font-weight:650;
+    line-height:1.45;
+}
+.common-folder-modal .nl-modal-head-actions{
+    display:flex;
+    flex:0 0 auto;
+    align-items:center;
+    gap:8px;
+}
+
+.common-folder-modal .nl-move-folder-tools{
+    display:flex;
+    padding:0;
+    border:0;
+}
+.common-folder-modal .nl-move-folder-tools[hidden]{display:none!important;}
+
+.common-folder-modal .nl-modal-folder-create{
+    display:inline-flex;
+    width:auto;
+    min-height:30px;
+    align-items:center;
+    justify-content:center;
+    gap:6px;
+    padding:0 9px;
+    border:0;
+    border-radius:8px;
+    color:#315fce;
+    background:transparent;
+    box-shadow:none;
+    font:inherit;
+    font-size:12px;
+    font-weight:800;
+    cursor:pointer;
+}
+.common-folder-modal .nl-modal-folder-create:hover{
+    color:#254fc1;
+    background:linear-gradient(90deg,rgba(52,210,193,.11),rgba(74,137,255,.10),rgba(126,91,255,.09));
+}
+
+.common-folder-modal .nl-modal-close{
+    display:inline-grid;
+    width:28px;
+    height:28px;
+    place-items:center;
+    padding:0;
+    border:0;
+    border-radius:7px;
+    color:#718096;
+    background:transparent;
+    box-shadow:none;
+    font-size:21px;
+    line-height:1;
+    cursor:pointer;
+}
+.common-folder-modal .nl-modal-close:hover{
+    color:#334155;
+    background:#f1f5f9;
+}
+.common-folder-modal .nl-modal-close[hidden]{display:none!important;}
+
+/* Shared list area */
+.common-folder-modal .nl-folder-choice-list{
+    flex:1 1 auto;
+    min-height:180px;
+    max-height:390px;
+    overflow:auto;
+    padding:12px 16px 14px;
+}
+.common-folder-modal .nl-folder-choice-row{
+    position:relative;
+}
+.common-folder-modal .nl-folder-choice-row + .nl-folder-choice-row{
+    margin-top:8px;
+}
+
+/* Shared selectable card */
+.common-folder-modal .nl-folder-choice{
+    display:grid;
+    width:100%;
+    min-height:64px;
+    grid-template-columns:40px minmax(0,1fr) 24px;
+    align-items:center;
+    gap:12px;
+    padding:10px 12px;
+    border:1px solid #dbe4ef;
+    border-radius:15px;
+    color:#334155;
+    background:#fff;
+    font:inherit;
+    text-align:left;
+    cursor:pointer;
+    transition:border-color .15s ease,background .15s ease,box-shadow .15s ease;
+}
+.common-folder-modal .nl-folder-choice:hover{
+    border-color:#bfd2ef;
+    background:#fbfdff;
+}
+.common-folder-modal .nl-folder-choice-row.is-selected .nl-folder-choice{
+    border-color:#8fb5ff;
+    background:linear-gradient(90deg,rgba(49,210,193,.06),rgba(73,137,255,.07),rgba(126,91,255,.06));
+    box-shadow:0 0 0 1px rgba(79,123,255,.05);
+}
+.common-folder-modal .nl-folder-choice-row.is-current:not(.is-selected) .nl-folder-choice{
+    border-color:#d7e3f3;
+    background:#fbfdff;
+}
+
+.common-folder-modal .nl-folder-choice-icon{
+    display:inline-grid;
+    width:34px;
+    height:34px;
+    place-items:center;
+    border-radius:10px;
+    color:#8193aa;
+    background:#f3f6fa;
+    font-size:14px;
+}
+.common-folder-modal .nl-folder-choice-row.is-selected .nl-folder-choice-icon{
+    color:#4f7bff;
+    background:#eef4ff;
+}
+.common-folder-modal .nl-folder-choice-copy{
+    display:flex;
+    min-width:0;
+    flex-direction:column;
+    gap:4px;
+}
+.common-folder-modal .nl-folder-choice-copy strong{
+    overflow:hidden;
+    color:#263548;
+    font-size:13px;
+    font-weight:800;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+}
+.common-folder-modal .nl-folder-choice-copy small{
+    overflow:hidden;
+    color:#8b98aa;
+    font-size:11px;
+    font-weight:600;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+}
+.common-folder-modal .nl-folder-choice-check{
+    display:inline-grid;
+    width:22px;
+    height:22px;
+    place-items:center;
+    color:#4f7bff;
+    font-size:13px;
+    opacity:0;
+}
+.common-folder-modal .nl-folder-choice-row.is-selected .nl-folder-choice-check{opacity:1;}
+
+.common-folder-modal .nl-folder-choice-row.is-disabled .nl-folder-choice{
+    border-style:dashed;
+    border-color:#dce4ee;
+    background:#f8fafc;
+    box-shadow:none;
+    cursor:not-allowed;
+}
+.common-folder-modal .nl-folder-choice-row.is-disabled .nl-folder-choice-copy strong{color:#7c899a;}
+.common-folder-modal .nl-folder-choice-row.is-disabled .nl-folder-choice-check{display:none;}
+.common-folder-modal .nl-folder-choice-row.is-disabled .nl-folder-choice-icon{opacity:.72;}
+
+/* Tree mode: 공통 카드 markup에 chevron/depth만 추가 */
+.common-folder-modal .nl-folder-tree-toggle{
+    display:none;
+    width:18px;
+    height:28px;
+    place-items:center;
+    border-radius:7px;
+    color:#8291a6;
+    font-size:10px;
+    cursor:pointer;
+}
+.common-folder-modal .nl-folder-choice-list.is-tree-mode .nl-folder-choice-row{
+    padding-left:calc(var(--folder-depth,0) * 18px);
+}
+.common-folder-modal .nl-folder-choice-list.is-tree-mode .nl-folder-choice{
+    grid-template-columns:18px 40px minmax(0,1fr) 24px;
+}
+.common-folder-modal .nl-folder-choice-list.is-tree-mode .nl-folder-tree-toggle{
+    display:inline-grid;
+}
+.common-folder-modal .nl-folder-choice-list.is-tree-mode .nl-folder-tree-toggle:hover{
+    color:#315fce;
+    background:#eef4ff;
+}
+.common-folder-modal .nl-folder-choice-list.is-tree-mode .nl-folder-tree-toggle.is-empty{
+    visibility:hidden;
+    pointer-events:none;
+}
+
+/* Optional folder management actions */
+.common-folder-modal .nl-folder-choice-title-line{
+    display:flex;
+    min-width:0;
+    align-items:center;
+    gap:6px;
+}
+.common-folder-modal .nl-folder-choice-title-line > strong{
+    min-width:0;
+}
+.common-folder-modal .nl-modal-folder-actions{
+    position:static;
+    display:inline-flex;
+    flex:0 0 auto;
+    align-items:center;
+    gap:2px;
+    padding:0;
+    transform:none;
+    opacity:0;
+    visibility:hidden;
+    pointer-events:none;
+    transition:opacity .14s ease, visibility .14s ease;
+}
+
+.common-folder-modal .nl-folder-choice-row:hover .nl-modal-folder-actions,
+.common-folder-modal .nl-folder-choice-row:focus-within .nl-modal-folder-actions{
+    opacity:1;
+    visibility:visible;
+    pointer-events:auto;
+}
+.common-folder-modal .nl-modal-folder-action{
+    display:grid;
+    width:22px;
+    height:22px;
+    place-items:center;
+    padding:0;
+    border:0;
+    border-radius:8px;
+    color:#718096;
+    background:transparent;
+    box-shadow:none;
+    cursor:pointer;
+}
+.common-folder-modal .nl-modal-folder-action:hover{
+    color:#315fce;
+    background:#eef4ff;
+}
+.common-folder-modal .nl-modal-folder-action.is-danger:hover{
+    color:#dc2626;
+    background:#fff1f2;
+}
+
+/* Legacy menu is no longer used by the current renderer */
+.common-folder-modal .nl-modal-folder-more,
+.common-folder-modal .nl-modal-folder-menu{
+    display:none!important;
+}
+
+/* Footer shell: identical in MOVE / SELECT */
+.common-folder-modal .nl-modal-actions{
+    padding:12px 16px 16px;
+    border-top:1px solid #edf1f6;
+    background:#fff;
+}
+.common-folder-modal .nl-modal-confirm{
+    width:100%;
+    height:44px;
+    border:0;
+    border-radius:12px;
+    color:#fff;
+    background:linear-gradient(135deg,#34c5c8 0%,#4a90e2 56%,#5f5cff 100%);
+    box-shadow:0 8px 20px rgba(79,123,255,.18);
+    font:inherit;
+    font-size:13px;
+    font-weight:850;
+    cursor:pointer;
+    transition:transform .16s ease,box-shadow .16s ease,filter .16s ease;
+}
+.common-folder-modal .nl-modal-confirm:hover:not(:disabled){
+    transform:translateY(-1px);
+    box-shadow:0 10px 24px rgba(79,123,255,.23);
+}
+.common-folder-modal .nl-modal-confirm:active:not(:disabled){transform:translateY(0);}
+.common-folder-modal .nl-modal-confirm:disabled{
+    opacity:.55;
+    cursor:not-allowed;
+    box-shadow:none;
+}
+
+body.nl-modal-open{overflow:hidden;}
+
+@media(max-width:520px){
+    .common-folder-modal{padding:12px;}
+    .common-folder-modal .nl-move-modal{
+        width:100%;
+        max-height:calc(100vh - 24px);
+    }
+    .common-folder-modal .nl-modal-head{padding:18px 16px 14px;}
+    .common-folder-modal .nl-folder-choice-list,
+    .common-folder-modal .nl-folder-choice-list.is-tree-mode{
+        padding:10px 12px 12px;
+    }
+    .common-folder-modal .nl-modal-actions{
+        padding:10px 12px 12px;
+    }
+}
+
+
+/* 체크는 기존 맨 오른쪽 grid column을 그대로 사용한다. */
+.common-folder-modal .nl-folder-choice-check{
+    position:static;
+    transform:none;
+}

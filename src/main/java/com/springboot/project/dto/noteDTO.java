@@ -62,9 +62,11 @@ public class noteDTO {
     private Integer viewCount;
     private Integer likeCount;
     private boolean likedByMe;
+    private boolean isShared;
     private Integer tableCount;
     private Integer imageCount;
     private Integer videoCount;
+    private Integer linkCount;
     private String firstAttachmentName;
     private Long previewImageFileId;
 
@@ -449,6 +451,14 @@ public class noteDTO {
         this.videoCount = videoCount;
     }
 
+    public int getLinkCount() {
+        return linkCount == null ? 0 : linkCount;
+    }
+
+    public void setLinkCount(Integer linkCount) {
+        this.linkCount = linkCount;
+    }
+
     public String getFirstAttachmentName() {
         if (firstAttachmentName != null && !firstAttachmentName.isBlank()) return firstAttachmentName;
         if (fileList == null || fileList.isEmpty()) return null;
@@ -551,4 +561,6 @@ public class noteDTO {
     public void setLikeCount(Integer likeCount) { this.likeCount = likeCount; }
     public boolean isLikedByMe() { return likedByMe; }
     public void setLikedByMe(boolean likedByMe) { this.likedByMe = likedByMe; }
+    public boolean isShared() { return isShared; }
+    public void setShared(boolean shared) { this.isShared = shared; }
 }

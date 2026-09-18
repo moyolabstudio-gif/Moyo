@@ -8,13 +8,15 @@
     <meta charset="UTF-8">
     <title>노트 수정</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/moyoUi.css?v=moyo-ui-stage7">
+<link rel="stylesheet" href="${pageContext.request.contextPath}/css/common/commonCkeditor.css?v=moyo-ckeditor-common-v2">
 <link rel="stylesheet" href="/css/note.css?v=note-ckeditor-media-table-v41">
 <link rel="stylesheet" href="/css/commonFolderModal.css?v=common-folder-modal-final-v15">
     <script src="https://cdn.ckeditor.com/ckeditor5/41.1.0/super-build/ckeditor.js"></script>
     <script src="https://cdn.ckeditor.com/ckeditor5/41.1.0/super-build/translations/ko.js"></script>
-    <script src="/js/commonCkeditor.js?v=moyo-editor-media-preview-v3"></script>
+    <script src="${pageContext.request.contextPath}/js/commonCkeditor.js?v=20260907-image-guard-1"></script>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/commonRichContent.css?v=rich-content-v4-20260619">
-    <link rel="stylesheet" href="/css/commonShareModal.css?v=note-share-edit-inline-v1">
+    <link rel="stylesheet" href="/css/commonPeopleModal.css?v=20260810-inline-share-state-popover-2">
 </head>
 <body class="note-page-body">
 <jsp:include page="/WEB-INF/views/common/header.jsp" />
@@ -96,7 +98,7 @@
                 <input type="hidden" id="noteIcon" name="icon" value="${empty note.icon ? '📝' : note.icon}">
                 <div class="note-title-row note-edit-title-row">
                     <button type="button" id="noteIconButton" class="note-title-icon-button" aria-label="노트 아이콘 선택" title="아이콘 선택" aria-expanded="false" data-current-icon="${empty note.icon ? '📝' : note.icon}">${empty note.icon ? '📝' : note.icon}</button>
-                    <input type="text" id="noteTitle" name="noteTitle" class="note-doc-title-input" value="${note.noteTitle}" placeholder="제목 없음" required autofocus>
+                    <input type="text" id="noteTitle" name="noteTitle" class="note-doc-title-input" value="${fn:escapeXml(note.noteTitle)}" placeholder="제목 없음" required autofocus>
                     <div class="note-write-title-actions note-edit-title-actions">
                         <span id="draftStatus" class="note-save-status note-save-status-inline">수정 중</span>
                         <button type="submit" form="noteForm" class="note-doc-save-btn note-write-submit-top">수정 완료</button>
@@ -214,7 +216,7 @@
                         <c:forEach var="file" items="${note.fileList}">
                             <div class="note-existing-file">
                                 <a class="note-file-row" href="/note/download?fileId=${file.fileId}">
-                                    <span class="note-file-name">📎 ${file.originFileName}</span>
+                                    <span class="note-file-name">📎 <c:out value="${file.originFileName}" /></span>
                                     <span class="note-file-size">${file.fileSize} bytes</span>
                                 </a>
                                 <button type="button" class="note-file-remove existing-file-delete-btn" data-file-id="${file.fileId}">삭제</button>
@@ -296,12 +298,7 @@
                 </div>
                 <button type="button" class="note-write-share-close" data-note-share-close aria-label="닫기">×</button>
             </div>
-            <div class="note-write-share-tabs" role="tablist" aria-label="공유 대상 유형">
-                <button type="button" class="note-write-share-tab is-active" data-share-tab="FRIEND">친구</button>
-                <button type="button" class="note-write-share-tab" data-share-tab="WORKSPACE">그룹</button>
-                <button type="button" class="note-write-share-tab" data-share-tab="PROJECT">프로젝트</button>
-            </div>
-            <div class="note-write-share-toolbar">
+<div class="note-write-share-toolbar">
                 <select id="noteEditShareContext" class="note-write-share-select" aria-label="공유 범위 선택" hidden></select>
                 <input type="text" id="noteEditShareKeyword" class="note-write-share-input" placeholder="친구 이름 또는 이메일 검색">
             </div>
@@ -325,14 +322,15 @@
     </div>
 
 
-<script src="/js/commonShareModal.js?v=note-share-edit-inline-v1"></script>
+<script src="/js/commonPeopleModal.js?v=20260906-share-policy-cleanup-61"></script>
 <script>
 (function () {
     function initNoteEditShare() {
-        if (!window.MoyoShareModal || typeof window.MoyoShareModal.init !== 'function') return;
+        if (!window.CommonPeopleModal || typeof window.CommonPeopleModal.init !== 'function') return;
         if (!document.getElementById('noteEditShareModal')) return;
-        window.MoyoShareModal.init({
+        window.CommonPeopleModal.init({
             contentType: 'NOTE',
+            friendOnly: true,
             contentId: document.getElementById('openNoteEditShareModal')?.dataset.shareContentId || '',
             persist: true,
             reloadOnPersist: true,

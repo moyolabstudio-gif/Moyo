@@ -3,6 +3,21 @@
     const NOTE_PAGE_HEIGHT = 1123;
     const NOTE_PAGE_SPREAD_GAP = 0;
     const NOTE_VIEW_SIZE_DEFAULT = 'fit';
+    let profileNotePageScrollY = 0;
+    const profileNoteLikeRequests = new Map();
+    const profileNoteReactionVersions = new Map();
+    const profileNoteReactionRequests = new Map();
+
+    const nextProfileNoteReactionVersion = noteId => {
+        const key = String(noteId || '').trim();
+        const next = (profileNoteReactionVersions.get(key) || 0) + 1;
+        profileNoteReactionVersions.set(key, next);
+        return next;
+    };
+
+    const currentProfileNoteReactionVersion = noteId =>
+        profileNoteReactionVersions.get(String(noteId || '').trim()) || 0;
+
     const NOTE_VIEW_SIZE_SCALE = {
         fit: { label: '기본' },
         large: { label: '크게' }
@@ -699,6 +714,15 @@
             const profileLink = document.createElement('a');
             profileLink.className = 'profile-note-comment-profile';
             profileLink.href = `${modal.dataset.contextPath || ''}/users/profile?userId=${encodeURIComponent(reply.userId || '')}`;
+            profileLink.addEventListener('click', event => {
+                const wsId = String(document.body?.dataset?.wsId
+                    || window.PROJECT_MAIN_CONFIG?.wsId
+                    || window.PROJECT_MAIN_CONFIG?.paramWsId
+                    || '').trim();
+                if (!wsId) return;
+                event.preventDefault();
+                openProfileNoteScopedUser(reply.userId);
+            });
             profileLink.appendChild(makeProfileNoteCommentAvatar(modal, reply));
 
             const body = document.createElement('div');
@@ -711,6 +735,15 @@
             nameLink.href = profileLink.href;
             nameLink.className = 'profile-note-comment-name';
             nameLink.textContent = reply.userName || '사용자';
+            nameLink.addEventListener('click', event => {
+                const wsId = String(document.body?.dataset?.wsId
+                    || window.PROJECT_MAIN_CONFIG?.wsId
+                    || window.PROJECT_MAIN_CONFIG?.paramWsId
+                    || '').trim();
+                if (!wsId) return;
+                event.preventDefault();
+                openProfileNoteScopedUser(reply.userId);
+            });
 
             const time = document.createElement('time');
             time.textContent = profileNoteFormatCommentDate(reply.updDt || reply.regDt);
@@ -896,6 +929,33 @@
         renderProfileNoteComments(modal, data.replies, data.currentUserId);
     };
 
+    const readProfileNoteCount = node => {
+        if (!node) return 0;
+        const raw = String(node.title || node.textContent || '').replace(/,/g, '').trim();
+        const value = Number(raw);
+        return Number.isFinite(value) && value > 0 ? value : 0;
+    };
+
+    const getProfileNoteReactionSnapshot = (modal, noteId) => {
+        const safeNoteId = String(noteId || modal?.dataset.noteId || '').trim();
+        const cardView = safeNoteId
+            ? document.querySelector(`[data-profile-note-card-view-count="${CSS.escape(safeNoteId)}"]`)
+            : null;
+        const cardLike = safeNoteId
+            ? document.querySelector(`[data-profile-note-card-like-count="${CSS.escape(safeNoteId)}"]`)
+            : null;
+        const cardToggle = safeNoteId
+            ? document.querySelector(`[data-profile-note-card-like-toggle][data-note-id="${CSS.escape(safeNoteId)}"]`)
+            : null;
+        return {
+            viewCount: Math.max(readProfileNoteCount(cardView), readProfileNoteCount(modal?.querySelector('[data-profile-note-view-count]'))),
+            likeCount: Math.max(readProfileNoteCount(cardLike), readProfileNoteCount(modal?.querySelector('[data-profile-note-like-count]'))),
+            liked: cardToggle
+                ? cardToggle.classList.contains('is-active')
+                : Boolean(modal?.querySelector('[data-profile-note-like-toggle]')?.classList.contains('is-active'))
+        };
+    };
+
     const updateProfileNoteCardReactionUi = (noteId, data = {}) => {
         const safeNoteId = String(noteId || '').trim();
         if (!safeNoteId) return;
@@ -943,97 +1003,228 @@
 
     const loadProfileNoteReaction = async (modal, recordView = false) => {
         if (!modal) return;
-        const noteId = modal.dataset.noteId || '';
+        const noteId = String(modal.dataset.noteId || '').trim();
         if (!noteId) return;
+
+        const requestVersion = currentProfileNoteReactionVersion(noteId);
+        const requestKey = `${noteId}:${recordView ? 'view' : 'reaction'}`;
+        const previousController = profileNoteReactionRequests.get(requestKey);
+        if (previousController) previousController.abort();
+        const controller = new AbortController();
+        profileNoteReactionRequests.set(requestKey, controller);
+
         try {
-            if (recordView && modal.dataset.viewRecorded !== 'true') {
-                const viewBody = new URLSearchParams({ noteId });
-                const viewResponse = await fetch(profileNoteApiUrl(modal, '/note/api/public/view'), {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8', Accept: 'application/json' },
-                    body: viewBody
+            if (recordView && !['true', 'pending'].includes(modal.dataset.viewRecorded || '')) {
+                const before = getProfileNoteReactionSnapshot(modal, noteId);
+                const optimisticViewCount = before.viewCount + 1;
+                modal.dataset.viewRecorded = 'pending';
+                updateProfileNoteReactionUi(modal, {
+                    viewCount: optimisticViewCount,
+                    likeCount: before.likeCount,
+                    liked: before.liked
                 });
-                const viewData = await viewResponse.json();
-                if (viewResponse.ok && viewData.success) {
-                    modal.dataset.viewRecorded = 'true';
-                    const nextViewCount = Number(viewData.viewCount || 0);
-                    modal.querySelectorAll('[data-profile-note-view-count]').forEach(node => {
-                        setProfileNoteCompactCount(node, nextViewCount);
+
+                try {
+                    const viewBody = new URLSearchParams({ noteId });
+                    const viewResponse = await fetch(profileNoteApiUrl(modal, '/note/api/public/view'), {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8', Accept: 'application/json' },
+                        body: viewBody,
+                        cache: 'no-store',
+                        credentials: 'same-origin',
+                        signal: controller.signal
                     });
-                    updateProfileNoteCardReactionUi(noteId, {
-                        viewCount: nextViewCount,
-                        likeCount: Number(modal.querySelector('[data-profile-note-like-count]')?.title?.replace(/,/g, '') || 0),
-                        liked: modal.querySelector('[data-profile-note-like-toggle]')?.classList.contains('is-active')
-                    });
+                    const viewData = await viewResponse.json();
+                    if (!viewResponse.ok || !viewData.success) {
+                        throw new Error(viewData.message || '조회수를 반영하지 못했습니다.');
+                    }
+                    if (requestVersion === currentProfileNoteReactionVersion(noteId)) {
+                        modal.dataset.viewRecorded = 'true';
+                        updateProfileNoteReactionUi(modal, {
+                            viewCount: Number(viewData.viewCount || 0),
+                            likeCount: before.likeCount,
+                            liked: before.liked
+                        });
+                    }
+                } catch (error) {
+                    if (error?.name === 'AbortError') throw error;
+                    delete modal.dataset.viewRecorded;
+                    updateProfileNoteReactionUi(modal, before);
+                    throw error;
                 }
             }
-            const response = await fetch(profileNoteApiUrl(modal, `/note/api/public/reaction?noteId=${encodeURIComponent(noteId)}`), {
-                headers: { Accept: 'application/json' }
+
+            const response = await fetch(profileNoteApiUrl(modal, `/note/api/public/reaction?noteId=${encodeURIComponent(noteId)}&_=${Date.now()}`), {
+                headers: { Accept: 'application/json' },
+                cache: 'no-store',
+                credentials: 'same-origin',
+                signal: controller.signal
             });
             const data = await response.json();
-            if (response.ok && data.success) updateProfileNoteReactionUi(modal, data);
+            if (response.ok && data.success && requestVersion === currentProfileNoteReactionVersion(noteId)) {
+                const currentViewCount = Number(modal.querySelector('[data-profile-note-view-count]')?.title?.replace(/,/g, '') || 0);
+                data.viewCount = Math.max(Number(data.viewCount || 0), currentViewCount);
+                updateProfileNoteReactionUi(modal, data);
+            }
         } catch (error) {
-            console.warn('노트 반응 정보를 불러오지 못했습니다.', error);
+            if (error?.name !== 'AbortError') console.warn('노트 반응 정보를 불러오지 못했습니다.', error);
+        } finally {
+            if (profileNoteReactionRequests.get(requestKey) === controller) {
+                profileNoteReactionRequests.delete(requestKey);
+            }
         }
     };
 
     const toggleProfileNoteLike = async modal => {
         if (!modal) return;
-        const body = new URLSearchParams({ noteId: modal.dataset.noteId || '' });
-        const response = await fetch(profileNoteApiUrl(modal, '/note/api/public/like'), {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8', Accept: 'application/json' },
-            body
-        });
-        const data = await response.json();
-        if (!response.ok || !data.success) throw new Error(data.message || '좋아요를 처리하지 못했습니다.');
-        updateProfileNoteReactionUi(modal, data);
+        const noteId = String(modal.dataset.noteId || '').trim();
+        if (!noteId) return;
+        if (profileNoteLikeRequests.has(noteId)) return profileNoteLikeRequests.get(noteId);
+
+        const before = getProfileNoteReactionSnapshot(modal, noteId);
+        const optimistic = {
+            viewCount: before.viewCount,
+            likeCount: Math.max(0, before.likeCount + (before.liked ? -1 : 1)),
+            liked: !before.liked
+        };
+        updateProfileNoteReactionUi(modal, optimistic);
+
+        nextProfileNoteReactionVersion(noteId);
+        for (const [key, controller] of profileNoteReactionRequests.entries()) {
+            if (key.startsWith(`${noteId}:`)) {
+                controller.abort();
+                profileNoteReactionRequests.delete(key);
+            }
+        }
+
+        const request = (async () => {
+            try {
+                const body = new URLSearchParams({ noteId });
+                const response = await fetch(profileNoteApiUrl(modal, '/note/api/public/like'), {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8', Accept: 'application/json' },
+                    body,
+                    cache: 'no-store',
+                    credentials: 'same-origin'
+                });
+                const data = await response.json();
+                if (!response.ok || !data.success) throw new Error(data.message || '좋아요를 처리하지 못했습니다.');
+                updateProfileNoteReactionUi(modal, data);
+                return data;
+            } catch (error) {
+                updateProfileNoteReactionUi(modal, before);
+                throw error;
+            }
+        })();
+
+        profileNoteLikeRequests.set(noteId, request);
+        try {
+            return await request;
+        } finally {
+            profileNoteLikeRequests.delete(noteId);
+        }
+    };
+
+
+    const toggleProfileNoteCardLike = async button => {
+        if (!button) return;
+        const noteId = String(button.dataset.noteId || '').trim();
+        if (!noteId || button.classList.contains('is-loading')) return;
+
+        const countNode = document.querySelector(
+            `[data-profile-note-card-like-count="${CSS.escape(noteId)}"]`
+        );
+        const viewNode = document.querySelector(
+            `[data-profile-note-card-view-count="${CSS.escape(noteId)}"]`
+        );
+
+        const before = {
+            liked: button.classList.contains('is-active'),
+            likeCount: readProfileNoteCount(countNode),
+            viewCount: readProfileNoteCount(viewNode)
+        };
+        const optimistic = {
+            liked: !before.liked,
+            likeCount: Math.max(0, before.likeCount + (before.liked ? -1 : 1)),
+            viewCount: before.viewCount
+        };
+
+        button.classList.add('is-loading');
+        updateProfileNoteCardReactionUi(noteId, optimistic);
+
+        try {
+            const contextPath =
+                document.querySelector('.profile-shell')?.dataset?.contextPath ||
+                document.body?.dataset?.contextPath ||
+                '';
+
+            const response = await fetch(`${contextPath}/note/api/public/like`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+                    'Accept': 'application/json'
+                },
+                body: new URLSearchParams({ noteId }),
+                cache: 'no-store',
+                credentials: 'same-origin'
+            });
+
+            const data = await response.json();
+            if (!response.ok || !data.success) {
+                throw new Error(data.message || '좋아요를 처리하지 못했습니다.');
+            }
+
+            updateProfileNoteCardReactionUi(noteId, {
+                viewCount: data.viewCount ?? before.viewCount,
+                likeCount: data.likeCount ?? optimistic.likeCount,
+                liked: data.liked ?? optimistic.liked
+            });
+        } catch (error) {
+            updateProfileNoteCardReactionUi(noteId, before);
+            throw error;
+        } finally {
+            button.classList.remove('is-loading');
+        }
     };
 
     const openProfileNoteDetail = modalId => {
         if (!modalId) return;
-        const modal = document.getElementById(modalId);
-        if (!modal) return;
-        document.querySelectorAll('[data-profile-note-detail]:not([hidden])').forEach(opened => {
-            opened.hidden = true;
-            opened.classList.remove('profile-note-printing', 'is-note-scroll-mode', 'is-note-fit-mode', 'is-note-basic-mode', 'is-note-large-mode', 'is-note-dual-mode');
-        });
-        modal.hidden = false;
-        modal.classList.add('is-review-collapsed');
-        modal.classList.remove('is-note-scroll-mode', 'is-note-fit-mode', 'is-note-basic-mode', 'is-note-large-mode', 'is-note-dual-mode');
-        const reviewToggle = modal.querySelector('[data-profile-note-review-toggle]');
-        reviewToggle?.setAttribute('aria-expanded', 'false');
-        const reviewLabel = reviewToggle?.querySelector('[data-profile-note-review-toggle-label]');
-        if (reviewLabel) reviewLabel.textContent = '반응 보기';
-        document.documentElement.classList.add('profile-note-modal-open');
-        document.body.classList.add('profile-note-modal-open');
-        modal.querySelectorAll('[data-profile-note-page-stage]').forEach(stage => {
-            stage.dataset.profileNoteCurrentPage = '0';
-            stage.dataset.profileNoteViewSize = NOTE_VIEW_SIZE_DEFAULT;
-            stage.dataset.profileNoteViewMode = 'single';
-        });
-        const wrap = modal.querySelector('.profile-note-document-wrap');
-        if (wrap) {
-            wrap.scrollTop = 0;
-            wrap.setAttribute('tabindex', '-1');
-            setTimeout(() => wrap.focus({ preventScroll: true }), 0);
+
+        // 프로필 노트도 다른 노트 진입 경로와 동일한 공통 노트 모달을 사용한다.
+        // 예전 profile-note-detail 전체화면 뷰어는 더 이상 열지 않는다.
+        const matched = String(modalId).match(/profileNoteDetail-(\d+)/);
+        const noteId = matched ? Number(matched[1]) : 0;
+        if (!noteId) return;
+
+        if (!window.MoyoNoteModal || typeof window.MoyoNoteModal.open !== 'function') {
+            console.error('[MOYO Profile Note] 공통 노트 모달이 준비되지 않았습니다.', { noteId });
+            window.alert('노트를 열 준비가 되지 않았습니다. 페이지를 새로고침해주세요.');
+            return;
         }
-        setTimeout(() => fitProfileNotePages(modal), 0);
-        setTimeout(() => fitProfileNotePages(modal), 250);
-        loadProfileNoteComments(modal);
-        loadProfileNoteReaction(modal, true);
+
+        window.MoyoNoteModal.open({
+            noteId,
+            scopeType: 'PERSONAL',
+            libraryName: '라이브러리'
+        }).catch(error => {
+            console.error('[MOYO Profile Note] 노트 열기 실패:', error);
+            window.alert(error?.message || '노트를 열지 못했습니다.');
+        });
     };
 
 
     let profileNoteShareMounted = false;
     let profileNoteShareApi = null;
+    let profileNoteSendMounted = false;
+    let profileNoteSendApi = null;
 
     function initProfileNoteShareModal() {
         if (profileNoteShareMounted) return;
-        if (!window.MoyoShareModal || typeof window.MoyoShareModal.init !== 'function') return;
+        if (!window.CommonPeopleModal || typeof window.CommonPeopleModal.init !== 'function') return;
         if (!document.getElementById('profileNoteShareModal')) return;
-        profileNoteShareApi = window.MoyoShareModal.init({
+        profileNoteShareApi = window.CommonPeopleModal.init({
             contentType: 'NOTE',
+            friendOnly: true,
             persist: true,
             shareMode: 'PERMISSION',
             enablePermission: true,
@@ -1065,15 +1256,31 @@
     }
 
     function openProfileNoteShare(button, permissionMode) {
-        const noteId = String(button?.dataset.noteId || button?.closest('[data-profile-note-detail]')?.dataset.noteId || '').trim();
+        const noteId = String(button?.dataset.contentId || button?.dataset.noteId || button?.closest('[data-profile-note-detail]')?.dataset.noteId || '').trim();
         if (!noteId) return;
 
         const hidden = document.getElementById(permissionMode ? 'profileNotePermissionOpenHidden' : 'profileNoteShareOpenHidden');
         const shareOpen = document.getElementById('profileNoteShareOpenHidden');
+        const modalEl = document.getElementById('profileNoteShareModal');
         if (!hidden || !shareOpen) return;
+
+        const ownerId = String(
+            button?.closest('[data-profile-note-detail]')?.dataset.noteOwnerId
+            || button?.closest('[data-profile-note-open]')?.dataset.noteOwnerId
+            || button?.closest('[data-note-owned]')?.dataset.noteOwnerId
+            || ''
+        ).trim();
+        const currentUserId = String(modalEl?.dataset.currentUserId || document.body?.dataset?.userId || '').trim();
+        const ownedByMe = ownerId && currentUserId && ownerId === currentUserId;
 
         shareOpen.dataset.shareContentId = noteId;
         hidden.dataset.shareContentId = noteId;
+        if (modalEl) {
+            // 내 노트는 기존 권한 공유, 다른 사용자의 MOYO 공개 노트는 재공유(FEED)로 처리한다.
+            // PERMISSION으로 열면 비작성자에게 대상 목록이 비어 '공유 버튼만 있는' 상태가 된다.
+            modalEl.dataset.shareModeType = ownedByMe ? 'PERMISSION' : 'FEED';
+            modalEl.dataset.ownerUserId = ownerId;
+        }
 
         // 카드에서 바로 열 때도 공통 공유 모달이 로드된 뒤 확실히 마운트되도록 한다.
         initProfileNoteShareModal();
@@ -1096,6 +1303,105 @@
             } else {
                 hidden.click();
             }
+        }, 0);
+    }
+
+
+    function initProfileNoteSendModal(noteId) {
+        if (!window.CommonPeopleModal || typeof window.CommonPeopleModal.init !== 'function') return;
+        let modalEl = document.getElementById('profileNoteSendModal');
+        if (!modalEl) return;
+
+        const normalizedNoteId = String(noteId || '').trim();
+        if (!normalizedNoteId) return;
+
+        // CommonPeopleModal은 contentId를 초기화 시점에 캡처한다.
+        // 다른 카드로 전환할 때 기존 리스너가 누적되지 않도록 전용 DOM을 새 노드로 교체한다.
+        if (profileNoteSendMounted && modalEl.dataset.contentId === normalizedNoteId && profileNoteSendApi) return;
+        if (profileNoteSendMounted && modalEl.dataset.contentId !== normalizedNoteId) {
+            const freshModal = modalEl.cloneNode(true);
+            freshModal.hidden = true;
+            modalEl.replaceWith(freshModal);
+            modalEl = freshModal;
+
+            const oldOpen = document.getElementById('profileNoteSendOpenHidden');
+            if (oldOpen) {
+                const freshOpen = oldOpen.cloneNode(true);
+                oldOpen.replaceWith(freshOpen);
+            }
+            profileNoteSendApi = null;
+            profileNoteSendMounted = false;
+        }
+        modalEl.dataset.contentId = normalizedNoteId;
+
+        profileNoteSendApi = window.CommonPeopleModal.init({
+            contentType: 'NOTE',
+            contentId: Number(normalizedNoteId),
+            contentIds: [Number(normalizedNoteId)],
+            friendOnly: true,
+            actionKind: 'SEND',
+            shareMode: 'PERMISSION',
+            persist: true,
+            reloadOnPersist: false,
+            enablePermission: false,
+            bodyOpenClass: 'note-share-modal-open',
+            currentUserId: modalEl.dataset.currentUserId || document.body?.dataset.userId || '',
+            blockedUserIds: [String(modalEl.dataset.currentUserId || document.body?.dataset.userId || '')].filter(Boolean),
+            ids: {
+                openButton: 'profileNoteSendOpenHidden',
+                modal: 'profileNoteSendModal',
+                keyword: 'profileNoteSendKeyword',
+                applyButton: 'profileNoteSendApply',
+                title: 'profileNoteSendModalTitle',
+                candidates: 'profileNoteSendCandidates',
+                selected: 'profileNoteSendSelected',
+                hiddenFields: 'profileNoteSendHiddenFields',
+                count: 'profileNoteSendCount',
+                modalCount: 'profileNoteSendModalCount',
+                initialSharesSource: 'profileNoteSendInitialSource'
+            },
+            onSubmit: async ({ targets }) => {
+                const targetUserIds = (targets || [])
+                    .map(item => Number(item.id))
+                    .filter(id => Number.isFinite(id) && id > 0);
+                if (!targetUserIds.length) throw new Error('보낼 친구를 선택해 주세요.');
+
+                const response = await fetch(getContextPath() + '/note/api/' + encodeURIComponent(normalizedNoteId) + '/send', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                    credentials: 'same-origin',
+                    body: JSON.stringify({ targetUserIds })
+                });
+                const result = await response.json().catch(() => ({}));
+                if (!response.ok) throw new Error(result?.message || '친구에게 노트를 보내지 못했습니다.');
+                window.alert(`${Number(result.sentCount || targetUserIds.length)}명에게 보냈습니다.`);
+            }
+        });
+        profileNoteSendMounted = true;
+    }
+
+    function openProfileNoteSend(button) {
+        const noteId = String(
+            button?.dataset.contentId ||
+            button?.dataset.noteId ||
+            button?.closest('[data-profile-note-detail]')?.dataset.noteId || ''
+        ).trim();
+        if (!noteId) return;
+
+        const hidden = document.getElementById('profileNoteSendOpenHidden');
+        if (!hidden) return;
+        hidden.dataset.shareContentId = noteId;
+
+        initProfileNoteSendModal(noteId);
+        if (profileNoteSendApi && typeof profileNoteSendApi.openShare === 'function') {
+            profileNoteSendApi.openShare();
+            return;
+        }
+
+        window.setTimeout(() => {
+            initProfileNoteSendModal(noteId);
+            if (profileNoteSendApi && typeof profileNoteSendApi.openShare === 'function') profileNoteSendApi.openShare();
+            else hidden.click();
         }, 0);
     }
 
@@ -1133,6 +1439,41 @@
     }
 
     const getContextPath = () => String(window.MOYO_CONTEXT_PATH || '').replace(/\/$/, '');
+
+    const openProfileNoteScopedUser = userId => {
+        const id = String(userId || '').trim();
+        if (!id) return;
+        const wsId = String(
+            document.body?.dataset?.wsId
+            || window.PROJECT_MAIN_CONFIG?.wsId
+            || window.PROJECT_MAIN_CONFIG?.paramWsId
+            || ''
+        ).trim();
+        const projId = String(
+            window.PROJECT_MAIN_CONFIG?.projectId
+            || window.PROJECT_MAIN_CONFIG?.paramProjId
+            || document.body?.dataset?.projId
+            || ''
+        ).trim();
+
+        if (projId && typeof window.openProjectMemberProfile === 'function') {
+            window.openProjectMemberProfile(id);
+            return;
+        }
+        if (wsId) {
+            if (typeof window.openWorkspaceMemberActivityProfile === 'function') {
+                window.openWorkspaceMemberActivityProfile(id);
+                return;
+            }
+            if (typeof window.openWorkspaceMemberProfile === 'function') {
+                window.openWorkspaceMemberProfile(id);
+                return;
+            }
+            window.alert('그룹 멤버 프로필을 불러오지 못했습니다.');
+            return;
+        }
+        window.location.href = `${getContextPath()}/users/profile?userId=${encodeURIComponent(id)}`;
+    };
 
     const normalizeFolderDisplayName = value => {
         const text = String(value == null ? '' : value).trim();
@@ -1499,14 +1840,8 @@ ${styleNodes}
         if (cardLikeToggle) {
             event.preventDefault();
             event.stopPropagation();
-            if (cardLikeToggle.classList.contains('is-loading')) return;
-            const modalId = cardLikeToggle.dataset.modalId || `profileNoteDetail-${cardLikeToggle.dataset.noteId || ''}`;
-            const modal = document.getElementById(modalId);
-            if (!modal) return;
-            cardLikeToggle.classList.add('is-loading');
-            toggleProfileNoteLike(modal)
-                .catch(error => window.alert(error.message))
-                .finally(() => cardLikeToggle.classList.remove('is-loading'));
+            toggleProfileNoteCardLike(cardLikeToggle)
+                .catch(error => window.alert(error.message));
             return;
         }
 
@@ -1522,8 +1857,16 @@ ${styleNodes}
             return;
         }
 
-        const cardShare = event.target.closest && event.target.closest('[data-profile-note-card-share]');
-        if (cardShare) {
+        const cardFriendSend = event.target.closest && event.target.closest('[data-profile-note-card-friend-send], [data-explorer-friend-send]');
+        if (cardFriendSend && cardFriendSend.closest('.profile-note-paper-card')) {
+            event.preventDefault();
+            event.stopPropagation();
+            openProfileNoteSend(cardFriendSend);
+            return;
+        }
+
+        const cardShare = event.target.closest && event.target.closest('[data-profile-note-card-share], [data-explorer-share-open]');
+        if (cardShare && cardShare.closest('.profile-note-paper-card')) {
             event.preventDefault();
             event.stopPropagation();
             openProfileNoteShare(cardShare, false);
@@ -1839,14 +2182,19 @@ ${styleNodes}
         submitProfileNoteComment(form);
     });
 
-    document.addEventListener('input', event => {
-        const input = event.target.closest && event.target.closest('[data-profile-note-comment-input]');
-        if (!input) return;
+    const handleProfileNoteCommentInput = event => {
+        const input = event.currentTarget;
         input.style.height = 'auto';
         const maxHeight = 96;
         input.style.height = `${Math.min(input.scrollHeight, maxHeight)}px`;
         input.style.overflowY = input.scrollHeight > maxHeight ? 'auto' : 'hidden';
         renderProfileNoteMentionList(input);
+    };
+
+    document.querySelectorAll('[data-profile-note-comment-input]').forEach(input => {
+        if (input.dataset.moyoInputBound === 'true') return;
+        input.addEventListener('input', handleProfileNoteCommentInput);
+        input.dataset.moyoInputBound = 'true';
     });
 
     document.addEventListener('keydown', event => {
@@ -1893,6 +2241,12 @@ ${styleNodes}
     });
 
     window.addEventListener('resize', () => fitProfileNotePages(document.querySelector('[data-profile-note-detail]:not([hidden])')));
+
+
+    window.MoyoCommonNoteDetail = Object.assign(window.MoyoCommonNoteDetail || {}, {
+        open: openProfileNoteDetail,
+        toggleLike: function (modal) { return toggleProfileNoteLike(modal); }
+    });
 
     window.addEventListener('afterprint', () => {
         document.querySelectorAll('.profile-note-printing').forEach(modal => modal.classList.remove('profile-note-printing'));

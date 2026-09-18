@@ -9,24 +9,18 @@
         body {
             margin: 0;
             padding: 0;
-            
+
             color: #333;
             font-family: "Pretendard", sans-serif;
         }
 
-        
-
         /* workspaceMain의 ws-hero와 같은 톤 */
         .project-hero {
-            
-            
-            
-            
-            
+
             display: flex;
-            
+
             align-items: center;
-            
+
             box-sizing: border-box;
             width: 100%;
         }
@@ -34,10 +28,6 @@
             flex: 1;
             min-width: 0;
         }
-
-        
-
-        
 
         .hero-actions {
             flex-shrink: 0;
@@ -98,8 +88,6 @@
             font-weight: bold;
         }
 
-        
-
         .main-content {
             flex: 3;
             display: flex;
@@ -142,165 +130,7 @@
 		    font-weight: bold;
 		}
 
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-        
-        
-
-        
-
-        
-
-
         /* ===== 업무 현황 요약 + 기존 칸반 정리 ===== */
-        
-
-        
-
-        
-
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-        /* ===== End 업무 현황 요약 + 기존 칸반 정리 ===== */
-
-
-        
-
-        .mini-calendar {
-            background: #ffffff;
-            border-radius: 12px;
-            padding: 18px;
-            margin-bottom: 25px;
-            border: 1px solid #eef0f2;
-        }
-
-        .calendar-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-weight: bold;
-            font-size: 14px;
-            color: #222;
-            margin-bottom: 15px;
-        }
-
-        .calendar-header a {
-            font-size: 11px;
-            color: #4A90E2;
-            cursor: pointer;
-            font-weight: bold;
-            text-decoration: none;
-        }
-
-        .calendar-month-control {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .calendar-arrow {
-            cursor: pointer;
-            user-select: none;
-        }
-
-        .calendar-grid {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 6px;
-            text-align: center;
-            font-size: 12px;
-        }
-
-        .day-name {
-            font-weight: bold;
-            color: #777;
-            padding-bottom: 5px;
-        }
-
-        .day-num {
-            padding: 6px 0;
-            border-radius: 6px;
-            color: #333;
-            cursor: pointer;
-            font-weight: 500;
-            position: relative;
-            height: 28px;
-            line-height: 16px;
-        }
-
-        .day-num:hover {
-            background: #e2f0fe;
-            color: #4A90E2;
-        }
-
-        .day-num.today {
-            background: #4A90E2;
-            color: white !important;
-            font-weight: bold;
-        }
-
-        .day-num.has-event {
-            position: relative;
-            font-weight: bold;
-            color: #4A90E2;
-        }
-
-        .day-num.today.has-event {
-            color: white !important;
-        }
-
-        .day-num.has-event::after {
-            content: "";
-            position: absolute;
-            bottom: 1px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 4px;
-            height: 4px;
-            background: currentColor;
-            border-radius: 50%;
-        }
 
         .schedule-preview {
             margin-top: 16px;
@@ -331,44 +161,16 @@
         }
 
         .schedule-title {
-            
+
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
         }
 
         .schedule-date {
-            
+
             flex-shrink: 0;
         }
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
 
         .text-muted {
             color: #999;
@@ -404,9 +206,9 @@
         }
 
         .modal-input,
-        .modal-select,
-        .form-control,
-        .form-select {
+.modal-select,
+.form-control,
+.form-select {
             width: 100%;
             padding: 10px;
             margin: 8px 0;
@@ -436,12 +238,7 @@
             font-size: 13px;
         }
 
-        
-
         /* 프로젝트 화면 반응형 정리 */
-        
-
-        
 
         @media (max-width: 900px){
 .side-content {
@@ -464,7 +261,6 @@
 }
 
         /* 프로젝트 수정 모달 */
-        
 
         .modal-title-row {
             display: flex;
@@ -524,8 +320,6 @@
             color: #777;
             margin-bottom: 6px;
         }
-
-        
 
         @media (max-width: 600px){
 .date-row {
@@ -596,7 +390,7 @@
         }
 
         .project-edit-modal .modal-input,
-        .project-edit-modal .modal-select {
+.project-edit-modal .modal-select {
             width: 100%;
             padding: 12px 14px;
             border: 1px solid #ddd;
@@ -611,7 +405,7 @@
         }
 
         .project-edit-modal .modal-input:focus,
-        .project-edit-modal .modal-select:focus {
+.project-edit-modal .modal-select:focus {
             border-color: #4A90E2;
             box-shadow: 0 0 0 3px rgba(74,144,226,0.12);
         }
@@ -674,7 +468,6 @@
                 flex-direction: column;
             }
 }
-        /* ===== End 프로젝트 수정 모달 디자인 개선 ===== */
 
         /* 프로젝트 기간 / D-Day 작은 표시 */
         .project-meta-row {
@@ -716,32 +509,8 @@
         }
 
         /* 미니 달력에서 프로젝트 전체 기간 표시 */
-        
-
-        .day-num.project-start-day::before {
-            content: "S";
-            position: absolute;
-            top: -4px;
-            right: 2px;
-            font-size: 9px;
-            color: #4A90E2;
-            font-weight: bold;
-        }
-
-        .day-num.project-end-day::before {
-            content: "E";
-            position: absolute;
-            top: -4px;
-            right: 2px;
-            font-size: 9px;
-            color: #ff9f43;
-            font-weight: bold;
-        }
-
-        
 
         /* ===== Hero 설정 + 프로젝트 요약 카드 ===== */
-        
 
         .project-hero-right {
             display: flex;
@@ -751,23 +520,15 @@
         }
 
         .project-setting-btn {
-            
-            
-            
-            
-            
-            
+
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            
-            
+
         }
 
-        
-
         .project-summary-grid {
-            
+
             grid-template-columns: repeat(3, 1fr);
             gap: 16px;
             margin-bottom: 24px;
@@ -821,7 +582,6 @@
                 justify-content: flex-start;
             }
 }
-        /* ===== End Hero 설정 + 프로젝트 요약 카드 ===== */
 
         .project-edit-modal .modal-footer-between {
             justify-content: space-between !important;
@@ -866,16 +626,6 @@
             opacity: .85;
         }
 
-        
-
-        
-
-        
-
-        
-
-        
-
         .side-dday {
             color: #4A90E2 !important;
         }
@@ -891,22 +641,8 @@
         .project-summary-grid {
             display: none !important;
         }
-        /* ===== End Hero 설정 아이콘 / 사이드 프로젝트 요약 정리 ===== */
 
         /* ===== 상단 위젯 / D-Day 강조 정리 ===== */
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
 
         .side-summary-label {
             font-size: 12px;
@@ -923,28 +659,7 @@
             word-break: keep-all;
         }
 
-        
-
-        
-
-        
-
-        
-
-        
-        /* ===== End 상단 위젯 / D-Day 강조 정리 ===== */
-
         /* 프로젝트 게시판 위젯 리스트 */
-        
-
-        
-
-        
-
-        
-
-        
-
 
         /* ===== Responsive Layout Fix v2 ===== */
         /* 중간/좁은 화면에서 왼쪽 영역이 찌그러지지 않도록 전체 폭 사용 */
@@ -954,8 +669,6 @@
                 padding-left: 16px;
                 padding-right: 16px;
             }
-
-            
 
             .main-content {
                 width: 100%;
@@ -990,19 +703,9 @@
                 justify-content: flex-end;
             }
 
-            
-
-            
-
             .section-card {
                 padding: 22px 18px;
             }
-
-            
-
-            
-
-            
 
             .side-content {
                 padding: 22px 18px;
@@ -1024,8 +727,6 @@
                 font-size: 22px;
             }
 }
-        /* ===== End Responsive Layout Fix v2 ===== */
-
 
         /* ===== Final project sidebar polish ===== */
         .project-setting-text-btn {
@@ -1034,9 +735,7 @@
             padding: 9px 14px !important;
             border-radius: 8px !important;
             border: 1px solid #dee2e6 !important;
-            
-            
-            
+
             display: inline-flex !important;
             align-items: center !important;
             justify-content: center !important;
@@ -1049,7 +748,7 @@
         }
 
         .project-setting-text-btn:hover {
-            
+
             transform: translateY(-1px) !important;
             box-shadow: 0 4px 12px rgba(0,0,0,0.04) !important;
             opacity: 1 !important;
@@ -1124,8 +823,6 @@
                 font-size: 12px !important;
             }
 }
-        /* ===== End final project sidebar polish ===== */
-
 
         /* ===== Project Schedule Section ===== */
         .schedule-section {
@@ -1222,12 +919,6 @@
             color: #888;
         }
 
-        
-
-        
-
-        
-
         @media (max-width: 760px){
 .schedule-item {
                 align-items: flex-start;
@@ -1239,8 +930,6 @@
                 align-self: flex-start;
             }
 }
-        /* ===== End Project Schedule Section ===== */
-
 
         /* ===== Schedule edit modal polish ===== */
         .schedule-item {
@@ -1260,33 +949,8 @@
         .modal-danger-btn:hover {
             background: #fff5f5 !important;
         }
-        /* ===== End schedule edit modal polish ===== */
-
 
         /* ===== Project mini calendar markers ===== */
-        .day-num {
-            overflow: visible;
-        }
-
-        .day-num.project-period-day {
-            
-            color: #4A90E2;
-        }
-
-        .day-num.project-start-day::before,
-        .day-num.project-end-day::before {
-            display: none !important;
-        }
-
-        .day-num.project-boundary {
-            font-weight: 800;
-            box-shadow: inset 0 0 0 1px rgba(74,144,226,0.28);
-        }
-
-        .day-num.today.project-period-day {
-            background: #4A90E2 !important;
-            color: white !important;
-        }
 
         .calendar-marker-row {
             position: absolute;
@@ -1313,118 +977,14 @@
             background: #4A90E2;
         }
 
-        
-
-        .day-num.today .calendar-marker {
-            background: currentColor;
-            opacity: .95;
-        }
-
-        .calendar-legend {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            margin-top: 12px;
-            padding-top: 10px;
-            border-top: 1px solid #f1f3f5;
-            font-size: 11px;
-            color: #777;
-        }
-
-        
-
-        
-
-        .legend-dot {
-            width: 6px;
-            height: 6px;
-            border-radius: 999px;
-            display: inline-block;
-        }
-
-        .legend-dot.schedule {
-            background: #4A90E2;
-        }
-
-        
-        /* ===== End project mini calendar markers ===== */
-
         /* ===== Responsive Project Gantt ===== */
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-        /* ===== End Responsive Project Gantt ===== */
-
 
         /* ===== Gantt clipping + schedule color palette fix ===== */
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-        /* ===== End gantt clipping + schedule color palette fix ===== */
-
 
         /* ===== Gantt-first project schedule layout ===== */
         .schedule-section .section-header {
             margin-bottom: 14px;
         }
-
-        
-
-        
 
         .schedule-list-title {
             display: flex;
@@ -1472,369 +1032,49 @@
                 grid-template-columns: 1fr;
             }
 }
-        /* ===== End gantt-first project schedule layout ===== */
-
 
         /* ===== Hero-under full-width gantt layout ===== */
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
 
         .schedule-section {
             display: none !important;
         }
 
-        
-        /* ===== End hero-under full-width gantt layout ===== */
-
-
         /* ===== Gantt date alignment fix ===== */
-        
-
-        
-
-        
-        /* ===== End gantt date alignment fix ===== */
-
 
         /* ===== Gantt compact day-scale fix ===== */
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-        /* ===== End gantt compact day-scale fix ===== */
-
 
         /* ===== Final gantt alignment fix: shared grid ===== */
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-        /* ===== End final gantt alignment fix ===== */
-
 
         /* ===== Gantt drag-to-create schedule ===== */
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-        /* ===== End gantt drag-to-create schedule ===== */
 
         /* ===== Gantt interaction polish v2 ===== */
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-        /* ===== End gantt interaction polish v2 ===== */
-
 
         /* ===== Row-limited gantt drag fix ===== */
-        
-
-        
-
-        
-
-        
-
-        
-        /* ===== End row-limited gantt drag fix ===== */
-
 
         /* ===== Gantt bar drag-to-update ===== */
-        
-
-        
-
-        
-        /* ===== End gantt bar drag-to-update ===== */
-
 
         /* ===== Gantt bar resize handles ===== */
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-        /* ===== End gantt bar resize handles ===== */
-
 
         /* ===== Gantt empty project-period drag row ===== */
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-        /* ===== End gantt empty project-period drag row ===== */
-
 
         /* ===== Gantt interaction selector fix ===== */
-        
-
-        
-
-        
-
-        
-
-        
-        /* ===== End gantt interaction selector fix ===== */
-
 
         /* ===== Gantt all-scale bar drag fix ===== */
-        
-
-        
-
-        
-        /* ===== End gantt all-scale bar drag fix ===== */
-
 
         /* ===== Stable tick-grid gantt fix ===== */
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-        
-
-        
-
-        
-
-        
-
-        
-        /* ===== End stable tick-grid gantt fix ===== */
-
 
         /* ===== Gantt column alignment final fix ===== */
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-        /* ===== End gantt column alignment final fix ===== */
-
 
         /* ===== Explicit gantt grid column fix ===== */
-        
-
-        
-
-        
-
-        
-
-        
-        /* ===== End explicit gantt grid column fix ===== */
-
 
         /* ===== Schedule custom color picker ===== */
-        
-
-        
-
-        
-
-        
-
-        
-        /* ===== End schedule custom color picker ===== */
-
 
         /* ===== Mini calendar schedule range style ===== */
-        .day-num.schedule-range-day {
-            
-            color: var(--schedule-text, #1f2937);
-            
-        }
-
-        .day-num.schedule-range-day.project-period-day {
-            background:
-                linear-gradient(0deg, var(--schedule-bg, #EEF6FF), var(--schedule-bg, #EEF6FF)),
-                #F4F9FF !important;
-        }
-
-        .day-num.schedule-range-day.schedule-boundary {
-            font-weight: 800;
-            box-shadow: inset 0 0 0 1.5px var(--schedule-border, rgba(74,144,226,0.35));
-        }
-
-        .day-num.today.schedule-range-day {
-            color: #fff !important;
-            background: var(--schedule-solid, #4A90E2) !important;
-            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.35);
-        }
-
-        .day-num.has-multiple-schedules::after {
-            content: "";
-            position: absolute;
-            right: 3px;
-            top: 3px;
-            width: 4px;
-            height: 4px;
-            border-radius: 999px;
-            background: var(--schedule-solid, #4A90E2);
-            opacity: .9;
-        }
 
         .calendar-marker-row.schedule-hidden {
             display: none !important;
         }
 
-        
-        /* ===== End mini calendar schedule range style ===== */
 /* ===== Header-aligned page width ===== */
         .container {
             max-width: 1400px !important;
@@ -1863,74 +1103,7 @@
                 padding-right: 12px !important;
             }
 }
-        /* ===== End header-aligned page width ===== */
-/* ===== Mini calendar compact legend polish ===== */
-        .calendar-legend,
-        .mini-calendar-legend {
-            display: flex !important;
-            flex-wrap: wrap;
-            align-items: center;
-            gap: 6px 8px !important;
-            padding: 10px 0 8px !important;
-            margin-top: 8px !important;
-            border-top: 1px solid #eef0f2 !important;
-            border-bottom: none !important;
-            font-size: 11px !important;
-            color: #7b8491 !important;
-        }
-
-        .calendar-legend-item {
-            display: inline-flex !important;
-            align-items: center;
-            gap: 4px !important;
-            padding: 3px 7px !important;
-            border-radius: 999px !important;
-            background: #fafafa !important;
-            border: 1px solid #eef0f2 !important;
-            line-height: 1 !important;
-            white-space: nowrap;
-        }
-
-        
-
-        
-
-        
-
-        .legend-box,
-        .legend-dot {
-            flex-shrink: 0;
-        }
-
-        .legend-box {
-            width: 9px !important;
-            height: 9px !important;
-            border-radius: 3px !important;
-            border: 1px solid #A8D1FF !important;
-            background: #EAF4FF !important;
-            box-sizing: border-box;
-        }
-
-        .legend-box.schedule {
-            width: 14px !important;
-            height: 9px !important;
-            border-radius: 999px !important;
-            
-            border: 1px solid rgba(85,221,191,.55) !important;
-            position: relative;
-        }
-
-        .legend-box.schedule::after {
-            display: none !important;
-        }
-
-        .legend-dot.task {
-            width: 6px !important;
-            height: 6px !important;
-            border-radius: 999px !important;
-            background: #F59E0B !important;
-        }
-
+/* ===== Project period summary ===== */
         .project-period-summary {
             margin-top: 10px !important;
             padding-top: 12px !important;
@@ -1938,8 +1111,8 @@
         }
 
         .project-period-summary .summary-row,
-        .project-period-row,
-        .dday-row {
+.project-period-row,
+.dday-row {
             display: flex !important;
             align-items: center !important;
             justify-content: space-between !important;
@@ -1948,20 +1121,20 @@
         }
 
         .project-period-summary .summary-label,
-        .project-period-label,
-        .dday-label {
+.project-period-label,
+.dday-label {
             color: #7b8491 !important;
             font-weight: 700 !important;
         }
 
         .project-period-summary .summary-value,
-        .project-period-value {
+.project-period-value {
             color: #222 !important;
             font-weight: 800 !important;
         }
 
         .dday-badge,
-        .dday-value {
+.dday-value {
             display: inline-flex !important;
             align-items: center !important;
             justify-content: center !important;
@@ -1975,12 +1148,9 @@
         }
 
         .calendar-help-text,
-        .calendar-desc,
-        .mini-calendar-desc {
+.calendar-desc {
             display: none !important;
         }
-        /* ===== End mini calendar compact legend polish ===== */
-
 
         /* ===== MOYO Project Point Theme - subtle ===== */
         :root {
@@ -1999,22 +1169,12 @@
             background: #fff !important;
         }
 
-        
-
-        
-
-        
-
         .project-hero-info,
-        .project-hero-right,
-        .hero-actions {
+.project-hero-right,
+.hero-actions {
             position: relative;
             z-index: 1;
         }
-
-        
-
-        
 
         .project-setting-text-btn {
             background: rgba(255,255,255,0.92) !important;
@@ -2029,67 +1189,17 @@
             color: var(--moyo-blue) !important;
         }
 
-        
-
         /* 주요 액션만 브랜드 그라데이션 */
-        
-
-        
 
         /* 보조 배지는 과하지 않게 */
-        
 
         /* 간트는 오늘/드래그 정도만 민트 포인트 */
-        
-
-        
-
-        
-
-        
-
-        
-
-        
 
         /* 미니 달력: 전체 민트톤 약화, 오늘만 포인트 */
-        .mini-calendar .today,
-        .calendar-day.today,
-        .day-num.today {
+        .calendar-day.today {
             background: var(--moyo-blue) !important;
             color: #fff !important;
         }
-
-        .day-num.project-period-day {
-            background: #F5F9FF !important;
-            box-shadow: inset 0 0 0 1px rgba(74,144,226,0.16) !important;
-        }
-
-        .day-num.schedule-range-day {
-            background: var(--schedule-bg, rgba(85,221,191,0.18)) !important;
-            box-shadow: inset 0 0 0 1px var(--schedule-border, rgba(85,221,191,0.30)) !important;
-        }
-
-        .calendar-legend-item.schedule-legend {
-            color: var(--moyo-mint-dark) !important;
-            background: #F5FFFB !important;
-            border-color: #D7F3EC !important;
-        }
-
-        .calendar-legend-item.period-legend {
-            color: var(--moyo-blue) !important;
-            background: #F7FBFF !important;
-            border-color: #DCEBFF !important;
-        }
-
-        .legend-box.schedule {
-            background: rgba(85,221,191,0.18) !important;
-            border-color: rgba(85,221,191,0.40) !important;
-        }
-
-        
-
-        
 
         a:hover {
             color: var(--moyo-blue);
@@ -2106,16 +1216,11 @@
                 top: -105px;
             }
 }
-        /* ===== End MOYO Project Point Theme - subtle ===== */
 
         /* ===== Work report widget ===== */
-        
-        
-        
-        
-        
+
         .report-more-btn,
-        .report-write-btn {
+.report-write-btn {
             display:inline-flex;
             align-items:center;
             justify-content:center;
@@ -2138,402 +1243,43 @@
             color:#4A90E2;
         }
         .report-write-btn {
-            background:linear-gradient(135deg,#4A90E2 0%,#39CDB5 100%);
+            background:var(--moyo-primary-gradient,linear-gradient(135deg,#39CDB5 0%,#4A90E2 54%,#7358E8 100%));
             color:#fff;
             box-shadow:0 5px 12px rgba(57,205,181,0.16);
         }
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        @media (max-width:760px){
-.report-more-btn,.report-write-btn{flex:1;}
-}
-        /* ===== End work report widget ===== */
 
+        @media (max-width:760px){
+.report-more-btn,
+.report-write-btn {flex:1;}
+}
 
         /* ===== 업무 현황 헤더 버튼 보정 ===== */
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-        /* ===== End 업무 현황 헤더 버튼 보정 ===== */
-
 
         /* ===== 업무 카드: 담당자/마감/실제시작/완료/지연 표시 ===== */
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-        /* ===== End 업무 카드 표시 ===== */
-
-        
-
-        
-
 
         /* ===== 업무 카드 시각화 개선 ===== */
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-        /* ===== End 업무 카드 시각화 개선 ===== */
-
 
         /* ===== 업무 카드 단순 범위형 개선 ===== */
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-        /* ===== End 업무 카드 단순 범위형 개선 ===== */
-
 
         /* ===== 업무 카드 초압축 리스트형 개선 ===== */
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-        /* ===== End 업무 카드 초압축 리스트형 개선 ===== */
-
 
         /* ===== 업무 카드 시작/마감 2줄형 개선 ===== */
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-        /* ===== End 업무 카드 시작/마감 2줄형 개선 ===== */
-
 
         /* ===== 업무 모달 안정형 디자인 ===== */
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-        /* ===== End 업무 모달 안정형 디자인 ===== */
-
 
         /* ===== 프로젝트 메인 업무 카드 간결형 ===== */
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-        /* ===== End 프로젝트 메인 업무 카드 간결형 ===== */
-
 
         /* ===== 프로젝트 메인 업무 모달 개선 ===== */
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-        /* ===== End 프로젝트 메인 업무 모달 개선 ===== */
-
 
         /* ===== 프로젝트 멤버 리스트 관리형 개선 ===== */
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-        /* ===== End 프로젝트 멤버 리스트 관리형 개선 ===== */
-
 
         /* ===== 프로젝트 멤버 포지션 표시 ===== */
-        
-
-        
-
-        
-
-        
-
-        
-        /* ===== End 프로젝트 멤버 포지션 표시 ===== */
-
 
         /* ===== 프로젝트 멤버 역할 버튼 표시 보강 ===== */
-        
-
-        
-        /* ===== End 프로젝트 멤버 역할 버튼 표시 보강 ===== */
-
-
 
 /* ===== 프로젝트 메인 멤버 카드 역할 버튼 제거 ===== */
 
-/* ===== End 프로젝트 메인 멤버 카드 역할 버튼 제거 ===== */
-
-
 /* ===== 프로젝트 메인 업무현황 높이 압축 ===== */
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 .summary-card {
     min-height: 66px !important;
@@ -2543,397 +1289,106 @@
 
 /* 메인에서는 업무현황 아래 노트가 보이도록 전체 섹션 여백도 살짝 축소 */
 
-/* ===== End 프로젝트 메인 업무현황 높이 압축 ===== */
-
-
 /* ===== 프로젝트 타임라인 접기/펼치기 ===== */
-
-
-
-
-
-
-
-
-
-
-
-
-
-/* ===== End 프로젝트 타임라인 접기/펼치기 ===== */
-
 
 /* ===== 프로젝트 타임라인 단위 선택/접기 위치 개선 ===== */
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/* ===== End 프로젝트 타임라인 단위 선택/접기 위치 개선 ===== */
-
-
 /* ===== 타임라인 접기 하단 이동 + 단위 선택 정리 ===== */
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /* 접힌 상태에서는 본문이 접히므로 하단 접기 버튼도 사라짐. 헤더 클릭 영역 혼란 방지 */
-
-
-
-/* ===== End 타임라인 접기 하단 이동 + 단위 선택 정리 ===== */
-
 
 /* ===== 타임라인 접기 유지/주말 표시 ===== */
 /* 접은 뒤에도 하단 우측 펼치기 버튼이 사라지지 않도록 하단 액션은 body 밖에서 항상 표시 */
 
-
-
-
-
-
-
-
 /* 일 단위에서 주말 표시 */
-
-
-
-
-
-
-
-/* ===== End 타임라인 접기 유지/주말 표시 ===== */
-
 
 /* ===== 타임라인 주말/라벨 색상 정리 ===== */
 /* 주말 표시: 토요일 파랑, 일요일 빨강 */
 
-
-
-
-
-
-
-
 /* 기존 weekend 공통 붉은 테두리 제거 */
-
 
 /* 주말 셀/오늘 셀에 붉은 outline이 생기지 않도록 정리 */
 
-
 /* 일정명 왼쪽 색상 표시 */
-
-
-
-
-
 
 /* 빈 행 라벨은 dot 없이 기존처럼 */
 
-/* ===== End 타임라인 주말/라벨 색상 정리 ===== */
-
-
 /* ===== 타임라인 새로고침 접힘 깜빡임 방지 ===== */
-
-
-
-
-
-
-
-
-
-/* ===== End 타임라인 새로고침 접힘 깜빡임 방지 ===== */
 
 /* ===== 일 단위 주말 표시 최종 보강 ===== */
 
-
-
-
-
-
-
-
-
-
-
-
 /* 주말 칸의 붉은 테두리/가상선 완전 제거 */
-
-
-
-/* ===== End 일 단위 주말 표시 최종 보강 ===== */
-
 
 /* ===== 타임라인 로딩 깜빡임 최종 방지 ===== */
 
-
-
-
-
-
-
-
-
-/* ===== End 타임라인 로딩 깜빡임 최종 방지 ===== */
-
 /* ===== 일 단위 토/일 표시 최종 복구 ===== */
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/* ===== End 일 단위 토/일 표시 최종 복구 ===== */
-
 
 /* ===== 타임라인 새로고침 깜빡임 최종 제거 ===== */
 /* 접힘 상태를 새로고침 후 복원하지 않고, 기본 펼침으로 고정한다.
    따라서 초기 렌더링 중 max-height 전환이 발생하지 않도록 transition을 제거한다. */
 
-
-
-
-
-
-
-/* ===== End 타임라인 새로고침 깜빡임 최종 제거 ===== */
-
-
 /* ===== 타임라인 접기 기능 제거 ===== */
-
-
-
-
-
-
-
-
-
-/* ===== End 타임라인 접기 기능 제거 ===== */
-
 
 /* ===== 타임라인 로딩 높이 안정화 ===== */
 /* 접기 기능은 제거되었지만, 일정 데이터를 fetch하기 전에는 로딩 div만 있어서
    간트 영역 높이가 작고, 데이터 렌더링 후 커지면서 접혔다 펴지는 것처럼 보일 수 있습니다. */
 
-
-
-
-
-
-
-
-
-
 /* 기존 접기 관련 클래스가 캐시/잔여 CSS로 남아도 화면을 접지 못하게 방어 */
-
-
-
-
-
-/* ===== End 타임라인 로딩 높이 안정화 ===== */
-
 
 /* ===== 프로젝트 메인 위젯 높이 정리 ===== */
 /* 공지사항/자유 피드/자료실은 대시보드 보조 위젯이므로
    메인에서는 최대 4개 정도만 보이게 높이를 고정합니다. */
 
-
-
-
-
-
-
-
-
-
-
-
-
-
 /* 위젯 item은 4개가 자연스럽게 들어오도록 살짝 압축 */
-
 
 /* 빈 상태도 카드 중앙을 과하게 밀지 않게 */
 
-
 /* 자유 피드는 일단 유지하되 보조 위젯 느낌으로 높이 통일 */
-
-/* ===== End 프로젝트 메인 위젯 높이 정리 ===== */
-
 
 /* ===== 프로젝트 메인 위젯 4개만 표시 ===== */
 /* 메인 대시보드에서는 공지/피드/자료실을 최대 4개만 보여주고,
    더 많은 항목은 '더보기' 페이지에서 확인하는 구조로 정리합니다. */
 
-
-
-
 /* 항목 5개부터는 메인에서 숨김 */
-
 
 /* 스크롤바 완전 제거 */
 
-
-
-
 /* 4개가 안정적으로 들어오게 item 높이 정리 */
 
-
 /* 날짜/제목이 너무 길면 한 줄 처리 */
-
-
-
-/* ===== End 프로젝트 메인 위젯 4개만 표시 ===== */
-
 
 /* ===== 자유 피드 미노출 → 최근 노트 / 업무현황 높이 조정 ===== */
 /* 메인 위젯은 스크롤 없이 4개까지만 노출 */
 
-
-
-
-
-
 /* 최근 노트도 공지/자료실과 같은 밀도 */
-
 
 /* 자유 피드를 뺀 대신 업무현황 보드 가시 영역을 조금 늘림 */
 
-
-
-
 /* 업무 카드가 많을 때는 업무현황 컬럼 내부 스크롤 유지 */
-
-/* ===== End 자유 피드 미노출 → 최근 노트 / 업무현황 높이 조정 ===== */
-
 
 /* ===== 프로젝트 메인 위젯: 공지사항 / 자료실 / 노트 ===== */
 /* FREE 게시판은 프로젝트 메인에서 미노출하고, 기존 작업 노트 위젯을 사용합니다. */
 
-
-
-
-
-
-
-/* ===== End 프로젝트 메인 위젯: 공지사항 / 자료실 / 노트 ===== */
-
-
 /* ===== 프로젝트 메인 위젯 2개 구성: 공지사항 / 자료실 ===== */
-
-
-
 
 /* 2개만 남으므로 카드 내부 여백과 가독성 유지 */
 
-
 /* 메인에서는 4개까지만 표시하고 더보기로 유도 */
-
-
-
-
-
-
-
-/* ===== End 프로젝트 메인 위젯 2개 구성 ===== */
-
 
 /* ===== 프로젝트 메인 상단 위젯: 공지사항 + 노트 ===== */
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /* 하단에 있던 노트 섹션을 제거했으므로 여백 튐 방지 */
-
 
 /* 메인에서는 공지/노트 각각 4개까지만 */
 
-
-
-/* ===== End 프로젝트 메인 상단 위젯: 공지사항 + 노트 ===== */
-
-
 /* ===== 공지사항 단독 위젯 + 노트 독립 섹션 ===== */
 
-
-
-
 /* 공지사항은 4개까지만 노출 */
-
-
-
-
-
 
 /* 노트는 제목만 있는 작은 위젯이 아니라 독립 섹션으로 노출 */
 .note-main-section {
     margin-top: 18px !important;
 }
-
-
-
-
 
 .note-main-list {
     display: grid !important;
@@ -2941,27 +1396,14 @@
     gap: 12px !important;
 }
 
-
-
-
-
-
-
-
-
 @media (max-width: 1050px){
 .note-main-list {
         grid-template-columns: 1fr !important;
     }
 }
-/* ===== End 공지사항 단독 위젯 + 노트 독립 섹션 ===== */
-
 
 /* ===== 노트/업무현황 헤더 액션 정리 ===== */
 /* 더보기는 공지사항처럼 텍스트 링크로 통일 */
-
-
-
 
 /* 노트 설명은 업무현황 설명처럼 은은하게 */
 .note-section-header p {
@@ -2990,7 +1432,7 @@
     min-height: 32px;
     padding: 0 13px;
     border-radius: 999px;
-    background: linear-gradient(135deg, #4A90E2 0%, #39CDB5 100%);
+    background: var(--moyo-primary-gradient, linear-gradient(135deg, #39CDB5 0%, #4A90E2 54%, #7358E8 100%));
     color: #fff !important;
     font-size: 12px;
     font-weight: 900;
@@ -3012,10 +1454,8 @@
     margin-top: 12px !important;
 }
 
-
 .note-main-list .note-item {
-    
-    
+
     min-height:128px;
     padding:16px 16px 14px 18px;
     border:1px solid #e9eef4;
@@ -3145,7 +1585,7 @@
     min-height:34px;
     padding:0 14px;
     border-radius:999px;
-    background:linear-gradient(135deg, #4A90E2 0%, #39CDB5 100%);
+    background:var(--moyo-primary-gradient, linear-gradient(135deg, #39CDB5 0%, #4A90E2 54%, #7358E8 100%));
     color:#fff;
     text-decoration:none;
     font-size:12px;
@@ -3169,33 +1609,23 @@
 
 /* 업무현황 액션: 전체 보기는 텍스트, 업무 추가는 기존 강조 버튼 유지 */
 
-
 /* 기존 전체 보기 버튼 클래스가 남아도 텍스트처럼 보이게 */
 
-
-
-
 /* 단, 업무 추가 버튼은 유지 */
-
 
 /* 노트 헤더 오른쪽이 공지사항 더보기와 같은 인상 */
 .note-section-header {
     align-items: flex-start !important;
 }
-/* ===== End 노트/업무현황 헤더 액션 정리 ===== */
-
 
 /* ===== 업무현황 헤더/보드 높이 정리 ===== */
 /* 업무현황의 전체 보기는 노트/공지처럼 텍스트 링크로 통일 */
-
-
-
 
 /* 업무 추가 버튼은 노트 작성처럼 섹션 하단 우측으로 이동 */
 .work-add-bottom-actions {
     display: flex;
     justify-content: flex-end;
-    
+
     padding-top: 12px;
     border-top: 1px solid #f0f2f5;
 }
@@ -3208,7 +1638,7 @@
     padding: 0 13px;
     border: 0;
     border-radius: 999px;
-    background: linear-gradient(135deg, #4A90E2 0%, #39CDB5 100%);
+    background: var(--moyo-primary-gradient, linear-gradient(135deg, #39CDB5 0%, #4A90E2 54%, #7358E8 100%));
     color: #fff;
     font-size: 12px;
     font-weight: 900;
@@ -3224,311 +1654,134 @@
 
 /* 칸반 영역은 4~5개 업무가 들어가도록 높이 확장 */
 
-
-
-
-
-
-
-
 /* 카드 간격을 약간 압축해서 4~5개가 자연스럽게 보이게 */
-
-
-
-
-
-
-
-
-
-/* ===== End 업무현황 헤더/보드 높이 정리 ===== */
-
 
 /* ===== 업무현황 텍스트/요약카드 정렬 정리 ===== */
 /* 모든 더보기 링크는 공지사항처럼 가볍게 통일 */
 
-
-
-
 /* 업무현황 요약 카드 가운데 정렬 */
-
-
-
-
-
-
-
 
 /* 업무현황 헤더의 더보기는 버튼 느낌 제거 */
 
-
-
-
 /* 좁은 화면에서는 요약 카드가 무리하지 않게 줄바꿈 */
-
-/* ===== End 업무현황 텍스트/요약카드 정렬 정리 ===== */
-
 
 /* ===== 더보기 텍스트 최종 통일 + 업무현황 자연 높이 확장 ===== */
 /* 공지사항/노트/업무현황 더보기는 모두 같은 가벼운 텍스트 링크 */
 
-
-
-
 /* 업무현황은 하단 주요 영역이므로 내부 스크롤 없이 업무 개수만큼 자연스럽게 늘어남 */
-
-
-
-
-
-
-
 
 /* 스크롤바 제거 */
 
-
-
-
 /* 업무 카드가 많아져도 아래로 자연스럽게 쌓이도록 */
-
 
 /* 빈 컬럼도 너무 작아 보이지 않게 */
 
-
 /* :has 미지원 브라우저 대비 */
-
-
-
-/* ===== End 더보기 텍스트 최종 통일 + 업무현황 자연 높이 확장 ===== */
-
 
 /* ===== 업무현황 더보기 일반 텍스트 + 빈칸 클릭 업무 추가 ===== */
 /* 기존 .work-board-more-btn의 font-weight가 뒤에서 덮여도 이 규칙이 최종으로 이김 */
 
-
-
-
 /* 빈 칸반 영역 클릭 가능 표시 */
 
-
-
-
-
-
-
-
 /* 카드가 없는 칸은 클릭 유도, 카드가 있는 칸도 빈 공간 클릭 시 추가 가능 */
-
-/* ===== End 업무현황 더보기 일반 텍스트 + 빈칸 클릭 업무 추가 ===== */
-
 
 /* ===== 업무현황 칸반 기본 3개 높이 + 자동 확장 ===== */
 /* 업무현황은 하단 주요 섹션이므로 내부 스크롤을 만들지 않고,
    기본은 카드 3개 정도 높이로 유지한 뒤 업무가 많아지면 섹션이 아래로 자연스럽게 늘어납니다. */
 
-
-
-
-
 /* 컬럼 기본 높이: 카드 3개 정도 */
-
 
 /* 헤더 제외 실제 카드 리스트 기본 높이 */
 
-
 /* 내부 스크롤 제거 */
-
-
-
 
 /* 카드가 늘어나면 리스트/컬럼이 같이 늘어남 */
 
-
 /* 빈 컬럼도 너무 커 보이지 않게 3개 기준 높이만 유지 */
 
-
 /* 빈칸 클릭 힌트 위치가 과하게 아래로 내려가지 않게 */
-
 
 /* 업무 추가 버튼과 칸반 사이 여백 안정화 */
 .work-add-bottom-actions {
     margin-top: 14px !important;
 }
 
-
-/* ===== End 업무현황 칸반 기본 3개 높이 + 자동 확장 ===== */
-
-
 /* ===== FINAL: 업무현황 칸반 3개 기준 높이 강제 ===== */
 /* 이전 단계의 높은 min-height 규칙을 최종 override합니다.
    기본은 카드 3개 정도 높이, 업무가 많아지면 내부 스크롤 없이 페이지가 아래로 늘어납니다. */
 
-
-
-
-
-
-
 /* 빈 칸도 3개 정도의 기준 높이만 유지 */
-
 
 /* 카드가 많으면 리스트가 자연스럽게 늘어나도록 */
 
-
 /* 이전 스크롤바 규칙 제거 */
-
-
-
 
 /* 빈칸 클릭 문구는 너무 아래로 내려가지 않게 중앙보다 살짝 위 */
 
-
 /* 업무 추가 버튼과 하단 여백 */
 
-
 /* 화면이 좁을 때 */
-
-/* ===== End FINAL: 업무현황 칸반 3개 기준 높이 강제 ===== */
-
 
 /* ===== FINAL 2: 업무현황 높이/진행중 색상 통일 ===== */
 /* 이전 높은 min-height와 stretch 때문에 높이가 그대로 보이는 문제를 최종 override */
 
 /* 1) 칸반 높이: 기본 3개 카드 정도, 더 많으면 아래로 자연 확장 */
 
-
-
-
-
-
 /* 빈 칸도 너무 길지 않게 */
-
 
 /* 카드가 4개 이상이면 리스트와 컬럼이 아래로 계속 늘어남 */
 
-
 /* 드래그/빈칸 클릭용 안내 위치 */
-
 
 /* 업무 추가 버튼과 보드 사이 여백 */
 
-
 /* 2) 진행중 색상 통일: 진행중은 파랑 */
-
-
-
-
-
 
 /* 진행중 뱃지 파랑 통일: 클래스명이 달라도 최대한 잡음 */
 
-
 /* 진행중 카드 안에 텍스트 뱃지가 inline style 없이 클래스가 없을 때를 대비 */
 
-
 /* 좁은 화면 */
-
-/* ===== End FINAL 2: 업무현황 높이/진행중 색상 통일 ===== */
-
 
 /* ===== 진행 전/진행 중 명칭 및 진행 뱃지 색상 통일 ===== */
 /* TODO 컬럼은 요약 카드와 같은 용어인 '진행 전'으로 통일 */
 
 /* 진행 중은 모든 위치에서 파랑 계열 */
 
-
-
-
-
-
 /* 진행 중 뱃지 클래스 후보를 최대한 넓게 커버 */
-
 
 /* 기존 orange/warning 클래스가 진행 중 뱃지에 붙어도 파랑으로 덮기 위한 보강 */
 
-
 /* 진행 전 / 할 일은 주황 계열 유지 */
-
-/* ===== End 진행 전/진행 중 명칭 및 진행 뱃지 색상 통일 ===== */
-
 
 /* ===== 업무현황 용어/뱃지 최종 정리 ===== */
 /* TODO 용어는 '할 일'로 통일 */
 
 /* 지연 외 상태 뱃지는 메인 카드에서 숨김 */
 
-
-
-
 /* 모달 안의 상태 선택 pill은 숨기면 안 됨 */
 
-
 /* 할 일은 주황 계열, 진행 중은 파랑 계열로 유지 */
-
-
-
-
-
-
-
-
-
-
-
-/* ===== End 업무현황 용어/뱃지 최종 정리 ===== */
-
 
 /* ===== 업무현황 요약 간소화 + 진행중 연한 파랑 ===== */
 /* 전체 숫자는 할 일/진행 중/완료 합으로 추론 가능하므로 메인 요약에서는 제외 */
 
-
 /* 진행 중은 너무 진한 파랑보다 연한 파랑이 메인 화면에서 덜 튀고 자연스러움 */
-
-
-
-
-
-
-
 
 /* 진행 중 상태는 카드 뱃지에서 숨기지만, 혹시 남는 경우도 연한 파랑으로 통일 */
 
-
 /* 기존 total 카드가 남아 있어도 화면에서 숨김 */
 
-
 /* 4개 카드 기준 가운데 정렬 유지 */
-
-
-
-/* ===== End 업무현황 요약 간소화 + 진행중 연한 파랑 ===== */
-
 
 /* ===== 업무현황 카드 날짜 간소화 + 칸반 높이 균형 ===== */
 /* 업무 카드의 오전/오후는 메인에서는 과한 정보라 제거하고, 날짜만 표시합니다. */
 
 /* 칸반은 가장 많은 컬럼 높이에 맞춰 균형 있게 보이게 하되, 기본은 3개 카드 정도 */
 
-
-
-
-
-
-
-
-
-
 /* 날짜가 짧아졌으므로 카드 내부 간격을 살짝 안정화 */
 
-
-
-
 /* 완료/진행 중 컬럼이 짧아 보여도 카드 리스트 영역은 같은 높이를 유지 */
-
-
-
-/* ===== End 업무현황 카드 날짜 간소화 + 칸반 높이 균형 ===== */
-
 
 /* ===== FINAL: 업무현황 칸반 컬럼/클릭 영역 높이 통일 ===== */
 /* 문제:
@@ -3541,184 +1794,77 @@
    - 업무가 많아지면 가장 긴 컬럼 기준으로 전체 보드가 아래로 늘어남
 */
 
-
-
-
-
-
-
 /* 실제 클릭/드롭 영역 */
-
 
 /* 빈 리스트도 다른 컬럼과 같은 기준 높이 */
 
-
 /* 할 일 빈칸 안내가 클릭 영역 중앙에 오도록 */
-
 
 /* 카드가 많아질 때 내부 스크롤 없이 컬럼/섹션이 같이 늘어나도록 */
 
-
 /* 이전 단계에서 들어간 큰 min-height 방어 */
 
-
 /* 하단 추가 버튼과 보드 사이 간격 */
-
-
-
-/* ===== End FINAL: 업무현황 칸반 컬럼/클릭 영역 높이 통일 ===== */
-
 
 /* ===== 업무 모달 상태 색상 + 칸반 빈칸 클릭 UX 수정 ===== */
 /* 모달 상태 버튼 기본 */
 
-
-
-
 /* 할 일 active: 주황 */
-
 
 /* 진행 중 active: 연한 파랑 */
 
-
 /* 완료 active: 초록 */
-
 
 /* 숨겨진 select는 화면에서 제거 */
 
-
 /* 칸반 리스트 전체 빈 공간은 클릭 가능해야 함 */
-
 
 /* 업무 카드는 상세 클릭 영역이므로 기본 포인터 유지 */
 
-
 /* 빈칸 클릭 안내는 세 컬럼 모두 동일 */
 
-
 /* 카드가 하나도 없는 컬럼에서만 안내 표시 */
-
-
-
-/* ===== End 업무 모달 상태 색상 + 칸반 빈칸 클릭 UX 수정 ===== */
-
 
 /* ===== FINAL: 업무현황 빈칸 클릭 제거 + 상태 색상/바 유지 ===== */
 /* 빈칸 클릭 업무 추가 기능은 제거하고, 하단 + 업무 추가 버튼만 사용합니다. */
 
-
-
-
 /* 업무 카드는 상세 보기 대상이므로 포인터 유지 */
-
 
 /* 컬럼 높이와 리스트 영역 통일 */
 
-
-
-
-
-
 /* 업무 카드 왼쪽 상태 바 유지 */
-
-
-
-
-
 
 /* 지연 외 상태 뱃지는 카드에서 표시하지 않음 */
 
-
-
-
 /* 상태 색상 통일 */
-
-
-
-
-
-
-
-
-
-/* ===== End FINAL: 업무현황 빈칸 클릭 제거 + 상태 색상/바 유지 ===== */
-
 
 /* ===== FINAL: 메인 업무 카드 왼쪽 색상바를 workList와 통일 ===== */
 /* 메인도 workList처럼 컬럼/상태에 따라 카드 앞 색상바가 달라지도록 맞춥니다. */
 
-
-
 /* 기존 공통 색상바 제거/재정의 */
-
 
 /* 할 일 컬럼: 주황 */
 
-
 /* 진행 중 컬럼: 연한 파랑 */
-
 
 /* 완료 컬럼: 초록/민트 */
 
-
 /* 지연 업무는 어느 컬럼에 있어도 빨강 우선 */
-
 
 /* 왼쪽 바 때문에 내용이 너무 붙지 않게 */
 
-/* ===== End FINAL: 메인 업무 카드 왼쪽 색상바를 workList와 통일 ===== */
-
-
 /* ===== FINAL: 프로젝트 메인 업무현황 전체 카운터 복구 ===== */
 
-
-
-
-
-
-
-
-
-
-
-
-
-
 /* 상태 색상 유지 */
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/* ===== End FINAL: 프로젝트 메인 업무현황 전체 카운터 복구 ===== */
-
 
 /* ===== FINAL: 프로젝트 메인 멤버 전체 노출 ===== */
 /* 프로젝트 멤버 영역은 사이드바 하단에 있으므로 더보기 없이 전체 멤버를 세로로 자연스럽게 노출합니다. */
 
-
-
-
 /* JS가 일부만 보이도록 nth-child 처리했을 경우 방어 */
-
 
 /* 더보기 버튼/링크 제거 */
 
-
 /* 멤버가 많아질 때 카드 간격 안정화 */
-
 
 /* 사이드바가 멤버 수만큼 자연스럽게 늘어나도록 */
 .side-content,
@@ -3727,66 +1873,25 @@
     max-height: none !important;
     overflow: visible !important;
 }
-/* ===== End FINAL: 프로젝트 메인 멤버 전체 노출 ===== */
-
 
 /* ===== FINAL: 프로젝트 멤버 통계는 카드 아래 별도 행 ===== */
 /* 멤버 더보기만 제거 */
 
-
 /* 다른 대시보드 더보기 유지 */
-
 
 /* 멤버 리스트 */
 
-
 /* 카드 */
-
 
 /* 1행: 아바타 | 이름 + 권한라벨 / 프로젝트 역할 */
 
-
-
-
-
-
-
-
-
-
-
-
 /* 권한 라벨: 통계와 다른 둥근 사각 라벨 */
-
-
-
-
-
-
-
 
 /* 2행: 상황 숫자는 이름 옆이 아니라 카드 아래에 별도 행으로 표시 */
 
-
-
-
 /* 풀 라벨을 유지하되 사이드바 폭에 맞도록 압축 */
 
-
-
-
-
-
-
-
-
-
 /* 이전 구조 잔재 제거 */
-
-
-
-/* ===== End FINAL: 프로젝트 멤버 통계는 카드 아래 별도 행 ===== */
-
 
 /* =======================================================================
    MOYO 프로젝트 메인 - 프로젝트 멤버 카드 최종 분리 패치
@@ -3794,54 +1899,6 @@
    - JSP에는 멤버 UI용 CSS/JS를 넣지 않습니다.
    - 구조: [아바타] 이름+권한 / 프로젝트역할  +  아래 행: 전체/할일/진행/완료/지연
    ======================================================================= */
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/* ===== End MOYO 프로젝트 멤버 카드 최종 분리 패치 ===== */
-
 
 /* =======================================================================
    PROJECT MAIN CLEAN OVERRIDE v1
@@ -3851,140 +1908,32 @@
    - 기존 전체 CSS는 유지하고, 충돌 가능성이 큰 마지막 오버라이드만 정리
    ======================================================================= */
 
-
 /* -----------------------------------------------------------------------
    1. 프로젝트 멤버 패널
    ----------------------------------------------------------------------- */
-
-
-
-
-
-
-
-
-
-
-
-
 
 /* -----------------------------------------------------------------------
    2. 초대 버튼: MOYO 그라데이션 버튼으로 통일
    ----------------------------------------------------------------------- */
 
-
-
-
-
-
-
 /* -----------------------------------------------------------------------
    3. 프로젝트 멤버 카드
    ----------------------------------------------------------------------- */
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /* 권한: 배지 없이 우측 상단 plain text만 */
-
-
 
 /* -----------------------------------------------------------------------
    4. 프로젝트 멤버 상태 칩
    JS에서 "전체 4" 형태의 단일 텍스트로 렌더링한다.
    ----------------------------------------------------------------------- */
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /* -----------------------------------------------------------------------
    5. 업무 현황 섹션: 더보기 / 카드 간격 최종값
    ----------------------------------------------------------------------- */
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /* -----------------------------------------------------------------------
    6. 반응형 보정
    ----------------------------------------------------------------------- */
-
-
-
-
-
-/* ===== End PROJECT MAIN CLEAN OVERRIDE v1 ===== */
 
 /* ===== 노트 메인 위젯 전문 펼치기 + 고정 상태 구분 ===== */
 .note-main-list .note-item {
@@ -4055,30 +2004,25 @@
 .note-preview-toggle:hover {
     text-decoration: underline;
 }
-/* ===== End 노트 메인 위젯 전문 펼치기 + 고정 상태 구분 ===== */
-
 
 /* ===== 노트 위젯 전체 펼치기 ===== */
 .note-section-actions { display:flex; align-items:center; gap:12px; flex-shrink:0; }
 
-
 .note-main-list.is-all-expanded { align-items:start; }
 
 .note-main-list.is-all-expanded .work-note-preview {
-    
+
     -webkit-line-clamp:unset !important;
-    
+
     overflow-y:auto !important;
     padding-right:6px;
-    
+
 }
 .note-main-list.is-all-expanded .work-note-preview::-webkit-scrollbar { width:6px; }
 .note-main-list.is-all-expanded .work-note-preview::-webkit-scrollbar-thumb { background:#cbd5e1; border-radius:999px; }
 .note-preview-toggle { display:none !important; }
 
-
 /* ===== 노트 메인 위젯: 하단 전체 펼치기 + 이미지 미리보기 ===== */
-
 
 .note-item-images {
     display:none;
@@ -4127,7 +2071,6 @@
         align-items:stretch;
     }
 }
-/* ===== End 노트 메인 위젯 ===== */
 
 /* ===== 노트 메인 위젯 첨부 이미지 썸네일 크기 강제 보정 ===== */
 .note-main-list .note-item-images {
@@ -4178,19 +2121,14 @@
         grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
     }
     .note-main-list .note-item-image,
-    .note-main-list .note-item-image img {
+.note-main-list .note-item-image img {
         height: 78px !important;
         min-height: 78px !important;
         max-height: 78px !important;
     }
 }
-/* ===== End 노트 첨부 이미지 썸네일 보정 ===== */
 
 /* ===== FINAL: 업무 현황 더보기 hover 가시성 보정 ===== */
-
-
-
-/* ===== End FINAL ===== */
 
 /* ===== PROJECT MAIN FINAL BALANCE TUNE =====
    - 노트 개수에 맞춰 카드 폭 자동 조절
@@ -4213,57 +2151,21 @@
 
 /* 업무가 없을 때도 화면 절반을 차지하지 않도록 기본 높이를 축소 */
 
-
-
-
-
-
 /* 실제 업무 카드가 늘어나면 목록 높이는 자연스럽게 확장 */
-
 
 @media (max-width: 1050px){
 .note-main-list:has(> .note-item:nth-child(2):last-child),
-    .note-main-list:has(> .note-item:nth-child(3):last-child) {
+.note-main-list:has(> .note-item:nth-child(3):last-child) {
         grid-template-columns: 1fr !important;
     }
 }
 
-/* ===== END PROJECT MAIN FINAL BALANCE TUNE ===== */
-
-
 /* ===== FINAL: 업무 현황 더보기는 텍스트 변화 없이 포인터만 표시 ===== */
-
-/* ===== End 업무 현황 더보기 포인터 보정 ===== */
 
 /* =========================================================
    Migrated from projectMain.jsp inline styles (preserved order)
    ========================================================= */
 
-/* Inline style block 01 */
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/* Inline style block 02 */
 .schedule-time-toggle {
     display:flex;
     align-items:center;
@@ -4301,249 +2203,13 @@
     cursor:not-allowed;
 }
 
-
-
-
-
-
-/* Inline style block 03 */
-/* FINAL FIX: 1주 이내 시간 기준선은 칸을 늘리지 않고 날짜 칸 안에 작게 표시 */
-
-
 /* 빈 칸에도 시간 계획 가능 영역이 있다는 힌트 */
-
 
 /* 드래그 선택 효과: 주말 칸에서도 확실히 보이게 */
 
-
-
-
-
-
-
-
-/* Inline style block 04 */
-/* FINAL FIX: 시간별 일정은 간트 칸을 늘리지 않고 별도 리스트로 표시 */
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/* Inline style block 05 */
-/* FINAL FIX: 시간 계획은 간트/목록이 아니라 주간 일정표로 표시 */
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/* Inline style block 06 */
-/* FINAL FIX: 시간별 보기에서는 간트 박스 자체가 주간 시간표로 바뀜 */
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/* Inline style block 07 */
-/* FINAL FIX: 일/주/월 간트 막대 안에서는 시간 텍스트를 표시하지 않음 */
-
-
-/* Inline style block 08 */
-/* FINAL FIX: 주간 시간표 드래그 등록/이동 */
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/* Inline style block 09 */
-/* FINAL FIX: 주간 시간표 새벽 접기/펼치기 + 드래그 UX 보정 */
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/* Inline style block 10 */
-/* FINAL FIX: 주간 시간표 드래그는 실제 이동/조정 중에만 이펙트 표시 */
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/* Inline style block 11 */
-/* FINAL FIX: 시간표/간트 표시 정리 + 드래그 중 이동 위치 표시 */
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/* Inline style block 12 */
-/* FINAL FIX v2: 주간 시간표 색상/오늘/현재시간/간트 시간표시 정리 */
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/* Inline style block 13 */
-/* FINAL FIX: 주간 시간표 드래그/드롭 제거 + 오늘/현재시간 표시 정리 */
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/* Inline style block 14 */
-/* FINAL FIX: 주간 시간표 행 높이/현재시간선/오늘표시 보정 */
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /* 간트 오늘 표시는 텍스트를 추가하지 않고 배경/하단선만 사용 */
 
-
-/* Inline style block 15 */
 /* FINAL FIX: 간트 시간 표시 복구 / 헤더 여백 / 시간 입력 UX 보정 */
-
-
-
-
-
-
-
 
 .schedule-time-row input[type="time"],
 .schedule-time-row .modal-input[type="time"] {
@@ -4554,7 +2220,6 @@
     letter-spacing: 0;
 }
 
-/* Inline style block 16 */
 /* FINAL FIX: 일정 모달 날짜/시간 배치 + 10분 단위 24시간 셀렉트 */
 .schedule-datetime-grid {
     display: grid;
@@ -4604,7 +2269,6 @@
     }
 }
 
-/* Inline style block 17 */
 /* FINAL FIX: 시간/분 분리 선택 + 오늘 텍스트 제거 */
 .schedule-time-split-wrap {
     display: grid;
@@ -4642,295 +2306,153 @@
 
 /* 오늘 표시는 텍스트 없이 점/강조만 */
 
-
-
-
-/* Inline style block 18 */
-/* FINAL FIX: 시간계획 토글/오늘 점/간트 시간 텍스트 정리 */
-
-
-
-
 /* 간트 막대의 시간은 중앙 정렬 텍스트로만 표시 */
-
-
-
-
-/* Inline style block 19 */
-/* FINAL FIX: 오늘 표시는 텍스트/점 없이 날짜 셀 하단선만 사용 */
-
 
 /* 이전 패치에서 남은 오늘 텍스트/점 완전 제거 */
 
-
 /* 혹시 과거 CSS의 '오늘' pseudo text가 남아도 표시하지 않음 */
-
-
-/* Inline style block 20 */
-/* FINAL OVERRIDE: 오늘 텍스트 완전 제거 + 주간 시간표 시간행 여백 보정 */
-
-
-
 
 /* 시간행 아래쪽이 비어 보이지 않도록 행과 텍스트를 강제로 중앙 정렬 */
 
-
-
-
-
-
-
-
 /* 헤더도 줄바꿈/오늘 표시로 커지지 않게 고정 */
-
 
 /* 현재 시간선은 행 높이에 영향을 주지 않게 셀 내부 절대좌표로만 표시 */
 
-
-
-
-/* Inline style block 21 */
-/* FINAL FIX: 주간 시간표 안정화 - 새벽 접기 우선순위 / 시간 단위 배치 */
-
-
-
-
-
-
-
-
 /* 현재 시간선은 행을 밀지 않고 셀 내부에만 표시 */
 
+/* ===== 워크스페이스와 통일한 프로젝트 히어로 최종 스타일 ===== */
+.project-hero {
+    min-height: 112px !important;
+    margin-bottom: 22px !important;
+    padding: 24px 32px !important;
+    position: relative !important;
 
+    gap: 20px !important;
 
+    border: 1px solid #e7effa !important;
+    border-radius: 20px !important;
 
+}
+.project-hero::before {
+    content: "";
+    position: absolute;
+    left: 0;
 
+    border-radius: 0 999px 999px 0;
 
-/* Inline style block 22 */
-/* FINAL FIX: projectMain 공지사항 옆 진행 중인 투표 위젯 */
+}
+.project-hero::after {
+    content: "";
+    position: absolute;
 
+    pointer-events: none;
+}
+.project-hero-info,
+.project-hero-right {
+    position: relative;
+    z-index: 1;
+}
+.project-type-label {
+    display: block;
+    margin-bottom: 4px;
+    color: #8a94a6;
+    font-family: Georgia, "Times New Roman", "Pretendard", sans-serif;
+    font-size: 12px;
+    font-style: italic;
+    font-weight: 500;
+    letter-spacing: .04em;
+    line-height: 1.2;
+}
+.project-hero h1 {
+    margin: 0 0 7px !important;
+    color: #111827 !important;
+    font-size: 26px !important;
+    font-weight: 900 !important;
+    letter-spacing: -.04em !important;
+    line-height: 1.24 !important;
+}
+.project-hero p {
+    margin: 0 !important;
+    color: #6b7280 !important;
+    font-size: 14px !important;
+    font-weight: 500 !important;
+    line-height: 1.5 !important;
+}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/* Inline style block 23 */
-
-
-
-/* Inline style block 24 */
-
-
-
-
+/* 프로젝트 히어로 자유 외부 링크 */
+.project-hero .project-hero-meta-line {
+    min-width:0;
+    height:28px;
+    margin-top:1px;
+    display:flex;
+    align-items:center;
+    gap:10px;
+}
+.project-hero .project-hero-description {
+    min-width:80px;
+    max-width:430px;
+    margin:0;
+    overflow:hidden;
+    color:#6b7280;
+    font-size:13px;
+    line-height:28px;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+}
+.project-hero .project-external-links {
+    min-width:0;
+    max-width:min(44vw,480px);
+    height:28px;
+    margin:0;
+    display:flex;
+    flex:0 1 auto;
+    align-items:center;
+    gap:6px;
+    overflow-x:auto;
+    overflow-y:hidden;
+    scrollbar-width:none;
+    white-space:nowrap;
+}
+.project-hero .project-external-links::-webkit-scrollbar { display:none; }
+.project-hero .project-external-link {
+    height:26px;
+    min-height:26px;
+    padding:0 9px;
+    display:inline-flex;
+    flex:0 0 auto;
+    align-items:center;
+    gap:4px;
+    border:1px solid #d7e5f3;
+    border-radius:999px;
+    background:#fff;
+    color:#347bc8;
+    font-size:10.5px;
+    font-weight:500;
+    line-height:1;
+    text-decoration:none;
+}
+.project-hero .project-external-link:hover {
+    border-color:#9fc6ec;
+    background:#f5faff;
+    transform:translateY(-1px);
+}
+@media (max-width:760px){
+.project-hero .project-hero-description {max-width:42%;}
+    .project-hero .project-external-links {max-width:58%;}
+}
 
 /* ===== 프로젝트 멤버 프로필 ===== */
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/* ===== End 프로젝트 멤버 프로필 ===== */
-
-
-
-
 
 /* =========================================================
    Project main - member add modal
    프로젝트 설정의 멤버 추가 모달과 동일한 구성
    ========================================================= */
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /* ===== MOYO project board widget final polish ===== */
-
-
-
-
-
-
-
-/* ===== End MOYO project board widget final polish ===== */
 
 /* ===== 프로젝트 메인 사진첩 위젯 추가 ===== */
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/* ===== End 프로젝트 메인 사진첩 위젯 추가 ===== */
-
-
 /* ===== 프로젝트 메인: 노트 / 사진첩 2컬럼 배치 ===== */
-
-
-
-
-
-
-
-
-/* ===== End 프로젝트 메인: 노트 / 사진첩 2컬럼 배치 ===== */
-
 
 /* ===== 프로젝트 메인: 공유 노트 준비중 카드 ===== */
 .shared-note-ready-section .note-section-header .section-more-link,
@@ -4963,510 +2485,34 @@
     font-size: 13px !important;
     color: #6f7f8f !important;
 }
-/* ===== End 프로젝트 메인: 공유 노트 준비중 카드 ===== */
-
 
 /* ===== PROJECT MAIN: 공유 노트 / 사진첩 높이 정렬 최종 보정 ===== */
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/* ===== End PROJECT MAIN note/photo height fix ===== */
-
 /* ===== PROJECT MAIN: workspace-like note/photo typography final ===== */
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/* ===== End PROJECT MAIN: workspace-like note/photo typography final ===== */
-
 
 /* ===== REAL FINAL: project main shared-note/photo equal workspace tone ===== */
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/* ===== End REAL FINAL project main shared-note/photo ===== */
-
 /* ===== FINAL: 프로젝트 메인 사진첩 더보기 링크 통일 =====
    공지사항/진행 중인 투표/자료실/노트의 더보기와 같은 텍스트 링크 톤으로 맞춤 */
-
-
-
-/* ===== End 프로젝트 메인 사진첩 더보기 링크 통일 ===== */
 
 /* ======================================================================
    FINAL POLISH: Project mini calendar widget
    - 워크스페이스 달력 위젯과 톤/크기 맞춤
    - 프로젝트 기간/일정/마감 범례는 유지
    ====================================================================== */
-.mini-calendar {
-    overflow: hidden;
-}
-
-.mini-calendar .calendar-header {
-    margin-bottom: 16px;
-}
-
-.mini-calendar .calendar-month-control {
-    gap: 6px;
-    line-height: 1;
-}
-
-.mini-calendar .calendar-arrow {
-    width: 18px;
-    height: 22px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 8px;
-    transition: background-color .15s ease, color .15s ease;
-}
-
-.mini-calendar .calendar-arrow:hover {
-    background: #f1f7ff;
-    color: #2563eb;
-}
-
-.mini-calendar .calendar-grid {
-    gap: 7px 4px;
-}
-
-.mini-calendar .day-name,
-.mini-calendar .day-num {
-    min-width: 0;
-    width: 100%;
-    min-height: 28px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    line-height: 1;
-}
-
-.mini-calendar .day-name {
-    height: 24px;
-    padding-bottom: 0;
-    font-size: 11px;
-    font-weight: 800;
-}
-
-.mini-calendar .day-num {
-    height: 28px;
-    padding: 0;
-    border-radius: 9px;
-    font-size: 12px;
-    font-weight: 600;
-}
-
-.mini-calendar .day-num:not(:empty):hover {
-    background: #f5f9ff;
-}
-
-.mini-calendar .day-num.today,
-.mini-calendar .calendar-day.today {
-    width: 28px;
-    justify-self: center;
-    box-shadow: 0 7px 14px rgba(59, 130, 246, .18);
-}
-
-.mini-calendar .calendar-legend,
-.mini-calendar .mini-calendar-legend {
-    gap: 8px;
-    margin-top: 16px;
-    padding-top: 14px;
-}
-
-.mini-calendar .calendar-legend-item {
-    height: 24px;
-    padding: 0 9px;
-    border-radius: 999px;
-    background: #f8fbff;
-    border: 1px solid #e5edf7;
-    font-size: 11px;
-    font-weight: 600;
-}
-
-@media (max-width: 1180px){
-.side-content .mini-calendar,
-    .project-side-content .mini-calendar {
-        max-width: 360px;
-        margin-left: auto;
-        margin-right: auto;
-    }
-}
-
-@media (max-width: 560px){
-.side-content .mini-calendar,
-    .project-side-content .mini-calendar {
-        max-width: 100%;
-        padding: 18px 16px !important;
-    }
-    .mini-calendar .calendar-grid {
-        gap: 6px 3px;
-    }
-    .mini-calendar .day-num {
-        height: 27px;
-        min-height: 27px;
-        font-size: 11px;
-    }
-    .mini-calendar .day-num.today,
-    .mini-calendar .calendar-day.today {
-        width: 27px;
-    }
-}
-
-/* ======================================================================
-   FINAL: Workspace/Project calendar widget shared UI tone
-   - 프로젝트 달력은 기간/일정/마감 표시는 유지하고 겉 UI만 통일
-   ====================================================================== */
-.side-content .moyo-calendar-widget,
-.project-side-content .moyo-calendar-widget,
-.mini-calendar.project-calendar-panel {
-    background: #fff;
-    border: 1px solid #e8eef7;
-    border-radius: 18px;
-    padding: 18px;
-    box-shadow: 0 10px 24px rgba(15, 23, 42, .045);
-    overflow: hidden;
-}
-
-.mini-calendar .moyo-calendar-head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-    margin-bottom: 14px;
-}
-
-.mini-calendar .moyo-calendar-title-row {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    color: #111827;
-}
-
-.mini-calendar .moyo-calendar-month-title {
-    min-width: 68px;
-    text-align: center;
-    font-size: 15px;
-    font-weight: 900;
-    letter-spacing: -.03em;
-    color: #111827;
-}
-
-.mini-calendar .moyo-calendar-nav-btn {
-    width: 28px !important;
-    height: 28px !important;
-    display: inline-flex !important;
-    align-items: center;
-    justify-content: center;
-    border: 0 !important;
-    border-radius: 10px !important;
-    background: #f3f7fb !important;
-    color: #475569 !important;
-    font-size: 18px !important;
-    font-weight: 800 !important;
-    line-height: 1 !important;
-    cursor: pointer;
-    transition: background .15s ease, color .15s ease, box-shadow .15s ease, transform .15s ease;
-}
-
-.mini-calendar .moyo-calendar-nav-btn:hover {
-    background: linear-gradient(135deg, #4A90E2, #6C63FF) !important;
-    color: #fff !important;
-    box-shadow: 0 8px 16px rgba(74, 144, 226, .22);
-    transform: translateY(-1px);
-}
-
-.mini-calendar .moyo-calendar-more {
-    color: #64748b !important;
-    font-size: 12px !important;
-    font-weight: 600 !important;
-    text-decoration: none !important;
-}
-
-.mini-calendar .moyo-calendar-more:hover {
-    color: #4A90E2 !important;
-}
-
-.mini-calendar .moyo-calendar-grid {
-    display: grid;
-    grid-template-columns: repeat(7, minmax(0, 1fr));
-    gap: 6px 4px;
-    text-align: center;
-}
-
-.mini-calendar .moyo-calendar-grid .day-name,
-.mini-calendar .moyo-calendar-grid .day-num,
-.mini-calendar .moyo-calendar-grid .empty-slot {
-    min-width: 0;
-    width: 100%;
-    min-height: 29px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    line-height: 1;
-}
-
-.mini-calendar .moyo-calendar-grid .day-name {
-    height: 24px;
-    color: #94a3b8 !important;
-    font-size: 11px;
-    font-weight: 800;
-}
-
-.mini-calendar .moyo-calendar-grid .day-name.sun { color: #ef4444 !important; }
-.mini-calendar .moyo-calendar-grid .day-name.sat { color: #3b82f6 !important; }
-
-.mini-calendar .moyo-calendar-grid .day-num {
-    position: relative;
-    border-radius: 10px;
-    color: #334155;
-    font-size: 12px;
-    font-weight: 700;
-    cursor: default;
-}
-
-.mini-calendar .moyo-calendar-grid .day-num:not(:empty):hover {
-    background: #f5f9ff;
-}
-
-.mini-calendar .moyo-calendar-grid .day-num.today,
-.mini-calendar .moyo-calendar-grid .calendar-day.today {
-    background: linear-gradient(135deg, #4A90E2, #6C63FF) !important;
-    color: #fff !important;
-    box-shadow: 0 8px 16px rgba(74, 144, 226, .22);
-}
-
-.mini-calendar .moyo-calendar-legend {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-top: 16px;
-    padding-top: 14px;
-    border-top: 1px solid #edf2f7;
-}
-
-.mini-calendar .moyo-calendar-legend .calendar-legend-item {
-    height: 24px;
-    padding: 0 10px;
-    border-radius: 999px;
-    background: #f8fbff;
-    border: 1px solid #e5edf7;
-    color: #64748b;
-    font-size: 11px;
-    font-weight: 700;
-}
-
-.mini-calendar .moyo-calendar-grid .calendar-marker-row {
-    bottom: 3px;
-}
-/* ===== End workspace/project calendar widget shared UI tone ===== */
-
-/* ======================================================================
-   FINAL PATCH: Project calendar widget width align with workspace widget
-   - 프로젝트 사이드 달력이 워크스페이스 달력보다 좁아 보이는 문제만 보정
-   ====================================================================== */
-
-
-.side-content .project-calendar-panel.moyo-calendar-widget,
-.side-content .mini-calendar.project-calendar-panel {
-    width: 100% !important;
-    box-sizing: border-box !important;
-}
-
-.side-content .project-calendar-panel .moyo-calendar-grid {
-    grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
-}
-/* ===== End project calendar widget width align patch ===== */
 
 /* ===== PROJECT NOTE WIDGET v3: workspace-style stable layout ===== */
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/* ===== End PROJECT NOTE WIDGET v3 ===== */
-
-
 /* ===== Project shared note widget v4: unified compact rows ===== */
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/* ===== End project shared note widget v4 ===== */
-
-
 /* ===== PROJECT MAIN shared note widget v6 polish ===== */
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/* ===== End PROJECT MAIN shared note widget v6 polish ===== */
-
 
 /* ===== PROJECT MAIN shared note widget v7: more link + clipping fix ===== */
 /* 이전 준비중 규칙이 실제 공유 노트의 더보기 링크까지 숨기던 문제 복구 */
 
-
-
 /* 노트 두 건의 제목/본문/작성자 행이 카드 하단에서 잘리지 않도록 여유 확보 */
 
-
-
-
-
-
-
-
-/* ===== End PROJECT MAIN shared note widget v7 ===== */
-
 /* ===== PROJECT MAIN shared note widget v8: second card bottom clipping final fix ===== */
-
-
-
-
-
-
-
-
-
-
-
-/* ===== End PROJECT MAIN shared note widget v8 ===== */
-
 
 .project-main-back-btn {
     min-height: 38px;
@@ -5507,312 +2553,992 @@ body.personal-project-main .side-content > div:empty {
     display: none;
 }
 
-
-
 /* 개인 프로젝트는 타임라인 다음에 노트, 업무 현황 순으로 유지한다. */
 body.personal-project-main .note-main-section {
     order: 1;
 }
-
-
 
 @media (max-width: 1100px){
 body.personal-project-main .side-content {
         width: 100%;
     }
 }
-/* ===== End personal project layout v2 ===== */
 
-/* ===== Project hero: workspace hero structure without image ===== */
-.project-hero {
-    min-height: 112px;
-    margin-bottom: 22px;
-    padding: 20px 32px;
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    align-items: start;
-    column-gap: 20px;
+/* ========================================================================
+   20-13 프로젝트 메인 더보기 · 설정/멤버/목록 이동
+   ======================================================================== */
+.project-main-more {
     position: relative;
-    overflow: hidden;
-    background: linear-gradient(135deg, #fff 0%, #f9fcff 100%);
-    border: 1px solid #e7effa;
-    border-radius: 20px;
-    box-shadow: 0 8px 22px rgba(74, 144, 226, .045);
 }
 
-.project-hero::before {
-    content: "";
-    position: absolute;
-    left: 0;
-    top: 22px;
-    bottom: 22px;
-    width: 4px;
-    border-radius: 0 999px 999px 0;
-    background: linear-gradient(180deg, var(--moyo-blue), var(--moyo-mint));
-}
-
-.project-hero::after {
-    content: "";
-    position: absolute;
-    right: -82px;
-    top: -104px;
-    width: 212px;
-    height: 212px;
-    border-radius: 999px;
-    background: rgba(74, 144, 226, .045);
-    pointer-events: none;
-}
-
-.project-hero-info {
-    grid-column: 1;
-    min-width: 0;
-    width: 100%;
-    position: relative;
-    z-index: 1;
-}
-
-.project-hero-actions {
-    grid-column: 2;
-    align-self: start;
-    justify-self: end;
-    margin-top: 2px;
-    position: relative;
-    z-index: 1;
-}
-
-.project-type-status {
-    min-width: 0;
-    margin-bottom: 5px;
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 7px;
-}
-
-.project-type-label {
-    display: inline;
-    margin: 0;
-    color: #8a94a6;
-    font-family: Georgia, "Times New Roman", "Pretendard", sans-serif;
-    font-size: 12px;
-    font-style: italic;
-    font-weight: 500;
-    letter-spacing: .04em;
-    line-height: 22px;
-}
-
-.project-scope-badge {
-    min-height: 22px;
-    padding: 0 9px;
+.project-main-more-button {
+    width: 40px;
+    height: 40px;
+    padding: 0;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    border: 1px solid transparent;
-    border-radius: 999px;
-    font-size: 10px;
-    font-weight: 800;
-    line-height: 1;
-    white-space: nowrap;
-}
 
-.project-scope-badge.is-personal {
-    border-color: #dcecff;
-    background: #f4f9ff;
-    color: #347bc8;
-}
-
-.project-scope-badge.is-group {
-    border-color: #d7f3ec;
-    background: #f2fcf8;
-    color: #159777;
-}
-
-.project-hero h1 {
-    max-width: min(760px, 100%);
-    margin: 0 0 7px;
-    display: -webkit-box;
-    overflow: hidden;
-    overflow-wrap: anywhere;
-    word-break: break-word;
-    color: #111827;
-    font-size: 26px;
-    font-weight: 900;
-    letter-spacing: -.04em;
-    line-height: 1.24;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2;
-}
-
-.project-hero-meta-line {
-    max-width: 100%;
-    min-width: 0;
-    display: flex;
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 7px;
-}
-
-.project-hero-description {
-    max-width: min(720px, 100%);
-    margin: 0;
-    overflow: hidden;
-    display: -webkit-box;
-    color: #6b7280;
-    font-size: 14px;
-    font-weight: 500;
-    line-height: 1.55;
-    overflow-wrap: anywhere;
-    word-break: break-word;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2;
-}
-
-.project-hero.has-links:not(.has-description) .project-hero-meta-line {
-    margin-top: 5px;
-}
-
-.project-hero:not(.has-description):not(.has-links) {
-    align-items: center;
-}
-
-.project-hero:not(.has-description):not(.has-links) .project-hero-info,
-.project-hero:not(.has-description):not(.has-links) .project-hero-actions {
-    align-self: center;
-}
-
-.project-external-links {
-    width: min(760px, 100%);
-    max-height: 60px;
-    display: flex;
-    flex-wrap: wrap;
-    align-content: flex-start;
-    gap: 6px;
-    overflow: hidden;
-}
-
-.project-external-link {
-    max-width: 220px;
-    min-height: 28px;
-    padding: 0 10px 0 8px;
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    overflow: hidden;
-    border: 1px solid #d7e5f3;
-    border-radius: 999px;
-    background: #fff;
-    color: #347bc8;
-    font-size: 11px;
-    font-weight: 700;
-    line-height: 1;
-    text-decoration: none;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    transition: border-color .15s ease, background .15s ease, color .15s ease, transform .15s ease;
-}
-
-.project-external-link:hover {
-    border-color: #9fc6ec;
-    background: #f5faff;
-    color: var(--moyo-blue);
-    transform: translateY(-1px);
-}
-
-.project-main-menu-wrap {
-    position: relative;
-    flex: 0 0 auto;
-}
-
-.project-main-menu-trigger {
-    width: 38px;
-    height: 38px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border: 1px solid #dbe3ea;
-    border-radius: 10px;
-    background: #fff;
-    color: #64748b;
-    font: inherit;
-    font-size: 20px;
-    font-weight: 800;
-    line-height: 1;
-    cursor: pointer;
-    transition: border-color .15s ease, background .15s ease, color .15s ease, transform .15s ease;
-}
-
-.project-main-menu-trigger:hover,
-.project-main-menu-trigger[aria-expanded="true"] {
-    border-color: #bfd3e7;
-    background: #f7fbff;
-    color: var(--moyo-blue);
-    transform: translateY(-1px);
-}
-
-.project-main-menu {
-    position: fixed;
-    z-index: 1000;
-    width: 168px;
-    padding: 6px;
-    border: 1px solid #dce6f0;
     border-radius: 12px;
-    background: #fff;
-    box-shadow: 0 14px 32px rgba(15, 23, 42, .14);
+
+    font-family: inherit;
+    font-size: 16px;
+    font-weight: 900;
+    letter-spacing: 2px;
+    cursor: pointer;
+
 }
 
-.project-main-menu[hidden] { display: none !important; }
+.project-main-more-menu {
+    position: absolute;
 
-.project-main-menu-item {
+    top: calc(100% + 8px);
+    right: 0;
+    width: 168px;
+    padding: 7px;
+    border: 1px solid #dce6f0;
+    border-radius: 13px;
+    background: #fff;
+    box-shadow: 0 16px 34px rgba(42, 67, 96, .14);
+}
+
+.project-main-more-menu[hidden] {
+    display: none !important;
+}
+
+.project-main-more-item {
     width: 100%;
-    min-height: 36px;
-    padding: 0 10px;
+    min-height: 38px;
+    padding: 0 11px;
     display: flex;
     align-items: center;
     border: 0;
-    border-radius: 8px;
+    border-radius: 9px;
     background: transparent;
-    color: #334155;
-    font: inherit;
-    font-size: 12px;
-    font-weight: 700;
+    color: #354b64;
+    font-family: inherit;
+    font-size: 11.5px;
+    font-weight: 800;
     text-align: left;
-    text-decoration: none;
     cursor: pointer;
 }
 
-.project-main-menu-item:hover {
-    background: #f4f8fc;
-    color: var(--moyo-blue);
+.project-main-more-item:hover,
+.project-main-more-item:focus-visible {
+    outline: none;
+    background: #f2f7fc;
+    color: #315f91;
 }
 
-@media (max-width: 980px) {
-    .project-hero {
-        grid-template-columns: minmax(0, 1fr) auto;
-        gap: 0 14px;
-        padding: 18px 20px;
+/* ========================================================================
+   프로젝트 메인 더보기 메뉴 잘림 보정
+   ======================================================================== */
+.project-hero {
+    overflow: visible !important;
+}
+
+.project-hero-right,
+.project-main-more {
+    z-index: 30 !important;
+}
+
+.project-main-more-menu {
+    z-index: 100 !important;
+}
+
+/* ========================================================================
+   프로젝트 메인 더보기 버튼 테두리 톤 보정
+   ======================================================================== */
+.project-main-more-button {
+    border: 1px solid #cfd9e6 !important;
+    background: rgba(255, 255, 255, .92) !important;
+    color: #4a90e2 !important;
+    box-shadow: 0 5px 14px rgba(43, 72, 108, .07) !important;
+}
+
+.project-main-more-button:hover,
+.project-main-more-button[aria-expanded="true"] {
+    border-color: #91b6de !important;
+    background: #fff !important;
+    color: #347fcf !important;
+    box-shadow: 0 7px 18px rgba(74, 144, 226, .12) !important;
+}
+
+.project-main-more-button:focus-visible {
+    outline: 3px solid rgba(74, 144, 226, .16) !important;
+    outline-offset: 2px !important;
+}
+
+/* ========================================================================
+   프로젝트 메인 히어로 — 소속 그룹 문맥 + 유형 분리, 높이 유지
+   ======================================================================== */
+.container > .project-hero {
+    box-sizing: border-box !important;
+    min-height: 112px !important;
+    padding: 18px 32px !important;
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    align-items: start !important;
+    gap: 20px !important;
+    overflow: visible !important;
+}
+
+.container > .project-hero .project-hero-info {
+    min-width: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+}
+
+.container > .project-hero .project-type-label {
+    margin: 0 0 4px !important;
+    color: #8a94a6 !important;
+    font-size: 12px !important;
+    font-style: italic !important;
+    font-weight: 500 !important;
+    line-height: 1.4 !important;
+}
+
+.container > .project-hero h1 {
+    max-width: min(780px, 100%) !important;
+    margin: 0 0 5px !important;
+    color: #111827 !important;
+    font-size: 26px !important;
+    font-weight: 900 !important;
+    letter-spacing: -.04em !important;
+    line-height: 1.2 !important;
+}
+
+.container > .project-hero .project-hero-meta-line {
+    width: 100% !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 5px !important;
+}
+
+.container > .project-hero .project-hero-description {
+
+    max-width: min(780px, 100%) !important;
+
+}
+
+.container > .project-hero .project-hero-inline-meta {
+    width: min(780px, 100%) !important;
+
+    display: flex !important;
+    align-items: center !important;
+    flex-wrap: nowrap !important;
+    gap: 8px !important;
+
+}
+
+.container > .project-hero .project-hero-project-type {
+    min-width: 0 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    flex: 0 0 auto !important;
+    white-space: nowrap !important;
+}
+
+.container > .project-hero .project-hero-inline-label {
+    color: #94a3b8 !important;
+    font-size: 9.5px !important;
+    font-weight: 750 !important;
+}
+
+.container > .project-hero .project-hero-project-type strong {
+    color: #6354b6 !important;
+    font-size: 10.5px !important;
+    font-weight: 850 !important;
+}
+
+.container > .project-hero .project-hero-inline-divider {
+    width: 1px !important;
+    height: 13px !important;
+    flex: 0 0 1px !important;
+    background: #dbe4ee !important;
+}
+
+.container > .project-hero .project-external-links {
+    min-width: 0 !important;
+    max-width: 100% !important;
+
+    display: flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+
+    flex-wrap: nowrap !important;
+}
+
+.container > .project-hero .project-external-link {
+
+    max-width: 180px !important;
+
+    padding: 0 8px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 3px !important;
+
+    border: 1px solid #d7e5f3 !important;
+    border-radius: 999px !important;
+    background: #fff !important;
+    color: #347bc8 !important;
+    font-size: 10px !important;
+    font-weight: 500 !important;
+    line-height: 1 !important;
+    text-decoration: none !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    flex: 0 0 auto !important;
+}
+
+.container > .project-hero .project-external-link-icon {
+    font-size: 9px !important;
+}
+
+.container > .project-hero .project-hero-right {
+
+    margin: 0 !important;
+}
+
+@media (max-width: 760px) {
+    .container > .project-hero {
+        min-height: 0 !important;
+        padding: 16px 18px !important;
+        gap: 12px !important;
+    }
+
+    .container > .project-hero h1 {
+        font-size: 22px !important;
+    }
+
+    .container > .project-hero .project-hero-description {
+        white-space: normal !important;
+        display: -webkit-box !important;
+        -webkit-box-orient: vertical !important;
+        -webkit-line-clamp: 2 !important;
+    }
+
+    .container > .project-hero .project-hero-inline-meta {
+        flex-wrap: wrap !important;
+        height: auto !important;
     }
 }
 
-@media (max-width: 680px) {
-    .project-hero {
-        min-height: 0;
-        padding: 18px 18px;
-        border-radius: 18px;
+/* ========================================================================
+   프로젝트 히어로 외부 링크 잘림 보정
+   - 기본 상태 상·하단 테두리 클리핑 제거
+   - hover 이동 여유 확보
+   ======================================================================== */
+.container > .project-hero .project-hero-meta-line {
+    overflow: visible !important;
+}
+
+.container > .project-hero .project-hero-inline-meta {
+    box-sizing: border-box !important;
+    min-height: 30px !important;
+    height: 30px !important;
+    padding: 2px 0 !important;
+    overflow: visible !important;
+}
+
+.container > .project-hero .project-external-links {
+    box-sizing: border-box !important;
+    height: 28px !important;
+    min-height: 28px !important;
+    padding: 2px 0 !important;
+    overflow: visible !important;
+}
+
+.container > .project-hero .project-external-link {
+    position: relative !important;
+    z-index: 1 !important;
+    box-sizing: border-box !important;
+    height: 24px !important;
+    min-height: 24px !important;
+    margin: 0 !important;
+    overflow: hidden !important;
+}
+
+.container > .project-hero .project-external-link:hover {
+    z-index: 2 !important;
+}
+
+/* 링크 영역을 스크롤 컨테이너로 만들지 않음 */
+.container > .project-hero .project-hero-inline-meta,
+.container > .project-hero .project-external-links {
+    scrollbar-width: none !important;
+}
+
+.container > .project-hero .project-hero-inline-meta::-webkit-scrollbar,
+.container > .project-hero .project-external-links::-webkit-scrollbar {
+    display: none !important;
+}
+
+/* 20-21 프로젝트 메인 삭제 예정 상태 — 히어로 오른쪽 하단 */
+.container > .project-hero .project-hero-right {
+    align-self: stretch !important;
+    min-width: max-content !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-end !important;
+    justify-content: space-between !important;
+    gap: 12px !important;
+}
+
+.container > .project-hero .project-delete-pending-banner {
+    margin: auto 0 0 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    gap: 7px !important;
+    color: #9e5962 !important;
+    font-size: 10.5px !important;
+    font-weight: 650 !important;
+    line-height: 1.35 !important;
+    white-space: nowrap !important;
+}
+
+.container > .project-hero .project-delete-pending-badge {
+    display: inline-flex !important;
+    align-items: center !important;
+    min-height: 21px !important;
+    padding: 0 8px !important;
+    border: 1px solid #efc6cb !important;
+    border-radius: 999px !important;
+    background: #fff5f6 !important;
+    color: #bd5360 !important;
+    font-size: 9.5px !important;
+    font-weight: 850 !important;
+}
+
+.container > .project-hero .project-delete-pending-banner strong {
+    color: #b64e5b !important;
+}
+
+@media (max-width: 760px) {
+    .container > .project-hero .project-hero-right {
+        min-width: 0 !important;
     }
 
-    .project-type-status {
-        gap: 5px;
-        margin-bottom: 4px;
+    .container > .project-hero .project-delete-pending-banner {
+        max-width: 180px !important;
+        align-items: flex-end !important;
+        flex-direction: column !important;
+        gap: 4px !important;
+        white-space: normal !important;
+        text-align: right !important;
     }
+}/* 프로젝트 설명이 비어 있어도 히어로 정보 위치 유지 */
 
-    .project-hero h1 {
-        font-size: 23px;
-    }
+/* 프로젝트 설명을 유형 메타와 분리해 항상 표시 */
+.container > .project-hero .project-hero-description {
+    display: block !important;
+    width: min(780px, 100%) !important;
+    min-height: 18px !important;
+    margin: 0 0 5px !important;
+    overflow: hidden !important;
+    color: #6b7280 !important;
+    font-size: 12px !important;
+    font-weight: 500 !important;
+    line-height: 1.45 !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
 
-    .project-main-menu-trigger {
-        width: 36px;
-        height: 36px;
+.container > .project-hero .project-hero-description.is-empty {
+    color: #9aa6b7 !important;
+    font-weight: 450 !important;
+}
+
+.container > .project-hero .project-hero-meta-line {
+    height: auto !important;
+    min-height: 22px !important;
+}
+
+@media (max-width: 760px) {
+    .container > .project-hero .project-hero-description {
+        white-space: normal !important;
+        display: -webkit-box !important;
+        -webkit-box-orient: vertical !important;
+        -webkit-line-clamp: 2 !important;
     }
 }
-/* ===== End project hero ===== */
 
+/* =====================================================================
+   PROJECT MAIN LAYOUT BASELINE v20
+   - workspace main geometry is the baseline
+   - personal/group differences are controlled by shell mode classes
+   - neutralizes legacy .container/.main-content/.side-content overrides
+   ===================================================================== */
+body.personal-project-main,
+body.group-project-main {
+    min-width: 0;
+    background: #f7f9fc;
+}
+
+.container.moyo-main-shell.moyo-main-shell--project {
+    width: 100% !important;
+    max-width: 1600px !important;
+    margin: 0 auto !important;
+    padding: 28px 32px 72px !important;
+    font-size: 14px !important;
+    transform: none !important;
+    zoom: 1 !important;
+}
+
+.moyo-main-shell--project .moyo-main-shell__hero {
+    width: 100% !important;
+    min-height: 118px !important;
+    margin: 0 0 22px !important;
+}
+
+.moyo-main-shell--project .project-hero {
+    display: grid !important;
+
+    gap: 22px !important;
+
+    border: 1px solid #e2e9f2 !important;
+    border-radius: 18px !important;
+    background: #fff !important;
+    box-shadow: 0 4px 14px rgba(15, 23, 42, .035) !important;
+}
+
+.moyo-main-shell--project .project-hero-info {
+    display: flex !important;
+    flex-direction: column !important;
+
+    align-items: flex-start !important;
+    min-width: 0 !important;
+}
+
+.moyo-main-shell--project .project-type-label {
+    margin: 0 0 4px !important;
+    color: #7b8798 !important;
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    line-height: 1.35 !important;
+}
+
+.moyo-main-shell--project .project-hero h1 {
+    max-width: 100% !important;
+    margin: 0 0 7px !important;
+    color: #111827 !important;
+    font-size: 27px !important;
+    font-weight: 900 !important;
+    line-height: 1.2 !important;
+}
+
+.moyo-main-shell--project .project-hero-description {
+    width: 100% !important;
+
+    font-size: 13px !important;
+    line-height: 1.5 !important;
+}
+
+.moyo-main-shell--project .project-hero-right {
+
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-end !important;
+    justify-content: space-between !important;
+}
+
+.moyo-main-shell--project .moyo-main-shell__project-flow {
+    width: 100% !important;
+    min-width: 0 !important;
+    margin: 0 0 22px !important;
+}
+
+/* Shared dashboard geometry, card sizing and row heights come from the common/group CSS.
+   Project CSS must not redefine the common dashboard. */
+
+/* Personal project: owner context replaces collaborative member controls. */
+.moyo-main-shell--personal-project .project-member-panel,
+.moyo-main-shell--personal-project [data-member-scope="PROJECT"],
+.moyo-main-shell--personal-project .project-member-invite-btn {
+    display: none !important;
+}
+
+.moyo-main-shell--personal-project .project-owner-panel {
+    display: block !important;
+}
+
+/* Group project: collaboration widgets remain visible. */
+.moyo-main-shell--group-project .project-owner-panel {
+    display: none !important;
+}
+
+.moyo-main-shell--group-project .project-member-panel {
+    display: block !important;
+}
+
+/* Main shell / hero responsive geometry is owned by commonMainShell.css and commonMainHero.css. */
+
+/* v21: 프로젝트 히어로 외부 링크 가로 잘림 방지
+   - 링크 행을 프로젝트 정보 영역 전체 폭으로 사용
+   - 링크가 많거나 길면 다음 줄로 자연스럽게 배치 */
+.moyo-main-shell--project .project-hero-meta-line{
+    width:100%!important;
+    max-width:none!important;
+    height:auto!important;
+    min-height:28px!important;
+    overflow:visible!important;
+}
+
+.moyo-main-shell--project .project-hero-inline-meta{
+    width:100%!important;
+    max-width:none!important;
+    height:auto!important;
+    min-height:28px!important;
+    padding:2px 0!important;
+    align-items:center!important;
+    flex-wrap:wrap!important;
+    overflow:visible!important;
+}
+
+.moyo-main-shell--project .project-external-links{
+    width:100%!important;
+    max-width:none!important;
+    height:auto!important;
+    min-height:28px!important;
+    display:flex!important;
+    flex:1 1 100%!important;
+    flex-wrap:wrap!important;
+    align-items:center!important;
+    gap:6px!important;
+    padding:2px 0!important;
+    overflow:visible!important;
+    white-space:normal!important;
+}
+
+.moyo-main-shell--project .project-external-link{
+    flex:0 0 auto!important;
+    max-width:180px!important;
+}
+
+/* ========================================================================
+   UI/UX 5단계 — Project Main 브랜드 포인트 미세조정
+   Workspace Main / 목록 화면과 같은 중립 베이스 + 블루 중심 포인트로 통일한다.
+   ======================================================================== */
+.project-hero {
+    background: #fff !important;
+    border-color: var(--moyo-line, #e5ebf1) !important;
+    box-shadow: 0 8px 22px rgba(31, 41, 55, .045) !important;
+}
+
+.project-hero::before {
+    top: 24px !important;
+    bottom: 24px !important;
+    width: 3px !important;
+    background: linear-gradient(180deg, var(--moyo-blue, #4A90E2) 0%, #5aa4e6 72%, rgba(57,205,181,.72) 100%) !important;
+}
+
+.project-hero::after {
+    right: 0 !important;
+    top: 0 !important;
+    width: 112px !important;
+    height: 92px !important;
+    border-radius: 0 20px 0 100% !important;
+    background: rgba(74, 144, 226, .025) !important;
+}
+
+/* 프로젝트 메인의 핵심 액션만 MOYO 브랜드 그라데이션 사용 */
+.project-hero .btn-primary,
+.project-hero .project-primary-btn,
+.project-hero .project-action-primary {
+    min-height: var(--moyo-control-height, 40px) !important;
+    border-color: transparent !important;
+    border-radius: var(--moyo-radius-md, 12px) !important;
+    background: var(--moyo-primary-gradient, linear-gradient(135deg,
+        var(--moyo-mint, #39CDB5) 0%,
+        var(--moyo-blue, #4A90E2) 54%,
+        var(--moyo-purple, #7358E8) 100%)) !important;
+    color: #fff !important;
+    box-shadow: 0 6px 14px rgba(74, 144, 226, .14) !important;
+}
+
+.project-hero .btn-primary:hover,
+.project-hero .project-primary-btn:hover,
+.project-hero .project-action-primary:hover {
+    color: #fff !important;
+    box-shadow: 0 8px 18px rgba(74, 144, 226, .20) !important;
+}
+
+/* ========================================================================
+   2026-09-09 Project hero detail pass
+   - 그룹 히어로와 같은 정보 밀도/정렬 규칙
+   - 프로젝트 유형만 배지로 유지하고 멤버 수 · 역할은 가벼운 인라인 메타로 정리
+   - 기간/D-day/상위 그룹은 제목 아래 한 줄로 유지
+   - 삭제 예정 상태와 더보기는 우측 독립 배치
+   ======================================================================== */
+.moyo-main-shell--project .project-type-status {
+    margin: 0 0 6px !important;
+    display: flex !important;
+    align-items: center !important;
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+    min-width: 0 !important;
+}
+
+.moyo-main-shell--project .project-type-status .project-type-label {
+    display: inline-flex !important;
+    align-items: center !important;
+    min-height: 22px !important;
+    margin: 0 !important;
+    padding: 0 8px !important;
+    border: 1px solid #e7edf4 !important;
+    border-radius: 999px !important;
+    background: #f8fafc !important;
+    color: #708094 !important;
+    font-size: 10px !important;
+    font-weight: 750 !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+}
+
+.moyo-main-shell--project .project-member-count,
+.moyo-main-shell--project .project-role-label {
+    display: inline-flex !important;
+    align-items: center !important;
+    min-height: 22px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    color: #708094 !important;
+    font-size: 10.5px !important;
+    font-weight: 700 !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+}
+
+.moyo-main-shell--project .project-role-label {
+    color: #5f7188 !important;
+    font-weight: 750 !important;
+}
+
+.moyo-main-shell--project .project-type-divider {
+    flex: 0 0 auto !important;
+    margin: 0 -1px !important;
+    color: #c0c8d3 !important;
+    font-size: 10px !important;
+    font-weight: 700 !important;
+    line-height: 1 !important;
+}
+
+.moyo-main-shell--project .project-period-line {
+    width: 100% !important;
+    min-width: 0 !important;
+
+    display: flex !important;
+    align-items: center !important;
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+    color: #7a8798 !important;
+    font-size: 11px !important;
+    font-weight: 650 !important;
+    line-height: 1.35 !important;
+}
+
+.moyo-main-shell--project .project-period-text,
+.moyo-main-shell--project .project-workspace-name {
+    min-width: 0 !important;
+}
+
+.moyo-main-shell--project .project-workspace-name {
+    max-width: 320px !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    color: #8290a2 !important;
+}
+
+.moyo-main-shell--project .project-period-divider {
+    color: #b7c0cc !important;
+}
+
+.moyo-main-shell--project .project-dday-badge {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-height: 22px !important;
+    padding: 0 8px !important;
+    border: 1px solid #d9e7f7 !important;
+    border-radius: 999px !important;
+    background: #f5f9fe !important;
+    color: #4c77a8 !important;
+    font-size: 10px !important;
+    font-weight: 800 !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+}
+
+.moyo-main-shell--project .project-dday-badge.dday-today {
+    border-color: #f2d6ab !important;
+    background: #fff9ee !important;
+    color: #a66d1e !important;
+}
+
+.moyo-main-shell--project .project-dday-badge.dday-ended {
+    border-color: #e4e9ef !important;
+    background: #f8fafc !important;
+    color: #8895a5 !important;
+}
+
+.moyo-main-shell--project .project-hero-description {
+    max-width: 900px !important;
+
+    display: -webkit-box !important;
+    -webkit-line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
+    overflow: hidden !important;
+}
+
+.moyo-main-shell--project .project-hero-right {
+    position: relative !important;
+    width: 40px !important;
+    min-width: 40px !important;
+    align-self: stretch !important;
+}
+
+.moyo-main-shell--project .project-main-more {
+    position: relative !important;
+    z-index: 3 !important;
+    margin: 0 !important;
+}
+
+.moyo-main-shell--project .project-delete-pending-banner {
+    position: absolute !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    z-index: 1 !important;
+    margin: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-end !important;
+    gap: 4px !important;
+    white-space: nowrap !important;
+    color: #a45761 !important;
+    font-size: 11px !important;
+}
+
+.moyo-main-shell--project .project-delete-pending-badge {
+    display: inline-flex !important;
+    align-items: center !important;
+    min-height: 21px !important;
+    padding: 0 7px !important;
+    border: 1px solid #efced3 !important;
+    border-radius: 999px !important;
+    background: #fff7f8 !important;
+    color: #ad5561 !important;
+    font-size: 9.5px !important;
+    font-weight: 800 !important;
+    line-height: 1 !important;
+}
+
+.moyo-main-shell--project .project-delete-pending-banner strong {
+    color: #b34e5a !important;
+    font-size: 10.5px !important;
+    font-weight: 750 !important;
+}
+
+@media (max-width: 720px) {
+    .moyo-main-shell--project .project-type-status {
+        gap: 5px !important;
+        margin-bottom: 5px !important;
+    }
+
+    .moyo-main-shell--project .project-type-status .project-type-label,
+    .moyo-main-shell--project .project-member-count,
+    .moyo-main-shell--project .project-role-label {
+        min-height: 20px !important;
+        padding: 0 7px !important;
+        font-size: 9.5px !important;
+    }
+
+    .moyo-main-shell--project .project-workspace-name {
+        max-width: 210px !important;
+    }
+
+    .moyo-main-shell--project .project-delete-pending-banner {
+        display: none !important;
+    }
+}
+
+/* ========================================================================
+   2026-09-09 Project hero group-skeleton alignment
+   - 그룹 히어로와 동일하게 좌측 시각 기준점 + 정보 + 우측 액션의 3열 구조
+   - 프로젝트 설명을 제목 바로 아래에 두고 기간/상위 그룹을 하단 메타로 배치
+   ======================================================================== */
+.moyo-main-shell--project .project-hero {
+    grid-template-columns: 66px minmax(0, 1fr) auto !important;
+    align-items: center !important;
+    min-height: 140px !important;
+    column-gap: 20px !important;
+    padding: 22px 28px !important;
+}
+
+.moyo-main-shell--project .project-avatar {
+    position: relative !important;
+    width: 66px !important;
+    height: 66px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex: 0 0 66px !important;
+    border: 1px solid #dfe8f3 !important;
+    border-radius: 17px !important;
+    background: linear-gradient(145deg, #f7fbff 0%, #eef6ff 100%) !important;
+    box-shadow: 0 7px 17px rgba(50, 92, 145, .08) !important;
+    overflow: hidden !important;
+}
+
+.moyo-main-shell--project .project-avatar::before {
+    content: "" !important;
+    position: absolute !important;
+    inset: 7px !important;
+    border-radius: 13px !important;
+    background: linear-gradient(135deg, rgba(57, 205, 181, .13) 0%, rgba(74, 144, 226, .12) 55%, rgba(139, 92, 246, .10) 100%) !important;
+}
+
+.moyo-main-shell--project .project-avatar-icon {
+    position: relative !important;
+    z-index: 1 !important;
+    width: 40px !important;
+    height: 40px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-radius: 12px !important;
+    background: #fff !important;
+    color: #4a90e2 !important;
+    font-size: 20px !important;
+    box-shadow: 0 4px 10px rgba(74, 144, 226, .10) !important;
+}
+
+.moyo-main-shell--project .project-avatar--work .project-avatar-icon {
+    color: #4a90e2 !important;
+}
+
+.moyo-main-shell--project .project-avatar--travel .project-avatar-icon {
+    color: #2f9f9a !important;
+}
+
+.moyo-main-shell--project .project-avatar--event .project-avatar-icon {
+    color: #7b6ad8 !important;
+}
+
+.moyo-main-shell--project .project-avatar--study .project-avatar-icon {
+    color: #5f74c8 !important;
+}
+
+.moyo-main-shell--project .project-avatar--life .project-avatar-icon {
+    color: #4f9a78 !important;
+}
+
+.moyo-main-shell--project .project-avatar--hobby .project-avatar-icon {
+    color: #b46a9c !important;
+}
+
+.moyo-main-shell--project .project-avatar--etc .project-avatar-icon {
+    color: #758397 !important;
+}
+
+.moyo-main-shell--project .project-hero-info {
+    justify-content: center !important;
+    align-self: stretch !important;
+}
+
+.moyo-main-shell--project .project-type-status {
+    margin-bottom: 5px !important;
+}
+
+.moyo-main-shell--project .project-hero h1 {
+    margin-bottom: 5px !important;
+}
+
+.moyo-main-shell--project .project-hero-description {
+    min-height: 0 !important;
+    margin: 0 0 6px !important;
+    color: #667085 !important;
+}
+
+.moyo-main-shell--project .project-period-line {
+    margin: 0 !important;
+}
+
+.moyo-main-shell--project .project-hero-meta-line {
+    margin-top: 6px !important;
+}
+
+@media (max-width: 720px) {
+    .moyo-main-shell--project .project-hero {
+        grid-template-columns: 54px minmax(0, 1fr) auto !important;
+        column-gap: 13px !important;
+        min-height: 126px !important;
+        padding: 18px !important;
+    }
+
+    .moyo-main-shell--project .project-avatar {
+        width: 54px !important;
+        height: 54px !important;
+        flex-basis: 54px !important;
+        border-radius: 15px !important;
+    }
+
+    .moyo-main-shell--project .project-avatar::before {
+        inset: 6px !important;
+        border-radius: 11px !important;
+    }
+
+    .moyo-main-shell--project .project-avatar-icon {
+        width: 34px !important;
+        height: 34px !important;
+        border-radius: 10px !important;
+        font-size: 17px !important;
+    }
+}
+
+/* ========================================================================
+   2026-09-09 Project hero final density polish
+   - desktop hero vertical density only
+   - tighten meta/title spacing
+   - soften category icon shadows
+   ======================================================================== */
+@media (min-width: 721px) {
+    .moyo-main-shell--project .project-hero {
+        min-height: 130px !important;
+        padding: 18px 28px !important;
+    }
+
+    .moyo-main-shell--project .project-type-status {
+        margin-bottom: 3px !important;
+    }
+
+    .moyo-main-shell--project .project-hero h1 {
+        margin-bottom: 3px !important;
+    }
+
+    .moyo-main-shell--project .project-avatar {
+        box-shadow: 0 4px 11px rgba(50, 92, 145, .055) !important;
+    }
+
+    .moyo-main-shell--project .project-avatar-icon {
+        box-shadow: 0 2px 6px rgba(74, 144, 226, .065) !important;
+    }
+}
+
+
+/* STEP25 regression restore: hero menu is viewport-positioned so the shared hero may keep overflow clipping for decoration. */
+#projectMainMoreMenu:not([hidden]) {
+    position: fixed !important;
+    z-index: 1200 !important;
+}

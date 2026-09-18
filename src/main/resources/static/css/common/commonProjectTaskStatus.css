@@ -1,0 +1,138 @@
+/* ======================================================================
+   MOYO Project Task Status Contract
+   - 프로젝트 전역의 업무 상태 색상을 한 곳에서 관리한다.
+   - 진행 보드 / 멤버 업무 요약 / 프로젝트 프로필이 동일한 상태 의미를 공유한다.
+   ====================================================================== */
+:root {
+    --moyo-task-all-bg: #f6f8fb;
+    --moyo-task-all-border: #e2e8f0;
+    --moyo-task-all-text: #475569;
+
+    --moyo-task-todo-bg: #fff8ed;
+    --moyo-task-todo-border: #ffe4b8;
+    --moyo-task-todo-text: #c77700;
+
+    --moyo-task-progress-bg: #eef6ff;
+    --moyo-task-progress-border: #beddff;
+    --moyo-task-progress-text: #1d6fd8;
+
+    --moyo-task-done-bg: #effcf8;
+    --moyo-task-done-border: #c7f0e3;
+    --moyo-task-done-text: #07966f;
+
+    --moyo-task-delayed-bg: #fff5f5;
+    --moyo-task-delayed-border: #ffd7d7;
+    --moyo-task-delayed-text: #e34b4b;
+}
+
+.moyo-task-status--all {
+    --moyo-task-status-bg: var(--moyo-task-all-bg);
+    --moyo-task-status-border: var(--moyo-task-all-border);
+    --moyo-task-status-text: var(--moyo-task-all-text);
+}
+.moyo-task-status--todo {
+    --moyo-task-status-bg: var(--moyo-task-todo-bg);
+    --moyo-task-status-border: var(--moyo-task-todo-border);
+    --moyo-task-status-text: var(--moyo-task-todo-text);
+}
+.moyo-task-status--progress {
+    --moyo-task-status-bg: var(--moyo-task-progress-bg);
+    --moyo-task-status-border: var(--moyo-task-progress-border);
+    --moyo-task-status-text: var(--moyo-task-progress-text);
+}
+.moyo-task-status--done {
+    --moyo-task-status-bg: var(--moyo-task-done-bg);
+    --moyo-task-status-border: var(--moyo-task-done-border);
+    --moyo-task-status-text: var(--moyo-task-done-text);
+}
+.moyo-task-status--delayed {
+    --moyo-task-status-bg: var(--moyo-task-delayed-bg);
+    --moyo-task-status-border: var(--moyo-task-delayed-border);
+    --moyo-task-status-text: var(--moyo-task-delayed-text);
+}
+
+/* 진행 보드 상단 상태 필터 */
+.project-task-summary .project-task-metric.moyo-task-status {
+    border-color: var(--moyo-task-status-border) !important;
+    background: var(--moyo-task-status-bg) !important;
+    color: var(--moyo-task-status-text) !important;
+}
+.project-task-summary .project-task-metric.moyo-task-status strong {
+    color: var(--moyo-task-status-text) !important;
+}
+.project-task-summary .project-task-metric.moyo-task-status:hover,
+.project-task-summary .project-task-metric.moyo-task-status.is-active {
+    border-color: var(--moyo-task-status-border) !important;
+    background: var(--moyo-task-status-bg) !important;
+    color: var(--moyo-task-status-text) !important;
+    box-shadow: 0 5px 14px color-mix(in srgb, var(--moyo-task-status-text) 12%, transparent) !important;
+}
+.project-task-summary .project-task-metric.moyo-task-status.is-active {
+    box-shadow: inset 0 0 0 1px var(--moyo-task-status-border), 0 5px 14px color-mix(in srgb, var(--moyo-task-status-text) 13%, transparent) !important;
+}
+
+/* 진행 보드 컬럼 표시점도 같은 상태 토큰 사용 */
+.project-task-column-dot.todo { background: var(--moyo-task-todo-text) !important; }
+.project-task-column-dot.progress { background: var(--moyo-task-progress-text) !important; }
+.project-task-column-dot.done { background: var(--moyo-task-done-text) !important; }
+
+/* 멤버 리스트/사이드 위젯 업무 요약 */
+.moyo-member-stat.moyo-task-status,
+.project-member-stat.moyo-task-status {
+    border-color: var(--moyo-task-status-border) !important;
+    background: var(--moyo-task-status-bg) !important;
+    color: var(--moyo-task-status-text) !important;
+}
+.moyo-member-stat.moyo-task-status strong,
+.project-member-stat.moyo-task-status strong {
+    color: inherit !important;
+}
+
+/* 프로젝트 프로필 업무 요약 */
+.project-member-profile__task-stat.moyo-task-status {
+    border-color: var(--moyo-task-status-border) !important;
+    background: var(--moyo-task-status-bg) !important;
+    color: var(--moyo-task-status-text) !important;
+}
+.project-member-profile__task-stat.moyo-task-status strong {
+    color: var(--moyo-task-status-text) !important;
+}
+
+/* 프로젝트 프로필 업무 목록의 상태 뱃지 */
+.project-member-profile__task-status.moyo-task-status {
+    border: 1px solid var(--moyo-task-status-border) !important;
+    background: var(--moyo-task-status-bg) !important;
+    color: var(--moyo-task-status-text) !important;
+}
+
+/* ======================================================================
+   Member Activity Profile task filters
+   - 진행 보드 상단 상태 필터와 동일한 status contract를 사용한다.
+   - 전체 / 할 일 / 진행 / 완료 / 지연의 배경·테두리·텍스트·숫자색을 통일한다.
+   ====================================================================== */
+.member-activity-profile__task-summary .member-activity-profile__task-stat.moyo-task-status {
+    border-color: var(--moyo-task-status-border) !important;
+    background: var(--moyo-task-status-bg) !important;
+    color: var(--moyo-task-status-text) !important;
+}
+.member-activity-profile__task-summary .member-activity-profile__task-stat.moyo-task-status > span,
+.member-activity-profile__task-summary .member-activity-profile__task-stat.moyo-task-status > strong {
+    color: var(--moyo-task-status-text) !important;
+}
+.member-activity-profile__task-summary .member-activity-profile__task-stat.moyo-task-status:hover,
+.member-activity-profile__task-summary .member-activity-profile__task-stat.moyo-task-status.is-active {
+    border-color: var(--moyo-task-status-border) !important;
+    background: var(--moyo-task-status-bg) !important;
+    color: var(--moyo-task-status-text) !important;
+}
+.member-activity-profile__task-summary .member-activity-profile__task-stat.moyo-task-status.is-active {
+    box-shadow: inset 0 0 0 1px var(--moyo-task-status-border),
+                0 5px 14px color-mix(in srgb, var(--moyo-task-status-text) 13%, transparent) !important;
+}
+
+/* 멤버 활동 프로필 업무 목록 상태 배지도 동일 contract 사용 */
+.member-activity-profile__task-status.moyo-task-status {
+    border: 1px solid var(--moyo-task-status-border) !important;
+    background: var(--moyo-task-status-bg) !important;
+    color: var(--moyo-task-status-text) !important;
+}

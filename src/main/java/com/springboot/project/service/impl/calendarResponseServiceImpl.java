@@ -5,11 +5,13 @@ import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
@@ -20,6 +22,7 @@ import com.springboot.project.dto.calendarResponseDTO;
 import com.springboot.project.dto.contentShareDTO;
 import com.springboot.project.service.IcalendarResponseService;
 import com.springboot.project.service.IcontentShareService;
+import com.springboot.project.service.IcontentRecordService;
 import com.springboot.project.util.LunarUtil;
 
 import lombok.RequiredArgsConstructor;
@@ -27,17 +30,23 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 public class calendarResponseServiceImpl implements IcalendarResponseService {
+
+    @Value("${moyo.schema.runtime-ddl-enabled:false}")
+    private boolean runtimeDdlEnabled;
     
     private final IcalendarResponseDAO calendarDao;
     private final IcontentShareService contentShareService;
     private final IuserNoticeDAO userNoticeDAO;
+    private final IcontentRecordService contentRecordService;
     
     // 공공데이터포털 인증키 (기존과 동일)
-    private final String SERVICE_KEY = "29022db18fa77c8865fb004f0087d36ea659013b96e1d9467b4faa4847ba6e94";
+    @Value("${moyo.calendar.holiday-service-key:}")
+    private String holidayServiceKey;
 
  // calendarResponseServiceImpl.java 수정
 
     private void ensureCalendarEventTypeColumn() {
+        if (!runtimeDdlEnabled) return;
         try {
             calendarDao.ensureCalendarEventTypeColumn();
         } catch (Exception e) {
@@ -46,6 +55,7 @@ public class calendarResponseServiceImpl implements IcalendarResponseService {
     }
 
     private void ensureCalendarAttendeeTable() {
+        if (!runtimeDdlEnabled) return;
         try {
             calendarDao.ensureCalendarAttendeeTable();
         } catch (Exception e) {
@@ -78,6 +88,31 @@ public class calendarResponseServiceImpl implements IcalendarResponseService {
             if (!before.contains(userId)) added.add(userId);
         }
         return added;
+    }
+
+    private void applyFriendVisibilityShares(calendarResponseDTO dto, Long actorUserId) {
+        if (dto == null || actorUserId == null) return;
+        String visibility = dto.getVisibilityType() == null ? "PRIVATE" : dto.getVisibilityType().trim().toUpperCase();
+        if (!"PRIVATE".equalsIgnoreCase(dto.getItemType()) || !"FRIEND".equals(visibility)) return;
+
+        List<Long> friendIds = calendarDao.selectAcceptedFriendIds(actorUserId);
+        if (friendIds == null || friendIds.isEmpty()) return;
+
+        List<Map<String, Object>> targets = dto.getShareTargets() == null
+                ? new ArrayList<>()
+                : new ArrayList<>(dto.getShareTargets());
+
+        Set<Long> already = directUserShareTargetIds(targets);
+        for (Long friendId : friendIds) {
+            if (friendId == null || friendId.equals(actorUserId) || already.contains(friendId)) continue;
+            Map<String, Object> target = new LinkedHashMap<>();
+            target.put("targetType", "USER");
+            target.put("targetId", friendId);
+            target.put("permissionType", "VIEW");
+            targets.add(target);
+        }
+        dto.setShareTargets(targets);
+        dto.setIsPrivate("Y");
     }
 
     private void syncCalendarShareRequests(calendarResponseDTO dto, Long actorUserId) {
@@ -154,12 +189,50 @@ public class calendarResponseServiceImpl implements IcalendarResponseService {
 
     @Override
     public List<calendarResponseDTO> getMonthlyCalendar(Long userId, Long projId, Long wsId, List<String> types, String startDate, String endDate) {
-        ensureCalendarDetailColumns();
-        // 1. DB에서 해당 기간의 일정 가져오기 (음력은 날짜 상관없이 가져오도록 XML에서 처리됨)
-        List<calendarResponseDTO> eventList = calendarDao.getMonthlyEvents(userId, wsId, projId, types, startDate, endDate);
+        return getMonthlyCalendar(userId, null, null, projId, wsId, types, startDate, endDate);
+    }
 
-        // 2. 현재 화면에서 보고 있는 '연도' 추출 (예: "2027-06-01" -> 2027)
-        int viewYear = Integer.parseInt(startDate.substring(0, 4));
+    @Override
+    public List<calendarResponseDTO> getMonthlyCalendar(Long userId, String scope, Long friendId, Long projId, Long wsId, List<String> types, String startDate, String endDate) {
+        ensureCalendarDetailColumns();
+
+        String normalizedScope = scope == null ? null : scope.trim().toUpperCase();
+        if (normalizedScope != null && !List.of("PRIVATE", "FRIEND", "WS", "PROJ").contains(normalizedScope)) {
+            normalizedScope = null;
+        }
+
+        // 일반 일정/프로젝트 기간은 EVENTS에서 조회한다.
+        // V2는 scope/friendId/wsId/projId를 명시해서 SQL 단계에서 현재 화면 범위만 가져온다.
+        // scope가 없는 구형 호출은 기존 types 기반 조회를 그대로 지원한다.
+        List<calendarResponseDTO> eventList = calendarDao.getMonthlyEvents(
+                userId, normalizedScope, friendId, wsId, projId, types, startDate, endDate);
+
+        // 업무는 프로젝트를 하나 선택한 화면에서만 조회한다.
+        // 프로젝트 미선택/개인/친구/그룹 화면에서 전체 업무를 가져오지 않는다.
+        boolean explicitProjectScope = "PROJ".equals(normalizedScope);
+        boolean legacyTaskRequest = normalizedScope == null
+                && types != null
+                && types.stream().anyMatch(type -> "TASK".equalsIgnoreCase(type));
+        if (projId != null && (explicitProjectScope || legacyTaskRequest)) {
+            List<calendarResponseDTO> projectTasks = calendarDao.getMonthlyProjectTasks(userId, projId, startDate, endDate);
+            if (projectTasks != null && !projectTasks.isEmpty()) {
+                eventList.addAll(projectTasks);
+            }
+        }
+
+        // 2. 현재 화면에서 보고 있는 달의 연도를 조회 범위 중앙 날짜로 계산한다.
+        // FullCalendar 월간 조회는 1월 화면에서도 startDate가 전년도 12월일 수 있으므로
+        // 단순히 startDate의 연도를 사용하면 음력 일정이 전년도 기준으로 변환될 수 있다.
+        int viewYear;
+        try {
+            LocalDate rangeStart = LocalDate.parse(startDate);
+            LocalDate rangeEnd = LocalDate.parse(endDate);
+            long spanDays = java.time.temporal.ChronoUnit.DAYS.between(rangeStart, rangeEnd);
+            viewYear = rangeStart.plusDays(Math.max(spanDays, 0L) / 2L).getYear();
+        } catch (Exception e) {
+            // 비정상 범위가 들어오더라도 기존 동작 수준으로 안전하게 fallback한다.
+            viewYear = Integer.parseInt(startDate.substring(0, 4));
+        }
 
         for (calendarResponseDTO event : eventList) {
             // 음력 설정이 'Y'인 일정만 처리
@@ -186,6 +259,183 @@ public class calendarResponseServiceImpl implements IcalendarResponseService {
         }
         
         return eventList;
+    }
+
+    @Override
+    public List<Map<String, Object>> getFriendBirthdays(Long userId, int year, int month) {
+        if (userId == null) return List.of();
+        if (year < 2000 || year > 2100 || month < 1 || month > 12) {
+            throw new IllegalArgumentException("생일 조회 연월이 올바르지 않습니다.");
+        }
+
+        List<Map<String, Object>> friends = calendarDao.selectAcceptedFriendBirthdays(userId);
+        if (friends == null || friends.isEmpty()) return List.of();
+
+        List<Map<String, Object>> result = new ArrayList<>();
+        java.time.YearMonth targetMonth = java.time.YearMonth.of(year, month);
+
+        for (Map<String, Object> friend : friends) {
+            Long friendId = longOrNull(friend.get("friendId"));
+            if (friendId == null) friendId = longOrNull(friend.get("FRIENDID"));
+            String friendName = stringOrNull(friend.get("friendName"));
+            if (friendName == null) friendName = stringOrNull(friend.get("FRIENDNAME"));
+            Integer birthMonth = intOrNull(friend.get("birthMonth"));
+            if (birthMonth == null) birthMonth = intOrNull(friend.get("BIRTHMONTH"));
+            Integer birthDay = intOrNull(friend.get("birthDay"));
+            if (birthDay == null) birthDay = intOrNull(friend.get("BIRTHDAY"));
+            String calendarType = stringOrNull(friend.get("birthCalendarType"));
+            if (calendarType == null) calendarType = stringOrNull(friend.get("BIRTHCALENDARTYPE"));
+            calendarType = calendarType == null ? "SOLAR" : calendarType.trim().toUpperCase();
+            String ownerProfileImagePath = stringOrNull(friend.get("ownerProfileImagePath"));
+            if (ownerProfileImagePath == null) ownerProfileImagePath = stringOrNull(friend.get("OWNERPROFILEIMAGEPATH"));
+
+            if (friendId == null || birthMonth == null || birthDay == null) continue;
+
+            LocalDate birthdayDate;
+            try {
+                if ("LUNAR".equals(calendarType)) {
+                    birthdayDate = LocalDate.parse(LunarUtil.convertLunarToSolar(year, birthMonth, birthDay));
+                    if (birthdayDate.getYear() != year || birthdayDate.getMonthValue() != month) continue;
+                } else {
+                    if (birthMonth != month) continue;
+                    int safeDay = Math.min(Math.max(birthDay, 1), targetMonth.lengthOfMonth());
+                    birthdayDate = LocalDate.of(year, month, safeDay);
+                }
+            } catch (Exception e) {
+                System.err.println("친구 생일 변환 실패(USER_ID=" + friendId + "): " + e.getMessage());
+                continue;
+            }
+
+            Map<String, Object> item = new LinkedHashMap<>();
+            item.put("id", "BIRTHDAY:" + friendId + ":" + birthdayDate);
+            item.put("itemType", "BIRTHDAY");
+            item.put("eventType", "BIRTHDAY");
+            item.put("title", (friendName == null || friendName.isBlank() ? "친구" : friendName) + " 생일");
+            item.put("startDt", birthdayDate + " 00:00:00");
+            item.put("endDt", birthdayDate + " 23:59:59");
+            item.put("allDay", "Y");
+            item.put("userId", friendId);
+            item.put("ownerName", friendName);
+            item.put("ownerProfileImagePath", ownerProfileImagePath);
+            item.put("birthCalendarType", calendarType);
+            result.add(item);
+        }
+
+        return result;
+    }
+
+
+    @Override
+    public List<Map<String, Object>> getWorkspaceMemberBirthdays(Long userId, Long wsId, int year, int month) {
+        if (userId == null || wsId == null) return List.of();
+        if (year < 2000 || year > 2100 || month < 1 || month > 12) {
+            throw new IllegalArgumentException("생일 조회 연월이 올바르지 않습니다.");
+        }
+
+        // 달력 API 자체에서도 현재 사용자가 해당 그룹 멤버인지 확인한다.
+        boolean workspaceMember = calendarDao.selectUserWorkspaces(userId).stream().anyMatch(ws -> {
+            Long currentWsId = longOrNull(ws.get("wsId"));
+            if (currentWsId == null) currentWsId = longOrNull(ws.get("WS_ID"));
+            return wsId.equals(currentWsId);
+        });
+        if (!workspaceMember) return List.of();
+
+        List<Map<String, Object>> members = calendarDao.selectWorkspaceMemberBirthdays(wsId);
+        if (members == null || members.isEmpty()) return List.of();
+
+        List<Map<String, Object>> result = new ArrayList<>();
+        java.time.YearMonth targetMonth = java.time.YearMonth.of(year, month);
+        for (Map<String, Object> member : members) {
+            Long memberId = longOrNull(member.get("memberId"));
+            if (memberId == null) memberId = longOrNull(member.get("MEMBERID"));
+            String memberName = stringOrNull(member.get("memberName"));
+            if (memberName == null) memberName = stringOrNull(member.get("MEMBERNAME"));
+            Integer birthMonth = intOrNull(member.get("birthMonth"));
+            if (birthMonth == null) birthMonth = intOrNull(member.get("BIRTHMONTH"));
+            Integer birthDay = intOrNull(member.get("birthDay"));
+            if (birthDay == null) birthDay = intOrNull(member.get("BIRTHDAY"));
+            String calendarType = stringOrNull(member.get("birthCalendarType"));
+            if (calendarType == null) calendarType = stringOrNull(member.get("BIRTHCALENDARTYPE"));
+            calendarType = calendarType == null ? "SOLAR" : calendarType.trim().toUpperCase();
+            String ownerProfileImagePath = stringOrNull(member.get("ownerProfileImagePath"));
+            if (ownerProfileImagePath == null) ownerProfileImagePath = stringOrNull(member.get("OWNERPROFILEIMAGEPATH"));
+
+            if (memberId == null || birthMonth == null || birthDay == null) continue;
+
+            LocalDate birthdayDate;
+            try {
+                if ("LUNAR".equals(calendarType)) {
+                    birthdayDate = LocalDate.parse(LunarUtil.convertLunarToSolar(year, birthMonth, birthDay));
+                    if (birthdayDate.getYear() != year || birthdayDate.getMonthValue() != month) continue;
+                } else {
+                    if (birthMonth != month) continue;
+                    int safeDay = Math.min(Math.max(birthDay, 1), targetMonth.lengthOfMonth());
+                    birthdayDate = LocalDate.of(year, month, safeDay);
+                }
+            } catch (Exception e) {
+                System.err.println("그룹 멤버 생일 변환 실패(USER_ID=" + memberId + "): " + e.getMessage());
+                continue;
+            }
+
+            Map<String, Object> item = new LinkedHashMap<>();
+            item.put("id", "WS_BIRTHDAY:" + wsId + ":" + memberId + ":" + birthdayDate);
+            item.put("itemType", "BIRTHDAY");
+            item.put("eventType", "BIRTHDAY");
+            item.put("title", (memberName == null || memberName.isBlank() ? "멤버" : memberName) + " 생일");
+            item.put("startDt", birthdayDate + " 00:00:00");
+            item.put("endDt", birthdayDate + " 23:59:59");
+            item.put("allDay", "Y");
+            item.put("userId", memberId);
+            item.put("ownerName", memberName);
+            item.put("ownerProfileImagePath", ownerProfileImagePath);
+            item.put("birthCalendarType", calendarType);
+            result.add(item);
+        }
+        return result;
+    }
+
+    private Integer intOrNull(Object value) {
+        if (value == null) return null;
+        if (value instanceof Number number) return number.intValue();
+        try {
+            String text = String.valueOf(value).trim();
+            return text.isEmpty() ? null : Integer.valueOf(text);
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
+    @Override
+    public Map<String, Object> getProjectTaskSummary(Long userId, Long projId) {
+        Map<String, Object> raw = calendarDao.getProjectTaskSummary(userId, projId);
+        int todo = summaryNumber(raw, "todoCount");
+        int progress = summaryNumber(raw, "progressCount");
+        int done = summaryNumber(raw, "doneCount");
+        int delayed = summaryNumber(raw, "delayedCount");
+        int total = summaryNumber(raw, "totalCount");
+        int rate = total > 0 ? (int) Math.round((done * 100.0d) / total) : 0;
+
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("todoCount", todo);
+        result.put("progressCount", progress);
+        result.put("doneCount", done);
+        result.put("delayedCount", delayed);
+        result.put("totalCount", total);
+        result.put("rate", rate);
+        return result;
+    }
+
+    private int summaryNumber(Map<String, Object> values, String key) {
+        if (values == null || values.isEmpty()) return 0;
+        Object value = values.get(key);
+        if (value == null) value = values.get(key.toUpperCase());
+        if (value == null) return 0;
+        if (value instanceof Number number) return number.intValue();
+        try {
+            return Integer.parseInt(String.valueOf(value));
+        } catch (NumberFormatException e) {
+            return 0;
+        }
     }
 
     private long calculateInclusiveDurationDays(String startDt, String endDt) {
@@ -216,8 +466,13 @@ public class calendarResponseServiceImpl implements IcalendarResponseService {
         
         for (int month = 1; month <= 12; month++) {
             String monthStr = String.format("%02d", month);
-            String url = "http://apis.data.go.kr/B090041/openapi/service/SpcdeInfoService/getHoliDeInfo"
-                    + "?serviceKey=" + SERVICE_KEY
+            if (holidayServiceKey == null || holidayServiceKey.isBlank()) {
+            System.err.println("공휴일 API 키가 설정되지 않아 외부 공휴일 갱신을 건너뜁니다.");
+            return;
+        }
+
+        String url = "https://apis.data.go.kr/B090041/openapi/service/SpcdeInfoService/getHoliDeInfo"
+                    + "?serviceKey=" + holidayServiceKey
                     + "&solYear=" + year
                     + "&solMonth=" + monthStr
                     + "&_type=json";
@@ -281,6 +536,10 @@ public class calendarResponseServiceImpl implements IcalendarResponseService {
         ensureCalendarDetailColumns();
         
         calendarDao.registerEvent(dto);
+        applyFriendVisibilityShares(dto, dto.getUserId());
+        if (dto.getDraftKey() != null && !dto.getDraftKey().isBlank()) {
+            contentRecordService.activateDraft(dto.getDraftKey().trim(), "EVENT", dto.getId(), dto.getUserId());
+        }
         Set<Long> addedAttendees = syncEventAttendees(dto.getId(), dto.getAttendeeUserIds());
         syncCalendarShareRequests(dto, dto.getUserId());
         sendCalendarAttendeeNotices(dto, addedAttendees, dto.getUserId());
@@ -292,6 +551,7 @@ public class calendarResponseServiceImpl implements IcalendarResponseService {
         if (dto == null) return;
         String itemType = dto.getItemType() == null ? "PRIVATE" : dto.getItemType().trim().toUpperCase();
         dto.setItemType(itemType);
+        dto.setRecordEnabledYn("Y".equalsIgnoreCase(dto.getRecordEnabledYn()) ? "Y" : "N");
 
         String eventType = dto.getEventType() == null || dto.getEventType().isBlank() ? "NONE" : dto.getEventType().trim().toUpperCase();
         dto.setEventType(eventType);
@@ -301,6 +561,7 @@ public class calendarResponseServiceImpl implements IcalendarResponseService {
             dto.setIsPrivate("Y");
         } else {
             String visibility = dto.getVisibilityType() == null ? "PRIVATE" : dto.getVisibilityType().trim().toUpperCase();
+            if (!Set.of("PRIVATE", "FRIEND", "MOYO").contains(visibility)) visibility = "PRIVATE";
             dto.setVisibilityType(visibility);
             dto.setIsPrivate("MOYO".equals(visibility) ? "N" : "Y");
         }
@@ -498,6 +759,7 @@ public class calendarResponseServiceImpl implements IcalendarResponseService {
             if (updated) {
                 Long eventId = longOrNull(params.get("id"));
                 calendarResponseDTO noticeDto = mapToCalendarDto(params);
+                applyFriendVisibilityShares(noticeDto, longOrNull(params.get("userId")));
                 Set<Long> addedAttendees = syncEventAttendees(eventId, attendeeIdsFromParams(params));
                 syncCalendarShareRequests(noticeDto, longOrNull(params.get("userId")));
                 sendCalendarAttendeeNotices(noticeDto, addedAttendees, longOrNull(params.get("userId")));
@@ -510,6 +772,7 @@ public class calendarResponseServiceImpl implements IcalendarResponseService {
             if (updated) {
                 Long eventId = longOrNull(params.get("id"));
                 calendarResponseDTO noticeDto = mapToCalendarDto(params);
+                applyFriendVisibilityShares(noticeDto, longOrNull(params.get("userId")));
                 Set<Long> addedAttendees = syncEventAttendees(eventId, attendeeIdsFromParams(params));
                 syncCalendarShareRequests(noticeDto, longOrNull(params.get("userId")));
                 sendCalendarAttendeeNotices(noticeDto, addedAttendees, longOrNull(params.get("userId")));
@@ -532,6 +795,7 @@ public class calendarResponseServiceImpl implements IcalendarResponseService {
             }
             applyLunarOriginalDate(nextSeries);
             calendarDao.registerEvent(nextSeries);
+            applyFriendVisibilityShares(nextSeries, longOrNull(params.get("userId")));
             Set<Long> addedAttendees = syncEventAttendees(nextSeries.getId(), attendeeIdsFromParams(params));
             syncCalendarShareRequests(nextSeries, longOrNull(params.get("userId")));
             sendCalendarAttendeeNotices(nextSeries, addedAttendees, longOrNull(params.get("userId")));
@@ -556,6 +820,7 @@ public class calendarResponseServiceImpl implements IcalendarResponseService {
             normalizeCalendarEvent(singleEvent);
             applyLunarOriginalDate(singleEvent);
             calendarDao.registerEvent(singleEvent);
+            applyFriendVisibilityShares(singleEvent, longOrNull(params.get("userId")));
             Set<Long> addedAttendees = syncEventAttendees(singleEvent.getId(), attendeeIdsFromParams(params));
             syncCalendarShareRequests(singleEvent, longOrNull(params.get("userId")));
             sendCalendarAttendeeNotices(singleEvent, addedAttendees, longOrNull(params.get("userId")));
@@ -732,6 +997,7 @@ public class calendarResponseServiceImpl implements IcalendarResponseService {
         return "NONE"; // 소속되어 있지 않은 경우
     }
     private void ensureCalendarDetailColumns() {
+        if (!runtimeDdlEnabled) return;
         ensureCalendarEventTypeColumn();
         try {
             calendarDao.ensureCalendarDetailColumns();

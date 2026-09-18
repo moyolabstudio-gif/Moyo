@@ -1,6 +1,14 @@
 /* Common calendar event preview modal.
    Used by calendar page, profile calendar tab, and any page that opens a quick event preview. */
 
+/* Common modal isolation: do not depend on page-level box-sizing rules. */
+#calendarViewModal,
+#calendarViewModal *,
+#calendarViewModal *::before,
+#calendarViewModal *::after {
+    box-sizing: border-box;
+}
+
 /* Overlay / modal shell */
 .moyo-event-view-overlay {
     position: fixed;
@@ -11,7 +19,7 @@
     justify-content: center;
     padding: 24px;
     background: rgba(15, 23, 42, 0.24);
-    backdrop-filter: blur(8px);
+    backdrop-filter: none;
 }
 
 .moyo-event-view-overlay[hidden] { display: none !important; }
@@ -97,7 +105,7 @@
     right: 0;
     bottom: -1px;
     height: 2px;
-    background: linear-gradient(90deg, var(--event-accent-border) 0%, rgba(225, 232, 244, 0.68) 100%);
+    background: var(--moyo-primary-gradient, linear-gradient(90deg, #55D5CE 0%, #4288EF 52%, #5A55EE 100%));
     pointer-events: none;
 }
 
@@ -140,26 +148,57 @@
 }
 
 .moyo-event-view-author-avatar {
+    position: relative;
     flex: 0 0 28px;
     width: 28px;
     height: 28px;
-    border-radius: 999px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
+    border-radius: 50%;
+    display: inline-grid;
+    place-items: center;
     overflow: hidden;
-    background: var(--event-accent-soft);
-    color: var(--event-accent);
-    font-size: 12px;
-    font-weight: 950;
+    background: var(--moyo-avatar-gradient, var(--moyo-primary-gradient, linear-gradient(135deg, #55D5CE 0%, #4288EF 52%, #5A55EE 100%)));
+    color: #fff;
+    font-size: 10px;
+    font-weight: 850;
     line-height: 1;
+    box-shadow: none;
+}
+
+.moyo-event-view-author-avatar.has-image {
+    background: transparent !important;
+    background-image: none !important;
+}
+
+.moyo-event-view-author-avatar .moyo-member-avatar-fallback {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 850;
+}
+
+.moyo-event-view-author-avatar.has-image .moyo-member-avatar-fallback {
+    display: none;
 }
 
 .moyo-event-view-author-avatar img {
+    position: absolute;
+    inset: 0;
     width: 100%;
     height: 100%;
     object-fit: cover;
     display: block;
+    border-radius: inherit;
+    background: transparent;
+}
+
+.moyo-event-view-author-avatar img.is-transparent-image,
+.moyo-event-view-author-avatar img.is-contain-image {
+    object-fit: contain;
+    transform: scale(1.16);
+    transform-origin: center;
 }
 
 .moyo-event-view-author-name {
@@ -724,7 +763,7 @@
     justify-content: center;
     padding: 20px;
     background: rgba(15, 23, 42, 0.30);
-    backdrop-filter: blur(6px);
+    backdrop-filter: none;
 }
 
 .moyo-event-view-delete-modal[hidden] { display: none !important; }
@@ -877,3 +916,1286 @@
 }
 
 body.moyo-event-view-open { overflow: hidden; }
+
+
+/* 일정 상세 기록 - 작업 상세와 동일한 요약 흐름 */
+.moyo-event-view-section.record{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    padding-top:16px;
+    padding-bottom:16px;
+    border-top:1px solid #edf1f7;
+}
+.moyo-event-view-section.record[hidden]{display:none!important;}
+.moyo-event-view-record-label{
+    flex:0 0 auto;
+    min-width:42px;
+    font-size:13px;
+    font-weight:800;
+    color:#52637a;
+}
+.moyo-event-view-record-counts{
+    display:flex;
+    align-items:center;
+    gap:15px;
+    min-width:0;
+    flex:1 1 auto;
+}
+.moyo-event-view-record-shortcut{
+    display:inline-flex;
+    align-items:center;
+    gap:4px;
+    padding:3px 0;
+    border:0;
+    background:transparent;
+    color:#71849d;
+    font:inherit;
+    cursor:pointer;
+}
+.moyo-event-view-record-shortcut i{
+    width:18px;
+    text-align:center;
+    font-size:17px;
+}
+.moyo-event-view-record-shortcut b{
+    font-size:13px;
+    color:#5a6e88;
+}
+.moyo-event-view-record-shortcut:hover,
+.moyo-event-view-record-shortcut:focus-visible{
+    color:var(--event-accent,#6d63f6);
+}
+.moyo-event-view-record-shortcut:hover b,
+.moyo-event-view-record-shortcut:focus-visible b{
+    color:var(--event-accent,#6d63f6);
+}
+.moyo-event-view-record-btn{
+    flex:0 0 auto;
+    min-height:34px;
+    padding:0 12px;
+    border:1px solid #d8e2ef;
+    border-radius:11px;
+    background:#fff;
+    color:#4e8ce8;
+    font-size:12px;
+    font-weight:800;
+    cursor:pointer;
+}
+.moyo-event-view-record-btn:hover,
+.moyo-event-view-record-btn:focus-visible{
+    border-color:#b9d2f6;
+    background:#f7fbff;
+}
+
+
+/* 2026-09 일정 상세 UI 마감 */
+.moyo-event-view-card {
+    width: min(520px, calc(100vw - 40px));
+}
+
+.moyo-event-view-head,
+.moyo-event-view-card.is-compact-detail .moyo-event-view-head {
+    min-height: 62px;
+    padding: 14px 20px 13px;
+    justify-content: center;
+}
+
+.moyo-event-view-dialog-title {
+    margin: 0;
+    color: #14213d;
+    font-size: 17px;
+    font-weight: 820;
+    line-height: 1.15;
+    letter-spacing: -0.045em;
+    text-align: center;
+}
+
+.moyo-event-view-head-actions {
+    position: absolute;
+    top: 50%;
+    right: 14px;
+    transform: translateY(-50%);
+}
+
+.moyo-event-view-body,
+.moyo-event-view-card.is-compact-detail .moyo-event-view-body {
+    padding: 16px 22px 18px;
+    gap: 0;
+}
+
+.moyo-event-view-title-section {
+    display: grid;
+    grid-template-columns: 76px minmax(0, 1fr);
+    align-items: center;
+    gap: 12px;
+    min-height: 48px;
+    padding: 0 0 13px;
+    border-bottom: 1px solid #edf1f7;
+}
+
+.moyo-event-view-field-label {
+    color: #7b8798;
+    font-size: 11px;
+    font-weight: 850;
+    letter-spacing: -0.025em;
+}
+
+.moyo-event-view-title-row {
+    min-height: 28px;
+    gap: 7px;
+}
+
+.moyo-event-view-title {
+    font-size: 15px;
+    line-height: 1.4;
+    font-weight: 900;
+    color: #182230;
+}
+
+.moyo-event-view-type-icon {
+    width: 24px;
+    height: 24px;
+    margin-left: 1px;
+    border-radius: 8px;
+    background: var(--event-accent-soft);
+    color: var(--event-accent);
+    font-size: 12px;
+    transform: none;
+}
+
+.moyo-event-view-public-badge {
+    width: 22px;
+    height: 22px;
+}
+
+.moyo-event-view-public-badge img {
+    width: 21px;
+    height: 21px;
+    flex-basis: 21px;
+}
+
+.moyo-event-view-author,
+.moyo-event-view-card.is-compact-detail .moyo-event-view-author {
+    padding: 12px 0;
+    border-bottom: 1px solid #edf1f7;
+}
+
+.moyo-event-view-section,
+.moyo-event-view-section.time {
+    grid-template-columns: 76px minmax(0, 1fr);
+    column-gap: 12px;
+    min-height: 50px;
+    padding: 12px 0;
+    border-bottom: 1px solid #edf1f7;
+    align-items: center;
+}
+
+.moyo-event-view-section.time {
+    margin: 0;
+}
+
+.moyo-event-view-section:not(.record):last-of-type {
+    border-bottom-color: transparent;
+}
+
+.moyo-event-view-row-icon {
+    width: auto;
+    height: auto;
+    justify-content: flex-start;
+    padding-left: 2px;
+    font-size: 16px;
+}
+
+.moyo-event-view-section.time .moyo-event-view-row-icon {
+    width: auto;
+    height: auto;
+    margin-top: 0;
+    padding-left: 2px;
+    font-size: 17px;
+}
+
+.moyo-event-view-time-list {
+    gap: 7px;
+}
+
+.moyo-event-view-time-line {
+    grid-template-columns: 32px minmax(0, 1fr);
+    column-gap: 8px;
+}
+
+.moyo-event-view-time-line .time-main {
+    font-size: 13px;
+    font-weight: 760;
+}
+
+.moyo-event-view-time-meta {
+    padding-left: 40px;
+    font-size: 11px;
+}
+
+.moyo-event-view-section.record {
+    min-height: 50px;
+    padding: 12px 0 0;
+    border-top: 0;
+    border-bottom: 0;
+}
+
+.moyo-event-view-record-label {
+    min-width: 0;
+    flex: 0 0 76px;
+    color: #7b8798;
+    font-size: 11px;
+    font-weight: 850;
+}
+
+@media (max-width: 560px) {
+    .moyo-event-view-title-section,
+    .moyo-event-view-section,
+    .moyo-event-view-section.time {
+        grid-template-columns: 66px minmax(0, 1fr);
+        gap: 10px;
+    }
+    .moyo-event-view-record-label { flex-basis: 66px; }
+    .moyo-event-view-body,
+    .moyo-event-view-card.is-compact-detail .moyo-event-view-body { padding-left: 18px; padding-right: 18px; }
+}
+
+/* 2026-09-13 일정 상세: 업무 상세과 동일한 정보 위계 */
+.moyo-event-view-card{
+    width:min(520px, calc(100vw - 40px));
+    min-height:0;
+    overflow:hidden;
+}
+.moyo-event-view-head,
+.moyo-event-view-card.is-compact-detail .moyo-event-view-head{
+    min-height:62px;
+    padding:14px 20px 13px;
+}
+.moyo-event-view-body,
+.moyo-event-view-card.is-compact-detail .moyo-event-view-body{
+    padding:20px;
+    display:flex;
+    flex-direction:column;
+    gap:0;
+    overflow:auto;
+    max-height:calc(100vh - 100px);
+}
+.moyo-event-view-detail-item,
+.moyo-event-view-title-section,
+.moyo-event-view-author{
+    display:grid;
+    grid-template-columns:92px minmax(0,1fr);
+    align-items:center;
+    gap:14px;
+    min-height:0;
+    padding:15px 2px;
+    border-bottom:1px solid #edf1f5;
+    color:#344054;
+    font-size:12px;
+    line-height:1.55;
+}
+.moyo-event-view-detail-item[hidden],
+.moyo-event-view-author[hidden]{display:none!important;}
+.moyo-event-view-field-label,
+.moyo-event-view-record-label{
+    color:#7b8798;
+    font-size:11px;
+    font-weight:850;
+    letter-spacing:-.025em;
+}
+.moyo-event-view-title-section{
+    min-height:0;
+}
+.moyo-event-view-title-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    min-width:0;
+    min-height:26px;
+    overflow:visible;
+}
+.moyo-event-view-title{
+    min-width:0;
+    flex:1 1 auto;
+    margin:0;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+    color:#182230;
+    font-size:15px;
+    font-weight:900;
+    line-height:1.4;
+}
+.moyo-event-view-scope-badge{
+    flex:0 0 auto;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-height:26px;
+    padding:0 10px;
+    border-radius:999px;
+    background:var(--event-accent-soft);
+    color:var(--event-accent);
+    font-size:11px;
+    font-weight:900;
+    line-height:1;
+    white-space:nowrap;
+}
+.moyo-event-view-scope-badge.is-moyo-public{
+    background:rgba(69,207,208,.12);
+    color:#2b9ea0;
+}
+.moyo-event-view-public-badge{display:none!important;}
+.moyo-event-view-type-icon{display:none!important;}
+
+.moyo-event-view-author{
+    justify-content:initial;
+}
+.moyo-event-view-author-main{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    min-width:0;
+    width:max-content;
+    max-width:100%;
+}
+.moyo-event-view-author-avatar{
+    flex:0 0 30px;
+    width:30px;
+    height:30px;
+}
+.moyo-event-view-author-name{
+    color:#263247;
+    font-size:12px;
+    font-weight:750;
+}
+.moyo-event-view-author-scope{display:none!important;}
+.moyo-event-view-affiliation{
+    color:#344054;
+    font-size:12px;
+    font-weight:750;
+    word-break:break-word;
+}
+
+.moyo-event-view-time-compact{
+    display:flex;
+    flex-direction:column;
+    gap:3px;
+    min-width:0;
+}
+.moyo-event-view-time-compact strong{
+    color:#344054;
+    font-size:12px;
+    font-weight:780;
+    line-height:1.5;
+}
+.moyo-event-view-time-compact small{
+    color:#7f8b9b;
+    font-size:10px;
+    font-weight:650;
+    line-height:1.4;
+}
+.moyo-event-view-time-list,
+.moyo-event-view-time-period,
+.moyo-event-view-time-meta{margin:0;padding:0;}
+
+.moyo-event-view-content{
+    min-width:0;
+    color:#344054;
+    font-size:12px;
+}
+.moyo-event-view-textbox{
+    padding:0;
+    border:0;
+    border-radius:0;
+    background:transparent;
+    color:#344054;
+    line-height:1.55;
+}
+.moyo-event-view-section.location .moyo-event-view-content,
+.moyo-event-view-detail-item.location .moyo-event-view-content{
+    display:flex;
+    align-items:center;
+    gap:8px;
+}
+.moyo-event-view-map-link{
+    flex:0 0 auto;
+    min-height:28px;
+    padding:0 9px;
+    border-radius:8px;
+    font-size:10px;
+}
+.moyo-event-view-people{
+    display:flex;
+    flex-wrap:wrap;
+    align-items:center;
+    gap:6px;
+}
+.moyo-event-view-person.note-share-chip{
+    min-height:28px;
+}
+
+/* 기록은 업무 상세의 공통 기록 요약과 같은 간격 */
+.moyo-event-view-section.record{
+    display:grid;
+    grid-template-columns:92px minmax(0,1fr) auto;
+    align-items:center;
+    gap:14px;
+    min-height:0;
+    padding:14px 2px 0;
+    border:0;
+}
+.moyo-event-view-section.record[hidden]{display:none!important;}
+.moyo-event-view-record-label{
+    min-width:0;
+    flex:none;
+}
+.moyo-event-view-record-counts{
+    display:flex;
+    align-items:center;
+    gap:18px;
+    min-width:0;
+}
+.moyo-event-view-record-shortcut{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    padding:0;
+    border:0;
+    background:transparent;
+    color:#68778b;
+    line-height:1;
+}
+.moyo-event-view-record-shortcut i{
+    width:auto;
+    font-size:18px;
+    color:#66768c;
+}
+.moyo-event-view-record-shortcut b{
+    color:#536277;
+    font-size:13px;
+    font-weight:700;
+}
+.moyo-event-view-record-btn{
+    min-width:60px;
+    height:30px;
+    min-height:30px;
+    padding:0 11px;
+    border:1px solid #dce6ef;
+    border-radius:9px;
+    background:#fff;
+    color:#4a90e2;
+    font-size:11px;
+    font-weight:850;
+}
+
+/* 기록이 없으면 마지막 정보 행의 선을 닫아 업무 상세처럼 마감 */
+.moyo-event-view-body:not(:has(.moyo-event-view-section.record:not([hidden]))) .moyo-event-view-detail-item:not([hidden]):last-of-type{
+    border-bottom:0;
+}
+
+@media(max-width:640px){
+    .moyo-event-view-body,
+    .moyo-event-view-card.is-compact-detail .moyo-event-view-body{padding:16px;}
+    .moyo-event-view-detail-item,
+    .moyo-event-view-title-section,
+    .moyo-event-view-author{
+        grid-template-columns:76px minmax(0,1fr);
+        gap:10px;
+    }
+    .moyo-event-view-section.record{
+        grid-template-columns:76px minmax(0,1fr);
+        gap:10px;
+    }
+    .moyo-event-view-record-btn{
+        grid-column:2;
+        justify-self:start;
+    }
+    .moyo-event-view-title-row{align-items:flex-start;}
+}
+
+/* 2026-09-13 — 일정 상세 사람 기본 아바타는 MOYO 공통 정책(민트→블루→보라 + 이니셜)을 따른다. */
+.moyo-event-view-author-avatar.is-default-profile,
+.moyo-event-view-author-avatar:not(.has-image),
+.moyo-event-view-person.note-share-type-user .note-share-avatar.is-fallback,
+.moyo-event-view-person.note-share-scope-ws-member .note-share-avatar.is-fallback,
+.moyo-event-view-person.note-share-scope-proj-member .note-share-avatar.is-fallback {
+    background: var(--moyo-avatar-gradient, linear-gradient(135deg, #55D5CE 0%, #4288EF 52%, #5A55EE 100%)) !important;
+    background-image: var(--moyo-avatar-gradient, linear-gradient(135deg, #55D5CE 0%, #4288EF 52%, #5A55EE 100%)) !important;
+    color: #fff !important;
+}
+.moyo-event-view-author-avatar.is-default-profile .moyo-member-avatar-fallback,
+.moyo-event-view-author-avatar:not(.has-image) .moyo-member-avatar-fallback,
+.moyo-event-view-person .note-share-avatar.is-fallback b {
+    color: #fff !important;
+}
+
+
+/* 2026-09-13 — 일정 상세: 업무 상세과 동일한 달력 아이콘 + 날짜 뒤 양/음력 아이콘 */
+.moyo-event-view-time-compact{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    min-width:0;
+}
+.moyo-event-view-calendar-icon{
+    display:inline-grid;
+    place-items:center;
+    flex:0 0 34px;
+    width:34px;
+    height:34px;
+    border-radius:10px;
+    background:#eef6ff;
+    color:#4a90e2;
+    font-size:13px;
+}
+.moyo-event-view-time-copy{
+    display:flex;
+    min-width:0;
+    flex-direction:column;
+    gap:3px;
+}
+.moyo-event-view-date-main{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    min-width:0;
+}
+.moyo-event-view-date-main strong{
+    color:#263348;
+    font-size:12px;
+    font-weight:900;
+    line-height:1.45;
+    letter-spacing:0;
+}
+.moyo-event-view-calendar-type{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    flex:0 0 auto;
+    color:#6b7df4;
+    font-size:11px;
+    line-height:1;
+}
+.moyo-event-view-calendar-type .fa-sun{color:#f2a23a;}
+.moyo-event-view-calendar-type .fa-moon{color:#6b62e8;}
+.moyo-event-view-time-copy small{
+    display:flex;
+    align-items:center;
+    flex-wrap:wrap;
+    gap:4px;
+    margin:0;
+    color:#7d8999;
+    font-size:10px;
+    font-weight:750;
+    line-height:1.4;
+}
+.moyo-event-view-time-separator{color:#b0bac7;}
+
+
+/* 2026-09-13 — 일정 상세 최종: 업무 상세과 동일한 기간/참석자 요약 구조 */
+.moyo-event-view-time-compact{
+    flex-direction:row;
+    align-items:center;
+    justify-content:flex-start;
+    gap:10px;
+    width:100%;
+}
+.moyo-event-view-calendar-icon{align-self:center;}
+.moyo-event-view-time-copy{align-items:flex-start;text-align:left;}
+
+.moyo-event-view-attendee-wrap{min-width:0;width:100%;}
+.moyo-event-view-attendee-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    min-width:0;
+}
+.moyo-event-view-people{
+    display:flex;
+    align-items:center;
+    gap:9px;
+    min-width:0;
+}
+.moyo-event-view-attendee-stack{
+    display:flex;
+    align-items:center;
+    flex:0 0 auto;
+    padding-left:0;
+}
+.moyo-event-view-attendee-avatar-link{
+    position:relative;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    flex:0 0 auto;
+    margin-left:-8px;
+    border:2px solid #fff;
+    border-radius:50%;
+    background:#fff;
+    line-height:0;
+}
+.moyo-event-view-attendee-avatar-link:first-child{margin-left:0;}
+.moyo-event-view-attendee-avatar-link.is-profile-link{cursor:pointer;}
+.moyo-event-view-attendee-avatar-link .note-share-avatar{
+    width:32px!important;
+    min-width:32px!important;
+    height:32px!important;
+    min-height:32px!important;
+    border-radius:50%!important;
+}
+.moyo-event-view-attendee-remain{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    width:32px;
+    height:32px;
+    margin-left:-8px;
+    border:2px solid #fff;
+    border-radius:50%;
+    background:#eef3f8;
+    color:#64748b;
+    font-size:10px;
+    font-weight:900;
+}
+.moyo-event-view-attendee-copy{
+    display:flex;
+    min-width:0;
+    flex-direction:column;
+    gap:1px;
+}
+.moyo-event-view-attendee-copy b{
+    overflow:hidden;
+    color:#344054;
+    font-size:12px;
+    font-weight:900;
+    line-height:1.35;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+}
+.moyo-event-view-attendee-copy small{
+    color:#7f8b9b;
+    font-size:10px;
+    font-weight:700;
+    line-height:1.35;
+}
+.moyo-event-view-attendee-more{
+    flex:0 0 auto;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-width:60px;
+    height:30px;
+    padding:0 11px;
+    border:1px solid #dce6ef;
+    border-radius:9px;
+    background:#fff;
+    color:#4a90e2;
+    font-size:11px;
+    line-height:1;
+    font-weight:850;
+    cursor:pointer;
+}
+.moyo-event-view-attendee-more:hover{border-color:#a9cdea;background:#f5faff;color:#2f79c0;}
+.moyo-event-view-attendee-list{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:8px;
+    margin-top:11px;
+    padding-top:11px;
+    border-top:1px solid #edf1f5;
+}
+.moyo-event-view-attendee-list[hidden]{display:none!important;}
+.moyo-event-view-attendee-person{
+    display:flex;
+    align-items:center;
+    gap:9px;
+    min-width:0;
+    padding:8px 9px;
+    border:1px solid #e5ebf1;
+    border-radius:11px;
+    background:#fff;
+}
+.moyo-event-view-attendee-person.is-profile-link{cursor:pointer;}
+.moyo-event-view-attendee-person>span:last-child{
+    display:flex;
+    min-width:0;
+    flex:1;
+    flex-direction:column;
+    gap:2px;
+}
+.moyo-event-view-attendee-person b{overflow:hidden;color:#344054;font-size:11px;font-weight:900;text-overflow:ellipsis;white-space:nowrap;}
+.moyo-event-view-attendee-person small{color:#8793a3;font-size:9px;font-weight:750;}
+@media(max-width:520px){
+    .moyo-event-view-attendee-head{align-items:flex-start;}
+    .moyo-event-view-attendee-list{grid-template-columns:1fr;}
+}
+
+
+/* 2026-09-13 — 참석자 요약 아바타 크기 회귀 수정 */
+.moyo-event-view-attendee-avatar-link{
+    width:36px;
+    height:36px;
+    overflow:hidden;
+}
+.moyo-event-view-attendee-avatar-link .note-share-avatar,
+.moyo-event-view-attendee-person .note-share-avatar{
+    position:relative;
+    display:inline-flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    flex:0 0 32px!important;
+    width:32px!important;
+    min-width:32px!important;
+    max-width:32px!important;
+    height:32px!important;
+    min-height:32px!important;
+    max-height:32px!important;
+    overflow:hidden!important;
+    border-radius:50%!important;
+    line-height:1!important;
+}
+.moyo-event-view-attendee-avatar-link .note-share-avatar img,
+.moyo-event-view-attendee-person .note-share-avatar img{
+    display:block!important;
+    width:100%!important;
+    min-width:0!important;
+    max-width:100%!important;
+    height:100%!important;
+    min-height:0!important;
+    max-height:100%!important;
+    object-fit:cover!important;
+    object-position:center!important;
+    border-radius:inherit!important;
+}
+.moyo-event-view-attendee-avatar-link .note-share-avatar b,
+.moyo-event-view-attendee-person .note-share-avatar b{
+    display:flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    width:100%!important;
+    height:100%!important;
+    margin:0!important;
+    font-size:11px!important;
+    font-weight:900!important;
+    line-height:1!important;
+}
+.moyo-event-view-attendee-person{overflow:hidden;}
+
+/* 2026-09-13 — 일정 상세 참석자 요약: 기본 사람 아바타만 MOYO 그라데이션 + 이니셜로 고정 */
+.moyo-event-view-attendee-avatar-link .note-share-avatar.is-fallback,
+.moyo-event-view-attendee-person .note-share-avatar.is-fallback {
+    background: var(--moyo-avatar-gradient, linear-gradient(135deg, #55D5CE 0%, #4288EF 52%, #5A55EE 100%)) !important;
+    background-image: var(--moyo-avatar-gradient, linear-gradient(135deg, #55D5CE 0%, #4288EF 52%, #5A55EE 100%)) !important;
+    color: #fff !important;
+}
+.moyo-event-view-attendee-avatar-link .note-share-avatar.is-fallback > b,
+.moyo-event-view-attendee-person .note-share-avatar.is-fallback > b {
+    color: #fff !important;
+}
+
+/* 2026-09-13 — 일정 상세 최종 정보 위계 정리 (기능/DOM 변경 없음) */
+.moyo-event-view-body,
+.moyo-event-view-card.is-compact-detail .moyo-event-view-body{
+    padding:18px 20px 20px;
+}
+
+/* 모든 상세 행의 기준선을 통일한다. */
+.moyo-event-view-detail-item,
+.moyo-event-view-title-section,
+.moyo-event-view-author{
+    grid-template-columns:78px minmax(0,1fr);
+    gap:18px;
+    padding:14px 2px;
+}
+.moyo-event-view-field-label,
+.moyo-event-view-record-label{
+    color:#8591a2;
+    font-size:10.5px;
+    font-weight:800;
+}
+
+/* 1순위: 일정명. 제목을 먼저 읽고 범위 배지는 보조로 읽히게 한다. */
+.moyo-event-view-title-section{
+    padding-top:13px;
+    padding-bottom:15px;
+}
+.moyo-event-view-title-row{
+    justify-content:flex-start;
+    gap:8px;
+}
+.moyo-event-view-title{
+    flex:0 1 auto;
+    max-width:calc(100% - 82px);
+    color:#182230;
+    font-size:16px;
+    font-weight:900;
+    line-height:1.35;
+    letter-spacing:-.025em;
+}
+.moyo-event-view-scope-badge{
+    order:2;
+    min-height:23px;
+    padding:0 9px;
+    font-size:10px;
+    font-weight:850;
+    opacity:.9;
+}
+
+/* 2순위: 작성자/소속은 설명 정보로 한 톤 낮춘다. */
+.moyo-event-view-author-avatar{
+    flex-basis:28px;
+    width:28px;
+    height:28px;
+}
+.moyo-event-view-author-main{
+    gap:8px;
+}
+.moyo-event-view-author-name,
+.moyo-event-view-affiliation{
+    color:#3b4758;
+    font-size:11.5px;
+    font-weight:750;
+}
+
+/* 2순위 핵심: 날짜/시간은 상세 본문의 중심 정보로 강조한다. */
+.moyo-event-view-detail-item.time{
+    padding-top:15px;
+    padding-bottom:15px;
+}
+.moyo-event-view-time-compact{
+    gap:11px;
+}
+.moyo-event-view-calendar-icon{
+    flex-basis:32px;
+    width:32px;
+    height:32px;
+    border-radius:9px;
+    font-size:12px;
+}
+.moyo-event-view-date-main{
+    gap:5px;
+}
+.moyo-event-view-date-main strong{
+    color:#1f2d42;
+    font-size:13.5px;
+    font-weight:900;
+    letter-spacing:-.01em;
+}
+.moyo-event-view-calendar-type{
+    font-size:10px;
+}
+.moyo-event-view-time-copy small{
+    color:#8490a0;
+    font-size:9.5px;
+    font-weight:700;
+}
+
+/* 3순위: 참석자는 담당자 요약형처럼 간결하게 유지한다. */
+.moyo-event-view-detail-item.attendees{
+    padding-top:14px;
+    padding-bottom:14px;
+}
+.moyo-event-view-people{
+    gap:8px;
+}
+.moyo-event-view-attendee-avatar-link{
+    width:32px;
+    height:32px;
+    margin-left:-7px;
+}
+.moyo-event-view-attendee-avatar-link .note-share-avatar,
+.moyo-event-view-attendee-person .note-share-avatar{
+    flex-basis:28px!important;
+    width:28px!important;
+    min-width:28px!important;
+    max-width:28px!important;
+    height:28px!important;
+    min-height:28px!important;
+    max-height:28px!important;
+}
+.moyo-event-view-attendee-remain{
+    width:30px;
+    height:30px;
+    margin-left:-7px;
+}
+.moyo-event-view-attendee-copy b{
+    color:#344054;
+    font-size:11.5px;
+    font-weight:850;
+}
+.moyo-event-view-attendee-copy small{
+    color:#8a96a5;
+    font-size:9.5px;
+    font-weight:700;
+}
+.moyo-event-view-attendee-more{
+    min-width:58px;
+    height:29px;
+    padding:0 10px;
+    color:#4d8fd8;
+    font-size:10.5px;
+    font-weight:800;
+}
+
+/* 최하단 공통 기능: 기록은 내용보다 한 단계 낮추되 액션은 분명하게 둔다. */
+.moyo-event-view-section.record{
+    grid-template-columns:78px minmax(0,1fr) auto;
+    gap:18px;
+    padding:13px 2px 0;
+}
+.moyo-event-view-record-counts{
+    gap:16px;
+    opacity:.92;
+}
+.moyo-event-view-record-shortcut{
+    gap:5px;
+}
+.moyo-event-view-record-shortcut i{
+    font-size:17px;
+    color:#718096;
+}
+.moyo-event-view-record-shortcut b{
+    color:#66758a;
+    font-size:12px;
+    font-weight:700;
+}
+.moyo-event-view-record-btn{
+    min-width:58px;
+    height:29px;
+    min-height:29px;
+    padding:0 10px;
+    color:#4d8fd8;
+    font-size:10.5px;
+    font-weight:800;
+}
+
+@media(max-width:640px){
+    .moyo-event-view-detail-item,
+    .moyo-event-view-title-section,
+    .moyo-event-view-author{
+        grid-template-columns:68px minmax(0,1fr);
+        gap:12px;
+    }
+    .moyo-event-view-section.record{
+        grid-template-columns:68px minmax(0,1fr);
+        gap:12px;
+    }
+    .moyo-event-view-title{max-width:calc(100% - 76px);font-size:15px;}
+}
+
+/* 2026-09-13 — 일정 상세 최종 밀도: 업무 상세 기준과 수치 통일 (UI/기능 구조 변경 없음) */
+.moyo-event-view-body,
+.moyo-event-view-card.is-compact-detail .moyo-event-view-body{
+    padding:20px;
+}
+.moyo-event-view-detail-item,
+.moyo-event-view-title-section,
+.moyo-event-view-author{
+    grid-template-columns:92px minmax(0,1fr);
+    gap:14px;
+    padding:15px 2px;
+}
+.moyo-event-view-field-label,
+.moyo-event-view-record-label{
+    color:#7b8798;
+    font-size:11px;
+    font-weight:850;
+}
+
+/* 제목/범위: 업무명 + 상태 배지와 같은 밀도 */
+.moyo-event-view-title-section{
+    padding-top:15px;
+    padding-bottom:15px;
+}
+.moyo-event-view-title-row{
+    gap:10px;
+}
+.moyo-event-view-title{
+    max-width:calc(100% - 88px);
+    font-size:15px;
+    line-height:1.4;
+}
+.moyo-event-view-scope-badge{
+    min-height:26px;
+    padding:0 10px;
+    font-size:11px;
+    font-weight:900;
+}
+
+/* 작성자/참석자: 업무 담당자와 같은 사람 정보 밀도 */
+.moyo-event-view-author-avatar{
+    flex-basis:32px;
+    width:32px;
+    height:32px;
+}
+.moyo-event-view-author-main{
+    gap:9px;
+}
+.moyo-event-view-author-name,
+.moyo-event-view-affiliation{
+    font-size:12px;
+    font-weight:800;
+}
+.moyo-event-view-detail-item.attendees{
+    padding-top:15px;
+    padding-bottom:15px;
+}
+.moyo-event-view-people{
+    gap:9px;
+}
+.moyo-event-view-attendee-avatar-link{
+    width:36px;
+    height:36px;
+    margin-left:-7px;
+}
+.moyo-event-view-attendee-avatar-link .note-share-avatar,
+.moyo-event-view-attendee-person .note-share-avatar{
+    flex-basis:32px!important;
+    width:32px!important;
+    min-width:32px!important;
+    max-width:32px!important;
+    height:32px!important;
+    min-height:32px!important;
+    max-height:32px!important;
+}
+.moyo-event-view-attendee-copy b{
+    font-size:13px;
+    font-weight:900;
+}
+.moyo-event-view-attendee-copy small{
+    margin-top:2px;
+    font-size:11px;
+    font-weight:700;
+}
+.moyo-event-view-attendee-more{
+    min-width:60px;
+    height:30px;
+    padding:0 11px;
+    font-size:11px;
+    font-weight:850;
+}
+
+/* 일정: 업무 진행 기간과 동일한 아이콘/날짜 밀도 */
+.moyo-event-view-detail-item.time{
+    padding-top:15px;
+    padding-bottom:15px;
+}
+.moyo-event-view-time-compact{
+    gap:10px;
+}
+.moyo-event-view-calendar-icon{
+    flex-basis:34px;
+    width:34px;
+    height:34px;
+    border-radius:10px;
+    font-size:13px;
+}
+.moyo-event-view-date-main{
+    gap:6px;
+}
+.moyo-event-view-date-main strong{
+    font-size:12px;
+    line-height:1.45;
+}
+.moyo-event-view-calendar-type{
+    font-size:10px;
+}
+.moyo-event-view-time-copy small{
+    font-size:10px;
+    font-weight:750;
+}
+
+/* 기록: 업무 상세 기록 요약과 정확히 같은 열/간격 */
+.moyo-event-view-section.record{
+    grid-template-columns:92px minmax(0,1fr) auto;
+    gap:14px;
+    padding:14px 2px 0;
+}
+.moyo-event-view-record-counts{
+    gap:18px;
+    opacity:1;
+}
+.moyo-event-view-record-shortcut{
+    gap:6px;
+}
+.moyo-event-view-record-shortcut i{
+    font-size:18px;
+    color:#66768c;
+}
+.moyo-event-view-record-shortcut b{
+    color:#536277;
+    font-size:13px;
+    font-weight:700;
+}
+.moyo-event-view-record-btn{
+    min-width:60px;
+    height:30px;
+    min-height:30px;
+    padding:0 11px;
+    font-size:11px;
+    font-weight:850;
+}
+
+@media(max-width:640px){
+    .moyo-event-view-body,
+    .moyo-event-view-card.is-compact-detail .moyo-event-view-body{padding:16px;}
+    .moyo-event-view-detail-item,
+    .moyo-event-view-title-section,
+    .moyo-event-view-author{
+        grid-template-columns:76px minmax(0,1fr);
+        gap:10px;
+    }
+    .moyo-event-view-section.record{
+        grid-template-columns:76px minmax(0,1fr);
+        gap:10px;
+    }
+}
+
+
+/* 2026-09-13 — 일정 상세 마감: 범위 배지 우측 정렬 + 기록 간격 업무 상세과 통일 */
+.moyo-event-view-title-row{
+    width:100%;
+    min-width:0;
+    display:flex;
+    align-items:center;
+    gap:10px;
+}
+.moyo-event-view-title{
+    min-width:0;
+    max-width:none;
+    flex:1 1 auto;
+}
+.moyo-event-view-scope-badge{
+    margin-left:auto;
+    flex:0 0 auto;
+}
+.moyo-event-view-public-badge{
+    flex:0 0 auto;
+}
+
+/* 업무 상세 기록 요약의 실측 간격과 동일하게 맞춘다. */
+.moyo-event-view-section.record{
+    grid-template-columns:96px minmax(0,1fr) auto;
+    gap:14px;
+    align-items:center;
+    padding:14px 2px 0;
+}
+.moyo-event-view-record-counts{
+    display:flex;
+    align-items:center;
+    gap:18px;
+    min-width:0;
+}
+.moyo-event-view-record-shortcut{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    height:30px;
+    padding:0 5px;
+    white-space:nowrap;
+}
+.moyo-event-view-record-shortcut i{
+    font-size:18px;
+    line-height:1;
+}
+.moyo-event-view-record-shortcut b{
+    font-size:13px;
+    line-height:1;
+}
+.moyo-event-view-record-btn{
+    margin-left:0;
+    justify-self:end;
+}
+
+@media(max-width:640px){
+    .moyo-event-view-title-row{gap:8px;}
+    .moyo-event-view-section.record{
+        grid-template-columns:76px minmax(0,1fr);
+        gap:10px;
+    }
+    .moyo-event-view-record-btn{
+        grid-column:2;
+        justify-self:start;
+    }
+}
+
+/* 2026-09-13 — 일정 상세 최종 미세정렬: 범위 배지 수직 중심 + 기록 시작점 */
+.moyo-event-view-scope-badge{
+    transform:translateY(-1px);
+}
+.moyo-event-view-record-counts{
+    padding-left:5px;
+}
+
+@media(max-width:640px){
+    .moyo-event-view-record-counts{
+        padding-left:0;
+    }
+}
+
+
+/* 2026-09-14 일정 상세 헤더 액션 업무/계획 상세 통일 */
+.moyo-event-view-head-actions{
+    right:18px !important;
+    gap:2px !important;
+    transform:translateY(-50%) !important;
+}
+
+.moyo-event-view-head-btn{
+    display:inline-flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    width:34px !important;
+    height:34px !important;
+    flex:0 0 34px !important;
+    padding:0 !important;
+    border:0 !important;
+    border-radius:50% !important;
+    background:transparent !important;
+    box-shadow:none !important;
+    color:#7f8b9d !important;
+    font-size:13px !important;
+    line-height:1 !important;
+    transform:none !important;
+    transition:color .16s ease, background-color .16s ease !important;
+}
+
+.moyo-event-view-close{
+    font-size:16px !important;
+}
+
+.moyo-event-view-edit:hover{
+    color:#4a90e2 !important;
+    background:rgba(74,144,226,.10) !important;
+    box-shadow:none !important;
+    transform:none !important;
+}
+
+.moyo-event-view-delete{
+    color:#8a96a6 !important;
+}
+.moyo-event-view-delete:hover{
+    color:#ef4d5f !important;
+    background:rgba(239,77,95,.10) !important;
+    box-shadow:none !important;
+    transform:none !important;
+}
+
+.moyo-event-view-close:hover{
+    color:#4b5565 !important;
+    background:rgba(113,128,150,.10) !important;
+    box-shadow:none !important;
+    transform:none !important;
+}
+
+/* 구형 공유 버튼이 노출되는 페이지에서도 같은 액션 규격 유지 */
+.moyo-event-view-share:hover{
+    color:#4a90e2 !important;
+    background:rgba(74,144,226,.10) !important;
+    box-shadow:none !important;
+    transform:none !important;
+}

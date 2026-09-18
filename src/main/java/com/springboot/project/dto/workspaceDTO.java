@@ -22,9 +22,11 @@ public class workspaceDTO {
     private String wsType;       // ORGANIZATION/TEAM/STUDY/COMMUNITY/CLUB/LIFE/ETC
     private String joinType;     // OPEN/APPROVAL/INVITE_ONLY
     private Long memberCount;     // 그룹 멤버 수
+    private String currentUserRole; // 현재 로그인 사용자의 그룹 역할(OWNER/ADMIN/MEMBER)
 
     private String status;                    // ACTIVE/DELETE_PENDING
     private LocalDateTime deleteRequestedAt; // 삭제 신청일
-    private LocalDateTime deleteScheduledAt; // 삭제 예정일
+    private LocalDateTime deleteDeadlineAt;  // 최종 삭제 예정일
+    private String deleteDeadlineDate;
     
 }

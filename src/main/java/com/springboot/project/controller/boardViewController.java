@@ -18,6 +18,8 @@ import org.springframework.web.multipart.MultipartFile;
 import com.springboot.project.dto.postDTO;
 import com.springboot.project.dto.usersDto;
 import com.springboot.project.service.IboardService;
+import com.springboot.project.service.BoardAuthorizationService;
+import com.springboot.project.service.UploadSecurityService;
 
 import jakarta.servlet.http.HttpSession;
 
@@ -28,6 +30,12 @@ public class boardViewController {
     @Autowired
     private IboardService iboardService;
 
+    @Autowired
+    private BoardAuthorizationService boardAuthorizationService;
+
+    @Autowired
+    private UploadSecurityService uploadSecurityService;
+
 
     private Long currentUserId(HttpSession session) {
         usersDto loginUser = (usersDto) session.getAttribute("user");
@@ -36,7 +44,7 @@ public class boardViewController {
 
     private boolean canManagePin(Long wsId, Long projId, HttpSession session) {
         Long userId = currentUserId(session);
-        return iboardService.canManageBoardPin(wsId, projId, userId);
+        return boardAuthorizationService.canManageBoard(wsId, projId, userId);
     }
 
 
@@ -88,10 +96,19 @@ public class boardViewController {
         model.addAttribute("hasNext", page < totalPages);
     }
 
+    private String redirectLegacyFileBoard(Long wsId, Long projId) {
+        if (projId != null) {
+            return "redirect:/project/files?projId=" + projId
+                    + (wsId != null ? "&wsId=" + wsId : "");
+        }
+        return "redirect:/group/files?wsId=" + wsId;
+    }
+
     // 1. 게시판 목록
     @GetMapping("/list")
     public String boardList(
             @RequestParam(value = "wsId", required = false) Long wsId,
+            @RequestParam(value = "projId", required = false) Long projId,
             @RequestParam(value = "type", defaultValue = "FREE") String type,
             @RequestParam(value = "page", defaultValue = "1") int page,
             @RequestParam(value = "size", defaultValue = "10") int size,
@@ -100,6 +117,12 @@ public class boardViewController {
             Model model,
             HttpSession session) {
 
+        if ("FILE".equalsIgnoreCase(type)) {
+            return redirectLegacyFileBoard(wsId, projId);
+        }
+        Long userId = currentUserId(session);
+        if (userId == null) return "redirect:/users/loginForm";
+        if (!boardAuthorizationService.canAccessBoard(wsId, projId, userId)) return "redirect:/?authError=board";
         page = Math.max(page, 1);
         size = Math.min(Math.max(size, 5), 50);
         keyword = keyword == null ? "" : keyword.trim();
@@ -134,7 +157,14 @@ public class boardViewController {
             Model model,
             HttpSession session) {
 
-        boolean canManageBoard = canManagePin(wsId, projId, session);
+        if ("FILE".equalsIgnoreCase(type)) {
+            return redirectLegacyFileBoard(wsId, projId);
+        }
+        Long userId = currentUserId(session);
+        if (userId == null) return "redirect:/users/loginForm";
+        if (!boardAuthorizationService.canAccessBoard(wsId, projId, userId)) return "redirect:/?authError=board";
+
+        boolean canManageBoard = boardAuthorizationService.canManageBoard(wsId, projId, userId);
         if ("NOTICE".equalsIgnoreCase(type) && !canManageBoard) {
             return "redirect:/group/board/list?wsId=" + wsId
                     + (projId != null ? "&projId=" + projId : "")
@@ -157,6 +187,12 @@ public class boardViewController {
                               Model model,
                               HttpSession session) {
         postDTO post = iboardService.getPostDetail(postId);
+        Long userId = currentUserId(session);
+        if (userId == null) return "redirect:/users/loginForm";
+        if (post == null || !boardAuthorizationService.canViewPost((long) postId, userId)) return "redirect:/?authError=board";
+        if (post != null && "FILE".equalsIgnoreCase(post.getBoardType())) {
+            return redirectLegacyFileBoard(post.getWsId() != null ? post.getWsId() : wsId, projId);
+        }
         List<Map<String, Object>> replyList = iboardService.getReplyList(postId);
         List<Map<String, Object>> fileList = iboardService.getFileList(postId);
 
@@ -184,7 +220,11 @@ public class boardViewController {
             HttpSession session) {
 
         com.springboot.project.dto.usersDto loginUser = (com.springboot.project.dto.usersDto) session.getAttribute("user");
-        if (loginUser == null) return "redirect:/login";
+        if (loginUser == null) return "redirect:/users/loginForm";
+        if (!boardAuthorizationService.canAccessBoard(wsId, projId, loginUser.getUserId())) return "redirect:/?authError=board";
+        if ("FILE".equalsIgnoreCase(boardType)) {
+            return redirectLegacyFileBoard(wsId, projId);
+        }
 
         postDTO post = new postDTO();
         post.setWsId(wsId);
@@ -194,7 +234,7 @@ public class boardViewController {
         post.setUserId(loginUser.getUSER_ID());
         if (projId != null) post.setProjId(projId);
 
-        boolean canManage = iboardService.canManageBoardPin(wsId, projId, loginUser.getUserId());
+        boolean canManage = boardAuthorizationService.canManageBoard(wsId, projId, loginUser.getUserId());
         if ("NOTICE".equalsIgnoreCase(boardType) && !canManage) {
             return "redirect:/group/board/list?wsId=" + wsId
                     + (projId != null ? "&projId=" + projId : "")
@@ -231,6 +271,14 @@ public class boardViewController {
             Model model,
             HttpSession session) {
         postDTO post = iboardService.getPostDetail(postId);
+        Long userId = currentUserId(session);
+        if (userId == null) return "redirect:/users/loginForm";
+        if (post == null || !boardAuthorizationService.canEditPost((long) postId, userId)) return "redirect:/?authError=board-edit";
+        if (post != null && "FILE".equalsIgnoreCase(post.getBoardType())) {
+            return redirectLegacyFileBoard(post.getWsId() != null ? post.getWsId() : wsId, post.getProjId());
+        }
+        wsId = post.getWsId();
+        projId = post.getProjId();
         List<Map<String, Object>> fileList = iboardService.getFileList(postId);
         model.addAttribute("post", post);
         model.addAttribute("fileList", fileList);
@@ -255,6 +303,17 @@ public class boardViewController {
             @RequestParam(value = "files", required = false) List<MultipartFile> files,
             HttpSession session) {
 
+        Long userId = currentUserId(session);
+        if (userId == null) return "redirect:/users/loginForm";
+        postDTO existingPost = iboardService.getPostDetail(postId.intValue());
+        if (existingPost == null || !boardAuthorizationService.canEditPost(postId, userId)) return "redirect:/?authError=board-edit";
+        wsId = existingPost.getWsId();
+        projId = existingPost.getProjId();
+        boardType = existingPost.getBoardType();
+        if ("FILE".equalsIgnoreCase(boardType)) {
+            return redirectLegacyFileBoard(wsId, projId);
+        }
+
         postDTO post = new postDTO();
         post.setPostId(postId);
         post.setWsId(wsId);
@@ -263,7 +322,7 @@ public class boardViewController {
         post.setTitle(title);
         post.setContent(content);
 
-        boolean canManage = canManagePin(wsId, projId, session);
+        boolean canManage = boardAuthorizationService.canManageBoard(wsId, projId, userId);
         if (canManage && "Y".equalsIgnoreCase(isPinned)) {
             post.setIsPinned("Y");
             post.setPinStartDt(pinStartDt);
@@ -292,7 +351,7 @@ public class boardViewController {
                 Map<String, Object> fileMap = new HashMap<>();
                 fileMap.put("postId", postId);
                 fileMap.put("fileName", savedName);
-                fileMap.put("originalName", file.getOriginalFilename());
+                fileMap.put("originalName", uploadSecurityService.safeOriginalName(file.getOriginalFilename()));
                 fileMap.put("fileSize", file.getSize());
 
                 iboardService.insertFile(fileMap);
@@ -388,12 +447,21 @@ public class boardViewController {
     }
 
 
-    @GetMapping("/delete")
+    @PostMapping("/delete")
     public String boardDelete(
             @RequestParam("postId") Long postId,
             @RequestParam(value = "wsId", required = false) Long wsId,
             @RequestParam(value = "projId", required = false) Long projId,
-            @RequestParam("boardType") String boardType) {
+            @RequestParam("boardType") String boardType,
+            HttpSession session) {
+
+        Long userId = currentUserId(session);
+        if (userId == null) return "redirect:/users/loginForm";
+        postDTO existingPost = iboardService.getPostDetail(postId.intValue());
+        if (existingPost == null || !boardAuthorizationService.canDeletePost(postId, userId)) return "redirect:/?authError=board-delete";
+        wsId = existingPost.getWsId();
+        projId = existingPost.getProjId();
+        boardType = existingPost.getBoardType();
 
         boolean success = iboardService.deletePost(postId);
 

@@ -9,13 +9,23 @@ import java.util.Base64;
 import java.util.Locale;
 import java.util.UUID;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Service
 public class AccountProfileImageService {
-    private static final Path UPLOAD_DIR = Paths.get("C:/uploads/users");
+    private final Path uploadDir;
     private static final long MAX_ORIGINAL_SIZE = 8L * 1024L * 1024L;
     private static final long MAX_CROPPED_SIZE = 5L * 1024L * 1024L;
+
+    private final UploadSecurityService uploadSecurityService;
+
+    public AccountProfileImageService(
+            UploadSecurityService uploadSecurityService,
+            @Value("${moyo.upload.user-dir:C:/uploads/users/}") String uploadDir) {
+        this.uploadSecurityService = uploadSecurityService;
+        this.uploadDir = Paths.get(uploadDir).toAbsolutePath().normalize();
+    }
 
     public String saveOriginalImage(String dataUrl) throws IOException {
         return saveImage(dataUrl, "original", MAX_ORIGINAL_SIZE);
@@ -23,6 +33,26 @@ public class AccountProfileImageService {
 
     public String saveCroppedImage(String dataUrl) throws IOException {
         return saveImage(dataUrl, "profile", MAX_CROPPED_SIZE);
+    }
+
+    /**
+     * DB에 저장된 /uploads/users/... 공개 경로의 실제 파일을 안전하게 삭제한다.
+     * 허용된 사용자 프로필 업로드 디렉터리 밖의 경로는 절대 삭제하지 않는다.
+     */
+    public void deleteStoredImageQuietly(String publicPath) {
+        if (publicPath == null || publicPath.isBlank()) return;
+        try {
+            String normalized = publicPath.replace('\\', '/').trim();
+            String prefix = "/uploads/users/";
+            if (!normalized.startsWith(prefix)) return;
+            String fileName = normalized.substring(prefix.length());
+            if (fileName.isBlank() || fileName.contains("/") || fileName.contains("..")) return;
+            Path target = uploadDir.resolve(fileName).normalize();
+            if (!target.startsWith(uploadDir)) return;
+            Files.deleteIfExists(target);
+        } catch (Exception ignored) {
+            // 파일 삭제 실패 때문에 계정 익명화 트랜잭션 전체를 막지 않는다.
+        }
     }
 
     private String saveImage(String dataUrl, String prefix, long maxSize) throws IOException {
@@ -47,15 +77,18 @@ public class AccountProfileImageService {
             throw new IllegalArgumentException("지원하지 않는 이미지 형식입니다.");
         }
 
-        byte[] bytes = Base64.getDecoder().decode(dataUrl.substring(commaIndex + 1));
-        if (bytes.length > maxSize) {
-            throw new IllegalArgumentException("프로필 이미지가 너무 큽니다.");
+        byte[] bytes;
+        try {
+            bytes = Base64.getDecoder().decode(dataUrl.substring(commaIndex + 1));
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("올바르지 않은 이미지 데이터입니다.");
         }
+        uploadSecurityService.validateImageBytes(bytes, extension, maxSize);
 
-        Files.createDirectories(UPLOAD_DIR);
+        Files.createDirectories(uploadDir);
         String safePrefix = prefix == null || prefix.trim().isEmpty() ? "profile" : prefix.trim();
         String fileName = safePrefix + "_" + UUID.randomUUID() + extension;
-        Files.write(UPLOAD_DIR.resolve(fileName), bytes,
+        Files.write(uploadDir.resolve(fileName), bytes,
                 StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE);
 
         return "/uploads/users/" + fileName;

@@ -13,6 +13,9 @@ public interface IphotoAlbumDAO {
     Map<String, Object> selectAlbum(@Param("albumId") Long albumId);
     int insertAlbum(Map<String, Object> params);
     int updateAlbum(Map<String, Object> params);
+    int updateAlbumParent(@Param("albumId") Long albumId, @Param("parentAlbumId") Long parentAlbumId);
+    int promoteChildAlbums(@Param("albumId") Long albumId, @Param("parentAlbumId") Long parentAlbumId);
+    int countAlbumDescendant(@Param("albumId") Long albumId, @Param("candidateParentId") Long candidateParentId);
     int deleteAlbum(@Param("albumId") Long albumId);
 
     List<Map<String, Object>> selectPosts(@Param("scopeType") String scopeType,
@@ -23,6 +26,8 @@ public interface IphotoAlbumDAO {
                                                 @Param("scopeId") Long scopeId,
                                                 @Param("limit") int limit,
                                                 @Param("userId") Long userId);
+    List<Map<String, Object>> selectFriendSharedPosts(@Param("userId") Long userId,
+                                                      @Param("ownerId") Long ownerId);
     List<Map<String, Object>> selectProfilePublicPosts(@Param("profileUserId") Long profileUserId,
                                                        @Param("userId") Long userId);
     int countProfilePublicPosts(@Param("profileUserId") Long profileUserId);
@@ -33,7 +38,7 @@ public interface IphotoAlbumDAO {
     int updatePostAlbum(@Param("postId") Long postId, @Param("albumId") Long albumId);
     int updatePostVisibility(@Param("postId") Long postId, @Param("visibilityType") String visibilityType);
     int updatePhotoAlbumByPost(@Param("postId") Long postId, @Param("albumId") Long albumId);
-    List<Map<String, Object>> selectTrashPosts(@Param("userId") Long userId);
+    List<Map<String, Object>> selectTrashPosts(@Param("scopeType") String scopeType, @Param("scopeId") Long scopeId, @Param("userId") Long userId);
     Map<String, Object> selectTrashPost(@Param("postId") Long postId, @Param("userId") Long userId);
     int movePostToTrash(@Param("postId") Long postId, @Param("userId") Long userId);
     int restorePostFromTrash(@Param("postId") Long postId, @Param("userId") Long userId);

@@ -3,6 +3,10 @@
 
     const STORAGE_COLLAPSED = 'moyo.appSidebar.collapsed';
     const STORAGE_OPEN_WS = 'moyo.appSidebar.openWorkspaces';
+    const SIDEBAR_MOBILE_BREAKPOINT = 1200;
+    const UPDATED_FRIEND_WINDOW_DAYS = 7;
+    const UPDATED_FRIEND_MAX_ITEMS = 8;
+    let CONTEXT_PATH = '';
 
     function readOpenWorkspaceIds() {
         try {
@@ -41,7 +45,7 @@
     }
 
     function normalizeSidebarBackdrop() {
-        const isMobile = window.innerWidth <= 900;
+        const isMobile = window.innerWidth <= SIDEBAR_MOBILE_BREAKPOINT;
         const isOpen = document.body.classList.contains('moyo-app-sidebar-mobile-open');
         const backdrop = document.getElementById('moyoAppSidebarBackdrop');
 
@@ -56,8 +60,19 @@
     }
 
 
+    function appUrl(path) {
+        const value = String(path || '');
+        if (!value) return CONTEXT_PATH || '/';
+        if (/^https?:\/\//i.test(value)) return value;
+        if (!value.startsWith('/')) return (CONTEXT_PATH || '') + '/' + value;
+        return (CONTEXT_PATH || '') + value;
+    }
+
     function fetchJson(url) {
-        return fetch(url, { credentials: 'same-origin' }).then(function(res) { return res.json(); });
+        return fetch(appUrl(url), { credentials: 'same-origin' }).then(function(res) {
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            return res.json();
+        });
     }
 
     function escapeText(value) {
@@ -87,10 +102,37 @@
         return Number.isFinite(time) ? time : 0;
     }
 
-    function friendActivityTime(friend) {
-        const raw = friend.lastInteractionAt || friend.lastActivityAt || friend.profileUpdatedAt || friend.feedUpdatedAt || friend.photoUpdatedAt || friend.noteUpdatedAt || friend.recentActivityAt || friend.recentUpdatedAt || '';
-        const time = raw ? new Date(raw).getTime() : 0;
+    function parseActivityTime(raw) {
+        if (!raw) return 0;
+        const time = new Date(raw).getTime();
         return Number.isFinite(time) ? time : 0;
+    }
+
+    function friendActivityMeta(friend) {
+        const candidates = [];
+
+        function add(raw, label, contentType, contentId) {
+            const time = parseActivityTime(raw);
+            if (time > 0) candidates.push({ time: time, label: label, contentType: contentType || '', contentId: contentId || '' });
+        }
+
+        // /friends/api/list가 제공하는 공개 활동과 실제 원본 콘텐츠 ID를 함께 사용한다.
+        add(friend.latestPhotoAt, '새 사진', 'PHOTO', friend.latestPhotoPostId);
+        add(friend.latestNoteAt, '새 노트', 'NOTE', friend.latestNoteId);
+        add(friend.latestProfileAt, '프로필 변경', 'PROFILE', '');
+
+        const relationStatus = String(friend.relationStatus || friend.status || '').toUpperCase();
+        if (relationStatus === 'ACCEPTED') {
+            add(friend.respondedAt || friend.updatedAt, '친구가 됨');
+        }
+
+        if (!candidates.length) return { time: 0, label: '' };
+        candidates.sort(function(a, b) { return b.time - a.time; });
+        return candidates[0];
+    }
+
+    function friendActivityTime(friend) {
+        return friendActivityMeta(friend).time;
     }
 
     function friendBirthdayRaw(friend) {
@@ -141,341 +183,157 @@
     function initSidebarFriendPreview() {
         const box = document.getElementById('moyoSidebarFriendPreview');
         const updatedBox = document.getElementById('moyoSidebarUpdatedFriends');
-        const birthdayBox = document.getElementById('moyoSidebarBirthdayFriends');
-        const friendListBox = document.getElementById('moyoSidebarFriendList');
-        if (!box || !updatedBox || !friendListBox) return;
-
-        function section(name) {
-            return box.querySelector('[data-moyo-friend-section="' + name + '"]');
-        }
+        if (!box || !updatedBox) return;
 
         function friendInitial(name) {
             return String(name || '친구').substring(0, 1).toUpperCase();
         }
 
-        function avatarHtml(friend, name, extraClass) {
+        function avatarHtml(friend, name) {
             const image = friendImage(friend);
             const safeName = escapeText(name);
             const initial = escapeText(friendInitial(name));
-            const cls = 'moyo-app-sidebar-friend-avatar' + (extraClass ? ' ' + extraClass : '');
             return image
-                ? '<span class="' + cls + '"><img src="' + escapeText(image) + '" alt="' + safeName + '" onerror="this.remove();"></span>'
-                : '<span class="' + cls + '">' + initial + '</span>';
+                ? '<span class="moyo-app-sidebar-friend-avatar has-image"><img src="' + escapeText(image) + '" alt="' + safeName + '" onerror="this.parentElement.classList.remove(\'has-image\');this.parentElement.textContent=\'' + initial + '\';"></span>'
+                : '<span class="moyo-app-sidebar-friend-avatar">' + initial + '</span>';
         }
 
         function renderEmpty(message) {
-            const birthdaySection = section('birthday');
-            updatedBox.innerHTML = '';
-            friendListBox.innerHTML = '<button type="button" class="moyo-app-sidebar-friend-item skeleton" data-moyo-friend-modal-open>' +
+            updatedBox.innerHTML = '<div class="moyo-app-sidebar-friend-chip skeleton">' +
                 '<span class="moyo-app-sidebar-friend-avatar">👥</span>' +
-                '<span class="moyo-app-sidebar-friend-text"><strong>' + escapeText(message) + '</strong><em>관리에서 추가할 수 있어요</em></span>' +
-                '</button>';
-            if (birthdaySection) birthdaySection.hidden = true;
-        }
-
-        function renderUpdated(friends) {
-            const updatedSection = section('updated');
-            const updatedFriends = friends
-                .filter(function(friend) { return friendActivityTime(friend) > 0; })
-                .sort(function(a, b) { return friendActivityTime(b) - friendActivityTime(a); })
-                .slice(0, 5);
-
-            if (updatedSection) updatedSection.hidden = updatedFriends.length === 0;
-            if (!updatedFriends.length) {
-                updatedBox.innerHTML = '';
-                return false;
-            }
-
-            updatedBox.innerHTML = updatedFriends.map(function(friend) {
-                const name = friendDisplayName(friend);
-                return '<button type="button" class="moyo-app-sidebar-friend-chip" data-moyo-friend-modal-open title="' + escapeText(name) + '">' +
-                    avatarHtml(friend, name) +
-                    '<span>' + escapeText(name) + '</span>' +
-                    '</button>';
-            }).join('');
-            return true;
-        }
-
-        function renderBirthdays(friends) {
-            const birthdaySection = section('birthday');
-            if (!birthdaySection || !birthdayBox) return false;
-            const birthdays = friends
-                .filter(function(friend) { return birthdayDistance(friend) <= 30; })
-                .sort(function(a, b) { return birthdayDistance(a) - birthdayDistance(b); })
-                .slice(0, 2);
-            birthdaySection.hidden = birthdays.length === 0;
-            if (!birthdays.length) {
-                birthdayBox.innerHTML = '';
-                return false;
-            }
-            birthdayBox.innerHTML = birthdays.map(function(friend) {
-                const name = friendDisplayName(friend);
-                const email = friendEmail(friend);
-                return '<button type="button" class="moyo-app-sidebar-friend-item" data-moyo-friend-modal-open>' +
-                    avatarHtml(friend, name) +
-                    '<span class="moyo-app-sidebar-friend-text"><strong>' + escapeText(name) + '</strong><em>' + escapeText(email || '친구') + '</em></span>' +
-                    '<span class="moyo-app-sidebar-birthday-note">' + escapeText(birthdayLabel(friend)) + '</span>' +
-                    '</button>';
-            }).join('');
-            return true;
-        }
-
-        function renderFriendList(friends, showLabel) {
-            const listSection = section('list');
-            const listLabel = listSection ? listSection.querySelector('.moyo-app-sidebar-friend-section-label') : null;
-            if (listLabel) listLabel.hidden = !showLabel;
-            const listFriends = sortSidebarFriends(friends).slice(0, 3);
-            friendListBox.innerHTML = listFriends.map(function(friend) {
-                const name = friendDisplayName(friend);
-                const email = friendEmail(friend);
-                return '<button type="button" class="moyo-app-sidebar-friend-item" data-moyo-friend-modal-open>' +
-                    avatarHtml(friend, name) +
-                    '<span class="moyo-app-sidebar-friend-text"><strong>' + escapeText(name) + '</strong><em>' + escapeText(email || '친구') + '</em></span>' +
-                    '</button>';
-            }).join('');
+                '<span>' + escapeText(message) + '</span>' +
+                '</div>';
         }
 
         function render(friends) {
-            if (!friends.length) {
-                renderEmpty('등록된 친구가 없습니다');
+            const cutoff = Date.now() - (UPDATED_FRIEND_WINDOW_DAYS * 86400000);
+            const byUser = new Map();
+
+            (Array.isArray(friends) ? friends : []).forEach(function(friend) {
+                const relationStatus = String(friend.relationStatus || friend.status || '').toUpperCase();
+                if (relationStatus && relationStatus !== 'ACCEPTED') return;
+
+                const userId = String(friend.userId || friend.USER_ID || friend.id || '');
+                if (!userId) return;
+
+                const activity = friendActivityMeta(friend);
+                if (!activity.time || activity.time < cutoff) return;
+
+                const previous = byUser.get(userId);
+                if (!previous || activity.time > previous.activity.time) {
+                    byUser.set(userId, { friend: friend, activity: activity, userId: userId });
+                }
+            });
+
+            const updatedFriends = Array.from(byUser.values())
+                .sort(function(a, b) {
+                    if (b.activity.time !== a.activity.time) return b.activity.time - a.activity.time;
+                    return friendDisplayName(a.friend).localeCompare(friendDisplayName(b.friend), 'ko');
+                })
+                .slice(0, UPDATED_FRIEND_MAX_ITEMS);
+
+            if (!updatedFriends.length) {
+                renderEmpty('최근 업데이트 없음');
                 return;
             }
-            const hasUpdated = renderUpdated(friends);
-            const hasBirthday = renderBirthdays(friends);
-            renderFriendList(friends, hasUpdated || hasBirthday);
+
+            updatedBox.innerHTML = updatedFriends.map(function(item) {
+                const friend = item.friend;
+                const name = friendDisplayName(friend);
+                const reason = item.activity.label;
+                let profilePath = '/users/profile?userId=' + encodeURIComponent(item.userId);
+                if (item.activity.contentType === 'PHOTO' && item.activity.contentId) {
+                    profilePath += '&openPhotoId=' + encodeURIComponent(item.activity.contentId);
+                } else if (item.activity.contentType === 'NOTE' && item.activity.contentId) {
+                    profilePath += '&openNoteId=' + encodeURIComponent(item.activity.contentId);
+                }
+                return '<a class="moyo-app-sidebar-friend-chip" href="' + escapeText(appUrl(profilePath)) + '" title="' + escapeText(name + ' · ' + reason) + '">' +
+                    avatarHtml(friend, name) +
+                    '<span class="moyo-app-sidebar-friend-name">' + escapeText(name) + '</span>' +
+                    '<span class="moyo-app-sidebar-friend-reason">' + escapeText(reason) + '</span>' +
+                    '</a>';
+            }).join('');
         }
 
         fetchJson('/friends/api/list')
             .then(function(data) { render(data.friends || []); })
-            .catch(function() { renderEmpty('친구를 불러오지 못했습니다'); });
+            .catch(function() { renderEmpty('불러오기 실패'); });
     }
 
-    function initFriendModal() {
-        const modal = document.getElementById('moyoFriendModal');
-        if (!modal) return;
+    let commonFriendToolsPromise = null;
 
-        const panel = modal.querySelector('.moyo-friend-modal-panel');
-        const closeButtons = modal.querySelectorAll('[data-moyo-friend-modal-close]');
-        const searchInput = document.getElementById('moyoFriendModalSearchInput');
-        const searchButton = document.getElementById('moyoFriendModalSearchButton');
-        let loadedOnce = false;
+    function ensureStylesheet(href, marker) {
+        if (document.querySelector('link[data-' + marker + ']')) return;
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = href;
+        link.dataset[marker] = 'true';
+        document.head.appendChild(link);
+    }
 
-        function openModal() {
-            modal.classList.add('open');
-            modal.setAttribute('aria-hidden', 'false');
-            document.body.classList.add('moyo-friend-modal-open');
-            closeMobileSidebar();
-            if (!loadedOnce) {
-                loadAllFriends();
-                loadedOnce = true;
-            }
-            setTimeout(function() {
-                if (panel) panel.focus();
-            }, 0);
-        }
-
-        function closeModal() {
-            modal.classList.remove('open');
-            modal.setAttribute('aria-hidden', 'true');
-            document.body.classList.remove('moyo-friend-modal-open');
-        }
-
-        function setTab(tabName) {
-            modal.querySelectorAll('[data-moyo-friend-tab]').forEach(function(button) {
-                const active = button.dataset.moyoFriendTab === tabName;
-                button.classList.toggle('active', active);
-                button.setAttribute('aria-selected', active ? 'true' : 'false');
+    function loadScriptOnce(src, test) {
+        if (typeof test === 'function' && test()) return Promise.resolve();
+        return new Promise(function(resolve, reject) {
+            const existing = Array.from(document.scripts).find(function(script) {
+                return script.src && script.src.indexOf(src) !== -1;
             });
-            modal.querySelectorAll('[data-moyo-friend-panel]').forEach(function(panel) {
-                panel.classList.toggle('active', panel.dataset.moyoFriendPanel === tabName);
-            });
-            if (tabName === 'add' && searchInput) {
-                setTimeout(function() { searchInput.focus(); }, 0);
-            }
-        }
-
-        function loadAllFriends() {
-            loadFriendList();
-            loadFriendRequests();
-        }
-
-        function fetchJson(url) {
-            return fetch(url, { credentials: 'same-origin' }).then(function(res) { return res.json(); });
-        }
-
-        function post(url, params) {
-            const body = new URLSearchParams();
-            Object.keys(params).forEach(function(key) { body.append(key, params[key]); });
-            return fetch(url, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
-                credentials: 'same-origin',
-                body: body
-            }).then(function(res) { return res.json(); });
-        }
-
-        function loadFriendList() {
-            fetchJson('/friends/api/list')
-                .then(function(data) { renderFriendList(data.friends || []); })
-                .catch(function() { renderMessage('moyoFriendModalFriendList', '친구 목록을 불러오지 못했습니다.'); });
-        }
-
-        function loadFriendRequests() {
-            fetchJson('/friends/api/requests')
-                .then(function(data) {
-                    renderReceived(data.received || []);
-                    renderSent(data.sent || []);
-                    const pendingCount = data.pendingCount || 0;
-                    const pending = document.getElementById('moyoFriendModalPendingCount');
-                    if (pending) pending.textContent = pendingCount;
-                })
-                .catch(function() {
-                    renderMessage('moyoFriendModalReceivedList', '받은 요청을 불러오지 못했습니다.');
-                    renderMessage('moyoFriendModalSentList', '보낸 요청을 불러오지 못했습니다.');
-                });
-        }
-
-        function searchUsers() {
-            const keyword = (searchInput && searchInput.value || '').trim();
-            fetchJson('/friends/api/search?keyword=' + encodeURIComponent(keyword))
-                .then(function(data) { renderSearchResult(data.users || []); })
-                .catch(function() { renderMessage('moyoFriendModalSearchResult', '검색 중 오류가 발생했습니다.'); });
-        }
-
-        function renderFriendList(friends) {
-            const total = document.getElementById('moyoFriendModalTotalCount');
-            if (total) total.textContent = friends.length;
-            if (!friends.length) {
-                renderMessage('moyoFriendModalFriendList', '아직 등록된 친구가 없습니다.');
+            if (existing) {
+                if (typeof test === 'function' && test()) return resolve();
+                existing.addEventListener('load', resolve, { once: true });
+                existing.addEventListener('error', reject, { once: true });
                 return;
             }
-            const box = document.getElementById('moyoFriendModalFriendList');
-            if (!box) return;
-            box.innerHTML = friends.map(function(friend) {
-                return friendRow(friend, '<button type="button" class="danger" data-moyo-delete-friend="' + escapeHtml(friend.friendId) + '">삭제</button>');
-            }).join('');
-            box.querySelectorAll('[data-moyo-delete-friend]').forEach(function(button) {
-                button.addEventListener('click', function() {
-                    if (!confirm('친구를 삭제할까요?')) return;
-                    post('/friends/api/delete', { friendId: button.dataset.moyoDeleteFriend }).then(afterAction);
-                });
-            });
-        }
+            const script = document.createElement('script');
+            script.src = src;
+            script.defer = true;
+            script.addEventListener('load', resolve, { once: true });
+            script.addEventListener('error', reject, { once: true });
+            document.head.appendChild(script);
+        });
+    }
 
-        function renderSearchResult(users) {
-            if (!users.length) {
-                renderMessage('moyoFriendModalSearchResult', '검색 결과가 없습니다.');
-                return;
+    function ensureCommonFriendTools() {
+        if (window.CommonPeopleModal && window.CommonFriendAdapter && typeof window.CommonFriendAdapter.openAdd === 'function') {
+            return Promise.resolve();
+        }
+        if (commonFriendToolsPromise) return commonFriendToolsPromise;
+        ensureStylesheet(appUrl('/css/commonPeopleModal.css?v=sidebar-friend-add-v1'), 'moyoCommonPeopleCss');
+        commonFriendToolsPromise = loadScriptOnce(appUrl('/js/commonPeopleModal.js?v=sidebar-friend-add-v1'), function() {
+            return !!window.CommonPeopleModal;
+        }).then(function() {
+            return loadScriptOnce(appUrl('/js/friendPeopleAdapter.js?v=sidebar-friend-add-v1'), function() {
+                return !!window.CommonFriendAdapter;
+            });
+        }).catch(function(error) {
+            commonFriendToolsPromise = null;
+            throw error;
+        });
+        return commonFriendToolsPromise;
+    }
+
+    function openCommonFriendAddModal() {
+        closeMobileSidebar();
+        ensureCommonFriendTools().then(function() {
+            if (!window.CommonFriendAdapter || typeof window.CommonFriendAdapter.openAdd !== 'function') {
+                throw new Error('친구 추가 공통 모달을 불러오지 못했습니다.');
             }
-            const box = document.getElementById('moyoFriendModalSearchResult');
-            if (!box) return;
-            box.innerHTML = users.map(function(user) {
-                const status = user.relationStatus || 'NONE';
-                const direction = user.direction || 'NONE';
-                let action = '<button type="button" class="primary" data-moyo-request-friend="' + escapeHtml(user.userId) + '">친구 요청</button>';
-                if (status === 'ACCEPTED') action = '<span class="moyo-friend-status-chip">친구</span>';
-                if (status === 'PENDING' && direction === 'SENT') action = '<span class="moyo-friend-status-chip">요청 중</span>';
-                if (status === 'PENDING' && direction === 'RECEIVED') action = '<span class="moyo-friend-status-chip">받은 요청 있음</span>';
-                if (status === 'BLOCKED') action = '<span class="moyo-friend-status-chip">차단됨</span>';
-                return friendRow(user, action);
-            }).join('');
-            box.querySelectorAll('[data-moyo-request-friend]').forEach(function(button) {
-                button.addEventListener('click', function() {
-                    post('/friends/api/request', { targetUserId: button.dataset.moyoRequestFriend }).then(afterAction);
-                });
+            window.CommonFriendAdapter.openAdd({
+                contextPath: CONTEXT_PATH,
+                onUpdated: initSidebarFriendPreview
             });
-        }
+        }).catch(function(error) {
+            console.error(error);
+            window.location.href = appUrl('/friends');
+        });
+    }
 
-        function renderReceived(requests) {
-            if (!requests.length) {
-                renderMessage('moyoFriendModalReceivedList', '받은 요청이 없습니다.');
-                return;
-            }
-            const box = document.getElementById('moyoFriendModalReceivedList');
-            if (!box) return;
-            box.innerHTML = requests.map(function(request) {
-                return friendRow(request,
-                    '<button type="button" class="primary" data-moyo-accept-friend="' + escapeHtml(request.friendId) + '">수락</button>' +
-                    '<button type="button" data-moyo-reject-friend="' + escapeHtml(request.friendId) + '">거절</button>'
-                );
-            }).join('');
-            box.querySelectorAll('[data-moyo-accept-friend]').forEach(function(button) {
-                button.addEventListener('click', function() { post('/friends/api/accept', { friendId: button.dataset.moyoAcceptFriend }).then(afterAction); });
-            });
-            box.querySelectorAll('[data-moyo-reject-friend]').forEach(function(button) {
-                button.addEventListener('click', function() { post('/friends/api/reject', { friendId: button.dataset.moyoRejectFriend }).then(afterAction); });
-            });
-        }
-
-        function renderSent(requests) {
-            if (!requests.length) {
-                renderMessage('moyoFriendModalSentList', '보낸 요청이 없습니다.');
-                return;
-            }
-            const box = document.getElementById('moyoFriendModalSentList');
-            if (!box) return;
-            box.innerHTML = requests.map(function(request) {
-                return friendRow(request, '<button type="button" data-moyo-cancel-friend="' + escapeHtml(request.friendId) + '">취소</button>');
-            }).join('');
-            box.querySelectorAll('[data-moyo-cancel-friend]').forEach(function(button) {
-                button.addEventListener('click', function() { post('/friends/api/cancel', { friendId: button.dataset.moyoCancelFriend }).then(afterAction); });
-            });
-        }
-
-        function afterAction(data) {
-            if (data && data.success === false && data.message) alert(data.message);
-            loadAllFriends();
-            if (searchInput && searchInput.value.trim()) searchUsers();
-        }
-
-        function friendRow(user, actionHtml) {
-            const name = escapeHtml(user.userName || user.email || '이름 없음');
-            const email = escapeHtml(user.email || '');
-            const initial = name.substring(0, 1).toUpperCase();
-            return '<div class="moyo-friend-row">' +
-                '<div class="moyo-friend-avatar">' + initial + '</div>' +
-                '<div class="moyo-friend-info"><strong>' + name + '</strong><span>' + email + '</span></div>' +
-                '<div class="moyo-friend-row-actions">' + actionHtml + '</div>' +
-                '</div>';
-        }
-
-        function renderMessage(id, message) {
-            const box = document.getElementById(id);
-            if (box) box.innerHTML = '<div class="moyo-friend-empty">' + escapeHtml(message) + '</div>';
-        }
-
-        function escapeHtml(value) {
-            return String(value == null ? '' : value)
-                .replaceAll('&', '&amp;')
-                .replaceAll('<', '&lt;')
-                .replaceAll('>', '&gt;')
-                .replaceAll('"', '&quot;')
-                .replaceAll("'", '&#039;');
-        }
-
+    function initFriendAddTrigger() {
         document.addEventListener('click', function(event) {
-            const trigger = event.target.closest('[data-moyo-friend-modal-open]');
-            if (!trigger || modal.contains(trigger)) return;
+            const trigger = event.target.closest('[data-moyo-friend-add-open]');
+            if (!trigger) return;
             event.preventDefault();
-            openModal();
-        });
-        closeButtons.forEach(function(button) {
-            button.addEventListener('click', closeModal);
-        });
-        modal.querySelectorAll('[data-moyo-friend-tab]').forEach(function(button) {
-            button.addEventListener('click', function() { setTab(button.dataset.moyoFriendTab); });
-        });
-        modal.querySelectorAll('[data-moyo-friend-refresh]').forEach(function(button) {
-            button.addEventListener('click', loadAllFriends);
-        });
-        if (searchButton) searchButton.addEventListener('click', searchUsers);
-        if (searchInput) {
-            searchInput.addEventListener('keydown', function(event) {
-                if (event.key === 'Enter') searchUsers();
-            });
-        }
-        document.addEventListener('keydown', function(event) {
-            if (event.key === 'Escape' && modal.classList.contains('open')) closeModal();
+            event.stopPropagation();
+            openCommonFriendAddModal();
         });
     }
 
@@ -484,15 +342,19 @@
         if (!sidebar) return;
 
         document.body.classList.add('moyo-app-sidebar-enabled');
+        CONTEXT_PATH = String(sidebar.dataset.contextPath || '').replace(/\/$/, '');
         normalizeSidebarBackdrop();
 
         const params = new URLSearchParams(window.location.search);
-        const currentPath = window.location.pathname;
+        const rawCurrentPath = window.location.pathname;
+        const currentPath = CONTEXT_PATH && rawCurrentPath.startsWith(CONTEXT_PATH)
+            ? (rawCurrentPath.slice(CONTEXT_PATH.length) || '/')
+            : rawCurrentPath;
         const currentWsId = String(sidebar.dataset.currentWsId || params.get('wsId') || '');
         const currentProjId = String(sidebar.dataset.currentProjId || params.get('projId') || '');
         const openedIds = readOpenWorkspaceIds();
 
-        if (window.innerWidth > 900) {
+        if (window.innerWidth > SIDEBAR_MOBILE_BREAKPOINT) {
             setDesktopCollapsed(localStorage.getItem(STORAGE_COLLAPSED) === 'true');
         }
 
@@ -543,15 +405,17 @@
             }
         });
 
-        document.querySelectorAll('.moyo-app-sidebar-main-link').forEach(function(link) {
-            const path = link.dataset.appPath;
-            if (path && currentPath.startsWith(path)) link.classList.add('active');
+        document.querySelectorAll('[data-app-path]').forEach(function(link) {
+            const path = String(link.dataset.appPath || '');
+            if (!path) return;
+            const exactOrChild = currentPath === path || currentPath.startsWith(path + '/');
+            if (exactOrChild) link.classList.add('active');
         });
 
         const toggleButton = document.getElementById('moyoAppSidebarToggle');
         if (toggleButton) {
             toggleButton.addEventListener('click', function() {
-                if (window.innerWidth <= 900) {
+                if (window.innerWidth <= SIDEBAR_MOBILE_BREAKPOINT) {
                     document.body.classList.toggle('moyo-app-sidebar-mobile-open');
                     const opened = document.body.classList.contains('moyo-app-sidebar-mobile-open');
                     toggleButton.setAttribute('aria-expanded', String(opened));
@@ -567,18 +431,20 @@
 
         sidebar.querySelectorAll('a').forEach(function(link) {
             link.addEventListener('click', function() {
-                if (window.innerWidth <= 900) closeMobileSidebar();
+                if (window.innerWidth <= SIDEBAR_MOBILE_BREAKPOINT) closeMobileSidebar();
             });
         });
 
         initSidebarFriendPreview();
-        initFriendModal();
+        // 헤더/공통 모달에서 친구 관계가 바뀐 직후 같은 화면에서 즉시 갱신할 수 있도록 공개 훅을 제공한다.
+        window.refreshMoyoSidebarFriends = initSidebarFriendPreview;
+        initFriendAddTrigger();
 
         window.addEventListener('pageshow', normalizeSidebarBackdrop);
 
         window.addEventListener('resize', function() {
             normalizeSidebarBackdrop();
-            if (window.innerWidth > 900) {
+            if (window.innerWidth > SIDEBAR_MOBILE_BREAKPOINT) {
                 closeMobileSidebar();
                 setDesktopCollapsed(localStorage.getItem(STORAGE_COLLAPSED) === 'true');
             } else {

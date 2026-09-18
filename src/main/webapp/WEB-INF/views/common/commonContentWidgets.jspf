@@ -1,0 +1,63 @@
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
+
+<c:set var="commonContentIsWorkspace" value="${mainShellMode eq 'WORKSPACE'}" />
+<c:set var="commonContentScopeType" value="${commonContentIsWorkspace ? 'WORKSPACE' : 'PROJECT'}" />
+<c:set var="commonContentScopeId" value="${commonContentIsWorkspace ? effectiveWorkspaceId : effectiveProjectId}" />
+<c:set var="commonContentWsId" value="${commonContentIsWorkspace ? effectiveWorkspaceId : (isPersonalProject ? '' : effectiveProjectWsId)}" />
+<c:set var="commonContentCanWrite" value="${commonContentIsWorkspace ? isWorkspaceMember : (isPersonalProject or canManageProject)}" />
+<c:set var="commonContentNoteQuery" value="${commonContentIsWorkspace ? workspaceNoteQuery : projectNoteQuery}" />
+
+<c:if test="${commonContentIsWorkspace or showProjectNotes or showProjectPhotos}">
+<div class="common-content-widget-row moyo-content-widget-row"
+     data-common-content-scope-type="${commonContentScopeType}"
+     data-common-content-scope-id="${commonContentScopeId}"
+     data-common-content-ws-id="${commonContentWsId}"
+     data-common-content-can-write="${commonContentCanWrite}">
+
+    <c:if test="${commonContentIsWorkspace or showProjectNotes}">
+    <section class="common-note-widget moyo-content-widget moyo-content-widget--note" data-dashboard-widget="notes">
+        <div class="moyo-content-widget__head moyo-widget-head">
+            <span class="moyo-widget-title"><span class="moyo-widget-title__icon" aria-hidden="true">📝</span><span class="moyo-widget-title__text">공유 노트</span></span>
+            <a class="moyo-widget-more" href="${pageContext.request.contextPath}/note/list?${commonContentNoteQuery}">더보기</a>
+        </div>
+        <div id="commonRecentNoteList"
+             class="moyo-content-widget__body moyo-content-widget__body--note"
+             data-common-note-list
+             aria-live="polite"
+             aria-busy="true">
+            <div class="moyo-content-empty moyo-content-empty--loading" role="status">
+                <span class="moyo-content-empty__icon" aria-hidden="true">📝</span>
+                <div class="moyo-content-empty__copy">
+                    <strong class="moyo-content-empty__title">노트를 불러오는 중입니다.</strong>
+                    <span class="moyo-content-empty__description">잠시만 기다려주세요.</span>
+                </div>
+            </div>
+        </div>
+    </section>
+    </c:if>
+
+    <c:if test="${commonContentIsWorkspace or showProjectPhotos}">
+    <section class="common-photo-widget moyo-content-widget moyo-content-widget--photo" data-dashboard-widget="photos">
+        <div class="moyo-content-widget__head moyo-widget-head">
+            <span class="moyo-widget-title"><span class="workspace-camera-icon moyo-widget-title__icon" aria-hidden="true">📷</span><span class="moyo-widget-title__text">사진첩</span></span>
+            <a class="moyo-widget-more" href="${pageContext.request.contextPath}/photo-album?scopeType=${commonContentScopeType}&amp;scopeId=${commonContentScopeId}">더보기</a>
+        </div>
+        <div id="commonPhotoWidgetList"
+             class="moyo-content-widget__body moyo-content-widget__body--photo"
+             data-common-photo-list
+             role="status"
+             aria-live="polite"
+             aria-busy="true">
+            <div class="moyo-content-empty moyo-content-empty--loading" role="status">
+                <span class="moyo-content-empty__icon" aria-hidden="true">📷</span>
+                <div class="moyo-content-empty__copy">
+                    <strong class="moyo-content-empty__title">사진을 불러오는 중입니다.</strong>
+                    <span class="moyo-content-empty__description">잠시만 기다려주세요.</span>
+                </div>
+            </div>
+        </div>
+    </section>
+    </c:if>
+</div>
+</c:if>

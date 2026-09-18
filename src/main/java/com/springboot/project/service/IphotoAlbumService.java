@@ -1,5 +1,6 @@
 package com.springboot.project.service;
 
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 
@@ -8,16 +9,19 @@ import org.springframework.web.multipart.MultipartFile;
 public interface IphotoAlbumService {
     List<Map<String, Object>> getAlbums(String scopeType, Long scopeId);
     Map<String, Object> getAlbum(Long albumId);
-    Long createAlbum(String scopeType, Long scopeId, String name, String description, Long userId);
+    Long createAlbum(String scopeType, Long scopeId, Long parentAlbumId, String name, String description, Long userId);
     boolean updateAlbum(Long albumId, String name, String description);
+    boolean moveAlbum(Long albumId, Long parentAlbumId);
     boolean deleteAlbum(Long albumId);
 
     List<Map<String, Object>> getPosts(String scopeType, Long scopeId, Long albumId, Long userId);
     List<Map<String, Object>> getRecentPosts(String scopeType, Long scopeId, int limit, Long userId);
+    List<Map<String, Object>> getFriendSharedPosts(Long userId, Long ownerId);
     List<Map<String, Object>> getProfilePublicPosts(Long profileUserId, Long viewerUserId);
     int countProfilePublicPosts(Long profileUserId);
     Map<String, Object> getPost(Long postId);
     Map<String, Object> getPost(Long postId, Long userId);
+    Map<String, Object> getTrashPost(Long postId, Long userId);
     List<Map<String, Object>> getPostPhotos(Long postId);
     Long createPost(String scopeType, Long scopeId, Long albumId, String title,
                     String description, String visibilityType, List<MultipartFile> files,
@@ -28,7 +32,7 @@ public interface IphotoAlbumService {
                                  List<String> editMetas, Long userId);
     boolean movePostAlbum(Long postId, Long albumId);
     boolean updatePostVisibility(Long postId, String visibilityType);
-    List<Map<String, Object>> getTrashPosts(Long userId);
+    List<Map<String, Object>> getTrashPosts(String scopeType, Long scopeId, Long userId);
     boolean movePostToTrash(Long postId, Long userId);
     boolean restorePostFromTrash(Long postId, Long userId);
     boolean canPermanentlyDeletePost(Long postId, Long userId);
@@ -39,6 +43,8 @@ public interface IphotoAlbumService {
     boolean deletePost(Long postId);
 
     Map<String, Object> getPhoto(Long photoId);
+    Path getPhotoPath(Long photoId, boolean raw);
+    Map<String, Object> updatePhotoMetadata(Long photoId, Map<String, Object> metadata);
     boolean deletePhoto(Long photoId);
 
     List<Map<String, Object>> getPostComments(Long postId, Long userId);

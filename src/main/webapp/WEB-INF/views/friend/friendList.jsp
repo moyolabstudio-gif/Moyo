@@ -5,7 +5,9 @@
 <head>
     <meta charset="UTF-8">
     <title>MOYO - 친구</title>
-    <link rel="stylesheet" href="/css/friend.css?v=friend-profile-link-20260707">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/moyoUi.css?v=stage3-list-ui">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/friend.css?v=20260907cm1">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/commonPeopleModal.css?v=202608081545-unified-people-shell">
 </head>
 <body class="friend-page-body moyo-app-sidebar-enabled">
 <jsp:include page="/WEB-INF/views/common/header.jsp" />
@@ -15,74 +17,85 @@
         <div class="friend-hero-copy">
             <span class="friend-eyebrow">MOYO FRIEND</span>
             <div class="friend-title-row">
-                <h1>친구</h1>
-                <div class="friend-hero-stats" aria-label="친구 현황">
-                    <span class="friend-mini-stat">친구 <strong id="friendTotalCount">0</strong></span>
-                    <span class="friend-mini-stat">대기 요청 <strong id="friendHeroPendingCount"><c:out value="${pendingFriendCount}" default="0" /></strong></span>
+                <div>
+                    <h1>친구</h1>
+                    <p>친구를 찾고 요청과 개인 공유 대상을 관리합니다.</p>
+                </div>
+                <div class="friend-hero-actions">
+                    <button type="button" class="friend-primary-action" id="openFriendAddModalButton">
+                        <span aria-hidden="true">＋</span> 친구 찾기
+                    </button>
                 </div>
             </div>
-            <p>공유할 친구를 추가하고 요청을 관리합니다.</p>
         </div>
     </section>
 
-    <section class="friend-stack">
-        <article class="friend-card friend-search-card">
-            <div class="friend-card-head">
-                <div>
-                    <span class="friend-card-label">친구 추가</span>
-                    <h2>친구 찾기</h2>
-                    <p>이름 또는 이메일로 검색해 친구 요청을 보냅니다.</p>
+    <section class="friend-dashboard">
+        <div class="friend-main-column">
+            <article class="friend-card friend-list-card">
+                <div class="friend-card-head friend-card-head-inline">
+                    <div>
+                        <span class="friend-card-label">내 관계</span>
+                        <div class="friend-section-title-row">
+                            <h2>친구 목록</h2>
+                            <span class="friend-section-count" aria-label="친구 수"><strong id="friendTotalCount">0</strong></span>
+                        </div>
+                        <p>노트, 사진, 일정의 개인 공유 대상입니다.</p>
+                    </div>
+                    <button type="button" class="friend-refresh-btn" data-friend-refresh aria-label="친구 목록 새로고침">새로고침</button>
                 </div>
-            </div>
-            <div class="friend-search-row">
-                <input type="text" id="friendSearchInput" placeholder="이름 또는 이메일 검색">
-                <button type="button" id="friendSearchButton">검색</button>
-            </div>
-            <div id="friendSearchResult" class="friend-list friend-result-list"></div>
-        </article>
+                <div id="friendList" class="friend-list friend-primary-list"></div>
+            </article>
 
-        <article class="friend-card friend-list-card">
-            <div class="friend-card-head">
-                <div>
-                    <span class="friend-card-label">공유 대상</span>
-                    <h2>친구 목록</h2>
-                    <p>노트, 사진, 일정 공유 대상에 표시되는 사용자입니다.</p>
+            <article class="friend-card friend-recommend-card">
+                <div class="friend-card-head friend-card-head-inline">
+                    <div>
+                        <span class="friend-card-label">공통 친구 추천</span>
+                        <h2>알 수도 있는 사람</h2>
+                        <p>공통 친구를 기준으로 추천합니다.</p>
+                    </div>
                 </div>
-                <button type="button" class="friend-refresh-btn" data-friend-refresh>새로고침</button>
-            </div>
-            <div id="friendList" class="friend-list friend-primary-list"></div>
-        </article>
+                <div id="friendRecommendationList" class="friend-recommend-grid"></div>
+            </article>
+        </div>
 
-        <article class="friend-card friend-request-card">
-            <div class="friend-card-head">
-                <div>
-                    <span class="friend-card-label">요청 관리</span>
-                    <h2>친구 요청</h2>
-                    <p>받은 요청과 보낸 요청을 확인합니다.</p>
+        <aside class="friend-side-column">
+            <article class="friend-card friend-request-card">
+                <div class="friend-card-head">
+                    <div>
+                        <span class="friend-card-label">요청 관리</span>
+                        <h2>친구 요청</h2>
+                        <p>받은 요청과 보낸 요청을 한 곳에서 확인합니다.</p>
+                    </div>
                 </div>
-            </div>
 
-            <div class="friend-request-tabs" role="tablist" aria-label="친구 요청 탭">
-                <button type="button" class="active" data-friend-request-tab="received" role="tab" aria-selected="true">
-                    받은 요청 <span id="friendPendingBadge" class="friend-count-badge"><c:out value="${pendingFriendCount}" default="0" /></span>
-                </button>
-                <button type="button" data-friend-request-tab="sent" role="tab" aria-selected="false">
-                    보낸 요청 <span id="friendSentBadge" class="friend-count-badge">0</span>
-                </button>
-            </div>
+                <div class="friend-request-tabs" role="tablist" aria-label="친구 요청 탭">
+                    <button type="button" class="active" data-friend-request-tab="received" role="tab" aria-selected="true">
+                        받은 요청 <span id="friendPendingBadge" class="friend-count-badge"><c:out value="${pendingFriendCount}" default="0" /></span>
+                    </button>
+                    <button type="button" data-friend-request-tab="sent" role="tab" aria-selected="false">
+                        보낸 요청 <span id="friendSentBadge" class="friend-count-badge">0</span>
+                    </button>
+                </div>
 
-            <div class="friend-request-panel active" data-friend-request-panel="received" role="tabpanel">
-                <div id="friendReceivedList" class="friend-list"></div>
-            </div>
-            <div class="friend-request-panel" data-friend-request-panel="sent" role="tabpanel">
-                <div id="friendSentList" class="friend-list"></div>
-            </div>
-        </article>
+                <div class="friend-request-panel active" data-friend-request-panel="received" role="tabpanel">
+                    <div id="friendReceivedList" class="friend-list friend-request-list"></div>
+                </div>
+                <div class="friend-request-panel" data-friend-request-panel="sent" role="tabpanel">
+                    <div id="friendSentList" class="friend-list friend-request-list"></div>
+                </div>
+            </article>
+        </aside>
     </section>
 </main>
 
 <jsp:include page="/WEB-INF/views/common/footer.jsp" />
+<%@ include file="../common/commonPeopleModal.jspf" %>
 
-<script src="/js/friend.js?v=friend-profile-link-20260707"></script>
+<script src="${pageContext.request.contextPath}/js/commonProfileUtils.js?v=friend-dashboard-v2"></script>
+<script src="${pageContext.request.contextPath}/js/commonPeopleModal.js?v=202608081545-unified-people-shell"></script>
+<script>window.MOYO_CONTEXT_PATH = '${pageContext.request.contextPath}';</script>
+<script src="${pageContext.request.contextPath}/js/friendPeopleAdapter.js?v=friend-common-add-modal-v2"></script>
+<script src="${pageContext.request.contextPath}/js/friend.js?v=friend-dashboard-v2"></script>
 </body>
 </html>

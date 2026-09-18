@@ -1,14 +1,24 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
+<c:set var="moyoTabFaviconManaged" value="true" scope="request" />
 <!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>${workspace.wsName} - 그룹 설정</title>
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/moyoUi.css">
+    <title><c:out value="${workspace.wsName}"/> | MOYO</title>
+    <c:choose>
+        <c:when test="${not empty workspace.wsImagePath}">
+            <link rel="icon" href="<c:out value='${workspace.wsImagePath}'/>">
+        </c:when>
+        <c:otherwise>
+            <link rel="icon" type="image/png" href="${pageContext.request.contextPath}/brand/moyo_mark.png?v=moyo-tab-mascot-v1">
+        </c:otherwise>
+    </c:choose>
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/moyoUi.css?v=primary-gradient-135-v1-20260910">
     <link rel="stylesheet"
           href="${pageContext.request.contextPath}/css/commonMemberProfile.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/commonMemberActivityProfile.css?v=step25-regression-restore-20260911">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
         var WORKSPACE_CONFIG = {
@@ -16,15 +26,21 @@
             currentUserId: Number('${currentUserId}'),
             isAdmin: ${isWorkspaceAdmin ? 'true' : 'false'},
             isOwner: ${currentUserIsOwner ? 'true' : 'false'},
+            workspaceStatus: '<c:out value="${workspace.status}"/>',
+            deleteStatus: '<c:out value="${workspace.status}"/>',
             contextPath: '${pageContext.request.contextPath}'
         };
     </script>
     <script defer
-            src="${pageContext.request.contextPath}/js/commonMemberProfile.js"></script>
-    <script defer src="${pageContext.request.contextPath}/js/commonWorkspaceInvite.js"></script>
+            src="${pageContext.request.contextPath}/js/commonMemberProfile.js?v=20260908-group-leave-v1"></script>
+    <script defer src="${pageContext.request.contextPath}/js/commonMemberActivityProfile.js?v=step25-regression-restore-20260911"></script>
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/commonPeopleModal.css?v=primary-gradient-135-v1-20260910">
+    <script defer src="${pageContext.request.contextPath}/js/commonPeopleModal.js?v=202608081545-unified-people-shell"></script>
+    <script defer src="${pageContext.request.contextPath}/js/commonWorkspaceInvite.js?v=workspace-invite-common-people-v1"></script>
     <link rel="stylesheet"
-          href="${pageContext.request.contextPath}/css/workspaceSettings.css">
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/commonWorkspaceInvite.css">
+          href="${pageContext.request.contextPath}/css/workspaceSettings.css?v=workspace-settings-css-cleanup-20260908">
+    <link rel="stylesheet"
+          href="${pageContext.request.contextPath}/css/common/commonSettings.css?v=member-trigger-fix-v1-20260910">
 
     <script>
         const WORKSPACE_CONTEXT_PATH = '${pageContext.request.contextPath}';
@@ -209,6 +225,7 @@
                     document.getElementById('removeWorkspaceImage').value='Y';
                     if(originalPathInput) originalPathInput.value='';
                     scaleInput.value='';xInput.value='';yInput.value='';
+                    markWorkspaceSettingsImageChanged();
                 });
                 document.querySelectorAll('[data-workspace-image-close]').forEach(el=>el.addEventListener('click',close));
                 range.addEventListener('input',()=>{scale=Math.max(minimumScale(),Number(range.value)/100);render()});
@@ -229,6 +246,7 @@
                     document.getElementById('removeWorkspaceImage').value='N';
                     def.disabled=false;
                     syncState();
+                    markWorkspaceSettingsImageChanged();
                     modal.hidden=true;
                     document.body.classList.remove('profile-crop-open');
                 });
@@ -281,6 +299,7 @@
             row.querySelector('[name="linkUrl"]').value = url || '';
             list.appendChild(row);
             syncWorkspaceLinkControls();
+            refreshWorkspaceSettingsDirtyState();
             row.querySelector('[name="linkName"]').focus();
         }
 
@@ -289,50 +308,320 @@
             if (!row) return;
             row.remove();
             syncWorkspaceLinkControls();
+            refreshWorkspaceSettingsDirtyState();
         }
 
         document.addEventListener('DOMContentLoaded', syncWorkspaceLinkControls);
 
 
-        function saveWorkspaceMemberPosition(userId) {
-            const row = document.querySelector(
-                '.workspace-member-manage-row[data-user-id="' + userId + '"]'
-            );
-            if (!row) return;
 
-            const positionInput = row.querySelector('.workspace-member-position-input');
-            const saveButton = row.querySelector('.workspace-member-position-save');
+        function getWorkspaceMemberRows() {
+            return Array.from(document.querySelectorAll('#workspaceMemberManageList .ws-member-row'));
+        }
+
+        let workspaceMemberMode = 'view';
+        let workspaceMemberSaving = false;
+
+        function getChangedWorkspaceMemberRows() {
+            return getWorkspaceMemberRows().filter(function(row) {
+                const roleSelect = row.querySelector('.workspace-member-role-edit');
+                const positionInput = row.querySelector('.workspace-member-position-edit');
+                const nextRole = roleSelect ? roleSelect.value : (row.dataset.role || 'MEMBER');
+                const nextPosition = positionInput ? positionInput.value.trim() : '';
+                return nextRole !== (row.dataset.role || 'MEMBER')
+                    || nextPosition !== (row.dataset.position || '');
+            });
+        }
+
+        function refreshWorkspaceMemberDirtyState() {
+            const saveButton = document.getElementById('workspaceMemberSaveButton');
+            if (!saveButton) return;
+
+            const hasChanges = workspaceMemberMode === 'edit' && getChangedWorkspaceMemberRows().length > 0;
+            saveButton.disabled = workspaceMemberSaving || !hasChanges;
+            saveButton.textContent = workspaceMemberSaving ? '저장 중...' : '변경사항 저장';
+        }
+
+        function getSelectedWorkspaceMemberRows() {
+            if (workspaceMemberMode !== 'remove') return [];
+            return getWorkspaceMemberRows().filter(function(row) {
+                const checkbox = row.querySelector('.workspace-member-select');
+                return checkbox && checkbox.checked && !checkbox.disabled && !row.hidden;
+            });
+        }
+
+        function setWorkspaceMemberMode(mode, restore) {
+            const memberTab = document.getElementById('settingsTabMembers');
+            if (!memberTab) return;
+
+            if (restore) {
+                getWorkspaceMemberRows().forEach(function(row) {
+                    const roleSelect = row.querySelector('.workspace-member-role-edit');
+                    const positionInput = row.querySelector('.workspace-member-position-edit');
+                    if (roleSelect) roleSelect.value = row.dataset.originalRole || row.dataset.role || 'MEMBER';
+                    if (positionInput) positionInput.value = row.dataset.originalPosition || row.dataset.position || '';
+                });
+            }
+
+            workspaceMemberMode = mode;
+            memberTab.classList.toggle('is-member-editing', mode === 'edit');
+            memberTab.classList.toggle('is-member-removing', mode === 'remove');
+
+            getWorkspaceMemberRows().forEach(function(row) {
+                const checkbox = row.querySelector('.workspace-member-select');
+                if (checkbox) checkbox.checked = false;
+                row.classList.remove('is-selected');
+
+                const roleSelect = row.querySelector('.workspace-member-role-edit');
+                const positionInput = row.querySelector('.workspace-member-position-edit');
+                const isOwner = row.dataset.isOwner === 'true';
+                const isCurrentUser = row.dataset.isCurrentUser === 'true';
+                if (roleSelect) roleSelect.disabled = mode !== 'edit' || isOwner || isCurrentUser;
+                if (positionInput) positionInput.disabled = mode !== 'edit';
+            });
+
+            syncWorkspaceMemberSelection();
+            refreshWorkspaceMemberDirtyState();
+        }
+
+        function enterWorkspaceMemberEditMode() {
+            getWorkspaceMemberRows().forEach(function(row) {
+                row.dataset.originalRole = row.dataset.role || 'MEMBER';
+                row.dataset.originalPosition = row.dataset.position || '';
+            });
+            setWorkspaceMemberMode('edit', false);
+        }
+
+        function enterWorkspaceMemberRemoveMode() {
+            setWorkspaceMemberMode('remove', false);
+        }
+
+        function exitWorkspaceMemberMode(restore) {
+            setWorkspaceMemberMode('view', Boolean(restore));
+        }
+
+        function getSelectableWorkspaceMemberCheckboxes() {
+            return getWorkspaceMemberRows()
+                .filter(function(row) {
+                    if (row.hidden || row.dataset.isOwner === 'true' || row.dataset.isCurrentUser === 'true') return false;
+                    if (!WORKSPACE_CONFIG.isOwner && String(row.dataset.role || '').toUpperCase() === 'ADMIN') return false;
+                    return true;
+                })
+                .map(function(row) { return row.querySelector('.workspace-member-select'); })
+                .filter(function(checkbox) { return checkbox && !checkbox.disabled; });
+        }
+
+        function syncWorkspaceMemberModeNote() {
+            const note = document.getElementById('workspaceMemberRoleNote');
+            if (!note) return;
+
+            if (workspaceMemberMode === 'edit') {
+                note.textContent = '권한과 직책 · 담당을 수정한 뒤 변경사항 저장을 눌러 한 번에 반영하세요.';
+                return;
+            }
+
+            if (workspaceMemberMode === 'remove') {
+                note.textContent = '내보낼 멤버를 선택하세요. 그룹장은 선택할 수 없습니다.';
+                return;
+            }
+
+            note.textContent = '';
+        }
+
+        function syncWorkspaceMemberSelection() {
+            const rows = getWorkspaceMemberRows().filter(function(row) { return !row.hidden; });
+            const selectable = getSelectableWorkspaceMemberCheckboxes();
+            const selected = selectable.filter(function(box) { return box.checked; });
+            const selectAll = document.getElementById('workspaceMemberSelectAll');
+            const count = document.getElementById('workspaceMemberSelected');
+            const removeButton = document.getElementById('workspaceMemberRemoveConfirmButton');
+
+            if (selectAll) {
+                const allSelected = selectable.length > 0 && selected.length === selectable.length;
+                const partiallySelected = selected.length > 0 && selected.length < selectable.length;
+                selectAll.checked = allSelected;
+                selectAll.indeterminate = partiallySelected;
+                selectAll.disabled = workspaceMemberMode !== 'remove' || selectable.length === 0;
+                selectAll.setAttribute('aria-checked', partiallySelected ? 'mixed' : String(allSelected));
+            }
+            if (count) count.textContent = '선택 ' + selected.length + '명';
+            if (removeButton) {
+                removeButton.disabled = selected.length === 0;
+                removeButton.textContent = selected.length > 0
+                    ? selected.length + '명 내보내기'
+                    : '선택 내보내기';
+            }
+            rows.forEach(function(row) {
+                const checkbox = row.querySelector('.workspace-member-select');
+                row.classList.toggle('is-selected', workspaceMemberMode === 'remove' && checkbox && checkbox.checked);
+            });
+            syncWorkspaceMemberModeNote();
+        }
+
+        function toggleAllWorkspaceMembers(checked) {
+            if (workspaceMemberMode !== 'remove') return;
+            getSelectableWorkspaceMemberCheckboxes().forEach(function(checkbox) {
+                checkbox.checked = checked;
+            });
+            syncWorkspaceMemberSelection();
+        }
+
+        function filterWorkspaceMembers() {
+            const input = document.getElementById('workspaceMemberSearchInput');
+            const keyword = String(input ? input.value : '').trim().toLowerCase();
+            let visibleCount = 0;
+            getWorkspaceMemberRows().forEach(function(row) {
+                const matched = !keyword || String(row.dataset.search || '').includes(keyword);
+                row.hidden = !matched;
+                if (matched) visibleCount += 1;
+                const checkbox = row.querySelector('.workspace-member-select');
+                if (!matched && checkbox) checkbox.checked = false;
+            });
+            const empty = document.getElementById('workspaceMemberEmpty');
+            if (empty) empty.classList.toggle('is-visible', visibleCount === 0);
+            syncWorkspaceMemberSelection();
+        }
+
+        function postWorkspaceMemberForm(url, values) {
             const params = new URLSearchParams();
-
-            params.append('wsId', '${workspace.wsId}');
-            params.append('userId', userId);
-            params.append('positionName', positionInput.value.trim());
-
-            saveButton.disabled = true;
-            saveButton.textContent = '저장 중';
-
-            fetch(WORKSPACE_CONTEXT_PATH + '/workspace/api/update-member-position', {
+            Object.keys(values).forEach(function(key) { params.append(key, values[key]); });
+            return fetch(WORKSPACE_CONTEXT_PATH + url, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                 body: params
-            })
-            .then(function(response) { return response.text(); })
-            .then(function(result) {
-                if (result === 'success') {
-                    alert('워크스페이스 역할을 저장했습니다.');
-                    return;
-                }
-                alert('워크스페이스 역할 저장에 실패했습니다.');
-            })
-            .catch(function(error) {
-                console.error('워크스페이스 역할 저장 실패:', error);
-                alert('워크스페이스 역할 저장 중 오류가 발생했습니다.');
-            })
-            .finally(function() {
-                saveButton.disabled = false;
-                saveButton.textContent = '역할 저장';
-            });
+            }).then(function(response) { return response.text(); });
         }
+
+        async function saveWorkspaceMemberChanges() {
+            if (workspaceMemberSaving) return;
+            const changedRows = getChangedWorkspaceMemberRows();
+
+            if (!changedRows.length) {
+                refreshWorkspaceMemberDirtyState();
+                return;
+            }
+            if (!confirm(changedRows.length + '명의 변경사항을 저장하시겠습니까?')) return;
+
+            const changes = changedRows.map(function(row) {
+                const roleSelect = row.querySelector('.workspace-member-role-edit');
+                const positionInput = row.querySelector('.workspace-member-position-edit');
+                const nextRole = roleSelect ? roleSelect.value : (row.dataset.role || 'MEMBER');
+                const nextPosition = positionInput ? positionInput.value.trim() : '';
+                const item = { userId: Number(row.dataset.userId) };
+
+                if (roleSelect && nextRole !== (row.dataset.role || 'MEMBER')) {
+                    item.role = nextRole;
+                }
+                if (positionInput && nextPosition !== (row.dataset.position || '')) {
+                    item.positionName = nextPosition;
+                }
+                return item;
+            });
+
+            const saveButton = document.getElementById('workspaceMemberSaveButton');
+            workspaceMemberSaving = true;
+            refreshWorkspaceMemberDirtyState();
+
+            try {
+                const result = await postWorkspaceMemberForm('/workspace/api/update-members', {
+                    wsId: '${workspace.wsId}',
+                    changes: JSON.stringify(changes)
+                });
+                if (result !== 'success') throw new Error(result || 'MEMBER_UPDATE_FAILED');
+
+                changedRows.forEach(function(row) {
+                    const roleSelect = row.querySelector('.workspace-member-role-edit');
+                    const positionInput = row.querySelector('.workspace-member-position-edit');
+                    const nextRole = roleSelect ? roleSelect.value : (row.dataset.role || 'MEMBER');
+                    const nextPosition = positionInput ? positionInput.value.trim() : '';
+
+                    if (roleSelect && nextRole !== row.dataset.role) {
+                        row.dataset.role = nextRole;
+                        const roleSummary = row.querySelector('.ws-member-role-summary');
+                        if (roleSummary) {
+                            roleSummary.textContent = nextRole === 'ADMIN' ? '관리자' : '멤버';
+                            roleSummary.classList.toggle('is-admin', nextRole === 'ADMIN');
+                        }
+                    }
+                    if (positionInput && nextPosition !== (row.dataset.position || '')) {
+                        row.dataset.position = nextPosition;
+                        const positionSummary = row.querySelector('.ws-member-position-summary');
+                        if (positionSummary) {
+                            positionSummary.textContent = nextPosition || '미지정';
+                            positionSummary.classList.toggle('is-empty', !nextPosition);
+                        }
+                    }
+                    row.dataset.originalRole = row.dataset.role || 'MEMBER';
+                    row.dataset.originalPosition = row.dataset.position || '';
+                });
+
+                workspaceMemberSaving = false;
+                exitWorkspaceMemberMode(false);
+            } catch (error) {
+                console.error('멤버 변경사항 저장 실패:', error);
+                const code = error && error.message ? error.message : '';
+                const messages = {
+                    self_role_locked: '내 권한은 멤버 관리에서 직접 변경할 수 없습니다.',
+                    owner_role_locked: '그룹장 권한은 멤버 관리에서 변경할 수 없습니다.',
+                    member_not_found: '현재 그룹에 없는 멤버가 포함되어 있습니다.',
+                    workspace_unavailable: '현재 그룹 상태에서는 멤버 정보를 변경할 수 없습니다.',
+                    forbidden: '멤버 정보를 변경할 권한이 없습니다.'
+                };
+                alert(messages[code] || '변경사항을 저장하지 못했습니다. 입력값을 확인한 뒤 다시 시도해 주세요.');
+            } finally {
+                workspaceMemberSaving = false;
+                refreshWorkspaceMemberDirtyState();
+            }
+        }
+
+        async function removeSelectedWorkspaceMembers() {
+            const rows = getSelectedWorkspaceMemberRows();
+            if (!rows.length) return;
+            const names = rows.map(function(row) { return row.dataset.memberName; }).filter(Boolean);
+            if (!confirm((names.length <= 3 ? names.join(', ') : names.slice(0, 3).join(', ') + ' 외 ' + (names.length - 3) + '명') + '을 그룹에서 내보내시겠습니까?')) return;
+
+            const removeButton = document.getElementById('workspaceMemberRemoveConfirmButton');
+            if (removeButton) {
+                removeButton.disabled = true;
+                removeButton.textContent = '내보내는 중...';
+            }
+
+            try {
+                const result = await postWorkspaceMemberForm('/workspace/api/remove-members', {
+                    wsId: '${workspace.wsId}',
+                    userIds: rows.map(function(row) { return row.dataset.userId; }).join(',')
+                });
+                if (result !== 'success') throw new Error(result || 'REMOVE_FAILED');
+
+                rows.forEach(function(row) { row.remove(); });
+                updateWorkspaceMemberTotal();
+                exitWorkspaceMemberMode(false);
+            } catch (error) {
+                console.error('멤버 일괄 내보내기 실패:', error);
+                const code = error && error.message ? error.message : '';
+                const messages = {
+                    self_remove_locked: '본인은 멤버 관리에서 내보낼 수 없습니다.',
+                    owner_protected: '그룹장은 내보낼 수 없습니다.',
+                    member_not_found: '현재 그룹에 없는 멤버가 포함되어 있습니다.',
+                    project_leader_transfer_required: '진행 중인 그룹 프로젝트의 팀장은 먼저 프로젝트 팀장을 다른 멤버에게 위임해야 합니다.',
+                    workspace_unavailable: '현재 그룹 상태에서는 멤버를 내보낼 수 없습니다.',
+                    forbidden: '선택한 멤버를 내보낼 권한이 없습니다.'
+                };
+                alert(messages[code] || '멤버를 내보내지 못했습니다. 목록을 확인한 뒤 다시 시도해 주세요.');
+                syncWorkspaceMemberSelection();
+            }
+        }
+
+        function updateWorkspaceMemberTotal() {
+            const total = getWorkspaceMemberRows().length;
+            const element = document.getElementById('workspaceMemberTotal');
+            if (element) element.innerHTML = '전체 <strong>' + total + '</strong>명';
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            updateWorkspaceMemberTotal();
+            setWorkspaceMemberMode('view', false);
+        });
 
         function transferWorkspaceLeaderFromSettings(userId, memberName, select, previousRole) {
             if (!confirm(memberName + ' 멤버에게 그룹장 권한을 넘기시겠습니까?\n기존 그룹장은 관리자로 변경됩니다.')) {
@@ -368,6 +657,12 @@
 
                 if (result === 'owner_only') {
                     alert('현재 그룹장만 그룹장 권한을 넘길 수 있습니다.');
+                } else if (result === 'unavailable') {
+                    alert('삭제 예정 또는 사용할 수 없는 그룹에서는 그룹장을 위임할 수 없습니다.');
+                } else if (result === 'member_not_found') {
+                    alert('현재 그룹 멤버에게만 그룹장 권한을 넘길 수 있습니다.');
+                } else if (result === 'conflict') {
+                    alert('그룹장 정보가 이미 변경되었습니다. 화면을 새로고침한 뒤 다시 확인해 주세요.');
                 } else {
                     alert('그룹장 위임에 실패했습니다.');
                 }
@@ -386,7 +681,7 @@
             const previousRole = select.dataset.previousRole || 'MEMBER';
             const role = select.value;
             const row = select.closest('.workspace-member-manage-row');
-            const memberNameElement = row ? row.querySelector('.workspace-member-manage-name') : null;
+            const memberNameElement = row ? row.querySelector('.ws-member-name') : null;
             const memberName = memberNameElement ? memberNameElement.textContent.trim() : '선택한';
 
             if (role === 'OWNER') {
@@ -452,7 +747,7 @@
             .then(function(result) {
                 if (result === 'success') {
                     const row = document.querySelector(
-                        '.workspace-member-manage-row[data-user-id="' + userId + '"]'
+                        '.ws-member-row[data-user-id="' + userId + '"]'
                     );
                     if (row) row.remove();
                     alert('멤버를 그룹에서 내보냈습니다.');
@@ -477,6 +772,11 @@
                     return;
                 }
 
+                if (result === 'project_leader_transfer_required') {
+                    alert('진행 중인 그룹 프로젝트의 팀장은 먼저 다른 멤버에게 팀장을 위임해야 합니다.');
+                    return;
+                }
+
                 alert('멤버 내보내기에 실패했습니다.');
             })
             .catch(function(error) {
@@ -487,22 +787,81 @@
 
         let workspaceSettingsSaving = false;
         let workspaceSettingsRedirecting = false;
+        let workspaceSettingsDirty = false;
+        let workspaceSettingsInitialSnapshot = '';
+        let workspaceSettingsImageRevision = 0;
 
-        window.addEventListener('pageshow', function(event) {
-            // 뒤로/앞으로 가기 캐시로 페이지가 복원돼도 저장 버튼이 잠긴 채 남지 않게 한다.
+        function normalizeWorkspaceSettingsSnapshotValue(value) {
+            return String(value == null ? '' : value).replace(/\r\n/g, '\n');
+        }
+
+        function getWorkspaceSettingsSnapshot() {
+            const form = document.getElementById('settingsForm');
+            if (!form) return '';
+
+            const selectedJoinType = form.querySelector('input[name="joinType"]:checked');
+            const links = Array.from(form.querySelectorAll('.workspace-link-row')).map(function(row) {
+                const name = row.querySelector('[name="linkName"]')?.value.trim().replace(/\s+/g, ' ') || '';
+                const url = row.querySelector('[name="linkUrl"]')?.value.trim() || '';
+                return { name: name, url: url };
+            }).filter(function(link) {
+                return link.name || link.url;
+            });
+
+            return JSON.stringify({
+                wsName: normalizeWorkspaceSettingsSnapshotValue(document.getElementById('wsName')?.value),
+                wsType: normalizeWorkspaceSettingsSnapshotValue(document.getElementById('wsType')?.value),
+                wsDescription: normalizeWorkspaceSettingsSnapshotValue(document.getElementById('wsDescription')?.value),
+                joinType: selectedJoinType ? selectedJoinType.value : '',
+                removeWorkspaceImage: normalizeWorkspaceSettingsSnapshotValue(document.getElementById('removeWorkspaceImage')?.value),
+                wsImageCropScale: normalizeWorkspaceSettingsSnapshotValue(document.getElementById('wsImageCropScale')?.value),
+                wsImageCropX: normalizeWorkspaceSettingsSnapshotValue(document.getElementById('wsImageCropX')?.value),
+                wsImageCropY: normalizeWorkspaceSettingsSnapshotValue(document.getElementById('wsImageCropY')?.value),
+                imageRevision: workspaceSettingsImageRevision,
+                links: links
+            });
+        }
+
+        function setWorkspaceSettingsDirty(dirty) {
+            workspaceSettingsDirty = Boolean(dirty);
+            const button = document.getElementById('workspaceSettingsSaveButton');
+            if (!button) return;
+
+            button.classList.toggle('is-dirty', workspaceSettingsDirty);
+            button.disabled = workspaceSettingsSaving || !workspaceSettingsDirty;
+            button.setAttribute('aria-disabled', button.disabled ? 'true' : 'false');
+        }
+
+        function refreshWorkspaceSettingsDirtyState() {
+            if (!workspaceSettingsInitialSnapshot) return;
+            setWorkspaceSettingsDirty(getWorkspaceSettingsSnapshot() !== workspaceSettingsInitialSnapshot);
+        }
+
+        function markWorkspaceSettingsImageChanged() {
+            workspaceSettingsImageRevision += 1;
+            refreshWorkspaceSettingsDirtyState();
+        }
+
+        window.addEventListener('pageshow', function() {
             if (!workspaceSettingsRedirecting) {
                 setWorkspaceSettingsSaving(false);
+                refreshWorkspaceSettingsDirtyState();
             }
         });
 
         document.addEventListener('DOMContentLoaded', function() {
             const settingsForm = document.getElementById('settingsForm');
-            if (settingsForm) {
-                settingsForm.addEventListener('submit', function(event) {
-                    event.preventDefault();
-                    updateWorkspaceSetting();
-                });
-            }
+            if (!settingsForm) return;
+
+            workspaceSettingsInitialSnapshot = getWorkspaceSettingsSnapshot();
+            setWorkspaceSettingsDirty(false);
+
+            settingsForm.addEventListener('submit', function(event) {
+                event.preventDefault();
+                updateWorkspaceSetting();
+            });
+            settingsForm.addEventListener('input', refreshWorkspaceSettingsDirtyState);
+            settingsForm.addEventListener('change', refreshWorkspaceSettingsDirtyState);
         });
 
         function setWorkspaceSettingsSaving(saving) {
@@ -515,7 +874,8 @@
                 button.dataset.defaultText = button.textContent.trim();
             }
 
-            button.disabled = saving;
+            button.disabled = saving || !workspaceSettingsDirty;
+            button.setAttribute('aria-disabled', button.disabled ? 'true' : 'false');
             button.setAttribute('aria-busy', saving ? 'true' : 'false');
             button.classList.toggle('is-saving', saving);
             button.textContent = saving ? '저장 중...' : button.dataset.defaultText;
@@ -531,7 +891,7 @@
         }
 
         async function updateWorkspaceSetting() {
-            if (workspaceSettingsSaving) return;
+            if (workspaceSettingsSaving || !workspaceSettingsDirty) return;
 
             const wsNameInput = document.getElementById('wsName');
             const wsName = normalizeWorkspaceName(wsNameInput ? wsNameInput.value : '');
@@ -601,6 +961,9 @@
                 }
                 validatedWorkspaceLinkUrls.add(duplicateKey);
             }
+
+            refreshWorkspaceSettingsDirtyState();
+            if (!workspaceSettingsDirty) return;
 
             setWorkspaceSettingsSaving(true);
 
@@ -677,32 +1040,110 @@
             });
         }
 
-        // 그룹 완전 삭제 (DELETE) AJAX 호출
-        function deleteWorkspace() {
-            if (confirm("정말로 이 그룹을 삭제하시겠습니까?\n삭제 후 프로젝트, 게시글, 멤버십을 포함한 모든 데이터가 복구 불가능하게 파괴됩니다.")) {
-                $.ajax({
-                    url: WORKSPACE_CONTEXT_PATH + '/workspace/api/delete',
-                    type: 'POST',
-                    data: { wsId: "${workspace.wsId}" },
-                    success: function(res) {
-                        if (res === 'success') {
-                            alert("그룹이 안전하게 폐쇄 및 완전히 삭제되었습니다.");
-                            location.href = WORKSPACE_CONTEXT_PATH + '/workspace/list'; 
-                        } else {
-                            alert("그룹 삭제 처리에 실패했습니다. 권한을 확인하세요.");
-                        }
-                    },
-                    error: function(err) {
-                        console.error("삭제 중 오류 발생:", err);
-                        alert("서버 통신 오류가 발생했습니다.");
-                    }
-                });
-            }
+        function openWorkspaceDeleteRequestModal() {
+            const modal = document.getElementById('workspaceDeleteRequestModal');
+            const input = document.getElementById('workspaceDeleteConfirmName');
+            if (!modal) return;
+            if (input) input.value = '';
+            modal.hidden = false;
+            document.body.classList.add('workspace-delete-modal-open');
+            setTimeout(function(){ if (input) input.focus(); }, 0);
         }
+
+        function closeWorkspaceDeleteRequestModal() {
+            const modal = document.getElementById('workspaceDeleteRequestModal');
+            if (modal) modal.hidden = true;
+            document.body.classList.remove('workspace-delete-modal-open');
+        }
+
+        function requestWorkspaceDeletion() {
+            const workspaceName = "${fn:escapeXml(workspace.wsName)}";
+            const input = document.getElementById('workspaceDeleteConfirmName');
+            const submit = document.getElementById('workspaceDeleteRequestSubmit');
+            const typedName = input ? input.value.trim() : '';
+
+            if (typedName !== workspaceName.trim()) {
+                alert("그룹 이름을 정확히 입력해 주세요.");
+                if (input) input.focus();
+                return;
+            }
+
+            if (submit) submit.disabled = true;
+
+            $.ajax({
+                url: WORKSPACE_CONTEXT_PATH + '/workspace/api/delete',
+                type: 'POST',
+                data: { wsId: "${workspace.wsId}", workspaceName: typedName },
+                success: function(res) {
+                    if (res === 'success' || res === 'already_pending') {
+                        closeWorkspaceDeleteRequestModal();
+                        alert(res === 'already_pending'
+                            ? "이미 삭제 신청된 그룹입니다."
+                            : "그룹 삭제가 신청되었습니다. 30일 안에는 취소할 수 있습니다.");
+                        location.reload();
+                    } else if (res === 'name_mismatch') {
+                        alert("그룹 이름이 일치하지 않습니다.");
+                    } else if (res === 'owner_only') {
+                        alert("그룹 삭제 신청은 그룹장만 가능합니다.");
+                    } else if (res === 'login_required') {
+                        alert("로그인이 필요합니다.");
+                    } else if (res === 'not_found') {
+                        alert("그룹 정보를 찾을 수 없습니다.");
+                    } else {
+                        alert("그룹 삭제 신청에 실패했습니다.");
+                    }
+                },
+                error: function(xhr) {
+                    console.error("그룹 삭제 신청 오류:", xhr);
+                    alert("그룹 삭제 신청 중 서버 통신 오류가 발생했습니다.");
+                },
+                complete: function() {
+                    if (submit) submit.disabled = false;
+                }
+            });
+        }
+
+        function cancelWorkspaceDeletion() {
+            if (!confirm("그룹 삭제 신청을 취소할까요?")) return;
+
+            $.ajax({
+                url: WORKSPACE_CONTEXT_PATH + '/workspace/api/delete/cancel',
+                type: 'POST',
+                data: { wsId: "${workspace.wsId}" },
+                success: function(res) {
+                    if (res === 'success') {
+                        alert("그룹 삭제 신청이 취소되었습니다.");
+                        location.reload();
+                    } else if (res === 'owner_only') {
+                        alert("그룹 삭제 신청 취소는 그룹장만 가능합니다.");
+                    } else {
+                        alert("그룹 삭제 신청 취소에 실패했습니다.");
+                    }
+                },
+                error: function(xhr) {
+                    console.error("그룹 삭제 신청 취소 오류:", xhr);
+                    alert("그룹 삭제 신청 취소 중 서버 통신 오류가 발생했습니다.");
+                }
+            });
+        }
+
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') closeWorkspaceDeleteRequestModal();
+        });
 
         function switchWorkspaceSettingsTab(tabName) {
             const basic = document.getElementById('settingsTabBasic');
             const members = document.getElementById('settingsTabMembers');
+
+            // 탭을 이동할 때 저장하지 않은 멤버 편집/내보내기 상태를 초기화한다.
+            if (workspaceMemberMode !== 'view') {
+                exitWorkspaceMemberMode(true);
+            }
+            const memberSearchInput = document.getElementById('workspaceMemberSearchInput');
+            if (memberSearchInput && memberSearchInput.value) {
+                memberSearchInput.value = '';
+                filterWorkspaceMembers();
+            }
 
             basic.classList.toggle('is-active', tabName === 'basic');
             members.classList.toggle('is-active', tabName === 'members');
@@ -710,6 +1151,11 @@
             document.querySelectorAll('.settings-tab-button').forEach(function(button) {
                 button.classList.toggle('is-active', button.dataset.tab === tabName);
             });
+
+            const pageActions = document.getElementById('workspaceSettingsPageActions');
+            if (pageActions) {
+                pageActions.hidden = tabName === 'members';
+            }
 
             const url = new URL(window.location.href);
             if (tabName === 'members') {
@@ -790,29 +1236,29 @@
 
     </script>
 </head>
-<body>
+<body data-member-activity-mode="GROUP" data-main-shell-mode="WORKSPACE" data-ws-id="${workspace.wsId}" data-context-path="${pageContext.request.contextPath}" data-current-user-id="${currentUserId}" data-scope-status="<c:out value='${workspace.status}'/>">
     <jsp:include page="/WEB-INF/views/common/header.jsp" />
 
-    <main class="workspace-settings-page">
-        <section class="settings-hero">
-            <div class="settings-hero-main">
-                <div class="settings-hero-avatar" aria-hidden="true">
-                    <c:choose>
-                        <c:when test="${not empty workspace.wsImagePath}"><img src="${workspace.wsImagePath}" alt=""></c:when>
-                        <c:otherwise>${fn:toUpperCase(fn:substring(workspace.wsName, 0, 1))}</c:otherwise>
-                    </c:choose>
-                </div>
-                <div class="settings-hero-copy">
-                    <span class="settings-kicker">그룹 설정</span>
-                    <h1>${workspace.wsName}</h1>
-                    <p>그룹 정보와 가입 방식, 외부 링크를 관리합니다.</p>
-                </div>
+    <main class="workspace-settings-page moyo-settings-page moyo-settings-page--workspace">
+        <header class="settings-page-header">
+            <div class="settings-page-heading">
+                <a href="#" onclick="history.back(); return false;"
+                   class="settings-page-back-link" aria-label="이전 화면으로 돌아가기">
+                    <span aria-hidden="true">←</span> 뒤로
+                </a>
+                <h1>그룹 설정</h1>
+                <p><c:out value="${workspace.wsName}"/>의 정보와 가입 방식, 외부 링크를 관리합니다.</p>
             </div>
-            <div class="settings-hero-actions">
-                <a href="${pageContext.request.contextPath}/workspace/main?wsId=${workspace.wsId}"
-                   class="settings-back-link">그룹 홈</a>
+            <div id="workspaceSettingsPageActions" class="settings-page-actions">
+                <button type="submit"
+                        form="settingsForm"
+                        id="workspaceSettingsSaveButton"
+                        class="settings-btn settings-btn-primary"
+                        aria-busy="false"
+                        aria-disabled="true"
+                        disabled>변경사항 저장</button>
             </div>
-        </section>
+        </header>
 
         <div class="settings-tabs" role="tablist">
             <button type="button"
@@ -827,8 +1273,8 @@
 
         <div class="settings-layout">
             <div id="settingsTabBasic" class="settings-tab-panel">
-            <section class="settings-card">
-                <form id="settingsForm">
+            <section class="settings-card settings-main-panel">
+                <form id="settingsForm" class="moyo-settings-form">
 <input type="hidden" id="removeWorkspaceImage" name="removeWorkspaceImage" value="N">
                     <input type="hidden" id="workspaceImageOriginalPath" value="<c:out value='${workspace.wsImageOriginalPath}'/>">
                     <input type="hidden" id="wsImageCropScale" name="wsImageCropScale" value="${empty workspace.wsImageCropScale ? 1.15 : workspace.wsImageCropScale}">
@@ -877,20 +1323,20 @@
                             </div>
                         </div>
 
-                        <div class="form-group full" style="margin-top:14px;">
+                        <div class="form-group full settings-join-section">
                             <span class="field-label">가입 방식</span>
                             <div class="join-type-options" role="radiogroup" aria-label="그룹 가입 방식">
                                 <label class="join-type-option">
                                     <input type="radio" name="joinType" value="OPEN" ${empty workspace.joinType or workspace.joinType eq 'OPEN' ? 'checked' : ''}>
-                                    <span class="join-type-card"><span class="join-type-badge">자유 가입</span><strong>누구나 바로 참여</strong><p>공개된 그룹을 확인한 사용자가 승인 없이 바로 참여할 수 있어요.</p></span>
+                                    <span class="join-type-card"><span class="join-type-badge">자유 가입</span><strong>누구나 바로 참여</strong><p>공개된 그룹을 확인한 사용자가 바로 참여할 수 있어요.</p></span>
                                 </label>
                                 <label class="join-type-option">
                                     <input type="radio" name="joinType" value="APPROVAL" ${workspace.joinType eq 'APPROVAL' ? 'checked' : ''}>
-                                    <span class="join-type-card"><span class="join-type-badge">승인제</span><strong>승인 후 참여</strong><p>참여 요청을 그룹장 또는 그룹 관리자가 승인해야 참여해요.</p></span>
+                                    <span class="join-type-card"><span class="join-type-badge">승인제</span><strong>승인 후 참여</strong><p>참여 요청을 보내면 그룹장 또는 관리자가 승인해요.</p></span>
                                 </label>
                                 <label class="join-type-option">
                                     <input type="radio" name="joinType" value="INVITE_ONLY" ${workspace.joinType eq 'INVITE_ONLY' ? 'checked' : ''}>
-                                    <span class="join-type-card"><span class="join-type-badge">초대 전용</span><strong>초대받은 사용자만 참여</strong><p>그룹장이나 그룹 관리자의 초대로만 참여해요.</p></span>
+                                    <span class="join-type-card"><span class="join-type-badge">초대 전용</span><strong>초대받은 사용자만 참여</strong><p>그룹장이나 관리자가 초대한 사용자만 참여할 수 있어요.</p></span>
                                 </label>
                             </div>
                         </div>
@@ -988,146 +1434,182 @@
                         </div>
                     </div>
 
-                    <div class="settings-save-bar">
-                        <a href="${pageContext.request.contextPath}/workspace/main?wsId=${workspace.wsId}" class="settings-btn">취소</a>
-                        <button type="submit" id="workspaceSettingsSaveButton" class="settings-btn settings-btn-primary" aria-busy="false">변경사항 저장</button>
-                    </div>
                 </form>
             </section>
 
-            <section class="settings-side-card danger-zone">
+            <section class="settings-side-card danger-zone ${workspace.status eq 'DELETE_PENDING' ? 'is-delete-pending' : ''}">
                 <div class="danger-zone-copy">
                     <h3>위험 구역</h3>
-                    <p>그룹을 삭제하면 프로젝트, 게시글, 멤버 정보가 모두 삭제되며 복구할 수 없습니다.</p>
+                    <c:choose>
+                        <c:when test="${workspace.status eq 'DELETE_PENDING'}">
+                            <p>
+                                이 그룹은 삭제 예정 상태입니다.
+                                <strong><c:out value="${workspace.deleteDeadlineDate}"/></strong>
+                            </p>
+                        </c:when>
+                        <c:otherwise>
+                            <p>삭제를 신청하면 30일 동안 취소할 수 있으며, 기간이 지나면 최종 삭제됩니다.</p>
+                        </c:otherwise>
+                    </c:choose>
                 </div>
-                <button type="button" class="btn-delete" onclick="deleteWorkspace()">그룹 삭제</button>
+                <c:choose>
+                    <c:when test="${workspace.status eq 'DELETE_PENDING'}">
+                        <button type="button" class="btn-delete-cancel" onclick="cancelWorkspaceDeletion()">삭제 신청 취소</button>
+                    </c:when>
+                    <c:otherwise>
+                        <button type="button" class="btn-delete" onclick="openWorkspaceDeleteRequestModal()">그룹 삭제 신청</button>
+                    </c:otherwise>
+                </c:choose>
             </section>
             </div>
 
             <div id="settingsTabMembers" class="settings-tab-panel">
-                <section class="settings-card">
+                <section class="settings-card moyo-member-manage">
                     <div class="member-tab-head">
                         <div>
                             <h2>멤버 관리</h2>
                             <p>권한과 그룹 내 역할을 관리합니다.</p>
                         </div>
-                        <button type="button"
-                                class="member-tab-invite"
-                                onclick="openTabInviteModal()">+ 멤버 초대</button>
                     </div>
 
-                    <div class="member-search-box">
-                        <input type="text"
-                               id="workspaceMemberSearchInput"
-                               placeholder="이름, 이메일, 역할로 검색"
-                               oninput="filterWorkspaceMembers()">
-                    </div>
-
-
-                    <div class="workspace-member-manage-list" id="workspaceMemberManageList">
-                        <c:forEach var="member" items="${memberList}">
-                            <div class="workspace-member-manage-row"
-                                 data-user-id="${member.USER_ID}"
-                                 data-search="${fn:toLowerCase(member.DISPLAY_NAME)} ${fn:toLowerCase(member.EMAIL)} ${fn:toLowerCase(member.WS_ROLE)} ${fn:toLowerCase(member.POSITION_NAME)}">
-                                <div class="workspace-member-manage-info">
-                                    <button type="button"
-                                            class="workspace-member-manage-avatar workspace-member-profile-trigger ${not empty member.PROFILE_IMAGE_PATH ? 'has-image' : 'is-default-profile'}"
-                                            aria-label="<c:out value='${member.DISPLAY_NAME}'/> 프로필 보기"
-                                            onclick="openWorkspaceMemberProfile(${member.USER_ID})">
-                                        <c:choose>
-                                            <c:when test="${not empty member.PROFILE_IMAGE_PATH}">
-                                                <img src="<c:out value='${member.PROFILE_IMAGE_PATH}'/>"
-                                                     alt="<c:out value='${member.DISPLAY_NAME}'/> 프로필"
-                                                     onerror="
-                                                         const avatar = this.closest('.workspace-member-manage-avatar');
-                                                         if (avatar) {
-                                                             avatar.classList.remove('has-image');
-                                                             avatar.classList.add('is-default-profile');
-                                                         }
-                                                         this.remove();
-                                                     ">
-                                                <span class="workspace-member-manage-avatar-fallback">
-                                                    <c:out value="${fn:substring(member.DISPLAY_NAME,0,1)}"/>
-                                                </span>
-                                            </c:when>
-                                            <c:otherwise>
-                                                <span class="workspace-member-manage-avatar-fallback">
-                                                    <c:out value="${fn:substring(member.DISPLAY_NAME,0,1)}"/>
-                                                </span>
-                                            </c:otherwise>
-                                        </c:choose>
-                                    </button>
-                                    <div class="workspace-member-manage-text">
-                                        <button type="button"
-                                                class="workspace-member-profile-name-trigger"
-                                                aria-label="<c:out value='${member.DISPLAY_NAME}'/> 프로필 보기"
-                                                onclick="openWorkspaceMemberProfile(${member.USER_ID})">
-                                            <span class="workspace-member-manage-name">
-                                                <c:out value="${member.DISPLAY_NAME}"/>
-                                            </span>
-                                        </button>
-                                        <span class="workspace-member-manage-email">
-                                            <c:out value="${member.EMAIL}"/>
-                                        </span>
-                                        <c:if test="${not empty member.JOINED_AT}">
-                                            <span class="workspace-member-manage-joined">
-                                                <c:out value="${member.JOINED_AT}"/> 가입
-                                            </span>
-                                        </c:if>
-                                    </div>
+                    <div class="workspace-member-toolbar wsmt-toolbar moyo-member-toolbar">
+                        <div class="member-search-box moyo-member-search">
+                            <input type="text"
+                                   id="workspaceMemberSearchInput"
+                                   placeholder="이름, 이메일, 역할로 검색"
+                                   oninput="filterWorkspaceMembers()">
+                        </div>
+                        <div class="workspace-member-toolbar-actions moyo-member-toolbar-actions">
+                            <span class="workspace-member-total moyo-member-total" id="workspaceMemberTotal">전체 <strong><c:out value="${fn:length(memberList)}"/></strong>명</span>
+                            <c:if test="${workspace.status ne 'DELETE_PENDING'}">
+                                <div class="workspace-member-view-actions moyo-member-view-actions">
+                                    <button type="button" class="workspace-member-toolbar-button moyo-member-action" onclick="enterWorkspaceMemberEditMode()">권한 수정</button>
+                                    <button type="button" class="workspace-member-toolbar-button moyo-member-action is-danger-ghost" onclick="enterWorkspaceMemberRemoveMode()">내보내기</button>
+                                    <button type="button" class="member-tab-invite moyo-member-invite" onclick="openTabInviteModal()">+ 멤버 초대</button>
                                 </div>
-
-                                <c:choose>
-                                    <c:when test="${member.USER_ID eq workspace.ownerId}">
-                                        <select class="workspace-member-role-select" disabled>
-                                            <option>그룹장</option>
-                                        </select>
-                                    </c:when>
-                                    <c:otherwise>
-                                        <select class="workspace-member-role-select"
-                                                data-previous-role="${member.WS_ROLE}"
-                                                onchange="changeWorkspaceMemberRole(this, ${member.USER_ID})">
-                                            <c:if test="${currentUserIsOwner}">
-                                                <option value="OWNER">그룹장</option>
-                                            </c:if>
-                                            <option value="ADMIN" ${member.WS_ROLE eq 'ADMIN' ? 'selected' : ''}>관리자</option>
-                                            <option value="MEMBER" ${member.WS_ROLE ne 'ADMIN' ? 'selected' : ''}>멤버</option>
-                                        </select>
-                                    </c:otherwise>
-                                </c:choose>
-
-                                <input type="text"
-                                       class="workspace-member-position-input"
-                                       maxlength="50"
-                                       value="<c:out value='${member.POSITION_NAME}'/>"
-                                       placeholder="담당 역할을 입력하세요">
-
-                                <button type="button"
-                                        class="workspace-member-position-save"
-                                        onclick="saveWorkspaceMemberPosition(${member.USER_ID})">역할 저장</button>
-
-                                <div class="workspace-member-actions">
-                                    <c:choose>
-                                        <c:when test="${member.USER_ID eq workspace.ownerId}">
-                                            <span class="workspace-member-owner-protected">그룹장 보호</span>
-                                        </c:when>
-                                        <c:when test="${member.USER_ID ne currentUserId}">
-                                            <button type="button"
-                                                    class="workspace-member-kick-button"
-                                                    onclick="removeWorkspaceMemberFromSettings(${member.USER_ID}, '<c:out value="${member.DISPLAY_NAME}"/>')">
-                                                내보내기
-                                            </button>
-                                        </c:when>
-                                    </c:choose>
-                                </div>
+                            </c:if>
+                            <div class="workspace-member-edit-actions moyo-member-edit-actions">
+                                <button type="button" class="workspace-member-toolbar-button moyo-member-action" onclick="exitWorkspaceMemberMode(true)">취소</button>
+                                <button type="button" class="workspace-member-toolbar-button moyo-member-action is-primary" id="workspaceMemberSaveButton" onclick="saveWorkspaceMemberChanges()" disabled>변경사항 저장</button>
                             </div>
-                        </c:forEach>
+                            <div class="workspace-member-remove-actions moyo-member-remove-actions">
+                                <span class="workspace-member-selected moyo-member-selected" id="workspaceMemberSelected">선택 0명</span>
+                                <button type="button" class="workspace-member-toolbar-button moyo-member-action" onclick="exitWorkspaceMemberMode(false)">취소</button>
+                                <button type="button" class="workspace-member-toolbar-button moyo-member-action is-danger" id="workspaceMemberRemoveConfirmButton" onclick="removeSelectedWorkspaceMembers()" disabled>선택 내보내기</button>
+                            </div>
+                        </div>
                     </div>
-                    <div id="workspaceMemberEmpty" class="workspace-member-empty">검색된 멤버가 없습니다.</div>
 
-                    <p class="workspace-member-role-note">
-                        그룹장은 권한 선택에서 그룹장을 선택해 바로 위임할 수 있습니다. 기존 그룹장은 관리자로 변경됩니다.
-                    </p>
+                    <div class="wsmt-wrap moyo-member-table-wrap">
+                        <table class="wsmt-table moyo-member-table">
+                            <colgroup>
+                                <col class="workspace-member-col-check">
+                                <col class="workspace-member-col-person">
+                                <col class="workspace-member-col-role">
+                                <col class="workspace-member-col-position">
+                                <col class="workspace-member-col-date">
+                            </colgroup>
+                            <thead>
+                                <tr>
+                                    <th class="workspace-member-check-cell wsmt-check-cell moyo-member-check-cell">
+                                        <input type="checkbox" id="workspaceMemberSelectAll" aria-label="검색된 멤버 전체 선택" onchange="toggleAllWorkspaceMembers(this.checked)">
+                                    </th>
+                                    <th>멤버</th>
+                                    <th>권한</th>
+                                    <th>직책 · 담당</th>
+                                    <th>가입일</th>
+                                </tr>
+                            </thead>
+                            <tbody id="workspaceMemberManageList">
+                                <c:forEach var="member" items="${memberList}">
+                                    <tr class="ws-member-row wsmt-row moyo-member-row"
+                                        data-user-id="${member.USER_ID}"
+                                        data-member-name="<c:out value='${member.DISPLAY_NAME}'/>"
+                                        data-is-owner="${member.USER_ID eq workspace.ownerId}"
+                                        data-is-current-user="${member.USER_ID eq currentUserId}"
+                                        data-role="${member.USER_ID eq workspace.ownerId ? 'OWNER' : member.WS_ROLE}"
+                                        data-position="<c:out value='${member.POSITION_NAME}'/>"
+                                        data-search="${fn:toLowerCase(member.DISPLAY_NAME)} ${fn:toLowerCase(member.EMAIL)} ${fn:toLowerCase(member.WS_ROLE)} ${fn:toLowerCase(member.POSITION_NAME)}">
+                                        <td class="workspace-member-check-cell wsmt-check-cell moyo-member-check-cell">
+                                            <input type="checkbox"
+                                                   class="workspace-member-select"
+                                                   value="${member.USER_ID}"
+                                                   aria-label="<c:out value='${member.DISPLAY_NAME}'/> 선택"
+                                                   <c:choose>
+                                                       <c:when test="${member.USER_ID eq workspace.ownerId}">disabled title="그룹장은 내보낼 수 없습니다."</c:when>
+                                                       <c:when test="${member.USER_ID eq currentUserId}">disabled title="본인은 내보낼 수 없습니다."</c:when>
+                                                       <c:when test="${not currentUserIsOwner and member.WS_ROLE eq 'ADMIN'}">disabled title="관리자는 다른 관리자를 내보낼 수 없습니다."</c:when>
+                                                   </c:choose>
+                                                   onchange="syncWorkspaceMemberSelection()">
+                                        </td>
+                                        <td class="wsmt-person-cell moyo-member-person-cell">
+                                            <div class="ws-member-person moyo-member-person">
+                                                <button type="button"
+                                                        class="ws-member-avatar workspace-member-profile-trigger moyo-member-avatar ${not empty member.PROFILE_IMAGE_PATH ? 'has-image' : 'is-default-profile'}"
+                                                        aria-label="<c:out value='${member.DISPLAY_NAME}'/> 프로필 보기"
+                                                        onclick="openWorkspaceMemberActivityProfile(${member.USER_ID})">
+                                                    <c:choose>
+                                                        <c:when test="${not empty member.PROFILE_IMAGE_PATH}">
+                                                            <img src="<c:out value='${member.PROFILE_IMAGE_PATH}'/>" alt="" onerror="this.closest('.moyo-member-avatar').classList.remove('has-image'); this.closest('.moyo-member-avatar').classList.add('is-default-profile'); this.remove();">
+                                                            <span class="ws-member-avatar-fallback moyo-member-avatar-fallback"><c:out value="${fn:substring(member.DISPLAY_NAME,0,1)}"/></span>
+                                                        </c:when>
+                                                        <c:otherwise>
+                                                            <span class="ws-member-avatar-fallback moyo-member-avatar-fallback"><c:out value="${fn:substring(member.DISPLAY_NAME,0,1)}"/></span>
+                                                        </c:otherwise>
+                                                    </c:choose>
+                                                </button>
+                                                <div class="ws-member-person-copy moyo-member-copy">
+                                                    <button type="button" class="ws-member-name-button" onclick="openWorkspaceMemberActivityProfile(${member.USER_ID})">
+                                                        <span class="ws-member-name moyo-member-name"><c:out value="${member.DISPLAY_NAME}"/></span>
+                                                    </button>
+                                                    <span class="ws-member-email moyo-member-email"><c:out value="${member.EMAIL}"/></span>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="wsmt-role-cell moyo-member-role-cell">
+                                            <span class="ws-member-role-summary moyo-member-role ${member.USER_ID eq workspace.ownerId ? 'is-owner' : (member.WS_ROLE eq 'ADMIN' ? 'is-admin' : '')}">
+                                                <c:choose>
+                                                    <c:when test="${member.USER_ID eq workspace.ownerId}">그룹장</c:when>
+                                                    <c:when test="${member.WS_ROLE eq 'ADMIN'}">관리자</c:when>
+                                                    <c:otherwise>멤버</c:otherwise>
+                                                </c:choose>
+                                            </span>
+                                            <c:if test="${member.USER_ID ne workspace.ownerId}">
+                                                <select class="workspace-member-role-edit moyo-member-role-edit" disabled onchange="refreshWorkspaceMemberDirtyState()" aria-label="<c:out value='${member.DISPLAY_NAME}'/> 권한">
+                                                    <option value="MEMBER" ${member.WS_ROLE ne 'ADMIN' ? 'selected' : ''}>멤버</option>
+                                                    <option value="ADMIN" ${member.WS_ROLE eq 'ADMIN' ? 'selected' : ''}>관리자</option>
+                                                </select>
+                                            </c:if>
+                                        </td>
+                                        <td class="wsmt-position-cell moyo-member-position-cell">
+                                            <span class="ws-member-position-summary moyo-member-position ${empty member.POSITION_NAME ? 'is-empty' : ''}">
+                                                <c:choose>
+                                                    <c:when test="${not empty member.POSITION_NAME}"><c:out value="${member.POSITION_NAME}"/></c:when>
+                                                    <c:otherwise>미지정</c:otherwise>
+                                                </c:choose>
+                                            </span>
+                                            <input type="text"
+                                                   class="workspace-member-position-edit moyo-member-position-edit"
+                                                   maxlength="50"
+                                                   oninput="refreshWorkspaceMemberDirtyState()"
+                                                   disabled
+                                                   value="<c:out value='${member.POSITION_NAME}'/>"
+                                                   placeholder="예: 개발, 운영, 기록 등">
+                                        </td>
+                                        <td class="ws-member-joined-cell wsmt-date-cell moyo-member-date-cell">
+                                            <c:choose>
+                                                <c:when test="${not empty member.JOINED_AT}"><c:out value="${member.JOINED_AT}"/></c:when>
+                                                <c:otherwise>-</c:otherwise>
+                                            </c:choose>
+                                        </td>
+                                    </tr>
+                                </c:forEach>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div id="workspaceMemberEmpty" class="workspace-member-empty moyo-member-empty">검색된 멤버가 없습니다.</div>
+
+                    <p class="workspace-member-role-note moyo-member-note" id="workspaceMemberRoleNote" aria-live="polite"></p>
 
                     <c:if test="${not empty pendingInvitationList}">
                         <section class="workspace-pending-invites" id="workspacePendingInviteSection">
@@ -1148,7 +1630,7 @@
                                             <div class="workspace-pending-invite-avatar">
                                                 <c:choose>
                                                     <c:when test="${not empty invite.INVITEE_PROFILE_IMAGE_PATH}">
-                                                        <img src="${invite.INVITEE_PROFILE_IMAGE_PATH}" alt="" onerror="this.remove();">
+                                                        <img src="${invite.INVITEE_PROFILE_IMAGE_PATH}" alt="" onerror="this.closest('.moyo-member-avatar').classList.remove('has-image'); this.closest('.moyo-member-avatar').classList.add('is-default-profile'); this.remove();">
                                                     </c:when>
                                                     <c:otherwise>
                                                         <c:out value="${fn:substring(invite.INVITEE_NAME,0,1)}"/>
@@ -1175,8 +1657,6 @@
             </div>
         </div>
     </main>
-    <jsp:include page="/WEB-INF/views/common/commonWorkspaceInvite.jsp" />
-
 <div id="workspaceImageCropModal" class="signup-profile-modal" hidden role="dialog" aria-modal="true" aria-labelledby="workspaceImageCropTitle">
     <div class="signup-profile-modal-backdrop" data-workspace-image-close></div>
     <div class="signup-profile-modal-dialog">
@@ -1201,6 +1681,7 @@
         </div>
     </div>
 </div>
+<%@ include file="../common/commonMemberActivityProfile.jspf" %>
 <jsp:include page="/WEB-INF/views/common/commonMemberProfile.jsp">
     <jsp:param name="profileScope" value="group"/>
     <jsp:param name="scopeId" value="${workspace.wsId}"/>
@@ -1210,5 +1691,30 @@
 </jsp:include>
 
 <jsp:include page="/WEB-INF/views/common/footer.jsp" />
+
+    <div id="workspaceDeleteRequestModal" class="workspace-delete-request-modal" hidden>
+        <div class="workspace-delete-request-backdrop" onclick="closeWorkspaceDeleteRequestModal()"></div>
+        <section class="workspace-delete-request-dialog" role="dialog" aria-modal="true" aria-labelledby="workspaceDeleteRequestTitle">
+            <button type="button" class="workspace-delete-request-close" aria-label="닫기" onclick="closeWorkspaceDeleteRequestModal()">×</button>
+            <span class="workspace-delete-request-eyebrow">그룹 삭제 신청</span>
+            <h2 id="workspaceDeleteRequestTitle"><c:out value="${workspace.wsName}"/> 그룹을 삭제 신청할까요?</h2>
+            <p class="workspace-delete-request-description">
+                신청 즉시 삭제되지 않습니다. 30일 동안 취소할 수 있고,
+                예정일이 지나면 그룹과 소속 프로젝트가 최종 삭제됩니다.
+            </p>
+            <div class="workspace-delete-request-notice">
+                <strong>삭제 유예기간</strong><span>신청일로부터 30일</span>
+            </div>
+            <label class="workspace-delete-confirm-field">
+                <span>확인을 위해 그룹 이름을 입력하세요.</span>
+                <input type="text" id="workspaceDeleteConfirmName" autocomplete="off" placeholder="<c:out value='${workspace.wsName}'/>">
+            </label>
+            <div class="workspace-delete-request-actions">
+                <button type="button" class="workspace-delete-request-secondary" onclick="closeWorkspaceDeleteRequestModal()">닫기</button>
+                <button type="button" id="workspaceDeleteRequestSubmit" class="workspace-delete-request-primary" onclick="requestWorkspaceDeletion()">삭제 신청</button>
+            </div>
+        </section>
+    </div>
+
 </body>
 </html>

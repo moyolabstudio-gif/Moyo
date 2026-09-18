@@ -14,12 +14,70 @@
     let deleteState = null;
     let lastOptions = {};
     let initialized = false;
+    let calendarRecordModal = null;
+    let currentCalendarRecordDetail = null;
+    let currentCalendarRecordEventId = null;
 
     function contextPath() {
         return window.MOYO_CALENDAR_CONTEXT_PATH
             || document.querySelector('[data-context-path]')?.dataset.contextPath
             || document.body?.dataset.contextPath
             || '';
+    }
+
+    function openCalendarScopedUserProfile(userId, detail) {
+        const id = String(userId || '').trim();
+        if (!id) return;
+
+        const detailWsId = String(
+            getDetailValue(detail || {}, 'profileWsId', 'PROFILE_WS_ID', 'projectWsId', 'PROJECT_WS_ID', 'wsId', 'WS_ID') || ''
+        ).trim();
+        const pageWsId = String(
+            document.body?.dataset?.wsId
+            || window.PROJECT_MAIN_CONFIG?.wsId
+            || window.PROJECT_MAIN_CONFIG?.paramWsId
+            || ''
+        ).trim();
+        const wsId = detailWsId || pageWsId;
+
+        if (wsId) {
+            const activeWsId = String(
+                window.WORKSPACE_CONFIG?.wsId
+                || window.PROJECT_MAIN_CONFIG?.wsId
+                || window.PROJECT_MAIN_CONFIG?.paramWsId
+                || document.body?.dataset?.wsId
+                || ''
+            ).trim();
+            if (activeWsId === wsId && typeof window.openWorkspaceMemberProfile === 'function') {
+                window.openWorkspaceMemberProfile(id);
+                return;
+            }
+            if (typeof window.openProjectMemberProfile === 'function' && window.PROJECT_MAIN_CONFIG?.wsId && String(window.PROJECT_MAIN_CONFIG.wsId) === wsId) {
+                window.openProjectMemberProfile(id);
+                return;
+            }
+            // 일정 상세은 그룹 프로필 데이터를 이미 사용한다. 현재 화면에 그룹 프로필 모달 컨텍스트가 없으면
+            // 잘못된 개인 프로필로 보내지 않고 현재 표시만 유지한다.
+            return;
+        }
+
+        window.location.href = contextPath() + '/users/profile?userId=' + encodeURIComponent(id);
+    }
+
+    function canOpenCalendarScopedUserProfile(detail) {
+        const wsId = String(
+            getDetailValue(detail || {}, 'profileWsId', 'PROFILE_WS_ID', 'projectWsId', 'PROJECT_WS_ID', 'wsId', 'WS_ID') || ''
+        ).trim();
+        if (!wsId) return true;
+        const activeWsId = String(
+            window.WORKSPACE_CONFIG?.wsId
+            || window.PROJECT_MAIN_CONFIG?.wsId
+            || window.PROJECT_MAIN_CONFIG?.paramWsId
+            || document.body?.dataset?.wsId
+            || ''
+        ).trim();
+        return !!activeWsId && activeWsId === wsId
+            && (typeof window.openWorkspaceMemberProfile === 'function' || typeof window.openProjectMemberProfile === 'function');
     }
 
     function mascotPath() {
@@ -84,14 +142,16 @@
         }
 
         setText('calendarViewTitle', title);
-        renderTypeIcon(detail);
+        renderScopeBadge(detail, displayType, isMoyoPublic);
         hideKicker();
         renderMoyoBadge(false);
-        renderAuthor(detail, displayType, isMoyoPublic);
+        renderAuthor(detail);
+        renderAffiliation(detail, displayType);
         renderTime(detail);
         renderLocation(detail);
         renderAttendees(detail);
         renderDescription(detail);
+        renderCalendarRecordSection(detail, eventId);
         setupEditButton(eventId, canEdit, options);
         setupDeleteButton(detail, eventId, canDelete, options);
         setupShareButton(detail, eventId, options);
@@ -103,16 +163,21 @@
     function close() {
         const modal = document.getElementById('calendarViewModal');
         if (modal) modal.hidden = true;
+        currentCalendarRecordDetail = null;
+        currentCalendarRecordEventId = null;
         document.body.classList.remove('moyo-event-view-open');
     }
 
-    function renderTypeIcon(detail) {
-        const typeMeta = getCalendarViewTypeMeta(detail);
-        const typeIconEl = document.getElementById('calendarViewTypeIcon');
-        if (!typeIconEl) return;
-        typeIconEl.textContent = typeMeta.icon;
-        typeIconEl.setAttribute('title', typeMeta.label + ' 일정');
-        typeIconEl.setAttribute('aria-label', typeMeta.label + ' 일정');
+    function renderScopeBadge(detail, displayType, isMoyoPublic) {
+        const badge = document.getElementById('calendarViewScopeBadge');
+        if (!badge) return;
+        let label = '개인';
+        if (displayType === 'FRIEND') label = '친구';
+        if (displayType === 'WS') label = '그룹';
+        if (displayType === 'PROJ') label = '프로젝트';
+        if (isMoyoPublic && (displayType === 'PRIVATE' || displayType === 'FRIEND')) label = 'MOYO 공개';
+        badge.textContent = label;
+        badge.className = 'moyo-event-view-scope-badge scope-' + displayType + (isMoyoPublic ? ' is-moyo-public' : '');
     }
 
     function hideKicker() {
@@ -130,61 +195,93 @@
         if (moyoBadge) moyoBadge.hidden = !visible;
     }
 
-    function renderAuthor(detail, displayType, isMoyoPublic) {
+    function renderAuthor(detail) {
         const row = document.getElementById('calendarViewAuthorRow');
         const avatar = document.getElementById('calendarViewAuthorAvatar');
         const nameEl = document.getElementById('calendarViewAuthorName');
         const scopeEl = document.getElementById('calendarViewAuthorScope');
-        if (!row || !avatar || !nameEl || !scopeEl) return;
+        if (!row || !avatar || !nameEl) return;
 
         const ownerName = calendarViewOwnerName(detail) || '작성자';
-        const ownerImage = normalizeImagePath(calendarViewOwnerImage(detail));
+        const ownerImageRaw = calendarViewOwnerImage(detail);
+        const ownerAvatarType = calendarViewOwnerAvatarType(detail);
+        const ownerImage = ownerAvatarType === 'IMAGE' && isMoyoPersonProfileImage(ownerImageRaw)
+            ? normalizeImagePath(ownerImageRaw)
+            : '';
         const ownerId = calendarViewOwnerId(detail);
-        const scopeLabel = buildCalendarViewScopeLabel(detail, displayType);
-        const showMoyoScope = isMoyoPublic && (displayType === 'PRIVATE' || displayType === 'FRIEND');
         const authorMain = row.querySelector('.moyo-event-view-author-main');
+        const profileLinkEnabled = !!ownerId && canOpenCalendarScopedUserProfile(detail);
 
         row.hidden = false;
         nameEl.textContent = ownerName;
         nameEl.title = ownerName;
-        scopeEl.classList.toggle('is-moyo-public', showMoyoScope);
+        if (scopeEl) {
+            scopeEl.hidden = true;
+            scopeEl.textContent = '';
+        }
 
         if (authorMain) {
-            authorMain.classList.toggle('is-profile-link', !!ownerId);
-            authorMain.setAttribute('role', ownerId ? 'link' : 'presentation');
-            authorMain.tabIndex = ownerId ? 0 : -1;
-            authorMain.onclick = ownerId ? function(event) {
+            authorMain.classList.toggle('is-profile-link', profileLinkEnabled);
+            authorMain.setAttribute('role', profileLinkEnabled ? 'link' : 'presentation');
+            authorMain.tabIndex = profileLinkEnabled ? 0 : -1;
+            authorMain.onclick = profileLinkEnabled ? function(event) {
                 event.preventDefault();
                 event.stopPropagation();
-                window.location.href = contextPath() + '/users/profile?userId=' + encodeURIComponent(ownerId);
+                openCalendarScopedUserProfile(ownerId, detail);
             } : null;
-            authorMain.onkeydown = ownerId ? function(event) {
+            authorMain.onkeydown = profileLinkEnabled ? function(event) {
                 if (event.key !== 'Enter' && event.key !== ' ') return;
                 event.preventDefault();
-                window.location.href = contextPath() + '/users/profile?userId=' + encodeURIComponent(ownerId);
+                openCalendarScopedUserProfile(ownerId, detail);
             } : null;
-            authorMain.title = ownerId ? ownerName + ' 프로필 보기' : '';
+            authorMain.title = profileLinkEnabled ? ownerName + ' 프로필 보기' : '';
         }
 
-        if (showMoyoScope) {
-            scopeEl.innerHTML = '<img src="' + escapeHtml(mascotPath()) + '" alt="" aria-hidden="true"><span class="moyo-public-text">MOYO 공개</span>';
-            scopeEl.title = 'MOYO 공개';
-        } else {
-            scopeEl.textContent = scopeLabel;
-            scopeEl.title = scopeLabel;
+        const initial = escapeHtml(String(ownerName || '?').trim().slice(0, 1) || '?');
+        avatar.classList.remove('has-image', 'is-default-profile');
+        avatar.classList.add(ownerImage ? 'has-image' : 'is-default-profile');
+        avatar.innerHTML = (ownerImage
+            ? '<img src="' + escapeHtml(ownerImage) + '" alt="' + escapeHtml(ownerName) + ' 프로필" loading="lazy" decoding="async">'
+            : '')
+            + '<span class="moyo-member-avatar-fallback">' + initial + '</span>';
+        const img = avatar.querySelector('img');
+        if (img) {
+            img.onload = function() {
+                if (window.CommonMemberWidget && typeof window.CommonMemberWidget.applyAvatarImagePolicy === 'function') {
+                    window.CommonMemberWidget.applyAvatarImagePolicy(img);
+                    return;
+                }
+                avatar.classList.add('has-image');
+                avatar.classList.remove('is-default-profile');
+            };
+            img.onerror = function() {
+                if (window.CommonMemberWidget && typeof window.CommonMemberWidget.handleAvatarError === 'function') {
+                    window.CommonMemberWidget.handleAvatarError(img);
+                    return;
+                }
+                img.remove();
+                avatar.classList.remove('has-image');
+                avatar.classList.add('is-default-profile');
+            };
         }
+    }
 
-        if (ownerImage) {
-            avatar.innerHTML = '<img src="' + escapeHtml(ownerImage) + '" alt="" loading="lazy">';
-            const img = avatar.querySelector('img');
-            if (img) {
-                img.onerror = function() {
-                    avatar.innerHTML = '<b>' + escapeHtml(String(ownerName || '?').slice(0, 1)) + '</b>';
-                };
-            }
-        } else {
-            avatar.innerHTML = '<b>' + escapeHtml(String(ownerName || '?').slice(0, 1)) + '</b>';
+    function renderAffiliation(detail, displayType) {
+        const section = document.getElementById('calendarViewAffiliationSection');
+        const box = document.getElementById('calendarViewAffiliation');
+        if (!section || !box) return;
+        if (displayType !== 'WS' && displayType !== 'PROJ') {
+            section.hidden = true;
+            box.textContent = '';
+            return;
         }
+        const wsName = getDetailValue(detail, 'projectWorkspaceName', 'PROJECT_WORKSPACE_NAME', 'wsName', 'WS_NAME', 'workspaceName', 'WORKSPACE_NAME') || '';
+        const projName = getDetailValue(detail, 'projName', 'PROJ_NAME', 'projectName', 'PROJECT_NAME') || '';
+        const text = displayType === 'PROJ'
+            ? [wsName, projName].filter(Boolean).join(' > ')
+            : wsName;
+        box.textContent = text || (displayType === 'PROJ' ? '프로젝트' : '그룹');
+        section.hidden = false;
     }
 
     function renderTime(detail) {
@@ -196,41 +293,42 @@
         const isLunar = getDetailValue(detail, 'isLunar', 'IS_LUNAR') === 'Y';
         const timezone = getDetailValue(detail, 'timezone', 'TIMEZONE') || 'Asia/Seoul';
         const repeat = buildRepeatSummary(detail);
-        const chips = [];
-        if (isAllDay) chips.push('<span class="moyo-event-view-time-chip all-day">종일</span>');
-        chips.push('<span class="moyo-event-view-time-chip">' + escapeHtml(isLunar ? '음력' : '양력') + '</span>');
-        chips.push('<span class="moyo-event-view-time-chip">' + escapeHtml(formatTimezoneLabel(timezone)) + '</span>');
-        if (repeat) chips.push('<span class="moyo-event-view-time-chip repeat">' + escapeHtml(repeat) + '</span>');
 
-        let periodHtml = '';
+        let dateMain = '';
+        let timeSub = '';
         if (isAllDay && start.date === end.date) {
-            periodHtml = '<div class="moyo-event-view-time-line start is-all-day-single">'
-                + '<span class="time-label">일자</span>'
-                + '<strong class="time-main">' + escapeHtml(start.date) + '<span class="time-clock all-day">종일</span></strong>'
-                + '</div>';
+            dateMain = start.date;
+            timeSub = '종일';
         } else if (isAllDay) {
-            periodHtml = '<div class="moyo-event-view-time-line start is-all-day">'
-                + '<span class="time-label">시작</span>'
-                + '<strong class="time-main">' + escapeHtml(start.date) + '</strong>'
-                + '</div>'
-                + '<div class="moyo-event-view-time-line end is-all-day">'
-                + '<span class="time-label">종료</span>'
-                + '<strong class="time-main">' + escapeHtml(end.date) + '</strong>'
-                + '</div>';
+            dateMain = start.date + ' ~ ' + end.date;
+            timeSub = '종일';
+        } else if (start.date === end.date) {
+            dateMain = start.date;
+            timeSub = start.ampm + ' ' + start.time + ' ~ ' + end.ampm + ' ' + end.time;
         } else {
-            periodHtml = '<div class="moyo-event-view-time-line start">'
-                + '<span class="time-label">시작</span>'
-                + '<strong class="time-main">' + escapeHtml(start.date) + '<span class="time-clock">' + escapeHtml(start.ampm + ' ' + start.time) + '</span></strong>'
-                + '</div>'
-                + '<div class="moyo-event-view-time-line end">'
-                + '<span class="time-label">종료</span>'
-                + '<strong class="time-main">' + escapeHtml(end.date) + '<span class="time-clock">' + escapeHtml(end.ampm + ' ' + end.time) + '</span></strong>'
-                + '</div>';
+            dateMain = start.date + ' ~ ' + end.date;
+            timeSub = start.ampm + ' ' + start.time + ' ~ ' + end.ampm + ' ' + end.time;
         }
 
-        box.innerHTML = '<div class="moyo-event-view-time-list">'
-            + '<div class="moyo-event-view-time-period">' + periodHtml + '</div>'
-            + '<div class="moyo-event-view-time-meta">' + chips.join('') + '</div>'
+        const meta = [];
+        if (timezone && timezone !== 'Asia/Seoul') meta.push(formatTimezoneLabel(timezone));
+        if (repeat) meta.push(repeat);
+
+        const calendarLabel = isLunar ? '음력' : '양력';
+        const calendarTypeIcon = isLunar ? 'fa-regular fa-moon' : 'fa-regular fa-sun';
+        const subItems = [];
+        if (timeSub) subItems.push('<span>' + escapeHtml(timeSub) + '</span>');
+        if (meta.length) subItems.push('<span>' + escapeHtml(meta.join(' · ')) + '</span>');
+
+        box.innerHTML = '<div class="moyo-event-view-time-compact">'
+            + '<span class="moyo-event-view-calendar-icon" aria-hidden="true"><i class="fa-regular fa-calendar"></i></span>'
+            + '<span class="moyo-event-view-time-copy">'
+            + '<span class="moyo-event-view-date-main">'
+            + '<strong>' + escapeHtml(dateMain || '-') + '</strong>'
+            + '<span class="moyo-event-view-calendar-type" title="' + calendarLabel + '" aria-label="' + calendarLabel + '"><i class="' + calendarTypeIcon + '" aria-hidden="true"></i></span>'
+            + '</span>'
+            + (subItems.length ? '<small>' + subItems.join('<span class="moyo-event-view-time-separator">·</span>') + '</small>' : '')
+            + '</span>'
             + '</div>';
     }
 
@@ -254,27 +352,83 @@
     function renderAttendees(detail) {
         const section = document.getElementById('calendarViewAttendeesSection');
         const box = document.getElementById('calendarViewAttendees');
+        const moreButton = document.getElementById('calendarViewAttendeeMore');
+        const list = document.getElementById('calendarViewAttendeeList');
         if (!box) return;
         const attendees = normalizeDetailArray(getDetailValue(detail, 'attendees', 'ATTENDEES'));
         if (section) section.hidden = !attendees.length;
         if (!attendees.length) {
             box.innerHTML = '';
+            if (moreButton) moreButton.hidden = true;
+            if (list) { list.hidden = true; list.innerHTML = ''; }
             return;
         }
-        box.innerHTML = attendees.map(function(item) {
-            const name = calendarViewAttendeeName(item);
-            const typeClass = calendarViewAttendeeTypeClass(item);
-            const userId = calendarViewAttendeeUserId(item);
-            const linkAttrs = userId
-                ? ' data-profile-user-id="' + escapeHtml(userId) + '" role="link" tabindex="0" aria-label="' + escapeHtml(name) + ' 프로필 보기"'
-                : '';
-            const linkClass = userId ? ' is-profile-link' : '';
-            return '<span class="moyo-event-view-person note-share-chip moyo-attendee-chip ' + typeClass + linkClass + '" title="' + escapeHtml(userId ? name + ' 프로필 보기' : name) + '"' + linkAttrs + '>'
-                + calendarViewAttendeeAvatar(item, name)
-                + '<span class="note-share-chip-name moyo-attendee-chip-name" title="' + escapeHtml(name) + '">' + escapeHtml(name) + '</span>'
-                + '</span>';
-        }).join('');
-        bindAttendeeProfileLinks(box);
+
+        const representative = attendees[0];
+        const representativeName = calendarViewAttendeeName(representative);
+        const visiblePeople = attendees.slice(0, 3);
+        const remainCount = Math.max(0, attendees.length - visiblePeople.length);
+        const summaryName = attendees.length > 1
+            ? representativeName + ' 외 ' + (attendees.length - 1) + '명'
+            : representativeName;
+        const summaryMeta = attendees.length + '명 참석';
+
+        const stackHtml = '<span class="moyo-event-view-attendee-stack">'
+            + visiblePeople.map(function(item) {
+                const name = calendarViewAttendeeName(item);
+                const userId = calendarViewAttendeeUserId(item);
+                const profileLinkEnabled = !!userId && canOpenCalendarScopedUserProfile(detail);
+                const attrs = profileLinkEnabled
+                    ? ' data-profile-user-id="' + escapeHtml(userId) + '" role="button" tabindex="0" aria-label="' + escapeHtml(name) + ' 프로필 보기" title="' + escapeHtml(name) + ' 프로필 보기"'
+                    : ' title="' + escapeHtml(name) + '"';
+                return '<span class="moyo-event-view-attendee-avatar-link' + (profileLinkEnabled ? ' is-profile-link' : '') + '"' + attrs + '>'
+                    + calendarViewAttendeeAvatar(item, name)
+                    + '</span>';
+            }).join('')
+            + (remainCount ? '<span class="moyo-event-view-attendee-remain">+' + remainCount + '</span>' : '')
+            + '</span>';
+
+        box.innerHTML = stackHtml
+            + '<span class="moyo-event-view-attendee-copy">'
+            + '<b>' + escapeHtml(summaryName) + '</b>'
+            + '<small>' + escapeHtml(summaryMeta) + '</small>'
+            + '</span>';
+
+        if (moreButton) {
+            const showMore = attendees.length > 1;
+            moreButton.hidden = !showMore;
+            moreButton.style.display = showMore ? '' : 'none';
+            moreButton.textContent = '전체 보기';
+            moreButton.setAttribute('aria-expanded', 'false');
+        }
+
+        if (list) {
+            list.hidden = true;
+            list.innerHTML = attendees.map(function(item) {
+                const name = calendarViewAttendeeName(item);
+                const userId = calendarViewAttendeeUserId(item);
+                const profileLinkEnabled = !!userId && canOpenCalendarScopedUserProfile(detail);
+                const linkAttrs = profileLinkEnabled
+                    ? ' data-profile-user-id="' + escapeHtml(userId) + '" role="button" tabindex="0" aria-label="' + escapeHtml(name) + ' 프로필 보기"'
+                    : '';
+                return '<div class="moyo-event-view-attendee-person' + (profileLinkEnabled ? ' is-profile-link' : '') + '"' + linkAttrs + '>'
+                    + calendarViewAttendeeAvatar(item, name)
+                    + '<span><b>' + escapeHtml(name) + '</b><small>참석자</small></span>'
+                    + '</div>';
+            }).join('');
+        }
+        bindAttendeeProfileLinks(box, detail);
+        if (list) bindAttendeeProfileLinks(list, detail);
+    }
+
+    function toggleCalendarViewAttendeeList() {
+        const list = document.getElementById('calendarViewAttendeeList');
+        const button = document.getElementById('calendarViewAttendeeMore');
+        if (!list || !button) return;
+        const willOpen = list.hidden;
+        list.hidden = !willOpen;
+        button.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+        button.textContent = willOpen ? '접기' : '전체 보기';
     }
 
     function renderDescription(detail) {
@@ -284,6 +438,189 @@
         const text = getDetailValue(detail, 'descriptionText', 'DESCRIPTION_TEXT') || '';
         if (section) section.hidden = !text;
         box.textContent = text;
+    }
+
+
+    function calendarRecordValue(detail, camel, upper) {
+        return getDetailValue(detail, camel, upper);
+    }
+
+    function isCalendarRecordEnabled(detail) {
+        return String(calendarRecordValue(detail, 'recordEnabledYn', 'RECORD_ENABLED_YN') || 'N').toUpperCase() === 'Y';
+    }
+
+    function calendarRecordContext(detail) {
+        const projId = Number(calendarRecordValue(detail, 'projId', 'PROJ_ID') || 0);
+        const wsId = Number(calendarRecordValue(detail, 'wsId', 'WS_ID') || 0);
+        if (projId > 0) return { contextType: 'PROJECT', contextId: projId, photoScopeType: 'PROJECT', photoScopeId: projId, visibilityType: 'PROJECT' };
+        if (wsId > 0) return { contextType: 'GROUP', contextId: wsId, photoScopeType: 'WORKSPACE', photoScopeId: wsId, visibilityType: 'WORKSPACE' };
+        const ownerId = Number(calendarViewOwnerId(detail) || window.MOYO_CALENDAR_SESSION_USER_ID || document.body?.dataset?.currentUserId || 0);
+        return { contextType: 'PERSONAL', contextId: null, photoScopeType: 'PERSONAL', photoScopeId: ownerId, visibilityType: 'PRIVATE' };
+    }
+
+    function calendarRecordType(item) {
+        const raw = String(getDetailValue(item, 'recordType', 'RECORD_TYPE', 'contentType', 'CONTENT_TYPE') || '').toUpperCase();
+        return raw === 'PHOTO_POST' ? 'PHOTO' : raw;
+    }
+
+    function emptyCalendarRecordCounts() {
+        return { NOTE: 0, PHOTO: 0, FILE: 0, LINK: 0, LOCATION: 0 };
+    }
+
+    function renderCalendarRecordCounts(items) {
+        const wrap = document.getElementById('calendarViewRecordCounts');
+        if (!wrap) return;
+        const counts = emptyCalendarRecordCounts();
+        (Array.isArray(items) ? items : []).forEach(function(item) {
+            const type = calendarRecordType(item);
+            if (Object.prototype.hasOwnProperty.call(counts, type)) counts[type] += 1;
+        });
+        const defs = [
+            ['NOTE', 'fa-regular fa-note-sticky', '노트'],
+            ['PHOTO', 'fa-regular fa-image', '사진'],
+            ['FILE', 'fa-solid fa-paperclip', '파일'],
+            ['LINK', 'fa-solid fa-link', '링크'],
+            ['LOCATION', 'fa-solid fa-location-dot', '장소']
+        ];
+        wrap.innerHTML = defs.map(function(def) {
+            return '<button type="button" class="moyo-event-view-record-shortcut" data-calendar-record-type="' + def[0]
+                + '" title="' + def[2] + ' 바로 열기" aria-label="' + def[2] + ' ' + counts[def[0]] + '개, 바로 열기">'
+                + '<i class="' + def[1] + '" aria-hidden="true"></i><b>' + counts[def[0]] + '</b></button>';
+        }).join('');
+    }
+
+    async function getExistingCalendarRecordTarget(eventId) {
+        const response = await fetch(contextPath() + '/api/content-records/target?targetType=EVENT&targetId=' + encodeURIComponent(eventId), {
+            credentials: 'same-origin'
+        });
+        if (!response.ok) return null;
+        return response.json().catch(function() { return null; });
+    }
+
+    async function ensureCalendarRecordTarget(detail, eventId) {
+        const context = calendarRecordContext(detail);
+        const response = await fetch(contextPath() + '/api/content-records/target', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'same-origin',
+            body: JSON.stringify({
+                targetType: 'EVENT',
+                targetId: Number(eventId),
+                contextType: context.contextType,
+                contextId: context.contextId
+            })
+        });
+        const body = await response.json().catch(function() { return null; });
+        if (!response.ok) throw new Error((body && (body.message || body.error)) || '일정 기록 대상을 준비하지 못했습니다.');
+        return body;
+    }
+
+    async function loadCalendarRecordSummary(detail, eventId) {
+        const section = document.getElementById('calendarViewRecordSection');
+        if (!section || !eventId) return;
+        renderCalendarRecordCounts([]);
+        try {
+            const target = await getExistingCalendarRecordTarget(eventId);
+            if (!target) return;
+            const recordTargetId = Number(getDetailValue(target, 'recordTargetId', 'RECORD_TARGET_ID') || 0);
+            if (!recordTargetId) return;
+            const response = await fetch(contextPath() + '/api/content-records/' + encodeURIComponent(recordTargetId) + '/items', {
+                credentials: 'same-origin'
+            });
+            if (!response.ok) throw new Error('일정 기록을 불러오지 못했습니다.');
+            const items = await response.json();
+            if (String(currentCalendarRecordEventId) === String(eventId)) renderCalendarRecordCounts(items);
+        } catch (error) {
+            console.warn('[일정 상세] 기록 개수 조회 실패:', error);
+            if (String(currentCalendarRecordEventId) === String(eventId)) renderCalendarRecordCounts([]);
+        }
+    }
+
+    function renderCalendarRecordSection(detail, eventId) {
+        const section = document.getElementById('calendarViewRecordSection');
+        if (!section) return;
+        const available = !!eventId;
+        currentCalendarRecordDetail = available ? detail : null;
+        currentCalendarRecordEventId = available ? eventId : null;
+        section.hidden = !available;
+        renderCalendarRecordCounts([]);
+        if (available) loadCalendarRecordSummary(detail, eventId);
+    }
+
+    async function openCalendarRecordViewer(recordType) {
+        if (!currentCalendarRecordDetail || !currentCalendarRecordEventId) return;
+        try {
+            initCalendarRecordModal();
+            if (!calendarRecordModal) throw new Error('공통 기록 모달을 불러오지 못했습니다.');
+            const target = await ensureCalendarRecordTarget(currentCalendarRecordDetail, currentCalendarRecordEventId);
+            const recordTargetId = Number(getDetailValue(target, 'recordTargetId', 'RECORD_TARGET_ID') || 0);
+            if (!recordTargetId) throw new Error('일정 기록 대상을 확인할 수 없습니다.');
+            const title = getDetailValue(currentCalendarRecordDetail, 'title', 'TITLE') || '일정';
+            calendarRecordModal.open({
+                recordTargetId: recordTargetId,
+                targetLabel: String(title),
+                activeType: String(recordType || 'NOTE').toUpperCase()
+            });
+        } catch (error) {
+            alert(error && error.message ? error.message : '기록을 열지 못했습니다.');
+        }
+    }
+
+    function initCalendarRecordModal() {
+        if (calendarRecordModal || !window.CommonContentRecordModal?.create) return;
+        calendarRecordModal = window.CommonContentRecordModal.create({
+            contextPath: contextPath(),
+            onChanged: async function() {
+                if (currentCalendarRecordDetail && currentCalendarRecordEventId) {
+                    await loadCalendarRecordSummary(currentCalendarRecordDetail, currentCalendarRecordEventId);
+                }
+            },
+            onCreatePhoto: async function(payload) {
+                if (!currentCalendarRecordDetail || !currentCalendarRecordEventId) throw new Error('일정 정보를 확인할 수 없습니다.');
+                const recordTargetId = Number(payload && payload.recordTargetId || 0);
+                const formData = payload && payload.formData;
+                const context = calendarRecordContext(currentCalendarRecordDetail);
+                if (!recordTargetId || !context.photoScopeId) throw new Error('사진 저장 위치를 확인할 수 없습니다.');
+                const files = formData ? formData.getAll('files').filter(function(file) { return file instanceof File && file.size > 0; }) : [];
+                if (!files.length) throw new Error('등록할 사진을 선택해주세요.');
+
+                const requestJson = async function(url, options) {
+                    const response = await fetch(contextPath() + url, Object.assign({ credentials: 'same-origin' }, options || {}));
+                    const body = await response.json().catch(function() { return null; });
+                    if (!response.ok) throw new Error((body && (body.message || body.error)) || '사진을 저장하지 못했습니다.');
+                    return body;
+                };
+
+                const title = String(getDetailValue(currentCalendarRecordDetail, 'title', 'TITLE') || '일정').trim();
+                const album = await requestJson('/api/content-records/' + encodeURIComponent(recordTargetId) + '/photo-album', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ albumName: title })
+                });
+                const albumId = Number(album && (album.albumId || album.ALBUM_ID));
+                if (!albumId) throw new Error('기록 사진 앨범을 준비하지 못했습니다.');
+
+                const upload = new FormData();
+                upload.append('scopeType', context.photoScopeType);
+                upload.append('scopeId', String(context.photoScopeId));
+                upload.append('albumId', String(albumId));
+                upload.append('title', title);
+                upload.append('description', '');
+                upload.append('visibilityType', context.visibilityType);
+                files.forEach(function(file) { upload.append('files', file); });
+
+                const post = await requestJson('/api/photo-posts', { method: 'POST', body: upload });
+                const postId = Number(post && (post.postId || post.POST_ID));
+                if (!postId) throw new Error('사진 게시물 정보를 확인하지 못했습니다.');
+
+                await requestJson('/api/content-records/' + encodeURIComponent(recordTargetId) + '/contents', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ recordType: 'PHOTO', contentId: postId, title: title })
+                });
+            }
+        });
+        window.moyoCommonContentRecordModal = calendarRecordModal;
     }
 
     function setupEditButton(eventId, canEdit, options) {
@@ -319,46 +656,13 @@
     function setupShareButton(detail, eventId, options) {
         const shareBtn = document.getElementById('calendarViewShareBtn');
         if (!shareBtn) return;
+
+        // 일정의 공유 대상/편집 권한은 "참석자"에서 한 번에 관리한다.
+        // 개인 일정: 참석자 = 공유 대상, 참석자 권한(VIEW/EDIT) = 일정/기록 권한.
+        // 그룹/프로젝트 일정: 공간 멤버는 기본 조회 가능하며 참석자의 EDIT만 추가 권한이다.
+        // 따라서 일정 상세에서 별도 공유 모달을 열지 않는다.
         shareBtn.hidden = true;
         shareBtn.onclick = null;
-        if (!eventId || options.showActions === false) return;
-
-        const hiddenOpen = document.getElementById('calendarViewShareOpenHidden');
-        const modal = document.getElementById('calendarViewShareModal');
-        if (!hiddenOpen || !modal) return;
-
-        const ownerYn = getDetailValue(detail, 'ownerYn', 'OWNER_YN') === 'Y';
-        const canEdit = getDetailValue(detail, 'canEditYn', 'CAN_EDIT_YN') === 'Y';
-        const relation = String(getDetailValue(detail, 'shareRelation', 'SHARE_RELATION') || 'NORMAL').toUpperCase();
-        const shareStatus = String(getDetailValue(detail, 'shareStatus', 'SHARE_STATUS') || '').toUpperCase();
-        const shareId = String(getDetailValue(detail, 'shareId', 'SHARE_ID') || '').trim();
-        const receivedShare = !ownerYn && (relation !== 'NORMAL' && relation !== 'OWNER' || !!shareId || shareStatus === 'ACCEPTED' || shareStatus === 'PENDING' || canEdit);
-        const visible = ownerYn || receivedShare;
-        if (!visible) return;
-
-        const readonlyShare = !ownerYn;
-        function syncDataset() {
-            hiddenOpen.dataset.shareContentId = String(eventId);
-            hiddenOpen.dataset.readonlyShare = readonlyShare ? 'true' : 'false';
-            hiddenOpen.dataset.shareRelation = relation;
-            hiddenOpen.dataset.shareStatus = shareStatus;
-            hiddenOpen.dataset.shareId = shareId;
-            modal.dataset.contentId = String(eventId);
-            modal.dataset.readonlyShare = readonlyShare ? 'true' : 'false';
-            modal.dataset.shareRelation = relation;
-            modal.dataset.shareStatus = shareStatus;
-            modal.dataset.shareId = shareId;
-            modal.classList.toggle('is-calendar-received-share', readonlyShare);
-        }
-
-        syncDataset();
-        shareBtn.hidden = false;
-        shareBtn.onclick = function(event) {
-            event.preventDefault();
-            event.stopPropagation();
-            syncDataset();
-            hiddenOpen.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, view: window }));
-        };
     }
 
     function openDeleteModal(detail, eventId, options) {
@@ -405,6 +709,9 @@
             close();
             deleteState = null;
             if (typeof options.onDeleted === 'function') options.onDeleted();
+            document.dispatchEvent(new CustomEvent('moyo:calendar-event-deleted', {
+                detail: { eventId: deleteState?.eventId || '' }
+            }));
         }).catch(function(error) {
             alert(error && error.message ? error.message : '일정을 삭제하지 못했습니다.');
         });
@@ -444,6 +751,21 @@
 
         const confirmBtn = document.getElementById('calendarViewDeleteConfirm');
         if (confirmBtn) confirmBtn.addEventListener('click', performDelete);
+
+        initCalendarRecordModal();
+        const recordButton = document.getElementById('calendarViewRecordBtn');
+        if (recordButton) recordButton.addEventListener('click', function() { openCalendarRecordViewer('NOTE'); });
+        const attendeeMoreButton = document.getElementById('calendarViewAttendeeMore');
+        if (attendeeMoreButton) attendeeMoreButton.addEventListener('click', toggleCalendarViewAttendeeList);
+
+        const recordCounts = document.getElementById('calendarViewRecordCounts');
+        if (recordCounts) {
+            recordCounts.addEventListener('click', function(event) {
+                const shortcut = event.target.closest('[data-calendar-record-type]');
+                if (!shortcut) return;
+                openCalendarRecordViewer(shortcut.dataset.calendarRecordType);
+            });
+        }
 
         document.addEventListener('click', function(event) {
             const opener = event.target && event.target.closest ? event.target.closest('[data-open-calendar-event-preview], [data-open-calendar-event-detail]') : null;
@@ -515,6 +837,10 @@
 
     function calendarViewOwnerImage(detail) {
         return getDetailValue(detail, 'ownerProfileImagePath', 'OWNER_PROFILE_IMAGE_PATH', 'ownerImagePath', 'OWNER_IMAGE_PATH', 'writerProfileImagePath', 'WRITER_PROFILE_IMAGE_PATH', 'writerImagePath', 'WRITER_IMAGE_PATH', 'creatorProfileImagePath', 'CREATOR_PROFILE_IMAGE_PATH', 'profileImagePath', 'PROFILE_IMAGE_PATH', 'userProfileImagePath', 'USER_PROFILE_IMAGE_PATH', 'userImagePath', 'USER_IMAGE_PATH', 'imagePath', 'IMAGE_PATH') || '';
+    }
+
+    function calendarViewOwnerAvatarType(detail) {
+        return String(getDetailValue(detail, 'ownerAvatarType', 'OWNER_AVATAR_TYPE', 'profileAvatarType', 'PROFILE_AVATAR_TYPE') || 'DEFAULT').toUpperCase();
     }
 
     function buildCalendarViewScopeLabel(detail, displayType) {
@@ -638,20 +964,20 @@
         return item.userId || item.USER_ID || item.memberId || item.MEMBER_ID || item.attendeeUserId || item.ATTENDEE_USER_ID || item.targetUserId || item.TARGET_USER_ID || '';
     }
 
-    function bindAttendeeProfileLinks(box) {
+    function bindAttendeeProfileLinks(box, detail) {
         box.querySelectorAll('.moyo-attendee-chip.is-profile-link[data-profile-user-id]').forEach(function(chip) {
             const userId = chip.getAttribute('data-profile-user-id');
             if (!userId) return;
             chip.onclick = function(event) {
                 event.preventDefault();
                 event.stopPropagation();
-                window.location.href = contextPath() + '/users/profile?userId=' + encodeURIComponent(userId);
+                openCalendarScopedUserProfile(userId, detail);
             };
             chip.onkeydown = function(event) {
                 if (event.key !== 'Enter' && event.key !== ' ') return;
                 event.preventDefault();
                 event.stopPropagation();
-                window.location.href = contextPath() + '/users/profile?userId=' + encodeURIComponent(userId);
+                openCalendarScopedUserProfile(userId, detail);
             };
         });
     }
@@ -672,11 +998,24 @@
 
     function calendarViewAttendeeAvatar(item, name) {
         const typeClass = calendarViewAttendeeTypeClass(item);
-        const imagePath = normalizeImagePath(calendarViewAttendeeImage(item));
+        const rawImagePath = calendarViewAttendeeImage(item);
+        const avatarType = String(item.profileAvatarType || item.PROFILE_AVATAR_TYPE || item.avatarType || item.AVATAR_TYPE || 'DEFAULT').toUpperCase();
+        const imagePath = avatarType === 'IMAGE' && isMoyoPersonProfileImage(rawImagePath)
+            ? normalizeImagePath(rawImagePath)
+            : '';
         if (imagePath) {
-            return '<span class="note-write-share-avatar note-share-avatar ' + typeClass + '"><img src="' + escapeHtml(imagePath) + '" alt=""></span>';
+            return '<span class="note-write-share-avatar note-share-avatar ' + typeClass + '"><img src="' + escapeHtml(imagePath) + '" alt="" loading="lazy" decoding="async" onload="window.CommonMemberWidget&&CommonMemberWidget.applyAvatarImagePolicy(this)" onerror="window.CommonMemberWidget?CommonMemberWidget.handleAvatarError(this):this.remove()"></span>';
         }
         return '<span class="note-write-share-avatar note-share-avatar ' + typeClass + ' is-fallback"><b>' + escapeHtml(String(name || '?').slice(0, 1)) + '</b></span>';
+    }
+
+    function isMoyoPersonProfileImage(path) {
+        if (!path) return false;
+        const value = String(path).trim();
+        if (!value) return false;
+        // 현재 MOYO 사람 프로필 이미지는 사용자/그룹 프로필 업로드 경로만 사용한다.
+        // 과거 기본 인물 이미지(/images/... 등)는 실제 사용자 사진으로 취급하지 않는다.
+        return /(?:^|\/)uploads\/(?:users|workspace)\//i.test(value);
     }
 
     function normalizeImagePath(path) {

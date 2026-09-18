@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <mapper namespace="com.springboot.project.dao.IprojectDAO">
 
     <!--
-        이 파일은 업무 1개 = 담당자 1명 구조를 유지합니다.
-        EVENTS.USER_ID = 담당자
-        EVENTS.TASK_TIME_SLOT = 오전/오후/종일 구분
+        업무 원본은 PROJECT_TASKS 하나만 사용합니다.
+        PROJECT_TASKS.ASSIGNEE_ID = 담당자 사용자 ID
+        달력은 업무를 복제하지 않고 PROJECT_TASKS를 조회해 변환합니다.
     -->
 
     <insert id="insertProject" parameterType="com.springboot.project.dto.projectRequestDTO">
@@ -62,11 +62,11 @@
 
     
     <update id="reassignMemberTasksToLeader">
-        UPDATE EVENTS
-           SET USER_ID = #{leaderId, jdbcType=NUMERIC}
+        UPDATE PROJECT_TASKS
+           SET ASSIGNEE_ID = #{leaderId, jdbcType=NUMERIC},
+               UPDATED_AT = SYSDATE
          WHERE PROJ_ID = #{projId, jdbcType=NUMERIC}
-           AND USER_ID = #{userId, jdbcType=NUMERIC}
-           AND ITEM_TYPE = 'TASK'
+           AND ASSIGNEE_ID = #{userId, jdbcType=NUMERIC}
     </update>
 
     <delete id="deleteProjectMember">
@@ -93,7 +93,11 @@
                     THEN wp.PROFILE_IMAGE_PATH
                 ELSE u.PROFILE_IMAGE_PATH
             END AS "profileImagePath",
-            NVL(wp.CONTACT_EMAIL, u.EMAIL) AS "EMAIL",
+            CASE
+                WHEN NVL(wp.SHOW_EMAIL, 'Y') = 'Y'
+                    THEN NVL(wp.CONTACT_EMAIL, u.EMAIL)
+                ELSE NULL
+            END AS "EMAIL",
             wm.WS_ROLE AS "WS_ROLE",
             wp.POSITION_NAME AS "WS_POSITION"
         FROM WS_MEMBERS wm
@@ -126,20 +130,70 @@
                     THEN NVL(wp.DISPLAY_NAME, u.USER_NAME)
                 ELSE u.USER_NAME
             END AS "USER_NAME",
-            NVL(wp.CONTACT_EMAIL, u.EMAIL) AS "EMAIL",
             CASE
-                WHEN NVL(wp.USE_ACCOUNT_PROFILE, 'Y') = 'N'
-                    THEN wp.PROFILE_IMAGE_PATH
-                ELSE u.PROFILE_IMAGE_PATH
+                WHEN NVL(wp.SHOW_EMAIL, 'Y') = 'Y'
+                    THEN NVL(wp.CONTACT_EMAIL, u.EMAIL)
+                ELSE NULL
+            END AS "EMAIL",
+            CASE
+                WHEN pr.WS_ID IS NOT NULL AND NVL(wp.USE_ACCOUNT_PROFILE, 'Y') = 'N'
+                    THEN CASE
+                        WHEN (wp.PROFILE_IMAGE_PATH IS NOT NULL OR wp.PROFILE_IMAGE_ORIGINAL_PATH IS NOT NULL)
+                         AND NOT (UPPER(NVL(u.PROFILE_AVATAR_TYPE, 'DEFAULT')) = 'DEFAULT'
+                                  AND NVL(wp.PROFILE_IMAGE_PATH, '#') = NVL(u.PROFILE_IMAGE_PATH, '#')
+                                  AND NVL(wp.PROFILE_IMAGE_ORIGINAL_PATH, '#') = NVL(u.PROFILE_ORIGINAL_IMAGE_PATH, '#'))
+                            THEN wp.PROFILE_IMAGE_PATH
+                    END
+                ELSE CASE WHEN UPPER(NVL(u.PROFILE_AVATAR_TYPE, 'DEFAULT')) = 'IMAGE' THEN u.PROFILE_IMAGE_PATH END
             END AS "PROFILE_IMAGE_PATH",
             CASE
-                WHEN NVL(wp.USE_ACCOUNT_PROFILE, 'Y') = 'N'
-                    THEN wp.PROFILE_IMAGE_PATH
-                ELSE u.PROFILE_IMAGE_PATH
+                WHEN pr.WS_ID IS NOT NULL AND NVL(wp.USE_ACCOUNT_PROFILE, 'Y') = 'N'
+                    THEN CASE
+                        WHEN (wp.PROFILE_IMAGE_PATH IS NOT NULL OR wp.PROFILE_IMAGE_ORIGINAL_PATH IS NOT NULL)
+                         AND NOT (UPPER(NVL(u.PROFILE_AVATAR_TYPE, 'DEFAULT')) = 'DEFAULT'
+                                  AND NVL(wp.PROFILE_IMAGE_PATH, '#') = NVL(u.PROFILE_IMAGE_PATH, '#')
+                                  AND NVL(wp.PROFILE_IMAGE_ORIGINAL_PATH, '#') = NVL(u.PROFILE_ORIGINAL_IMAGE_PATH, '#'))
+                            THEN wp.PROFILE_IMAGE_PATH
+                    END
+                ELSE CASE WHEN UPPER(NVL(u.PROFILE_AVATAR_TYPE, 'DEFAULT')) = 'IMAGE' THEN u.PROFILE_IMAGE_PATH END
             END AS "profileImagePath",
+            CASE
+                WHEN pr.WS_ID IS NOT NULL AND NVL(wp.USE_ACCOUNT_PROFILE, 'Y') = 'N'
+                    THEN wp.PROFILE_IMAGE_ORIGINAL_PATH
+                ELSE u.PROFILE_ORIGINAL_IMAGE_PATH
+            END AS "PROFILE_ORIGINAL_IMAGE_PATH",
+            CASE
+                WHEN pr.WS_ID IS NOT NULL AND NVL(wp.USE_ACCOUNT_PROFILE, 'Y') = 'N'
+                    THEN NVL(wp.PROFILE_IMAGE_CROP_SCALE, 1)
+                ELSE NVL(u.PROFILE_CROP_SCALE, 1)
+            END AS "PROFILE_CROP_SCALE",
+            CASE
+                WHEN pr.WS_ID IS NOT NULL AND NVL(wp.USE_ACCOUNT_PROFILE, 'Y') = 'N'
+                    THEN NVL(wp.PROFILE_IMAGE_CROP_X, 0)
+                ELSE NVL(u.PROFILE_CROP_X, 0)
+            END AS "PROFILE_CROP_X",
+            CASE
+                WHEN pr.WS_ID IS NOT NULL AND NVL(wp.USE_ACCOUNT_PROFILE, 'Y') = 'N'
+                    THEN NVL(wp.PROFILE_IMAGE_CROP_Y, 0)
+                ELSE NVL(u.PROFILE_CROP_Y, 0)
+            END AS "PROFILE_CROP_Y",
+            CASE
+                WHEN pr.WS_ID IS NOT NULL AND NVL(wp.USE_ACCOUNT_PROFILE, 'Y') = 'N'
+                    THEN CASE
+                        WHEN (wp.PROFILE_IMAGE_PATH IS NOT NULL OR wp.PROFILE_IMAGE_ORIGINAL_PATH IS NOT NULL)
+                         AND NOT (UPPER(NVL(u.PROFILE_AVATAR_TYPE, 'DEFAULT')) = 'DEFAULT'
+                                  AND NVL(wp.PROFILE_IMAGE_PATH, '#') = NVL(u.PROFILE_IMAGE_PATH, '#')
+                                  AND NVL(wp.PROFILE_IMAGE_ORIGINAL_PATH, '#') = NVL(u.PROFILE_ORIGINAL_IMAGE_PATH, '#'))
+                            THEN 'IMAGE'
+                        ELSE 'DEFAULT'
+                    END
+                ELSE UPPER(NVL(u.PROFILE_AVATAR_TYPE, 'DEFAULT'))
+            END AS "PROFILE_AVATAR_TYPE",
+            CASE WHEN pr.WS_ID IS NOT NULL THEN NVL(wp.USE_ACCOUNT_PROFILE, 'Y') ELSE 'Y' END AS "USE_ACCOUNT_PROFILE",
             wp.POSITION_NAME AS "WS_POSITION",
             pm.PROJ_ROLE,
             pm.PROJ_POSITION AS "PROJ_POSITION",
+            TO_CHAR(pm.JOINED_AT, 'YYYY-MM-DD') AS "PROJ_JOINED_AT",
             TO_CHAR(wm.JOINED_AT, 'YYYY-MM-DD') AS "WS_JOINED_AT"
         FROM PROJ_MEMBERS pm
         JOIN PROJECTS pr ON pr.PROJ_ID = pm.PROJ_ID
@@ -208,13 +262,101 @@
                 MAX(END_DT) AS END_DT
             FROM EVENTS
             WHERE ITEM_TYPE = 'PROJ'
+              AND EVENT_TYPE = 'PROJECT_PERIOD'
             GROUP BY PROJ_ID
         ) pd ON pd.PROJ_ID = p.PROJ_ID
         WHERE p.WS_ID = #{wsId}
-          AND (pd.START_DT IS NULL OR TRUNC(pd.START_DT) &lt;= TRUNC(SYSDATE))
+          AND NVL(p.STATUS, 'ACTIVE') = 'ACTIVE'
           AND (pd.END_DT IS NULL OR TRUNC(pd.END_DT) &gt; TRUNC(SYSDATE))
         ORDER BY
-            pd.END_DT ASC NULLS LAST,
+            CASE
+                WHEN pd.START_DT IS NOT NULL AND TRUNC(pd.START_DT) &gt; TRUNC(SYSDATE) THEN 2
+                ELSE 1
+            END,
+            CASE
+                WHEN pd.START_DT IS NOT NULL AND TRUNC(pd.START_DT) &gt; TRUNC(SYSDATE) THEN pd.START_DT
+                ELSE pd.END_DT
+            END ASC NULLS LAST,
+            p.PROJ_ID DESC
+    </select>
+
+    <select id="selectSidebarActiveProjectsForUser" parameterType="long" resultType="com.springboot.project.dto.projectRequestDTO">
+        SELECT
+            p.PROJ_ID AS "projId",
+            p.PROJ_NAME AS "projName",
+            p.WS_ID AS "wsId",
+            TO_CHAR(pd.START_DT, 'YYYY-MM-DD') AS "startDate",
+            TO_CHAR(pd.END_DT, 'YYYY-MM-DD') AS "endDate"
+        FROM PROJECTS p
+        JOIN WS_MEMBERS wm
+          ON wm.WS_ID = p.WS_ID
+         AND wm.USER_ID = #{userId}
+        LEFT JOIN (
+            SELECT
+                PROJ_ID,
+                MIN(START_DT) AS START_DT,
+                MAX(END_DT) AS END_DT
+            FROM EVENTS
+            WHERE ITEM_TYPE = 'PROJ'
+              AND EVENT_TYPE = 'PROJECT_PERIOD'
+            GROUP BY PROJ_ID
+        ) pd ON pd.PROJ_ID = p.PROJ_ID
+        WHERE p.WS_ID IS NOT NULL
+          AND NVL(p.STATUS, 'ACTIVE') = 'ACTIVE'
+          AND (pd.END_DT IS NULL OR TRUNC(pd.END_DT) &gt; TRUNC(SYSDATE))
+        ORDER BY
+            p.WS_ID DESC,
+            CASE
+                WHEN pd.START_DT IS NOT NULL AND TRUNC(pd.START_DT) &gt; TRUNC(SYSDATE) THEN 2
+                ELSE 1
+            END,
+            CASE
+                WHEN pd.START_DT IS NOT NULL AND TRUNC(pd.START_DT) &gt; TRUNC(SYSDATE) THEN pd.START_DT
+                ELSE pd.END_DT
+            END ASC NULLS LAST,
+            p.PROJ_ID DESC
+    </select>
+
+    <select id="selectSidebarPersonalActiveProjects" parameterType="long" resultType="com.springboot.project.dto.projectRequestDTO">
+        SELECT
+            p.PROJ_ID AS "projId",
+            p.PROJ_NAME AS "projName",
+            p.WS_ID AS "wsId",
+            NVL(UPPER(p.PROJ_SCOPE), CASE WHEN p.WS_ID IS NULL THEN 'PERSONAL' ELSE 'GROUP' END) AS "projScope",
+            TO_CHAR(pd.START_DT, 'YYYY-MM-DD') AS "startDate",
+            TO_CHAR(pd.END_DT, 'YYYY-MM-DD') AS "endDate"
+        FROM PROJECTS p
+        LEFT JOIN (
+            SELECT
+                PROJ_ID,
+                MIN(START_DT) AS START_DT,
+                MAX(END_DT) AS END_DT
+            FROM EVENTS
+            WHERE ITEM_TYPE = 'PROJ'
+              AND EVENT_TYPE = 'PROJECT_PERIOD'
+            GROUP BY PROJ_ID
+        ) pd ON pd.PROJ_ID = p.PROJ_ID
+        WHERE NVL(UPPER(p.PROJ_SCOPE), CASE WHEN p.WS_ID IS NULL THEN 'PERSONAL' ELSE 'GROUP' END) = 'PERSONAL'
+          AND NVL(p.STATUS, 'ACTIVE') = 'ACTIVE'
+          AND (pd.END_DT IS NULL OR TRUNC(pd.END_DT) &gt; TRUNC(SYSDATE))
+          AND (
+              p.LEADER_ID = #{userId}
+              OR EXISTS (
+                  SELECT 1
+                  FROM PROJ_MEMBERS pm
+                  WHERE pm.PROJ_ID = p.PROJ_ID
+                    AND pm.USER_ID = #{userId}
+              )
+          )
+        ORDER BY
+            CASE
+                WHEN pd.START_DT IS NOT NULL AND TRUNC(pd.START_DT) &gt; TRUNC(SYSDATE) THEN 2
+                ELSE 1
+            END,
+            CASE
+                WHEN pd.START_DT IS NOT NULL AND TRUNC(pd.START_DT) &gt; TRUNC(SYSDATE) THEN pd.START_DT
+                ELSE pd.END_DT
+            END ASC NULLS LAST,
             p.PROJ_ID DESC
     </select>
 
@@ -226,8 +368,14 @@
             p.PROJ_DESC AS "PROJ_DESC",
             p.PROJ_TYPE AS "PROJ_TYPE",
             p.PROJ_CATEGORY AS "PROJ_CATEGORY",
+            NVL(p.STATUS, 'ACTIVE') AS "DELETE_STATUS",
+            TO_CHAR(p.DELETE_DEADLINE_AT, 'YYYY-MM-DD') AS "DELETE_DEADLINE_DATE",
             p.LEADER_ID AS "LEADER_ID",
-            u.USER_NAME AS "LEADER_NAME",
+            CASE
+                WHEN NVL(leader_wp.USE_ACCOUNT_PROFILE, 'Y') = 'N'
+                    THEN NVL(leader_wp.DISPLAY_NAME, u.USER_NAME)
+                ELSE u.USER_NAME
+            END AS "LEADER_NAME",
             TO_CHAR(pd.START_DT, 'YYYY-MM-DD') AS "START_DATE",
             TO_CHAR(pd.END_DT, 'YYYY-MM-DD') AS "END_DATE",
             CASE
@@ -237,21 +385,38 @@
             END AS "PROJECT_STATUS",
             (SELECT COUNT(*) FROM PROJ_MEMBERS pm WHERE pm.PROJ_ID = p.PROJ_ID) AS "MEMBER_COUNT",
             (
-                SELECT LISTAGG(u2.USER_NAME, ', ') WITHIN GROUP (
+                SELECT LISTAGG(
+                           CASE
+                               WHEN NVL(member_wp.USE_ACCOUNT_PROFILE, 'Y') = 'N'
+                                   THEN NVL(member_wp.DISPLAY_NAME, u2.USER_NAME)
+                               ELSE u2.USER_NAME
+                           END,
+                           ', '
+                       ) WITHIN GROUP (
                     ORDER BY
-                        CASE pm2.PROJ_ROLE
-                            WHEN 'ADMIN' THEN 1
-                            WHEN 'MANAGER' THEN 2
-                            ELSE 3
+                        CASE WHEN pm2.USER_ID = p.LEADER_ID THEN 1
+                             WHEN pm2.PROJ_ROLE = 'ADMIN' THEN 2
+                             WHEN pm2.PROJ_ROLE = 'MANAGER' THEN 3
+                             ELSE 4
                         END,
-                        u2.USER_NAME
+                        CASE
+                            WHEN NVL(member_wp.USE_ACCOUNT_PROFILE, 'Y') = 'N'
+                                THEN NVL(member_wp.DISPLAY_NAME, u2.USER_NAME)
+                            ELSE u2.USER_NAME
+                        END
                 )
                 FROM PROJ_MEMBERS pm2
                 JOIN USERS u2 ON u2.USER_ID = pm2.USER_ID
+                LEFT JOIN WS_MEMBER_PROFILES member_wp
+                  ON member_wp.WS_ID = p.WS_ID
+                 AND member_wp.USER_ID = pm2.USER_ID
                 WHERE pm2.PROJ_ID = p.PROJ_ID
             ) AS "MEMBER_NAMES"
         FROM PROJECTS p
         LEFT JOIN USERS u ON u.USER_ID = p.LEADER_ID
+        LEFT JOIN WS_MEMBER_PROFILES leader_wp
+          ON leader_wp.WS_ID = p.WS_ID
+         AND leader_wp.USER_ID = p.LEADER_ID
         LEFT JOIN (
             SELECT
                 PROJ_ID,
@@ -259,6 +424,7 @@
                 MAX(END_DT) AS END_DT
             FROM EVENTS
             WHERE ITEM_TYPE = 'PROJ'
+              AND EVENT_TYPE = 'PROJECT_PERIOD'
             GROUP BY PROJ_ID
         ) pd ON pd.PROJ_ID = p.PROJ_ID
         WHERE p.WS_ID = #{wsId}
@@ -269,8 +435,17 @@
                 ELSE 1
             END,
             CASE
-                WHEN pd.END_DT IS NOT NULL AND TRUNC(pd.END_DT) &lt;= TRUNC(SYSDATE) THEN pd.END_DT
-                ELSE pd.START_DT
+                WHEN (pd.START_DT IS NULL OR TRUNC(pd.START_DT) &lt;= TRUNC(SYSDATE))
+                 AND (pd.END_DT IS NULL OR TRUNC(pd.END_DT) &gt; TRUNC(SYSDATE))
+                    THEN pd.END_DT
+            END ASC NULLS LAST,
+            CASE
+                WHEN pd.START_DT IS NOT NULL AND TRUNC(pd.START_DT) &gt; TRUNC(SYSDATE)
+                    THEN pd.START_DT
+            END ASC NULLS LAST,
+            CASE
+                WHEN pd.END_DT IS NOT NULL AND TRUNC(pd.END_DT) &lt;= TRUNC(SYSDATE)
+                    THEN pd.END_DT
             END DESC NULLS LAST,
             p.PROJ_ID DESC
     </select>
@@ -283,6 +458,8 @@
             p.PROJ_DESC AS "PROJ_DESC",
             p.PROJ_TYPE AS "PROJ_TYPE",
             p.PROJ_CATEGORY AS "PROJ_CATEGORY",
+            NVL(p.STATUS, 'ACTIVE') AS "DELETE_STATUS",
+            TO_CHAR(p.DELETE_DEADLINE_AT, 'YYYY-MM-DD') AS "DELETE_DEADLINE_DATE",
             NVL(UPPER(p.PROJ_SCOPE), CASE WHEN p.WS_ID IS NULL THEN 'PERSONAL' ELSE 'GROUP' END) AS "PROJ_SCOPE",
             p.LEADER_ID AS "LEADER_ID",
             u.USER_NAME AS "LEADER_NAME",
@@ -296,8 +473,8 @@
                 ELSE 'IN_PROGRESS'
             END AS "PROJECT_STATUS",
             (SELECT COUNT(*) FROM PROJ_MEMBERS pm WHERE pm.PROJ_ID = p.PROJ_ID) AS "MEMBER_COUNT",
-            (SELECT COUNT(*) FROM EVENTS e WHERE e.PROJ_ID = p.PROJ_ID AND e.ITEM_TYPE = 'TASK') AS "TASK_TOTAL",
-            (SELECT COUNT(*) FROM EVENTS e WHERE e.PROJ_ID = p.PROJ_ID AND e.ITEM_TYPE = 'TASK' AND e.STATUS = 'DONE') AS "TASK_DONE",
+            (SELECT COUNT(*) FROM PROJECT_TASKS t WHERE t.PROJ_ID = p.PROJ_ID) AS "TASK_TOTAL",
+            (SELECT COUNT(*) FROM PROJECT_TASKS t WHERE t.PROJ_ID = p.PROJ_ID AND t.STATUS = 'DONE') AS "TASK_DONE",
             (
                 SELECT LISTAGG(u2.USER_NAME, ', ') WITHIN GROUP (ORDER BY u2.USER_NAME)
                 FROM PROJ_MEMBERS pm2
@@ -311,6 +488,7 @@
             SELECT PROJ_ID, MIN(START_DT) AS START_DT, MAX(END_DT) AS END_DT
             FROM EVENTS
             WHERE ITEM_TYPE = 'PROJ'
+              AND EVENT_TYPE = 'PROJECT_PERIOD'
             GROUP BY PROJ_ID
         ) pd ON pd.PROJ_ID = p.PROJ_ID
         WHERE NVL(UPPER(p.PROJ_SCOPE), CASE WHEN p.WS_ID IS NULL THEN 'PERSONAL' ELSE 'GROUP' END) = 'PERSONAL'
@@ -339,137 +517,618 @@
             SUM(CASE WHEN STATUS = 'TODO' THEN 1 ELSE 0 END) AS TODO_CNT,
             SUM(CASE WHEN STATUS = 'IN_PROGRESS' THEN 1 ELSE 0 END) AS IN_PROGRESS_CNT,
             SUM(CASE WHEN STATUS = 'DONE' THEN 1 ELSE 0 END) AS DONE_CNT,
-            SUM(
-                CASE
-                    WHEN STATUS != 'DONE'
-                     AND END_DT IS NOT NULL
-                     AND END_DT &lt; SYSDATE
-                    THEN 1
-                    ELSE 0
-                END
-            ) AS DELAYED_CNT
-        FROM EVENTS
+            SUM(CASE WHEN STATUS != 'DONE' AND END_AT IS NOT NULL AND END_AT &lt; SYSDATE THEN 1 ELSE 0 END) AS DELAYED_CNT
+        FROM PROJECT_TASKS
         WHERE PROJ_ID = #{projId, jdbcType=NUMERIC}
-          AND ITEM_TYPE = 'TASK'
     </select>
 
     <select id="getProjectTasks" resultType="map">
         SELECT
-            e.EVENT_ID AS TASK_ID,
-            e.TITLE,
-            e.STATUS,
-            e.USER_ID AS "USER_ID",
-            u.USER_NAME AS "USER_NAME",
-            NVL(e.START_TIME_SLOT, 'NONE') AS START_TIME_SLOT,
-            NVL(e.END_TIME_SLOT, 'NONE') AS END_TIME_SLOT,
-            CASE WHEN e.START_TIME_SLOT = 'TIME' AND e.END_TIME_SLOT = 'TIME' THEN 'Y' ELSE 'N' END AS USE_TIME,
-            CASE WHEN e.START_TIME_SLOT = 'TIME' THEN TO_CHAR(e.START_DT, 'HH24:MI') ELSE NULL END AS START_TIME,
-            CASE WHEN e.END_TIME_SLOT = 'TIME' THEN TO_CHAR(e.END_DT, 'HH24:MI') ELSE NULL END AS END_TIME,
-            TO_CHAR(e.START_DT, 'YYYY-MM-DD') AS START_DATE,
-            TO_CHAR(e.END_DT, 'YYYY-MM-DD') AS END_DATE,
-            TO_CHAR(e.ACTUAL_START_DT, 'YYYY-MM-DD HH24:MI') AS ACTUAL_START_DATE,
-            TO_CHAR(e.ACTUAL_DONE_DT, 'YYYY-MM-DD HH24:MI') AS ACTUAL_DONE_DATE,
+            t.TASK_ID AS "TASK_ID", t.PROJ_ID AS "PROJ_ID", t.TITLE AS "TITLE",
+            t.DESCRIPTION AS "DESCRIPTION", t.STATUS AS "STATUS",
+            t.ASSIGNEE_ID AS "USER_ID", t.ASSIGNEE_ID AS "ASSIGNEE_ID",
             CASE
-                WHEN e.STATUS != 'DONE'
-                 AND e.END_DT IS NOT NULL
-                 AND e.END_DT &lt; SYSDATE
-                THEN 'Y'
-                ELSE 'N'
-            END AS DELAYED_YN
-        FROM EVENTS e
-        LEFT JOIN USERS u
-          ON e.USER_ID = u.USER_ID
-        WHERE e.PROJ_ID = #{projId}
-          AND e.ITEM_TYPE = 'TASK'
+                WHEN p.WS_ID IS NOT NULL AND NVL(wp.USE_ACCOUNT_PROFILE, 'Y') = 'N'
+                    THEN NVL(wp.DISPLAY_NAME, u.USER_NAME)
+                ELSE u.USER_NAME
+            END AS "USER_NAME",
+            CASE
+                WHEN p.WS_ID IS NOT NULL AND NVL(wp.USE_ACCOUNT_PROFILE, 'Y') = 'N'
+                    THEN NVL(wp.DISPLAY_NAME, u.USER_NAME)
+                ELSE u.USER_NAME
+            END AS "ASSIGNEE_NAME",
+            CASE
+                WHEN p.WS_ID IS NOT NULL AND NVL(wp.USE_ACCOUNT_PROFILE, 'Y') = 'N'
+                    THEN wp.PROFILE_IMAGE_PATH
+                WHEN NVL(u.PROFILE_AVATAR_TYPE, 'DEFAULT') = 'IMAGE'
+                    THEN u.PROFILE_IMAGE_PATH
+                ELSE NULL
+            END AS "PROFILE_IMAGE_PATH",
+            pm.PROJ_ROLE AS "ASSIGNEE_ROLE", pm.PROJ_POSITION AS "ASSIGNEE_POSITION",
+            t.ALL_DAY_YN AS "ALL_DAY_YN", t.CALENDAR_VISIBLE_YN AS "CALENDAR_VISIBLE_YN",
+            NVL(t.RECORD_ENABLED_YN, 'N') AS "RECORD_ENABLED_YN", NVL(t.RECORD_VISIBILITY, 'PROJECT') AS "RECORD_VISIBILITY",
+            CASE WHEN t.ALL_DAY_YN = 'N' THEN 'Y' ELSE 'N' END AS "USE_TIME",
+            CASE WHEN t.ALL_DAY_YN = 'N' THEN TO_CHAR(t.START_AT, 'HH24:MI') END AS "START_TIME",
+            CASE WHEN t.ALL_DAY_YN = 'N' THEN TO_CHAR(t.END_AT, 'HH24:MI') END AS "END_TIME",
+            TO_CHAR(t.START_AT, 'YYYY-MM-DD') AS "START_DATE",
+            TO_CHAR(t.END_AT, 'YYYY-MM-DD') AS "END_DATE",
+            TO_CHAR(t.ACTUAL_STARTED_AT, 'YYYY-MM-DD HH24:MI') AS "ACTUAL_START_DATE",
+            TO_CHAR(t.COMPLETED_AT, 'YYYY-MM-DD HH24:MI') AS "ACTUAL_DONE_DATE",
+            CASE WHEN t.STATUS != 'DONE' AND t.END_AT IS NOT NULL AND t.END_AT &lt; SYSDATE THEN 'Y' ELSE 'N' END AS "DELAYED_YN",
+            t.SORT_ORDER AS "SORT_ORDER", 0 AS "PROGRESS"
+        FROM PROJECT_TASKS t
+        JOIN PROJECTS p ON p.PROJ_ID = t.PROJ_ID
+        LEFT JOIN USERS u ON u.USER_ID = t.ASSIGNEE_ID
+        LEFT JOIN PROJ_MEMBERS pm ON pm.PROJ_ID = t.PROJ_ID AND pm.USER_ID = t.ASSIGNEE_ID
+        LEFT JOIN WS_MEMBER_PROFILES wp ON wp.WS_ID = p.WS_ID AND wp.USER_ID = t.ASSIGNEE_ID
+        WHERE t.PROJ_ID = #{projId, jdbcType=NUMERIC}
         ORDER BY
-            CASE
-                WHEN e.STATUS != 'DONE'
-                 AND e.END_DT IS NOT NULL
-                 AND e.END_DT &lt; SYSDATE
-                THEN 0
-                WHEN e.STATUS = 'IN_PROGRESS' THEN 1
-                WHEN e.STATUS = 'TODO' THEN 2
-                WHEN e.STATUS = 'DONE' THEN 3
+            CASE t.STATUS
+                WHEN 'TODO' THEN 1
+                WHEN 'IN_PROGRESS' THEN 2
+                WHEN 'DONE' THEN 3
                 ELSE 4
             END,
-            e.END_DT ASC NULLS LAST,
-            CASE NVL(e.END_TIME_SLOT, 'PM')
-                WHEN 'AM' THEN 1
-                WHEN 'PM' THEN 2
-                ELSE 3
+            CASE WHEN t.STATUS = 'TODO' THEN t.START_AT END ASC NULLS LAST,
+            CASE WHEN t.STATUS = 'TODO' THEN t.END_AT END ASC NULLS LAST,
+            CASE WHEN t.STATUS = 'IN_PROGRESS' THEN t.END_AT END ASC NULLS LAST,
+            CASE WHEN t.STATUS = 'IN_PROGRESS' THEN t.START_AT END ASC NULLS LAST,
+            CASE WHEN t.STATUS = 'DONE' THEN t.COMPLETED_AT END DESC NULLS LAST,
+            t.TASK_ID DESC
+    </select>
+
+    <!-- 프로젝트 프로필: 특정 멤버가 담당자인 업무 조회 -->
+    <select id="getProjectMemberTasks" resultType="map">
+        SELECT
+            t.TASK_ID AS "TASK_ID",
+            t.TITLE AS "TITLE",
+            t.STATUS AS "STATUS",
+            TO_CHAR(t.START_AT, 'YYYY-MM-DD') AS "START_DATE",
+            TO_CHAR(t.END_AT, 'YYYY-MM-DD') AS "END_DATE",
+            CASE
+                WHEN t.STATUS != 'DONE'
+                 AND t.END_AT IS NOT NULL
+                 AND t.END_AT &lt; SYSDATE THEN 'Y'
+                ELSE 'N'
+            END AS "DELAYED_YN",
+            TO_CHAR(t.COMPLETED_AT, 'YYYY-MM-DD') AS "COMPLETED_DATE",
+            t.SORT_ORDER AS "SORT_ORDER"
+        FROM PROJECT_TASKS t
+        WHERE t.PROJ_ID = #{projId, jdbcType=NUMERIC}
+          AND (
+                t.ASSIGNEE_ID = #{userId, jdbcType=NUMERIC}
+                OR EXISTS (
+                    SELECT 1
+                    FROM PROJECT_TASK_ASSIGNEES pta
+                    WHERE pta.TASK_ID = t.TASK_ID
+                      AND pta.USER_ID = #{userId, jdbcType=NUMERIC}
+                )
+              )
+        ORDER BY
+            CASE WHEN t.STATUS != 'DONE' AND t.END_AT IS NOT NULL AND t.END_AT &lt; SYSDATE THEN 0 ELSE 1 END,
+            CASE t.STATUS
+                WHEN 'IN_PROGRESS' THEN 1
+                WHEN 'TODO' THEN 2
+                WHEN 'DONE' THEN 3
+                ELSE 4
             END,
-            e.EVENT_ID DESC
+            CASE WHEN t.STATUS != 'DONE' THEN t.END_AT END ASC NULLS LAST,
+            CASE WHEN t.STATUS = 'DONE' THEN t.COMPLETED_AT END DESC NULLS LAST,
+            t.TASK_ID DESC
+    </select>
+
+
+
+    <!-- 프로젝트 프로필: 멤버가 프로젝트 안에서 작성/업로드한 콘텐츠 기여 -->
+    <select id="getProjectMemberContributionCounts" resultType="map">
+        SELECT
+            (
+                SELECT COUNT(*)
+                  FROM NOTES n
+                 WHERE n.SCOPE_TYPE = 'PROJ'
+                   AND n.PROJ_ID = #{projId, jdbcType=NUMERIC}
+                   AND n.USER_ID = #{userId, jdbcType=NUMERIC}
+                   AND NVL(n.DELETED_YN, 'N') = 'N'
+                   AND (
+                        NOT EXISTS (
+                            SELECT 1 FROM CONTENT_SHARES secret_marker
+                             WHERE secret_marker.CONTENT_TYPE = 'NOTE'
+                               AND secret_marker.CONTENT_ID = n.NOTE_ID
+                               AND secret_marker.TARGET_TYPE = 'USER'
+                               AND secret_marker.TARGET_ID = secret_marker.OWNER_ID
+                               AND secret_marker.SHARED_BY = secret_marker.OWNER_ID
+                               AND UPPER(NVL(secret_marker.PERMISSION_TYPE, 'VIEW')) = 'VIEW'
+                               AND secret_marker.ACTIVE_YN = 'Y'
+                               AND NVL(secret_marker.SHARE_STATUS, 'ACCEPTED') = 'ACCEPTED'
+                        )
+                        OR n.USER_ID = #{viewerUserId, jdbcType=NUMERIC}
+                        OR EXISTS (
+                            SELECT 1 FROM CONTENT_SHARES edit_share
+                             WHERE edit_share.CONTENT_TYPE = 'NOTE'
+                               AND edit_share.CONTENT_ID = n.NOTE_ID
+                               AND edit_share.TARGET_TYPE = 'USER'
+                               AND edit_share.TARGET_ID = #{viewerUserId, jdbcType=NUMERIC}
+                               AND UPPER(NVL(edit_share.PERMISSION_TYPE, 'VIEW')) = 'EDIT'
+                               AND edit_share.ACTIVE_YN = 'Y'
+                               AND NVL(edit_share.SHARE_STATUS, 'ACCEPTED') = 'ACCEPTED'
+                               AND (edit_share.EXPIRES_AT IS NULL OR edit_share.EXPIRES_AT &gt;= SYSDATE)
+                        )
+                        OR EXISTS (
+                            SELECT 1 FROM PROJECTS p_mgr
+                            LEFT JOIN PROJ_MEMBERS pm_mgr
+                              ON pm_mgr.PROJ_ID = p_mgr.PROJ_ID
+                             AND pm_mgr.USER_ID = #{viewerUserId, jdbcType=NUMERIC}
+                           WHERE p_mgr.PROJ_ID = n.PROJ_ID
+                             AND (p_mgr.LEADER_ID = #{viewerUserId, jdbcType=NUMERIC}
+                                  OR UPPER(NVL(pm_mgr.PROJ_ROLE, 'MEMBER')) IN ('ADMIN','LEADER','OWNER','PM'))
+                        )
+                   )
+            ) AS "NOTE_CNT",
+            (
+                SELECT COUNT(*)
+                  FROM PHOTOS p
+                  JOIN PHOTO_POSTS pp ON pp.POST_ID = p.POST_ID
+                 WHERE pp.SCOPE_TYPE = 'PROJECT'
+                   AND pp.SCOPE_ID = #{projId, jdbcType=NUMERIC}
+                   AND p.UPLOADED_BY = #{userId, jdbcType=NUMERIC}
+                   AND NVL(pp.DELETED_YN, 'N') = 'N'
+            ) AS "PHOTO_CNT",
+            (
+                SELECT COUNT(*)
+                  FROM CONTENT_FILES f
+                 WHERE f.SCOPE_TYPE = 'PROJECT'
+                   AND f.PROJ_ID = #{projId, jdbcType=NUMERIC}
+                   AND f.CREATED_BY = #{userId, jdbcType=NUMERIC}
+                   AND f.DELETED_YN = 'N'
+                   AND (
+                        NOT EXISTS (
+                            SELECT 1 FROM CONTENT_SHARES secret_marker
+                             WHERE secret_marker.CONTENT_TYPE = 'FILE'
+                               AND secret_marker.CONTENT_ID = f.CONTENT_FILE_ID
+                               AND secret_marker.TARGET_TYPE = 'USER'
+                               AND secret_marker.TARGET_ID = secret_marker.OWNER_ID
+                               AND secret_marker.SHARED_BY = secret_marker.OWNER_ID
+                               AND UPPER(NVL(secret_marker.PERMISSION_TYPE, 'VIEW')) = 'VIEW'
+                               AND secret_marker.ACTIVE_YN = 'Y'
+                               AND NVL(secret_marker.SHARE_STATUS, 'ACCEPTED') = 'ACCEPTED'
+                        )
+                        OR f.CREATED_BY = #{viewerUserId, jdbcType=NUMERIC}
+                        OR EXISTS (
+                            SELECT 1 FROM CONTENT_SHARES edit_share
+                             WHERE edit_share.CONTENT_TYPE = 'FILE'
+                               AND edit_share.CONTENT_ID = f.CONTENT_FILE_ID
+                               AND edit_share.TARGET_TYPE = 'USER'
+                               AND edit_share.TARGET_ID = #{viewerUserId, jdbcType=NUMERIC}
+                               AND UPPER(NVL(edit_share.PERMISSION_TYPE, 'VIEW')) = 'EDIT'
+                               AND edit_share.ACTIVE_YN = 'Y'
+                               AND NVL(edit_share.SHARE_STATUS, 'ACCEPTED') = 'ACCEPTED'
+                               AND (edit_share.EXPIRES_AT IS NULL OR edit_share.EXPIRES_AT &gt;= SYSDATE)
+                        )
+                        OR EXISTS (
+                            SELECT 1 FROM PROJECTS p_mgr
+                            LEFT JOIN PROJ_MEMBERS pm_mgr
+                              ON pm_mgr.PROJ_ID = p_mgr.PROJ_ID
+                             AND pm_mgr.USER_ID = #{viewerUserId, jdbcType=NUMERIC}
+                           WHERE p_mgr.PROJ_ID = f.PROJ_ID
+                             AND p_mgr.WS_ID IS NOT NULL
+                             AND (p_mgr.LEADER_ID = #{viewerUserId, jdbcType=NUMERIC}
+                                  OR UPPER(NVL(pm_mgr.PROJ_ROLE, 'MEMBER')) IN ('ADMIN','LEADER','OWNER','PM'))
+                        )
+                   )
+            ) AS "FILE_CNT"
+        FROM DUAL
+    </select>
+
+    <select id="getProjectMemberRecentNotes" resultType="map">
+        SELECT * FROM (
+            SELECT
+                n.NOTE_ID AS "NOTE_ID",
+                NVL(NULLIF(TRIM(n.NOTE_TITLE), ''), '제목 없는 노트') AS "TITLE",
+                n.CATEGORY AS "CATEGORY",
+                n.ICON AS "ICON",
+                TO_CHAR(NVL(n.UPD_DT, n.REG_DT), 'YYYY-MM-DD HH24:MI') AS "ACTIVITY_AT"
+              FROM NOTES n
+             WHERE n.SCOPE_TYPE = 'PROJ'
+               AND n.PROJ_ID = #{projId, jdbcType=NUMERIC}
+               AND n.USER_ID = #{userId, jdbcType=NUMERIC}
+               AND NVL(n.DELETED_YN, 'N') = 'N'
+               AND (
+                    NOT EXISTS (
+                        SELECT 1 FROM CONTENT_SHARES secret_marker
+                         WHERE secret_marker.CONTENT_TYPE = 'NOTE'
+                           AND secret_marker.CONTENT_ID = n.NOTE_ID
+                           AND secret_marker.TARGET_TYPE = 'USER'
+                           AND secret_marker.TARGET_ID = secret_marker.OWNER_ID
+                           AND secret_marker.SHARED_BY = secret_marker.OWNER_ID
+                           AND UPPER(NVL(secret_marker.PERMISSION_TYPE, 'VIEW')) = 'VIEW'
+                           AND secret_marker.ACTIVE_YN = 'Y'
+                           AND NVL(secret_marker.SHARE_STATUS, 'ACCEPTED') = 'ACCEPTED'
+                    )
+                    OR n.USER_ID = #{viewerUserId, jdbcType=NUMERIC}
+                    OR EXISTS (
+                        SELECT 1 FROM CONTENT_SHARES edit_share
+                         WHERE edit_share.CONTENT_TYPE = 'NOTE'
+                           AND edit_share.CONTENT_ID = n.NOTE_ID
+                           AND edit_share.TARGET_TYPE = 'USER'
+                           AND edit_share.TARGET_ID = #{viewerUserId, jdbcType=NUMERIC}
+                           AND UPPER(NVL(edit_share.PERMISSION_TYPE, 'VIEW')) = 'EDIT'
+                           AND edit_share.ACTIVE_YN = 'Y'
+                           AND NVL(edit_share.SHARE_STATUS, 'ACCEPTED') = 'ACCEPTED'
+                           AND (edit_share.EXPIRES_AT IS NULL OR edit_share.EXPIRES_AT &gt;= SYSDATE)
+                    )
+                    OR EXISTS (
+                        SELECT 1 FROM PROJECTS p_mgr
+                        LEFT JOIN PROJ_MEMBERS pm_mgr
+                          ON pm_mgr.PROJ_ID = p_mgr.PROJ_ID
+                         AND pm_mgr.USER_ID = #{viewerUserId, jdbcType=NUMERIC}
+                       WHERE p_mgr.PROJ_ID = n.PROJ_ID
+                         AND (p_mgr.LEADER_ID = #{viewerUserId, jdbcType=NUMERIC}
+                              OR UPPER(NVL(pm_mgr.PROJ_ROLE, 'MEMBER')) IN ('ADMIN','LEADER','OWNER','PM'))
+                    )
+               )
+             ORDER BY NVL(n.UPD_DT, n.REG_DT) DESC, n.NOTE_ID DESC
+        ) WHERE ROWNUM &lt;= 6
+    </select>
+
+    <select id="getProjectMemberRecentPhotos" resultType="map">
+        SELECT * FROM (
+            SELECT
+                pp.POST_ID AS "POST_ID",
+                NVL(NULLIF(TRIM(pp.TITLE), ''), '사진') AS "TITLE",
+                (SELECT COUNT(*) FROM PHOTOS p WHERE p.POST_ID = pp.POST_ID) AS "PHOTO_COUNT",
+                (SELECT MIN(p.PHOTO_ID) KEEP (DENSE_RANK FIRST ORDER BY NVL(p.SORT_ORDER, 0), p.PHOTO_ID)
+                   FROM PHOTOS p WHERE p.POST_ID = pp.POST_ID) AS "COVER_PHOTO_ID",
+                (SELECT MIN(p.FILE_PATH) KEEP (DENSE_RANK FIRST ORDER BY NVL(p.SORT_ORDER, 0), p.PHOTO_ID)
+                   FROM PHOTOS p WHERE p.POST_ID = pp.POST_ID) AS "COVER_PATH",
+                TO_CHAR(pp.CREATED_AT, 'YYYY-MM-DD HH24:MI') AS "ACTIVITY_AT"
+              FROM PHOTO_POSTS pp
+             WHERE pp.SCOPE_TYPE = 'PROJECT'
+               AND pp.SCOPE_ID = #{projId, jdbcType=NUMERIC}
+               AND pp.CREATED_BY = #{userId, jdbcType=NUMERIC}
+               AND NVL(pp.DELETED_YN, 'N') = 'N'
+             ORDER BY pp.CREATED_AT DESC, pp.POST_ID DESC
+        ) WHERE ROWNUM &lt;= 6
+    </select>
+
+    <select id="getProjectMemberRecentFiles" resultType="map">
+        SELECT * FROM (
+            SELECT
+                f.CONTENT_FILE_ID AS "CONTENT_FILE_ID",
+                f.ORIGINAL_NAME AS "TITLE",
+                f.FILE_EXT AS "FILE_EXT",
+                f.MIME_TYPE AS "MIME_TYPE",
+                f.FILE_SIZE AS "FILE_SIZE",
+                TO_CHAR(f.CREATED_AT, 'YYYY-MM-DD HH24:MI') AS "ACTIVITY_AT"
+              FROM CONTENT_FILES f
+             WHERE f.SCOPE_TYPE = 'PROJECT'
+               AND f.PROJ_ID = #{projId, jdbcType=NUMERIC}
+               AND f.CREATED_BY = #{userId, jdbcType=NUMERIC}
+               AND f.DELETED_YN = 'N'
+               AND (
+                    NOT EXISTS (
+                        SELECT 1 FROM CONTENT_SHARES secret_marker
+                         WHERE secret_marker.CONTENT_TYPE = 'FILE'
+                           AND secret_marker.CONTENT_ID = f.CONTENT_FILE_ID
+                           AND secret_marker.TARGET_TYPE = 'USER'
+                           AND secret_marker.TARGET_ID = secret_marker.OWNER_ID
+                           AND secret_marker.SHARED_BY = secret_marker.OWNER_ID
+                           AND UPPER(NVL(secret_marker.PERMISSION_TYPE, 'VIEW')) = 'VIEW'
+                           AND secret_marker.ACTIVE_YN = 'Y'
+                           AND NVL(secret_marker.SHARE_STATUS, 'ACCEPTED') = 'ACCEPTED'
+                    )
+                    OR f.CREATED_BY = #{viewerUserId, jdbcType=NUMERIC}
+                    OR EXISTS (
+                        SELECT 1 FROM CONTENT_SHARES edit_share
+                         WHERE edit_share.CONTENT_TYPE = 'FILE'
+                           AND edit_share.CONTENT_ID = f.CONTENT_FILE_ID
+                           AND edit_share.TARGET_TYPE = 'USER'
+                           AND edit_share.TARGET_ID = #{viewerUserId, jdbcType=NUMERIC}
+                           AND UPPER(NVL(edit_share.PERMISSION_TYPE, 'VIEW')) = 'EDIT'
+                           AND edit_share.ACTIVE_YN = 'Y'
+                           AND NVL(edit_share.SHARE_STATUS, 'ACCEPTED') = 'ACCEPTED'
+                           AND (edit_share.EXPIRES_AT IS NULL OR edit_share.EXPIRES_AT &gt;= SYSDATE)
+                    )
+                    OR EXISTS (
+                        SELECT 1 FROM PROJECTS p_mgr
+                        LEFT JOIN PROJ_MEMBERS pm_mgr
+                          ON pm_mgr.PROJ_ID = p_mgr.PROJ_ID
+                         AND pm_mgr.USER_ID = #{viewerUserId, jdbcType=NUMERIC}
+                       WHERE p_mgr.PROJ_ID = f.PROJ_ID
+                         AND p_mgr.WS_ID IS NOT NULL
+                         AND (p_mgr.LEADER_ID = #{viewerUserId, jdbcType=NUMERIC}
+                              OR UPPER(NVL(pm_mgr.PROJ_ROLE, 'MEMBER')) IN ('ADMIN','LEADER','OWNER','PM'))
+                    )
+               )
+             ORDER BY f.CREATED_AT DESC, f.CONTENT_FILE_ID DESC
+        ) WHERE ROWNUM &lt;= 6
+    </select>
+
+    <!-- 프로젝트 프로필: 멤버의 최근 프로젝트 활동.
+         작성자/업로더/생성자가 명확한 기록만 사용자 활동으로 귀속한다.
+         완료 업무는 '사용자가 완료했다'고 단정하지 않고 해당 멤버의 담당 업무 완료 기록으로 표시한다. -->
+    <select id="getProjectMemberRecentActivities" resultType="map">
+        SELECT * FROM (
+            SELECT activity_type AS "ACTIVITY_TYPE",
+                   target_id AS "TARGET_ID",
+                   title AS "TITLE",
+                   detail AS "DETAIL",
+                   TO_CHAR(activity_at, 'YYYY-MM-DD HH24:MI') AS "ACTIVITY_AT"
+              FROM (
+                    SELECT 'TASK_CREATED' AS activity_type,
+                           t.TASK_ID AS target_id,
+                           NVL(NULLIF(TRIM(t.TITLE), ''), '제목 없는 업무') AS title,
+                           '업무 등록' AS detail,
+                           t.CREATED_AT AS activity_at
+                      FROM PROJECT_TASKS t
+                     WHERE t.PROJ_ID = #{projId, jdbcType=NUMERIC}
+                       AND t.CREATED_BY = #{userId, jdbcType=NUMERIC}
+                       AND t.CREATED_AT IS NOT NULL
+
+                    UNION ALL
+
+                    SELECT 'TASK_DONE' AS activity_type,
+                           t.TASK_ID AS target_id,
+                           NVL(NULLIF(TRIM(t.TITLE), ''), '제목 없는 업무') AS title,
+                           '담당 업무 완료' AS detail,
+                           t.COMPLETED_AT AS activity_at
+                      FROM PROJECT_TASKS t
+                     WHERE t.PROJ_ID = #{projId, jdbcType=NUMERIC}
+                       AND t.STATUS = 'DONE'
+                       AND t.COMPLETED_AT IS NOT NULL
+                       AND (
+                            t.ASSIGNEE_ID = #{userId, jdbcType=NUMERIC}
+                            OR EXISTS (
+                                SELECT 1 FROM PROJECT_TASK_ASSIGNEES pta
+                                 WHERE pta.TASK_ID = t.TASK_ID
+                                   AND pta.USER_ID = #{userId, jdbcType=NUMERIC}
+                            )
+                       )
+
+                    UNION ALL
+
+                    SELECT 'NOTE' AS activity_type,
+                           n.NOTE_ID AS target_id,
+                           NVL(NULLIF(TRIM(n.NOTE_TITLE), ''), '제목 없는 노트') AS title,
+                           '노트 작성' AS detail,
+                           n.REG_DT AS activity_at
+                      FROM NOTES n
+                     WHERE n.SCOPE_TYPE = 'PROJ'
+                       AND n.PROJ_ID = #{projId, jdbcType=NUMERIC}
+                       AND n.USER_ID = #{userId, jdbcType=NUMERIC}
+                       AND NVL(n.DELETED_YN, 'N') = 'N'
+                       AND n.REG_DT IS NOT NULL
+                       AND (
+                            NOT EXISTS (
+                                SELECT 1 FROM CONTENT_SHARES secret_marker
+                                 WHERE secret_marker.CONTENT_TYPE = 'NOTE'
+                                   AND secret_marker.CONTENT_ID = n.NOTE_ID
+                                   AND secret_marker.TARGET_TYPE = 'USER'
+                                   AND secret_marker.TARGET_ID = secret_marker.OWNER_ID
+                                   AND secret_marker.SHARED_BY = secret_marker.OWNER_ID
+                                   AND UPPER(NVL(secret_marker.PERMISSION_TYPE, 'VIEW')) = 'VIEW'
+                                   AND secret_marker.ACTIVE_YN = 'Y'
+                                   AND NVL(secret_marker.SHARE_STATUS, 'ACCEPTED') = 'ACCEPTED'
+                            )
+                            OR n.USER_ID = #{viewerUserId, jdbcType=NUMERIC}
+                            OR EXISTS (
+                                SELECT 1 FROM CONTENT_SHARES edit_share
+                                 WHERE edit_share.CONTENT_TYPE = 'NOTE'
+                                   AND edit_share.CONTENT_ID = n.NOTE_ID
+                                   AND edit_share.TARGET_TYPE = 'USER'
+                                   AND edit_share.TARGET_ID = #{viewerUserId, jdbcType=NUMERIC}
+                                   AND UPPER(NVL(edit_share.PERMISSION_TYPE, 'VIEW')) = 'EDIT'
+                                   AND edit_share.ACTIVE_YN = 'Y'
+                                   AND NVL(edit_share.SHARE_STATUS, 'ACCEPTED') = 'ACCEPTED'
+                                   AND (edit_share.EXPIRES_AT IS NULL OR edit_share.EXPIRES_AT &gt;= SYSDATE)
+                            )
+                            OR EXISTS (
+                                SELECT 1 FROM PROJECTS p_mgr
+                                LEFT JOIN PROJ_MEMBERS pm_mgr
+                                  ON pm_mgr.PROJ_ID = p_mgr.PROJ_ID
+                                 AND pm_mgr.USER_ID = #{viewerUserId, jdbcType=NUMERIC}
+                               WHERE p_mgr.PROJ_ID = n.PROJ_ID
+                                 AND (p_mgr.LEADER_ID = #{viewerUserId, jdbcType=NUMERIC}
+                                      OR UPPER(NVL(pm_mgr.PROJ_ROLE, 'MEMBER')) IN ('ADMIN','LEADER','OWNER','PM'))
+                            )
+                       )
+
+                    UNION ALL
+
+                    SELECT 'PHOTO' AS activity_type,
+                           pp.POST_ID AS target_id,
+                           NVL(NULLIF(TRIM(pp.TITLE), ''), '사진') AS title,
+                           '사진 업로드' AS detail,
+                           pp.CREATED_AT AS activity_at
+                      FROM PHOTO_POSTS pp
+                     WHERE pp.SCOPE_TYPE = 'PROJECT'
+                       AND pp.SCOPE_ID = #{projId, jdbcType=NUMERIC}
+                       AND pp.CREATED_BY = #{userId, jdbcType=NUMERIC}
+                       AND NVL(pp.DELETED_YN, 'N') = 'N'
+                       AND pp.CREATED_AT IS NOT NULL
+
+                    UNION ALL
+
+                    SELECT 'FILE' AS activity_type,
+                           f.CONTENT_FILE_ID AS target_id,
+                           NVL(NULLIF(TRIM(f.ORIGINAL_NAME), ''), '파일') AS title,
+                           '파일 업로드' AS detail,
+                           f.CREATED_AT AS activity_at
+                      FROM CONTENT_FILES f
+                     WHERE f.SCOPE_TYPE = 'PROJECT'
+                       AND f.PROJ_ID = #{projId, jdbcType=NUMERIC}
+                       AND f.CREATED_BY = #{userId, jdbcType=NUMERIC}
+                       AND f.DELETED_YN = 'N'
+                       AND f.CREATED_AT IS NOT NULL
+                       AND (
+                            NOT EXISTS (
+                                SELECT 1 FROM CONTENT_SHARES secret_marker
+                                 WHERE secret_marker.CONTENT_TYPE = 'FILE'
+                                   AND secret_marker.CONTENT_ID = f.CONTENT_FILE_ID
+                                   AND secret_marker.TARGET_TYPE = 'USER'
+                                   AND secret_marker.TARGET_ID = secret_marker.OWNER_ID
+                                   AND secret_marker.SHARED_BY = secret_marker.OWNER_ID
+                                   AND UPPER(NVL(secret_marker.PERMISSION_TYPE, 'VIEW')) = 'VIEW'
+                                   AND secret_marker.ACTIVE_YN = 'Y'
+                                   AND NVL(secret_marker.SHARE_STATUS, 'ACCEPTED') = 'ACCEPTED'
+                            )
+                            OR f.CREATED_BY = #{viewerUserId, jdbcType=NUMERIC}
+                            OR EXISTS (
+                                SELECT 1 FROM CONTENT_SHARES edit_share
+                                 WHERE edit_share.CONTENT_TYPE = 'FILE'
+                                   AND edit_share.CONTENT_ID = f.CONTENT_FILE_ID
+                                   AND edit_share.TARGET_TYPE = 'USER'
+                                   AND edit_share.TARGET_ID = #{viewerUserId, jdbcType=NUMERIC}
+                                   AND UPPER(NVL(edit_share.PERMISSION_TYPE, 'VIEW')) = 'EDIT'
+                                   AND edit_share.ACTIVE_YN = 'Y'
+                                   AND NVL(edit_share.SHARE_STATUS, 'ACCEPTED') = 'ACCEPTED'
+                                   AND (edit_share.EXPIRES_AT IS NULL OR edit_share.EXPIRES_AT &gt;= SYSDATE)
+                            )
+                            OR EXISTS (
+                                SELECT 1 FROM PROJECTS p_mgr
+                                LEFT JOIN PROJ_MEMBERS pm_mgr
+                                  ON pm_mgr.PROJ_ID = p_mgr.PROJ_ID
+                                 AND pm_mgr.USER_ID = #{viewerUserId, jdbcType=NUMERIC}
+                               WHERE p_mgr.PROJ_ID = f.PROJ_ID
+                                 AND p_mgr.WS_ID IS NOT NULL
+                                 AND (p_mgr.LEADER_ID = #{viewerUserId, jdbcType=NUMERIC}
+                                      OR UPPER(NVL(pm_mgr.PROJ_ROLE, 'MEMBER')) IN ('ADMIN','LEADER','OWNER','PM'))
+                            )
+                       )
+
+                    UNION ALL
+
+                    SELECT CASE WHEN bp.BOARD_TYPE = 'NOTICE' THEN 'NOTICE' ELSE 'BOARD' END AS activity_type,
+                           bp.POST_ID AS target_id,
+                           NVL(NULLIF(TRIM(bp.TITLE), ''), '제목 없는 게시글') AS title,
+                           CASE WHEN bp.BOARD_TYPE = 'NOTICE' THEN '공지 작성' ELSE '게시글 작성' END AS detail,
+                           bp.REG_DT AS activity_at
+                      FROM BOARD_POSTS bp
+                     WHERE bp.PROJ_ID = #{projId, jdbcType=NUMERIC}
+                       AND bp.USER_ID = #{userId, jdbcType=NUMERIC}
+                       AND bp.REG_DT IS NOT NULL
+
+                    UNION ALL
+
+                    SELECT 'PLAN' AS activity_type,
+                           p.PERIOD_PLAN_ID AS target_id,
+                           NVL(NULLIF(TRIM(p.TITLE), ''), '프로젝트 계획') AS title,
+                           '기간 계획 작성' AS detail,
+                           p.CREATED_AT AS activity_at
+                      FROM PROJECT_PERIOD_PLANS p
+                     WHERE p.PROJ_ID = #{projId, jdbcType=NUMERIC}
+                       AND p.CREATED_BY = #{userId, jdbcType=NUMERIC}
+                       AND p.CREATED_AT IS NOT NULL
+
+                    UNION ALL
+
+                    SELECT 'PLAN' AS activity_type,
+                           t.TIME_PLAN_ID AS target_id,
+                           NVL(NULLIF(TRIM(t.TITLE), ''), '프로젝트 계획') AS title,
+                           '시간 계획 작성' AS detail,
+                           t.CREATED_AT AS activity_at
+                      FROM PROJECT_TIME_PLANS t
+                     WHERE t.PROJ_ID = #{projId, jdbcType=NUMERIC}
+                       AND t.CREATED_BY = #{userId, jdbcType=NUMERIC}
+                       AND t.CREATED_AT IS NOT NULL
+
+                    UNION ALL
+
+                    SELECT 'PLAN' AS activity_type,
+                           w.WEEKLY_PLAN_ID AS target_id,
+                           NVL(NULLIF(TRIM(w.TITLE), ''), '프로젝트 계획') AS title,
+                           '주간 계획 작성' AS detail,
+                           w.CREATED_AT AS activity_at
+                      FROM PROJECT_WEEKLY_PLANS w
+                     WHERE w.PROJ_ID = #{projId, jdbcType=NUMERIC}
+                       AND w.CREATED_BY = #{userId, jdbcType=NUMERIC}
+                       AND w.CREATED_AT IS NOT NULL
+              )
+             WHERE activity_at IS NOT NULL
+             ORDER BY activity_at DESC, target_id DESC
+        )
+        WHERE ROWNUM &lt;= 30
+    </select>
+
+    <select id="getProjectTaskAssignees" resultType="map">
+        SELECT
+            pta.TASK_ID AS "TASK_ID",
+            pta.USER_ID AS "USER_ID",
+            CASE
+                WHEN NVL(wp.USE_ACCOUNT_PROFILE, 'Y') = 'N'
+                    THEN NVL(wp.DISPLAY_NAME, u.USER_NAME)
+                ELSE u.USER_NAME
+            END AS "USER_NAME",
+            NVL(wp.CONTACT_EMAIL, u.EMAIL) AS "USER_EMAIL",
+            CASE
+                WHEN NVL(wp.USE_ACCOUNT_PROFILE, 'Y') = 'N'
+                    THEN wp.PROFILE_IMAGE_PATH
+                ELSE u.PROFILE_IMAGE_PATH
+            END AS "PROFILE_IMAGE_PATH",
+            pm.PROJ_ROLE AS "PROJECT_ROLE",
+            pm.PROJ_POSITION AS "PROJECT_POSITION",
+            TO_CHAR(pta.ASSIGNED_AT, 'YYYY-MM-DD HH24:MI:SS') AS "ASSIGNED_AT"
+        FROM PROJECT_TASK_ASSIGNEES pta
+        JOIN PROJECT_TASKS t ON t.TASK_ID = pta.TASK_ID
+        JOIN PROJECTS p ON p.PROJ_ID = t.PROJ_ID
+        JOIN USERS u ON u.USER_ID = pta.USER_ID
+        LEFT JOIN PROJ_MEMBERS pm ON pm.PROJ_ID = t.PROJ_ID AND pm.USER_ID = pta.USER_ID
+        LEFT JOIN WS_MEMBER_PROFILES wp ON wp.WS_ID = p.WS_ID AND wp.USER_ID = pta.USER_ID
+        WHERE t.PROJ_ID = #{projId, jdbcType=NUMERIC}
+        ORDER BY pta.TASK_ID, pta.ASSIGNED_AT, pta.USER_ID
+    </select>
+
+    <select id="getTaskAssignees" resultType="map">
+        SELECT
+            pta.TASK_ID AS "TASK_ID",
+            pta.USER_ID AS "USER_ID",
+            CASE
+                WHEN NVL(wp.USE_ACCOUNT_PROFILE, 'Y') = 'N'
+                    THEN NVL(wp.DISPLAY_NAME, u.USER_NAME)
+                ELSE u.USER_NAME
+            END AS "USER_NAME",
+            NVL(wp.CONTACT_EMAIL, u.EMAIL) AS "USER_EMAIL",
+            CASE
+                WHEN NVL(wp.USE_ACCOUNT_PROFILE, 'Y') = 'N'
+                    THEN wp.PROFILE_IMAGE_PATH
+                ELSE u.PROFILE_IMAGE_PATH
+            END AS "PROFILE_IMAGE_PATH",
+            pm.PROJ_ROLE AS "PROJECT_ROLE",
+            pm.PROJ_POSITION AS "PROJECT_POSITION",
+            TO_CHAR(pta.ASSIGNED_AT, 'YYYY-MM-DD HH24:MI:SS') AS "ASSIGNED_AT"
+        FROM PROJECT_TASK_ASSIGNEES pta
+        JOIN PROJECT_TASKS t ON t.TASK_ID = pta.TASK_ID
+        JOIN PROJECTS p ON p.PROJ_ID = t.PROJ_ID
+        JOIN USERS u ON u.USER_ID = pta.USER_ID
+        LEFT JOIN PROJ_MEMBERS pm ON pm.PROJ_ID = t.PROJ_ID AND pm.USER_ID = pta.USER_ID
+        LEFT JOIN WS_MEMBER_PROFILES wp ON wp.WS_ID = p.WS_ID AND wp.USER_ID = pta.USER_ID
+        WHERE pta.TASK_ID = #{taskId, jdbcType=NUMERIC}
+        ORDER BY pta.ASSIGNED_AT, pta.USER_ID
     </select>
 
     <insert id="insertTask" parameterType="map">
-        INSERT INTO EVENTS (
-            EVENT_ID,
-            PROJ_ID,
-            WS_ID,
-            USER_ID,
-            TITLE,
-            STATUS,
-            ITEM_TYPE,
-            START_DT,
-            END_DT,
-            ACTUAL_START_DT,
-            ACTUAL_DONE_DT,
-            START_TIME_SLOT,
-            END_TIME_SLOT
-        )
-        VALUES (
-            SEQ_EVENT_ID.NEXTVAL,
-            #{projId},
-            #{wsId},
-            #{userId, jdbcType=NUMERIC},
-            #{title},
-            #{status},
-            'TASK',
-            CASE
-                WHEN #{startDate, jdbcType=VARCHAR} IS NULL
-                  OR TRIM(#{startDate, jdbcType=VARCHAR}) IS NULL
-                THEN NULL
-                ELSE TO_DATE(#{startDate, jdbcType=VARCHAR} ||
-                    CASE
-                        WHEN #{startTimeSlot, jdbcType=VARCHAR} = 'TIME'
-                         AND #{startTime, jdbcType=VARCHAR} IS NOT NULL
-                         AND TRIM(#{startTime, jdbcType=VARCHAR}) IS NOT NULL
-                        THEN ' ' || #{startTime, jdbcType=VARCHAR} || ':00'
-                        WHEN #{startTimeSlot, jdbcType=VARCHAR} = 'PM' THEN ' 13:00:00'
-                        WHEN #{startTimeSlot, jdbcType=VARCHAR} = 'NONE' THEN ' 00:00:00'
-                        ELSE ' 09:00:00'
-                    END,
-                    'YYYY-MM-DD HH24:MI:SS'
-                )
-            END,
-            CASE
-                WHEN #{endDate, jdbcType=VARCHAR} IS NULL
-                  OR TRIM(#{endDate, jdbcType=VARCHAR}) IS NULL
-                THEN NULL
-                ELSE TO_DATE(#{endDate, jdbcType=VARCHAR} ||
-                    CASE
-                        WHEN #{endTimeSlot, jdbcType=VARCHAR} = 'TIME'
-                         AND #{endTime, jdbcType=VARCHAR} IS NOT NULL
-                         AND TRIM(#{endTime, jdbcType=VARCHAR}) IS NOT NULL
-                        THEN ' ' || #{endTime, jdbcType=VARCHAR} || ':59'
-                        WHEN #{endTimeSlot, jdbcType=VARCHAR} = 'AM' THEN ' 12:00:00'
-                        WHEN #{endTimeSlot, jdbcType=VARCHAR} = 'NONE' THEN ' 23:59:59'
-                        ELSE ' 18:00:00'
-                    END,
-                    'YYYY-MM-DD HH24:MI:SS'
-                )
-            END,
-            CASE
-                WHEN #{status} IN ('IN_PROGRESS', 'DONE') THEN SYSDATE
-                ELSE NULL
-            END,
-            CASE
-                WHEN #{status} = 'DONE' THEN SYSDATE
-                ELSE NULL
-            END,
-            NVL(#{startTimeSlot, jdbcType=VARCHAR}, 'NONE'),
-            NVL(#{endTimeSlot, jdbcType=VARCHAR}, 'NONE')
-        )
+        <selectKey keyProperty="taskId" resultType="long" order="BEFORE">SELECT SEQ_PROJECT_TASK_ID.NEXTVAL FROM DUAL</selectKey>
+        INSERT INTO PROJECT_TASKS (TASK_ID, PROJ_ID, ASSIGNEE_ID, CREATED_BY, TITLE, DESCRIPTION, STATUS, START_AT, END_AT, ALL_DAY_YN, CALENDAR_VISIBLE_YN, RECORD_ENABLED_YN, RECORD_VISIBILITY, ACTUAL_STARTED_AT, COMPLETED_AT, SORT_ORDER, CREATED_AT, UPDATED_AT)
+        VALUES (#{taskId}, #{projId}, #{userId}, #{createdBy, jdbcType=NUMERIC}, #{title}, #{description, jdbcType=VARCHAR}, #{status},
+            CASE WHEN #{startDate, jdbcType=VARCHAR} IS NULL OR TRIM(#{startDate, jdbcType=VARCHAR}) IS NULL THEN NULL ELSE TO_DATE(#{startDate} || CASE WHEN #{startTimeSlot}='TIME' THEN ' '||#{startTime}||':00' ELSE ' 00:00:00' END, 'YYYY-MM-DD HH24:MI:SS') END,
+            CASE WHEN #{endDate, jdbcType=VARCHAR} IS NULL OR TRIM(#{endDate, jdbcType=VARCHAR}) IS NULL THEN NULL ELSE TO_DATE(#{endDate} || CASE WHEN #{endTimeSlot}='TIME' THEN ' '||#{endTime}||':59' ELSE ' 23:59:59' END, 'YYYY-MM-DD HH24:MI:SS') END,
+            CASE WHEN #{startTimeSlot}='TIME' AND #{endTimeSlot}='TIME' THEN 'N' ELSE 'Y' END, NVL(#{calendarVisibleYn, jdbcType=VARCHAR}, 'Y'),
+            NVL(#{recordEnabledYn, jdbcType=VARCHAR}, 'Y'), NVL(#{recordVisibility, jdbcType=VARCHAR}, 'PROJECT'),
+            CASE WHEN #{status} IN ('IN_PROGRESS','DONE') THEN SYSDATE END, CASE WHEN #{status}='DONE' THEN SYSDATE END,
+            NVL(#{sortOrder, jdbcType=NUMERIC}, (SELECT NVL(MAX(SORT_ORDER),0)+1 FROM PROJECT_TASKS WHERE PROJ_ID=#{projId})), SYSDATE, SYSDATE)
+    </insert>
+
+    <delete id="deleteTaskAssignees">
+        DELETE FROM PROJECT_TASK_ASSIGNEES
+         WHERE TASK_ID = #{taskId, jdbcType=NUMERIC}
+    </delete>
+
+    <insert id="insertTaskAssignees">
+        INSERT ALL
+        <foreach collection="assigneeIds" item="userId">
+            INTO PROJECT_TASK_ASSIGNEES (TASK_ID, USER_ID, ASSIGNED_AT, ASSIGNED_BY)
+            VALUES (#{taskId, jdbcType=NUMERIC}, #{userId, jdbcType=NUMERIC}, SYSDATE, #{assignedBy, jdbcType=NUMERIC})
+        </foreach>
+        SELECT 1 FROM DUAL
     </insert>
 
     <select id="selectProjectById" resultType="com.springboot.project.dto.projectRequestDTO">
@@ -483,111 +1142,72 @@
             p.PROJ_SCOPE,
             p.PROJ_CATEGORY,
             p.PROJ_CATEGORY_DETAIL,
+            NVL(p.STATUS, 'ACTIVE') AS STATUS,
+            p.DELETE_REQUESTED_AT,
+            p.DELETE_DEADLINE_AT,
+            TO_CHAR(p.DELETE_DEADLINE_AT, 'YYYY-MM-DD') AS DELETE_DEADLINE_DATE,
             TO_CHAR(e.START_DT, 'YYYY-MM-DD') AS START_DATE,
             TO_CHAR(e.END_DT, 'YYYY-MM-DD') AS END_DATE
         FROM PROJECTS p
-        LEFT JOIN EVENTS e
-          ON p.PROJ_ID = e.PROJ_ID
-         AND e.ITEM_TYPE = 'PROJ'
+        LEFT JOIN (
+            SELECT
+                PROJ_ID,
+                MIN(START_DT) AS START_DT,
+                MAX(END_DT) AS END_DT
+            FROM EVENTS
+            WHERE ITEM_TYPE = 'PROJ'
+              AND EVENT_TYPE = 'PROJECT_PERIOD'
+            GROUP BY PROJ_ID
+        ) e ON p.PROJ_ID = e.PROJ_ID
         WHERE p.PROJ_ID = #{projId}
     </select>
 
     <select id="getTaskDetail" parameterType="long" resultType="map">
-        SELECT
-            e.EVENT_ID AS "TASK_ID",
-            e.PROJ_ID AS "PROJ_ID",
-            e.TITLE,
-            e.STATUS,
-            e.USER_ID AS "USER_ID",
-            u.USER_NAME AS "USER_NAME",
-            NVL(e.START_TIME_SLOT, 'NONE') AS "START_TIME_SLOT",
-            NVL(e.END_TIME_SLOT, 'NONE') AS "END_TIME_SLOT",
-            CASE WHEN e.START_TIME_SLOT = 'TIME' AND e.END_TIME_SLOT = 'TIME' THEN 'Y' ELSE 'N' END AS "USE_TIME",
-            CASE WHEN e.START_TIME_SLOT = 'TIME' THEN TO_CHAR(e.START_DT, 'HH24:MI') ELSE NULL END AS "START_TIME",
-            CASE WHEN e.END_TIME_SLOT = 'TIME' THEN TO_CHAR(e.END_DT, 'HH24:MI') ELSE NULL END AS "END_TIME",
-            TO_CHAR(e.START_DT, 'YYYY-MM-DD') AS "START_DATE",
-            TO_CHAR(e.END_DT, 'YYYY-MM-DD') AS "END_DATE",
-            TO_CHAR(e.ACTUAL_START_DT, 'YYYY-MM-DD HH24:MI') AS "ACTUAL_START_DATE",
-            TO_CHAR(e.ACTUAL_DONE_DT, 'YYYY-MM-DD HH24:MI') AS "ACTUAL_DONE_DATE",
-            CASE
-                WHEN e.STATUS != 'DONE'
-                 AND e.END_DT IS NOT NULL
-                 AND e.END_DT &lt; SYSDATE
-                THEN 'Y'
-                ELSE 'N'
-            END AS "DELAYED_YN"
-        FROM EVENTS e
-        LEFT JOIN USERS u
-          ON e.USER_ID = u.USER_ID
-        WHERE e.EVENT_ID = #{taskId}
-          AND e.ITEM_TYPE = 'TASK'
+        SELECT t.TASK_ID AS "TASK_ID", t.PROJ_ID AS "PROJ_ID", t.TITLE AS "TITLE", t.DESCRIPTION AS "DESCRIPTION", t.STATUS AS "STATUS",
+               t.ASSIGNEE_ID AS "USER_ID", t.ASSIGNEE_ID AS "ASSIGNEE_ID",
+               CASE
+                   WHEN p.WS_ID IS NOT NULL AND NVL(wp.USE_ACCOUNT_PROFILE, 'Y') = 'N'
+                       THEN NVL(wp.DISPLAY_NAME, u.USER_NAME)
+                   ELSE u.USER_NAME
+               END AS "USER_NAME",
+               CASE
+                   WHEN p.WS_ID IS NOT NULL AND NVL(wp.USE_ACCOUNT_PROFILE, 'Y') = 'N'
+                       THEN wp.PROFILE_IMAGE_PATH
+                   WHEN NVL(u.PROFILE_AVATAR_TYPE, 'DEFAULT') = 'IMAGE'
+                       THEN u.PROFILE_IMAGE_PATH
+                   ELSE NULL
+               END AS "PROFILE_IMAGE_PATH",
+               pm.PROJ_ROLE AS "ASSIGNEE_ROLE", pm.PROJ_POSITION AS "ASSIGNEE_POSITION", t.ALL_DAY_YN AS "ALL_DAY_YN", t.CALENDAR_VISIBLE_YN AS "CALENDAR_VISIBLE_YN",
+               NVL(t.RECORD_ENABLED_YN, 'N') AS "RECORD_ENABLED_YN", NVL(t.RECORD_VISIBILITY, 'PROJECT') AS "RECORD_VISIBILITY",
+               CASE WHEN t.ALL_DAY_YN='N' THEN 'Y' ELSE 'N' END AS "USE_TIME",
+               CASE WHEN t.ALL_DAY_YN='N' THEN TO_CHAR(t.START_AT,'HH24:MI') END AS "START_TIME", CASE WHEN t.ALL_DAY_YN='N' THEN TO_CHAR(t.END_AT,'HH24:MI') END AS "END_TIME",
+               TO_CHAR(t.START_AT,'YYYY-MM-DD') AS "START_DATE", TO_CHAR(t.END_AT,'YYYY-MM-DD') AS "END_DATE",
+               TO_CHAR(t.ACTUAL_STARTED_AT,'YYYY-MM-DD HH24:MI') AS "ACTUAL_START_DATE", TO_CHAR(t.COMPLETED_AT,'YYYY-MM-DD HH24:MI') AS "ACTUAL_DONE_DATE",
+               CASE WHEN t.STATUS!='DONE' AND t.END_AT IS NOT NULL AND t.END_AT&lt;SYSDATE THEN 'Y' ELSE 'N' END AS "DELAYED_YN", t.SORT_ORDER AS "SORT_ORDER", 0 AS "PROGRESS"
+          FROM PROJECT_TASKS t
+          JOIN PROJECTS p ON p.PROJ_ID=t.PROJ_ID
+          LEFT JOIN USERS u ON u.USER_ID=t.ASSIGNEE_ID
+          LEFT JOIN PROJ_MEMBERS pm ON pm.PROJ_ID=t.PROJ_ID AND pm.USER_ID=t.ASSIGNEE_ID
+          LEFT JOIN WS_MEMBER_PROFILES wp ON wp.WS_ID=p.WS_ID AND wp.USER_ID=t.ASSIGNEE_ID
+         WHERE t.TASK_ID=#{taskId, jdbcType=NUMERIC}
     </select>
 
     <update id="updateTask" parameterType="map">
-        UPDATE EVENTS
-        SET
-            TITLE = #{title},
-            USER_ID = NVL(#{userId, jdbcType=NUMERIC}, USER_ID),
-            START_DT =
-                CASE
-                    WHEN #{startDate, jdbcType=VARCHAR} IS NULL
-                      OR TRIM(#{startDate, jdbcType=VARCHAR}) IS NULL
-                    THEN NULL
-                    ELSE TO_DATE(#{startDate, jdbcType=VARCHAR} ||
-                        CASE
-                            WHEN #{startTimeSlot, jdbcType=VARCHAR} = 'TIME'
-                         AND #{startTime, jdbcType=VARCHAR} IS NOT NULL
-                         AND TRIM(#{startTime, jdbcType=VARCHAR}) IS NOT NULL
-                        THEN ' ' || #{startTime, jdbcType=VARCHAR} || ':00'
-                        WHEN #{startTimeSlot, jdbcType=VARCHAR} = 'PM' THEN ' 13:00:00'
-                        WHEN #{startTimeSlot, jdbcType=VARCHAR} = 'NONE' THEN ' 00:00:00'
-                        ELSE ' 09:00:00'
-                        END,
-                        'YYYY-MM-DD HH24:MI:SS'
-                    )
-                END,
-            END_DT =
-                CASE
-                    WHEN #{endDate, jdbcType=VARCHAR} IS NULL
-                      OR TRIM(#{endDate, jdbcType=VARCHAR}) IS NULL
-                    THEN NULL
-                    ELSE TO_DATE(#{endDate, jdbcType=VARCHAR} ||
-                        CASE
-                            WHEN #{endTimeSlot, jdbcType=VARCHAR} = 'TIME'
-                         AND #{endTime, jdbcType=VARCHAR} IS NOT NULL
-                         AND TRIM(#{endTime, jdbcType=VARCHAR}) IS NOT NULL
-                        THEN ' ' || #{endTime, jdbcType=VARCHAR} || ':59'
-                        WHEN #{endTimeSlot, jdbcType=VARCHAR} = 'AM' THEN ' 12:00:00'
-                        WHEN #{endTimeSlot, jdbcType=VARCHAR} = 'NONE' THEN ' 23:59:59'
-                        ELSE ' 18:00:00'
-                        END,
-                        'YYYY-MM-DD HH24:MI:SS'
-                    )
-                END,
-            STATUS = #{status},
-            START_TIME_SLOT = NVL(#{startTimeSlot, jdbcType=VARCHAR}, 'NONE'),
-            END_TIME_SLOT = NVL(#{endTimeSlot, jdbcType=VARCHAR}, 'NONE'),
-            ACTUAL_START_DT =
-                CASE
-                    WHEN #{status} = 'TODO' THEN NULL
-                    WHEN #{status} IN ('IN_PROGRESS', 'DONE') AND ACTUAL_START_DT IS NULL THEN SYSDATE
-                    ELSE ACTUAL_START_DT
-                END,
-            ACTUAL_DONE_DT =
-                CASE
-                    WHEN #{status} = 'DONE' AND ACTUAL_DONE_DT IS NULL THEN SYSDATE
-                    WHEN #{status} != 'DONE' THEN NULL
-                    ELSE ACTUAL_DONE_DT
-                END
-        WHERE EVENT_ID = #{taskId, jdbcType=NUMERIC}
-          AND ITEM_TYPE = 'TASK'
+        UPDATE PROJECT_TASKS SET TITLE=#{title}, DESCRIPTION=#{description, jdbcType=VARCHAR}, ASSIGNEE_ID=<choose><when test="replaceAssignee">#{userId, jdbcType=NUMERIC}</when><otherwise>NVL(#{userId, jdbcType=NUMERIC},ASSIGNEE_ID)</otherwise></choose>, STATUS=#{status},
+            START_AT=CASE WHEN #{startDate, jdbcType=VARCHAR} IS NULL OR TRIM(#{startDate, jdbcType=VARCHAR}) IS NULL THEN NULL ELSE TO_DATE(#{startDate}||CASE WHEN #{startTimeSlot}='TIME' THEN ' '||#{startTime}||':00' ELSE ' 00:00:00' END,'YYYY-MM-DD HH24:MI:SS') END,
+            END_AT=CASE WHEN #{endDate, jdbcType=VARCHAR} IS NULL OR TRIM(#{endDate, jdbcType=VARCHAR}) IS NULL THEN NULL ELSE TO_DATE(#{endDate}||CASE WHEN #{endTimeSlot}='TIME' THEN ' '||#{endTime}||':59' ELSE ' 23:59:59' END,'YYYY-MM-DD HH24:MI:SS') END,
+            ALL_DAY_YN=CASE WHEN #{startTimeSlot}='TIME' AND #{endTimeSlot}='TIME' THEN 'N' ELSE 'Y' END,
+            CALENDAR_VISIBLE_YN=NVL(#{calendarVisibleYn, jdbcType=VARCHAR},CALENDAR_VISIBLE_YN),
+            RECORD_ENABLED_YN=NVL(#{recordEnabledYn, jdbcType=VARCHAR}, RECORD_ENABLED_YN),
+            RECORD_VISIBILITY=NVL(#{recordVisibility, jdbcType=VARCHAR}, RECORD_VISIBILITY),
+            SORT_ORDER=NVL(#{sortOrder, jdbcType=NUMERIC},SORT_ORDER),
+            ACTUAL_STARTED_AT=CASE WHEN #{status}='TODO' THEN NULL WHEN #{status} IN ('IN_PROGRESS','DONE') AND ACTUAL_STARTED_AT IS NULL THEN SYSDATE ELSE ACTUAL_STARTED_AT END,
+            COMPLETED_AT=CASE WHEN #{status}='DONE' AND COMPLETED_AT IS NULL THEN SYSDATE WHEN #{status}!='DONE' THEN NULL ELSE COMPLETED_AT END, UPDATED_AT=SYSDATE
+        WHERE TASK_ID=#{taskId, jdbcType=NUMERIC}
     </update>
 
-    <delete id="deleteTask" parameterType="long">
-        DELETE FROM EVENTS
-        WHERE EVENT_ID = #{taskId, jdbcType=NUMERIC}
-          AND ITEM_TYPE = 'TASK'
-    </delete>
+    <delete id="deleteTask" parameterType="long">DELETE FROM PROJECT_TASKS WHERE TASK_ID=#{taskId, jdbcType=NUMERIC}</delete>
+
 
     <update id="updateProject" parameterType="com.springboot.project.dto.projectRequestDTO">
         UPDATE PROJECTS
@@ -597,7 +1217,7 @@
             PROJ_TYPE = NVL(#{projType, jdbcType=VARCHAR}, PROJ_TYPE),
             PROJ_SCOPE = NVL(#{projScope, jdbcType=VARCHAR}, PROJ_SCOPE),
             PROJ_CATEGORY = NVL(#{projCategory, jdbcType=VARCHAR}, PROJ_CATEGORY),
-            PROJ_CATEGORY_DETAIL = NVL(#{projCategoryDetail, jdbcType=VARCHAR}, PROJ_CATEGORY_DETAIL)
+            PROJ_CATEGORY_DETAIL = NULL
         WHERE PROJ_ID = #{projId, jdbcType=NUMERIC}
     </update>
 
@@ -608,31 +1228,32 @@
             END_DT   = TO_DATE(#{endDate}, 'YYYY-MM-DD')
         WHERE PROJ_ID = #{projId}
           AND ITEM_TYPE = 'PROJ'
+          AND EVENT_TYPE = 'PROJECT_PERIOD'
     </update>
 
-    <delete id="deleteProject" parameterType="long">
-        DELETE FROM PROJECTS
-        WHERE PROJ_ID = #{projId}
-    </delete>
+    <update id="requestProjectDeletion" parameterType="long">
+        UPDATE PROJECTS
+           SET STATUS = 'DELETE_PENDING',
+               DELETE_REQUESTED_AT = SYSDATE,
+               DELETE_DEADLINE_AT = SYSDATE + 30
+         WHERE PROJ_ID = #{projId}
+           AND NVL(STATUS, 'ACTIVE') = 'ACTIVE'
+    </update>
 
-    <update id="updateTaskStatus">
-        UPDATE EVENTS
-        SET
-            STATUS = #{status},
-            ACTUAL_START_DT =
-                CASE
-                    WHEN #{status} = 'TODO' THEN NULL
-                    WHEN #{status} IN ('IN_PROGRESS', 'DONE') AND ACTUAL_START_DT IS NULL THEN SYSDATE
-                    ELSE ACTUAL_START_DT
-                END,
-            ACTUAL_DONE_DT =
-                CASE
-                    WHEN #{status} = 'DONE' AND ACTUAL_DONE_DT IS NULL THEN SYSDATE
-                    WHEN #{status} != 'DONE' THEN NULL
-                    ELSE ACTUAL_DONE_DT
-                END
-        WHERE EVENT_ID = #{taskId, jdbcType=NUMERIC}
-          AND ITEM_TYPE = 'TASK'
+    <update id="cancelProjectDeletion" parameterType="long">
+        UPDATE PROJECTS
+           SET STATUS = 'ACTIVE',
+               DELETE_REQUESTED_AT = NULL,
+               DELETE_DEADLINE_AT = NULL
+         WHERE PROJ_ID = #{projId}
+           AND STATUS = 'DELETE_PENDING'
+    </update>
+<update id="updateTaskStatus">
+        UPDATE PROJECT_TASKS SET STATUS=#{status},
+            ACTUAL_STARTED_AT=CASE WHEN #{status}='TODO' THEN NULL WHEN #{status} IN ('IN_PROGRESS','DONE') AND ACTUAL_STARTED_AT IS NULL THEN SYSDATE ELSE ACTUAL_STARTED_AT END,
+            COMPLETED_AT=CASE WHEN #{status}='DONE' AND COMPLETED_AT IS NULL THEN SYSDATE WHEN #{status}!='DONE' THEN NULL ELSE COMPLETED_AT END,
+            UPDATED_AT=SYSDATE
+        WHERE TASK_ID=#{taskId, jdbcType=NUMERIC}
     </update>
 
     <select id="selectProjectSchedules" resultType="map">
@@ -654,7 +1275,19 @@
             COLOR
         FROM EVENTS
         WHERE PROJ_ID = #{projId}
-          AND ITEM_TYPE = 'SCHEDULE'
+          AND (
+                ITEM_TYPE = 'SCHEDULE'
+                OR (
+                    ITEM_TYPE = 'PROJ'
+                    AND NVL(EVENT_TYPE, 'APPOINTMENT') != 'PROJECT_PERIOD'
+                )
+              )
+        <if test="startDate != null and startDate != ''">
+            AND NVL(END_DT, START_DT) &gt;= TO_DATE(#{startDate}, 'YYYY-MM-DD')
+        </if>
+        <if test="endDate != null and endDate != ''">
+            AND START_DT &lt; TO_DATE(#{endDate}, 'YYYY-MM-DD') + 1
+        </if>
         ORDER BY START_DT ASC, EVENT_ID ASC
     </select>
 
@@ -680,7 +1313,7 @@
             #{userId, jdbcType=NUMERIC},
             #{title, jdbcType=VARCHAR},
             #{status, jdbcType=VARCHAR},
-            'SCHEDULE',
+            'PROJ',
             CASE
                 WHEN #{startDate, jdbcType=VARCHAR} IS NULL
                   OR TRIM(#{startDate, jdbcType=VARCHAR}) IS NULL
@@ -737,7 +1370,13 @@
             COLOR
         FROM EVENTS
         WHERE EVENT_ID = #{scheduleId, jdbcType=NUMERIC}
-          AND ITEM_TYPE = 'SCHEDULE'
+          AND (
+                ITEM_TYPE = 'SCHEDULE'
+                OR (
+                    ITEM_TYPE = 'PROJ'
+                    AND NVL(EVENT_TYPE, 'APPOINTMENT') != 'PROJECT_PERIOD'
+                )
+              )
     </select>
 
     <update id="updateProjectSchedule" parameterType="map">
@@ -781,13 +1420,25 @@
             STATUS = #{status, jdbcType=VARCHAR},
             COLOR = #{color, jdbcType=VARCHAR}
         WHERE EVENT_ID = #{scheduleId, jdbcType=NUMERIC}
-          AND ITEM_TYPE = 'SCHEDULE'
+          AND (
+                ITEM_TYPE = 'SCHEDULE'
+                OR (
+                    ITEM_TYPE = 'PROJ'
+                    AND NVL(EVENT_TYPE, 'APPOINTMENT') != 'PROJECT_PERIOD'
+                )
+              )
     </update>
 
     <delete id="deleteProjectSchedule">
         DELETE FROM EVENTS
         WHERE EVENT_ID = #{scheduleId, jdbcType=NUMERIC}
-          AND ITEM_TYPE = 'SCHEDULE'
+          AND (
+                ITEM_TYPE = 'SCHEDULE'
+                OR (
+                    ITEM_TYPE = 'PROJ'
+                    AND NVL(EVENT_TYPE, 'APPOINTMENT') != 'PROJECT_PERIOD'
+                )
+              )
     </delete>
 
 
@@ -828,22 +1479,31 @@
                 ELSE u.USER_NAME
             END AS DISPLAY_NAME,
             CASE
-                WHEN NVL(wp.USE_ACCOUNT_PROFILE, 'Y') = 'N'
+                WHEN pr.WS_ID IS NOT NULL AND NVL(wp.USE_ACCOUNT_PROFILE, 'Y') = 'N'
                     THEN wp.PROFILE_IMAGE_PATH
+                WHEN NVL(u.PROFILE_AVATAR_TYPE, 'DEFAULT') = 'IMAGE'
+                    THEN u.PROFILE_IMAGE_PATH
                 ELSE NULL
             END AS PROFILE_IMAGE_PATH,
-            NVL(wp.CONTACT_EMAIL, u.EMAIL) AS EMAIL,
             CASE
                 WHEN pm.USER_ID = #{viewerUserId}
-                     OR NVL(wp.SHOW_PHONE, 'N') = 'Y'
+                     OR NVL(wp.SHOW_EMAIL, 'Y') = 'Y'
+                    THEN NVL(wp.CONTACT_EMAIL, u.EMAIL)
+                ELSE NULL
+            END AS EMAIL,
+            NVL(wp.SHOW_EMAIL, 'Y') AS SHOW_EMAIL,
+            CASE
+                WHEN pm.USER_ID = #{viewerUserId}
+                     OR NVL(wp.SHOW_PHONE, 'Y') = 'Y'
                     THEN wp.PHONE_NUMBER
                 ELSE NULL
             END AS PHONE_NUMBER,
-            NVL(wp.SHOW_PHONE, 'N') AS SHOW_PHONE,
+            NVL(wp.SHOW_PHONE, 'Y') AS SHOW_PHONE,
             wp.POSITION_NAME AS WS_POSITION,
             pm.PROJ_POSITION,
             pm.PROJ_ROLE,
             CASE WHEN pr.LEADER_ID = pm.USER_ID THEN 'Y' ELSE 'N' END AS IS_LEADER,
+            TO_CHAR(pm.JOINED_AT, 'YYYY-MM-DD') AS PROJ_JOINED_AT,
             TO_CHAR(wm.JOINED_AT, 'YYYY-MM-DD') AS WS_JOINED_AT
         FROM PROJ_MEMBERS pm
         JOIN PROJECTS pr ON pr.PROJ_ID = pm.PROJ_ID
@@ -862,6 +1522,680 @@
               WHERE viewer_pm.PROJ_ID = pm.PROJ_ID
                 AND viewer_pm.USER_ID = #{viewerUserId}
           )
+    </select>
+
+
+    <!-- 20-24: 삭제 기한이 지난 프로젝트 -->
+    <select id="selectExpiredProjectDeletionIds" resultType="long">
+        SELECT PROJ_ID
+          FROM PROJECTS
+         WHERE STATUS = 'DELETE_PENDING'
+           AND DELETE_DEADLINE_AT IS NOT NULL
+           AND DELETE_DEADLINE_AT &lt;= SYSDATE
+         ORDER BY DELETE_DEADLINE_AT, PROJ_ID
+    </select>
+
+    <!-- 20-26: 프로젝트로 공유된 원본은 삭제하지 않고 공유 연결만 제거 -->
+    <delete id="deleteProjectTargetShares">
+        DELETE FROM CONTENT_SHARES
+         WHERE TARGET_TYPE = 'PROJ'
+           AND TARGET_ID = #{projId, jdbcType=NUMERIC}
+    </delete>
+
+    <!-- 프로젝트 자체 소유 콘텐츠에 붙은 공통 반응 정리 -->
+    <delete id="deleteProjectContentReactions">
+        DELETE FROM CONTENT_REACTIONS cr
+         WHERE (cr.CONTENT_TYPE = 'NOTE' AND cr.CONTENT_ID IN (
+                    SELECT n.NOTE_ID
+                      FROM NOTES n
+                     WHERE n.PROJ_ID = #{projId, jdbcType=NUMERIC}
+                ))
+            OR (cr.CONTENT_TYPE IN ('PHOTO', 'PHOTO_POST') AND cr.CONTENT_ID IN (
+                    SELECT pp.POST_ID
+                      FROM PHOTO_POSTS pp
+                     WHERE pp.SCOPE_TYPE = 'PROJECT'
+                       AND pp.SCOPE_ID = #{projId, jdbcType=NUMERIC}
+                ))
+            OR (cr.CONTENT_TYPE = 'BOARD' AND cr.CONTENT_ID IN (
+                    SELECT bp.POST_ID
+                      FROM BOARD_POSTS bp
+                     WHERE bp.PROJ_ID = #{projId, jdbcType=NUMERIC}
+                ))
+            OR (cr.CONTENT_TYPE = 'EVENT' AND cr.CONTENT_ID IN (
+                    SELECT e.EVENT_ID
+                      FROM EVENTS e
+                     WHERE e.PROJ_ID = #{projId, jdbcType=NUMERIC}
+                ))
+            OR (cr.CONTENT_TYPE = 'POLL' AND cr.CONTENT_ID IN (
+                    SELECT p.POLL_ID
+                      FROM POLLS p
+                     WHERE p.PROJ_ID = #{projId, jdbcType=NUMERIC}
+                ))
+    </delete>
+
+    <!-- 20-25: 프로젝트 고유 데이터 삭제 순서 -->
+    <delete id="deleteProjectNativeNotes">
+        DELETE FROM NOTES
+         WHERE PROJ_ID = #{projId, jdbcType=NUMERIC}
+    </delete>
+
+    <delete id="deleteProjectNoteFolders">
+        DELETE FROM NOTE_FOLDERS
+         WHERE PROJ_ID = #{projId, jdbcType=NUMERIC}
+    </delete>
+
+    <delete id="deleteProjectPhotoPosts">
+        DELETE FROM PHOTO_POSTS
+         WHERE SCOPE_TYPE = 'PROJECT'
+           AND SCOPE_ID = #{projId, jdbcType=NUMERIC}
+    </delete>
+
+    <delete id="deleteProjectPhotoAlbums">
+        DELETE FROM PHOTO_ALBUMS
+         WHERE SCOPE_TYPE = 'PROJECT'
+           AND SCOPE_ID = #{projId, jdbcType=NUMERIC}
+    </delete>
+
+    <delete id="deleteProjectBoardPosts">
+        DELETE FROM BOARD_POSTS
+         WHERE PROJ_ID = #{projId, jdbcType=NUMERIC}
+    </delete>
+
+    <delete id="deleteProjectPolls">
+        DELETE FROM POLLS
+         WHERE PROJ_ID = #{projId, jdbcType=NUMERIC}
+    </delete>
+
+    <delete id="deleteProjectWorkReports">
+        DELETE FROM WORK_REPORTS
+         WHERE PROJ_ID = #{projId, jdbcType=NUMERIC}
+    </delete>
+
+    <delete id="deleteProjectEvents">
+        DELETE FROM EVENTS
+         WHERE PROJ_ID = #{projId, jdbcType=NUMERIC}
+    </delete>
+
+    <delete id="deleteProjectLinksForFinalDelete">
+        DELETE FROM PROJECT_LINKS
+         WHERE PROJ_ID = #{projId, jdbcType=NUMERIC}
+    </delete>
+
+    <delete id="deleteProjectMembersForFinalDelete">
+        DELETE FROM PROJ_MEMBERS
+         WHERE PROJ_ID = #{projId, jdbcType=NUMERIC}
+    </delete>
+
+    <delete id="deleteProjectRow">
+        DELETE FROM PROJECTS
+         WHERE PROJ_ID = #{projId, jdbcType=NUMERIC}
+           AND STATUS = 'DELETE_PENDING'
+           AND DELETE_DEADLINE_AT IS NOT NULL
+           AND DELETE_DEADLINE_AT &lt;= SYSDATE
+    </delete>
+
+
+    <delete id="deleteProjectRowForWorkspaceFinalDelete">
+        DELETE FROM PROJECTS
+         WHERE PROJ_ID = #{projId, jdbcType=NUMERIC}
+    </delete>
+
+
+
+    <!-- =====================================================
+         프로젝트 단계(PROJECT_PHASES)
+         Controller/API 연결 전 Mapper 계약만 우선 설계
+         ===================================================== -->
+
+    <resultMap id="projectPeriodPlanResultMap" type="com.springboot.project.dto.projectPeriodPlanDTO">
+        <id property="periodPlanId" column="PERIOD_PLAN_ID"/>
+        <result property="projId" column="PROJ_ID"/>
+        <result property="title" column="TITLE"/>
+        <result property="description" column="DESCRIPTION"/>
+        <result property="startDate" column="START_DATE_TEXT"/>
+        <result property="endDate" column="END_DATE_TEXT"/>
+        <result property="color" column="COLOR"/>
+        <result property="sortOrder" column="SORT_ORDER"/>
+        <result property="createdBy" column="CREATED_BY"/>
+        <result property="createdAt" column="CREATED_AT"/>
+        <result property="updatedAt" column="UPDATED_AT"/>
+        <result property="recordEnabledYn" column="RECORD_ENABLED_YN"/>
+        <result property="recordVisibility" column="RECORD_VISIBILITY"/>
+    </resultMap>
+
+    <sql id="projectPeriodPlanSelectColumns">
+        p.PERIOD_PLAN_ID, p.PROJ_ID, p.TITLE, p.DESCRIPTION,
+        TO_CHAR(p.START_DATE, 'YYYY-MM-DD') AS START_DATE_TEXT,
+        TO_CHAR(p.END_DATE, 'YYYY-MM-DD') AS END_DATE_TEXT,
+        p.COLOR, p.SORT_ORDER, p.CREATED_BY, p.CREATED_AT, p.UPDATED_AT,
+        NVL(p.RECORD_ENABLED_YN, 'N') AS RECORD_ENABLED_YN, NVL(p.RECORD_VISIBILITY, 'PROJECT') AS RECORD_VISIBILITY
+    </sql>
+
+    <select id="selectProjectPeriodPlans" resultMap="projectPeriodPlanResultMap">
+        SELECT <include refid="projectPeriodPlanSelectColumns"/>
+        FROM PROJECT_PERIOD_PLANS p
+        WHERE p.PROJ_ID = #{projId, jdbcType=NUMERIC}
+        <if test="startDate != null and startDate != ''">
+            AND p.END_DATE &gt;= TO_DATE(#{startDate, jdbcType=VARCHAR}, 'YYYY-MM-DD')
+        </if>
+        <if test="endDate != null and endDate != ''">
+            AND p.START_DATE &lt; TO_DATE(#{endDate, jdbcType=VARCHAR}, 'YYYY-MM-DD') + 1
+        </if>
+        ORDER BY p.SORT_ORDER, p.START_DATE, p.PERIOD_PLAN_ID
+    </select>
+
+    <select id="selectProjectPeriodPlanById" resultMap="projectPeriodPlanResultMap">
+        SELECT <include refid="projectPeriodPlanSelectColumns"/>
+        FROM PROJECT_PERIOD_PLANS p
+        WHERE p.PERIOD_PLAN_ID = #{periodPlanId, jdbcType=NUMERIC}
+    </select>
+
+    <select id="selectNextProjectPeriodPlanSortOrder" resultType="int">
+        SELECT NVL(MAX(SORT_ORDER), 0) + 1 FROM PROJECT_PERIOD_PLANS
+        WHERE PROJ_ID = #{projId, jdbcType=NUMERIC}
+    </select>
+
+    <select id="countProjectPeriodPlans" resultType="int">
+        SELECT COUNT(*) FROM PROJECT_PERIOD_PLANS WHERE PROJ_ID = #{projId, jdbcType=NUMERIC}
+    </select>
+
+    <insert id="insertProjectPeriodPlan" parameterType="com.springboot.project.dto.projectPeriodPlanDTO">
+        <selectKey keyProperty="periodPlanId" resultType="long" order="BEFORE">
+            SELECT SEQ_PROJECT_PERIOD_PLAN_ID.NEXTVAL FROM DUAL
+        </selectKey>
+        INSERT INTO PROJECT_PERIOD_PLANS
+        (PERIOD_PLAN_ID, PROJ_ID, TITLE, DESCRIPTION, START_DATE, END_DATE, COLOR, SORT_ORDER, CREATED_BY, CREATED_AT, UPDATED_AT, RECORD_ENABLED_YN, RECORD_VISIBILITY)
+        VALUES
+        (#{periodPlanId, jdbcType=NUMERIC}, #{projId, jdbcType=NUMERIC}, #{title, jdbcType=VARCHAR}, #{description, jdbcType=VARCHAR}, TO_DATE(#{startDate, jdbcType=VARCHAR}, 'YYYY-MM-DD'),
+         TO_DATE(#{endDate, jdbcType=VARCHAR}, 'YYYY-MM-DD'), NVL(#{color, jdbcType=VARCHAR}, '#7A5CFF'), #{sortOrder, jdbcType=NUMERIC}, #{createdBy, jdbcType=NUMERIC}, SYSDATE, SYSDATE, NVL(#{recordEnabledYn, jdbcType=VARCHAR}, 'Y'), NVL(#{recordVisibility, jdbcType=VARCHAR}, 'PROJECT'))
+    </insert>
+
+    <update id="updateProjectPeriodPlan" parameterType="com.springboot.project.dto.projectPeriodPlanDTO">
+        UPDATE PROJECT_PERIOD_PLANS
+        SET TITLE=#{title, jdbcType=VARCHAR}, DESCRIPTION=#{description, jdbcType=VARCHAR},
+            START_DATE=TO_DATE(#{startDate, jdbcType=VARCHAR}, 'YYYY-MM-DD'), END_DATE=TO_DATE(#{endDate, jdbcType=VARCHAR}, 'YYYY-MM-DD'),
+            COLOR=#{color, jdbcType=VARCHAR}, RECORD_ENABLED_YN=NVL(#{recordEnabledYn, jdbcType=VARCHAR}, RECORD_ENABLED_YN), RECORD_VISIBILITY=NVL(#{recordVisibility, jdbcType=VARCHAR}, RECORD_VISIBILITY), UPDATED_AT=SYSDATE
+        WHERE PERIOD_PLAN_ID=#{periodPlanId, jdbcType=NUMERIC} AND PROJ_ID=#{projId, jdbcType=NUMERIC}
+    </update>
+
+    <update id="updateProjectPeriodPlanSortOrder">
+        UPDATE PROJECT_PERIOD_PLANS SET SORT_ORDER=NVL(#{sortOrder, jdbcType=NUMERIC}, SORT_ORDER), UPDATED_AT=SYSDATE
+        WHERE PERIOD_PLAN_ID=#{periodPlanId, jdbcType=NUMERIC} AND PROJ_ID=#{projId, jdbcType=NUMERIC}
+    </update>
+
+    <update id="shiftProjectPeriodPlanSortOrdersForInsert">
+        UPDATE PROJECT_PERIOD_PLANS SET SORT_ORDER=SORT_ORDER+1, UPDATED_AT=SYSDATE
+        WHERE PROJ_ID=#{projId, jdbcType=NUMERIC} AND SORT_ORDER &gt;= #{fromSortOrder, jdbcType=NUMERIC}
+    </update>
+
+    <update id="compactProjectPeriodPlanSortOrdersAfterDelete">
+        UPDATE PROJECT_PERIOD_PLANS SET SORT_ORDER=SORT_ORDER-1, UPDATED_AT=SYSDATE
+        WHERE PROJ_ID=#{projId, jdbcType=NUMERIC} AND SORT_ORDER &gt; #{deletedSortOrder, jdbcType=NUMERIC}
+    </update>
+
+    <delete id="deleteProjectPeriodPlan">
+        DELETE FROM PROJECT_PERIOD_PLANS
+        WHERE PERIOD_PLAN_ID=#{periodPlanId, jdbcType=NUMERIC} AND PROJ_ID=#{projId, jdbcType=NUMERIC}
+    </delete>
+
+    <!-- 시작·종료 일시 기준 프로젝트 시간별 계획 -->
+    <resultMap id="projectTimePlanResultMap" type="com.springboot.project.dto.projectTimePlanDTO">
+        <id property="timePlanId" column="TIME_PLAN_ID"/>
+        <result property="projId" column="PROJ_ID"/>
+        <result property="taskId" column="TASK_ID"/>
+        <result property="title" column="TITLE"/>
+        <result property="description" column="DESCRIPTION"/>
+        <result property="startDate" column="START_DATE_TEXT"/>
+        <result property="startTime" column="START_TIME_TEXT"/>
+        <result property="endDate" column="END_DATE_TEXT"/>
+        <result property="endTime" column="END_TIME_TEXT"/>
+        <result property="allDayYn" column="ALL_DAY_YN"/>
+        <result property="color" column="COLOR"/>
+        <result property="sortOrder" column="SORT_ORDER"/>
+        <result property="createdBy" column="CREATED_BY"/>
+        <result property="createdAt" column="CREATED_AT"/>
+        <result property="updatedAt" column="UPDATED_AT"/>
+    </resultMap>
+
+    <sql id="projectTimePlanSelectColumns">
+        t.TIME_PLAN_ID, t.PROJ_ID, t.TASK_ID, t.TITLE, t.DESCRIPTION,
+        TO_CHAR(t.START_DATE, 'YYYY-MM-DD') AS START_DATE_TEXT,
+        CASE WHEN t.ALL_DAY_YN = 'N' THEN TO_CHAR(t.START_DATE, 'HH24:MI') END AS START_TIME_TEXT,
+        TO_CHAR(t.END_DATE, 'YYYY-MM-DD') AS END_DATE_TEXT,
+        CASE WHEN t.ALL_DAY_YN = 'N' THEN TO_CHAR(t.END_DATE, 'HH24:MI') END AS END_TIME_TEXT,
+        t.ALL_DAY_YN, t.COLOR, t.SORT_ORDER, t.CREATED_BY, t.CREATED_AT, t.UPDATED_AT,
+        NVL(t.RECORD_ENABLED_YN, 'N') AS RECORD_ENABLED_YN, NVL(t.RECORD_VISIBILITY, 'PROJECT') AS RECORD_VISIBILITY
+    </sql>
+
+    <select id="selectProjectTimePlans" resultMap="projectTimePlanResultMap">
+        SELECT <include refid="projectTimePlanSelectColumns"/>
+        FROM PROJECT_TIME_PLANS t
+        WHERE t.PROJ_ID = #{projId, jdbcType=NUMERIC}
+        <if test="startDate != null and startDate != ''">
+            AND t.END_DATE &gt;= TO_DATE(#{startDate, jdbcType=VARCHAR}, 'YYYY-MM-DD')
+        </if>
+        <if test="endDate != null and endDate != ''">
+            AND t.START_DATE &lt; TO_DATE(#{endDate, jdbcType=VARCHAR}, 'YYYY-MM-DD') + 1
+        </if>
+        <if test="taskId != null">AND t.TASK_ID = #{taskId, jdbcType=NUMERIC}</if>
+        ORDER BY t.START_DATE, t.SORT_ORDER, t.TIME_PLAN_ID
+    </select>
+
+    <select id="selectProjectTimePlanById" resultMap="projectTimePlanResultMap">
+        SELECT <include refid="projectTimePlanSelectColumns"/>
+        FROM PROJECT_TIME_PLANS t
+        WHERE t.TIME_PLAN_ID = #{timePlanId, jdbcType=NUMERIC}
+    </select>
+
+    <select id="selectNextProjectTimePlanSortOrder" resultType="int">
+        SELECT NVL(MAX(SORT_ORDER), 0) + 1
+        FROM PROJECT_TIME_PLANS
+        WHERE PROJ_ID = #{projId, jdbcType=NUMERIC}
+          AND TRUNC(START_DATE) = TO_DATE(#{startDate, jdbcType=VARCHAR}, 'YYYY-MM-DD')
+    </select>
+
+    <insert id="insertProjectTimePlan" parameterType="com.springboot.project.dto.projectTimePlanDTO">
+        <selectKey keyProperty="timePlanId" resultType="long" order="BEFORE">SELECT SEQ_PROJECT_TIME_PLAN_ID.NEXTVAL FROM DUAL</selectKey>
+        INSERT INTO PROJECT_TIME_PLANS (
+            TIME_PLAN_ID, PROJ_ID, TASK_ID, TITLE, DESCRIPTION, START_DATE, END_DATE,
+            ALL_DAY_YN, COLOR, SORT_ORDER, CREATED_BY, CREATED_AT, UPDATED_AT, RECORD_ENABLED_YN, RECORD_VISIBILITY
+        ) VALUES (
+            #{timePlanId, jdbcType=NUMERIC}, #{projId, jdbcType=NUMERIC}, #{taskId, jdbcType=NUMERIC},
+            #{title, jdbcType=VARCHAR}, #{description, jdbcType=VARCHAR},
+            <choose>
+                <when test="allDayYn == &quot;Y&quot;">TO_DATE(#{startDate, jdbcType=VARCHAR}, 'YYYY-MM-DD')</when>
+                <otherwise>TO_DATE(#{startDate, jdbcType=VARCHAR} || ' ' || #{startTime, jdbcType=VARCHAR}, 'YYYY-MM-DD HH24:MI')</otherwise>
+            </choose>,
+            <choose>
+                <when test="allDayYn == &quot;Y&quot;">TO_DATE(#{endDate, jdbcType=VARCHAR}, 'YYYY-MM-DD')</when>
+                <otherwise>TO_DATE(#{endDate, jdbcType=VARCHAR} || ' ' || #{endTime, jdbcType=VARCHAR}, 'YYYY-MM-DD HH24:MI')</otherwise>
+            </choose>,
+            #{allDayYn, jdbcType=CHAR}, NVL(#{color, jdbcType=VARCHAR}, '#7A5CFF'),
+            #{sortOrder, jdbcType=NUMERIC}, #{createdBy, jdbcType=NUMERIC}, SYSDATE, SYSDATE,
+            NVL(#{recordEnabledYn, jdbcType=VARCHAR}, 'Y'), NVL(#{recordVisibility, jdbcType=VARCHAR}, 'PROJECT')
+        )
+    </insert>
+
+    <update id="updateProjectTimePlan" parameterType="com.springboot.project.dto.projectTimePlanDTO">
+        UPDATE PROJECT_TIME_PLANS
+        SET TASK_ID=#{taskId, jdbcType=NUMERIC}, TITLE=#{title, jdbcType=VARCHAR}, DESCRIPTION=#{description, jdbcType=VARCHAR},
+            START_DATE=<choose><when test="allDayYn == &quot;Y&quot;">TO_DATE(#{startDate, jdbcType=VARCHAR}, 'YYYY-MM-DD')</when><otherwise>TO_DATE(#{startDate, jdbcType=VARCHAR} || ' ' || #{startTime, jdbcType=VARCHAR}, 'YYYY-MM-DD HH24:MI')</otherwise></choose>,
+            END_DATE=<choose><when test="allDayYn == &quot;Y&quot;">TO_DATE(#{endDate, jdbcType=VARCHAR}, 'YYYY-MM-DD')</when><otherwise>TO_DATE(#{endDate, jdbcType=VARCHAR} || ' ' || #{endTime, jdbcType=VARCHAR}, 'YYYY-MM-DD HH24:MI')</otherwise></choose>,
+            ALL_DAY_YN=#{allDayYn, jdbcType=CHAR}, COLOR=NVL(#{color, jdbcType=VARCHAR}, '#7A5CFF'),
+            SORT_ORDER=#{sortOrder, jdbcType=NUMERIC}, RECORD_ENABLED_YN=NVL(#{recordEnabledYn, jdbcType=VARCHAR}, RECORD_ENABLED_YN), RECORD_VISIBILITY=NVL(#{recordVisibility, jdbcType=VARCHAR}, RECORD_VISIBILITY), UPDATED_AT=SYSDATE
+        WHERE TIME_PLAN_ID=#{timePlanId, jdbcType=NUMERIC} AND PROJ_ID=#{projId, jdbcType=NUMERIC}
+    </update>
+
+    <update id="updateProjectTimePlanSortOrder">
+        UPDATE PROJECT_TIME_PLANS SET SORT_ORDER=#{sortOrder, jdbcType=NUMERIC}, UPDATED_AT=SYSDATE
+        WHERE TIME_PLAN_ID=#{timePlanId, jdbcType=NUMERIC} AND PROJ_ID=#{projId, jdbcType=NUMERIC}
+    </update>
+
+    <update id="shiftProjectTimePlanSortOrdersForInsert">
+        UPDATE PROJECT_TIME_PLANS SET SORT_ORDER=SORT_ORDER+1, UPDATED_AT=SYSDATE
+        WHERE PROJ_ID=#{projId, jdbcType=NUMERIC}
+          AND TRUNC(START_DATE)=TO_DATE(#{startDate, jdbcType=VARCHAR}, 'YYYY-MM-DD')
+          AND SORT_ORDER &gt;= #{fromSortOrder, jdbcType=NUMERIC}
+    </update>
+
+    <update id="compactProjectTimePlanSortOrdersAfterDelete">
+        UPDATE PROJECT_TIME_PLANS SET SORT_ORDER=SORT_ORDER-1, UPDATED_AT=SYSDATE
+        WHERE PROJ_ID=#{projId, jdbcType=NUMERIC}
+          AND TRUNC(START_DATE)=TO_DATE(#{startDate, jdbcType=VARCHAR}, 'YYYY-MM-DD')
+          AND SORT_ORDER &gt; #{deletedSortOrder, jdbcType=NUMERIC}
+    </update>
+
+    <delete id="deleteProjectTimePlan">
+        DELETE FROM PROJECT_TIME_PLANS
+        WHERE TIME_PLAN_ID=#{timePlanId, jdbcType=NUMERIC} AND PROJ_ID=#{projId, jdbcType=NUMERIC}
+    </delete>
+
+    <!-- 요일 기준 반복 프로젝트 주간 계획 -->
+    <resultMap id="projectWeeklyPlanResultMap" type="com.springboot.project.dto.projectWeeklyPlanDTO">
+        <id property="weeklyPlanId" column="WEEKLY_PLAN_ID"/>
+        <result property="projId" column="PROJ_ID"/>
+        <result property="taskId" column="TASK_ID"/>
+        <result property="title" column="TITLE"/>
+        <result property="description" column="DESCRIPTION"/>
+        <result property="dayOfWeek" column="DAY_OF_WEEK"/>
+        <result property="startTime" column="START_TIME"/>
+        <result property="endTime" column="END_TIME"/>
+        <result property="color" column="COLOR"/>
+        <result property="sortOrder" column="SORT_ORDER"/>
+        <result property="repeatStartDate" column="REPEAT_START_DATE_TEXT"/>
+        <result property="repeatEndDate" column="REPEAT_END_DATE_TEXT"/>
+        <result property="activeYn" column="ACTIVE_YN"/>
+        <result property="createdBy" column="CREATED_BY"/>
+        <result property="createdAt" column="CREATED_AT"/>
+        <result property="updatedAt" column="UPDATED_AT"/>
+        <result property="recordEnabledYn" column="RECORD_ENABLED_YN"/>
+        <result property="recordVisibility" column="RECORD_VISIBILITY"/>
+    </resultMap>
+
+    <sql id="projectWeeklyPlanSelectColumns">
+        w.WEEKLY_PLAN_ID,
+        w.PROJ_ID,
+        w.TASK_ID,
+        w.TITLE,
+        w.DESCRIPTION,
+        w.DAY_OF_WEEK,
+        w.START_TIME,
+        w.END_TIME,
+        w.COLOR,
+        w.SORT_ORDER,
+        TO_CHAR(w.REPEAT_START_DATE, 'YYYY-MM-DD') AS REPEAT_START_DATE_TEXT,
+        TO_CHAR(w.REPEAT_END_DATE, 'YYYY-MM-DD') AS REPEAT_END_DATE_TEXT,
+        w.ACTIVE_YN,
+        w.CREATED_BY,
+        w.CREATED_AT,
+        w.UPDATED_AT,
+        NVL(w.RECORD_ENABLED_YN, 'N') AS RECORD_ENABLED_YN,
+        NVL(w.RECORD_VISIBILITY, 'PROJECT') AS RECORD_VISIBILITY
+    </sql>
+
+    <select id="selectProjectWeeklyPlans" resultMap="projectWeeklyPlanResultMap">
+        SELECT <include refid="projectWeeklyPlanSelectColumns"/>
+        FROM PROJECT_WEEKLY_PLANS w
+        WHERE w.PROJ_ID = #{projId, jdbcType=NUMERIC}
+        <if test="dayOfWeek != null">
+            AND w.DAY_OF_WEEK = #{dayOfWeek, jdbcType=NUMERIC}
+        </if>
+        <if test="activeYn != null and activeYn != ''">
+            AND w.ACTIVE_YN = #{activeYn, jdbcType=CHAR}
+        </if>
+        <if test="taskId != null">
+            AND w.TASK_ID = #{taskId, jdbcType=NUMERIC}
+        </if>
+        ORDER BY w.DAY_OF_WEEK, w.START_TIME, w.SORT_ORDER, w.WEEKLY_PLAN_ID
+    </select>
+
+    <select id="selectProjectWeeklyPlanById" resultMap="projectWeeklyPlanResultMap">
+        SELECT <include refid="projectWeeklyPlanSelectColumns"/>
+        FROM PROJECT_WEEKLY_PLANS w
+        WHERE w.WEEKLY_PLAN_ID = #{weeklyPlanId, jdbcType=NUMERIC}
+    </select>
+
+    <select id="selectNextProjectWeeklyPlanSortOrder" resultType="int">
+        SELECT NVL(MAX(SORT_ORDER), 0) + 1
+        FROM PROJECT_WEEKLY_PLANS
+        WHERE PROJ_ID = #{projId, jdbcType=NUMERIC}
+          AND DAY_OF_WEEK = #{dayOfWeek, jdbcType=NUMERIC}
+    </select>
+
+    <insert id="insertProjectWeeklyPlan" parameterType="com.springboot.project.dto.projectWeeklyPlanDTO">
+        <selectKey keyProperty="weeklyPlanId" resultType="long" order="BEFORE">
+            SELECT SEQ_PROJECT_WEEKLY_PLAN_ID.NEXTVAL FROM DUAL
+        </selectKey>
+        INSERT INTO PROJECT_WEEKLY_PLANS (
+            WEEKLY_PLAN_ID, PROJ_ID, TASK_ID, TITLE, DESCRIPTION,
+            DAY_OF_WEEK, START_TIME, END_TIME, COLOR, SORT_ORDER,
+            REPEAT_START_DATE, REPEAT_END_DATE, ACTIVE_YN,
+            CREATED_BY, CREATED_AT, UPDATED_AT, RECORD_ENABLED_YN, RECORD_VISIBILITY
+        ) VALUES (
+            #{weeklyPlanId, jdbcType=NUMERIC},
+            #{projId, jdbcType=NUMERIC},
+            #{taskId, jdbcType=NUMERIC},
+            #{title, jdbcType=VARCHAR},
+            #{description, jdbcType=VARCHAR},
+            #{dayOfWeek, jdbcType=NUMERIC},
+            #{startTime, jdbcType=VARCHAR},
+            #{endTime, jdbcType=VARCHAR},
+            NVL(#{color, jdbcType=VARCHAR}, '#7A5CFF'),
+            #{sortOrder, jdbcType=NUMERIC},
+            <choose>
+                <when test="repeatStartDate != null and repeatStartDate != ''">
+                    TO_DATE(#{repeatStartDate, jdbcType=VARCHAR}, 'YYYY-MM-DD')
+                </when>
+                <otherwise>NULL</otherwise>
+            </choose>,
+            <choose>
+                <when test="repeatEndDate != null and repeatEndDate != ''">
+                    TO_DATE(#{repeatEndDate, jdbcType=VARCHAR}, 'YYYY-MM-DD')
+                </when>
+                <otherwise>NULL</otherwise>
+            </choose>,
+            NVL(#{activeYn, jdbcType=CHAR}, 'Y'),
+            #{createdBy, jdbcType=NUMERIC},
+            SYSDATE,
+            SYSDATE,
+            NVL(#{recordEnabledYn, jdbcType=VARCHAR}, 'Y'),
+            NVL(#{recordVisibility, jdbcType=VARCHAR}, 'PROJECT')
+        )
+    </insert>
+
+    <update id="updateProjectWeeklyPlan" parameterType="com.springboot.project.dto.projectWeeklyPlanDTO">
+        UPDATE PROJECT_WEEKLY_PLANS
+        SET TASK_ID = #{taskId, jdbcType=NUMERIC},
+            TITLE = #{title, jdbcType=VARCHAR},
+            DESCRIPTION = #{description, jdbcType=VARCHAR},
+            DAY_OF_WEEK = #{dayOfWeek, jdbcType=NUMERIC},
+            START_TIME = #{startTime, jdbcType=VARCHAR},
+            END_TIME = #{endTime, jdbcType=VARCHAR},
+            COLOR = NVL(#{color, jdbcType=VARCHAR}, '#7A5CFF'),
+            SORT_ORDER = NVL(#{sortOrder, jdbcType=NUMERIC}, SORT_ORDER),
+            REPEAT_START_DATE =
+                <choose>
+                    <when test="repeatStartDate != null and repeatStartDate != ''">
+                        TO_DATE(#{repeatStartDate, jdbcType=VARCHAR}, 'YYYY-MM-DD')
+                    </when>
+                    <otherwise>NULL</otherwise>
+                </choose>,
+            REPEAT_END_DATE =
+                <choose>
+                    <when test="repeatEndDate != null and repeatEndDate != ''">
+                        TO_DATE(#{repeatEndDate, jdbcType=VARCHAR}, 'YYYY-MM-DD')
+                    </when>
+                    <otherwise>NULL</otherwise>
+                </choose>,
+            ACTIVE_YN = NVL(#{activeYn, jdbcType=CHAR}, 'Y'),
+            RECORD_ENABLED_YN = NVL(#{recordEnabledYn, jdbcType=VARCHAR}, RECORD_ENABLED_YN),
+            RECORD_VISIBILITY = NVL(#{recordVisibility, jdbcType=VARCHAR}, RECORD_VISIBILITY),
+            UPDATED_AT = SYSDATE
+        WHERE WEEKLY_PLAN_ID = #{weeklyPlanId, jdbcType=NUMERIC}
+          AND PROJ_ID = #{projId, jdbcType=NUMERIC}
+    </update>
+
+    <update id="updateProjectWeeklyPlanSortOrder">
+        UPDATE PROJECT_WEEKLY_PLANS
+        SET SORT_ORDER = #{sortOrder, jdbcType=NUMERIC},
+            UPDATED_AT = SYSDATE
+        WHERE WEEKLY_PLAN_ID = #{weeklyPlanId, jdbcType=NUMERIC}
+          AND PROJ_ID = #{projId, jdbcType=NUMERIC}
+    </update>
+
+    <update id="shiftProjectWeeklyPlanSortOrdersForInsert">
+        UPDATE PROJECT_WEEKLY_PLANS
+        SET SORT_ORDER = SORT_ORDER + 1,
+            UPDATED_AT = SYSDATE
+        WHERE PROJ_ID = #{projId, jdbcType=NUMERIC}
+          AND DAY_OF_WEEK = #{dayOfWeek, jdbcType=NUMERIC}
+          AND SORT_ORDER &gt;= #{fromSortOrder, jdbcType=NUMERIC}
+    </update>
+
+    <update id="compactProjectWeeklyPlanSortOrdersAfterDelete">
+        UPDATE PROJECT_WEEKLY_PLANS
+        SET SORT_ORDER = SORT_ORDER - 1,
+            UPDATED_AT = SYSDATE
+        WHERE PROJ_ID = #{projId, jdbcType=NUMERIC}
+          AND DAY_OF_WEEK = #{dayOfWeek, jdbcType=NUMERIC}
+          AND SORT_ORDER &gt; #{deletedSortOrder, jdbcType=NUMERIC}
+    </update>
+
+    <delete id="deleteProjectWeeklyPlan">
+        DELETE FROM PROJECT_WEEKLY_PLANS
+        WHERE WEEKLY_PLAN_ID = #{weeklyPlanId, jdbcType=NUMERIC}
+          AND PROJ_ID = #{projId, jdbcType=NUMERIC}
+    </delete>
+
+    <!-- 프로젝트 계획 기능 생성 상태 -->
+    <resultMap id="projectPlanFeatureResultMap" type="com.springboot.project.dto.projectPlanFeatureDTO">
+        <id property="projId" column="PROJ_ID"/>
+        <result property="periodEnabledYn" column="PERIOD_ENABLED_YN"/>
+        <result property="timeEnabledYn" column="TIME_ENABLED_YN"/>
+        <result property="weeklyEnabledYn" column="WEEKLY_ENABLED_YN"/>
+        <result property="timeRangeStartDate" column="TIME_RANGE_START_DATE"/>
+        <result property="timeRangeEndDate" column="TIME_RANGE_END_DATE"/>
+        <result property="createdAt" column="CREATED_AT"/>
+        <result property="updatedAt" column="UPDATED_AT"/>
+    </resultMap>
+
+    <select id="selectProjectPlanFeature" resultMap="projectPlanFeatureResultMap">
+        SELECT PROJ_ID, PERIOD_ENABLED_YN, TIME_ENABLED_YN, WEEKLY_ENABLED_YN,
+               TO_CHAR(TIME_RANGE_START_DATE, 'YYYY-MM-DD') AS TIME_RANGE_START_DATE,
+               TO_CHAR(TIME_RANGE_END_DATE, 'YYYY-MM-DD') AS TIME_RANGE_END_DATE,
+               CREATED_AT, UPDATED_AT
+          FROM PROJECT_PLAN_FEATURES
+         WHERE PROJ_ID = #{projId, jdbcType=NUMERIC}
+    </select>
+
+    <insert id="insertDefaultProjectPlanFeature">
+        INSERT INTO PROJECT_PLAN_FEATURES (PROJ_ID)
+        SELECT #{projId, jdbcType=NUMERIC} FROM DUAL
+         WHERE NOT EXISTS (SELECT 1 FROM PROJECT_PLAN_FEATURES WHERE PROJ_ID = #{projId, jdbcType=NUMERIC})
+    </insert>
+
+    <update id="updateProjectPlanFeature">
+        UPDATE PROJECT_PLAN_FEATURES
+        <set>
+            <if test="periodEnabledYn != null">
+                PERIOD_ENABLED_YN = #{periodEnabledYn, jdbcType=VARCHAR},
+            </if>
+            <if test="timeEnabledYn != null">
+                TIME_ENABLED_YN = #{timeEnabledYn, jdbcType=VARCHAR},
+            </if>
+            <if test="weeklyEnabledYn != null">
+                WEEKLY_ENABLED_YN = #{weeklyEnabledYn, jdbcType=VARCHAR},
+            </if>
+            <if test="timeRangeStartDate != null">
+                TIME_RANGE_START_DATE = TO_DATE(#{timeRangeStartDate, jdbcType=VARCHAR}, 'YYYY-MM-DD'),
+            </if>
+            <if test="timeRangeEndDate != null">
+                TIME_RANGE_END_DATE = TO_DATE(#{timeRangeEndDate, jdbcType=VARCHAR}, 'YYYY-MM-DD'),
+            </if>
+            UPDATED_AT = SYSTIMESTAMP
+        </set>
+        WHERE PROJ_ID = #{projId, jdbcType=NUMERIC}
+    </update>
+
+    <delete id="deleteAllProjectPeriodPlans">
+        DELETE FROM PROJECT_PERIOD_PLANS WHERE PROJ_ID = #{projId, jdbcType=NUMERIC}
+    </delete>
+    <delete id="deleteAllProjectTimePlans">
+        DELETE FROM PROJECT_TIME_PLANS WHERE PROJ_ID = #{projId, jdbcType=NUMERIC}
+    </delete>
+    <delete id="deleteAllProjectWeeklyPlans">
+        DELETE FROM PROJECT_WEEKLY_PLANS WHERE PROJ_ID = #{projId, jdbcType=NUMERIC}
+    </delete>
+    <update id="disableProjectPlanFeature">
+        UPDATE PROJECT_PLAN_FEATURES
+           SET PERIOD_ENABLED_YN = CASE WHEN #{type} = 'GANTT' THEN 'N' ELSE PERIOD_ENABLED_YN END,
+               TIME_ENABLED_YN = CASE WHEN #{type} = 'TIME_SCHEDULE' THEN 'N' ELSE TIME_ENABLED_YN END,
+               WEEKLY_ENABLED_YN = CASE WHEN #{type} = 'WEEKLY' THEN 'N' ELSE WEEKLY_ENABLED_YN END,
+               TIME_RANGE_START_DATE = CASE WHEN #{type} = 'TIME_SCHEDULE' THEN NULL ELSE TIME_RANGE_START_DATE END,
+               TIME_RANGE_END_DATE = CASE WHEN #{type} = 'TIME_SCHEDULE' THEN NULL ELSE TIME_RANGE_END_DATE END,
+               UPDATED_AT = SYSTIMESTAMP
+         WHERE PROJ_ID = #{projId, jdbcType=NUMERIC}
+    </update>
+
+
+
+
+    <select id="selectProjectPlanCalendarPref" resultType="com.springboot.project.dto.projectPlanCalendarPrefDTO">
+        SELECT USER_ID AS userId, PROJ_ID AS projId, SHOW_PERIOD_YN AS showPeriodYn,
+               SHOW_TIME_YN AS showTimeYn, SHOW_WEEKLY_YN AS showWeeklyYn
+          FROM PROJECT_PLAN_CALENDAR_PREFS
+         WHERE USER_ID = #{userId} AND PROJ_ID = #{projId}
+    </select>
+
+    <insert id="mergeProjectPlanCalendarPref" parameterType="com.springboot.project.dto.projectPlanCalendarPrefDTO">
+        MERGE INTO PROJECT_PLAN_CALENDAR_PREFS T
+        USING (SELECT #{userId} USER_ID, #{projId} PROJ_ID FROM DUAL) S
+           ON (T.USER_ID = S.USER_ID AND T.PROJ_ID = S.PROJ_ID)
+        WHEN MATCHED THEN UPDATE SET
+             T.SHOW_PERIOD_YN = #{showPeriodYn},
+             T.SHOW_TIME_YN = #{showTimeYn},
+             T.SHOW_WEEKLY_YN = #{showWeeklyYn},
+             T.UPDATED_AT = SYSDATE
+        WHEN NOT MATCHED THEN INSERT
+             (USER_ID, PROJ_ID, SHOW_PERIOD_YN, SHOW_TIME_YN, SHOW_WEEKLY_YN, CREATED_AT, UPDATED_AT)
+        VALUES
+             (#{userId}, #{projId}, #{showPeriodYn}, #{showTimeYn}, #{showWeeklyYn}, SYSDATE, SYSDATE)
+    </insert>
+
+
+    <!-- 작업 상세 인라인 탭 노트 -->
+
+    <!-- 프로젝트 계획 추가 편집 권한: 기존 CONTENT_SHARES 재사용 -->
+    <select id="selectProjectPlanEditorUserIds" resultType="long">
+        SELECT s.TARGET_ID
+          FROM CONTENT_SHARES s
+         WHERE s.CONTENT_TYPE = #{planType, jdbcType=VARCHAR}
+           AND s.CONTENT_ID = #{planId, jdbcType=NUMERIC}
+           AND s.TARGET_TYPE = 'USER'
+           AND UPPER(NVL(s.PERMISSION_TYPE, 'VIEW')) = 'EDIT'
+           AND s.ACTIVE_YN = 'Y'
+           AND NVL(s.SHARE_STATUS, 'ACCEPTED') = 'ACCEPTED'
+           AND (s.EXPIRES_AT IS NULL OR s.EXPIRES_AT &gt;= SYSDATE)
+         ORDER BY s.TARGET_ID
+    </select>
+
+    <select id="countProjectPlanEditor" resultType="int">
+        SELECT COUNT(*)
+          FROM CONTENT_SHARES s
+         WHERE s.CONTENT_TYPE = #{planType, jdbcType=VARCHAR}
+           AND s.CONTENT_ID = #{planId, jdbcType=NUMERIC}
+           AND s.TARGET_TYPE = 'USER'
+           AND s.TARGET_ID = #{userId, jdbcType=NUMERIC}
+           AND UPPER(NVL(s.PERMISSION_TYPE, 'VIEW')) = 'EDIT'
+           AND s.ACTIVE_YN = 'Y'
+           AND NVL(s.SHARE_STATUS, 'ACCEPTED') = 'ACCEPTED'
+           AND (s.EXPIRES_AT IS NULL OR s.EXPIRES_AT &gt;= SYSDATE)
+    </select>
+
+    <delete id="deleteProjectPlanEditors">
+        DELETE FROM CONTENT_SHARES
+         WHERE CONTENT_TYPE = #{planType, jdbcType=VARCHAR}
+           AND CONTENT_ID = #{planId, jdbcType=NUMERIC}
+           AND TARGET_TYPE = 'USER'
+           AND UPPER(NVL(PERMISSION_TYPE, 'VIEW')) = 'EDIT'
+    </delete>
+
+    <insert id="insertProjectPlanEditor">
+        INSERT INTO CONTENT_SHARES (
+            SHARE_ID, CONTENT_TYPE, CONTENT_ID, OWNER_ID,
+            TARGET_TYPE, TARGET_ID, PERMISSION_TYPE, SHARED_BY,
+            CREATED_AT, UPDATED_AT, EXPIRES_AT, ACTIVE_YN,
+            SHARE_STATUS, RESPONDED_BY, RESPONDED_AT
+        )
+        SELECT
+            SEQ_CONTENT_SHARE_ID.NEXTVAL,
+            #{planType, jdbcType=VARCHAR},
+            #{planId, jdbcType=NUMERIC},
+            CASE #{planType, jdbcType=VARCHAR}
+                WHEN 'PERIOD_PLAN' THEN (SELECT p.CREATED_BY FROM PROJECT_PERIOD_PLANS p WHERE p.PERIOD_PLAN_ID = #{planId, jdbcType=NUMERIC})
+                WHEN 'TIME_PLAN' THEN (SELECT t.CREATED_BY FROM PROJECT_TIME_PLANS t WHERE t.TIME_PLAN_ID = #{planId, jdbcType=NUMERIC})
+                WHEN 'WEEKLY_PLAN' THEN (SELECT w.CREATED_BY FROM PROJECT_WEEKLY_PLANS w WHERE w.WEEKLY_PLAN_ID = #{planId, jdbcType=NUMERIC})
+            END,
+            'USER',
+            #{userId, jdbcType=NUMERIC},
+            'EDIT',
+            #{grantedBy, jdbcType=NUMERIC},
+            SYSDATE, SYSDATE, NULL, 'Y', 'ACCEPTED',
+            #{userId, jdbcType=NUMERIC}, SYSDATE
+          FROM DUAL
+         WHERE EXISTS (
+            SELECT 1
+              FROM PROJ_MEMBERS pm
+             WHERE pm.PROJ_ID = #{projId, jdbcType=NUMERIC}
+               AND pm.USER_ID = #{userId, jdbcType=NUMERIC}
+         )
+    </insert>
+
+    <select id="countProjectMemberForPlanPermission" resultType="int">
+        SELECT COUNT(*)
+          FROM PROJ_MEMBERS
+         WHERE PROJ_ID = #{projId, jdbcType=NUMERIC}
+           AND USER_ID = #{userId, jdbcType=NUMERIC}
     </select>
 
 </mapper>

@@ -15,7 +15,7 @@
     position: absolute;
     inset: 0;
     background: rgba(24, 34, 54, .28);
-    backdrop-filter: blur(3px);
+    backdrop-filter: none;
 }
 
 .profile-sheet-dialog {
@@ -302,15 +302,22 @@
 
 .profile-sheet-actions .profile-action.is-primary {
     min-width: 66px;
-    border: 1px solid transparent;
-    background: linear-gradient(135deg, #4f8df7 0%, #52c7d9 100%);
+    border: 0;
+    outline: 0;
+    background: linear-gradient(90deg, #55d5ce 0%, #4288ef 52%, #5a55ee 100%);
     color: #fff;
-    box-shadow: 0 10px 22px rgba(79, 141, 247, .24);
+    box-shadow: 0 10px 22px rgba(66, 136, 239, .22);
 }
 
 .profile-sheet-actions .profile-action.is-primary:hover {
-    background: linear-gradient(135deg, #4784ef 0%, #45bdd1 100%);
-    box-shadow: 0 12px 26px rgba(79, 141, 247, .3);
+    background: linear-gradient(90deg, #4fcfc8 0%, #3f82e8 52%, #544fe8 100%);
+    box-shadow: 0 12px 26px rgba(66, 136, 239, .28);
+}
+
+.profile-sheet-actions .profile-action.is-primary:active {
+    border: 0;
+    transform: translateY(1px);
+    box-shadow: 0 6px 14px rgba(66, 136, 239, .2);
 }
 
 .profile-sheet-dialog--account {
@@ -418,12 +425,17 @@
     align-items: center;
     justify-content: space-between;
     gap: 16px;
+    min-height: 68px;
+    height: auto;
     padding: 14px 0;
     border-bottom: 1px solid #edf1f7;
+    box-sizing: border-box;
 }
 
 .profile-privacy-row > div {
     min-width: 0;
+    flex: 1 1 auto;
+    padding-right: 8px;
 }
 
 .profile-privacy-row strong {
@@ -436,7 +448,15 @@
     margin: 4px 0 0;
     color: #818ea2;
     font-size: 12px;
-    line-height: 1.45;
+    line-height: 1.55;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+    word-break: keep-all;
+}
+
+.profile-privacy-row .profile-switch {
+    flex: 0 0 auto;
 }
 
 .profile-notification-form .profile-privacy-guide {
@@ -552,6 +572,7 @@
 
 .signup-profile-viewport.has-image {
     cursor: grab;
+    background: #fff;
     background-position: 50% 50%;
     background-repeat: no-repeat;
     background-size: 115% auto;
@@ -704,7 +725,7 @@
     position: absolute;
     inset: 0;
     background: rgba(24, 34, 54, .42);
-    backdrop-filter: blur(4px);
+    backdrop-filter: none;
 }
 
 .signup-profile-modal-dialog {
@@ -726,7 +747,7 @@
 }
 
 .signup-profile-modal-kicker {
-    color: #4aaebb;
+    color: #4b73f3;
     font-size: 11px;
     font-weight: 950;
     letter-spacing: .08em;
@@ -788,8 +809,78 @@
 }
 
 .signup-profile-crop-control input[type="range"] {
+    --moyo-range-progress: 34.615%;
     width: 100%;
-    accent-color: var(--moyo-blue);
+    height: 6px;
+    margin: 0;
+    border: 0;
+    border-radius: 999px;
+    outline: 0;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image:
+        linear-gradient(90deg, #55d5ce 0%, #4388ef 55%, #5b55ec 100%),
+        linear-gradient(90deg, #e7edf6 0%, #e7edf6 100%);
+    background-size: var(--moyo-range-progress) 100%, 100% 100%;
+    background-repeat: no-repeat;
+    cursor: pointer;
+}
+
+.signup-profile-crop-control input[type="range"]::-webkit-slider-runnable-track {
+    height: 6px;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+}
+
+.signup-profile-crop-control input[type="range"]::-webkit-slider-thumb {
+    width: 16px;
+    height: 16px;
+    margin-top: -5px;
+    border: 2px solid #fff;
+    border-radius: 50%;
+    background: #4b73f3;
+    box-shadow: 0 2px 7px rgba(67, 94, 195, .24);
+    appearance: none;
+    -webkit-appearance: none;
+}
+
+.signup-profile-crop-control input[type="range"]::-moz-range-track {
+    height: 6px;
+    border: 0;
+    border-radius: 999px;
+    background: #e7edf6;
+}
+
+.signup-profile-crop-control input[type="range"]::-moz-range-progress {
+    height: 6px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #55d5ce 0%, #4388ef 55%, #5b55ec 100%);
+}
+
+.signup-profile-crop-control input[type="range"]::-moz-range-thumb {
+    width: 14px;
+    height: 14px;
+    border: 2px solid #fff;
+    border-radius: 50%;
+    background: #4b73f3;
+    box-shadow: 0 2px 7px rgba(67, 94, 195, .24);
+}
+
+.signup-profile-crop-control input[type="range"]:focus-visible::-webkit-slider-thumb {
+    box-shadow: 0 0 0 3px rgba(75, 115, 243, .15), 0 2px 7px rgba(67, 94, 195, .24);
+}
+
+.signup-profile-modal-actions--simple .signup-profile-apply {
+    border: 0;
+    color: #fff;
+    background: linear-gradient(100deg, #55d5ce 0%, #4388ef 52%, #5b55ec 100%);
+    box-shadow: 0 9px 20px rgba(74, 100, 224, .18);
+}
+
+.signup-profile-modal-actions--simple .signup-profile-apply:hover {
+    background: linear-gradient(100deg, #4fd0c7 0%, #3e82ea 52%, #554fe8 100%);
+    box-shadow: 0 11px 24px rgba(74, 100, 224, .22);
 }
 
 .signup-profile-modal-hint {
@@ -867,7 +958,7 @@ body.signup-modal-open {
     border-radius: 18px;
     background: rgba(255, 255, 255, .96);
     box-shadow: 0 18px 42px rgba(35, 54, 92, .14);
-    backdrop-filter: blur(10px);
+    backdrop-filter: none;
 }
 
 .profile-more-menu::before {
@@ -1032,14 +1123,15 @@ body.signup-modal-open {
 }
 
 .profile-image-history-item:hover {
-    border-color: rgba(66, 211, 194, .45);
+    border-color: rgba(66, 136, 239, .45);
     box-shadow: 0 10px 24px rgba(32, 38, 54, .08);
     transform: translateY(-1px);
 }
 
 .profile-image-history-item.is-current {
-    border-color: rgba(66, 211, 194, .65);
-    background: #f8fffe;
+    border-color: rgba(66, 136, 239, .72);
+    background: #f7f9ff;
+    box-shadow: 0 0 0 2px rgba(90, 85, 238, .06);
 }
 
 .profile-image-history-item img {
@@ -1185,7 +1277,7 @@ body.signup-modal-open {
     position: absolute;
     inset: 0;
     background: rgba(34, 45, 66, .38);
-    backdrop-filter: blur(5px);
+    backdrop-filter: none;
 }
 
 .profile-confirm-dialog {
@@ -1258,6 +1350,14 @@ body.signup-modal-open {
     display: block;
     content: "";
     margin-top: 2px;
+}
+
+.profile-confirm-desc--withdraw span {
+    display: block;
+}
+
+.profile-confirm-desc--withdraw span + span {
+    margin-top: 8px;
 }
 
 .profile-confirm-password input {
@@ -1924,4 +2024,302 @@ body.signup-modal-open {
 /* Account settings: remove the final divider below membership withdrawal. */
 .profile-danger-zone.profile-danger-zone--account {
     border-bottom: 0;
+}
+
+
+/* 2026-09 settings information architecture cleanup */
+.profile-settings-section-title {
+    margin: 18px 0 14px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #edf1f7;
+}
+
+.profile-settings-section-title strong {
+    color: #2f3a4f;
+    font-size: 14px;
+    font-weight: 950;
+}
+
+.profile-settings-section-title p {
+    margin: 5px 0 0;
+    color: #8793a5;
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.profile-account-email {
+    margin-bottom: 2px;
+}
+
+.profile-privacy-list .profile-privacy-row:first-child {
+    border-top: 0;
+}
+
+/* 2026-09-06 profile edit detail pass: intro count, links, CTA hierarchy */
+.profile-edit-form .profile-intro-field .profile-field-note {
+    align-self: flex-end;
+    margin: 5px 2px 0 0;
+    text-align: right;
+}
+
+.profile-edit-form .profile-link-list:not(:empty) {
+    margin-top: 2px;
+}
+
+.profile-edit-form .profile-link-row {
+    gap: 8px;
+    padding: 8px;
+    border: 1px solid #e7edf6;
+    border-radius: 13px;
+    background: #fbfdff;
+}
+
+.profile-edit-form .profile-link-row + .profile-link-row {
+    margin-top: 1px;
+}
+
+.profile-edit-form .profile-link-row input {
+    height: 36px;
+    background: #fff;
+}
+
+.profile-edit-form .profile-link-remove {
+    width: 32px;
+    height: 32px;
+    border-color: #e1e8f2;
+    background: #fff;
+    color: #8795aa;
+    font-size: 16px;
+}
+
+.profile-edit-form .profile-link-remove:hover,
+.profile-edit-form .profile-link-remove:focus-visible {
+    border-color: #efb5bd;
+    background: #fff7f8;
+    color: #d95867;
+    box-shadow: 0 0 0 3px rgba(217, 88, 103, .08);
+}
+
+.profile-edit-form .profile-sheet-actions .profile-action:not(.is-primary) {
+    min-width: 64px;
+}
+
+.profile-edit-form .profile-sheet-actions .profile-action.is-primary {
+    min-width: 76px;
+}
+
+@media (max-width: 520px) {
+    .profile-edit-form .profile-link-row {
+        padding: 7px;
+    }
+}
+
+
+/* 2026-09-06 account settings detail pass */
+.profile-account-email .profile-readonly-value {
+    min-height: 42px;
+    padding: 0 2px;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    color: #445168;
+    font-size: 14px;
+    font-weight: 850;
+    box-shadow: none;
+}
+
+.profile-account-email .profile-field-note {
+    margin-top: 1px;
+}
+
+.profile-account-toggle {
+    height: 36px;
+    padding: 0 16px;
+    border-color: #ccdafa;
+    color: #416ff2;
+    font-size: 12.5px;
+    box-shadow: 0 6px 14px rgba(65, 111, 242, .05);
+}
+
+.profile-account-toggle:hover,
+.profile-account-toggle:focus-visible {
+    border-color: #b9c9f6;
+    background: #f7f9ff;
+    color: #4b58ee;
+}
+
+.profile-danger-zone--account .profile-danger-content p {
+    max-width: 318px;
+}
+
+/* 2026-09-06 account password UX detail pass */
+.profile-account-toggle.is-collapse {
+    height: auto;
+    padding: 2px 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    color: #73839b;
+    box-shadow: none;
+    font-size: 11px;
+    font-weight: 850;
+}
+
+.profile-account-toggle.is-collapse:hover,
+.profile-account-toggle.is-collapse:focus-visible {
+    border: 0;
+    background: transparent;
+    color: #4f6fd9;
+    box-shadow: none;
+    transform: none;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+.profile-password-form .profile-field > label,
+.profile-confirm-password > label {
+    display: block;
+    color: #344158;
+    font-size: 12px;
+    font-weight: 900;
+    line-height: 1.35;
+}
+
+.profile-password-input-wrap {
+    position: relative;
+    width: 100%;
+}
+
+.profile-password-input-wrap input {
+    width: 100%;
+    padding-right: 48px !important;
+}
+
+.profile-password-visibility {
+    position: absolute;
+    top: 50%;
+    right: 10px;
+    width: 34px;
+    height: 34px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transform: translateY(-50%);
+    border: 0;
+    border-radius: 10px;
+    background: transparent;
+    color: #8d9aad;
+    cursor: pointer;
+    transition: color .16s ease, background-color .16s ease;
+}
+
+.profile-password-visibility:hover {
+    color: #6b7fb0;
+    background: #f7f9fd;
+}
+
+.profile-password-visibility:focus-visible {
+    outline: 2px solid rgba(67, 127, 239, .28);
+    outline-offset: 1px;
+}
+
+.profile-password-visibility[aria-pressed="true"] {
+    color: #526fbe;
+}
+
+.profile-password-eye {
+    width: 19px;
+    height: 19px;
+    display: block;
+    overflow: visible;
+}
+
+.profile-password-eye__shape,
+.profile-password-eye__pupil,
+.profile-password-eye__slash {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.55;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    vector-effect: non-scaling-stroke;
+}
+
+.profile-password-eye__pupil {
+    fill: currentColor;
+    stroke: none;
+    opacity: .72;
+}
+
+.profile-password-eye__slash {
+    opacity: 0;
+    transition: opacity .16s ease;
+}
+
+.profile-password-visibility.is-visible .profile-password-eye__slash {
+    opacity: .78;
+}
+
+.profile-password-rules {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 7px;
+}
+
+.profile-password-rules span {
+    display: inline-flex;
+    align-items: center;
+    min-height: 24px;
+    padding: 0 9px;
+    border: 1px solid #e4eaf3;
+    border-radius: 999px;
+    background: #f8fafc;
+    color: #97a2b3;
+    font-size: 10.5px;
+    font-weight: 850;
+    transition: color .16s ease, border-color .16s ease, background-color .16s ease;
+}
+
+.profile-password-rules span::before {
+    content: '•';
+    margin-right: 5px;
+    color: #b8c0cc;
+}
+
+.profile-password-rules span.is-valid {
+    border-color: #cfdcf8;
+    background: #f4f7ff;
+    color: #4d68b7;
+}
+
+.profile-password-rules span.is-valid::before {
+    content: '✓';
+    color: #4f7ef0;
+}
+
+.profile-password-match {
+    min-height: 16px;
+    margin: 6px 2px 0;
+    font-size: 10.5px;
+    font-weight: 800;
+    line-height: 1.35;
+}
+
+.profile-password-match.is-valid {
+    color: #3a74d8;
+}
+
+.profile-password-match.is-error {
+    color: #df5a67;
+}
+
+.profile-confirm-password {
+    gap: 6px;
+}
+
+.profile-confirm-password .profile-password-input-wrap input {
+    height: 44px;
+    border-radius: 14px;
+    font-size: 13px;
 }

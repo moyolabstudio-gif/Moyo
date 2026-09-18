@@ -1,5 +1,6 @@
 package com.springboot.project.dto;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import lombok.Data;
@@ -21,6 +22,10 @@ public class projectRequestDTO {
     private Map<String, String> memberPositions;
     private String startDate; 
     private String endDate;
+    private String status;                       // ACTIVE / DELETE_PENDING
+    private LocalDateTime deleteRequestedAt;    // 삭제 신청 시각
+    private LocalDateTime deleteDeadlineAt;     // 최종 삭제 예정 시각
+    private String deleteDeadlineDate;              // yyyy-MM-dd 화면 표시용
 
     // 💡 클래스 중괄호 { } 내부로 이동 완료!
     public calendarResponseDTO toEventDTO() {

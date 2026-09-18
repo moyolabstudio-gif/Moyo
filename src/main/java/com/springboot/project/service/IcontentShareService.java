@@ -8,7 +8,12 @@ import java.util.Map;
 public interface IcontentShareService {
     boolean canManage(String contentType, Long contentId, Long userId);
     boolean canRead(String contentType, Long contentId, Long userId);
+    boolean canEdit(String contentType, Long contentId, Long userId);
+    boolean isRestrictedAccess(String contentType, Long contentId, Long userId);
+    boolean updateRestrictedAccess(String contentType, Long contentId, boolean restricted, Long userId);
     List<contentShareDTO> getShares(String contentType, Long contentId, Long userId);
+
+    List<Map<String, Object>> getFriendShareOwners(String contentType, Long userId);
 
     Map<String, Object> getTargets(String contentType, Long contentId, Long userId, String keyword, String shareMode);
     default Map<String, Object> getTargets(String contentType, Long contentId, Long userId, String keyword) {

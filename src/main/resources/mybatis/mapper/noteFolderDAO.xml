@@ -11,7 +11,7 @@
  </resultMap>
  <select id="selectFolderList" parameterType="map" resultMap="folderMap">
   SELECT FOLDER_ID,PARENT_FOLDER_ID,OWNER_USER_ID,SCOPE_TYPE,WS_ID,PROJ_ID,FOLDER_NAME,SORT_ORDER,REG_DT,UPD_DT,
-         LEVEL AS DEPTH, SYS_CONNECT_BY_PATH(FOLDER_NAME,' / ') AS FOLDER_PATH
+         LEVEL AS DEPTH, REPLACE(SYS_CONNECT_BY_PATH(REPLACE(FOLDER_NAME, '/', CHR(30)), ' / '), CHR(30), '/') AS FOLDER_PATH
   FROM NOTE_FOLDERS
   WHERE SCOPE_TYPE=#{scopeType}
     AND NVL(WS_ID,-1)=NVL(#{wsId,jdbcType=NUMERIC},-1)
@@ -19,6 +19,17 @@
     <if test="scopeType == 'PRIVATE'">
       AND OWNER_USER_ID=#{userId,jdbcType=NUMERIC}
     </if>
+    AND NOT EXISTS (
+      SELECT 1
+        FROM CONTENT_RECORD_TARGETS crt
+       WHERE crt.NOTE_FOLDER_ID = NOTE_FOLDERS.FOLDER_ID
+         AND crt.TARGET_TYPE = 'TASK'
+         AND EXISTS (
+           SELECT 1 FROM PROJECT_TASKS pt
+            WHERE pt.TASK_ID = crt.TARGET_ID
+              AND NVL(pt.RECORD_ENABLED_YN,'Y') = 'N'
+         )
+    )
   START WITH PARENT_FOLDER_ID IS NULL
     AND SCOPE_TYPE=#{scopeType}
     AND NVL(WS_ID,-1)=NVL(#{wsId,jdbcType=NUMERIC},-1)
@@ -26,6 +37,17 @@
     <if test="scopeType == 'PRIVATE'">
       AND OWNER_USER_ID=#{userId,jdbcType=NUMERIC}
     </if>
+    AND NOT EXISTS (
+      SELECT 1
+        FROM CONTENT_RECORD_TARGETS crt
+       WHERE crt.NOTE_FOLDER_ID = FOLDER_ID
+         AND crt.TARGET_TYPE = 'TASK'
+         AND EXISTS (
+           SELECT 1 FROM PROJECT_TASKS pt
+            WHERE pt.TASK_ID = crt.TARGET_ID
+              AND NVL(pt.RECORD_ENABLED_YN,'Y') = 'N'
+         )
+    )
   CONNECT BY NOCYCLE PRIOR FOLDER_ID=PARENT_FOLDER_ID
   ORDER SIBLINGS BY SORT_ORDER,FOLDER_NAME
  </select>
@@ -113,7 +135,7 @@
   SELECT p.PROJ_ID AS "projId", p.PROJ_NAME AS "projName", p.WS_ID AS "wsId", w.WS_NAME AS "wsName",
          CASE WHEN p.LEADER_ID=#{userId} OR EXISTS (SELECT 1 FROM PROJ_MEMBERS pa WHERE pa.PROJ_ID=p.PROJ_ID AND pa.USER_ID=#{userId} AND UPPER(NVL(pa.PROJ_ROLE,'MEMBER'))='ADMIN') THEN 1 ELSE 0 END AS "canManage"
   FROM PROJECTS p
-  JOIN WORKSPACES w ON w.WS_ID=p.WS_ID
+  LEFT JOIN WORKSPACES w ON w.WS_ID=p.WS_ID
   WHERE (
         p.LEADER_ID = #{userId}
         OR EXISTS (SELECT 1 FROM PROJ_MEMBERS pm WHERE pm.PROJ_ID=p.PROJ_ID AND pm.USER_ID=#{userId})

@@ -1,0 +1,60 @@
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<c:set var="communityIsWorkspace" value="${mainShellMode eq 'WORKSPACE'}" />
+<c:choose>
+    <c:when test="${communityIsWorkspace}">
+        <c:set var="communityPollMoreUrl" value="${pageContext.request.contextPath}/poll/list?scope=WORKSPACE&amp;wsId=${workspace.wsId}" />
+        <c:set var="communityNoticeMoreUrl" value="${pageContext.request.contextPath}/group/board/list?wsId=${workspace.wsId}&amp;type=NOTICE" />
+        <c:set var="communityFreeMoreUrl" value="${pageContext.request.contextPath}/group/board/list?wsId=${workspace.wsId}&amp;type=FREE" />
+        <c:set var="communityFileMoreUrl" value="${pageContext.request.contextPath}/group/files?wsId=${workspace.wsId}" />
+    </c:when>
+    <c:otherwise>
+        <c:set var="communityPollMoreUrl" value="${pageContext.request.contextPath}/poll/list?scope=PROJECT&amp;${projectRouteQuery}" />
+        <c:set var="communityNoticeMoreUrl" value="${pageContext.request.contextPath}/group/board/list?${projectRouteQuery}&amp;type=NOTICE" />
+        <c:set var="communityFreeMoreUrl" value="${pageContext.request.contextPath}/group/board/list?${projectRouteQuery}&amp;type=FREE" />
+        <c:set var="communityFileMoreUrl" value="${pageContext.request.contextPath}/project/files?${projectRouteQuery}" />
+    </c:otherwise>
+</c:choose>
+
+<section class="moyo-community-widgets moyo-dashboard-section" data-community-scope="${communityIsWorkspace ? 'WORKSPACE' : 'PROJECT'}">
+    <div class="workspace-core-row moyo-dashboard-grid moyo-dashboard-grid--2">
+        <section class="ws-card workspace-core-card workspace-main-today-card moyo-widget-card moyo-dashboard-slot" data-dashboard-widget="schedule">
+            <div class="workspace-core-head workspace-core-head--schedule moyo-widget-head">
+                <div class="workspace-core-titleline moyo-widget-title">
+                    <h3 class="moyo-widget-title__text">✨ 최근 활동</h3>
+                    <span id="recentActivityHeaderCount" class="workspace-title-count moyo-widget-count">최근 3일</span>
+                </div>
+            </div>
+            <ul id="recentActivityList" class="today-schedule-list workspace-main-schedule-list workspace-recent-activity-list moyo-widget-body">
+                <li class="workspace-compact-empty-state workspace-core-state moyo-widget-state is-loading"><span>최근 활동을 불러오는 중입니다.</span></li>
+            </ul>
+        </section>
+
+        <section class="ws-card workspace-core-card workspace-main-poll-card moyo-widget-card moyo-dashboard-slot" data-dashboard-widget="poll">
+            <div class="workspace-core-head workspace-core-head--poll moyo-widget-head">
+                <div class="workspace-core-titleline moyo-widget-title">
+                    <h3 class="moyo-widget-title__text">📊 진행 중인 투표</h3>
+                    <span id="activePollHeaderCount" class="workspace-title-count moyo-widget-count" hidden>0</span>
+                </div>
+                <a class="ws-more-link moyo-widget-more" href="${communityPollMoreUrl}">더보기</a>
+            </div>
+            <div id="activePollArea" class="workspace-active-poll-area workspace-poll-summary-area moyo-widget-body">
+                <div class="workspace-compact-empty-state workspace-core-state workspace-poll-summary-loading moyo-widget-state is-loading"><span>투표를 불러오는 중입니다.</span></div>
+            </div>
+        </section>
+    </div>
+
+    <div class="workspace-widget-grid workspace-project-card-row moyo-dashboard-grid moyo-dashboard-grid--3">
+        <div class="workspace-widget-card workspace-board-card notice-widget-card moyo-widget-card moyo-dashboard-slot" data-dashboard-widget="notice">
+            <div class="board-title moyo-widget-head"><span class="board-title-label moyo-widget-title"><span class="board-title-icon" aria-hidden="true">📢</span><span>공지사항</span></span><a class="moyo-widget-more" href="${communityNoticeMoreUrl}">더보기</a></div>
+            <ul id="noticeList" class="board-list moyo-widget-body"><li class="workspace-empty-state moyo-widget-state is-loading">공지사항을 불러오는 중입니다.</li></ul>
+        </div>
+        <div class="workspace-widget-card workspace-board-card free-widget-card workspace-free-feed-card moyo-widget-card moyo-dashboard-slot" data-dashboard-widget="free-feed">
+            <div class="board-title moyo-widget-head"><span class="board-title-label moyo-widget-title"><span class="board-title-icon" aria-hidden="true">💬</span><span>자유 피드</span></span><a class="moyo-widget-more" href="${communityFreeMoreUrl}">더보기</a></div>
+            <ul id="freeList" class="board-list free-board-list moyo-widget-body"><li class="workspace-empty-state moyo-widget-state is-loading">자유 피드를 불러오는 중입니다.</li></ul>
+        </div>
+        <div class="workspace-widget-card workspace-board-card resource-widget-card moyo-widget-card moyo-dashboard-slot" data-dashboard-widget="resources">
+            <div class="board-title moyo-widget-head"><span class="board-title-label moyo-widget-title"><span class="board-title-icon" aria-hidden="true">📁</span><span>자료실</span></span><a class="moyo-widget-more" href="${communityFileMoreUrl}">더보기</a></div>
+            <ul id="fileList" class="board-list moyo-widget-body"><li class="workspace-empty-state moyo-widget-state is-loading">자료실을 불러오는 중입니다.</li></ul>
+        </div>
+    </div>
+</section>

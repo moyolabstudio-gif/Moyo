@@ -1,8 +1,11 @@
 package com.springboot.project.service.impl;
 
 import com.springboot.project.dao.IfriendDAO;
+import com.springboot.project.dao.IuserNoticeDAO;
 import com.springboot.project.dto.friendDTO;
+import com.springboot.project.dto.usersDto;
 import com.springboot.project.service.IfriendService;
+import com.springboot.project.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,6 +18,12 @@ import java.util.Map;
 public class friendServiceImpl implements IfriendService {
     @Autowired
     private IfriendDAO friendDAO;
+
+    @Autowired
+    private IuserNoticeDAO userNoticeDAO;
+
+    @Autowired
+    private UserService userService;
 
     @Override
     public List<friendDTO> searchUsers(Long userId, String keyword) {
@@ -37,6 +46,11 @@ public class friendServiceImpl implements IfriendService {
     }
 
     @Override
+    public List<friendDTO> getRecommendations(Long userId) {
+        return userId == null ? List.of() : friendDAO.selectRecommendations(userId);
+    }
+
+    @Override
     public int getPendingReceivedCount(Long userId) {
         return userId == null ? 0 : friendDAO.countPendingReceived(userId);
     }
@@ -52,6 +66,12 @@ public class friendServiceImpl implements IfriendService {
     public Map<String, Object> requestFriend(Long userId, Long targetUserId) {
         if (userId == null || targetUserId == null) return fail("대상을 찾을 수 없습니다.");
         if (userId.equals(targetUserId)) return fail("본인에게는 친구 요청을 보낼 수 없습니다.");
+
+        usersDto targetUser = userService.findById(targetUserId);
+        String targetStatus = targetUser == null ? null : targetUser.getStatus();
+        if (targetUser == null || targetStatus == null || !"ACTIVE".equalsIgnoreCase(targetStatus.trim())) {
+            return fail("친구 요청을 보낼 수 없는 사용자입니다.");
+        }
 
         friendDTO relation = friendDAO.selectRelation(userId, targetUserId);
         if (relation != null) {
@@ -69,7 +89,39 @@ public class friendServiceImpl implements IfriendService {
     @Override
     @Transactional
     public Map<String, Object> acceptRequest(Long userId, Long friendId) {
-        return result(userId != null && friendId != null && friendDAO.acceptRequest(friendId, userId) > 0, "친구 요청을 수락했습니다.");
+        if (userId == null || friendId == null) return fail("요청 정보를 확인할 수 없습니다.");
+
+        friendDTO pendingRequest = null;
+        List<friendDTO> pendingRequests = friendDAO.selectReceivedRequests(userId);
+        if (pendingRequests != null) {
+            for (friendDTO request : pendingRequests) {
+                if (request != null && friendId.equals(request.getFriendId())) {
+                    pendingRequest = request;
+                    break;
+                }
+            }
+        }
+
+        int updated = friendDAO.acceptRequest(friendId, userId);
+        if (updated < 1) return fail("요청을 처리하지 못했습니다.");
+
+        if (pendingRequest != null && pendingRequest.getRequesterId() != null) {
+            usersDto accepter = userService.findById(userId);
+            String accepterName = accepter == null || accepter.getUSER_NAME() == null || accepter.getUSER_NAME().trim().isEmpty()
+                    ? "상대방"
+                    : accepter.getUSER_NAME().trim();
+            userNoticeDAO.insertContentSendAlarm(
+                    pendingRequest.getRequesterId(),
+                    "FRIEND_ACCEPTED",
+                    "USER",
+                    userId,
+                    "친구 요청이 수락되었습니다.",
+                    accepterName + "님과 친구가 되었습니다.",
+                    "/users/profile?userId=" + userId
+            );
+        }
+
+        return result(true, "친구 요청을 수락했습니다.");
     }
 
     @Override

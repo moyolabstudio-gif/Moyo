@@ -450,3 +450,883 @@ body.friend-page-body .moyo-footer {
 .friend-avatar {
     transition: transform .16s ease, box-shadow .16s ease;
 }
+
+/* =========================================================
+   MOYO Stage 3 - List Screen Unification / Friend
+   ========================================================= */
+.friend-page-body {
+    background: var(--moyo-color-page);
+    color: var(--moyo-color-text);
+    font-family: var(--moyo-font-family);
+}
+body.friend-page-body .friend-wrap {
+    width: min(1180px, calc(100% - 48px)) !important;
+    max-width: 1180px !important;
+    padding: 28px 0 48px !important;
+}
+.friend-hero {
+    min-height: 136px;
+    display: flex;
+    align-items: center;
+    padding: 26px 30px;
+    border: var(--moyo-border);
+    border-radius: var(--moyo-radius-lg);
+    background: var(--moyo-color-surface);
+    box-shadow: var(--moyo-shadow-sm);
+}
+.friend-hero::before {
+    width: 4px;
+    background: var(--moyo-color-friend);
+}
+.friend-eyebrow,
+.friend-card-label {
+    margin-bottom: 6px;
+    color: var(--moyo-color-text-muted);
+    font-size: var(--moyo-font-size-xs);
+    font-style: normal;
+    font-weight: var(--moyo-font-weight-bold);
+}
+.friend-hero h1 {
+    color: var(--moyo-color-text);
+    font-size: clamp(28px, 3vw, 36px);
+    line-height: 1.15;
+}
+.friend-hero p {
+    margin-top: 8px;
+    color: var(--moyo-color-text-soft);
+    font-size: var(--moyo-font-size-md);
+}
+.friend-mini-stat {
+    min-height: var(--moyo-control-height-compact);
+    padding: 0 11px;
+    border: var(--moyo-border);
+    background: var(--moyo-color-surface-soft);
+    color: var(--moyo-color-text-soft);
+}
+.friend-stack { gap: 16px; margin-top: 16px; }
+.friend-card {
+    padding: 20px;
+    border: var(--moyo-border);
+    border-radius: var(--moyo-radius-lg);
+    box-shadow: var(--moyo-shadow-xs);
+}
+.friend-card-head { margin-bottom: 12px; }
+.friend-card h2 {
+    color: var(--moyo-color-text);
+    font-size: 18px;
+    font-weight: var(--moyo-font-weight-heavy);
+}
+.friend-card p {
+    color: var(--moyo-color-text-soft);
+    font-size: var(--moyo-font-size-sm);
+}
+.friend-search-row { margin-bottom: 0; }
+.friend-search-row button,
+.friend-actions button,
+.friend-refresh-btn {
+    min-height: var(--moyo-control-height) !important;
+    border-radius: var(--moyo-radius-md) !important;
+    font-size: var(--moyo-font-size-sm) !important;
+    font-weight: var(--moyo-font-weight-bold) !important;
+}
+.friend-search-row button {
+    border-color: var(--moyo-color-friend) !important;
+    background: var(--moyo-color-friend) !important;
+    color: #fff !important;
+    box-shadow: 0 6px 14px rgba(246, 182, 66, .2) !important;
+}
+.friend-search-row button:hover { background: var(--moyo-color-friend-strong) !important; }
+.friend-refresh-btn {
+    border: var(--moyo-border-strong) !important;
+    background: var(--moyo-color-surface) !important;
+    color: #596579 !important;
+}
+.friend-list { gap: 8px; }
+.friend-row {
+    min-height: 58px;
+    padding: 9px 12px;
+    border: var(--moyo-border);
+    border-radius: var(--moyo-radius-md);
+    background: var(--moyo-color-surface-soft);
+}
+.friend-primary-list .friend-row { min-height: 60px; }
+.friend-request-tabs {
+    gap: 4px;
+    padding: 3px;
+    border: var(--moyo-border);
+    border-radius: var(--moyo-radius-md);
+    background: var(--moyo-color-surface-soft);
+    margin-bottom: 10px;
+}
+.friend-request-tabs button {
+    min-height: var(--moyo-control-height-compact);
+    border-radius: var(--moyo-radius-sm);
+    font-size: var(--moyo-font-size-sm);
+}
+.friend-request-tabs button.active {
+    background: #fff9ec;
+    color: #a66f0c;
+    box-shadow: none;
+}
+.friend-count-badge,
+.friend-status-chip,
+.friend-share-badge {
+    min-height: var(--moyo-badge-height);
+    border-radius: var(--moyo-radius-pill);
+    font-size: var(--moyo-font-size-xs);
+}
+.friend-empty {
+    border-color: var(--moyo-border-color-strong);
+    border-radius: var(--moyo-radius-md);
+    background: var(--moyo-color-surface-soft);
+    color: var(--moyo-color-text-muted);
+}
+@media (max-width: 760px) {
+    body.friend-page-body .friend-wrap { width: calc(100% - 24px) !important; max-width: none !important; padding-top: 16px !important; }
+    .friend-hero { min-height: 0; padding: 20px; }
+    .friend-card { padding: 16px; }
+}
+
+
+/* =========================================================
+   MOYO Stage 3 refinement - restrained scope accent
+   전체 UI는 MOYO blue/neutral, 친구색은 탭/배지 정도로만 사용
+   ========================================================= */
+.friend-hero::before {
+    width: 3px;
+    background: var(--moyo-color-primary);
+    opacity: .78;
+}
+.friend-search-row button {
+    border-color: var(--moyo-color-primary) !important;
+    background: var(--moyo-color-primary) !important;
+    box-shadow: var(--moyo-shadow-primary) !important;
+}
+.friend-search-row button:hover {
+    border-color: var(--moyo-color-primary-strong) !important;
+    background: var(--moyo-color-primary-strong) !important;
+}
+.friend-request-tabs button.active {
+    background: rgba(246, 182, 66, .09);
+    color: #9a6a15;
+}
+
+
+/* =========================================================
+   Friend dashboard v2
+   - 친구 목록 중심
+   - 공통 친구 추천만 사용 (그룹/프로젝트 신호 미사용)
+   ========================================================= */
+.friend-page-body { background: #f6f8fb; }
+body.friend-page-body .friend-wrap {
+    width: min(1220px, calc(100% - 48px)) !important;
+    max-width: 1220px !important;
+    padding: 26px 0 42px !important;
+}
+.friend-hero {
+    min-height: 118px;
+    padding: 22px 26px;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(31,53,86,.045);
+}
+.friend-hero::before { width: 3px; }
+.friend-title-row { align-items: center; }
+.friend-hero h1 { font-size: 32px; }
+.friend-hero p { max-width: 610px; margin-top: 7px; }
+.friend-hero-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 0 0 auto;
+}
+.friend-primary-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    min-height: 40px;
+    padding: 0 15px;
+    border: 1px solid var(--moyo-color-primary);
+    border-radius: 12px;
+    background: var(--moyo-color-primary);
+    color: #fff;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow: var(--moyo-shadow-primary);
+}
+.friend-primary-action:hover { background: var(--moyo-color-primary-strong); }
+.friend-dashboard {
+    display: grid;
+    grid-template-columns: minmax(0, 1.55fr) minmax(320px, .75fr);
+    gap: 16px;
+    align-items: start;
+    margin-top: 16px;
+}
+.friend-main-column,
+.friend-side-column {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-width: 0;
+}
+.friend-card {
+    padding: 18px;
+    border-radius: 18px;
+    box-shadow: 0 8px 26px rgba(31,53,86,.035);
+}
+.friend-card-head-inline { align-items: center; }
+.friend-refresh-btn {
+    min-height: 34px !important;
+    padding: 0 10px !important;
+    border-radius: 10px !important;
+    color: #7b8798 !important;
+    font-size: 11px !important;
+}
+.friend-primary-list { gap: 6px; }
+.friend-row {
+    min-height: 64px;
+    padding: 9px 10px 9px 11px;
+    border-color: #e8edf4;
+    border-radius: 14px;
+    background: #fff;
+    transition: border-color .16s ease, background .16s ease, box-shadow .16s ease;
+}
+.friend-row:hover {
+    border-color: #dbe5f1;
+    background: #fcfdff;
+    box-shadow: 0 6px 16px rgba(31,53,86,.035);
+}
+.friend-avatar,
+.friend-recommend-avatar {
+    overflow: hidden;
+    position: relative;
+    border: 1px solid rgba(255, 255, 255, .82);
+    background: linear-gradient(135deg, #55d5ce 0%, #4288ef 52%, #5a55ee 100%);
+    color: #fff;
+    box-shadow: 0 4px 11px rgba(66, 136, 239, .16);
+}
+.friend-avatar img,
+.friend-recommend-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+.friend-avatar.has-image,
+.friend-recommend-avatar.has-image {
+    background: #fff;
+    color: transparent;
+    border-color: #e5ebf3;
+    box-shadow: none;
+}
+.friend-avatar.is-fallback,
+.friend-recommend-avatar.is-fallback {
+    background: linear-gradient(135deg, #55d5ce 0%, #4288ef 52%, #5a55ee 100%);
+    color: #fff;
+}
+.friend-avatar { width: 38px; height: 38px; flex-basis: 38px; font-size: 13px; }
+.friend-info { gap: 2px; }
+.friend-info strong { font-size: 13px; }
+.friend-info span { color: #98a2b2; font-size: 11px; }
+.friend-row-tools {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    flex: 0 0 auto;
+}
+.friend-share-note {
+    color: #9aa5b5;
+    font-size: 10px;
+    font-weight: 700;
+}
+.friend-more-btn {
+    width: 32px;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    background: transparent;
+    color: #8090a5;
+    font-size: 20px;
+    line-height: 1;
+    cursor: pointer;
+}
+.friend-more-btn:hover,
+.friend-more-btn[aria-expanded="true"] {
+    border-color: #dfe7f1;
+    background: #f7f9fc;
+    color: #44536a;
+}
+.friend-row-menu {
+    display: none;
+    position: absolute;
+    top: 38px;
+    right: 0;
+    z-index: 30;
+    width: 132px;
+    padding: 5px;
+    border: 1px solid #e1e7ef;
+    border-radius: 12px;
+    background: #fff;
+    box-shadow: 0 12px 28px rgba(31,53,86,.12);
+}
+.friend-row-menu.open { display: block; }
+.friend-row-menu a,
+.friend-row-menu button {
+    width: 100%;
+    min-height: 34px;
+    display: flex;
+    align-items: center;
+    padding: 0 9px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: #46556b;
+    text-decoration: none;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+}
+.friend-row-menu a:hover,
+.friend-row-menu button:hover { background: #f6f8fb; }
+.friend-row-menu .is-danger { color: #e35862; }
+.friend-row-menu .is-danger:hover { background: #fff5f6; }
+.friend-recommend-card .friend-card-head { margin-bottom: 13px; }
+.friend-privacy-chip {
+    display: inline-flex;
+    align-items: center;
+    min-height: 25px;
+    padding: 0 9px;
+    border: 1px solid #dfe7ef;
+    border-radius: 999px;
+    background: #f9fbfd;
+    color: #718096;
+    font-size: 10px;
+    font-weight: 800;
+    white-space: nowrap;
+}
+.friend-recommend-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0,1fr));
+    gap: 8px;
+}
+.friend-recommend-item {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    min-width: 0;
+    min-height: 68px;
+    padding: 9px 10px;
+    border: 1px solid #e8edf4;
+    border-radius: 14px;
+    background: #fbfcfe;
+}
+.friend-recommend-profile {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    flex: 1;
+    min-width: 0;
+    color: inherit;
+    text-decoration: none;
+}
+.friend-recommend-avatar {
+    width: 38px;
+    height: 38px;
+    flex: 0 0 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    font-size: 13px;
+    font-weight: 800;
+}
+.friend-recommend-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+}
+.friend-recommend-copy strong,
+.friend-recommend-copy span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.friend-recommend-copy strong { color: #202c3e; font-size: 12px; font-weight: 800; }
+.friend-recommend-copy span { color: #8b98aa; font-size: 10px; font-weight: 700; }
+.friend-request-compact {
+    flex: 0 0 auto;
+    min-height: 30px;
+    padding: 0 9px;
+    border: 1px solid #cfe0f4;
+    border-radius: 9px;
+    background: #f7fbff;
+    color: #3274ca;
+    font: inherit;
+    font-size: 10px;
+    font-weight: 800;
+    cursor: pointer;
+}
+.friend-request-compact:hover { border-color: #a9c7ea; background: #eef6ff; }
+.friend-request-compact:disabled { opacity: .58; cursor: default; }
+.friend-side-column .friend-request-card { position: sticky; top: 86px; }
+.friend-request-tabs { margin-bottom: 9px; }
+.friend-request-row {
+    min-height: 56px;
+    align-items: center;
+    padding: 8px 9px;
+}
+.friend-request-row .friend-avatar { width: 34px; height: 34px; flex-basis: 34px; }
+.friend-request-row .friend-actions { gap: 4px; }
+.friend-request-row .friend-actions button {
+    min-height: 30px !important;
+    padding: 0 9px !important;
+    border-radius: 9px !important;
+    font-size: 10px !important;
+}
+.friend-empty {
+    min-height: 82px !important;
+    display: flex !important;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 16px !important;
+    border: 1px dashed #d9e2ed;
+    background: #fafcff;
+}
+.friend-empty strong { color: #758298; font-size: 12px; }
+.friend-empty span { color: #a0a9b7; font-size: 10px; font-weight: 500; }
+.friend-recommend-grid > .friend-empty { grid-column: 1 / -1; }
+@media (max-width: 1020px) {
+    .friend-dashboard { grid-template-columns: 1fr; }
+    .friend-side-column .friend-request-card { position: static; }
+}
+@media (max-width: 760px) {
+    body.friend-page-body .friend-wrap { width: calc(100% - 24px) !important; padding: 16px 0 28px !important; }
+    .friend-hero { padding: 18px; }
+    .friend-title-row { align-items: stretch; }
+    .friend-hero-actions { width: 100%; align-items: stretch; flex-direction: column; }
+    .friend-primary-action { width: 100%; }
+    .friend-dashboard { gap: 12px; margin-top: 12px; }
+    .friend-main-column, .friend-side-column { gap: 12px; }
+    .friend-card { padding: 14px; }
+    .friend-recommend-grid { grid-template-columns: 1fr; }
+    .friend-share-note { display: none; }
+}
+@media (max-width: 460px) {
+    .friend-row { align-items: center; flex-wrap: nowrap; }
+    .friend-row .friend-actions { width: auto; margin-left: auto; }
+    .friend-request-row { align-items: flex-start; flex-wrap: wrap; }
+    .friend-request-row .friend-actions { width: 100%; justify-content: flex-end; }
+    .friend-card-head-inline { align-items: flex-start; }
+    .friend-privacy-chip { display: none; }
+}
+
+
+/* =========================================================
+   Friend UI density polish v1
+   - 기능은 유지하고 친구 리스트 화면의 시각 밀도만 정리
+   ========================================================= */
+.friend-hero {
+    min-height: 96px;
+    padding: 16px 22px;
+}
+.friend-eyebrow { margin-bottom: 4px; }
+.friend-hero h1 { font-size: 30px; }
+.friend-hero p { margin-top: 5px; }
+.friend-hero-actions { gap: 13px; }
+.friend-dashboard {
+    gap: 14px;
+    margin-top: 14px;
+}
+.friend-main-column,
+.friend-side-column { gap: 14px; }
+.friend-card {
+    padding: 16px;
+    box-shadow: 0 6px 20px rgba(31,53,86,.028);
+}
+.friend-card-head { margin-bottom: 10px; }
+.friend-list-card .friend-card-head { margin-bottom: 8px; }
+.friend-refresh-btn {
+    opacity: .82;
+    border-color: #e4eaf1 !important;
+    background: #fbfcfe !important;
+}
+.friend-row {
+    border-color: #eef2f7;
+    background: #fff;
+    box-shadow: none;
+}
+.friend-primary-list .friend-row {
+    min-height: 58px;
+    background: #fff;
+}
+.friend-row:hover {
+    border-color: #dfe7f0;
+    background: #fbfdff;
+    box-shadow: 0 4px 12px rgba(31,53,86,.025);
+}
+.friend-info span { color: #a0a9b7; }
+
+.friend-request-tabs {
+    border-color: #e7ecf3;
+    background: #f7f9fc;
+}
+.friend-request-tabs button {
+    outline: none;
+    color: #8490a2;
+}
+.friend-request-tabs button.active {
+    background: rgba(79, 141, 247, .085);
+    color: #2f73cb;
+    box-shadow: none;
+}
+.friend-request-tabs button:focus-visible {
+    outline: 2px solid rgba(79, 141, 247, .34);
+    outline-offset: 1px;
+}
+.friend-request-tabs button.active .friend-count-badge {
+    background: #fff;
+    color: #2f73cb;
+}
+
+.friend-recommend-card { padding-top: 15px; padding-bottom: 15px; }
+.friend-recommend-card .friend-card-head { margin-bottom: 10px; }
+.friend-recommend-grid {
+    grid-template-columns: repeat(auto-fit, minmax(235px, 285px));
+    justify-content: start;
+    gap: 8px;
+}
+.friend-recommend-item {
+    min-height: 62px;
+    padding: 8px 9px;
+    border-color: #edf1f6;
+    background: #fff;
+}
+.friend-recommend-item:hover {
+    border-color: #dfe7f0;
+    background: #fbfdff;
+}
+.friend-request-compact {
+    min-height: 28px;
+    padding: 0 8px;
+    border-color: #d5e3f4;
+    background: #fbfdff;
+    color: #3c78c4;
+}
+.friend-request-compact:hover {
+    border-color: #bdd3ed;
+    background: #f2f8ff;
+}
+
+@media (max-width: 760px) {
+    .friend-hero { min-height: 0; padding: 16px; }
+    .friend-hero h1 { font-size: 27px; }
+    .friend-dashboard { gap: 12px; margin-top: 12px; }
+    .friend-main-column,
+    .friend-side-column { gap: 12px; }
+    .friend-card { padding: 14px; }
+    .friend-recommend-grid { grid-template-columns: 1fr; }
+}
+
+
+
+/* MOYO hero accent bar - mint → blue → violet */
+.friend-hero::before {
+    background: linear-gradient(180deg, #55d5ce 0%, #4288ef 52%, #5a55ee 100%);
+    opacity: 1;
+}
+
+/* =========================================================
+   Friend header information architecture v2
+   - 상단: 페이지 제목 + 주요 액션만
+   - 친구 수: 친구 목록 섹션으로 이동
+   - 요청 수: 받은/보낸 요청 탭에서만 표시
+   ========================================================= */
+.friend-title-row {
+    width: 100%;
+    align-items: center;
+}
+.friend-hero-copy { width: 100%; }
+.friend-hero-actions {
+    margin-left: auto;
+    justify-content: flex-end;
+}
+.friend-primary-action {
+    min-height: 42px;
+    padding: 0 17px;
+    border: 0;
+    background: linear-gradient(135deg, #55d5ce 0%, #4288ef 52%, #5a55ee 100%);
+    color: #fff;
+    box-shadow: 0 8px 18px rgba(66, 136, 239, .22);
+    transition: transform .16s ease, box-shadow .16s ease, filter .16s ease;
+}
+.friend-primary-action:hover {
+    background: linear-gradient(135deg, #55d5ce 0%, #4288ef 52%, #5a55ee 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 10px 22px rgba(66, 136, 239, .28);
+    filter: saturate(1.05);
+}
+.friend-primary-action:focus-visible {
+    outline: 3px solid rgba(66, 136, 239, .22);
+    outline-offset: 2px;
+}
+.friend-section-title-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+}
+.friend-section-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 27px;
+    height: 24px;
+    padding: 0 8px;
+    border: 1px solid #dfe7f1;
+    border-radius: 999px;
+    background: #f8fbff;
+    color: #2f73cb;
+    font-size: 11px;
+    font-weight: 800;
+    line-height: 1;
+}
+.friend-section-count strong {
+    font: inherit;
+    color: inherit;
+}
+
+@media (max-width: 760px) {
+    .friend-title-row { gap: 12px; }
+    .friend-hero-actions {
+        width: auto;
+        align-self: flex-start;
+        margin-left: 0;
+    }
+    .friend-primary-action { width: auto; }
+}
+
+/* === MOYO Friends mobile final polish (cumulative-safe) === */
+@media (max-width: 640px) {
+  .friend-hero,
+  .friends-hero,
+  .friend-page-hero {
+    text-align: left;
+  }
+
+  .friend-hero__inner,
+  .friends-hero__inner,
+  .friend-page-hero__inner {
+    align-items: flex-start;
+  }
+
+  .friend-hero__content,
+  .friends-hero__content,
+  .friend-page-hero__content {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .friend-hero__title,
+  .friends-hero__title,
+  .friend-page-hero__title,
+  .friend-hero h1,
+  .friends-hero h1,
+  .friend-page-hero h1 {
+    text-align: left;
+  }
+
+  .friend-hero__actions,
+  .friends-hero__actions,
+  .friend-page-hero__actions {
+    width: 100%;
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 10px;
+  }
+
+  .friend-find-btn,
+  .btn-find-friend,
+  [data-open-friend-search] {
+    width: auto;
+    min-width: 0;
+    padding: 10px 15px;
+  }
+
+  .friend-section-title-row,
+  .friends-section-title-row {
+    gap: 8px;
+  }
+
+  .friend-count-badge,
+  .friends-count-badge {
+    margin-left: 2px;
+  }
+
+  .friend-refresh-btn,
+  .friends-refresh-btn,
+  [data-friend-refresh] {
+    width: 34px;
+    min-width: 34px;
+    height: 34px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    white-space: nowrap;
+    font-size: 0;
+  }
+
+  .friend-refresh-btn::before,
+  .friends-refresh-btn::before,
+  [data-friend-refresh]::before {
+    content: "↻";
+    font-size: 16px;
+    line-height: 1;
+  }
+
+  .friend-recommend-card,
+  .friends-recommend-card,
+  .recommend-friend-card {
+    min-height: 72px;
+    padding-top: 11px;
+    padding-bottom: 11px;
+    align-items: center;
+  }
+
+  .friend-recommend-card .friend-request-btn,
+  .friends-recommend-card .friend-request-btn,
+  .recommend-friend-card .friend-request-btn {
+    padding: 7px 10px;
+    font-size: 12px;
+    min-height: 30px;
+  }
+}
+
+
+/* === 2026-09-07 Friends mobile exact fix === */
+@media (max-width: 640px) {
+    .friend-title-row {
+        width: 100%;
+        align-items: flex-start;
+    }
+
+    .friend-title-row > div:first-child {
+        min-width: 0;
+        width: 100%;
+        text-align: left;
+    }
+
+    .friend-hero h1,
+    .friend-hero p {
+        text-align: left;
+    }
+
+    .friend-hero-actions {
+        width: 100%;
+        align-self: auto;
+        margin-left: 0;
+        display: flex;
+        flex-direction: row;
+        justify-content: flex-end;
+        align-items: center;
+    }
+
+    .friend-primary-action {
+        width: auto;
+        flex: 0 0 auto;
+    }
+
+    .friend-refresh-btn,
+    [data-friend-refresh] {
+        width: 34px !important;
+        min-width: 34px !important;
+        max-width: 34px !important;
+        height: 34px !important;
+        min-height: 34px !important;
+        padding: 0 !important;
+        font-size: 0 !important;
+        overflow: hidden;
+        white-space: nowrap;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .friend-refresh-btn::before,
+    [data-friend-refresh]::before {
+        content: "↻";
+        font-size: 16px !important;
+        font-weight: 700;
+        line-height: 1;
+        color: #7b8798;
+    }
+}
+
+
+/* === 2026-09-07 Friend search result final polish === */
+.friend-search-results,
+.friend-search-result-list,
+[data-friend-search-results] {
+    min-height: 0 !important;
+    height: auto !important;
+    padding: 8px !important;
+    border-color: rgba(203, 213, 225, .55) !important;
+    background: rgba(248, 250, 252, .72);
+}
+
+.friend-search-results:empty,
+.friend-search-result-list:empty,
+[data-friend-search-results]:empty {
+    padding: 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+}
+
+.friend-search-result,
+.friend-search-result-item,
+.friend-search-user-row {
+    box-shadow: none !important;
+    border-color: rgba(203, 213, 225, .72) !important;
+}
+
+/* Already-friend state: status chip, not an actionable button */
+.friend-search-result .is-friend,
+.friend-search-result-item .is-friend,
+.friend-search-user-row .is-friend,
+.friend-search-result [data-relation-state="ACCEPTED"],
+.friend-search-result-item [data-relation-state="ACCEPTED"],
+.friend-search-user-row [data-relation-state="ACCEPTED"],
+.friend-search-result button:disabled,
+.friend-search-result-item button:disabled,
+.friend-search-user-row button:disabled {
+    min-width: auto !important;
+    height: 28px !important;
+    padding: 0 10px !important;
+    border-radius: 999px !important;
+    border: 1px solid #e3e9f1 !important;
+    background: #f5f7fa !important;
+    color: #78869a !important;
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    box-shadow: none !important;
+    cursor: default !important;
+}
+
+@media (max-width: 640px) {
+    .friend-search-results,
+    .friend-search-result-list,
+    [data-friend-search-results] {
+        padding: 6px !important;
+    }
+}

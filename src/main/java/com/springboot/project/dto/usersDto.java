@@ -23,6 +23,7 @@ public class usersDto {
     private String profileNotesPublicYn;
     private String profileCalendarPublicYn;
     private String profileGroupsPublicYn;
+    private String profileFriendsPublicYn;
     private String notifyScheduleYn;
     private String notifyShareYn;
     private String notifyRequestYn;
@@ -30,6 +31,9 @@ public class usersDto {
     private String notifyLikeYn;
     private String withdrawRequestedAt;
     private String withdrawDeadlineAt;
+    private Integer loginFailCount;
+    private String loginLockedUntil;
+    private Long securityVersion;
 
     public Long getUserId() { return userId; }
     public void setUserId(Long userId) { this.userId = userId; }
@@ -71,6 +75,8 @@ public class usersDto {
     public void setProfileCalendarPublicYn(String profileCalendarPublicYn) { this.profileCalendarPublicYn = profileCalendarPublicYn; }
     public String getProfileGroupsPublicYn() { return profileGroupsPublicYn; }
     public void setProfileGroupsPublicYn(String profileGroupsPublicYn) { this.profileGroupsPublicYn = profileGroupsPublicYn; }
+    public String getProfileFriendsPublicYn() { return profileFriendsPublicYn; }
+    public void setProfileFriendsPublicYn(String profileFriendsPublicYn) { this.profileFriendsPublicYn = profileFriendsPublicYn; }
     public String getNotifyScheduleYn() { return notifyScheduleYn; }
     public void setNotifyScheduleYn(String notifyScheduleYn) { this.notifyScheduleYn = notifyScheduleYn; }
     public String getNotifyShareYn() { return notifyShareYn; }
@@ -85,6 +91,12 @@ public class usersDto {
     public void setWithdrawRequestedAt(String withdrawRequestedAt) { this.withdrawRequestedAt = withdrawRequestedAt; }
     public String getWithdrawDeadlineAt() { return withdrawDeadlineAt; }
     public void setWithdrawDeadlineAt(String withdrawDeadlineAt) { this.withdrawDeadlineAt = withdrawDeadlineAt; }
+    public Integer getLoginFailCount() { return loginFailCount; }
+    public void setLoginFailCount(Integer loginFailCount) { this.loginFailCount = loginFailCount; }
+    public String getLoginLockedUntil() { return loginLockedUntil; }
+    public void setLoginLockedUntil(String loginLockedUntil) { this.loginLockedUntil = loginLockedUntil; }
+    public Long getSecurityVersion() { return securityVersion; }
+    public void setSecurityVersion(Long securityVersion) { this.securityVersion = securityVersion; }
 
     // 기존 JSP/Map 호환용
     @JsonIgnore
@@ -137,6 +149,9 @@ public class usersDto {
 
     @JsonIgnore
     public String getPROFILE_GROUPS_PUBLIC_YN() { return profileGroupsPublicYn; }
+
+    @JsonIgnore
+    public String getPROFILE_FRIENDS_PUBLIC_YN() { return profileFriendsPublicYn; }
 
     @JsonIgnore
     public String getNOTIFY_SCHEDULE_YN() { return notifyScheduleYn; }

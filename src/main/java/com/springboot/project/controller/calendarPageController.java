@@ -48,12 +48,14 @@ public class calendarPageController {
         }
 
         Long targetEventId = eventId != null ? eventId : id;
-        if ("edit".equalsIgnoreCase(mode) && targetEventId != null
-                && !calendarService.canEditEvent(targetEventId, loginUser.getUserId())) {
-            return "redirect:/calendar?viewEventId=" + targetEventId;
+        if ("edit".equalsIgnoreCase(mode) && targetEventId != null) {
+            if (!calendarService.canEditEvent(targetEventId, loginUser.getUserId())) {
+                return "redirect:/calendar?viewEventId=" + targetEventId;
+            }
+            return "redirect:/calendar?editEventId=" + targetEventId;
         }
 
-        return "calendar/calendarEventForm";
+        return "redirect:/calendar";
     }
 
     @GetMapping("/calendar/event/detail")

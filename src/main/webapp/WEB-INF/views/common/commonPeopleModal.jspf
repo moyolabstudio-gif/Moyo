@@ -1,0 +1,39 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<div class="common-people-modal-backdrop note-write-share-modal moyo-share-modal" id="commonPeopleModal" data-share-mode="share" hidden>
+    <div class="note-write-share-backdrop" data-common-people-close></div>
+    <section class="common-people-modal note-write-share-panel moyo-share-panel" role="dialog" aria-modal="true" aria-labelledby="commonPeopleModalTitle">
+        <div class="common-people-modal-header note-write-share-modal-head moyo-share-head">
+            <div>
+                <h3 id="commonPeopleModalTitle">사람 목록</h3>
+                <p class="common-people-modal-description" id="commonPeopleModalDescription" hidden></p>
+            </div>
+            <button type="button" class="common-people-modal-close note-write-share-close moyo-share-close" id="commonPeopleModalCloseButton" aria-label="닫기">×</button>
+        </div>
+        <div class="common-people-modal-search note-write-share-toolbar">
+            <input type="text" id="commonPeopleModalSearchInput" class="note-write-share-input" autocomplete="off" placeholder="검색">
+        </div>
+        <div class="note-write-share-body note-write-share-body-simple note-write-share-body-feed">
+            <div>
+                <div class="common-people-modal-list-label note-write-share-subtitle" id="commonPeopleModalListLabel">받는 대상</div>
+                <span class="common-people-modal-count" id="commonPeopleModalCount" hidden>0</span>
+                <div class="common-people-modal-body note-write-share-list" id="commonPeopleModalList" role="listbox" aria-label="사람 목록"></div>
+            </div>
+            <div class="common-people-modal-selected-wrap" id="commonPeopleModalSelected">
+                <div class="common-people-modal-selected-head note-write-share-subtitle">선택 대상 <span id="commonPeopleModalSelectedCount">(0)</span></div>
+                <div class="common-people-modal-selected-list note-write-share-selected note-share-chip-list" id="commonPeopleModalSelectedList">
+                    <span class="common-people-modal-selected-empty">아직 선택된 대상이 없습니다.</span>
+                </div>
+            </div>
+        </div>
+        <div class="common-people-modal-footer note-write-share-modal-actions" id="commonPeopleModalFooter">
+            <div class="common-people-modal-footer-left" hidden>
+                <span id="commonPeopleModalSummary">선택 없음</span>
+                <a href="#" id="commonPeopleModalManageLink" hidden>관리 화면으로 이동</a>
+            </div>
+            <div class="common-people-modal-actions">
+                <button type="button" class="common-people-modal-secondary note-soft-btn" id="commonPeopleModalCancelButton" hidden>취소</button>
+                <button type="button" class="common-people-modal-primary note-gradient-btn" id="commonPeopleModalConfirmButton">확인</button>
+            </div>
+        </div>
+    </section>
+</div>

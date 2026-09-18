@@ -1,0 +1,244 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.springboot.project.dao.IcontentFileDAO">
+  <resultMap id="contentFileMap" type="com.springboot.project.dto.contentFileDTO">
+    <id property="contentFileId" column="CONTENT_FILE_ID"/>
+    <result property="folderId" column="FOLDER_ID"/>
+    <result property="originalFolderId" column="ORIGINAL_FOLDER_ID"/>
+    <result property="scopeType" column="SCOPE_TYPE"/>
+    <result property="ownerUserId" column="OWNER_USER_ID"/>
+    <result property="wsId" column="WS_ID"/>
+    <result property="projId" column="PROJ_ID"/>
+    <result property="originalName" column="ORIGINAL_NAME"/>
+    <result property="storedName" column="STORED_NAME"/>
+    <result property="filePath" column="FILE_PATH"/>
+    <result property="fileExt" column="FILE_EXT"/>
+    <result property="mimeType" column="MIME_TYPE"/>
+    <result property="fileSize" column="FILE_SIZE"/>
+    <result property="description" column="DESCRIPTION"/>
+    <result property="createdBy" column="CREATED_BY"/>
+    <result property="creatorName" column="CREATOR_NAME"/>
+    <result property="createdAt" column="CREATED_AT"/>
+    <result property="updatedBy" column="UPDATED_BY"/>
+    <result property="updatedAt" column="UPDATED_AT"/>
+    <result property="deletedYn" column="DELETED_YN"/>
+    <result property="deletedBy" column="DELETED_BY"/>
+    <result property="deletedAt" column="DELETED_AT"/>
+  </resultMap>
+  <insert id="insert" parameterType="com.springboot.project.dto.contentFileDTO">
+    <selectKey keyProperty="contentFileId" resultType="long" order="BEFORE">SELECT SEQ_CONTENT_FILE_ID.NEXTVAL FROM DUAL</selectKey>
+    INSERT INTO CONTENT_FILES (
+      CONTENT_FILE_ID,FOLDER_ID,SCOPE_TYPE,OWNER_USER_ID,WS_ID,PROJ_ID,
+      ORIGINAL_NAME,STORED_NAME,FILE_PATH,FILE_EXT,MIME_TYPE,FILE_SIZE,DESCRIPTION,
+      CREATED_BY,CREATED_AT,UPDATED_BY,UPDATED_AT,DELETED_YN
+    ) VALUES (
+      #{contentFileId},#{folderId,jdbcType=NUMERIC},#{scopeType},#{ownerUserId,jdbcType=NUMERIC},#{wsId,jdbcType=NUMERIC},#{projId,jdbcType=NUMERIC},
+      #{originalName},#{storedName},#{filePath},#{fileExt,jdbcType=VARCHAR},#{mimeType,jdbcType=VARCHAR},#{fileSize},#{description,jdbcType=VARCHAR},
+      #{createdBy},SYSDATE,#{createdBy},SYSDATE,'N'
+    )
+  </insert>
+  <select id="selectById" resultMap="contentFileMap">
+    SELECT f.*,u.USER_NAME AS CREATOR_NAME
+      FROM CONTENT_FILES f LEFT JOIN USERS u ON u.USER_ID=f.CREATED_BY
+     WHERE f.CONTENT_FILE_ID=#{contentFileId} AND f.DELETED_YN='N'
+  </select>
+  <select id="selectOwned" resultMap="contentFileMap">
+    SELECT f.*,u.USER_NAME AS CREATOR_NAME
+      FROM CONTENT_FILES f LEFT JOIN USERS u ON u.USER_ID=f.CREATED_BY
+     WHERE f.CREATED_BY=#{userId} AND f.DELETED_YN='N'
+     ORDER BY f.CREATED_AT DESC,f.CONTENT_FILE_ID DESC
+  </select>
+  <select id="selectByScope" resultMap="contentFileMap">
+    SELECT f.*,u.USER_NAME AS CREATOR_NAME
+      FROM CONTENT_FILES f LEFT JOIN USERS u ON u.USER_ID=f.CREATED_BY
+     WHERE f.SCOPE_TYPE=#{scopeType} AND f.DELETED_YN='N'
+       <choose>
+         <when test="scopeType == 'PERSONAL'">AND f.OWNER_USER_ID=#{ownerUserId}</when>
+         <when test="scopeType == 'GROUP'">AND f.WS_ID=#{wsId}</when>
+         <when test="scopeType == 'PROJECT'">AND f.PROJ_ID=#{projId}</when>
+       </choose>
+       <include refid="groupAccessWhere"/>
+     ORDER BY f.CREATED_AT DESC,f.CONTENT_FILE_ID DESC
+  </select>
+  <select id="selectLatestByScope" resultMap="contentFileMap">
+    SELECT *
+      FROM (
+        SELECT f.*, u.USER_NAME AS CREATOR_NAME
+          FROM CONTENT_FILES f
+          LEFT JOIN USERS u ON u.USER_ID = f.CREATED_BY
+         WHERE f.SCOPE_TYPE = #{scopeType}
+           AND f.DELETED_YN = 'N'
+           <choose>
+             <when test="scopeType == 'PERSONAL'">AND f.OWNER_USER_ID = #{ownerUserId}</when>
+             <when test="scopeType == 'GROUP'">AND f.WS_ID = #{wsId}</when>
+             <when test="scopeType == 'PROJECT'">AND f.PROJ_ID = #{projId}</when>
+           </choose>
+       <include refid="groupAccessWhere"/>
+         ORDER BY f.CREATED_AT DESC, f.CONTENT_FILE_ID DESC
+      )
+     WHERE ROWNUM &lt;= #{limit}
+  </select>
+
+  <sql id="groupAccessWhere">
+    <choose>
+      <when test="scopeType == 'GROUP' or scopeType == 'PROJECT'">
+        AND (
+          NOT EXISTS (
+            SELECT 1 FROM CONTENT_SHARES secret_marker
+             WHERE secret_marker.CONTENT_TYPE='FILE'
+               AND secret_marker.CONTENT_ID=f.CONTENT_FILE_ID
+               AND secret_marker.TARGET_TYPE='USER'
+               AND secret_marker.TARGET_ID=secret_marker.OWNER_ID
+               AND secret_marker.SHARED_BY=secret_marker.OWNER_ID
+               AND UPPER(NVL(secret_marker.PERMISSION_TYPE,'VIEW'))='VIEW'
+               AND secret_marker.ACTIVE_YN='Y'
+               AND NVL(secret_marker.SHARE_STATUS,'ACCEPTED')='ACCEPTED'
+          )
+          OR f.CREATED_BY=#{userId}
+          OR EXISTS (
+            SELECT 1 FROM CONTENT_SHARES edit_share
+             WHERE edit_share.CONTENT_TYPE='FILE'
+               AND edit_share.CONTENT_ID=f.CONTENT_FILE_ID
+               AND edit_share.TARGET_TYPE='USER'
+               AND edit_share.TARGET_ID=#{userId}
+               AND UPPER(NVL(edit_share.PERMISSION_TYPE,'VIEW'))='EDIT'
+               AND edit_share.ACTIVE_YN='Y'
+               AND NVL(edit_share.SHARE_STATUS,'ACCEPTED')='ACCEPTED'
+               AND (edit_share.EXPIRES_AT IS NULL OR edit_share.EXPIRES_AT &gt;= SYSDATE)
+          )
+          OR (
+            #{scopeType}='GROUP' AND EXISTS (
+              SELECT 1 FROM WORKSPACES w_mgr
+              LEFT JOIN WS_MEMBERS wm_mgr ON wm_mgr.WS_ID=w_mgr.WS_ID AND wm_mgr.USER_ID=#{userId}
+              WHERE w_mgr.WS_ID=f.WS_ID
+                AND (w_mgr.OWNER_ID=#{userId} OR UPPER(NVL(wm_mgr.WS_ROLE,'MEMBER'))='ADMIN')
+            )
+          )
+          OR (
+            #{scopeType}='PROJECT' AND EXISTS (
+              SELECT 1 FROM PROJECTS p_mgr
+              LEFT JOIN PROJ_MEMBERS pm_mgr ON pm_mgr.PROJ_ID=p_mgr.PROJ_ID AND pm_mgr.USER_ID=#{userId}
+              WHERE p_mgr.PROJ_ID=f.PROJ_ID
+                AND p_mgr.WS_ID IS NOT NULL
+                AND (p_mgr.LEADER_ID=#{userId} OR UPPER(NVL(pm_mgr.PROJ_ROLE,'MEMBER')) IN ('ADMIN','LEADER','OWNER','PM'))
+            )
+          )
+        )
+      </when>
+    </choose>
+  </sql>
+
+  <sql id="scopeWhere">
+    f.SCOPE_TYPE=#{scopeType} AND f.DELETED_YN='N'
+    <choose>
+      <when test="scopeType == 'PERSONAL'">AND f.OWNER_USER_ID=#{ownerUserId}</when>
+      <when test="scopeType == 'GROUP'">AND f.WS_ID=#{wsId}</when>
+      <when test="scopeType == 'PROJECT'">AND f.PROJ_ID=#{projId}</when>
+    </choose>
+    <include refid="groupAccessWhere"/>
+    <if test="keyword != null and keyword != ''">AND UPPER(f.ORIGINAL_NAME) LIKE '%' || UPPER(#{keyword}) || '%'</if>
+    <if test="fileType != null and fileType != '' and fileType != 'ALL'">
+      <choose>
+        <when test="fileType == 'IMAGE'">AND (LOWER(f.MIME_TYPE) LIKE 'image/%' OR LOWER(f.FILE_EXT) IN ('jpg','jpeg','png','gif','webp','bmp','svg'))</when>
+        <when test="fileType == 'DOCUMENT'">AND LOWER(f.FILE_EXT) IN ('pdf','doc','docx','hwp','hwpx','txt','rtf')</when>
+        <when test="fileType == 'SHEET'">AND LOWER(f.FILE_EXT) IN ('xls','xlsx','csv')</when>
+        <when test="fileType == 'PRESENTATION'">AND LOWER(f.FILE_EXT) IN ('ppt','pptx')</when>
+        <when test="fileType == 'ARCHIVE'">AND LOWER(f.FILE_EXT) IN ('zip','rar','7z','tar','gz')</when>
+        <when test="fileType == 'OTHER'">AND LOWER(NVL(f.FILE_EXT,'-')) NOT IN ('jpg','jpeg','png','gif','webp','bmp','svg','pdf','doc','docx','hwp','hwpx','txt','rtf','xls','xlsx','csv','ppt','pptx','zip','rar','7z','tar','gz')</when>
+      </choose>
+    </if>
+  </sql>
+  <select id="selectPage" resultMap="contentFileMap">
+    SELECT * FROM (
+      SELECT q.*, ROWNUM rn FROM (
+        SELECT f.*,u.USER_NAME AS CREATOR_NAME
+          FROM CONTENT_FILES f LEFT JOIN USERS u ON u.USER_ID=f.CREATED_BY
+         WHERE <include refid="scopeWhere"/>
+         ORDER BY
+          <choose>
+            <when test="sort == 'NAME_ASC'">LOWER(f.ORIGINAL_NAME) ASC, f.CONTENT_FILE_ID DESC</when>
+            <when test="sort == 'SIZE_DESC'">f.FILE_SIZE DESC, f.CONTENT_FILE_ID DESC</when>
+            <when test="sort == 'SIZE_ASC'">f.FILE_SIZE ASC, f.CONTENT_FILE_ID DESC</when>
+            <when test="sort == 'OLDEST'">f.CREATED_AT ASC, f.CONTENT_FILE_ID ASC</when>
+            <otherwise>f.CREATED_AT DESC, f.CONTENT_FILE_ID DESC</otherwise>
+          </choose>
+      ) q WHERE ROWNUM &lt;= #{offset}+#{size}
+    ) WHERE rn &gt; #{offset}
+  </select>
+  <select id="countPage" resultType="int">
+    SELECT COUNT(*) FROM CONTENT_FILES f WHERE <include refid="scopeWhere"/>
+  </select>
+  <select id="sumPageBytes" resultType="long">
+    SELECT NVL(SUM(f.FILE_SIZE),0) FROM CONTENT_FILES f WHERE <include refid="scopeWhere"/>
+  </select>
+  <select id="countCanManage" resultType="int">
+    SELECT CASE
+      WHEN #{scopeType,jdbcType=VARCHAR}='GROUP' AND EXISTS (
+        SELECT 1
+          FROM WORKSPACES w
+          LEFT JOIN WS_MEMBERS wm
+            ON wm.WS_ID = w.WS_ID
+           AND wm.USER_ID = #{userId,jdbcType=NUMERIC}
+         WHERE w.WS_ID = #{wsId,jdbcType=NUMERIC}
+           AND (
+                w.OWNER_ID = #{userId,jdbcType=NUMERIC}
+                OR UPPER(NVL(wm.WS_ROLE, 'MEMBER')) = 'ADMIN'
+           )
+      ) THEN 1
+      WHEN #{scopeType,jdbcType=VARCHAR}='PROJECT' AND EXISTS (
+        SELECT 1
+          FROM PROJECTS p
+          LEFT JOIN PROJ_MEMBERS pm
+            ON pm.PROJ_ID = p.PROJ_ID
+           AND pm.USER_ID = #{userId,jdbcType=NUMERIC}
+         WHERE p.PROJ_ID = #{projId,jdbcType=NUMERIC}
+           AND (
+                p.LEADER_ID = #{userId,jdbcType=NUMERIC}
+                OR UPPER(NVL(pm.PROJ_ROLE, 'MEMBER')) IN ('ADMIN', 'LEADER', 'OWNER', 'PM')
+           )
+      ) THEN 1
+      ELSE 0
+    END
+    FROM DUAL
+  </select>
+  <update id="updateMetadata">
+    UPDATE CONTENT_FILES SET ORIGINAL_NAME=#{originalName},DESCRIPTION=#{description,jdbcType=VARCHAR},UPDATED_BY=#{userId},UPDATED_AT=SYSDATE
+     WHERE CONTENT_FILE_ID=#{contentFileId} AND DELETED_YN='N'
+  </update>
+
+  <select id="selectActiveTargetIds" resultType="long">
+    SELECT DISTINCT i.RECORD_TARGET_ID FROM CONTENT_RECORD_ITEMS i
+     WHERE i.RECORD_TYPE='FILE' AND i.CONTENT_ID=#{contentFileId} AND i.DELETED_YN='N'
+  </select>
+  <select id="countActiveReferences" resultType="int">
+    SELECT COUNT(*) FROM CONTENT_RECORD_ITEMS
+     WHERE RECORD_TYPE='FILE' AND CONTENT_ID=#{contentFileId} AND DELETED_YN='N'
+  </select>
+  <update id="updateOriginalNameOwned">
+    UPDATE CONTENT_FILES
+       SET ORIGINAL_NAME=#{originalName},UPDATED_BY=#{userId},UPDATED_AT=SYSDATE
+     WHERE CONTENT_FILE_ID=#{contentFileId} AND CREATED_BY=#{userId} AND DELETED_YN='N'
+  </update>
+  <update id="softDeleteOwned">
+    UPDATE CONTENT_FILES
+       SET DELETED_YN='Y',DELETED_BY=#{userId},DELETED_AT=SYSDATE,UPDATED_BY=#{userId},UPDATED_AT=SYSDATE
+     WHERE CONTENT_FILE_ID=#{contentFileId} AND CREATED_BY=#{userId} AND DELETED_YN='N'
+  </update>
+  <update id="softDeleteById">
+    UPDATE CONTENT_FILES
+       SET DELETED_YN='Y',DELETED_BY=#{userId},DELETED_AT=SYSDATE,UPDATED_BY=#{userId},UPDATED_AT=SYSDATE
+     WHERE CONTENT_FILE_ID=#{contentFileId} AND DELETED_YN='N'
+  </update>
+    <select id="countDirectFileShare" resultType="int">
+        SELECT COUNT(1)
+          FROM CONTENT_SHARES s
+         WHERE s.CONTENT_TYPE = 'FILE'
+           AND s.CONTENT_ID = #{contentFileId}
+           AND s.TARGET_TYPE = 'USER'
+           AND s.TARGET_ID = #{userId}
+           AND s.ACTIVE_YN = 'Y'
+           AND NVL(s.SHARE_STATUS, 'ACCEPTED') = 'ACCEPTED'
+           AND (s.EXPIRES_AT IS NULL OR s.EXPIRES_AT >= SYSDATE)
+    </select>
+
+</mapper>

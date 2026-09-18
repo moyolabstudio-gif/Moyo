@@ -2,8 +2,11 @@
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
 <%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
+
+<link rel="stylesheet" href="${pageContext.request.contextPath}/css/common/commonNoteHistoryModal.css?v=common-note-history-v2">
+<script src="${pageContext.request.contextPath}/js/common/commonNoteHistoryModal.js?v=common-note-history-v2"></script>
 <c:forEach var="note" items="${profilePublicNotes}">
-    <section id="profileNoteDetail-${note.noteId}" class="profile-note-detail-modal is-review-collapsed" data-profile-note-detail data-note-id="${note.noteId}" data-note-owner-id="${note.userId}" data-note-scope="${empty note.scopeType ? 'PRIVATE' : note.scopeType}" data-note-ws-id="${note.wsId}" data-note-proj-id="${note.projId}" data-note-folder-id="${note.folderId}" data-context-path="${pageContext.request.contextPath}" data-current-user-id="${sessionScope.user.userId}" hidden aria-label="${empty note.noteTitle ? '제목 없는 노트' : fn:escapeXml(note.noteTitle)} 노트 보기">
+    <section id="profileNoteDetail-${note.noteId}" class="profile-note-detail-modal is-review-collapsed" data-profile-note-detail data-note-id="${note.noteId}" data-note-owner-id="${note.userId}" data-note-author-name="${fn:escapeXml(empty note.userName ? displayName : note.userName)}" data-note-scope="${empty note.scopeType ? 'PRIVATE' : note.scopeType}" data-note-ws-id="${note.wsId}" data-note-proj-id="${note.projId}" data-note-folder-id="${note.folderId}" data-context-path="${pageContext.request.contextPath}" data-current-user-id="${sessionScope.user.userId}" hidden aria-label="${empty note.noteTitle ? '제목 없는 노트' : fn:escapeXml(note.noteTitle)} 노트 보기">
         <div class="profile-note-detail-backdrop" data-profile-note-close></div>
 
         <div class="profile-note-detail-dialog" role="dialog" aria-modal="true">
@@ -34,7 +37,7 @@
                             </a>
                             <span class="profile-note-detail-author-copy">
                                 <a class="profile-note-detail-author-link profile-note-detail-author-name-link" href="${pageContext.request.contextPath}/users/profile?userId=${note.userId}">
-                                    <strong><c:out value="${empty note.userName ? displayName : note.userName}" /></strong>
+                                    <strong data-common-note-author-name><c:out value="${empty note.userName ? displayName : note.userName}" /></strong>
                                 </a>
                                 <small>
                                     작성 <fmt:formatDate value="${note.regDt}" pattern="yyyy.MM.dd HH:mm" />
@@ -269,12 +272,7 @@
             <div><h3 id="profileNoteShareModalTitle">공유하기</h3><p>친구·그룹·프로젝트를 선택하고 필요하면 편집 권한을 함께 줄 수 있어요.</p></div>
             <button type="button" class="note-write-share-close" data-note-share-close aria-label="닫기">×</button>
         </div>
-        <div class="note-write-share-tabs" role="tablist" aria-label="공유 대상 유형">
-            <button type="button" class="note-write-share-tab is-active" data-share-tab="FRIEND">친구</button>
-            <button type="button" class="note-write-share-tab" data-share-tab="WORKSPACE">그룹</button>
-            <button type="button" class="note-write-share-tab" data-share-tab="PROJECT">프로젝트</button>
-        </div>
-        <div class="note-write-share-toolbar">
+<div class="note-write-share-toolbar">
             <select id="profileNoteShareContext" class="note-write-share-select" aria-label="공유 범위 선택" hidden></select>
             <input type="text" id="profileNoteShareKeyword" class="note-write-share-input" placeholder="친구 이름 또는 이메일 검색">
         </div>

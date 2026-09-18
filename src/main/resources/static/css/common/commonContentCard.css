@@ -1,0 +1,870 @@
+/* 탐색창 공통 카드 보강: 개인 프로필 사진/노트 카드의 시각 규칙을 재사용한다. */
+[data-content-explorer="PHOTO"] .file-browser-grid {
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
+  gap:18px;
+}
+[data-content-explorer="PHOTO"] .profile-photo-card--square {
+  position:relative;
+  display:block;
+  aspect-ratio:1/1;
+  overflow:hidden;
+  border-radius:18px;
+  background:#eef2f7;
+  box-shadow:0 8px 24px rgba(32,45,72,.08);
+  cursor:pointer;
+}
+[data-content-explorer="PHOTO"] .profile-photo-thumb,
+[data-content-explorer="PHOTO"] .profile-photo-thumb > img,
+[data-content-explorer="PHOTO"] .profile-photo-thumb .photo-edited-display {
+  width:100%; height:100%; display:block;
+}
+[data-content-explorer="PHOTO"] .profile-photo-thumb > img,
+[data-content-explorer="PHOTO"] .profile-photo-thumb .photo-edited-display img { object-fit:cover; }
+[data-content-explorer="PHOTO"] .profile-photo-hover {
+  position:absolute; inset:0; display:flex; align-items:flex-end;
+  padding:16px; opacity:0; transition:opacity .18s ease;
+  background:linear-gradient(to top,rgba(15,20,35,.72),rgba(15,20,35,0) 62%);
+}
+[data-content-explorer="PHOTO"] .profile-photo-card--square:hover .profile-photo-hover,
+[data-content-explorer="PHOTO"] .profile-photo-card--square:focus-within .profile-photo-hover { opacity:1; }
+[data-content-explorer="PHOTO"] .profile-photo-hover-main { width:100%; color:#fff; }
+[data-content-explorer="PHOTO"] .profile-photo-actions { display:flex; gap:10px; align-items:center; }
+
+/* ===== Common note paper card =====
+   프로필 노트 카드를 기준본으로 삼고 프로필/그룹/프로젝트/탐색기에서 같은 본체를 사용한다.
+   각 화면의 grid 크기, 관리 메뉴, MOYO 위치 등은 화면 전용 CSS에서 보정한다. */
+.profile-note-paper-card,
+.workspace-note-paper-card,
+.project-note-paper-card,
+.explorer-note-paper-card {
+    min-width: 0;
+}
+
+.profile-note-paper-button,
+.workspace-note-paper-card,
+.project-note-paper-card,
+.explorer-note-paper-button {
+    display: block;
+    width: 100%;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    text-align: left;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.profile-note-paper-button:focus-visible,
+.workspace-note-paper-card:focus-visible,
+.project-note-paper-card:focus-visible,
+.explorer-note-paper-button:focus-visible {
+    outline: 3px solid rgba(61, 138, 255, .24);
+    outline-offset: 5px;
+    border-radius: 16px;
+}
+
+.profile-note-paper,
+.workspace-note-paper,
+.project-note-paper,
+.explorer-note-paper {
+    position: relative;
+    display: block;
+    width: 100%;
+    aspect-ratio: 210 / 297;
+    overflow: hidden;
+    border: 1px solid #e8eef6;
+    border-radius: 10px;
+    background: linear-gradient(180deg, rgba(255,255,255,.98), #fff), #fff;
+    box-shadow: 0 18px 38px rgba(15, 23, 42, .09);
+    transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+}
+
+.profile-note-paper::before,
+.workspace-note-paper::before,
+.project-note-paper::before,
+.explorer-note-paper::before {
+    content: "";
+    position: absolute;
+    inset: 12px;
+    border: 1px solid rgba(232, 238, 246, .7);
+    border-radius: 4px;
+    pointer-events: none;
+}
+
+.profile-note-paper-button:hover .profile-note-paper,
+.profile-note-paper-button:focus-visible .profile-note-paper,
+.workspace-note-paper-card:hover .workspace-note-paper,
+.workspace-note-paper-card:focus-visible .workspace-note-paper,
+.project-note-paper-card:hover .project-note-paper,
+.project-note-paper-card:focus-visible .project-note-paper,
+.file-item--note:hover .explorer-note-paper,
+.file-item--note:focus-within .explorer-note-paper {
+    border-color: #d9e4f2;
+    box-shadow: 0 24px 54px rgba(15, 23, 42, .15);
+    transform: translateY(-4px);
+}
+
+.profile-note-paper-inner,
+.workspace-note-paper-inner,
+.project-note-paper-inner {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    padding: 32px 28px 26px;
+    color: #2f3a4f;
+    box-sizing: border-box;
+}
+
+.profile-note-paper-inner::after,
+.workspace-note-paper-inner::after,
+.project-note-paper-inner::after {
+    content: "";
+    position: absolute;
+    left: 28px;
+    right: 28px;
+    bottom: 34px;
+    height: 34px;
+    background:
+        linear-gradient(#f0f4f9, #f0f4f9) left top / 86% 1px no-repeat,
+        linear-gradient(#f0f4f9, #f0f4f9) left 11px / 72% 1px no-repeat,
+        linear-gradient(#f0f4f9, #f0f4f9) left 22px / 54% 1px no-repeat;
+    pointer-events: none;
+}
+
+.profile-note-paper-title,
+.workspace-note-paper-title,
+.project-note-paper-title {
+    display: -webkit-box;
+    min-height: 48px;
+    overflow: hidden;
+    color: #202b40;
+    font-size: 16px;
+    font-weight: 950;
+    letter-spacing: -.35px;
+    line-height: 1.45;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+
+.profile-note-content-meta,
+.workspace-note-content-meta,
+.project-note-content-meta,
+.explorer-note-content-meta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 5px 10px;
+    min-height: 18px;
+    margin-top: 8px;
+    color: #8491a6;
+    font-size: 10.5px;
+    font-weight: 800;
+    line-height: 1;
+}
+
+.profile-note-content-meta-item,
+.workspace-note-content-meta-item,
+.project-note-content-meta-item,
+.explorer-note-content-meta__item {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    white-space: nowrap;
+}
+
+.profile-note-content-meta-item i,
+.workspace-note-content-meta-item i,
+.project-note-content-meta-item i,
+.explorer-note-content-meta__item i {
+    width: 12px;
+    color: #718096;
+    font-size: 10.5px;
+    text-align: center;
+}
+
+.profile-note-content-meta + .profile-note-paper-line,
+.workspace-note-content-meta + .workspace-note-paper-line,
+.project-note-content-meta + .project-note-paper-line {
+    margin-top: 12px;
+}
+
+.profile-note-paper-line,
+.workspace-note-paper-line,
+.project-note-paper-line {
+    display: block;
+    width: 50%;
+    height: 1px;
+    margin: 18px 0 22px;
+    border-radius: 999px;
+    background: #dfe8f3;
+}
+
+.profile-note-paper-body,
+.workspace-note-paper-body,
+.project-note-paper-body {
+    display: -webkit-box;
+    min-height: 64px;
+    max-height: 64px;
+    overflow: hidden;
+    color: #5f6f87;
+    font-size: 11.5px;
+    font-weight: 700;
+    line-height: 1.75;
+    white-space: pre-line;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+}
+
+.profile-note-paper-lines,
+.workspace-note-paper-lines,
+.project-note-paper-lines {
+    display: grid;
+    gap: 8px;
+    margin-top: auto;
+    padding-bottom: 68px;
+    opacity: .92;
+}
+
+.profile-note-paper-lines span,
+.workspace-note-paper-lines span,
+.project-note-paper-lines span {
+    display: block;
+    height: 1px;
+    border-radius: 999px;
+    background: #edf2f8;
+}
+
+.profile-note-paper-lines span:nth-child(1), .workspace-note-paper-lines span:nth-child(1), .project-note-paper-lines span:nth-child(1) { width: 96%; }
+.profile-note-paper-lines span:nth-child(2), .workspace-note-paper-lines span:nth-child(2), .project-note-paper-lines span:nth-child(2) { width: 90%; }
+.profile-note-paper-lines span:nth-child(3), .workspace-note-paper-lines span:nth-child(3), .project-note-paper-lines span:nth-child(3) { width: 82%; }
+.profile-note-paper-lines span:nth-child(4), .workspace-note-paper-lines span:nth-child(4), .project-note-paper-lines span:nth-child(4) { width: 66%; }
+.profile-note-paper-lines span:nth-child(5), .workspace-note-paper-lines span:nth-child(5), .project-note-paper-lines span:nth-child(5) { width: 48%; }
+
+.profile-note-moyo-mark,
+.explorer-note-moyo-mark {
+    position: absolute;
+    right: 17px;
+    top: 17px;
+    z-index: 6;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    pointer-events: none;
+    filter: drop-shadow(0 2px 5px rgba(15, 23, 42, .12));
+}
+
+.profile-note-moyo-mark img,
+.explorer-note-moyo-mark img {
+    display: block;
+    width: 26px;
+    height: 26px;
+    object-fit: contain;
+}
+
+.profile-note-hover,
+.workspace-note-paper-hover,
+.project-note-paper-hover,
+.explorer-note-hover {
+    position: absolute;
+    inset: auto 10px 10px 10px;
+    z-index: 5;
+    min-height: 68px;
+    display: flex;
+    align-items: flex-end;
+    padding: 12px 13px 11px;
+    color: #233047;
+    border: 1px solid rgba(224, 233, 244, .82);
+    border-radius: 12px;
+    background: linear-gradient(180deg, rgba(255,255,255,.28), rgba(255,255,255,.94));
+    box-shadow: 0 12px 26px rgba(15, 23, 42, .1);
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity .18s ease, transform .18s ease;
+    pointer-events: none;
+}
+
+/* 프로필 노트 카드의 하단 액션(좋아요/댓글/공유/담기)은 실제 버튼이다.
+   부모 hover 레이어가 pointer-events:none이면 일부 브라우저/중첩 구조에서
+   자식 버튼 클릭이 카드 본문으로 빠질 수 있어 프로필 카드만 클릭 가능하게 둔다. */
+.profile-note-hover {
+    pointer-events: auto;
+}
+
+.profile-note-paper-button:hover .profile-note-hover,
+.profile-note-paper-button:focus-visible .profile-note-hover,
+.profile-note-paper-button:focus-within .profile-note-hover,
+.workspace-note-paper-card:hover .workspace-note-paper-hover,
+.workspace-note-paper-card:focus-visible .workspace-note-paper-hover,
+.project-note-paper-card:hover .project-note-paper-hover,
+.project-note-paper-card:focus-visible .project-note-paper-hover,
+.file-item--note:hover .explorer-note-hover,
+.file-item--note:focus-within .explorer-note-hover {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.profile-note-hover-main,
+.workspace-note-hover-main {
+    display: grid;
+    gap: 7px;
+    width: 100%;
+    min-width: 0;
+}
+
+.profile-note-hover-meta,
+.workspace-note-hover-meta {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    min-width: 0;
+}
+
+.profile-note-hover-meta strong,
+.profile-note-hover-date,
+.workspace-note-hover-meta strong,
+.workspace-note-hover-date {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.profile-note-hover-meta strong,
+.workspace-note-hover-meta strong {
+    flex: 0 1 auto;
+    max-width: 120px;
+    color: #202b40;
+    font-size: 13px;
+    font-weight: 950;
+    letter-spacing: -.2px;
+}
+
+.profile-note-hover-date,
+.workspace-note-hover-date {
+    flex: 0 0 auto;
+    color: #6a7890;
+    font-size: 10.5px;
+    font-weight: 850;
+}
+
+.profile-note-hover-dot,
+.workspace-note-hover-dot {
+    flex: 0 0 auto;
+    color: #9aa8ba;
+    font-size: 10px;
+    font-weight: 900;
+}
+
+.profile-note-feed-actions,
+.workspace-note-hover-actions {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #506079;
+    font-size: 12px;
+    font-weight: 900;
+    line-height: 1;
+    pointer-events: auto;
+}
+
+.profile-note-feed-action,
+.workspace-note-hover-action {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    min-width: 0;
+    padding: 2px 0;
+    border-radius: 6px;
+    transition: color .16s ease, transform .16s ease, opacity .16s ease;
+}
+
+.profile-note-feed-action[role="button"],
+.workspace-note-hover-action[role="button"] { cursor: pointer; }
+.profile-note-feed-action[role="button"]:hover,
+.workspace-note-hover-action[role="button"]:hover { color: #26364f; transform: translateY(-1px); }
+.profile-note-feed-action.is-loading,
+.workspace-note-hover-action.is-loading { opacity: .55; pointer-events: none; }
+.profile-note-feed-action i,
+.workspace-note-hover-action i { flex: 0 0 auto; width: 13px; font-size: 12px; text-align: center; }
+.profile-note-feed-action span,
+.workspace-note-hover-action span { display: inline-block; min-width: 8px; }
+.profile-note-feed-action.is-like i,
+.workspace-note-hover-action.is-like i { color: #8b98aa; }
+.profile-note-feed-action.is-like.is-active,
+.profile-note-feed-action.is-like.is-active i,
+.workspace-note-hover-action.is-like.is-active,
+.workspace-note-hover-action.is-like.is-active i { color: #ff5e73; }
+.profile-note-feed-action.is-collected,
+.profile-note-feed-action.is-collected i { color: #3d8aff; }
+
+.profile-note-feed-actions button.profile-note-feed-action,
+.workspace-note-hover-actions button.workspace-note-hover-action {
+    appearance: none;
+    -webkit-appearance: none;
+    margin: 0;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    line-height: inherit;
+}
+
+.profile-note-paper-button[role="button"] { position: relative; }
+.profile-note-paper-button[role="button"] .profile-note-feed-actions button { box-sizing: border-box; min-height: 18px; }
+.profile-note-paper-button[role="button"],
+.profile-note-paper-button[role="button"] > .profile-note-paper,
+.profile-note-paper-button[role="button"] .profile-note-paper-inner,
+.profile-note-paper-button[role="button"] .profile-note-paper-inner *,
+.profile-note-paper-button[role="button"] .profile-note-moyo-mark,
+.profile-note-paper-button[role="button"] .profile-note-moyo-mark *,
+.profile-note-paper-button[role="button"] .profile-note-hover,
+.profile-note-paper-button[role="button"] .profile-note-hover-main,
+.profile-note-paper-button[role="button"] .profile-note-hover-meta { cursor: pointer; }
+.profile-note-paper-button[role="button"] .profile-note-feed-actions button,
+.profile-note-paper-button[role="button"] .profile-note-feed-action[role="button"] { cursor: pointer; }
+
+/* 공통 탐색창 카드 기본 형태. 세부 정보는 후속 작업에서 확장한다. */
+.file-browser-grid .content-card {
+  position:relative;
+  min-width:0;
+  border:1px solid #e5e9f0;
+  border-radius:16px;
+  background:#fff;
+  overflow:hidden;
+  box-shadow:0 7px 20px rgba(38,52,78,.07);
+}
+.file-browser-grid .content-card__visual { aspect-ratio:1/1; display:grid; place-items:center; background:#f3f6fa; overflow:hidden; }
+.file-browser-grid .content-card__visual img { width:100%; height:100%; object-fit:cover; display:block; }
+.file-browser-grid .content-card__body,
+.file-browser-grid .content-card__link { display:block; padding:14px 15px; color:inherit; text-decoration:none; }
+.file-browser-grid .content-card__title { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.file-browser-grid .content-card--note { min-height:220px; background:#fffdf8; }
+.file-browser-grid .content-card--note .content-card__link { min-height:220px; }
+.file-browser-grid .content-card__preview { margin:18px 0 0; line-height:1.65; color:#697386; display:-webkit-box; -webkit-line-clamp:6; -webkit-box-orient:vertical; overflow:hidden; }
+.file-browser-grid.is-list { display:flex !important; flex-direction:column; gap:8px !important; }
+.file-browser-grid.is-list .content-card { display:grid; grid-template-columns:72px minmax(0,1fr); min-height:72px; border-radius:12px; box-shadow:none; }
+.file-browser-grid.is-list .content-card__visual { width:72px; height:72px; aspect-ratio:auto; }
+.file-browser-grid.is-list .content-card__body,
+.file-browser-grid.is-list .content-card__link { min-height:72px; padding:12px 16px; display:flex; flex-direction:column; justify-content:center; }
+.file-browser-grid.is-list .content-card--note { display:block; min-height:72px; }
+.file-browser-grid.is-list .content-card--note .content-card__link { min-height:72px; }
+.file-browser-grid.is-list .content-card__preview { margin:5px 0 0; white-space:nowrap; display:block; overflow:hidden; text-overflow:ellipsis; }
+[data-content-explorer="PHOTO"] .file-browser-grid.is-list .post-card {
+  display:grid !important;
+  grid-template-columns:88px minmax(0,1fr);
+  min-height:88px;
+  aspect-ratio:auto !important;
+  border-radius:12px;
+  overflow:hidden;
+}
+[data-content-explorer="PHOTO"] .file-browser-grid.is-list .post-card .post-photo,
+[data-content-explorer="PHOTO"] .file-browser-grid.is-list .post-card .post-card-media,
+[data-content-explorer="PHOTO"] .file-browser-grid.is-list .post-card > img {
+  width:88px !important;
+  height:88px !important;
+  min-height:88px !important;
+  aspect-ratio:auto !important;
+  object-fit:cover;
+}
+
+
+/* ===== Common note paper card: compact main variant =====
+   그룹/프로젝트 메인의 최근 노트 카드가 동일하게 사용한다. */
+.common-note-paper-card--compact {
+    outline: none;
+}
+
+.common-note-paper-card--compact:focus-visible {
+    border-radius: 12px;
+    box-shadow: 0 0 0 3px rgba(68, 139, 234, .16);
+}
+
+.common-note-paper-card--compact .workspace-note-paper,
+.common-note-paper-card--compact .project-note-paper {
+    border-color: #dce6f2;
+    border-radius: 11px;
+    box-shadow: 0 8px 20px rgba(31, 55, 92, .10);
+}
+
+.common-note-paper-card--compact .workspace-note-paper::before,
+.common-note-paper-card--compact .project-note-paper::before {
+    inset: 7px;
+    border-color: #e7edf5;
+}
+
+.common-note-paper-card--compact:hover .workspace-note-paper,
+.common-note-paper-card--compact:focus-visible .workspace-note-paper,
+.common-note-paper-card--compact:hover .project-note-paper,
+.common-note-paper-card--compact:focus-visible .project-note-paper {
+    transform: translateY(-3px);
+    border-color: #c9d9ee;
+    box-shadow: 0 14px 28px rgba(31, 55, 92, .15);
+}
+
+.common-note-paper-card--compact .workspace-note-paper-inner,
+.common-note-paper-card--compact .project-note-paper-inner {
+    position: absolute;
+    inset: 0;
+    padding: 18px 16px 14px;
+}
+
+.common-note-paper-card--compact .workspace-note-paper-inner::after,
+.common-note-paper-card--compact .project-note-paper-inner::after {
+    left: 16px;
+    right: 16px;
+    bottom: 14px;
+}
+
+.common-note-paper-card--compact .workspace-note-paper-title,
+.common-note-paper-card--compact .project-note-paper-title {
+    display: block;
+    min-height: 0;
+    margin-bottom: 0;
+    overflow: hidden;
+    color: #17243a;
+    font-size: 12px;
+    font-weight: 900;
+    line-height: 1.35;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.common-note-paper-card--compact .workspace-note-content-meta,
+.common-note-paper-card--compact .project-note-content-meta,
+.common-note-paper-card--compact .profile-note-content-meta {
+    min-height: 14px;
+    height: 14px;
+    margin-top: 9px;
+    margin-bottom: 4px;
+    gap: 4px 7px;
+    flex-wrap: nowrap;
+    overflow: hidden;
+    color: #7c8ca4;
+    font-size: 10px;
+    line-height: 14px;
+}
+
+.common-note-paper-card--compact .workspace-note-content-meta-item,
+.common-note-paper-card--compact .project-note-content-meta-item,
+.common-note-paper-card--compact .profile-note-content-meta-item {
+    gap: 3px;
+}
+
+.common-note-paper-card--compact .workspace-note-content-meta-item i,
+.common-note-paper-card--compact .project-note-content-meta-item i,
+.common-note-paper-card--compact .profile-note-content-meta-item i {
+    width: 10px;
+    font-size: 10px;
+}
+
+.common-note-paper-card--compact .workspace-note-paper-line,
+.common-note-paper-card--compact .project-note-paper-line {
+    width: 45%;
+    margin: 5px 0 0;
+    background: #dce7f4;
+}
+
+.common-note-paper-card--compact .workspace-note-paper-line.is-strong,
+.common-note-paper-card--compact .project-note-paper-line.is-strong {
+    width: 52%;
+    background: #cbd9ea;
+}
+
+.common-note-paper-card--compact .workspace-note-paper-body,
+.common-note-paper-card--compact .project-note-paper-body {
+    min-height: 34px;
+    max-height: none;
+    margin-top: 15px;
+    color: #607089;
+    font-size: 10px;
+    line-height: 1.55;
+    word-break: break-word;
+}
+
+.common-note-paper-card--compact .workspace-note-paper-lines,
+.common-note-paper-card--compact .project-note-paper-lines {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding-bottom: 3px;
+}
+
+.common-note-paper-card--compact .workspace-note-paper-lines span,
+.common-note-paper-card--compact .project-note-paper-lines span {
+    background: #e5ecf5;
+}
+
+.common-note-paper-card--compact .workspace-note-paper-hover,
+.common-note-paper-card--compact .project-note-paper-hover {
+    flex-direction: column;
+    gap: 1px;
+    transform: translateY(4px);
+    transition: opacity .16s ease, transform .16s ease;
+}
+
+.common-note-paper-card--compact .workspace-note-paper-hover strong,
+.common-note-paper-card--compact .workspace-note-paper-hover span,
+.common-note-paper-card--compact .project-note-paper-hover strong,
+.common-note-paper-card--compact .project-note-paper-hover span {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.common-note-paper-card--compact .workspace-note-paper-hover strong,
+.common-note-paper-card--compact .project-note-paper-hover strong {
+    color: #25344d;
+    font-size: 10px;
+    font-weight: 900;
+}
+
+.common-note-paper-card--compact .workspace-note-paper-hover span,
+.common-note-paper-card--compact .project-note-paper-hover span {
+    color: #8290a6;
+    font-size: 9px;
+}
+
+
+/* compact main hover/action sizing: shared by workspace and project */
+.common-note-paper-card--compact .workspace-note-paper-hover,
+.common-note-paper-card--compact .project-note-paper-hover {
+    right: 7px;
+    bottom: 7px;
+    left: 7px;
+    min-height: 52px;
+    align-items: flex-end;
+    padding: 8px 10px 7px;
+    border: 1px solid rgba(224, 233, 244, .9);
+    border-radius: 10px;
+    background: linear-gradient(180deg, rgba(255,255,255,.34), rgba(255,255,255,.97));
+    box-shadow: 0 9px 20px rgba(15, 23, 42, .11);
+}
+
+.common-note-paper-card--compact .workspace-note-hover-main,
+.common-note-paper-card--compact .profile-note-hover-main {
+    gap: 5px;
+}
+
+.common-note-paper-card--compact .workspace-note-hover-meta,
+.common-note-paper-card--compact .profile-note-hover-meta {
+    gap: 4px;
+}
+
+.common-note-paper-card--compact .workspace-note-hover-meta strong,
+.common-note-paper-card--compact .profile-note-hover-meta strong {
+    max-width: 82px;
+    font-size: 10px;
+    letter-spacing: -.15px;
+}
+
+.common-note-paper-card--compact .workspace-note-hover-date,
+.common-note-paper-card--compact .profile-note-hover-date {
+    font-size: 8.5px;
+}
+
+.common-note-paper-card--compact .workspace-note-hover-dot,
+.common-note-paper-card--compact .profile-note-hover-dot {
+    font-size: 8px;
+}
+
+.common-note-paper-card--compact .workspace-note-hover-actions,
+.common-note-paper-card--compact .profile-note-feed-actions {
+    z-index: 3;
+    gap: 8px;
+    font-size: 9px;
+}
+
+.common-note-paper-card--compact .workspace-note-hover-action,
+.common-note-paper-card--compact .profile-note-feed-action {
+    padding: 1px 0;
+}
+
+.common-note-paper-card--compact .workspace-note-hover-action i,
+.common-note-paper-card--compact .profile-note-feed-action i {
+    width: 10px;
+    font-size: 9px;
+}
+
+/* ===== End common note paper card compact main variant ===== */
+
+
+/* 2026-09-06: note-card interactive action feedback
+   Buttons generated by CommonContentCard are native <button> elements (no role attr),
+   so give them the same pointer/hover behavior explicitly. */
+.profile-note-feed-actions button.profile-note-feed-action,
+.workspace-note-hover-actions button.workspace-note-hover-action {
+    cursor: pointer;
+}
+
+.profile-note-feed-actions button.profile-note-feed-action:hover,
+.workspace-note-hover-actions button.workspace-note-hover-action:hover {
+    color: #3d78f4;
+    transform: translateY(-1px);
+}
+
+.profile-note-feed-actions button.profile-note-feed-action.is-icon-only,
+.workspace-note-hover-actions button.workspace-note-hover-action.is-icon-only {
+    width: 24px;
+    min-width: 24px;
+    height: 24px;
+    min-height: 24px;
+    justify-content: center;
+    padding: 0;
+    border-radius: 50%;
+    transition:
+        color .16s ease,
+        background-color .16s ease,
+        box-shadow .16s ease,
+        transform .16s ease;
+}
+
+.profile-note-feed-actions button.profile-note-feed-action.is-icon-only:hover,
+.workspace-note-hover-actions button.workspace-note-hover-action.is-icon-only:hover {
+    color: #3d78f4;
+    background: rgba(61, 120, 244, .09);
+    box-shadow: inset 0 0 0 1px rgba(61, 120, 244, .10);
+}
+
+.profile-note-feed-actions button.profile-note-feed-action:focus,
+.workspace-note-hover-actions button.workspace-note-hover-action:focus {
+    outline: none;
+}
+
+.profile-note-feed-actions button.profile-note-feed-action:focus-visible,
+.workspace-note-hover-actions button.workspace-note-hover-action:focus-visible {
+    outline: 2px solid rgba(61, 120, 244, .32);
+    outline-offset: 2px;
+}
+
+.profile-note-feed-actions button.profile-note-feed-action:active,
+.workspace-note-hover-actions button.workspace-note-hover-action:active {
+    transform: translateY(0);
+}
+
+
+/* 2026-09-06: profile note card action row unification
+   조회 / 좋아요 / 댓글 / 공유 / 담기를 같은 한 줄 액션 규칙으로 통일한다. */
+.profile-note-feed-actions {
+    display: inline-flex;
+    align-items: center;
+    flex-wrap: nowrap;
+    gap: 8px;
+}
+
+.profile-note-feed-action,
+.profile-note-feed-actions button.profile-note-feed-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    min-width: 0;
+    min-height: 22px;
+    padding: 2px 0;
+    margin: 0;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: #506079;
+    font: inherit;
+    line-height: 1;
+    vertical-align: middle;
+}
+
+.profile-note-feed-action i,
+.profile-note-feed-actions button.profile-note-feed-action i {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 13px;
+    min-width: 13px;
+    height: 13px;
+    font-size: 12px;
+    line-height: 1;
+}
+
+.profile-note-feed-action span {
+    display: inline-flex;
+    align-items: center;
+    min-width: 8px;
+    line-height: 1;
+}
+
+/* 공유/담기도 앞 액션과 동일한 간격 흐름 안에서 유지한다. */
+.profile-note-feed-actions button.profile-note-feed-action.is-icon-only {
+    width: 22px;
+    min-width: 22px;
+    height: 22px;
+    min-height: 22px;
+    padding: 0;
+    border-radius: 6px;
+    flex: 0 0 22px;
+}
+
+.profile-note-feed-actions button.profile-note-feed-action:hover,
+.profile-note-feed-action[role="button"]:hover {
+    color: #3d78f4;
+    background: rgba(61, 120, 244, .08);
+    transform: none;
+}
+
+.profile-note-feed-actions button.profile-note-feed-action:active,
+.profile-note-feed-action[role="button"]:active {
+    transform: none;
+}
+
+.profile-note-feed-actions button.profile-note-feed-action:focus {
+    outline: none;
+}
+
+.profile-note-feed-actions button.profile-note-feed-action:focus-visible {
+    outline: 2px solid rgba(61, 120, 244, .28);
+    outline-offset: 1px;
+}
+
+/* 2026-09-07: profile card touch/responsive interaction polish */
+@media (hover: none), (pointer: coarse) {
+    .profile-note-hover,
+    .profile-tab-section--photos .profile-photo-card--square .profile-photo-hover {
+        opacity: 1;
+        transform: none;
+    }
+
+    .profile-note-hover {
+        inset: auto 8px 8px 8px;
+        min-height: 60px;
+        padding: 9px 10px 8px;
+        background: rgba(255, 255, 255, .94);
+    }
+
+    .profile-tab-section--photos .profile-photo-card--square .profile-photo-hover {
+        min-height: 78px;
+        padding: 22px 38px 9px 9px;
+        pointer-events: auto;
+    }
+}
+
+@media (max-width: 560px) {
+    .profile-note-hover-meta strong {
+        max-width: 86px;
+    }
+
+    .profile-note-feed-actions {
+        gap: 6px;
+    }
+
+    .profile-note-feed-actions button.profile-note-feed-action.is-icon-only {
+        width: 24px;
+        min-width: 24px;
+        height: 24px;
+        min-height: 24px;
+        flex-basis: 24px;
+    }
+}

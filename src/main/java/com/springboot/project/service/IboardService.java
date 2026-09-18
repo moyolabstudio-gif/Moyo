@@ -38,8 +38,6 @@ public interface IboardService {
     boolean registerReply(Map<String, Object> replyData);
     boolean modifyReply(Map<String, Object> replyData);
     boolean removeReply(int replyId);
-
-    List<Map<String, Object>> selectWorkspaceCalendar(Long wsId);
     boolean canManageBoardPin(Long wsId, Long projId, Long userId);
     Map<String, Object> reportContent(String contentType, Long contentId, Long reporterId, String reason, String detail);
     List<Map<String, Object>> getReportList(Long wsId, Long projId, String status, String contentType, String keyword, int page, int size);

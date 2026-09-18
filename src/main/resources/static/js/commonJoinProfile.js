@@ -18,7 +18,9 @@
     const displayNameInput = document.getElementById("joinProfileDisplayName");
     const emailInput = document.getElementById("joinProfileEmail");
     const positionInput = document.getElementById("joinProfilePosition");
+    const introInput = document.getElementById("joinProfileIntro");
     const phoneInput = document.getElementById("joinProfilePhone");
+    const showEmailInput = document.getElementById("joinProfileShowEmail");
     const showPhoneInput = document.getElementById("joinProfileShowPhone");
     const showBirthInput = document.getElementById("joinProfileShowBirth");
     const submitButton = document.getElementById("joinProfileSubmit");
@@ -136,10 +138,15 @@
                 value("contactEmail", "CONTACT_EMAIL", emailInput.value) || "";
             positionInput.value =
                 value("positionName", "POSITION_NAME", "") || "";
+            introInput.value =
+                value("introText", "INTRO_TEXT", "") || "";
             phoneInput.value =
                 value("phoneNumber", "PHONE_NUMBER", "") || "";
+            showEmailInput.checked = String(
+                value("showEmail", "SHOW_EMAIL", "Y")
+            ).toUpperCase() === "Y";
             showPhoneInput.checked = String(
-                value("showPhone", "SHOW_PHONE", "N")
+                value("showPhone", "SHOW_PHONE", "Y")
             ).toUpperCase() === "Y";
             showBirthInput.checked = String(
                 value("showBirth", "SHOW_BIRTH", "Y")
@@ -226,8 +233,10 @@
         useAccountInput.checked = true;
         displayNameInput.value = accountName;
         positionInput.value = "";
+        introInput.value = "";
         phoneInput.value = "";
-        showPhoneInput.checked = false;
+        showEmailInput.checked = true;
+        showPhoneInput.checked = true;
 
         state.sourceUrl = "";
         state.finalBlob = null;
@@ -251,6 +260,7 @@
 
         document.getElementById("joinProfileTitle").textContent =
             state.workspaceName + " 참여 프로필";
+        submitButton.textContent = submitLabel();
 
         overlay.style.display = "block";
         modal.style.display = "block";
@@ -405,6 +415,12 @@
             }, "image/png");
         });
 
+    function submitLabel() {
+        if (state.mode === "invite") return "초대 수락";
+        if (state.mode === "approved") return "참여 완료";
+        return "참여하기";
+    }
+
     submitButton.addEventListener("click", async function () {
         if (state.mode === "invite" && !state.invitationId) return;
         if (state.mode === "approved" && !state.requestId) return;
@@ -440,7 +456,12 @@
         formData.append("displayName", displayName);
         formData.append("contactEmail", email);
         formData.append("positionName", positionInput.value.trim());
+        formData.append("introText", introInput.value.trim());
         formData.append("phoneNumber", phoneInput.value.trim());
+        formData.append(
+            "showEmail",
+            showEmailInput.checked ? "Y" : "N"
+        );
         formData.append(
             "showPhone",
             showPhoneInput.checked ? "Y" : "N"
@@ -460,7 +481,7 @@
         }
 
         submitButton.disabled = true;
-        submitButton.textContent = "참여 중...";
+        submitButton.textContent = "처리 중...";
 
         try {
             const endpoint = state.mode === "approved"
@@ -515,7 +536,7 @@
             );
         } finally {
             submitButton.disabled = false;
-            submitButton.textContent = "참여하기";
+            submitButton.textContent = submitLabel();
         }
     });
 

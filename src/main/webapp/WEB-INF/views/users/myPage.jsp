@@ -6,16 +6,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>내 프로필 - MOYO</title>
+    <title><c:choose><c:when test="${empty isOwnProfile or isOwnProfile}">내 프로필 - MOYO</c:when><c:otherwise><c:out value="${empty mypageUser.userName ? '사용자' : mypageUser.userName}" />님의 프로필 - MOYO</c:otherwise></c:choose></title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/moyoUi.css?v=profile-relation-menu-compact-20260707">
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/myPage.css?v=profile-spacing-20260712">
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/myPage-tabs.css?v=profile-spacing-20260712">
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/myPage-settings.css?v=profile-links-20260712">
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/commonFriendPickerModal.css?v=profile-css-cleanup-20260707">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/myPage.css?v=20260907-friend-responsive-73">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common/commonContentCard.css?v=20260907-profile-responsive-73">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/myPage-tabs.css?v=20260907-profile-responsive-73">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/myPage-settings.css?v=settings-cleanup-20260906">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/commonPeopleModal.css?v=20260906-avatar-isolation-59">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/commonPhotoPostDetail.css?v=20260709v50">
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/commonShareModal.css?v=photo-profile-share-v2">
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/commonCalendarEventPreview.css?v=calendar-preview-common-v7">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/commonPhotoPostDetail.css?v=20260809-fit-atomic">
+    
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/commonCalendarEventPreview.css?v=event-header-actions-unified-v1">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common/commonContentRecordModal.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/commonGroupPreview.css?v=profile-group-preview-v1">
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/css/commonNoteDetail.css?v=profile-note-actions-v1">
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/css/commonFolderModal.css?v=common-folder-card-v2">
@@ -44,6 +46,7 @@
 <c:set var="notesPublic" value="${empty currentUser.profileNotesPublicYn ? 'Y' : currentUser.profileNotesPublicYn}" />
 <c:set var="calendarPublic" value="${empty currentUser.profileCalendarPublicYn ? 'Y' : currentUser.profileCalendarPublicYn}" />
 <c:set var="groupsPublic" value="${empty currentUser.profileGroupsPublicYn ? 'Y' : currentUser.profileGroupsPublicYn}" />
+<c:set var="friendsPublic" value="${empty currentUser.profileFriendsPublicYn ? 'Y' : currentUser.profileFriendsPublicYn}" />
 <c:set var="notifySchedule" value="${empty currentUser.notifyScheduleYn ? 'Y' : currentUser.notifyScheduleYn}" />
 <c:set var="notifyShare" value="${empty currentUser.notifyShareYn ? 'Y' : currentUser.notifyShareYn}" />
 <c:set var="notifyRequest" value="${empty currentUser.notifyRequestYn ? 'Y' : currentUser.notifyRequestYn}" />
@@ -55,6 +58,7 @@
 <c:set var="relationId" value="${friendRelationId}" />
 <c:set var="profileOwnerIdValue" value="${empty profileOwnerId ? currentUser.userId : profileOwnerId}" />
 <c:set var="showGroups" value="${empty groupsVisible ? true : groupsVisible}" />
+<c:set var="showFriends" value="${empty friendsVisible ? true : friendsVisible}" />
 
 <main class="profile-shell ${isOwnerProfile ? 'is-personal-profile' : 'is-friend-profile'}" data-context-path="${pageContext.request.contextPath}" data-current-user-id="${sessionScope.user.userId}" data-profile-owner-id="${profileOwnerIdValue}" data-is-owner-profile="${isOwnerProfile}">
     <section class="profile-masthead" aria-labelledby="profileTitle">
@@ -92,15 +96,15 @@
                                 <div class="profile-more-menu" data-profile-menu hidden role="menu">
                                     <button type="button" role="menuitem" data-open-panel="edit">
                                         <strong>프로필 편집</strong>
-                                        <small>사진 · 이름 · 자기소개 · 생일</small>
+                                        <small>사진 · 이름 · 소개 · 생일 · 링크</small>
                                     </button>
                                     <button type="button" role="menuitem" data-open-panel="privacy">
                                         <strong>공개 설정</strong>
-                                        <small>사진 · 노트 · 일정 · 그룹</small>
+                                        <small>생일 · 사진 · 노트 · 일정 · 그룹 · 친구</small>
                                     </button>
                                     <button type="button" role="menuitem" data-open-panel="notification">
                                         <strong>알림 설정</strong>
-                                        <small>일정 · 공유 · 요청 · 댓글</small>
+                                        <small>일정 · 공유 · 요청 · 댓글 · 좋아요</small>
                                     </button>
                                     <button type="button" role="menuitem" data-open-panel="settings">
                                         <strong>계정 설정</strong>
@@ -125,13 +129,25 @@
                                     </div>
                                 </c:when>
                                 <c:when test="${relationStatus eq 'PENDING' and relationDirection eq 'SENT'}">
-                                    <button type="button" class="profile-action is-muted" disabled>요청 보냄</button>
+                                    <div class="profile-relation-actions" aria-label="보낸 친구 요청 관리">
+                                        <span class="profile-action is-muted" aria-label="친구 요청을 보낸 상태">요청 보냄</span>
+                                        <button type="button" class="profile-action is-secondary" data-friend-action="cancel" data-friend-id="${relationId}">요청 취소</button>
+                                    </div>
                                 </c:when>
                                 <c:when test="${relationStatus eq 'PENDING' and relationDirection eq 'RECEIVED'}">
-                                    <button type="button" class="profile-action is-primary" data-friend-action="accept" data-friend-id="${relationId}">요청 수락</button>
+                                    <div class="profile-relation-actions" aria-label="받은 친구 요청 관리">
+                                        <button type="button" class="profile-action is-primary" data-friend-action="accept" data-friend-id="${relationId}">요청 수락</button>
+                                        <button type="button" class="profile-action is-secondary" data-friend-action="reject" data-friend-id="${relationId}">거절</button>
+                                    </div>
+                                </c:when>
+                                <c:when test="${relationStatus eq 'BLOCKED'}">
+                                    <span class="profile-action is-muted" aria-label="현재 친구 요청을 보낼 수 없는 상태">친구 요청 불가</span>
+                                </c:when>
+                                <c:when test="${relationStatus eq 'NONE'}">
+                                    <button type="button" class="profile-action is-primary" data-friend-action="request" data-target-user-id="${profileOwnerIdValue}">친구 요청</button>
                                 </c:when>
                                 <c:otherwise>
-                                    <button type="button" class="profile-action is-primary" data-friend-action="request" data-target-user-id="${profileOwnerIdValue}">친구 요청</button>
+                                    <span class="profile-action is-muted">관계 확인 중</span>
                                 </c:otherwise>
                             </c:choose>
                         </c:otherwise>
@@ -144,33 +160,50 @@
             <c:if test="${not empty profileLinks}">
                 <div class="profile-external-links" aria-label="프로필 외부 링크">
                     <c:forEach var="profileLink" items="${profileLinks}">
-                        <a class="profile-external-link"
-                           href="${fn:escapeXml(profileLink.LINK_URL)}"
-                           target="_blank"
-                           rel="noopener noreferrer">
-                            <span aria-hidden="true">↗</span>
-                            <c:out value="${profileLink.LINK_NAME}" />
-                        </a>
+                        <c:if test="${not empty profileLink.LINK_URL}">
+                            <a class="profile-external-link"
+                               href="${fn:escapeXml(profileLink.LINK_URL)}"
+                               title="${fn:escapeXml(profileLink.LINK_URL)}"
+                               target="_blank"
+                               rel="noopener noreferrer">
+                                <span aria-hidden="true">↗</span>
+                                <c:out value="${empty profileLink.LINK_NAME ? profileLink.LINK_URL : profileLink.LINK_NAME}" />
+                            </a>
+                        </c:if>
                     </c:forEach>
                 </div>
             </c:if>
 
-            <div class="profile-stats" aria-label="내 활동 요약">
+            <div class="profile-stats" aria-label="${isOwnerProfile ? '내 활동 요약' : '프로필 활동 요약'}">
                 <button type="button" data-profile-tab="photos"><strong><c:out value="${profilePhotoCount}" /></strong><span>사진</span></button>
                 <button type="button" data-profile-tab="notes"><strong><c:out value="${profileNoteCount}" /></strong><span>노트</span></button>
                 <button type="button" data-profile-tab="calendar"><strong><c:out value="${profileCalendarCount}" /></strong><span>일정</span></button>
                 <button type="button" data-profile-tab="groups"><strong><c:out value="${groupCount}" /></strong><span>그룹</span></button>
-                <button type="button" data-profile-friends><strong><c:out value="${friendCount}" /></strong><span>친구</span></button>
+                <c:choose>
+                    <c:when test="${showFriends}">
+                        <button type="button" data-profile-friends><strong><c:out value="${friendCount}" /></strong><span>친구</span></button>
+                    </c:when>
+                    <c:otherwise>
+                        <button type="button"
+                                class="is-private"
+                                data-profile-friends-locked
+                                aria-label="친구 목록 비공개">
+                            <strong>—</strong><span>친구</span>
+                        </button>
+                    </c:otherwise>
+                </c:choose>
             </div>
 
             <div class="profile-meta-line">
-                <span><c:out value="${currentUser.email}" /></span>
+                <c:if test="${isOwnerProfile or showProfileEmail}">
+                    <span><c:out value="${currentUser.email}" /></span>
+                </c:if>
                 <c:if test="${not empty currentUser.birthDate && birthPublic ne 'N'}">
                     <span>
                         <c:if test="${birthType eq 'LUNAR'}">음력 </c:if><c:out value="${currentUser.birthDate}" />
                     </span>
                 </c:if>
-                <c:if test="${birthPublic eq 'N'}">
+                <c:if test="${isOwnerProfile and birthPublic eq 'N'}">
                     <span>생일 비공개</span>
                 </c:if>
             </div>
@@ -203,6 +236,7 @@
     </section>
 </main>
 
+<c:if test="${isOwnerProfile}">
 <section id="profileEditPanel" class="profile-sheet" hidden aria-labelledby="profileEditTitle">
     <div class="profile-sheet-backdrop" data-close-panel></div>
     <div class="profile-sheet-dialog">
@@ -274,12 +308,6 @@
                 </div>
             </div>
 
-            <div class="profile-field profile-field--readonly">
-                <span>이메일</span>
-                <div class="profile-readonly-value"><c:out value="${currentUser.email}" /></div>
-                <p class="profile-field-note">로그인 아이디로 사용되는 이메일입니다.</p>
-            </div>
-
             <div class="profile-field signup-birth-field profile-birth-field">
                 <div class="signup-birth-label-row">
                     <label for="birthDateDisplay" class="signup-birth-label">
@@ -326,17 +354,6 @@
                 </div>
             </div>
 
-            <div class="profile-public-row">
-                <div>
-                    <strong>생일 공개</strong>
-                    <p>비공개 시 친구와 그룹에 생일이 표시되지 않습니다.</p>
-                </div>
-                <label class="profile-switch">
-                    <input id="birthPublicYn" type="checkbox" ${birthPublic ne 'N' ? 'checked' : ''}>
-                    <span></span>
-                </label>
-            </div>
-
             <input id="profileImageData" type="hidden" name="profileImageData">
             <input id="profileOriginalImageData" type="hidden" name="profileOriginalImageData">
             <input id="profileCropScaleHidden" type="hidden" name="profileCropScale">
@@ -367,14 +384,24 @@
         <form id="profilePrivacyForm" class="profile-privacy-form" autocomplete="off">
             <div class="profile-privacy-guide">
                 <strong>프로필 공개 기준</strong>
-                <p><span>사진·노트·일정은 MOYO 공개 자료만 프로필에 표시됩니다.</span><span>개별 항목을 비공개로 바꾸면 프로필에서도 제외됩니다.</span></p>
+                <p><span>프로필에 보여줄 개인정보와 공개 콘텐츠를 설정합니다.</span><span>MOYO 공개 사진·노트·일정은 설정에 따라 친구에게만 표시됩니다. 그룹도 친구에게만 표시됩니다.</span></p>
             </div>
 
             <div class="profile-privacy-list">
                 <div class="profile-privacy-row">
                     <div>
+                        <strong>생일 공개</strong>
+                        <p>켜면 로그인한 MOYO 사용자의 프로필 화면에 생일을 표시합니다.</p>
+                    </div>
+                    <label class="profile-switch">
+                        <input id="birthPublicYn" type="checkbox" ${birthPublic ne 'N' ? 'checked' : ''}>
+                        <span></span>
+                    </label>
+                </div>
+                <div class="profile-privacy-row">
+                    <div>
                         <strong>사진 공개</strong>
-                        <p>공개 사진을 프로필 사진 탭에 보여줍니다.</p>
+                        <p>켜면 MOYO 공개로 저장한 사진을 친구에게 표시합니다.</p>
                     </div>
                     <label class="profile-switch">
                         <input id="profilePhotosPublicYn" type="checkbox" ${photosPublic ne 'N' ? 'checked' : ''}>
@@ -384,7 +411,7 @@
                 <div class="profile-privacy-row">
                     <div>
                         <strong>노트 공개</strong>
-                        <p>공개 노트를 프로필 노트 탭에 보여줍니다.</p>
+                        <p>켜면 MOYO 공개로 저장한 개인 노트를 친구에게 표시합니다.</p>
                     </div>
                     <label class="profile-switch">
                         <input id="profileNotesPublicYn" type="checkbox" ${notesPublic ne 'N' ? 'checked' : ''}>
@@ -394,7 +421,7 @@
                 <div class="profile-privacy-row">
                     <div>
                         <strong>일정 공개</strong>
-                        <p>공개 일정을 프로필 일정 탭에 보여줍니다.</p>
+                        <p>켜면 MOYO 공개로 저장한 개인 일정을 친구에게 표시합니다.</p>
                     </div>
                     <label class="profile-switch">
                         <input id="profileCalendarPublicYn" type="checkbox" ${calendarPublic ne 'N' ? 'checked' : ''}>
@@ -404,10 +431,20 @@
                 <div class="profile-privacy-row">
                     <div>
                         <strong>그룹 공개</strong>
-                        <p>프로필에서 참여 그룹을 보여줍니다.</p>
+                        <p>친구에게 참여 그룹을 표시합니다. 초대 전용 그룹은 제외합니다.</p>
                     </div>
                     <label class="profile-switch">
                         <input id="profileGroupsPublicYn" type="checkbox" ${groupsPublic ne 'N' ? 'checked' : ''}>
+                        <span></span>
+                    </label>
+                </div>
+                <div class="profile-privacy-row">
+                    <div>
+                        <strong>친구 목록 공개</strong>
+                        <p>켜면 로그인한 MOYO 사용자에게 친구 수와 친구 목록을 표시합니다.</p>
+                    </div>
+                    <label class="profile-switch">
+                        <input id="profileFriendsPublicYn" type="checkbox" ${friendsPublic ne 'N' ? 'checked' : ''}>
                         <span></span>
                     </label>
                 </div>
@@ -442,7 +479,7 @@
                 <div class="profile-privacy-row">
                     <div>
                         <strong>일정 알림</strong>
-                        <p>내 일정과 공유 일정 알림을 받습니다.</p>
+                        <p>내 일정과 참여 중인 일정 알림을 받습니다.</p>
                     </div>
                     <label class="profile-switch">
                         <input id="notifyScheduleYn" type="checkbox" ${notifySchedule ne 'N' ? 'checked' : ''}>
@@ -452,7 +489,7 @@
                 <div class="profile-privacy-row">
                     <div>
                         <strong>공유/권한 알림</strong>
-                        <p>공유 요청과 권한 변경 알림을 받습니다.</p>
+                        <p>콘텐츠 공유 요청과 권한 변경 알림을 받습니다.</p>
                     </div>
                     <label class="profile-switch">
                         <input id="notifyShareYn" type="checkbox" ${notifyShare ne 'N' ? 'checked' : ''}>
@@ -511,7 +548,11 @@
         </div>
 
         <div class="profile-account-section">
-            <div class="profile-field profile-field--readonly">
+            <div class="profile-settings-section-title">
+                <strong>계정 정보</strong>
+                <p>로그인과 계정 보안에 사용하는 정보를 관리합니다.</p>
+            </div>
+            <div class="profile-field profile-field--readonly profile-account-email">
                 <span>이메일</span>
                 <div class="profile-readonly-value"><c:out value="${currentUser.email}" /></div>
                 <p class="profile-field-note">로그인 아이디와 계정 안내에 사용되는 이메일입니다.</p>
@@ -541,22 +582,56 @@
             </div>
 
             <form id="profilePasswordForm" class="profile-password-form" autocomplete="off" hidden>
-                <p class="profile-password-policy">비밀번호는 4자 이상 입력해주세요.</p>
+                <p class="profile-password-policy">새 비밀번호 조건을 모두 충족하면 변경할 수 있습니다.</p>
 
-                <label class="profile-field">
-                    <span>현재 비밀번호</span>
-                    <input id="currentPassword" type="password" maxlength="30" placeholder="현재 비밀번호를 입력해주세요" required>
-                </label>
+                <div class="profile-field">
+                    <label for="currentPassword">현재 비밀번호</label>
+                    <div class="profile-password-input-wrap">
+                        <input id="currentPassword" type="password" maxlength="30" placeholder="현재 비밀번호를 입력해주세요" autocomplete="current-password" required>
+                        <button type="button" class="profile-password-visibility" data-password-visibility="currentPassword" aria-label="현재 비밀번호 보기" aria-pressed="false">
+                            <svg class="profile-password-eye" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                <path class="profile-password-eye__shape" d="M3.5 12s3.1-5 8.5-5 8.5 5 8.5 5-3.1 5-8.5 5-8.5-5-8.5-5Z"></path>
+                                <circle class="profile-password-eye__pupil" cx="12" cy="12" r="2.15"></circle>
+                                <path class="profile-password-eye__slash" d="M5 5 19 19"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
 
-                <label class="profile-field">
-                    <span>새 비밀번호</span>
-                    <input id="newPassword" type="password" maxlength="30" placeholder="새 비밀번호를 입력해주세요" required>
-                </label>
+                <div class="profile-field">
+                    <label for="newPassword">새 비밀번호</label>
+                    <div class="profile-password-input-wrap">
+                        <input id="newPassword" type="password" minlength="8" maxlength="72" placeholder="새 비밀번호를 입력해주세요" autocomplete="new-password" required>
+                        <button type="button" class="profile-password-visibility" data-password-visibility="newPassword" aria-label="새 비밀번호 보기" aria-pressed="false">
+                            <svg class="profile-password-eye" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                <path class="profile-password-eye__shape" d="M3.5 12s3.1-5 8.5-5 8.5 5 8.5 5-3.1 5-8.5 5-8.5-5-8.5-5Z"></path>
+                                <circle class="profile-password-eye__pupil" cx="12" cy="12" r="2.15"></circle>
+                                <path class="profile-password-eye__slash" d="M5 5 19 19"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="profile-password-rules" id="profilePasswordRules" aria-live="polite">
+                        <span data-password-rule="length">8자 이상</span>
+                        <span data-password-rule="letter">영문</span>
+                        <span data-password-rule="number">숫자</span>
+                        <span data-password-rule="special">특수문자</span>
+                    </div>
+                </div>
 
-                <label class="profile-field">
-                    <span>새 비밀번호 확인</span>
-                    <input id="confirmPassword" type="password" maxlength="30" placeholder="새 비밀번호를 다시 입력해주세요" required>
-                </label>
+                <div class="profile-field">
+                    <label for="confirmPassword">새 비밀번호 확인</label>
+                    <div class="profile-password-input-wrap">
+                        <input id="confirmPassword" type="password" minlength="8" maxlength="72" placeholder="새 비밀번호를 다시 입력해주세요" autocomplete="new-password" required>
+                        <button type="button" class="profile-password-visibility" data-password-visibility="confirmPassword" aria-label="새 비밀번호 확인 보기" aria-pressed="false">
+                            <svg class="profile-password-eye" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                <path class="profile-password-eye__shape" d="M3.5 12s3.1-5 8.5-5 8.5 5 8.5 5-3.1 5-8.5 5-8.5-5-8.5-5Z"></path>
+                                <circle class="profile-password-eye__pupil" cx="12" cy="12" r="2.15"></circle>
+                                <path class="profile-password-eye__slash" d="M5 5 19 19"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    <p class="profile-password-match" id="profilePasswordMatch" aria-live="polite"></p>
+                </div>
 
                 <div class="profile-sheet-actions profile-password-actions">
                     <button type="button" class="profile-action" data-cancel-password-form>취소</button>
@@ -569,7 +644,7 @@
             <div class="profile-danger-zone profile-danger-zone--account">
                 <div class="profile-danger-content">
                     <strong>회원 탈퇴</strong>
-                    <p>30일 안에 로그인하면 복구할 수 있습니다.<br>현재 비밀번호 확인 후 진행합니다.</p>
+                    <p>30일간 복구 가능하며,<br>이후 탈퇴가 확정됩니다.<br>비밀번호 확인 후 진행합니다.</p>
                 </div>
                 <button type="button" class="profile-danger-button" id="mypageWithdrawButton">탈퇴 신청</button>
             </div>
@@ -588,11 +663,23 @@
             <button type="button" class="profile-confirm-close" data-withdraw-close aria-label="닫기">×</button>
         </div>
         <div class="profile-confirm-body">
-            <p class="profile-confirm-desc">30일 안에 로그인하면 계정을 복구할 수 있습니다.<br>현재 비밀번호를 입력해주세요.</p>
-            <label class="profile-field profile-confirm-password" for="withdrawConfirmPassword">
-                <span>현재 비밀번호</span>
-                <input id="withdrawConfirmPassword" type="password" maxlength="30" placeholder="현재 비밀번호를 입력해주세요" autocomplete="current-password">
-            </label>
+            <p class="profile-confirm-desc profile-confirm-desc--withdraw">
+                <span>30일 동안 계정을 복구할 수 있습니다.</span>
+                <span>30일이 지나면 탈퇴가 최종 처리되며 개인정보는 삭제 또는 익명화됩니다. 이후에는 복구할 수 없습니다.</span>
+            </p>
+            <div class="profile-field profile-confirm-password">
+                <label for="withdrawConfirmPassword">현재 비밀번호</label>
+                <div class="profile-password-input-wrap">
+                    <input id="withdrawConfirmPassword" type="password" maxlength="30" placeholder="현재 비밀번호를 입력해주세요" autocomplete="current-password">
+                    <button type="button" class="profile-password-visibility" data-password-visibility="withdrawConfirmPassword" aria-label="현재 비밀번호 보기" aria-pressed="false">
+                        <svg class="profile-password-eye" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                            <path class="profile-password-eye__shape" d="M3.5 12s3.1-5 8.5-5 8.5 5 8.5 5-3.1 5-8.5 5-8.5-5-8.5-5Z"></path>
+                            <circle class="profile-password-eye__pupil" cx="12" cy="12" r="2.15"></circle>
+                            <path class="profile-password-eye__slash" d="M5 5 19 19"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
         </div>
         <div class="profile-confirm-actions">
             <button type="button" class="profile-action" data-withdraw-close>취소</button>
@@ -649,15 +736,18 @@
         <div id="profileImageHistoryList" class="profile-image-history-list"></div>
     </div>
 </div>
+</c:if>
 
-<%@ include file="../common/commonFriendPickerModal.jspf"%>
+<%@ include file="../common/commonPeopleModal.jspf"%>
 <%@ include file="../common/commonPhotoPostDetail.jspf"%>
 <%@ include file="../common/commonCalendarEventPreview.jspf"%>
+<jsp:include page="/WEB-INF/views/common/commonContentRecordModal.jsp" />
 
 <button type="button" id="calendarViewShareOpenHidden" data-share-content-id="" hidden>공유</button>
 <span id="calendarViewShareCount" hidden>0</span>
 <span id="calendarViewPermissionCount" hidden>0</span>
 <button type="button" id="calendarViewPermissionOpenHidden" hidden>권한</button>
+
 <div id="calendarViewShareHiddenFields" hidden></div>
 <div id="calendarViewShareInitialSource" hidden></div>
 <div id="calendarViewWorkspaceMemberSource" hidden></div>
@@ -702,18 +792,19 @@
     </section>
 </div>
 
-<script src="${pageContext.request.contextPath}/js/commonFriendPickerModal.js?v=status-badge-size-1"></script>
+<script src="${pageContext.request.contextPath}/js/commonPeopleModal.js?v=20260906-avatar-isolation-59"></script>
+<script src="${pageContext.request.contextPath}/js/friendPeopleAdapter.js?v=20260907-friend-relation-3"></script>
 <script>
     window.MOYO_CONTEXT_PATH = '${pageContext.request.contextPath}';
     window.MOYO_CALENDAR_CONTEXT_PATH = '${pageContext.request.contextPath}';
     window.MOYO_CALENDAR_SESSION_USER_ID = '${sessionScope.user.userId}';
 </script>
-<script src="${pageContext.request.contextPath}/js/commonShareModal.js?v=photo-profile-share-v2"></script>
+
 <script>
     (function() {
-        if (!window.MoyoShareModal || typeof window.MoyoShareModal.init !== 'function') return;
+        if (!window.CommonPeopleModal || typeof window.CommonPeopleModal.init !== 'function') return;
         if (!document.getElementById('calendarViewShareModal')) return;
-        window.MoyoShareModal.init({
+        window.CommonPeopleModal.init({
             contentType: 'CALENDAR',
             persist: true,
             shareMode: 'PERMISSION',
@@ -744,13 +835,15 @@
         });
     })();
 </script>
-<script src="${pageContext.request.contextPath}/js/commonPhotoPostDetail.js?v=20260709v50"></script>
-<script src="${pageContext.request.contextPath}/js/commonCalendarEventPreview.js?v=calendar-preview-common-v5"></script>
-<script src="${pageContext.request.contextPath}/js/myPage.js?v=mypage-css-clean-20260708"></script>
-<script src="${pageContext.request.contextPath}/js/myPage-tabs.js?v=20260709-note-profile-v1"></script>
-<script src="${pageContext.request.contextPath}/js/myPage-settings.js?v=profile-links-20260712"></script>
+<script src="${pageContext.request.contextPath}/js/commonPhotoPostDetail.js?v=20260907-profile-photo-collect-media"></script>
+<script src="${pageContext.request.contextPath}/js/common/commonContentRecordModal.js"></script>
+<script src="${pageContext.request.contextPath}/js/commonCalendarEventPreview.js?v=calendar-preview-avatar-policy-v12"></script>
+<script src="${pageContext.request.contextPath}/js/myPage.js?v=20260907-friend-count-guide-1"></script>
+<script src="${pageContext.request.contextPath}/js/commonContentCard.js?v=20260907-profile-note-send-card-fix-1"></script>
+<script src="${pageContext.request.contextPath}/js/myPage-tabs.js?v=20260907-friend-activity-open-1"></script>
+<script src="${pageContext.request.contextPath}/js/myPage-settings.js?v=settings-cleanup-20260906"></script>
 <script src="${pageContext.request.contextPath}/js/noteFolderAdapter.js?v=common-folder-card-v2"></script>
 <script src="${pageContext.request.contextPath}/js/commonFolderModal.js?v=common-folder-card-v2"></script>
-<script src="${pageContext.request.contextPath}/js/commonNoteDetail.js?v=profile-note-list-reactions-v3"></script>
+<script src="${pageContext.request.contextPath}/js/commonNoteDetail.js?v=20260907-profile-note-send-card-fix-1"></script>
 </body>
 </html>

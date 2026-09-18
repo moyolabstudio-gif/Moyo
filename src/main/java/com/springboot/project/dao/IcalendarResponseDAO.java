@@ -13,12 +13,28 @@ public interface IcalendarResponseDAO {
     void ensureCalendarEventTypeColumn();
 	List<calendarResponseDTO> getMonthlyEvents(
 	        @Param("userId") Long userId,
+            @Param("scope") String scope,
+            @Param("friendId") Long friendId,
 	        @Param("wsId") Long wsId,
 	        @Param("projId") Long projId,
 	        @Param("types") List<String> types,
 	        @Param("startDate") String startDate,
 	        @Param("endDate") String endDate
 	    );
+
+    List<calendarResponseDTO> getMonthlyProjectTasks(
+            @Param("userId") Long userId,
+            @Param("projId") Long projId,
+            @Param("startDate") String startDate,
+            @Param("endDate") String endDate
+        );
+
+    Map<String, Object> getProjectTaskSummary(
+            @Param("userId") Long userId,
+            @Param("projId") Long projId
+        );
+
+    List<Map<String, Object>> selectWorkspaceMemberBirthdays(@Param("wsId") Long wsId);
     
  // 공휴일 정보 저장
     int insertHoliday(calendarResponseDTO holiday);
@@ -67,4 +83,8 @@ public interface IcalendarResponseDAO {
     List<Map<String, Object>> selectDueCalendarReminders();
     int insertCalendarReminderAlarms(Map<String, Object> params);
     int markCalendarReminderSent(@Param("eventId") Long eventId);
+
+    List<Long> selectAcceptedFriendIds(@Param("userId") Long userId);
+
+    List<Map<String, Object>> selectAcceptedFriendBirthdays(@Param("userId") Long userId);
 }

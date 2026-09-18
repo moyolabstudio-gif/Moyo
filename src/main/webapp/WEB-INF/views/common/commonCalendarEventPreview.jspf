@@ -1,17 +1,8 @@
 <%@ page pageEncoding="UTF-8" %>
 <div class="moyo-event-view-overlay" id="calendarViewModal" hidden>
-    <article class="moyo-event-view-card" role="dialog" aria-modal="true" aria-labelledby="calendarViewTitle">
+    <article class="moyo-event-view-card" role="dialog" aria-modal="true" aria-labelledby="calendarViewDialogTitle">
         <header class="moyo-event-view-head">
-            <div class="moyo-event-view-head-main">
-                <div class="moyo-event-view-kicker"><span class="moyo-event-view-dot" id="calendarViewTypeDot"></span><span id="calendarViewMeta">일정</span></div>
-                <div class="moyo-event-view-title-row">
-                    <h2 class="moyo-event-view-title" id="calendarViewTitle">일정</h2>
-                    <span class="moyo-event-view-type-icon" id="calendarViewTypeIcon" aria-hidden="true"><i class="fa-regular fa-calendar"></i></span>
-                    <span class="moyo-event-view-public-badge" id="calendarViewMoyoBadge" title="MOYO 공개" hidden>
-                        <img id="calendarViewMascot" src="" alt="" aria-hidden="true">
-                    </span>
-                </div>
-            </div>
+            <h2 class="moyo-event-view-dialog-title" id="calendarViewDialogTitle">일정 상세</h2>
             <div class="moyo-event-view-head-actions">
                 <button type="button" class="moyo-event-view-head-btn moyo-event-view-edit" id="calendarViewEdit" aria-label="수정" title="수정" hidden>
                     <i class="fa-solid fa-pencil" aria-hidden="true"></i>
@@ -27,29 +18,55 @@
                 </button>
             </div>
         </header>
-        <div class="moyo-event-view-author" id="calendarViewAuthorRow" hidden>
-            <div class="moyo-event-view-author-main">
-                <span class="moyo-event-view-author-avatar" id="calendarViewAuthorAvatar" aria-hidden="true"></span>
-                <span class="moyo-event-view-author-name" id="calendarViewAuthorName"></span>
-            </div>
-            <span class="moyo-event-view-author-scope" id="calendarViewAuthorScope"></span>
-        </div>
         <div class="moyo-event-view-body">
-            <section class="moyo-event-view-section time">
-                <div class="moyo-event-view-row-icon" aria-hidden="true"><i class="fa-regular fa-clock"></i></div>
+            <section class="moyo-event-view-detail-item moyo-event-view-title-section">
+                <span class="moyo-event-view-field-label">일정명</span>
+                <div class="moyo-event-view-title-row">
+                    <h3 class="moyo-event-view-title" id="calendarViewTitle">일정</h3>
+                    <span class="moyo-event-view-scope-badge" id="calendarViewScopeBadge"></span>
+                    <span class="moyo-event-view-public-badge" id="calendarViewMoyoBadge" title="MOYO 공개" hidden>
+                        <img id="calendarViewMascot" src="" alt="" aria-hidden="true">
+                    </span>
+                </div>
+            </section>
+            <section class="moyo-event-view-detail-item moyo-event-view-author" id="calendarViewAuthorRow" hidden>
+                <span class="moyo-event-view-field-label">작성자</span>
+                <div class="moyo-event-view-author-main">
+                    <span class="moyo-event-view-author-avatar" id="calendarViewAuthorAvatar" aria-hidden="true"></span>
+                    <span class="moyo-event-view-author-name" id="calendarViewAuthorName"></span>
+                </div>
+                <span class="moyo-event-view-author-scope" id="calendarViewAuthorScope" hidden></span>
+            </section>
+            <section class="moyo-event-view-detail-item affiliation" id="calendarViewAffiliationSection" hidden>
+                <span class="moyo-event-view-field-label">소속</span>
+                <div class="moyo-event-view-content moyo-event-view-affiliation" id="calendarViewAffiliation"></div>
+            </section>
+            <section class="moyo-event-view-detail-item time">
+                <span class="moyo-event-view-field-label">일정</span>
                 <div class="moyo-event-view-content" id="calendarViewTimeInfo"></div>
             </section>
-            <section class="moyo-event-view-section location" id="calendarViewLocationSection">
-                <div class="moyo-event-view-row-icon" aria-hidden="true"><i class="fa-solid fa-location-dot"></i></div>
+            <section class="moyo-event-view-detail-item attendees" id="calendarViewAttendeesSection">
+                <span class="moyo-event-view-field-label">참석자</span>
+                <div class="moyo-event-view-attendee-wrap">
+                    <div class="moyo-event-view-attendee-head">
+                        <div class="moyo-event-view-content moyo-event-view-people" id="calendarViewAttendees"></div>
+                        <button type="button" class="moyo-event-view-attendee-more" id="calendarViewAttendeeMore" aria-expanded="false" hidden>전체 보기</button>
+                    </div>
+                    <div class="moyo-event-view-attendee-list" id="calendarViewAttendeeList" hidden></div>
+                </div>
+            </section>
+            <section class="moyo-event-view-detail-item location" id="calendarViewLocationSection">
+                <span class="moyo-event-view-field-label">장소</span>
                 <div class="moyo-event-view-content moyo-event-view-textbox" id="calendarViewLocation"></div>
             </section>
-            <section class="moyo-event-view-section attendees" id="calendarViewAttendeesSection">
-                <div class="moyo-event-view-row-icon" aria-hidden="true"><i class="fa-solid fa-users"></i></div>
-                <div class="moyo-event-view-content moyo-event-view-people" id="calendarViewAttendees"></div>
-            </section>
-            <section class="moyo-event-view-section description" id="calendarViewDescriptionSection">
-                <div class="moyo-event-view-row-icon" aria-hidden="true"><i class="fa-regular fa-note-sticky"></i></div>
+            <section class="moyo-event-view-detail-item description" id="calendarViewDescriptionSection">
+                <span class="moyo-event-view-field-label">메모</span>
                 <div class="moyo-event-view-content moyo-event-view-textbox" id="calendarViewDescription"></div>
+            </section>
+            <section class="moyo-event-view-section record" id="calendarViewRecordSection" hidden>
+                <div class="moyo-event-view-record-label">기록</div>
+                <div class="moyo-event-view-record-counts" id="calendarViewRecordCounts" aria-label="기록 개수"></div>
+                <button type="button" class="moyo-event-view-record-btn" id="calendarViewRecordBtn">기록 보기</button>
             </section>
         </div>
     </article>

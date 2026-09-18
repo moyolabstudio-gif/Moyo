@@ -1,0 +1,508 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.springboot.project.dao.IcontentRecordDAO">
+
+    <resultMap id="contentRecordTargetMap" type="com.springboot.project.dto.contentRecordTargetDTO">
+        <id property="recordTargetId" column="RECORD_TARGET_ID"/>
+        <result property="draftKey" column="DRAFT_KEY"/>
+        <result property="targetStatus" column="TARGET_STATUS"/>
+        <result property="targetType" column="TARGET_TYPE"/>
+        <result property="targetId" column="TARGET_ID"/>
+        <result property="scopeType" column="SCOPE_TYPE"/>
+        <result property="ownerUserId" column="OWNER_USER_ID"/>
+        <result property="wsId" column="WS_ID"/>
+        <result property="projId" column="PROJ_ID"/>
+        <result property="noteFolderId" column="NOTE_FOLDER_ID"/>
+        <result property="photoAlbumId" column="PHOTO_ALBUM_ID"/>
+        <result property="createdBy" column="CREATED_BY"/>
+        <result property="createdAt" column="CREATED_AT"/>
+        <result property="updatedAt" column="UPDATED_AT"/>
+        <result property="expiresAt" column="EXPIRES_AT"/>
+    </resultMap>
+
+    <sql id="targetColumns">
+        RECORD_TARGET_ID, DRAFT_KEY, TARGET_STATUS, TARGET_TYPE, TARGET_ID,
+        SCOPE_TYPE, OWNER_USER_ID, WS_ID, PROJ_ID, NOTE_FOLDER_ID, PHOTO_ALBUM_ID,
+        CREATED_BY, CREATED_AT, UPDATED_BY, UPDATED_AT, EXPIRES_AT
+    </sql>
+
+    <select id="selectById" resultMap="contentRecordTargetMap">
+        SELECT <include refid="targetColumns"/> FROM CONTENT_RECORD_TARGETS WHERE RECORD_TARGET_ID = #{recordTargetId}
+    </select>
+
+    <select id="selectByDraftKey" resultMap="contentRecordTargetMap">
+        SELECT <include refid="targetColumns"/>
+          FROM CONTENT_RECORD_TARGETS
+         WHERE DRAFT_KEY = #{draftKey, jdbcType=VARCHAR}
+    </select>
+
+    <select id="selectByTarget" resultMap="contentRecordTargetMap">
+        SELECT <include refid="targetColumns"/>
+          FROM CONTENT_RECORD_TARGETS
+         WHERE TARGET_TYPE = #{targetType, jdbcType=VARCHAR}
+           AND TARGET_ID = #{targetId, jdbcType=NUMERIC}
+           AND TARGET_STATUS IN ('ACTIVE', 'DELETED')
+    </select>
+
+    <insert id="insertDraft" parameterType="com.springboot.project.dto.contentRecordTargetDTO">
+        <selectKey keyProperty="recordTargetId" resultType="long" order="BEFORE">
+            SELECT SEQ_CONTENT_RECORD_TARGET_ID.NEXTVAL FROM DUAL
+        </selectKey>
+        INSERT INTO CONTENT_RECORD_TARGETS (
+            RECORD_TARGET_ID, DRAFT_KEY, TARGET_STATUS,
+            SCOPE_TYPE, OWNER_USER_ID, WS_ID, PROJ_ID,
+            CREATED_BY, CREATED_AT, UPDATED_BY, UPDATED_AT, EXPIRES_AT
+        ) VALUES (
+            #{recordTargetId, jdbcType=NUMERIC},
+            #{draftKey, jdbcType=VARCHAR},
+            'DRAFT',
+            #{scopeType, jdbcType=VARCHAR},
+            #{ownerUserId, jdbcType=NUMERIC},
+            #{wsId, jdbcType=NUMERIC},
+            #{projId, jdbcType=NUMERIC},
+            #{createdBy, jdbcType=NUMERIC},
+            SYSDATE,
+            #{createdBy, jdbcType=NUMERIC},
+            SYSDATE,
+            SYSDATE + 1
+        )
+    </insert>
+
+    <update id="touchDraft">
+        UPDATE CONTENT_RECORD_TARGETS
+           SET UPDATED_BY = #{userId, jdbcType=NUMERIC},
+               UPDATED_AT = SYSDATE,
+               EXPIRES_AT = SYSDATE + 1
+         WHERE RECORD_TARGET_ID = #{recordTargetId, jdbcType=NUMERIC}
+           AND TARGET_STATUS = 'DRAFT'
+    </update>
+
+    <update id="abandonDraft">
+        UPDATE CONTENT_RECORD_TARGETS
+           SET TARGET_STATUS = 'ABANDONED',
+               UPDATED_BY = #{userId, jdbcType=NUMERIC},
+               UPDATED_AT = SYSDATE,
+               EXPIRES_AT = SYSDATE + (1 / 24)
+         WHERE DRAFT_KEY = #{draftKey, jdbcType=VARCHAR}
+           AND CREATED_BY = #{userId, jdbcType=NUMERIC}
+           AND TARGET_STATUS = 'DRAFT'
+    </update>
+
+    <update id="activateDraft">
+        UPDATE CONTENT_RECORD_TARGETS
+           SET TARGET_STATUS = 'ACTIVE',
+               TARGET_TYPE = #{targetType, jdbcType=VARCHAR},
+               TARGET_ID = #{targetId, jdbcType=NUMERIC},
+               UPDATED_BY = #{userId, jdbcType=NUMERIC},
+               UPDATED_AT = SYSDATE,
+               EXPIRES_AT = NULL
+         WHERE DRAFT_KEY = #{draftKey, jdbcType=VARCHAR}
+           AND CREATED_BY = #{userId, jdbcType=NUMERIC}
+           AND TARGET_STATUS = 'DRAFT'
+    </update>
+
+    <resultMap id="contentRecordScopeMap" type="com.springboot.project.dto.contentRecordScopeDTO">
+        <result property="scopeType" column="SCOPE_TYPE"/>
+        <result property="ownerUserId" column="OWNER_USER_ID"/>
+        <result property="wsId" column="WS_ID"/>
+        <result property="projId" column="PROJ_ID"/>
+        <result property="leaderId" column="LEADER_ID"/>
+    </resultMap>
+
+    <select id="selectProjectScope" resultMap="contentRecordScopeMap">
+        SELECT
+            CASE
+                WHEN NVL(UPPER(p.PROJ_SCOPE), CASE WHEN p.WS_ID IS NULL THEN 'PERSONAL' ELSE 'GROUP' END) = 'PERSONAL'
+                THEN 'PERSONAL_PROJECT'
+                ELSE 'GROUP_PROJECT'
+            END AS SCOPE_TYPE,
+            CASE
+                WHEN NVL(UPPER(p.PROJ_SCOPE), CASE WHEN p.WS_ID IS NULL THEN 'PERSONAL' ELSE 'GROUP' END) = 'PERSONAL'
+                THEN p.LEADER_ID
+                ELSE NULL
+            END AS OWNER_USER_ID,
+            CASE
+                WHEN NVL(UPPER(p.PROJ_SCOPE), CASE WHEN p.WS_ID IS NULL THEN 'PERSONAL' ELSE 'GROUP' END) = 'GROUP'
+                THEN p.WS_ID
+                ELSE NULL
+            END AS WS_ID,
+            p.PROJ_ID,
+            p.LEADER_ID
+        FROM PROJECTS p
+        WHERE p.PROJ_ID = #{projId, jdbcType=NUMERIC}
+          AND NVL(p.STATUS, 'ACTIVE') &lt;&gt; 'DELETED'
+    </select>
+
+    <select id="countWorkspaceMember" resultType="int">
+        SELECT COUNT(*)
+        FROM WS_MEMBERS wm
+        WHERE wm.WS_ID = #{wsId, jdbcType=NUMERIC}
+          AND wm.USER_ID = #{userId, jdbcType=NUMERIC}
+    </select>
+
+    <select id="countProjectAccessibleMember" resultType="int">
+        SELECT COUNT(*)
+        FROM PROJECTS p
+        WHERE p.PROJ_ID = #{projId, jdbcType=NUMERIC}
+          AND (
+                p.LEADER_ID = #{userId, jdbcType=NUMERIC}
+                OR EXISTS (
+                    SELECT 1
+                    FROM PROJ_MEMBERS pm
+                    WHERE pm.PROJ_ID = p.PROJ_ID
+                      AND pm.USER_ID = #{userId, jdbcType=NUMERIC}
+                )
+              )
+    </select>
+
+
+    <!-- 기록 권한은 저장된 복사값이 아니라 원본 대상의 현재 권한을 매번 상속한다. -->
+    <sql id="acceptedCalendarShareTargetCondition">
+        (
+            (s.TARGET_TYPE = 'USER' AND s.TARGET_ID = #{userId})
+            OR (s.TARGET_TYPE = 'WS' AND EXISTS (
+                SELECT 1 FROM WS_MEMBERS wm
+                 WHERE wm.WS_ID = s.TARGET_ID AND wm.USER_ID = #{userId}
+            ))
+            OR (s.TARGET_TYPE = 'PROJ' AND EXISTS (
+                SELECT 1 FROM PROJ_MEMBERS pm
+                 WHERE pm.PROJ_ID = s.TARGET_ID AND pm.USER_ID = #{userId}
+            ))
+        )
+    </sql>
+
+    <sql id="eventManagerCondition">
+        (
+            e.USER_ID = #{userId}
+            OR (e.ITEM_TYPE = 'WS' AND EXISTS (
+                SELECT 1
+                  FROM WORKSPACES w
+                  LEFT JOIN WS_MEMBERS wm ON wm.WS_ID = w.WS_ID AND wm.USER_ID = #{userId}
+                 WHERE w.WS_ID = e.WS_ID
+                   AND (w.OWNER_ID = #{userId} OR UPPER(NVL(wm.WS_ROLE, 'MEMBER')) = 'ADMIN')
+            ))
+            OR (e.ITEM_TYPE IN ('PROJ', 'TASK') AND EXISTS (
+                SELECT 1
+                  FROM PROJECTS p
+                  LEFT JOIN PROJ_MEMBERS pm ON pm.PROJ_ID = p.PROJ_ID AND pm.USER_ID = #{userId}
+                 WHERE p.PROJ_ID = e.PROJ_ID
+                   AND (p.LEADER_ID = #{userId} OR UPPER(NVL(pm.PROJ_ROLE, 'MEMBER')) IN ('ADMIN','LEADER','OWNER','PM'))
+            ))
+        )
+    </sql>
+
+    <select id="countEventViewPermission" resultType="int">
+        SELECT COUNT(1)
+          FROM EVENTS e
+         WHERE e.EVENT_ID = #{eventId, jdbcType=NUMERIC}
+           AND NVL(e.RECORD_ENABLED_YN, 'N') = 'Y'
+           AND (
+                e.USER_ID = #{userId, jdbcType=NUMERIC}
+                OR (e.ITEM_TYPE = 'WS' AND EXISTS (
+                    SELECT 1 FROM WS_MEMBERS wm WHERE wm.WS_ID=e.WS_ID AND wm.USER_ID=#{userId}
+                ))
+                OR (e.ITEM_TYPE IN ('PROJ','TASK') AND EXISTS (
+                    SELECT 1 FROM PROJ_MEMBERS pm WHERE pm.PROJ_ID=e.PROJ_ID AND pm.USER_ID=#{userId}
+                ))
+                OR EXISTS (
+                    SELECT 1 FROM CONTENT_SHARES s
+                     WHERE s.CONTENT_TYPE='CALENDAR' AND s.CONTENT_ID=e.EVENT_ID
+                       AND s.ACTIVE_YN='Y' AND NVL(s.SHARE_STATUS,'ACCEPTED')='ACCEPTED'
+                       AND (s.EXPIRES_AT IS NULL OR s.EXPIRES_AT &gt;= SYSDATE)
+                       AND <include refid="acceptedCalendarShareTargetCondition"/>
+                )
+                OR EXISTS (
+                    SELECT 1 FROM EVENT_ATTENDEES ea WHERE ea.EVENT_ID=e.EVENT_ID AND ea.USER_ID=#{userId}
+                )
+                OR (e.ITEM_TYPE='PRIVATE' AND e.IS_PRIVATE='N')
+           )
+    </select>
+
+    <select id="countEventEditPermission" resultType="int">
+        SELECT COUNT(1)
+          FROM EVENTS e
+         WHERE e.EVENT_ID = #{eventId, jdbcType=NUMERIC}
+           AND NVL(e.RECORD_ENABLED_YN, 'N') = 'Y'
+           AND (
+                <include refid="eventManagerCondition"/>
+                OR EXISTS (
+                    SELECT 1 FROM CONTENT_SHARES s
+                     WHERE s.CONTENT_TYPE='CALENDAR' AND s.CONTENT_ID=e.EVENT_ID
+                       AND s.ACTIVE_YN='Y' AND NVL(s.SHARE_STATUS,'ACCEPTED')='ACCEPTED'
+                       AND UPPER(NVL(s.PERMISSION_TYPE,'VIEW'))='EDIT'
+                       AND (s.EXPIRES_AT IS NULL OR s.EXPIRES_AT &gt;= SYSDATE)
+                       AND <include refid="acceptedCalendarShareTargetCondition"/>
+                )
+           )
+    </select>
+
+    <select id="countEventDeletePermission" resultType="int">
+        SELECT COUNT(1) FROM EVENTS e
+         WHERE e.EVENT_ID=#{eventId, jdbcType=NUMERIC}
+           AND NVL(e.RECORD_ENABLED_YN, 'N') = 'Y'
+           AND <include refid="eventManagerCondition"/>
+    </select>
+
+    <sql id="projectManagerCondition">
+        (p.LEADER_ID = #{userId}
+         OR UPPER(NVL(pm.PROJ_ROLE, 'MEMBER')) IN ('ADMIN','LEADER','OWNER','PM'))
+    </sql>
+
+    <select id="countProjectTargetViewPermission" resultType="int">
+        <choose>
+            <when test="targetType == 'PERIOD_PLAN'">
+                SELECT COUNT(1) FROM PROJECT_PERIOD_PLANS x JOIN PROJECTS p ON p.PROJ_ID=x.PROJ_ID
+                LEFT JOIN PROJ_MEMBERS pm ON pm.PROJ_ID=p.PROJ_ID AND pm.USER_ID=#{userId}
+                WHERE x.PERIOD_PLAN_ID=#{targetId} AND NVL(x.RECORD_ENABLED_YN, 'N') = 'Y' AND (
+                    <include refid="projectManagerCondition"/>
+                    OR (UPPER(NVL(x.RECORD_VISIBILITY, 'PROJECT')) = 'PROJECT' AND pm.USER_ID IS NOT NULL)
+                )
+            </when>
+            <when test="targetType == 'TIME_PLAN'">
+                SELECT COUNT(1) FROM PROJECT_TIME_PLANS x JOIN PROJECTS p ON p.PROJ_ID=x.PROJ_ID
+                LEFT JOIN PROJ_MEMBERS pm ON pm.PROJ_ID=p.PROJ_ID AND pm.USER_ID=#{userId}
+                WHERE x.TIME_PLAN_ID=#{targetId} AND NVL(x.RECORD_ENABLED_YN, 'N') = 'Y' AND (
+                    <include refid="projectManagerCondition"/>
+                    OR (UPPER(NVL(x.RECORD_VISIBILITY, 'PROJECT')) = 'PROJECT' AND pm.USER_ID IS NOT NULL)
+                )
+            </when>
+            <when test="targetType == 'WEEKLY_PLAN'">
+                SELECT COUNT(1) FROM PROJECT_WEEKLY_PLANS x JOIN PROJECTS p ON p.PROJ_ID=x.PROJ_ID
+                LEFT JOIN PROJ_MEMBERS pm ON pm.PROJ_ID=p.PROJ_ID AND pm.USER_ID=#{userId}
+                WHERE x.WEEKLY_PLAN_ID=#{targetId} AND NVL(x.RECORD_ENABLED_YN, 'N') = 'Y' AND (
+                    <include refid="projectManagerCondition"/>
+                    OR (UPPER(NVL(x.RECORD_VISIBILITY, 'PROJECT')) = 'PROJECT' AND pm.USER_ID IS NOT NULL)
+                )
+            </when>
+            <otherwise>
+                SELECT COUNT(1)
+                  FROM PROJECT_TASKS x
+                  JOIN PROJECTS p ON p.PROJ_ID=x.PROJ_ID
+                  LEFT JOIN PROJ_MEMBERS pm ON pm.PROJ_ID=p.PROJ_ID AND pm.USER_ID=#{userId}
+                 WHERE x.TASK_ID=#{targetId}
+                   AND NVL(x.RECORD_ENABLED_YN, 'N') = 'Y'
+                   AND (
+                        <include refid="projectManagerCondition"/>
+                        OR (UPPER(NVL(x.RECORD_VISIBILITY, 'PROJECT')) = 'PROJECT'
+                            AND (p.LEADER_ID=#{userId} OR pm.USER_ID IS NOT NULL))
+                        OR (UPPER(NVL(x.RECORD_VISIBILITY, 'PROJECT')) IN ('ASSIGNEE','ASSIGNEE_MANAGER')
+                            AND EXISTS (
+                                SELECT 1 FROM PROJECT_TASK_ASSIGNEES pta
+                                 WHERE pta.TASK_ID=x.TASK_ID
+                                   AND pta.USER_ID=#{userId}
+                            ))
+                   )
+            </otherwise>
+        </choose>
+    </select>
+
+    <select id="countProjectTargetEditPermission" resultType="int">
+        <choose>
+            <when test="targetType == 'PERIOD_PLAN'">
+                SELECT COUNT(1) FROM PROJECT_PERIOD_PLANS x JOIN PROJECTS p ON p.PROJ_ID=x.PROJ_ID
+                LEFT JOIN PROJ_MEMBERS pm ON pm.PROJ_ID=p.PROJ_ID AND pm.USER_ID=#{userId}
+                WHERE x.PERIOD_PLAN_ID=#{targetId} AND NVL(x.RECORD_ENABLED_YN, 'N') = 'Y' AND <include refid="projectManagerCondition"/>
+            </when>
+            <when test="targetType == 'TIME_PLAN'">
+                SELECT COUNT(1) FROM PROJECT_TIME_PLANS x JOIN PROJECTS p ON p.PROJ_ID=x.PROJ_ID
+                LEFT JOIN PROJ_MEMBERS pm ON pm.PROJ_ID=p.PROJ_ID AND pm.USER_ID=#{userId}
+                WHERE x.TIME_PLAN_ID=#{targetId} AND NVL(x.RECORD_ENABLED_YN, 'N') = 'Y' AND <include refid="projectManagerCondition"/>
+            </when>
+            <when test="targetType == 'WEEKLY_PLAN'">
+                SELECT COUNT(1) FROM PROJECT_WEEKLY_PLANS x JOIN PROJECTS p ON p.PROJ_ID=x.PROJ_ID
+                LEFT JOIN PROJ_MEMBERS pm ON pm.PROJ_ID=p.PROJ_ID AND pm.USER_ID=#{userId}
+                WHERE x.WEEKLY_PLAN_ID=#{targetId} AND NVL(x.RECORD_ENABLED_YN, 'N') = 'Y' AND <include refid="projectManagerCondition"/>
+            </when>
+            <otherwise>
+                SELECT COUNT(1)
+                  FROM PROJECT_TASKS x
+                 WHERE x.TASK_ID=#{targetId}
+                   AND NVL(x.RECORD_ENABLED_YN, 'N') = 'Y'
+                   AND EXISTS (
+                       SELECT 1
+                         FROM PROJECT_TASK_ASSIGNEES pta
+                        WHERE pta.TASK_ID=x.TASK_ID
+                          AND pta.USER_ID=#{userId}
+                   )
+            </otherwise>
+        </choose>
+    </select>
+
+    <select id="countProjectTargetDeletePermission" resultType="int">
+        <choose>
+            <when test="targetType == 'PERIOD_PLAN'">
+                SELECT COUNT(1) FROM PROJECT_PERIOD_PLANS x JOIN PROJECTS p ON p.PROJ_ID=x.PROJ_ID
+                LEFT JOIN PROJ_MEMBERS pm ON pm.PROJ_ID=p.PROJ_ID AND pm.USER_ID=#{userId}
+                WHERE x.PERIOD_PLAN_ID=#{targetId} AND NVL(x.RECORD_ENABLED_YN, 'N') = 'Y' AND <include refid="projectManagerCondition"/>
+            </when>
+            <when test="targetType == 'TIME_PLAN'">
+                SELECT COUNT(1) FROM PROJECT_TIME_PLANS x JOIN PROJECTS p ON p.PROJ_ID=x.PROJ_ID
+                LEFT JOIN PROJ_MEMBERS pm ON pm.PROJ_ID=p.PROJ_ID AND pm.USER_ID=#{userId}
+                WHERE x.TIME_PLAN_ID=#{targetId} AND NVL(x.RECORD_ENABLED_YN, 'N') = 'Y' AND <include refid="projectManagerCondition"/>
+            </when>
+            <when test="targetType == 'WEEKLY_PLAN'">
+                SELECT COUNT(1) FROM PROJECT_WEEKLY_PLANS x JOIN PROJECTS p ON p.PROJ_ID=x.PROJ_ID
+                LEFT JOIN PROJ_MEMBERS pm ON pm.PROJ_ID=p.PROJ_ID AND pm.USER_ID=#{userId}
+                WHERE x.WEEKLY_PLAN_ID=#{targetId} AND NVL(x.RECORD_ENABLED_YN, 'N') = 'Y' AND <include refid="projectManagerCondition"/>
+            </when>
+            <otherwise>
+                SELECT COUNT(1) FROM PROJECT_TASKS x JOIN PROJECTS p ON p.PROJ_ID=x.PROJ_ID
+                LEFT JOIN PROJ_MEMBERS pm ON pm.PROJ_ID=p.PROJ_ID AND pm.USER_ID=#{userId}
+                WHERE x.TASK_ID=#{targetId}
+                  AND NVL(x.RECORD_ENABLED_YN, 'N') = 'Y'
+                  AND <include refid="projectManagerCondition"/>
+            </otherwise>
+        </choose>
+    </select>
+
+    <select id="selectRecordTargetIdByPhotoAlbumId" resultType="long">
+        SELECT RECORD_TARGET_ID
+          FROM CONTENT_RECORD_TARGETS
+         WHERE PHOTO_ALBUM_ID = #{photoAlbumId, jdbcType=NUMERIC}
+           AND TARGET_STATUS = 'ACTIVE'
+    </select>
+
+    <select id="selectRecordTargetIdByPhotoPostId" resultType="long">
+        SELECT crt.RECORD_TARGET_ID
+          FROM CONTENT_RECORD_TARGETS crt
+          JOIN PHOTO_POSTS pp ON pp.ALBUM_ID = crt.PHOTO_ALBUM_ID
+         WHERE pp.POST_ID = #{postId, jdbcType=NUMERIC}
+           AND crt.TARGET_STATUS = 'ACTIVE'
+    </select>
+
+    <update id="updatePhotoAlbumIdIfEmpty">
+        UPDATE CONTENT_RECORD_TARGETS
+           SET PHOTO_ALBUM_ID = #{photoAlbumId, jdbcType=NUMERIC},
+               UPDATED_BY = #{userId, jdbcType=NUMERIC},
+               UPDATED_AT = SYSDATE
+         WHERE RECORD_TARGET_ID = #{recordTargetId, jdbcType=NUMERIC}
+           AND PHOTO_ALBUM_ID IS NULL
+    </update>
+
+    <delete id="deleteExpiredAbandonedDrafts">
+        DELETE FROM CONTENT_RECORD_TARGETS
+         WHERE TARGET_STATUS = 'ABANDONED'
+           AND EXPIRES_AT &lt; SYSDATE
+    </delete>
+
+
+    <select id="selectRecordTargetTitle" resultType="string">
+        SELECT CASE t.TARGET_TYPE
+                 WHEN 'EVENT' THEN NVL((SELECT e.TITLE FROM EVENTS e WHERE e.EVENT_ID=t.TARGET_ID), '제목 없음')
+                 WHEN 'PERIOD_PLAN' THEN NVL((SELECT p.TITLE FROM PROJECT_PERIOD_PLANS p WHERE p.PERIOD_PLAN_ID=t.TARGET_ID), '제목 없음')
+                 WHEN 'TIME_PLAN' THEN NVL((SELECT p.TITLE FROM PROJECT_TIME_PLANS p WHERE p.TIME_PLAN_ID=t.TARGET_ID), '제목 없음')
+                 WHEN 'WEEKLY_PLAN' THEN NVL((SELECT p.TITLE FROM PROJECT_WEEKLY_PLANS p WHERE p.WEEKLY_PLAN_ID=t.TARGET_ID), '제목 없음')
+                 WHEN 'TASK' THEN NVL((SELECT p.TITLE FROM PROJECT_TASKS p WHERE p.TASK_ID=t.TARGET_ID), '제목 없음')
+                 ELSE '임시 기록'
+               END
+          FROM CONTENT_RECORD_TARGETS t
+         WHERE t.RECORD_TARGET_ID=#{recordTargetId}
+    </select>
+
+    <select id="selectNextNoteFolderId" resultType="long">
+        SELECT SEQ_NOTE_FOLDER_ID.NEXTVAL FROM DUAL
+    </select>
+
+    <select id="selectRecordNoteTypeFolderId" resultType="long">
+        SELECT FOLDER_ID FROM (
+            SELECT f.FOLDER_ID
+              FROM NOTE_FOLDERS f
+              JOIN CONTENT_RECORD_TARGETS t ON t.RECORD_TARGET_ID=#{recordTargetId}
+             WHERE f.PARENT_FOLDER_ID IS NULL
+               AND f.SCOPE_TYPE=CASE WHEN t.SCOPE_TYPE='PERSONAL' THEN 'PRIVATE' WHEN t.SCOPE_TYPE='GROUP' THEN 'WS' ELSE 'PROJ' END
+               AND NVL(f.WS_ID,-1)=NVL(t.WS_ID,-1)
+               AND NVL(f.PROJ_ID,-1)=NVL(t.PROJ_ID,-1)
+               AND (t.SCOPE_TYPE&lt;&gt;'PERSONAL' OR f.OWNER_USER_ID=NVL(t.OWNER_USER_ID,t.CREATED_BY))
+               AND f.FOLDER_NAME=CASE t.TARGET_TYPE
+                   WHEN 'EVENT' THEN '일정'
+                   WHEN 'PERIOD_PLAN' THEN '기간 계획'
+                   WHEN 'TIME_PLAN' THEN '시간 계획'
+                   WHEN 'WEEKLY_PLAN' THEN '주간 계획'
+                   WHEN 'TASK' THEN '작업 보드'
+                   ELSE '기록'
+               END
+             ORDER BY f.FOLDER_ID
+        ) WHERE ROWNUM=1
+    </select>
+
+    <insert id="insertRecordNoteTypeFolder">
+        INSERT INTO NOTE_FOLDERS (
+            FOLDER_ID, PARENT_FOLDER_ID, OWNER_USER_ID, SCOPE_TYPE,
+            WS_ID, PROJ_ID, FOLDER_NAME, SORT_ORDER, REG_DT
+        )
+        SELECT #{folderId}, NULL, NVL(t.OWNER_USER_ID,#{userId}),
+               CASE WHEN t.SCOPE_TYPE='PERSONAL' THEN 'PRIVATE'
+                    WHEN t.SCOPE_TYPE='GROUP' THEN 'WS' ELSE 'PROJ' END,
+               t.WS_ID, t.PROJ_ID,
+               CASE t.TARGET_TYPE
+                   WHEN 'EVENT' THEN '일정'
+                   WHEN 'PERIOD_PLAN' THEN '기간 계획'
+                   WHEN 'TIME_PLAN' THEN '시간 계획'
+                   WHEN 'WEEKLY_PLAN' THEN '주간 계획'
+                   WHEN 'TASK' THEN '작업 보드'
+                   ELSE '기록'
+               END,
+               0, SYSDATE
+          FROM CONTENT_RECORD_TARGETS t
+         WHERE t.RECORD_TARGET_ID=#{recordTargetId}
+           AND t.TARGET_STATUS IN ('DRAFT','ACTIVE')
+    </insert>
+
+    <insert id="insertRecordNoteFolder">
+        INSERT INTO NOTE_FOLDERS (
+            FOLDER_ID, PARENT_FOLDER_ID, OWNER_USER_ID, SCOPE_TYPE,
+            WS_ID, PROJ_ID, FOLDER_NAME, SORT_ORDER, REG_DT
+        )
+        SELECT #{folderId}, #{parentFolderId}, NVL(t.OWNER_USER_ID,#{userId}),
+               CASE WHEN t.SCOPE_TYPE='PERSONAL' THEN 'PRIVATE'
+                    WHEN t.SCOPE_TYPE='GROUP' THEN 'WS' ELSE 'PROJ' END,
+               t.WS_ID, t.PROJ_ID,
+               CASE t.TARGET_TYPE
+                   WHEN 'EVENT' THEN NVL((SELECT e.TITLE FROM EVENTS e WHERE e.EVENT_ID=t.TARGET_ID), '제목 없음')
+                   WHEN 'PERIOD_PLAN' THEN NVL((SELECT p.TITLE FROM PROJECT_PERIOD_PLANS p WHERE p.PERIOD_PLAN_ID=t.TARGET_ID), '제목 없음')
+                   WHEN 'TIME_PLAN' THEN NVL((SELECT p.TITLE FROM PROJECT_TIME_PLANS p WHERE p.TIME_PLAN_ID=t.TARGET_ID), '제목 없음')
+                   WHEN 'WEEKLY_PLAN' THEN NVL((SELECT p.TITLE FROM PROJECT_WEEKLY_PLANS p WHERE p.WEEKLY_PLAN_ID=t.TARGET_ID), '제목 없음')
+                   WHEN 'TASK' THEN NVL((SELECT p.TITLE FROM PROJECT_TASKS p WHERE p.TASK_ID=t.TARGET_ID), '제목 없음')
+                   ELSE '임시 기록'
+               END,
+               0, SYSDATE
+          FROM CONTENT_RECORD_TARGETS t
+         WHERE t.RECORD_TARGET_ID=#{recordTargetId}
+           AND t.TARGET_STATUS IN ('DRAFT','ACTIVE')
+    </insert>
+
+    <update id="updateRecordNoteFolderStructure">
+        UPDATE NOTE_FOLDERS f
+           SET f.PARENT_FOLDER_ID=#{parentFolderId},
+               f.FOLDER_NAME=(
+                   SELECT CASE t.TARGET_TYPE
+                       WHEN 'EVENT' THEN NVL((SELECT e.TITLE FROM EVENTS e WHERE e.EVENT_ID=t.TARGET_ID), '제목 없음')
+                       WHEN 'PERIOD_PLAN' THEN NVL((SELECT p.TITLE FROM PROJECT_PERIOD_PLANS p WHERE p.PERIOD_PLAN_ID=t.TARGET_ID), '제목 없음')
+                       WHEN 'TIME_PLAN' THEN NVL((SELECT p.TITLE FROM PROJECT_TIME_PLANS p WHERE p.TIME_PLAN_ID=t.TARGET_ID), '제목 없음')
+                       WHEN 'WEEKLY_PLAN' THEN NVL((SELECT p.TITLE FROM PROJECT_WEEKLY_PLANS p WHERE p.WEEKLY_PLAN_ID=t.TARGET_ID), '제목 없음')
+                       WHEN 'TASK' THEN NVL((SELECT p.TITLE FROM PROJECT_TASKS p WHERE p.TASK_ID=t.TARGET_ID), '제목 없음')
+                       ELSE '임시 기록'
+                   END
+                   FROM CONTENT_RECORD_TARGETS t
+                   WHERE t.RECORD_TARGET_ID=#{recordTargetId}
+               ),
+               f.UPD_DT=SYSDATE
+         WHERE f.FOLDER_ID=(SELECT t.NOTE_FOLDER_ID FROM CONTENT_RECORD_TARGETS t WHERE t.RECORD_TARGET_ID=#{recordTargetId})
+    </update>
+
+    <update id="updateNoteFolderIdIfEmpty">
+        UPDATE CONTENT_RECORD_TARGETS
+           SET NOTE_FOLDER_ID=#{noteFolderId}, UPDATED_BY=#{userId}, UPDATED_AT=SYSDATE
+         WHERE RECORD_TARGET_ID=#{recordTargetId}
+           AND NOTE_FOLDER_ID IS NULL
+           AND TARGET_STATUS IN ('DRAFT','ACTIVE')
+    </update>
+
+    <delete id="deleteRecordNoteFolderIfEmpty">
+        DELETE FROM NOTE_FOLDERS f
+         WHERE f.FOLDER_ID=#{folderId}
+           AND NOT EXISTS (SELECT 1 FROM NOTES n WHERE n.FOLDER_ID=f.FOLDER_ID)
+           AND NOT EXISTS (SELECT 1 FROM CONTENT_RECORD_TARGETS t WHERE t.NOTE_FOLDER_ID=f.FOLDER_ID)
+    </delete>
+</mapper>

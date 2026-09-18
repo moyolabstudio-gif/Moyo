@@ -434,7 +434,7 @@
                                     <div class="notice-info">
                                         <div class="notice-title-row">
                                             <c:if test="${notice.isPinned == 'Y'}"><span class="badge-pin">고정</span></c:if>
-                                            <div class="notice-title">${notice.title}</div>
+                                            <div class="notice-title"><c:out value="${notice.title}" /></div>
                                         </div>
                                         <div class="notice-meta">
                                             <span>공지사항</span>
@@ -445,7 +445,7 @@
                                     <span class="notice-toggle-icon">⌄</span>
                                 </div>
                                 <div class="notice-body">
-                                    <div class="notice-body-inner common-rich-content">${notice.content}</div>
+                                    <div class="notice-body-inner common-rich-content"><c:out value="${notice.content}" escapeXml="false" /></div>
                                     <c:if test="${sessionScope.user.userRole == 'ADMIN'}">
                                         <div class="notice-admin-actions">
                                             <a href="${pageContext.request.contextPath}/admin/notice/noticeEdit?noticeId=${notice.noticeId}" class="notice-admin-link" onclick="event.stopPropagation();">수정</a>
@@ -511,7 +511,9 @@ document.addEventListener('DOMContentLoaded', function () {
 function deleteNotice(noticeId, event) {
     if (event) event.stopPropagation();
     if (confirm('정말 이 공지사항을 삭제하시겠습니까?')) {
-        window.location.href = '${pageContext.request.contextPath}/admin/notice/delete?noticeId=' + encodeURIComponent(noticeId);
+        window.moyoPostNavigate('${pageContext.request.contextPath}/admin/notice/delete', {
+            noticeId: noticeId
+        });
     }
 }
 </script>

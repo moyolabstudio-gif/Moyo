@@ -6,73 +6,72 @@
        class="moyo-app-sidebar"
        aria-label="공간 바로가기"
        data-current-ws-id="${not empty wsId ? wsId : param.wsId}"
-       data-current-proj-id="${not empty projId ? projId : param.projId}">
+       data-current-proj-id="${not empty projId ? projId : param.projId}"
+       data-context-path="${pageContext.request.contextPath}">
     <div class="moyo-app-sidebar-layout">
         <div class="moyo-app-sidebar-scroll">
-            <section class="moyo-app-sidebar-section moyo-app-sidebar-friends-section moyo-app-sidebar-friends-top">
+            <section class="moyo-app-sidebar-section moyo-app-sidebar-projects-section">
                 <div class="moyo-app-sidebar-section-heading">
-                    <span class="moyo-app-sidebar-section-title">친구</span>
+                    <a href="${pageContext.request.contextPath}/project/manage"
+                       class="moyo-app-sidebar-section-title moyo-app-sidebar-section-title-link"
+                       data-app-path="/project/manage">개인 프로젝트</a>
+                    <a href="${pageContext.request.contextPath}/project/create?scope=PERSONAL"
+                       class="moyo-app-sidebar-add-action"
+                       aria-label="개인 프로젝트 추가"
+                       title="개인 프로젝트 추가">+</a>
+                </div>
+
+                <nav class="moyo-app-sidebar-personal-project-list" aria-label="개인 프로젝트 바로가기">
+                    <c:choose>
+                        <c:when test="${not empty sidebarPersonalProjects}">
+                            <c:forEach var="project" items="${sidebarPersonalProjects}">
+                                <a href="${pageContext.request.contextPath}/project/main?projId=${project.projId}"
+                                   class="moyo-app-project-link moyo-app-personal-project-link"
+                                   data-proj-id="${project.projId}">
+                                    <span class="moyo-app-project-dot personal"></span>
+                                    <span class="moyo-app-project-name"><c:out value="${project.projName}"/></span>
+                                </a>
+                            </c:forEach>
+                        </c:when>
+                        <c:otherwise>
+                            <div class="moyo-app-sidebar-empty nested">진행 중이거나 예정된 프로젝트가 없습니다.</div>
+                        </c:otherwise>
+                    </c:choose>
+                </nav>
+            </section>
+
+            <section class="moyo-app-sidebar-section moyo-app-sidebar-friends-section">
+                <div class="moyo-app-sidebar-section-heading">
+                    <a href="${pageContext.request.contextPath}/friends"
+                       class="moyo-app-sidebar-section-title moyo-app-sidebar-section-title-link">업데이트한 친구</a>
                     <button type="button"
-                            class="moyo-app-sidebar-section-action moyo-app-sidebar-text-action"
-                            data-moyo-friend-modal-open>관리</button>
+                            class="moyo-app-sidebar-add-action"
+                            data-moyo-friend-add-open
+                            aria-label="친구 추가"
+                            title="친구 추가">+</button>
                 </div>
 
                 <div id="moyoSidebarFriendPreview"
-                     class="moyo-app-sidebar-friend-preview moyo-app-sidebar-friend-summary"
-                     aria-label="친구 요약">
-                    <div class="moyo-app-sidebar-friend-block moyo-app-sidebar-friend-updated" data-moyo-friend-section="updated">
-                        <div class="moyo-app-sidebar-friend-section-label">업데이트한 친구</div>
-                        <div id="moyoSidebarUpdatedFriends" class="moyo-app-sidebar-friend-avatar-strip">
-                            <button type="button" class="moyo-app-sidebar-friend-chip skeleton" data-moyo-friend-modal-open>
-                                <span class="moyo-app-sidebar-friend-avatar">👥</span>
-                                <span>불러오는 중</span>
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="moyo-app-sidebar-friend-block moyo-app-sidebar-friend-birthday" data-moyo-friend-section="birthday" hidden>
-                        <div class="moyo-app-sidebar-friend-section-label">생일인 친구</div>
-                        <div id="moyoSidebarBirthdayFriends" class="moyo-app-sidebar-friend-mini-list"></div>
-                    </div>
-
-                    <div class="moyo-app-sidebar-friend-block moyo-app-sidebar-friend-list-block" data-moyo-friend-section="list">
-                        <div class="moyo-app-sidebar-friend-section-label">친구 목록</div>
-                        <div id="moyoSidebarFriendList" class="moyo-app-sidebar-friend-mini-list">
-                            <button type="button"
-                                    class="moyo-app-sidebar-friend-item skeleton"
-                                    data-moyo-friend-modal-open>
-                                <span class="moyo-app-sidebar-friend-avatar">👥</span>
-                                <span class="moyo-app-sidebar-friend-text">
-                                    <strong>친구를 불러오는 중</strong>
-                                    <em>잠시만 기다려 주세요</em>
-                                </span>
-                            </button>
-                        </div>
+                     class="moyo-app-sidebar-friend-preview"
+                     aria-label="업데이트한 친구">
+                    <div id="moyoSidebarUpdatedFriends" class="moyo-app-sidebar-friend-avatar-strip">
+                        <button type="button" class="moyo-app-sidebar-friend-chip skeleton">
+                            <span class="moyo-app-sidebar-friend-avatar">👥</span>
+                            <span>불러오는 중</span>
+                        </button>
                     </div>
                 </div>
-            </section>
-
-            <section class="moyo-app-sidebar-section moyo-app-sidebar-projects-section">
-                <div class="moyo-app-sidebar-section-heading">
-                    <span class="moyo-app-sidebar-section-title">프로젝트</span>
-                </div>
-
-                <nav class="moyo-app-sidebar-project-nav" aria-label="프로젝트 바로가기">
-                    <a href="/project/manage"
-                       class="moyo-app-sidebar-main-link moyo-app-sidebar-project-entry personal"
-                       data-app-path="/project/manage">
-                        <span class="moyo-app-sidebar-link-icon moyo-app-sidebar-project-icon personal" aria-hidden="true"></span>
-                        <span>개인 프로젝트</span>
-                    </a>
-                </nav>
             </section>
 
             <section class="moyo-app-sidebar-section moyo-app-sidebar-groups-section">
                 <div class="moyo-app-sidebar-section-heading">
-                    <span class="moyo-app-sidebar-section-title">그룹</span>
-                    <a href="/workspace/list"
-                       class="moyo-app-sidebar-section-action moyo-app-sidebar-text-action"
-                       data-app-path="/workspace/list">관리</a>
+                    <a href="${pageContext.request.contextPath}/workspace/list"
+                       class="moyo-app-sidebar-section-title moyo-app-sidebar-section-title-link"
+                       data-app-path="/workspace/list">그룹</a>
+                    <a href="${pageContext.request.contextPath}/workspace/create"
+                       class="moyo-app-sidebar-add-action"
+                       aria-label="그룹 추가"
+                       title="그룹 추가">+</a>
                 </div>
 
                 <c:choose>
@@ -100,7 +99,7 @@
                                 </button>
 
                                 <div class="moyo-app-workspace-menu">
-                                    <a href="/workspace/main?wsId=${workspace.wsId}"
+                                    <a href="${pageContext.request.contextPath}/workspace/main?wsId=${workspace.wsId}"
                                        class="moyo-app-workspace-home"
                                        data-ws-id="${workspace.wsId}">
                                         <span class="moyo-app-project-dot home"></span>
@@ -111,12 +110,12 @@
                                     <c:forEach var="project" items="${sidebarProjects[workspace.wsId]}">
                                         <c:if test="${project.projScope ne 'PERSONAL'}">
                                             <c:set var="hasGroupProject" value="true" />
-                                            <a href="/project/main?wsId=${workspace.wsId}&projId=${project.projId}"
+                                            <a href="${pageContext.request.contextPath}/project/main?wsId=${workspace.wsId}&projId=${project.projId}"
                                                class="moyo-app-project-link"
                                                data-proj-id="${project.projId}"
                                                data-ws-id="${workspace.wsId}">
                                                 <span class="moyo-app-project-dot"></span>
-                                                <span class="moyo-app-project-name">${project.projName}</span>
+                                                <span class="moyo-app-project-name"><c:out value="${project.projName}"/></span>
                                             </a>
                                         </c:if>
                                     </c:forEach>
@@ -132,65 +131,21 @@
                 </c:choose>
             </section>
         </div>
+
+        <div class="moyo-app-sidebar-bottom" aria-label="서비스 메뉴">
+            <nav class="moyo-app-sidebar-bottom-links">
+                <a href="${pageContext.request.contextPath}/common/noticeList" class="moyo-app-sidebar-bottom-link" data-app-path="/common/noticeList" aria-label="공지사항" title="공지사항">공지</a>
+                <a href="${pageContext.request.contextPath}/common/inquiry" class="moyo-app-sidebar-bottom-link" data-app-path="/common/inquiry" aria-label="문의하기" title="문의하기">문의</a>
+                <a href="${pageContext.request.contextPath}/common/privacyPolicy" class="moyo-app-sidebar-bottom-link" data-app-path="/common/privacyPolicy" aria-label="개인정보처리방침" title="개인정보처리방침">개인정보</a>
+                <c:if test="${fn:toUpperCase(sessionScope.user.userRole) eq 'ADMIN'}">
+                    <a href="${pageContext.request.contextPath}/admin" class="moyo-app-sidebar-bottom-link moyo-app-sidebar-admin-link" data-app-path="/admin" aria-label="관리자 센터" title="관리자 센터">관리자</a>
+                </c:if>
+            </nav>
+            <div class="moyo-app-sidebar-bottom-copy">© MOYO</div>
+        </div>
     </div>
 </aside>
 <div id="moyoAppSidebarBackdrop" class="moyo-app-sidebar-backdrop"></div>
 </c:if>
 
-<div id="moyoFriendModal" class="moyo-friend-modal" aria-hidden="true">
-    <div class="moyo-friend-modal-dim" data-moyo-friend-modal-close></div>
-    <section class="moyo-friend-modal-panel" role="dialog" aria-modal="true" aria-labelledby="moyoFriendModalTitle" tabindex="-1">
-        <header class="moyo-friend-modal-head">
-            <div>
-                <span class="moyo-friend-modal-eyebrow">MOYO FRIEND</span>
-                <h2 id="moyoFriendModalTitle">친구 관리</h2>
-                <p>친구 목록, 친구 추가, 요청 관리를 한 곳에서 확인합니다.</p>
-            </div>
-            <button type="button" class="moyo-friend-modal-close" aria-label="친구 관리 닫기" data-moyo-friend-modal-close>×</button>
-        </header>
-
-        <div class="moyo-friend-modal-summary" aria-label="친구 현황">
-            <span>친구 <strong id="moyoFriendModalTotalCount">0</strong></span>
-            <span>받은 요청 <strong id="moyoFriendModalPendingCount">0</strong></span>
-        </div>
-
-        <nav class="moyo-friend-modal-tabs" role="tablist" aria-label="친구 관리 탭">
-            <button type="button" class="active" data-moyo-friend-tab="list" role="tab" aria-selected="true">친구 목록</button>
-            <button type="button" data-moyo-friend-tab="add" role="tab" aria-selected="false">친구 추가</button>
-            <button type="button" data-moyo-friend-tab="requests" role="tab" aria-selected="false">요청</button>
-        </nav>
-
-        <div class="moyo-friend-modal-body">
-            <div class="moyo-friend-panel active" data-moyo-friend-panel="list" role="tabpanel">
-                <div class="moyo-friend-panel-head">
-                    <strong>친구 목록</strong>
-                    <button type="button" class="moyo-friend-ghost-btn" data-moyo-friend-refresh>새로고침</button>
-                </div>
-                <div id="moyoFriendModalFriendList" class="moyo-friend-modal-list"></div>
-            </div>
-
-            <div class="moyo-friend-panel" data-moyo-friend-panel="add" role="tabpanel">
-                <div class="moyo-friend-search-row">
-                    <input type="text" id="moyoFriendModalSearchInput" placeholder="이름 또는 이메일로 검색">
-                    <button type="button" id="moyoFriendModalSearchButton">검색</button>
-                </div>
-                <div id="moyoFriendModalSearchResult" class="moyo-friend-modal-list"></div>
-            </div>
-
-            <div class="moyo-friend-panel" data-moyo-friend-panel="requests" role="tabpanel">
-                <div class="moyo-friend-request-grid">
-                    <article>
-                        <div class="moyo-friend-panel-head"><strong>받은 요청</strong></div>
-                        <div id="moyoFriendModalReceivedList" class="moyo-friend-modal-list compact"></div>
-                    </article>
-                    <article>
-                        <div class="moyo-friend-panel-head"><strong>보낸 요청</strong></div>
-                        <div id="moyoFriendModalSentList" class="moyo-friend-modal-list compact"></div>
-                    </article>
-                </div>
-            </div>
-        </div>
-    </section>
-</div>
-
-<%@ include file="/WEB-INF/views/common/chat.jsp" %>
+<%-- 채팅 기능 임시 비활성화: 기능 안정화 후 보안 정리와 함께 재개 --%>

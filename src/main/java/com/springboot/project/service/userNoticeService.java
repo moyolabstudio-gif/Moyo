@@ -5,5 +5,5 @@ import com.springboot.project.dto.userNoticeDTO;
 
 public interface userNoticeService {
     List<userNoticeDTO> getMyNotices(Long userId);
-    void markAsRead(Long alarmId);
+    void markAsRead(Long alarmId, Long userId);
 }

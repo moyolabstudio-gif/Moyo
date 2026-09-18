@@ -1,6 +1,7 @@
 <%@ page pageEncoding="UTF-8" %>
 <section class="profile-tab-section profile-tab-section--photos">
 
+    <div data-profile-live-region="photos">
     <c:choose>
         <c:when test="${photosPublic eq 'N'}">
             <div class="profile-tab-card profile-empty-state is-private">
@@ -85,9 +86,10 @@
         <c:otherwise>
             <div class="profile-tab-card profile-empty-state">
                 <span>📷</span>
-                <strong>아직 공개한 사진이 없어요</strong>
-                <p>MOYO에 공개한 사진이 여기에 표시됩니다.</p>
+                <strong>공개된 사진이 없어요</strong>
+                <p>MOYO에 공개한 사진이 있으면 여기에 표시됩니다.</p>
             </div>
         </c:otherwise>
     </c:choose>
+    </div>
 </section>

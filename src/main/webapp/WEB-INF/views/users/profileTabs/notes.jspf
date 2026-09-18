@@ -4,6 +4,7 @@
 <%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
 <section class="profile-tab-section profile-tab-section--notes">
 
+    <div data-profile-live-region="notes">
     <c:choose>
         <c:when test="${notesPublic eq 'N'}">
             <div class="profile-tab-card profile-empty-state is-private">
@@ -16,98 +17,228 @@
         <c:when test="${not empty profilePublicNotes}">
             <div class="profile-note-grid" aria-label="MOYO 공개 노트">
                 <c:forEach var="note" items="${profilePublicNotes}">
-                    <article class="profile-note-paper-card">
-                        <div class="profile-note-paper-button" role="button" tabindex="0" data-profile-note-open="profileNoteDetail-${note.noteId}" aria-label="${empty note.noteTitle ? '제목 없는 노트' : fn:escapeXml(note.noteTitle)} 노트 보기">
-                            <span class="profile-note-paper" aria-hidden="true">
-                                <span class="profile-note-paper-inner">
-                                    <span class="profile-note-paper-title">
-                                        <c:out value="${empty note.noteTitle ? '제목 없는 노트' : note.noteTitle}" />
-                                    </span>
-                                    <span class="profile-note-paper-line is-strong"></span>
-                                    <span class="profile-note-paper-body">
-                                        <c:out value="${note.previewText}" />
-                                    </span>
-                                    <span class="profile-note-paper-lines" aria-hidden="true">
-                                        <span></span>
-                                        <span></span>
-                                        <span></span>
-                                        <span></span>
-                                        <span></span>
-                                    </span>
-                                </span>
-
-                                <span class="profile-note-moyo-mark" title="MOYO 공개">
-                                    <img src="${pageContext.request.contextPath}/brand/moyo_mark.png" alt="MOYO 공개">
-                                </span>
-
-                                <span class="profile-note-hover">
-                                    <span class="profile-note-hover-main">
-                                        <span class="profile-note-hover-meta">
-                                            <strong><c:out value="${empty note.userName ? displayName : note.userName}" /></strong>
-                                            <span class="profile-note-hover-dot" aria-hidden="true">·</span>
-                                            <span class="profile-note-hover-date">
-                                                <c:choose>
-                                                    <c:when test="${not empty note.moyoPublicAt}"><fmt:formatDate value="${note.moyoPublicAt}" pattern="yyyy.MM.dd" /></c:when>
-                                                    <c:when test="${not empty note.updDt}"><fmt:formatDate value="${note.updDt}" pattern="yyyy.MM.dd" /></c:when>
-                                                    <c:otherwise><fmt:formatDate value="${note.regDt}" pattern="yyyy.MM.dd" /></c:otherwise>
-                                                </c:choose>
-                                            </span>
-                                        </span>
-
-                                        <span class="profile-note-feed-actions" aria-label="노트 반응 정보">
-                                            <span class="profile-note-feed-action" title="조회수">
-                                                <i class="fa-regular fa-eye" aria-hidden="true"></i>
-                                                <span data-profile-note-card-view-count="${note.noteId}"><c:out value="${empty note.viewCount ? 0 : note.viewCount}" /></span>
-                                            </span>
-                                            <button type="button" class="profile-note-feed-action is-like ${note.likedByMe ? 'is-active' : ''}"
-                                                  data-profile-note-card-like-toggle
-                                                  data-note-id="${note.noteId}"
-                                                  data-modal-id="profileNoteDetail-${note.noteId}"
-                                                  aria-pressed="${note.likedByMe}"
-                                                  title="${note.likedByMe ? '좋아요 취소' : '좋아요'}">
-                                                <i class="${note.likedByMe ? 'fa-solid' : 'fa-regular'} fa-heart" aria-hidden="true"></i>
-                                                <span data-profile-note-card-like-count="${note.noteId}"><c:out value="${empty note.likeCount ? 0 : note.likeCount}" /></span>
-                                            </button>
-                                            <button type="button" class="profile-note-feed-action"
-                                                  data-profile-note-card-comment-open="profileNoteDetail-${note.noteId}"
-                                                  title="댓글 보기">
-                                                <i class="fa-regular fa-comment" aria-hidden="true"></i>
-                                                <span data-profile-note-card-comment-count="${note.noteId}"><c:out value="${empty note.feedbackCount ? 0 : note.feedbackCount}" /></span>
-                                            </button>
-                                            <button type="button" class="profile-note-feed-action is-icon-only"
-                                                  data-profile-note-card-share
-                                                  data-note-id="${note.noteId}"
-                                                  title="공유">
-                                                <i class="fa-regular fa-paper-plane" aria-hidden="true"></i>
-                                            </button>
-                                            <c:if test="${not note.ownedByMe}">
-                                                <button type="button" class="profile-note-feed-action is-icon-only"
-                                                      data-profile-note-card-collect
-                                                      data-profile-note-collect
-                                                      data-note-id="${note.noteId}"
-                                                      title="담기"
-                                                      aria-pressed="false">
-                                                    <i class="fa-regular fa-bookmark" aria-hidden="true"></i>
-                                                </button>
-                                            </c:if>
-                                        </span>
-                                    </span>
-                                </span>
-                            </span>
-                        </div>
+                    <article class="profile-note-paper-card profile-note-paper-card-host"
+                             data-profile-note-card-render
+                             data-note-id="${note.noteId}"
+                             data-note-liked="${note.likedByMe}"
+                             data-note-owned="${note.ownedByMe}"
+                             data-note-image-count="${empty note.imageCount ? 0 : note.imageCount}"
+                             data-note-table-count="${empty note.tableCount ? 0 : note.tableCount}"
+                             data-note-link-count="${empty note.linkCount ? 0 : note.linkCount}"
+                             data-note-video-count="${empty note.videoCount ? 0 : note.videoCount}"
+                             data-note-view-count-value="${empty note.viewCount ? 0 : note.viewCount}"
+                             data-note-like-count-value="${empty note.likeCount ? 0 : note.likeCount}"
+                             data-note-comment-count-value="${empty note.feedbackCount ? 0 : note.feedbackCount}">
+                        <span hidden data-note-card-title><c:out value="${empty note.noteTitle ? '제목 없는 노트' : note.noteTitle}" /></span>
+                        <span hidden data-note-card-preview><c:out value="${note.previewText}" /></span>
+                        <span hidden data-note-card-author><c:out value="${empty note.userName ? displayName : note.userName}" /></span>
+                        <span hidden data-note-card-date>
+                            <c:choose>
+                                <c:when test="${not empty note.moyoPublicAt}"><fmt:formatDate value="${note.moyoPublicAt}" pattern="yyyy.MM.dd" /></c:when>
+                                <c:when test="${not empty note.updDt}"><fmt:formatDate value="${note.updDt}" pattern="yyyy.MM.dd" /></c:when>
+                                <c:otherwise><fmt:formatDate value="${note.regDt}" pattern="yyyy.MM.dd" /></c:otherwise>
+                            </c:choose>
+                        </span>
                     </article>
                 </c:forEach>
             </div>
-
-            <%@ include file="/WEB-INF/views/common/commonNoteDetail.jspf" %>
         </c:when>
 
         <c:otherwise>
             <div class="profile-tab-card profile-empty-state">
                 <span>📝</span>
-                <strong>아직 공개한 노트가 없어요</strong>
-                <p>MOYO에 공개한 노트가 여기에 표시됩니다.</p>
+                <strong>공개된 노트가 없어요</strong>
+                <p>MOYO에 공개한 노트가 있으면 여기에 표시됩니다.</p>
             </div>
         </c:otherwise>
     </c:choose>
+    </div>
+
+            <%-- 프로필 노트도 공통 노트 상세/편집 모달을 사용한다.
+                 중요: commonNoteModal.js는 로딩 즉시 #moyoNoteModal을 찾으므로
+                 모달 마크업을 먼저 렌더링한 뒤 스크립트를 실행한다. --%>
+            <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common/commonCkeditor.css?v=moyo-ckeditor-common-v2">
+            <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common/commonNoteModal.css?v=20260822-toolbar-fix-5">
+            <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common/commonNoteHistoryModal.css?v=common-note-history-v2">
+
+            <%@ include file="/WEB-INF/views/common/commonNoteModal.jspf" %>
+
+            <script src="https://cdn.ckeditor.com/ckeditor5/41.1.0/super-build/ckeditor.js"></script>
+            <script src="https://cdn.ckeditor.com/ckeditor5/41.1.0/super-build/translations/ko.js"></script>
+            <script src="${pageContext.request.contextPath}/js/commonCkeditor.js?v=20260907-profile-note-media-1"></script>
+            <script src="${pageContext.request.contextPath}/js/common/commonNoteHistoryModal.js?v=common-note-history-v2"></script>
+            <script src="${pageContext.request.contextPath}/js/common/commonNoteModal.js?v=20260907-profile-note-media-1"></script>
+
+
+            <%-- 프로필 노트 카드 보조 액션 모달: 공유/담기 --%>
+<%-- 
+    프로필 노트 카드 전용 보조 모달.
+    예전 전체화면 commonNoteDetail.jspf를 다시 포함하지 않고,
+    카드 공유/담기에 필요한 DOM만 독립 유지한다.
+    NOTE 일반 공유 정책: 친구 대상만.
+--%>
+
+<button type="button" id="profileNoteShareOpenHidden" data-share-content-id="" hidden>공유</button>
+<button type="button" id="profileNotePermissionOpenHidden" data-share-content-id="" hidden>권한</button>
+<span id="profileNoteShareCount" hidden>0</span>
+<span id="profileNotePermissionCount" hidden>0</span>
+<div id="profileNoteShareHiddenFields" hidden></div>
+<div id="profileNoteShareInitialSource" hidden></div>
+<div id="profileNoteWorkspaceMemberSource" hidden></div>
+<div id="profileNoteProjectMemberSource" hidden></div>
+<div id="profileNoteWorkspaceTargetSource" hidden></div>
+<div id="profileNoteProjectTargetSource" hidden></div>
+
+<div id="profileNoteShareModal"
+     class="note-write-share-modal moyo-share-modal"
+     data-current-user-id="${sessionScope.user.userId}"
+     hidden>
+    <div class="note-write-share-backdrop" data-note-share-close></div>
+    <section class="note-write-share-panel"
+             role="dialog"
+             aria-modal="true"
+             aria-labelledby="profileNoteShareModalTitle">
+        <div class="note-write-share-modal-head">
+            <div>
+                <h3 id="profileNoteShareModalTitle">친구 공유</h3>
+                <p>이 노트를 함께 볼 친구를 선택하세요.</p>
+            </div>
+            <button type="button"
+                    class="note-write-share-close"
+                    data-note-share-close
+                    aria-label="닫기">×</button>
+        </div>
+
+        <div class="note-write-share-toolbar">
+            <select id="profileNoteShareContext"
+                    class="note-write-share-select"
+                    aria-label="공유 범위 선택"
+                    hidden></select>
+            <input type="text"
+                   id="profileNoteShareKeyword"
+                   class="note-write-share-input"
+                   placeholder="친구 이름 또는 이메일 검색">
+        </div>
+
+        <div class="note-write-share-body note-write-share-body-simple">
+            <div>
+                <div class="note-write-share-subtitle">받는 대상</div>
+                <div id="profileNoteShareCandidates" class="note-write-share-list"></div>
+            </div>
+            <div>
+                <div class="note-write-share-subtitle">
+                    선택 대상
+                    <span id="profileNoteShareModalCount"
+                          class="note-share-modal-count"
+                          hidden>0</span>
+                </div>
+                <div id="profileNoteShareSelected" class="note-write-share-selected"></div>
+            </div>
+        </div>
+
+        <div class="note-write-share-modal-actions">
+            <div>
+                <button type="button"
+                        class="note-soft-btn"
+                        data-note-share-close>취소</button>
+                <button type="button"
+                        id="profileNoteShareApply"
+                        class="note-gradient-btn">공유</button>
+            </div>
+        </div>
+    </section>
+</div>
+
+
+<%-- 비행기 아이콘 전용: MOYO 공개 노트를 친구에게 보내기 --%>
+<button type="button" id="profileNoteSendOpenHidden" data-share-content-id="" hidden>보내기</button>
+<span id="profileNoteSendCount" hidden>0</span>
+<div id="profileNoteSendHiddenFields" hidden></div>
+<div id="profileNoteSendInitialSource" hidden></div>
+
+<div id="profileNoteSendModal"
+     class="note-write-share-modal moyo-share-modal"
+     data-current-user-id="${sessionScope.user.userId}"
+     hidden>
+    <div class="note-write-share-backdrop" data-note-share-close></div>
+    <section class="note-write-share-panel"
+             role="dialog"
+             aria-modal="true"
+             aria-labelledby="profileNoteSendModalTitle">
+        <div class="note-write-share-modal-head">
+            <div>
+                <h3 id="profileNoteSendModalTitle">친구에게 보내기</h3>
+                <p>이 노트를 보낼 친구를 선택하세요.</p>
+            </div>
+            <button type="button"
+                    class="note-write-share-close"
+                    data-note-share-close
+                    aria-label="닫기">×</button>
+        </div>
+
+        <div class="note-write-share-toolbar">
+            <input type="text"
+                   id="profileNoteSendKeyword"
+                   class="note-write-share-input"
+                   placeholder="친구 이름 또는 이메일 검색">
+        </div>
+
+        <div class="note-write-share-body note-write-share-body-simple">
+            <div>
+                <div class="note-write-share-subtitle">받는 대상</div>
+                <div id="profileNoteSendCandidates" class="note-write-share-list"></div>
+            </div>
+            <div>
+                <div class="note-write-share-subtitle">
+                    선택 대상
+                    <span id="profileNoteSendModalCount"
+                          class="note-share-modal-count"
+                          hidden>0</span>
+                </div>
+                <div id="profileNoteSendSelected" class="note-write-share-selected"></div>
+            </div>
+        </div>
+
+        <div class="note-write-share-modal-actions">
+            <div>
+                <button type="button"
+                        class="note-soft-btn"
+                        data-note-share-close>취소</button>
+                <button type="button"
+                        id="profileNoteSendApply"
+                        class="note-gradient-btn">보내기</button>
+            </div>
+        </div>
+    </section>
+</div>
+
+<div id="profileNoteCollectModal" class="profile-note-collect-modal" hidden>
+    <div class="profile-note-collect-backdrop" data-profile-note-collect-close></div>
+    <section class="profile-note-collect-panel"
+             role="dialog"
+             aria-modal="true"
+             aria-labelledby="profileNoteCollectTitle">
+        <header class="profile-note-collect-head">
+            <div>
+                <h3 id="profileNoteCollectTitle">내 노트에 담기</h3>
+                <p>저장할 개인 폴더를 선택하세요.</p>
+            </div>
+            <button type="button"
+                    class="profile-note-collect-close"
+                    data-profile-note-collect-close
+                    aria-label="닫기">×</button>
+        </header>
+        <div id="profileNoteCollectFolderList" class="profile-note-collect-folder-list"></div>
+        <footer class="profile-note-collect-actions">
+            <button type="button"
+                    class="profile-note-collect-cancel"
+                    data-profile-note-collect-close>취소</button>
+            <button type="button"
+                    id="profileNoteCollectApply"
+                    class="profile-note-collect-apply"
+                    data-profile-note-collect-apply>담기</button>
+        </footer>
+    </section>
+</div>
+
 </section>

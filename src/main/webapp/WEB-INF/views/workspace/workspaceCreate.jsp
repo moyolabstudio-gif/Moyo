@@ -5,6 +5,7 @@
 <head>
     <meta charset="UTF-8">
     <title>새 그룹 만들기 - MOYO</title>
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/moyoUi.css?v=moyo-ui-controls-v2">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <style>
         * { box-sizing: border-box; }
@@ -373,14 +374,16 @@
     overflow:hidden;
     border-radius:50%;
     border:1px solid #dbe6f1;
-    background:linear-gradient(135deg,#4A90E2,#39CDB5);
+    background:transparent;
 }
 .profile-account-preview img {
     width:100%; height:100%; object-fit:cover; display:block;
+    background:transparent;
 }
 .profile-account-fallback {
     width:100%; height:100%; display:flex; align-items:center; justify-content:center;
     color:#fff; font-size:34px; font-weight:900;
+    background:linear-gradient(135deg,#4A90E2,#39CDB5);
 }
 .profile-account-preview img[hidden],
 .profile-account-fallback[hidden] { display:none !important; }
@@ -405,7 +408,7 @@
 .signup-profile-modal-backdrop {
     position: absolute; inset: 0;
     background: rgba(15, 23, 42, .34);
-    backdrop-filter: blur(6px);
+    backdrop-filter: none;
 }
 .signup-profile-modal-dialog {
     position: relative;
@@ -554,7 +557,108 @@ body.profile-crop-open { overflow: hidden; }
     text-transform: uppercase;
 }
 
+
+/* MOYO brand CTA gradient restoration */
+.create-btn.primary, .signup-primary-button {
+    border-color: rgba(74, 144, 226, .18) !important;
+    background: linear-gradient(135deg, #55D6C2 0%, #4A90E2 54%, #7567F4 100%) !important;
+    color: #fff !important;
+    box-shadow: 0 8px 18px rgba(74, 144, 226, .22) !important;
+}
+.create-btn.primary:hover, .signup-primary-button:hover {
+    border-color: rgba(63, 130, 212, .24) !important;
+    background: linear-gradient(135deg, #45C7B3 0%, #3F82D4 54%, #6758E6 100%) !important;
+    box-shadow: 0 10px 22px rgba(74, 144, 226, .26) !important;
+}
+
 </style>
+<style>
+/* ========================================================================
+   UI/UX 4단계 — 그룹 생성 화면 공통 기준
+   기존 2단계 기능은 유지하고 생성 폼의 시각 규칙만 통일한다.
+   ======================================================================== */
+body { background: var(--moyo-color-page, #F7F9FC); color: var(--moyo-text, #1F2937); }
+body:has(.create-wrap) { background: var(--moyo-color-page, #F7F9FC); }
+.create-wrap { width: min(100% - 40px, 820px); margin: 32px auto 56px; }
+.create-card {
+    padding: 32px;
+    border: var(--moyo-border, 1px solid #E5EBF1);
+    border-radius: var(--moyo-radius-xl, 20px);
+    background: var(--moyo-surface, #fff);
+    box-shadow: var(--moyo-shadow-md, 0 8px 24px rgba(15,23,42,.07));
+}
+.create-step-label { color: var(--moyo-primary, #4A90E2); font-size: var(--moyo-font-size-xs, 12px); font-weight: 900; }
+.create-card h2 { color: var(--moyo-text, #1F2937); font-size: 28px; font-weight: 900; letter-spacing: -.04em; }
+.create-desc { color: var(--moyo-text-soft, #667085); font-size: var(--moyo-font-size-sm, 13px); line-height: 1.55; }
+.form-grid { gap: 16px; }
+.form-group { margin-bottom: 16px; }
+.form-group > label, .field-title {
+    margin-bottom: 8px;
+    color: var(--moyo-text, #1F2937);
+    font-size: var(--moyo-font-size-xs, 12px);
+    font-weight: var(--moyo-font-weight-bold, 800);
+}
+.create-wrap input[type="text"],
+.create-wrap input[type="tel"],
+.create-wrap select,
+.create-wrap .form-control {
+    min-height: var(--moyo-control-height, 40px);
+    height: var(--moyo-control-height, 40px);
+    padding: 0 14px;
+    border: var(--moyo-border-strong, 1px solid #D8E1EA);
+    border-radius: var(--moyo-radius-md, 12px);
+    background: var(--moyo-surface, #fff);
+    color: var(--moyo-text, #1F2937);
+    font-size: var(--moyo-font-size-sm, 13px);
+}
+.create-wrap textarea {
+    min-height: 96px;
+    height: 96px;
+    max-height: 160px;
+    padding: 12px 14px;
+    border: var(--moyo-border-strong, 1px solid #D8E1EA);
+    border-radius: var(--moyo-radius-md, 12px);
+    resize: vertical;
+}
+.create-wrap input:focus, .create-wrap textarea:focus, .create-wrap select:focus {
+    border-color: var(--moyo-primary, #4A90E2);
+    box-shadow: var(--moyo-focus, 0 0 0 4px rgba(74,144,226,.12));
+}
+.upload-box, .join-type-card, .profile-choice label {
+    border-color: var(--moyo-line, #E5EBF1);
+    border-radius: var(--moyo-radius-lg, 18px);
+    background: var(--moyo-color-surface-soft, #F8FAFC);
+}
+.join-type-option input:checked + .join-type-card {
+    border-color: var(--moyo-primary, #4A90E2);
+    background: var(--moyo-color-surface-hover, #F7FBFF);
+    box-shadow: inset 0 0 0 1px rgba(74,144,226,.12);
+}
+.file-btn, .profile-account-button, .create-btn, .signup-secondary-button, .signup-primary-button {
+    min-height: var(--moyo-control-height, 40px);
+    border-radius: var(--moyo-radius-md, 12px);
+    font-size: var(--moyo-font-size-sm, 13px);
+    font-weight: var(--moyo-font-weight-bold, 800);
+}
+.create-btn.primary, .signup-primary-button {
+    border-color: var(--moyo-primary, #4A90E2);
+    background: var(--moyo-primary, #4A90E2);
+    color: #fff;
+    box-shadow: var(--moyo-shadow-primary, 0 6px 14px rgba(74,144,226,.18));
+}
+.create-btn.primary:hover, .signup-primary-button:hover {
+    border-color: var(--moyo-primary-hover, #397FCA);
+    background: var(--moyo-primary-hover, #397FCA);
+    transform: none;
+}
+.create-actions { margin-top: 26px; padding-top: 22px; border-top: var(--moyo-border, 1px solid #E5EBF1); }
+@media (max-width: 720px) {
+    .create-wrap { width: calc(100% - 28px); margin: 18px auto 32px; }
+    .create-card { padding: 24px 20px; border-radius: var(--moyo-radius-lg, 18px); }
+    .create-card h2 { font-size: 25px; }
+}
+</style>
+
 </head>
 <body>
 <jsp:include page="/WEB-INF/views/common/header.jsp" />
@@ -702,8 +806,8 @@ body.profile-crop-open { overflow: hidden; }
                            value="<c:out value='${accountDisplayName}'/>">
                 </div>
                 <div class="form-group">
-                    <label for="profilePositionName">직책 또는 담당 분야</label>
-                    <input type="text" id="profilePositionName" maxlength="50" placeholder="예: 백엔드 개발자">
+                    <label for="profilePositionName">직책 · 담당</label>
+                    <input type="text" id="profilePositionName" maxlength="50" placeholder="예: 개발, 운영, 기록, 발표 등">
                 </div>
                 <div class="form-group full">
                     <label for="profileContactEmail">이메일 *</label>
@@ -717,7 +821,7 @@ body.profile-crop-open { overflow: hidden; }
                 </div>
                 <div class="form-group full">
                     <label class="check-row">
-                        <input type="checkbox" id="profileShowPhone">
+                        <input type="checkbox" id="profileShowPhone" checked>
                         그룹 멤버에게 연락처 공개
                     </label>
                 </div>

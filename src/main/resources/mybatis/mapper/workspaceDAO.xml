@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <mapper namespace="com.springboot.project.dao.IworkspaceDAO">
 
@@ -35,11 +35,33 @@
 	        W.WS_DESCRIPTION,
         W.WS_TYPE,
         W.JOIN_TYPE,
+        NVL(MC.MEMBER_COUNT, 0) AS "memberCount",
+        CASE
+            WHEN W.OWNER_ID = M.USER_ID THEN 'OWNER'
+            WHEN UPPER(NVL(M.WS_ROLE, 'MEMBER')) = 'ADMIN' THEN 'ADMIN'
+            ELSE 'MEMBER'
+        END AS "currentUserRole",
         NVL(W.STATUS, 'ACTIVE') AS STATUS,
-        TO_CHAR(W.DELETE_REQUESTED_AT, 'YYYY-MM-DD HH24:MI') AS DELETE_REQUESTED_AT,
-        TO_CHAR(W.DELETE_DEADLINE_AT, 'YYYY-MM-DD HH24:MI') AS DELETE_DEADLINE_AT
+        CASE
+            WHEN W.DELETE_REQUESTED_AT IS NULL THEN NULL
+            WHEN LENGTH(TRIM(W.DELETE_REQUESTED_AT)) = 16
+                THEN TO_TIMESTAMP(TRIM(W.DELETE_REQUESTED_AT), 'YYYY-MM-DD HH24:MI')
+            ELSE TO_TIMESTAMP(TRIM(W.DELETE_REQUESTED_AT), 'YYYY-MM-DD HH24:MI:SS')
+        END AS DELETE_REQUESTED_AT,
+        CASE
+            WHEN W.DELETE_DEADLINE_AT IS NULL THEN NULL
+            WHEN LENGTH(TRIM(W.DELETE_DEADLINE_AT)) = 16
+                THEN TO_TIMESTAMP(TRIM(W.DELETE_DEADLINE_AT), 'YYYY-MM-DD HH24:MI')
+            ELSE TO_TIMESTAMP(TRIM(W.DELETE_DEADLINE_AT), 'YYYY-MM-DD HH24:MI:SS')
+        END AS DELETE_DEADLINE_AT,
+        SUBSTR(TRIM(W.DELETE_DEADLINE_AT), 1, 10) AS DELETE_DEADLINE_DATE
 	    FROM WORKSPACES W
 	    JOIN WS_MEMBERS M ON W.WS_ID = M.WS_ID
+        LEFT JOIN (
+            SELECT WS_ID, COUNT(*) AS MEMBER_COUNT
+            FROM WS_MEMBERS
+            GROUP BY WS_ID
+        ) MC ON MC.WS_ID = W.WS_ID
 	    WHERE M.USER_ID = #{userId}
 	    ORDER BY W.WS_ID DESC
 	</select>
@@ -59,8 +81,19 @@
             WS_TYPE,
             JOIN_TYPE,
             NVL(STATUS, 'ACTIVE') AS STATUS,
-            TO_CHAR(DELETE_REQUESTED_AT, 'YYYY-MM-DD HH24:MI') AS DELETE_REQUESTED_AT,
-            TO_CHAR(DELETE_DEADLINE_AT, 'YYYY-MM-DD HH24:MI') AS DELETE_DEADLINE_AT
+            CASE
+                WHEN DELETE_REQUESTED_AT IS NULL THEN NULL
+                WHEN LENGTH(TRIM(DELETE_REQUESTED_AT)) = 16
+                    THEN TO_TIMESTAMP(TRIM(DELETE_REQUESTED_AT), 'YYYY-MM-DD HH24:MI')
+                ELSE TO_TIMESTAMP(TRIM(DELETE_REQUESTED_AT), 'YYYY-MM-DD HH24:MI:SS')
+            END AS DELETE_REQUESTED_AT,
+            CASE
+                WHEN DELETE_DEADLINE_AT IS NULL THEN NULL
+                WHEN LENGTH(TRIM(DELETE_DEADLINE_AT)) = 16
+                    THEN TO_TIMESTAMP(TRIM(DELETE_DEADLINE_AT), 'YYYY-MM-DD HH24:MI')
+                ELSE TO_TIMESTAMP(TRIM(DELETE_DEADLINE_AT), 'YYYY-MM-DD HH24:MI:SS')
+            END AS DELETE_DEADLINE_AT,
+            SUBSTR(TRIM(DELETE_DEADLINE_AT), 1, 10) AS DELETE_DEADLINE_DATE
 	    FROM WORKSPACES 
 	    WHERE WS_ID = #{wsId}
 	</select>
@@ -106,10 +139,86 @@
 	    )
 	</insert>
 	
+    <update id="ensureWorkspaceMemberActivityHistory" statementType="CALLABLE">
+        <![CDATA[
+        BEGIN
+            BEGIN
+                EXECUTE IMMEDIATE '
+                    CREATE TABLE WS_MEMBER_ACTIVITY_HISTORY (
+                        ACTIVITY_ID NUMBER(20) NOT NULL,
+                        WS_ID NUMBER(20) NOT NULL,
+                        USER_ID NUMBER(20) NOT NULL,
+                        ACTIVITY_TYPE VARCHAR2(20) NOT NULL,
+                        USER_NAME VARCHAR2(200),
+                        PROFILE_IMAGE_PATH VARCHAR2(1000),
+                        ACTIVITY_AT DATE DEFAULT SYSDATE NOT NULL,
+                        CONSTRAINT PK_WS_MEMBER_ACTIVITY PRIMARY KEY (ACTIVITY_ID)
+                    )';
+            EXCEPTION WHEN OTHERS THEN
+                IF SQLCODE != -955 THEN RAISE; END IF;
+            END;
+
+            BEGIN
+                EXECUTE IMMEDIATE 'CREATE SEQUENCE SEQ_WS_MEMBER_ACTIVITY START WITH 1 INCREMENT BY 1 NOCACHE';
+            EXCEPTION WHEN OTHERS THEN
+                IF SQLCODE != -955 THEN RAISE; END IF;
+            END;
+        END;
+        ]]>
+    </update>
+
+    <insert id="insertWorkspaceMemberLeaveActivity">
+        INSERT INTO WS_MEMBER_ACTIVITY_HISTORY (
+            ACTIVITY_ID, WS_ID, USER_ID, ACTIVITY_TYPE,
+            USER_NAME, PROFILE_IMAGE_PATH, ACTIVITY_AT
+        )
+        SELECT SEQ_WS_MEMBER_ACTIVITY.NEXTVAL,
+               m.WS_ID,
+               m.USER_ID,
+               'LEAVE',
+               CASE
+                   WHEN NVL(p.USE_ACCOUNT_PROFILE, 'Y') = 'N'
+                       THEN NVL(p.DISPLAY_NAME, u.USER_NAME)
+                   ELSE u.USER_NAME
+               END,
+               CASE
+                   WHEN NVL(p.USE_ACCOUNT_PROFILE, 'N') = 'Y'
+                       THEN u.PROFILE_IMAGE_PATH
+                   ELSE NVL(p.PROFILE_IMAGE_PATH, u.PROFILE_IMAGE_PATH)
+               END,
+               SYSDATE
+          FROM WS_MEMBERS m
+          JOIN USERS u ON u.USER_ID = m.USER_ID
+          LEFT JOIN WS_MEMBER_PROFILES p
+            ON p.WS_ID = m.WS_ID
+           AND p.USER_ID = m.USER_ID
+         WHERE m.WS_ID = #{wsId}
+           AND m.USER_ID = #{userId}
+    </insert>
+
+    <select id="selectWorkspaceMemberLeaveActivities" resultType="map">
+        SELECT ACTIVITY_ID AS "activityId",
+               WS_ID AS "wsId",
+               USER_ID AS "userId",
+               ACTIVITY_TYPE AS "activityType",
+               USER_NAME AS "name",
+               PROFILE_IMAGE_PATH AS "profileImage",
+               TO_CHAR(ACTIVITY_AT, 'YYYY-MM-DD HH24:MI:SS') AS "regDt"
+          FROM WS_MEMBER_ACTIVITY_HISTORY
+         WHERE WS_ID = #{wsId}
+           AND ACTIVITY_TYPE = 'LEAVE'
+         ORDER BY ACTIVITY_AT DESC
+         FETCH FIRST 20 ROWS ONLY
+    </select>
+
 	<select id="selectWorkspaceMembers" parameterType="long" resultType="map">
         SELECT
             m.WS_MEM_ID,
-            m.WS_ROLE,
+            CASE
+                WHEN m.USER_ID = w.OWNER_ID THEN 'OWNER'
+                WHEN UPPER(NVL(m.WS_ROLE, 'MEMBER')) = 'ADMIN' THEN 'ADMIN'
+                ELSE 'MEMBER'
+            END AS WS_ROLE,
             u.USER_ID,
             p.CONTACT_EMAIL AS CUSTOM_CONTACT_EMAIL,
             NVL(p.CONTACT_EMAIL, u.EMAIL) AS EMAIL,
@@ -120,9 +229,48 @@
             END AS DISPLAY_NAME,
             CASE
                 WHEN NVL(p.USE_ACCOUNT_PROFILE, 'Y') = 'N'
-                    THEN p.PROFILE_IMAGE_PATH
-                ELSE u.PROFILE_IMAGE_PATH
+                    THEN CASE
+                        WHEN (p.PROFILE_IMAGE_PATH IS NOT NULL OR p.PROFILE_IMAGE_ORIGINAL_PATH IS NOT NULL)
+                         AND NOT (UPPER(NVL(u.PROFILE_AVATAR_TYPE, 'DEFAULT')) = 'DEFAULT'
+                                  AND NVL(p.PROFILE_IMAGE_PATH, '#') = NVL(u.PROFILE_IMAGE_PATH, '#')
+                                  AND NVL(p.PROFILE_IMAGE_ORIGINAL_PATH, '#') = NVL(u.PROFILE_ORIGINAL_IMAGE_PATH, '#'))
+                            THEN p.PROFILE_IMAGE_PATH
+                    END
+                ELSE CASE WHEN UPPER(NVL(u.PROFILE_AVATAR_TYPE, 'DEFAULT')) = 'IMAGE' THEN u.PROFILE_IMAGE_PATH END
             END AS PROFILE_IMAGE_PATH,
+            CASE
+                WHEN NVL(p.USE_ACCOUNT_PROFILE, 'Y') = 'N'
+                    THEN p.PROFILE_IMAGE_ORIGINAL_PATH
+                ELSE u.PROFILE_ORIGINAL_IMAGE_PATH
+            END AS PROFILE_ORIGINAL_IMAGE_PATH,
+            CASE
+                WHEN NVL(p.USE_ACCOUNT_PROFILE, 'Y') = 'N'
+                    THEN NVL(p.PROFILE_IMAGE_CROP_SCALE, 1)
+                ELSE NVL(u.PROFILE_CROP_SCALE, 1)
+            END AS PROFILE_CROP_SCALE,
+            CASE
+                WHEN NVL(p.USE_ACCOUNT_PROFILE, 'Y') = 'N'
+                    THEN NVL(p.PROFILE_IMAGE_CROP_X, 0)
+                ELSE NVL(u.PROFILE_CROP_X, 0)
+            END AS PROFILE_CROP_X,
+            CASE
+                WHEN NVL(p.USE_ACCOUNT_PROFILE, 'Y') = 'N'
+                    THEN NVL(p.PROFILE_IMAGE_CROP_Y, 0)
+                ELSE NVL(u.PROFILE_CROP_Y, 0)
+            END AS PROFILE_CROP_Y,
+            CASE
+                WHEN NVL(p.USE_ACCOUNT_PROFILE, 'Y') = 'N'
+                    THEN CASE
+                        WHEN (p.PROFILE_IMAGE_PATH IS NOT NULL OR p.PROFILE_IMAGE_ORIGINAL_PATH IS NOT NULL)
+                         AND NOT (UPPER(NVL(u.PROFILE_AVATAR_TYPE, 'DEFAULT')) = 'DEFAULT'
+                                  AND NVL(p.PROFILE_IMAGE_PATH, '#') = NVL(u.PROFILE_IMAGE_PATH, '#')
+                                  AND NVL(p.PROFILE_IMAGE_ORIGINAL_PATH, '#') = NVL(u.PROFILE_ORIGINAL_IMAGE_PATH, '#'))
+                            THEN 'IMAGE'
+                        ELSE 'DEFAULT'
+                    END
+                ELSE UPPER(NVL(u.PROFILE_AVATAR_TYPE, 'DEFAULT'))
+            END AS PROFILE_AVATAR_TYPE,
+            NVL(p.USE_ACCOUNT_PROFILE, 'Y') AS USE_ACCOUNT_PROFILE,
             p.POSITION_NAME,
             TO_CHAR(m.JOINED_AT, 'YYYY-MM-DD') AS JOINED_AT
         FROM WS_MEMBERS m
@@ -141,6 +289,57 @@
             DISPLAY_NAME ASC
     </select>
 	
+    <select id="lockWorkspaceMemberForLeave" resultType="long">
+        SELECT USER_ID
+          FROM WS_MEMBERS
+         WHERE WS_ID = #{wsId}
+           AND USER_ID = #{userId}
+         FOR UPDATE
+    </select>
+
+    <select id="countLedActiveWorkspaceProjects" resultType="int">
+        SELECT COUNT(*)
+          FROM PROJECTS
+         WHERE WS_ID = #{wsId}
+           AND LEADER_ID = #{userId}
+           AND NVL(UPPER(PROJ_SCOPE), 'GROUP') = 'GROUP'
+           AND NVL(STATUS, 'ACTIVE') = 'ACTIVE'
+    </select>
+
+    <update id="reassignWorkspaceProjectTasksToLeaders">
+        UPDATE PROJECT_TASKS t
+           SET t.ASSIGNEE_ID = (
+                   SELECT p.LEADER_ID
+                     FROM PROJECTS p
+                    WHERE p.PROJ_ID = t.PROJ_ID
+               ),
+               t.UPDATED_AT = SYSDATE
+         WHERE t.ASSIGNEE_ID = #{userId}
+           AND EXISTS (
+               SELECT 1
+                 FROM PROJECTS p
+                WHERE p.PROJ_ID = t.PROJ_ID
+                  AND p.WS_ID = #{wsId}
+                  AND NVL(UPPER(p.PROJ_SCOPE), 'GROUP') = 'GROUP'
+                  AND NVL(p.STATUS, 'ACTIVE') = 'ACTIVE'
+                  AND p.LEADER_ID IS NOT NULL
+                  AND p.LEADER_ID &lt;&gt; #{userId}
+           )
+    </update>
+
+    <delete id="deleteActiveWorkspaceProjectMemberships">
+        DELETE FROM PROJ_MEMBERS pm
+         WHERE pm.USER_ID = #{userId}
+           AND EXISTS (
+               SELECT 1
+                 FROM PROJECTS p
+                WHERE p.PROJ_ID = pm.PROJ_ID
+                  AND p.WS_ID = #{wsId}
+                  AND NVL(UPPER(p.PROJ_SCOPE), 'GROUP') = 'GROUP'
+                  AND NVL(p.STATUS, 'ACTIVE') = 'ACTIVE'
+           )
+    </delete>
+
 	<delete id="deleteWorkspaceMember">
 	    DELETE FROM WS_MEMBERS 
 	    WHERE WS_ID = #{wsId} AND USER_ID = #{userId}
@@ -157,6 +356,14 @@
 	    SET OWNER_ID = #{ownerId} 
 	    WHERE WS_ID = #{wsId}
 	</update>
+
+    <update id="updateWorkspaceOwnerIfCurrent">
+        UPDATE WORKSPACES
+           SET OWNER_ID = #{newOwnerId}
+         WHERE WS_ID = #{wsId}
+           AND OWNER_ID = #{currentOwnerId}
+           AND NVL(STATUS, 'ACTIVE') = 'ACTIVE'
+    </update>
 	
 	<select id="checkInvitationExists" resultType="int">
 	    SELECT (
@@ -179,26 +386,94 @@
 	           'PENDING',
 	           SYSDATE
 	      FROM DUAL
+	     WHERE NOT EXISTS (
+	               SELECT 1
+	                 FROM WS_MEMBERS m
+	                WHERE m.WS_ID = #{wsId}
+	                  AND m.USER_ID = #{inviteeId}
+	           )
+	       AND NOT EXISTS (
+	               SELECT 1
+	                 FROM WS_INVITATIONS i
+	                WHERE i.WS_ID = #{wsId}
+	                  AND i.INVITEE_ID = #{inviteeId}
+	                  AND i.STATUS = 'PENDING'
+	           )
 	</insert>
 	
+    <select id="countPendingInvitations" resultType="int">
+        SELECT COUNT(*)
+          FROM WS_INVITATIONS i
+          JOIN WORKSPACES w ON w.WS_ID = i.WS_ID
+         WHERE i.INVITEE_ID = #{userId}
+           AND i.STATUS = 'PENDING'
+           AND NVL(w.STATUS, 'ACTIVE') = 'ACTIVE'
+    </select>
+
 	<select id="selectPendingInvitations" resultType="map">
-	    SELECT 
-	        i.INVITE_ID, 
-	        w.WS_NAME, 
-	        u.USER_NAME as INVITER_NAME, 
-	        i.STATUS 
-	    FROM WS_INVITATIONS i  JOIN WORKSPACES w ON i.WS_ID = w.WS_ID 
-	    JOIN USERS u ON i.INVITER_ID = u.USER_ID 
-	    WHERE i.INVITEE_ID = #{userId} 
+	    SELECT
+	        i.INVITE_ID,
+	        i.WS_ID,
+	        w.WS_NAME,
+	        CASE
+	            WHEN NVL(wp.USE_ACCOUNT_PROFILE, 'Y') = 'N'
+	                THEN NVL(wp.DISPLAY_NAME, u.USER_NAME)
+	            ELSE u.USER_NAME
+	        END AS INVITER_NAME,
+	        CASE
+	            WHEN NVL(wp.USE_ACCOUNT_PROFILE, 'Y') = 'N'
+	                THEN wp.PROFILE_IMAGE_PATH
+	            ELSE u.PROFILE_IMAGE_PATH
+	        END AS INVITER_PROFILE_IMAGE_PATH,
+	        i.STATUS,
+	        TO_CHAR(i.SENT_AT, 'YYYY-MM-DD HH24:MI') AS SENT_AT
+	    FROM WS_INVITATIONS i
+	    JOIN WORKSPACES w ON i.WS_ID = w.WS_ID
+	    JOIN USERS u ON i.INVITER_ID = u.USER_ID
+	    LEFT JOIN WS_MEMBER_PROFILES wp
+	      ON wp.WS_ID = i.WS_ID
+	     AND wp.USER_ID = i.INVITER_ID
+	    WHERE i.INVITEE_ID = #{userId}
 	      AND i.STATUS = 'PENDING'
+	      AND NVL(w.STATUS, 'ACTIVE') = 'ACTIVE'
+	    ORDER BY i.SENT_AT DESC, i.INVITE_ID DESC
+	</select>
+
+	<select id="selectPendingInvitationsByWorkspace" resultType="map">
+	    SELECT
+	        i.INVITE_ID,
+	        i.WS_ID,
+	        i.INVITEE_ID,
+	        u.USER_NAME AS INVITEE_NAME,
+	        u.EMAIL AS INVITEE_EMAIL,
+	        u.PROFILE_IMAGE_PATH AS INVITEE_PROFILE_IMAGE_PATH,
+	        TO_CHAR(i.SENT_AT, 'YYYY-MM-DD HH24:MI') AS SENT_AT
+	    FROM WS_INVITATIONS i
+	    JOIN USERS u ON u.USER_ID = i.INVITEE_ID
+	    WHERE i.WS_ID = #{wsId}
+	      AND i.STATUS = 'PENDING'
+	    ORDER BY i.SENT_AT DESC, i.INVITE_ID DESC
 	</select>
 	
 	<update id="updateInvitationStatus">
-	    UPDATE WS_INVITATIONS SET STATUS = #{status} WHERE INVITE_ID = #{inviteId}
+	    UPDATE WS_INVITATIONS
+	       SET STATUS = #{status}
+	     WHERE INVITE_ID = #{inviteId}
+	       AND STATUS = 'PENDING'
+	</update>
+
+	<update id="cancelInvitation">
+	    UPDATE WS_INVITATIONS
+	       SET STATUS = 'CANCELLED'
+	     WHERE INVITE_ID = #{inviteId}
+	       AND WS_ID = #{wsId}
+	       AND STATUS = 'PENDING'
 	</update>
 	
 	<select id="selectInvitationById" resultType="map">
-	    SELECT WS_ID, INVITEE_ID FROM WS_INVITATIONS WHERE INVITE_ID = #{inviteId}
+	    SELECT INVITE_ID, WS_ID, INVITER_ID, INVITEE_ID, STATUS, SENT_AT
+	      FROM WS_INVITATIONS
+	     WHERE INVITE_ID = #{inviteId}
 	</select>
 	
 	<select id="getWorkspaceMembers" resultType="map">
@@ -227,19 +502,31 @@
 	                THEN wp.PROFILE_IMAGE_PATH
 	            ELSE u.PROFILE_IMAGE_PATH
 	        END AS "profileImagePath",
-	        m.WS_ROLE AS "WS_ROLE",
-	        m.WS_ROLE AS "wsRole",
+	        CASE
+	            WHEN m.USER_ID = w.OWNER_ID THEN 'OWNER'
+	            ELSE UPPER(NVL(m.WS_ROLE, 'MEMBER'))
+	        END AS "WS_ROLE",
+	        CASE
+	            WHEN m.USER_ID = w.OWNER_ID THEN 'OWNER'
+	            ELSE UPPER(NVL(m.WS_ROLE, 'MEMBER'))
+	        END AS "wsRole",
 	        wp.POSITION_NAME AS "WS_POSITION",
 	        wp.POSITION_NAME AS "wsPosition",
 	        TO_CHAR(m.JOINED_AT, 'YYYY-MM-DD') AS "JOINED_AT",
 	        TO_CHAR(m.JOINED_AT, 'YYYY-MM-DD') AS "joinedAt"
 	    FROM WS_MEMBERS m
+	    JOIN WORKSPACES w ON w.WS_ID = m.WS_ID
 	    JOIN USERS u ON m.USER_ID = u.USER_ID
 	    LEFT JOIN WS_MEMBER_PROFILES wp
 	      ON wp.WS_ID = m.WS_ID
 	     AND wp.USER_ID = m.USER_ID
 	    WHERE m.WS_ID = #{wsId}
-	    ORDER BY CASE WHEN m.WS_ROLE = 'ADMIN' THEN 1 ELSE 2 END, "USER_NAME"
+	    ORDER BY CASE
+	                 WHEN m.USER_ID = w.OWNER_ID THEN 1
+	                 WHEN UPPER(NVL(m.WS_ROLE, 'MEMBER')) = 'ADMIN' THEN 2
+	                 ELSE 3
+	             END,
+	             "USER_NAME"
 	</select>
     <update id="requestWorkspaceDeletion">
         UPDATE WORKSPACES
@@ -295,7 +582,7 @@
     SELECT
         (SELECT COUNT(*) FROM BOARD_POSTS WHERE WS_ID = #{wsId} AND PROJ_ID IS NULL AND BOARD_TYPE = 'NOTICE') AS "noticeCount",
         (SELECT COUNT(*) FROM BOARD_POSTS WHERE WS_ID = #{wsId} AND PROJ_ID IS NULL AND BOARD_TYPE = 'FREE') AS "freeCount",
-        (SELECT COUNT(*) FROM BOARD_POSTS WHERE WS_ID = #{wsId} AND PROJ_ID IS NULL AND BOARD_TYPE = 'FILE') AS "fileCount",
+        (SELECT COUNT(*) FROM CONTENT_FILES WHERE SCOPE_TYPE = 'GROUP' AND WS_ID = #{wsId} AND DELETED_YN = 'N') AS "fileCount",
         (SELECT COUNT(*) FROM POLLS WHERE WS_ID = #{wsId} AND SCOPE = 'WORKSPACE' AND STATUS = 'ACTIVE' AND (END_DT IS NULL OR END_DT >= SYSDATE)) AS "activePollCount",
         (SELECT COUNT(*) FROM EVENTS WHERE WS_ID = #{wsId} AND TRUNC(START_DT) = TRUNC(SYSDATE)) AS "todayEventCount",
         (SELECT COUNT(*) FROM PROJECTS WHERE WS_ID = #{wsId}) AS "projectCount",
@@ -319,7 +606,7 @@
         JOIN USERS u ON p.USER_ID = u.USER_ID
         WHERE p.WS_ID = #{wsId}
           AND p.PROJ_ID IS NULL
-          AND p.BOARD_TYPE IN ('NOTICE', 'FREE', 'FILE')
+          AND p.BOARD_TYPE IN ('NOTICE', 'FREE')
 
         UNION ALL
 
@@ -405,11 +692,11 @@
            ON (p.WS_ID = src.WS_ID AND p.USER_ID = src.USER_ID)
         WHEN NOT MATCHED THEN
             INSERT (
-                WS_ID, USER_ID, USE_ACCOUNT_PROFILE, SHOW_PHONE, SHOW_BIRTH,
+                WS_ID, USER_ID, USE_ACCOUNT_PROFILE, SHOW_EMAIL, SHOW_PHONE, SHOW_BIRTH,
                 CREATED_AT, UPDATED_AT
             )
             VALUES (
-                src.WS_ID, src.USER_ID, 'Y', 'N', 'Y',
+                src.WS_ID, src.USER_ID, 'Y', 'Y', 'Y', 'Y',
                 SYSDATE, SYSDATE
             )
     </insert>
@@ -424,7 +711,12 @@
             END AS IS_OWNER,
             u.EMAIL AS ACCOUNT_EMAIL,
             p.CONTACT_EMAIL AS CUSTOM_CONTACT_EMAIL,
-            NVL(p.CONTACT_EMAIL, u.EMAIL) AS EMAIL,
+            CASE
+                WHEN m.USER_ID = #{viewerUserId} OR NVL(p.SHOW_EMAIL, 'Y') = 'Y'
+                    THEN NVL(p.CONTACT_EMAIL, u.EMAIL)
+                ELSE NULL
+            END AS EMAIL,
+            p.INTRO_TEXT,
             u.USER_NAME AS ACCOUNT_NAME,
             u.PROFILE_IMAGE_PATH AS ACCOUNT_PROFILE_IMAGE_PATH,
             u.PROFILE_ORIGINAL_IMAGE_PATH AS ACCOUNT_PROFILE_ORIGINAL_IMAGE_PATH,
@@ -450,21 +742,22 @@
             END AS PROFILE_IMAGE_PATH,
             p.POSITION_NAME,
             CASE
-                WHEN m.USER_ID = #{viewerUserId} OR NVL(p.SHOW_PHONE, 'N') = 'Y'
+                WHEN m.USER_ID = #{viewerUserId} OR NVL(p.SHOW_PHONE, 'Y') = 'Y'
                     THEN p.PHONE_NUMBER
                 ELSE NULL
             END AS PHONE_NUMBER,
-            NVL(p.SHOW_PHONE, 'N') AS SHOW_PHONE,
+            NVL(p.SHOW_EMAIL, 'Y') AS SHOW_EMAIL,
+            NVL(p.SHOW_PHONE, 'Y') AS SHOW_PHONE,
             NVL(p.SHOW_BIRTH, 'Y') AS SHOW_BIRTH,
             NVL(p.USE_ACCOUNT_PROFILE, 'Y') AS USE_ACCOUNT_PROFILE,
             TO_CHAR(m.JOINED_AT, 'YYYY-MM-DD') AS JOINED_AT,
             CASE
-                WHEN NVL(p.SHOW_BIRTH, 'Y') = 'Y'
+                WHEN m.USER_ID = #{viewerUserId} OR NVL(p.SHOW_BIRTH, 'Y') = 'Y'
                     THEN TO_CHAR(u.BIRTH_DATE, 'MM-DD')
                 ELSE NULL
             END AS BIRTH_DATE,
             CASE
-                WHEN NVL(p.SHOW_BIRTH, 'Y') = 'Y'
+                WHEN m.USER_ID = #{viewerUserId} OR NVL(p.SHOW_BIRTH, 'Y') = 'Y'
                     THEN NVL(u.BIRTH_CALENDAR_TYPE, 'SOLAR')
                 ELSE NULL
             END AS BIRTH_CALENDAR_TYPE
@@ -496,9 +789,11 @@
             NVL(p.PROFILE_IMAGE_CROP_X, 0) AS CUSTOM_PROFILE_IMAGE_CROP_X,
             NVL(p.PROFILE_IMAGE_CROP_Y, 0) AS CUSTOM_PROFILE_IMAGE_CROP_Y,
             p.CONTACT_EMAIL,
+            p.INTRO_TEXT,
             p.POSITION_NAME,
             p.PHONE_NUMBER,
-            NVL(p.SHOW_PHONE, 'N') AS SHOW_PHONE,
+            NVL(p.SHOW_EMAIL, 'Y') AS SHOW_EMAIL,
+            NVL(p.SHOW_PHONE, 'Y') AS SHOW_PHONE,
             NVL(p.SHOW_BIRTH, 'Y') AS SHOW_BIRTH
         FROM WS_MEMBER_PROFILES p
         WHERE p.WS_ID = #{wsId}
@@ -550,8 +845,10 @@
                        )
                    END,
                CONTACT_EMAIL = #{contactEmail, jdbcType=VARCHAR},
+               INTRO_TEXT = #{introText, jdbcType=VARCHAR},
                POSITION_NAME = #{positionName, jdbcType=VARCHAR},
                PHONE_NUMBER = #{phoneNumber, jdbcType=VARCHAR},
+               SHOW_EMAIL = #{showEmail, jdbcType=VARCHAR},
                SHOW_PHONE = #{showPhone, jdbcType=VARCHAR},
                SHOW_BIRTH = #{showBirth, jdbcType=VARCHAR},
                UPDATED_AT = SYSDATE
@@ -571,8 +868,10 @@
             PROFILE_IMAGE_CROP_X,
             PROFILE_IMAGE_CROP_Y,
             CONTACT_EMAIL,
+            INTRO_TEXT,
             POSITION_NAME,
             PHONE_NUMBER,
+            SHOW_EMAIL,
             SHOW_PHONE,
             SHOW_BIRTH,
             CREATED_AT,
@@ -588,8 +887,10 @@
             #{profileImageCropX, jdbcType=NUMERIC},
             #{profileImageCropY, jdbcType=NUMERIC},
             #{contactEmail, jdbcType=VARCHAR},
+            #{introText, jdbcType=VARCHAR},
             #{positionName, jdbcType=VARCHAR},
             #{phoneNumber, jdbcType=VARCHAR},
+            #{showEmail},
             #{showPhone},
             #{showBirth},
             SYSDATE,
@@ -646,6 +947,7 @@
                 USER_ID,
                 USE_ACCOUNT_PROFILE,
                 POSITION_NAME,
+                SHOW_EMAIL,
                 SHOW_PHONE,
                 SHOW_BIRTH,
                 CREATED_AT,
@@ -656,7 +958,9 @@
                 src.USER_ID,
                 'Y',
                 src.POSITION_NAME,
-                'N',
+                'Y',
+                'Y',
+                'Y',
                 SYSDATE,
                 SYSDATE
             )
@@ -673,9 +977,21 @@
     <insert id="insertJoinRequest">
         INSERT INTO WS_JOIN_REQUESTS (
             REQUEST_ID, WS_ID, REQUESTER_ID, STATUS, REQUESTED_AT, UPDATED_AT
-        ) VALUES (
-            SEQ_WS_JOIN_REQUEST_ID.NEXTVAL, #{wsId}, #{userId}, 'PENDING', SYSDATE, SYSDATE
         )
+        SELECT SEQ_WS_JOIN_REQUEST_ID.NEXTVAL,
+               #{wsId},
+               #{userId},
+               'PENDING',
+               SYSDATE,
+               SYSDATE
+          FROM DUAL
+         WHERE NOT EXISTS (
+               SELECT 1
+                 FROM WS_JOIN_REQUESTS
+                WHERE WS_ID = #{wsId}
+                  AND REQUESTER_ID = #{userId}
+                  AND STATUS = 'PENDING'
+         )
     </insert>
 
     <update id="cancelJoinRequest">
@@ -756,6 +1072,21 @@
                   )
            )
     </delete>
+
+    <select id="countPendingJoinRequestsForAdmin" resultType="int">
+        SELECT COUNT(*)
+          FROM WS_JOIN_REQUESTS r
+          JOIN WORKSPACES w ON w.WS_ID = r.WS_ID
+         WHERE r.STATUS = 'PENDING'
+           AND (w.OWNER_ID = #{userId}
+                OR EXISTS (
+                    SELECT 1
+                      FROM WS_MEMBERS m
+                     WHERE m.WS_ID = r.WS_ID
+                       AND m.USER_ID = #{userId}
+                       AND m.WS_ROLE = 'ADMIN'
+                ))
+    </select>
 
     <select id="selectPendingJoinRequestsForAdmin" resultType="map">
         SELECT r.REQUEST_ID AS "requestId",
@@ -934,5 +1265,294 @@
           JOIN WORKSPACES w ON w.WS_ID = r.WS_ID
          WHERE r.REQUEST_ID = #{requestId}
     </insert>
+
+
+    <!-- Group final deletion mappings (merged with latest member/invite/owner-transfer mappings) -->
+    <delete id="deleteWorkspaceBoardPosts">
+        DELETE FROM BOARD_POSTS
+         WHERE WS_ID = #{wsId, jdbcType=NUMERIC}
+           AND PROJ_ID IS NULL
+    </delete>
+
+    <delete id="deleteWorkspaceContentFileFolders">
+        DELETE FROM CONTENT_FILE_FOLDERS
+         WHERE SCOPE_TYPE = 'GROUP'
+           AND WS_ID = #{wsId, jdbcType=NUMERIC}
+    </delete>
+
+    <delete id="deleteWorkspaceContentFileRecentAccess">
+        DELETE FROM CONTENT_FILE_RECENT_ACCESS a
+         WHERE a.CONTENT_FILE_ID IN (
+               SELECT f.CONTENT_FILE_ID
+                 FROM CONTENT_FILES f
+                WHERE f.SCOPE_TYPE = 'GROUP'
+                  AND f.WS_ID = #{wsId, jdbcType=NUMERIC}
+         )
+    </delete>
+
+    <delete id="deleteWorkspaceContentFiles">
+        DELETE FROM CONTENT_FILES
+         WHERE SCOPE_TYPE = 'GROUP'
+           AND WS_ID = #{wsId, jdbcType=NUMERIC}
+    </delete>
+
+    <delete id="deleteWorkspaceContentReactions">
+        DELETE FROM CONTENT_REACTIONS cr
+         WHERE (cr.CONTENT_TYPE = 'NOTE' AND cr.CONTENT_ID IN (
+                    SELECT n.NOTE_ID FROM NOTES n
+                     WHERE n.WS_ID = #{wsId, jdbcType=NUMERIC}
+                       AND n.PROJ_ID IS NULL
+                ))
+            OR (cr.CONTENT_TYPE = 'PHOTO' AND cr.CONTENT_ID IN (
+                    SELECT pp.PHOTO_ID FROM PHOTO_POSTS pp
+                     WHERE pp.SCOPE_TYPE = 'GROUP'
+                       AND pp.SCOPE_ID = #{wsId, jdbcType=NUMERIC}
+                ))
+            OR (cr.CONTENT_TYPE = 'BOARD' AND cr.CONTENT_ID IN (
+                    SELECT bp.POST_ID FROM BOARD_POSTS bp
+                     WHERE bp.WS_ID = #{wsId, jdbcType=NUMERIC}
+                       AND bp.PROJ_ID IS NULL
+                ))
+            OR (cr.CONTENT_TYPE = 'EVENT' AND cr.CONTENT_ID IN (
+                    SELECT e.EVENT_ID FROM EVENTS e
+                     WHERE e.WS_ID = #{wsId, jdbcType=NUMERIC}
+                       AND e.PROJ_ID IS NULL
+                ))
+            OR (cr.CONTENT_TYPE = 'POLL' AND cr.CONTENT_ID IN (
+                    SELECT p.POLL_ID FROM POLLS p
+                     WHERE p.WS_ID = #{wsId, jdbcType=NUMERIC}
+                       AND p.PROJ_ID IS NULL
+                ))
+    </delete>
+
+    <delete id="deleteWorkspaceContentRecordFileItems">
+        DELETE FROM CONTENT_RECORD_ITEMS i
+         WHERE i.RECORD_TYPE = 'FILE'
+           AND i.CONTENT_ID IN (
+               SELECT f.CONTENT_FILE_ID
+                 FROM CONTENT_FILES f
+                WHERE f.SCOPE_TYPE = 'GROUP'
+                  AND f.WS_ID = #{wsId, jdbcType=NUMERIC}
+           )
+    </delete>
+
+    <delete id="deleteWorkspaceEvents">
+        DELETE FROM EVENTS
+         WHERE WS_ID = #{wsId, jdbcType=NUMERIC}
+           AND PROJ_ID IS NULL
+    </delete>
+
+    <delete id="deleteWorkspaceInvitations">
+        DELETE FROM WS_INVITATIONS
+         WHERE WS_ID = #{wsId, jdbcType=NUMERIC}
+    </delete>
+
+    <delete id="deleteWorkspaceJoinRequests">
+        DELETE FROM WS_JOIN_REQUESTS
+         WHERE WS_ID = #{wsId, jdbcType=NUMERIC}
+    </delete>
+
+    <delete id="deleteWorkspaceLinksForFinalDelete">
+        DELETE FROM WORKSPACE_LINKS
+         WHERE WS_ID = #{wsId, jdbcType=NUMERIC}
+    </delete>
+
+    <delete id="deleteWorkspaceMemberProfiles">
+        DELETE FROM WS_MEMBER_PROFILES
+         WHERE WS_ID = #{wsId, jdbcType=NUMERIC}
+    </delete>
+
+    <delete id="deleteWorkspaceMembersForFinalDelete">
+        DELETE FROM WS_MEMBERS
+         WHERE WS_ID = #{wsId, jdbcType=NUMERIC}
+    </delete>
+
+    <delete id="deleteWorkspaceNativeNotes">
+        DELETE FROM NOTES
+         WHERE WS_ID = #{wsId, jdbcType=NUMERIC}
+           AND PROJ_ID IS NULL
+    </delete>
+
+    <delete id="deleteWorkspaceNoteFolders">
+        DELETE FROM NOTE_FOLDERS
+         WHERE WS_ID = #{wsId, jdbcType=NUMERIC}
+           AND PROJ_ID IS NULL
+    </delete>
+
+    <delete id="deleteWorkspacePhotoAlbums">
+        DELETE FROM PHOTO_ALBUMS
+         WHERE SCOPE_TYPE = 'GROUP'
+           AND SCOPE_ID = #{wsId, jdbcType=NUMERIC}
+    </delete>
+
+    <delete id="deleteWorkspacePhotoPosts">
+        DELETE FROM PHOTO_POSTS
+         WHERE SCOPE_TYPE = 'GROUP'
+           AND SCOPE_ID = #{wsId, jdbcType=NUMERIC}
+    </delete>
+
+    <delete id="deleteWorkspacePolls">
+        DELETE FROM POLLS
+         WHERE WS_ID = #{wsId, jdbcType=NUMERIC}
+           AND PROJ_ID IS NULL
+    </delete>
+
+    <delete id="deleteWorkspaceRow">
+        DELETE FROM WORKSPACES
+         WHERE WS_ID = #{wsId, jdbcType=NUMERIC}
+           AND STATUS = 'DELETE_PENDING'
+           AND DELETE_DEADLINE_AT IS NOT NULL
+           AND DELETE_DEADLINE_AT &lt;= SYSDATE
+    </delete>
+
+    <delete id="deleteWorkspaceTargetShares">
+        DELETE FROM CONTENT_SHARES
+         WHERE TARGET_TYPE = 'WS'
+           AND TARGET_ID = #{wsId, jdbcType=NUMERIC}
+    </delete>
+
+    <select id="selectWorkspaceProjectIdsForFinalDelete" resultType="long">
+        SELECT PROJ_ID
+          FROM PROJECTS
+         WHERE WS_ID = #{wsId, jdbcType=NUMERIC}
+         ORDER BY PROJ_ID
+    </select>
+
+
+    <!-- 공통 멤버 활동 프로필: 그룹 콘텐츠 기여 -->
+    <select id="selectWorkspaceMemberContributionCounts" resultType="map">
+        SELECT
+            (SELECT COUNT(*) FROM NOTES n
+              WHERE n.SCOPE_TYPE = 'WS'
+                AND n.WS_ID = #{wsId, jdbcType=NUMERIC}
+                AND n.USER_ID = #{userId, jdbcType=NUMERIC}
+                AND NVL(n.DELETED_YN, 'N') = 'N') AS "NOTE_CNT",
+            (SELECT COUNT(*) FROM PHOTOS ph
+               JOIN PHOTO_POSTS pp ON pp.POST_ID = ph.POST_ID
+              WHERE pp.SCOPE_TYPE IN ('WORKSPACE','GROUP')
+                AND pp.SCOPE_ID = #{wsId, jdbcType=NUMERIC}
+                AND ph.UPLOADED_BY = #{userId, jdbcType=NUMERIC}
+                AND NVL(pp.DELETED_YN, 'N') = 'N') AS "PHOTO_CNT",
+            (SELECT COUNT(*) FROM CONTENT_FILES f
+              WHERE f.SCOPE_TYPE = 'GROUP'
+                AND f.WS_ID = #{wsId, jdbcType=NUMERIC}
+                AND f.CREATED_BY = #{userId, jdbcType=NUMERIC}
+                AND f.DELETED_YN = 'N') AS "FILE_CNT"
+        FROM DUAL
+    </select>
+
+    <select id="selectWorkspaceMemberRecentNotes" resultType="map">
+        SELECT * FROM (
+            SELECT n.NOTE_ID AS "NOTE_ID",
+                   NVL(NULLIF(TRIM(n.NOTE_TITLE), ''), '제목 없는 노트') AS "TITLE",
+                   n.CATEGORY AS "CATEGORY",
+                   n.ICON AS "ICON",
+                   TO_CHAR(NVL(n.UPD_DT, n.REG_DT), 'YYYY-MM-DD HH24:MI') AS "ACTIVITY_AT"
+              FROM NOTES n
+             WHERE n.SCOPE_TYPE = 'WS'
+               AND n.WS_ID = #{wsId, jdbcType=NUMERIC}
+               AND n.USER_ID = #{userId, jdbcType=NUMERIC}
+               AND NVL(n.DELETED_YN, 'N') = 'N'
+             ORDER BY NVL(n.UPD_DT, n.REG_DT) DESC, n.NOTE_ID DESC
+        ) WHERE ROWNUM &lt;= 6
+    </select>
+
+    <select id="selectWorkspaceMemberRecentPhotos" resultType="map">
+        SELECT * FROM (
+            SELECT pp.POST_ID AS "POST_ID",
+                   NVL(NULLIF(TRIM(pp.TITLE), ''), '사진') AS "TITLE",
+                   (SELECT COUNT(*) FROM PHOTOS ph WHERE ph.POST_ID = pp.POST_ID) AS "PHOTO_COUNT",
+                   (SELECT MIN(ph.PHOTO_ID) KEEP (DENSE_RANK FIRST ORDER BY NVL(ph.SORT_ORDER, 0), ph.PHOTO_ID)
+                      FROM PHOTOS ph WHERE ph.POST_ID = pp.POST_ID) AS "COVER_PHOTO_ID",
+                   (SELECT MIN(ph.FILE_PATH) KEEP (DENSE_RANK FIRST ORDER BY NVL(ph.SORT_ORDER, 0), ph.PHOTO_ID)
+                      FROM PHOTOS ph WHERE ph.POST_ID = pp.POST_ID) AS "COVER_PATH",
+                   TO_CHAR(pp.CREATED_AT, 'YYYY-MM-DD HH24:MI') AS "ACTIVITY_AT"
+              FROM PHOTO_POSTS pp
+             WHERE pp.SCOPE_TYPE IN ('WORKSPACE','GROUP')
+               AND pp.SCOPE_ID = #{wsId, jdbcType=NUMERIC}
+               AND pp.CREATED_BY = #{userId, jdbcType=NUMERIC}
+               AND NVL(pp.DELETED_YN, 'N') = 'N'
+             ORDER BY pp.CREATED_AT DESC, pp.POST_ID DESC
+        ) WHERE ROWNUM &lt;= 6
+    </select>
+
+    <select id="selectWorkspaceMemberRecentFiles" resultType="map">
+        SELECT * FROM (
+            SELECT f.CONTENT_FILE_ID AS "CONTENT_FILE_ID",
+                   NVL(NULLIF(TRIM(f.ORIGINAL_NAME), ''), '파일') AS "TITLE",
+                   f.FILE_EXT AS "FILE_EXT",
+                   f.MIME_TYPE AS "MIME_TYPE",
+                   f.FILE_SIZE AS "FILE_SIZE",
+                   TO_CHAR(f.CREATED_AT, 'YYYY-MM-DD HH24:MI') AS "ACTIVITY_AT"
+              FROM CONTENT_FILES f
+             WHERE f.SCOPE_TYPE = 'GROUP'
+               AND f.WS_ID = #{wsId, jdbcType=NUMERIC}
+               AND f.CREATED_BY = #{userId, jdbcType=NUMERIC}
+               AND f.DELETED_YN = 'N'
+             ORDER BY f.CREATED_AT DESC, f.CONTENT_FILE_ID DESC
+        ) WHERE ROWNUM &lt;= 6
+    </select>
+
+    <select id="selectWorkspaceMemberRecentActivities" resultType="map">
+        SELECT * FROM (
+            SELECT activity_type AS "ACTIVITY_TYPE",
+                   target_id AS "TARGET_ID",
+                   title AS "TITLE",
+                   detail AS "DETAIL",
+                   TO_CHAR(activity_at, 'YYYY-MM-DD HH24:MI') AS "ACTIVITY_AT"
+              FROM (
+                    SELECT 'NOTE' AS activity_type,
+                           n.NOTE_ID AS target_id,
+                           NVL(NULLIF(TRIM(n.NOTE_TITLE), ''), '제목 없는 노트') AS title,
+                           '노트 작성' AS detail,
+                           n.REG_DT AS activity_at
+                      FROM NOTES n
+                     WHERE n.SCOPE_TYPE = 'WS'
+                       AND n.WS_ID = #{wsId, jdbcType=NUMERIC}
+                       AND n.USER_ID = #{userId, jdbcType=NUMERIC}
+                       AND NVL(n.DELETED_YN, 'N') = 'N'
+
+                    UNION ALL
+
+                    SELECT 'PHOTO' AS activity_type,
+                           pp.POST_ID AS target_id,
+                           NVL(NULLIF(TRIM(pp.TITLE), ''), '사진') AS title,
+                           '사진 업로드' AS detail,
+                           pp.CREATED_AT AS activity_at
+                      FROM PHOTO_POSTS pp
+                     WHERE pp.SCOPE_TYPE IN ('WORKSPACE','GROUP')
+                       AND pp.SCOPE_ID = #{wsId, jdbcType=NUMERIC}
+                       AND pp.CREATED_BY = #{userId, jdbcType=NUMERIC}
+                       AND NVL(pp.DELETED_YN, 'N') = 'N'
+
+                    UNION ALL
+
+                    SELECT 'FILE' AS activity_type,
+                           f.CONTENT_FILE_ID AS target_id,
+                           NVL(NULLIF(TRIM(f.ORIGINAL_NAME), ''), '파일') AS title,
+                           '파일 업로드' AS detail,
+                           f.CREATED_AT AS activity_at
+                      FROM CONTENT_FILES f
+                     WHERE f.SCOPE_TYPE = 'GROUP'
+                       AND f.WS_ID = #{wsId, jdbcType=NUMERIC}
+                       AND f.CREATED_BY = #{userId, jdbcType=NUMERIC}
+                       AND f.DELETED_YN = 'N'
+
+                    UNION ALL
+
+                    SELECT CASE WHEN bp.BOARD_TYPE = 'NOTICE' THEN 'NOTICE' ELSE 'BOARD' END AS activity_type,
+                           bp.POST_ID AS target_id,
+                           NVL(NULLIF(TRIM(bp.TITLE), ''), '제목 없는 게시글') AS title,
+                           CASE WHEN bp.BOARD_TYPE = 'NOTICE' THEN '공지 작성' ELSE '게시글 작성' END AS detail,
+                           bp.REG_DT AS activity_at
+                      FROM BOARD_POSTS bp
+                     WHERE bp.WS_ID = #{wsId, jdbcType=NUMERIC}
+                       AND bp.PROJ_ID IS NULL
+                       AND bp.USER_ID = #{userId, jdbcType=NUMERIC}
+              )
+             WHERE activity_at IS NOT NULL
+             ORDER BY activity_at DESC, target_id DESC
+        ) WHERE ROWNUM &lt;= 30
+    </select>
 
 </mapper>

@@ -1,0 +1,1514 @@
+/* ========================================================================
+   MOYO Common Settings Shell
+   ------------------------------------------------------------------------
+   Responsibility:
+   - settings page width / outer rhythm
+   - page heading / actions / back link
+   - tabs / panel shell
+   - settings section rhythm / form grid geometry
+   - member-tab outer heading
+   - danger-zone outer shell
+   - responsive reflow
+
+   NOT responsible for:
+   - workspace/project specific fields or feature styling
+   - member permission logic / role-specific controls
+   - link editor internals, image editor internals, join-type cards
+   ======================================================================== */
+
+.moyo-settings-page {
+    width: min(1080px, calc(100% - 48px)) !important;
+    max-width: 1080px !important;
+    margin: 32px auto 56px !important;
+    min-width: 0;
+}
+
+.moyo-settings-page .settings-page-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 24px;
+    padding: 0 0 22px;
+}
+
+.moyo-settings-page .settings-page-heading {
+    min-width: 0;
+    flex: 1 1 auto;
+}
+
+.moyo-settings-page .settings-page-back-link {
+    width: fit-content;
+    min-height: 28px;
+    margin: 0 0 8px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    color: var(--moyo-text-soft, #667085);
+    font-size: 12px;
+    font-weight: 750;
+    line-height: 1;
+    text-decoration: none;
+    transition: color .18s ease, transform .18s ease;
+}
+
+.moyo-settings-page .settings-page-back-link:hover {
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+    color: var(--moyo-primary, #4A90E2);
+    transform: translateX(-1px);
+}
+
+.moyo-settings-page .settings-page-back-link:focus-visible {
+    outline: 3px solid rgba(74, 144, 226, .14);
+    outline-offset: 3px;
+    border-radius: 6px;
+}
+
+.moyo-settings-page .settings-page-heading h1 {
+    margin: 0 0 7px;
+    color: var(--moyo-text, #1F2937);
+    font-size: 28px;
+    font-weight: var(--moyo-font-weight-heavy, 900);
+    line-height: 1.2;
+    letter-spacing: -.04em;
+}
+
+.moyo-settings-page .settings-page-heading p {
+    margin: 0;
+    color: var(--moyo-text-soft, #667085);
+    font-size: var(--moyo-font-size-sm, 13px);
+    line-height: 1.55;
+}
+
+.moyo-settings-page .settings-page-actions {
+    flex: 0 0 auto;
+    align-self: flex-end;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-bottom: 1px;
+}
+
+.moyo-settings-page .settings-tabs {
+    min-height: 48px;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    align-items: stretch;
+    gap: 24px;
+    border-bottom: var(--moyo-border, 1px solid #E5EBF1);
+    background: transparent;
+}
+
+.moyo-settings-page .settings-tab-button {
+    position: relative;
+    min-width: 0;
+    min-height: 48px;
+    height: 48px;
+    padding: 0 2px;
+    border: 0;
+    background: transparent;
+    color: var(--moyo-text-soft, #667085);
+    font-size: var(--moyo-font-size-sm, 13px);
+    font-weight: var(--moyo-font-weight-bold, 800);
+    line-height: 48px;
+}
+
+.moyo-settings-page .settings-tab-button::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -1px;
+    height: 2px;
+    border-radius: 999px;
+    background: transparent;
+}
+
+.moyo-settings-page .settings-tab-button:hover,
+.moyo-settings-page .settings-tab-button.is-active {
+    color: var(--moyo-text, #1F2937);
+}
+
+.moyo-settings-page .settings-tab-button.is-active::after {
+    background: linear-gradient(90deg, #55D6C2 0%, #4A90E2 54%, #7567F4 100%);
+}
+
+.moyo-settings-page .settings-layout,
+.moyo-settings-page .settings-card,
+.moyo-settings-page .settings-main-panel {
+    min-width: 0;
+    background: transparent;
+}
+
+.moyo-settings-page .settings-card {
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+}
+
+.moyo-settings-page .settings-section {
+    padding: 28px 4px 30px;
+    border-bottom: var(--moyo-border, 1px solid #E5EBF1);
+}
+
+.moyo-settings-page .settings-section-head {
+    margin-bottom: 18px;
+}
+
+.moyo-settings-page .settings-section-head-with-action {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.moyo-settings-page .settings-section-head h2 {
+    margin: 0 0 5px;
+    color: var(--moyo-text, #1F2937);
+    font-size: 18px;
+    font-weight: var(--moyo-font-weight-bold, 800);
+    line-height: 1.35;
+    letter-spacing: -.025em;
+}
+
+.moyo-settings-page .settings-section-head p {
+    margin: 0;
+    color: var(--moyo-text-muted, #98A2B3);
+    font-size: var(--moyo-font-size-xs, 12px);
+    line-height: 1.6;
+}
+
+.moyo-settings-page .settings-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+}
+
+.moyo-settings-page .settings-form-grid > .full,
+.moyo-settings-page .settings-form-grid > .form-group.full {
+    grid-column: 1 / -1;
+}
+
+.moyo-settings-page .member-tab-head {
+    margin: 0 0 16px;
+    padding: 28px 4px 0;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 14px;
+}
+
+.moyo-settings-page .member-tab-head h2 {
+    margin: 0 0 5px;
+    color: var(--moyo-text, #1F2937);
+    font-size: 20px;
+    font-weight: var(--moyo-font-weight-heavy, 900);
+    line-height: 1.3;
+    letter-spacing: -.035em;
+}
+
+.moyo-settings-page .member-tab-head p {
+    margin: 0;
+    color: var(--moyo-text-soft, #667085);
+    font-size: 12px;
+    line-height: 1.55;
+}
+
+.moyo-settings-page .settings-side-card.danger-zone {
+    margin-top: 0;
+    padding: 24px 4px 6px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    border: 0;
+    border-top: 1px solid rgba(239, 91, 103, .28);
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+}
+
+.moyo-settings-page .danger-zone-copy {
+    min-width: 0;
+    flex: 1 1 auto;
+}
+
+.moyo-settings-page .danger-zone h3 {
+    margin: 0 0 5px;
+    color: var(--moyo-danger, #EF5B67);
+    font-size: 13.5px;
+    line-height: 1.35;
+}
+
+.moyo-settings-page .danger-zone p {
+    margin: 0;
+    color: var(--moyo-text-soft, #667085);
+    font-size: 11.5px;
+    line-height: 1.55;
+}
+
+@media (max-width: 760px) {
+    .moyo-settings-page {
+        width: calc(100% - 28px) !important;
+        margin: 20px auto 36px !important;
+    }
+
+    .moyo-settings-page .settings-page-header {
+        flex-direction: column;
+        gap: 14px;
+        padding-bottom: 18px;
+    }
+
+    .moyo-settings-page .settings-page-heading h1 {
+        font-size: 25px;
+    }
+
+    .moyo-settings-page .settings-page-actions {
+        width: 100%;
+        align-self: stretch;
+    }
+
+    .moyo-settings-page .settings-page-actions .settings-btn {
+        width: 100%;
+    }
+
+    .moyo-settings-page .settings-tabs {
+        gap: 20px;
+        overflow-x: auto;
+        scrollbar-width: none;
+    }
+
+    .moyo-settings-page .settings-tabs::-webkit-scrollbar {
+        display: none;
+    }
+
+    .moyo-settings-page .settings-form-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .moyo-settings-page .settings-section {
+        padding: 24px 0 26px;
+    }
+
+    .moyo-settings-page .settings-section-head-with-action,
+    .moyo-settings-page .member-tab-head,
+    .moyo-settings-page .settings-side-card.danger-zone {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .moyo-settings-page .member-tab-head {
+        padding: 24px 0 0;
+    }
+}
+
+/* ========================================================================
+   Settings shell authority v2 — workspace/project parity regression fix
+   ------------------------------------------------------------------------
+   Legacy scope CSS still contains older !important shell rules.
+   This block deliberately has higher specificity so the common shell owns
+   width, heading rhythm, back navigation and tabs until legacy cleanup.
+   ======================================================================== */
+body .workspace-settings-page.moyo-settings-page,
+body .project-settings-page.moyo-settings-page {
+    width: min(1080px, calc(100% - 48px)) !important;
+    max-width: 1080px !important;
+    margin: 32px auto 56px !important;
+    padding: 0 !important;
+    min-width: 0 !important;
+}
+
+body .workspace-settings-page.moyo-settings-page .settings-page-header,
+body .project-settings-page.moyo-settings-page .settings-page-header {
+    display: flex !important;
+    grid-template-columns: none !important;
+    align-items: flex-start !important;
+    justify-content: space-between !important;
+    gap: 24px !important;
+    padding: 0 0 22px !important;
+}
+
+body .workspace-settings-page.moyo-settings-page .settings-page-heading,
+body .project-settings-page.moyo-settings-page .settings-page-heading {
+    min-width: 0 !important;
+    flex: 1 1 auto !important;
+}
+
+body .workspace-settings-page.moyo-settings-page .settings-page-back-link,
+body .project-settings-page.moyo-settings-page .settings-page-back-link {
+    display: inline-flex !important;
+    width: fit-content !important;
+    min-height: 28px !important;
+    margin: 0 0 8px !important;
+    padding: 0 !important;
+}
+
+body .workspace-settings-page.moyo-settings-page .settings-page-heading h1,
+body .project-settings-page.moyo-settings-page .settings-page-heading h1 {
+    margin: 0 0 7px !important;
+    font-size: 28px !important;
+    line-height: 1.2 !important;
+    font-weight: var(--moyo-font-weight-heavy, 900) !important;
+    letter-spacing: -.04em !important;
+}
+
+body .workspace-settings-page.moyo-settings-page .settings-page-heading > p,
+body .project-settings-page.moyo-settings-page .settings-page-heading > p {
+    margin: 0 !important;
+    font-size: var(--moyo-font-size-sm, 13px) !important;
+    line-height: 1.55 !important;
+}
+
+body .workspace-settings-page.moyo-settings-page .settings-page-actions,
+body .project-settings-page.moyo-settings-page .settings-page-actions {
+    flex: 0 0 auto !important;
+    align-self: flex-start !important;
+    margin-top: 36px !important;
+    padding: 0 0 1px !important;
+}
+
+body .workspace-settings-page.moyo-settings-page .settings-tabs,
+body .project-settings-page.moyo-settings-page .settings-tabs {
+    width: 100% !important;
+    max-width: none !important;
+    min-height: 48px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    display: flex !important;
+    align-items: stretch !important;
+    gap: 24px !important;
+    border-bottom: var(--moyo-border, 1px solid #E5EBF1) !important;
+}
+
+body .workspace-settings-page.moyo-settings-page .settings-tab-button,
+body .workspace-settings-page.moyo-settings-page .settings-tab-button.is-active,
+body .project-settings-page.moyo-settings-page .settings-tab-button,
+body .project-settings-page.moyo-settings-page .settings-tab-button.is-active {
+    min-width: 0 !important;
+    width: auto !important;
+    min-height: 48px !important;
+    height: 48px !important;
+    padding: 0 2px !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    font-size: var(--moyo-font-size-sm, 13px) !important;
+    font-weight: var(--moyo-font-weight-bold, 800) !important;
+    line-height: 48px !important;
+}
+
+body .workspace-settings-page.moyo-settings-page .settings-tab-button::after,
+body .project-settings-page.moyo-settings-page .settings-tab-button::after {
+    left: 0 !important;
+    right: 0 !important;
+    bottom: -1px !important;
+    width: auto !important;
+    height: 2px !important;
+    transform: none !important;
+}
+
+body .workspace-settings-page.moyo-settings-page .settings-tab-button.is-active::after,
+body .project-settings-page.moyo-settings-page .settings-tab-button.is-active::after {
+    background: linear-gradient(90deg, #55D6C2 0%, #4A90E2 54%, #7567F4 100%) !important;
+}
+
+/* Settings tab focus contract: mouse focus must not draw the legacy boxed outline. */
+body .workspace-settings-page.moyo-settings-page .settings-tab-button:focus,
+body .project-settings-page.moyo-settings-page .settings-tab-button:focus {
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+/* Keep an accessible indicator only for keyboard navigation. */
+body .workspace-settings-page.moyo-settings-page .settings-tab-button:focus-visible,
+body .project-settings-page.moyo-settings-page .settings-tab-button:focus-visible {
+    outline: 2px solid rgba(74, 144, 226, .34) !important;
+    outline-offset: -2px !important;
+    border-radius: 6px !important;
+}
+
+body .workspace-settings-page.moyo-settings-page .settings-layout,
+body .project-settings-page.moyo-settings-page .settings-layout {
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 0 !important;
+}
+
+@media (max-width: 760px) {
+    body .workspace-settings-page.moyo-settings-page,
+    body .project-settings-page.moyo-settings-page {
+        width: calc(100% - 28px) !important;
+        max-width: none !important;
+        margin: 20px auto 36px !important;
+    }
+
+    body .workspace-settings-page.moyo-settings-page .settings-page-header,
+    body .project-settings-page.moyo-settings-page .settings-page-header {
+        flex-direction: column !important;
+        gap: 14px !important;
+        padding-bottom: 18px !important;
+    }
+
+    body .workspace-settings-page.moyo-settings-page .settings-page-actions,
+    body .project-settings-page.moyo-settings-page .settings-page-actions {
+        width: 100% !important;
+        margin-top: 0 !important;
+        align-self: stretch !important;
+    }
+
+    body .workspace-settings-page.moyo-settings-page .settings-tabs,
+    body .project-settings-page.moyo-settings-page .settings-tabs {
+        gap: 20px !important;
+        overflow-x: auto !important;
+    }
+}
+
+@media (max-width: 480px) {
+    body .workspace-settings-page.moyo-settings-page,
+    body .project-settings-page.moyo-settings-page {
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 20px 16px 28px !important;
+    }
+}
+
+/* ========================================================================
+   Common settings components v3 — workspace/project visual contract
+   ------------------------------------------------------------------------
+   Same-role controls must render identically in workspace/project settings.
+   Scope-specific features keep their own internals and behavior.
+   ======================================================================== */
+body .workspace-settings-page.moyo-settings-page,
+body .project-settings-page.moyo-settings-page {
+    --settings-control-height: 42px;
+    --settings-control-compact-height: 34px;
+    --settings-control-radius: 11px;
+    --settings-control-border: #D8E1EA;
+    --settings-control-border-hover: #BFD0E0;
+    --settings-control-bg: #FFFFFF;
+    --settings-control-text: #1F2937;
+    --settings-label: #26384D;
+    --settings-help: #8A99AD;
+}
+
+/* Field stack / label / help */
+body .workspace-settings-page.moyo-settings-page .form-group,
+body .project-settings-page.moyo-settings-page .form-group {
+    min-width: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+}
+
+body .workspace-settings-page.moyo-settings-page .form-group > label,
+body .workspace-settings-page.moyo-settings-page .field-label,
+body .project-settings-page.moyo-settings-page .form-group > label,
+body .project-settings-page.moyo-settings-page .field-label {
+    margin: 0 !important;
+    color: var(--settings-label) !important;
+    font-size: 12px !important;
+    font-weight: 800 !important;
+    line-height: 1.4 !important;
+}
+
+body .workspace-settings-page.moyo-settings-page .field-help,
+body .workspace-settings-page.moyo-settings-page .workspace-link-help,
+body .project-settings-page.moyo-settings-page .field-help,
+body .project-settings-page.moyo-settings-page .project-link-help {
+    margin: 7px 0 0 !important;
+    color: var(--settings-help) !important;
+    font-size: 11px !important;
+    line-height: 1.5 !important;
+}
+
+/* Text / select / date / textarea */
+body .workspace-settings-page.moyo-settings-page .form-control,
+body .project-settings-page.moyo-settings-page .form-control,
+body .workspace-settings-page.moyo-settings-page .member-search-box input,
+body .project-settings-page.moyo-settings-page .member-search-box input {
+    box-sizing: border-box !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: var(--settings-control-height) !important;
+    height: var(--settings-control-height) !important;
+    padding: 0 14px !important;
+    border: 1px solid var(--settings-control-border) !important;
+    border-radius: var(--settings-control-radius) !important;
+    outline: none !important;
+    background: var(--settings-control-bg) !important;
+    color: var(--settings-control-text) !important;
+    font-family: inherit !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    line-height: 1.4 !important;
+    box-shadow: none !important;
+    transition: border-color .18s ease, box-shadow .18s ease, background-color .18s ease !important;
+}
+
+body .workspace-settings-page.moyo-settings-page .form-control:hover:not(:disabled),
+body .project-settings-page.moyo-settings-page .form-control:hover:not(:disabled),
+body .workspace-settings-page.moyo-settings-page .member-search-box input:hover:not(:disabled),
+body .project-settings-page.moyo-settings-page .member-search-box input:hover:not(:disabled) {
+    border-color: var(--settings-control-border-hover) !important;
+    background: #fff !important;
+}
+
+body .workspace-settings-page.moyo-settings-page .form-control:focus,
+body .project-settings-page.moyo-settings-page .form-control:focus,
+body .workspace-settings-page.moyo-settings-page .member-search-box input:focus,
+body .project-settings-page.moyo-settings-page .member-search-box input:focus {
+    border-color: var(--moyo-primary, #4A90E2) !important;
+    background: #fff !important;
+    box-shadow: var(--moyo-focus, 0 0 0 4px rgba(74, 144, 226, .12)) !important;
+}
+
+body .workspace-settings-page.moyo-settings-page textarea.form-control,
+body .project-settings-page.moyo-settings-page textarea.form-control {
+    min-height: 96px !important;
+    height: 96px !important;
+    padding: 12px 14px !important;
+    line-height: 1.55 !important;
+    resize: vertical !important;
+}
+
+body .workspace-settings-page.moyo-settings-page .form-control:disabled,
+body .project-settings-page.moyo-settings-page .form-control:disabled {
+    cursor: not-allowed !important;
+    border-color: #E2E8F0 !important;
+    background: #F5F7FA !important;
+    color: #98A2B3 !important;
+    opacity: 1 !important;
+}
+
+body .workspace-settings-page.moyo-settings-page .form-control::placeholder,
+body .project-settings-page.moyo-settings-page .form-control::placeholder {
+    color: #A7B1BF !important;
+    opacity: 1 !important;
+}
+
+/* Standard settings buttons */
+body .workspace-settings-page.moyo-settings-page .settings-btn,
+body .project-settings-page.moyo-settings-page .settings-btn {
+    min-height: 40px !important;
+    height: 40px !important;
+    padding: 0 16px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px !important;
+    border: 1px solid #D8E1EA !important;
+    border-radius: 10px !important;
+    background: #fff !important;
+    color: #52667D !important;
+    font-family: inherit !important;
+    font-size: 12px !important;
+    font-weight: 800 !important;
+    line-height: 1 !important;
+    text-decoration: none !important;
+    white-space: nowrap !important;
+    box-shadow: none !important;
+}
+
+body .workspace-settings-page.moyo-settings-page .settings-btn-primary,
+body .project-settings-page.moyo-settings-page .settings-btn-primary {
+    min-width: 126px !important;
+    border-color: rgba(74, 144, 226, .18) !important;
+    background: linear-gradient(135deg, #55D6C2 0%, #4A90E2 54%, #7567F4 100%) !important;
+    color: #fff !important;
+    box-shadow: 0 8px 18px rgba(74, 144, 226, .18) !important;
+}
+
+body .workspace-settings-page.moyo-settings-page .settings-btn-primary:hover:not(:disabled),
+body .project-settings-page.moyo-settings-page .settings-btn-primary:hover:not(:disabled) {
+    border-color: rgba(63, 130, 212, .24) !important;
+    background: linear-gradient(135deg, #45C7B3 0%, #3F82D4 54%, #6758E6 100%) !important;
+    box-shadow: 0 10px 22px rgba(74, 144, 226, .24) !important;
+}
+
+body .workspace-settings-page.moyo-settings-page .settings-btn:disabled,
+body .project-settings-page.moyo-settings-page .settings-btn:disabled,
+body .workspace-settings-page.moyo-settings-page .workspace-link-add:disabled,
+body .project-settings-page.moyo-settings-page .project-link-add:disabled {
+    cursor: default !important;
+    opacity: .5 !important;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+/* External link editor — same geometry, scope-specific JS/classes remain */
+body .workspace-settings-page.moyo-settings-page .workspace-link-head-actions,
+body .project-settings-page.moyo-settings-page .project-link-head-actions {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    flex: 0 0 auto !important;
+}
+
+body .workspace-settings-page.moyo-settings-page .workspace-link-count,
+body .project-settings-page.moyo-settings-page .project-link-count,
+body .project-settings-page.moyo-settings-page .project-link-count-label {
+    color: #66788D !important;
+    font-size: 11px !important;
+    font-weight: 800 !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+}
+
+body .workspace-settings-page.moyo-settings-page .workspace-link-add,
+body .project-settings-page.moyo-settings-page .project-link-add {
+    min-height: var(--settings-control-compact-height) !important;
+    height: var(--settings-control-compact-height) !important;
+    margin: 0 !important;
+    padding: 0 12px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border: 1px solid #D5E0EA !important;
+    border-radius: 9px !important;
+    background: #fff !important;
+    color: #3E668F !important;
+    font-family: inherit !important;
+    font-size: 11px !important;
+    font-weight: 800 !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+}
+
+body .workspace-settings-page.moyo-settings-page .workspace-link-add:hover:not(:disabled),
+body .project-settings-page.moyo-settings-page .project-link-add:hover:not(:disabled) {
+    border-color: #AFC4D8 !important;
+    background: #F9FBFD !important;
+    color: #244F7A !important;
+}
+
+body .workspace-settings-page.moyo-settings-page .workspace-link-list,
+body .project-settings-page.moyo-settings-page .project-settings-link-list {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+}
+
+body .workspace-settings-page.moyo-settings-page .workspace-link-row,
+body .project-settings-page.moyo-settings-page .project-settings-link-row {
+    display: grid !important;
+    grid-template-columns: 118px minmax(0, 1fr) 34px !important;
+    align-items: center !important;
+    gap: 8px !important;
+}
+
+body .workspace-settings-page.moyo-settings-page .workspace-link-row .form-control,
+body .project-settings-page.moyo-settings-page .project-settings-link-row .form-control {
+    min-height: 40px !important;
+    height: 40px !important;
+    font-size: 12px !important;
+}
+
+body .workspace-settings-page.moyo-settings-page .workspace-link-remove,
+body .project-settings-page.moyo-settings-page .project-setting-link-remove {
+    width: 34px !important;
+    min-width: 34px !important;
+    height: 34px !important;
+    padding: 0 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border: 1px solid #E1E8EF !important;
+    border-radius: 9px !important;
+    background: #fff !important;
+    color: #98A2B3 !important;
+    font-size: 18px !important;
+    line-height: 1 !important;
+}
+
+body .workspace-settings-page.moyo-settings-page .workspace-link-remove:hover,
+body .project-settings-page.moyo-settings-page .project-setting-link-remove:hover {
+    border-color: #F0B8BF !important;
+    background: #FFF8F8 !important;
+    color: var(--moyo-danger, #EF5B67) !important;
+}
+
+/* Member tab controls use the same settings control scale */
+body .workspace-settings-page.moyo-settings-page .member-tab-invite,
+body .project-settings-page.moyo-settings-page .member-tab-invite {
+    min-height: 40px !important;
+    height: 40px !important;
+    padding: 0 14px !important;
+    border: 1px solid var(--moyo-primary, #4A90E2) !important;
+    border-radius: 10px !important;
+    background: var(--moyo-primary, #4A90E2) !important;
+    color: #fff !important;
+    font-family: inherit !important;
+    font-size: 11.5px !important;
+    font-weight: 800 !important;
+    line-height: 1 !important;
+    box-shadow: var(--moyo-shadow-primary, 0 6px 14px rgba(74,144,226,.18)) !important;
+}
+
+body .workspace-settings-page.moyo-settings-page .member-search-box,
+body .project-settings-page.moyo-settings-page .member-search-box {
+    position: relative !important;
+    width: min(440px, 100%) !important;
+    max-width: 440px !important;
+}
+
+body .workspace-settings-page.moyo-settings-page .member-search-box input,
+body .project-settings-page.moyo-settings-page .member-search-box input {
+    padding-left: 40px !important;
+}
+
+/* Danger actions — same scale and treatment */
+body .workspace-settings-page.moyo-settings-page .btn-delete,
+body .project-settings-page.moyo-settings-page .btn-delete,
+body .workspace-settings-page.moyo-settings-page .btn-delete-cancel,
+body .project-settings-page.moyo-settings-page .btn-delete-cancel {
+    min-width: 120px !important;
+    min-height: 40px !important;
+    height: 40px !important;
+    padding: 0 15px !important;
+    border-radius: 10px !important;
+    font-family: inherit !important;
+    font-size: 11.5px !important;
+    font-weight: 800 !important;
+    line-height: 1 !important;
+}
+
+body .workspace-settings-page.moyo-settings-page .btn-delete,
+body .project-settings-page.moyo-settings-page .btn-delete {
+    border: 1px solid rgba(239, 91, 103, .34) !important;
+    background: #fff !important;
+    color: var(--moyo-danger, #EF5B67) !important;
+}
+
+body .workspace-settings-page.moyo-settings-page .btn-delete:hover,
+body .project-settings-page.moyo-settings-page .btn-delete:hover {
+    border-color: var(--moyo-danger, #EF5B67) !important;
+    background: #FFF7F8 !important;
+    color: var(--moyo-danger-hover, #DC4554) !important;
+}
+
+body .workspace-settings-page.moyo-settings-page .btn-delete-cancel,
+body .project-settings-page.moyo-settings-page .btn-delete-cancel {
+    border: 1px solid #CBD8E7 !important;
+    background: #fff !important;
+    color: #526A84 !important;
+}
+
+/* Informational/readonly notices share card language without merging semantics. */
+body .project-settings-page.moyo-settings-page .project-settings-readonly-notice {
+    margin: 2px 0 18px !important;
+    padding: 14px 16px !important;
+    border: 1px solid #DCE5EE !important;
+    border-radius: 12px !important;
+    background: rgba(255,255,255,.76) !important;
+    box-shadow: none !important;
+}
+
+body .project-settings-page.moyo-settings-page .project-settings-readonly-notice strong {
+    margin-bottom: 4px !important;
+    color: #314B67 !important;
+    font-size: 12px !important;
+    font-weight: 800 !important;
+}
+
+body .project-settings-page.moyo-settings-page .project-settings-readonly-notice p {
+    margin: 0 !important;
+    color: var(--settings-help) !important;
+    font-size: 11px !important;
+    line-height: 1.5 !important;
+}
+
+@media (max-width: 760px) {
+    body .workspace-settings-page.moyo-settings-page .workspace-link-row,
+    body .project-settings-page.moyo-settings-page .project-settings-link-row {
+        grid-template-columns: 110px minmax(0, 1fr) 34px !important;
+    }
+
+    body .workspace-settings-page.moyo-settings-page .member-search-box,
+    body .project-settings-page.moyo-settings-page .member-search-box {
+        width: 100% !important;
+        max-width: none !important;
+    }
+}
+
+@media (max-width: 520px) {
+    body .workspace-settings-page.moyo-settings-page .workspace-link-row,
+    body .project-settings-page.moyo-settings-page .project-settings-link-row {
+        grid-template-columns: minmax(0, 1fr) 34px !important;
+    }
+
+    body .workspace-settings-page.moyo-settings-page .workspace-link-row .form-control:first-child,
+    body .project-settings-page.moyo-settings-page .project-settings-link-row .form-control:first-child,
+    body .workspace-settings-page.moyo-settings-page .workspace-link-row .form-control:nth-child(2),
+    body .project-settings-page.moyo-settings-page .project-settings-link-row .form-control:nth-child(2) {
+        grid-column: 1 !important;
+    }
+
+    body .workspace-settings-page.moyo-settings-page .workspace-link-remove,
+    body .project-settings-page.moyo-settings-page .project-setting-link-remove {
+        grid-column: 2 !important;
+        grid-row: 1 / span 2 !important;
+        height: 100% !important;
+    }
+
+    body .workspace-settings-page.moyo-settings-page .settings-btn,
+    body .project-settings-page.moyo-settings-page .settings-btn,
+    body .workspace-settings-page.moyo-settings-page .member-tab-invite,
+    body .project-settings-page.moyo-settings-page .member-tab-invite {
+        width: 100% !important;
+    }
+}
+
+
+/* ========================================================================
+   Member management shared contract v1 — workspace / project
+   Same-role UI owns one visual geometry; permission logic remains scoped.
+   ======================================================================== */
+body .moyo-settings-page .moyo-member-manage {
+    --member-line: rgba(111, 139, 177, .16);
+    --member-text: #354B63;
+    --member-muted: #7B8DA8;
+    --member-soft: #F6F9FC;
+    padding-top: 28px !important;
+}
+
+body .moyo-settings-page .moyo-member-toolbar {
+    margin: 0 0 16px !important;
+    display: grid !important;
+    grid-template-columns: minmax(280px, 1fr) auto !important;
+    align-items: center !important;
+    gap: 18px !important;
+}
+
+body .moyo-settings-page .moyo-member-search {
+    position: relative !important;
+    width: min(440px, 100%) !important;
+    max-width: 440px !important;
+    min-width: 0 !important;
+}
+
+body .moyo-settings-page .moyo-member-search::before {
+    content: none !important;
+    display: none !important;
+}
+
+body .moyo-settings-page .moyo-member-search input {
+    width: 100% !important;
+    height: 40px !important;
+    padding: 0 14px 0 42px !important;
+    border: 1px solid #CFDCEB !important;
+    border-radius: 11px !important;
+    outline: 0 !important;
+    background-color: rgba(255,255,255,.82) !important;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='17' height='17' viewBox='0 0 24 24' fill='none' stroke='%237890aa' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m20 20-3.5-3.5'/%3E%3C/svg%3E") !important;
+    background-repeat: no-repeat !important;
+    background-position: left 14px center !important;
+    background-size: 17px 17px !important;
+    color: #30465F !important;
+    font-family: inherit !important;
+    font-size: 12px !important;
+    font-weight: 500 !important;
+    line-height: 1 !important;
+    box-shadow: none !important;
+}
+
+body .moyo-settings-page .moyo-member-toolbar-actions,
+body .moyo-settings-page .moyo-member-view-actions,
+body .moyo-settings-page .moyo-member-edit-actions,
+body .moyo-settings-page .moyo-member-remove-actions {
+    min-height: 40px !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    gap: 8px !important;
+}
+
+body .moyo-settings-page .moyo-member-total,
+body .moyo-settings-page .moyo-member-selected,
+body .moyo-settings-page .moyo-member-action,
+body .moyo-settings-page .moyo-member-invite {
+    box-sizing: border-box !important;
+    height: 36px !important;
+    min-height: 36px !important;
+    margin: 0 !important;
+    padding: 0 12px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-radius: 10px !important;
+    font-family: inherit !important;
+    font-size: 11px !important;
+    font-weight: 800 !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+}
+
+body .moyo-settings-page .moyo-member-total,
+body .moyo-settings-page .moyo-member-selected {
+    border: 1px solid #D8E2ED !important;
+    background: rgba(255,255,255,.76) !important;
+    color: #6F8095 !important;
+}
+
+body .moyo-settings-page .moyo-member-total strong {
+    margin: 0 2px 0 4px !important;
+    color: #405978 !important;
+    font-weight: 900 !important;
+}
+
+body .moyo-settings-page .moyo-member-action {
+    min-width: 58px !important;
+    border: 1px solid #D8E2ED !important;
+    background: rgba(255,255,255,.82) !important;
+    color: #49627E !important;
+    box-shadow: none !important;
+    transform: none !important;
+}
+
+body .moyo-settings-page .moyo-member-action:hover:not(:disabled) {
+    border-color: #AEBFD1 !important;
+    background: #fff !important;
+    color: #304F70 !important;
+}
+
+body .moyo-settings-page .moyo-member-action.is-primary,
+body .moyo-settings-page .moyo-member-invite {
+    border: 0 !important;
+    background: linear-gradient(100deg,#54C9C8 0%,#4388EF 52%,#5B55EC 100%) !important;
+    color: #fff !important;
+    box-shadow: 0 7px 16px rgba(71,105,220,.15) !important;
+}
+
+body .moyo-settings-page .moyo-member-action.is-danger-ghost {
+    border-color: #EBC6CC !important;
+    background: rgba(255,255,255,.82) !important;
+    color: #C4515E !important;
+}
+
+body .moyo-settings-page .moyo-member-action.is-danger {
+    border-color: #DF8F9A !important;
+    background: #FFF1F3 !important;
+    color: #B83C49 !important;
+}
+
+body .moyo-settings-page .moyo-member-action:disabled,
+body .moyo-settings-page .moyo-member-invite:disabled {
+    cursor: default !important;
+    opacity: .5 !important;
+}
+
+body .moyo-settings-page .moyo-member-table-wrap {
+    width: 100% !important;
+    overflow: hidden !important;
+    border-top: 1px solid var(--member-line) !important;
+    border-bottom: 1px solid var(--member-line) !important;
+}
+
+body .moyo-settings-page .moyo-member-table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    table-layout: fixed !important;
+    background: rgba(255,255,255,.42) !important;
+}
+
+body .moyo-settings-page .moyo-member-table th,
+body .moyo-settings-page .moyo-member-table td {
+    position: static !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 0 16px !important;
+    vertical-align: middle !important;
+    text-align: left !important;
+    border: 0 !important;
+    border-bottom: 1px solid var(--member-line) !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    background: transparent !important;
+}
+
+body .moyo-settings-page .moyo-member-table thead th {
+    height: 46px !important;
+    color: #61748A !important;
+    font-size: 10.5px !important;
+    font-weight: 850 !important;
+    white-space: nowrap !important;
+    background: rgba(246,249,252,.72) !important;
+}
+
+body .moyo-settings-page .moyo-member-table tbody td {
+    height: 64px !important;
+    color: var(--member-text) !important;
+    font-size: 11px !important;
+}
+
+body .moyo-settings-page .moyo-member-table tbody tr:last-child td {
+    border-bottom: 0 !important;
+}
+
+body .moyo-settings-page .moyo-member-table tbody tr:hover td {
+    background: rgba(255,255,255,.34) !important;
+}
+
+body .moyo-settings-page .moyo-member-row[hidden] {
+    display: none !important;
+}
+
+body .moyo-settings-page .moyo-member-row.is-selected td {
+    background: rgba(235,246,255,.72) !important;
+}
+
+body .moyo-settings-page .moyo-member-person {
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 38px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 11px !important;
+}
+
+body .moyo-settings-page .moyo-member-person-cell {
+    overflow: hidden !important;
+}
+
+body .moyo-settings-page .moyo-member-avatar {
+    position: relative !important;
+    width: 38px !important;
+    height: 38px !important;
+    min-width: 38px !important;
+    min-height: 38px !important;
+    flex: 0 0 38px !important;
+    padding: 0 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    overflow: hidden !important;
+    border: 1px solid rgba(111,139,177,.18) !important;
+    border-radius: 50% !important;
+    background: transparent !important;
+    background-image: none !important;
+    color: #fff !important;
+    box-shadow: none !important;
+}
+
+body .moyo-settings-page .moyo-member-avatar-fallback {
+    width: 100% !important;
+    height: 100% !important;
+    display: grid !important;
+    place-items: center !important;
+    color: #fff !important;
+    font-size: 13px !important;
+    font-weight: 850 !important;
+    line-height: 1 !important;
+}
+
+body .moyo-settings-page .moyo-member-avatar img {
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    display: block !important;
+    border: 0 !important;
+    border-radius: inherit !important;
+    object-fit: cover !important;
+    object-position: center !important;
+    background: transparent !important;
+}
+
+body .moyo-settings-page .moyo-member-copy {
+    min-width: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    justify-content: center !important;
+    gap: 2px !important;
+}
+
+body .moyo-settings-page .moyo-member-name {
+    display: block !important;
+    max-width: 100% !important;
+    overflow: hidden !important;
+    color: #17233B !important;
+    font-size: 13px !important;
+    font-weight: 850 !important;
+    line-height: 1.25 !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+}
+
+body .moyo-settings-page .moyo-member-email {
+    display: block !important;
+    max-width: 100% !important;
+    overflow: hidden !important;
+    color: var(--member-muted) !important;
+    font-size: 11px !important;
+    line-height: 1.25 !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+}
+
+body .moyo-settings-page .moyo-member-role,
+body .moyo-settings-page .moyo-member-position,
+body .moyo-settings-page .moyo-member-date-cell {
+    max-width: 100% !important;
+    white-space: nowrap !important;
+}
+
+body .moyo-settings-page .moyo-member-role {
+    min-height: 26px !important;
+    padding: 0 10px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    border-radius: 999px !important;
+    background: #EEF4FB !important;
+    color: #31547F !important;
+    font-size: 11px !important;
+    font-weight: 800 !important;
+}
+
+body .moyo-settings-page .moyo-member-role.is-admin {
+    background: #EFF9F6 !important;
+    color: #257D6D !important;
+}
+
+body .moyo-settings-page .moyo-member-role.is-owner,
+body .moyo-settings-page .moyo-member-role.is-leader {
+    background: #EDF5FF !important;
+    color: #24598C !important;
+}
+
+body .moyo-settings-page .moyo-member-position {
+    color: #50657D !important;
+    font-size: 11px !important;
+}
+
+body .moyo-settings-page .moyo-member-position.is-empty {
+    color: #98A6B6 !important;
+}
+
+body .moyo-settings-page .moyo-member-date-cell {
+    color: #50657D !important;
+    font-size: 11px !important;
+}
+
+body .moyo-settings-page .moyo-member-role-edit,
+body .moyo-settings-page .moyo-member-position-edit {
+    width: 100% !important;
+    height: 36px !important;
+    padding: 0 11px !important;
+    border: 1px solid #CFDBE7 !important;
+    border-radius: 9px !important;
+    outline: 0 !important;
+    background: #fff !important;
+    color: #334B64 !important;
+    font-family: inherit !important;
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    line-height: 1 !important;
+}
+
+body .moyo-settings-page .moyo-member-empty {
+    display: none;
+    padding: 30px 0 !important;
+    color: #8B99AA !important;
+    font-size: 11px !important;
+    text-align: center !important;
+}
+
+body .moyo-settings-page .moyo-member-empty.is-visible {
+    display: block !important;
+}
+
+body .moyo-settings-page .moyo-member-note {
+    margin: 14px 0 0 !important;
+    color: #8795A7 !important;
+    font-size: 10.5px !important;
+    line-height: 1.5 !important;
+}
+
+/* column contract: same visual ratio; project may omit date for personal projects */
+body .workspace-settings-page .moyo-member-table col.workspace-member-col-check,
+body .project-settings-page .moyo-member-table col.project-member-col-check { width: 0 !important; }
+body .workspace-settings-page .moyo-member-table col.workspace-member-col-person,
+body .project-settings-page .moyo-member-table col.project-member-col-person { width: 43% !important; }
+body .workspace-settings-page .moyo-member-table col.workspace-member-col-role,
+body .project-settings-page .moyo-member-table col.project-member-col-role { width: 18% !important; }
+body .workspace-settings-page .moyo-member-table col.workspace-member-col-position,
+body .project-settings-page .moyo-member-table col.project-member-col-position { width: 24% !important; }
+body .workspace-settings-page .moyo-member-table col.workspace-member-col-date,
+body .project-settings-page .moyo-member-table col.project-member-col-date { width: 15% !important; }
+
+body .project-settings-page .moyo-member-table--no-date col.project-member-col-person { width: 50% !important; }
+body .project-settings-page .moyo-member-table--no-date col.project-member-col-role { width: 20% !important; }
+body .project-settings-page .moyo-member-table--no-date col.project-member-col-position { width: 30% !important; }
+
+/* remove mode: check column appears consistently */
+body .workspace-settings-page #settingsTabMembers.is-member-removing .moyo-member-table col.workspace-member-col-check,
+body .project-settings-page #projectSettingsMembers.is-member-removing .moyo-member-table col.project-member-col-check {
+    width: 46px !important;
+}
+body .workspace-settings-page #settingsTabMembers.is-member-removing .moyo-member-check-cell,
+body .project-settings-page #projectSettingsMembers.is-member-removing .moyo-member-check-cell {
+    width: 46px !important;
+    padding: 0 12px !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    display: table-cell !important;
+}
+
+body .workspace-settings-page #settingsTabMembers:not(.is-member-removing) .moyo-member-check-cell,
+body .project-settings-page #projectSettingsMembers:not(.is-member-removing) .moyo-member-check-cell {
+    width: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    overflow: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+
+@media (max-width: 760px) {
+    body .moyo-settings-page .moyo-member-toolbar {
+        grid-template-columns: 1fr !important;
+    }
+    body .moyo-settings-page .moyo-member-search {
+        width: 100% !important;
+        max-width: none !important;
+    }
+    body .moyo-settings-page .moyo-member-toolbar-actions,
+    body .moyo-settings-page .moyo-member-view-actions,
+    body .moyo-settings-page .moyo-member-edit-actions,
+    body .moyo-settings-page .moyo-member-remove-actions {
+        justify-content: flex-start !important;
+        flex-wrap: wrap !important;
+    }
+    body .moyo-settings-page .moyo-member-table-wrap {
+        overflow-x: auto !important;
+    }
+    body .moyo-settings-page .moyo-member-table {
+        min-width: 720px !important;
+    }
+}
+
+/* =========================================================
+   Member search icon regression guard
+   - Keep the common search icon visible even when the shared
+     form-control background shorthand wins by specificity.
+   ========================================================= */
+body .workspace-settings-page.moyo-settings-page .member-search-box.moyo-member-search input,
+body .project-settings-page.moyo-settings-page .member-search-box.moyo-member-search input {
+    padding-left: 42px !important;
+    background-color: rgba(255,255,255,.82) !important;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='17' height='17' viewBox='0 0 24 24' fill='none' stroke='%237890aa' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m20 20-3.5-3.5'/%3E%3C/svg%3E") !important;
+    background-repeat: no-repeat !important;
+    background-position: left 14px center !important;
+    background-size: 17px 17px !important;
+}
+
+body .workspace-settings-page.moyo-settings-page .member-search-box.moyo-member-search input:hover:not(:disabled),
+body .project-settings-page.moyo-settings-page .member-search-box.moyo-member-search input:hover:not(:disabled),
+body .workspace-settings-page.moyo-settings-page .member-search-box.moyo-member-search input:focus,
+body .project-settings-page.moyo-settings-page .member-search-box.moyo-member-search input:focus {
+    background-color: #fff !important;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='17' height='17' viewBox='0 0 24 24' fill='none' stroke='%237890aa' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m20 20-3.5-3.5'/%3E%3C/svg%3E") !important;
+    background-repeat: no-repeat !important;
+    background-position: left 14px center !important;
+    background-size: 17px 17px !important;
+}
+
+
+/* MOYO MEMBER AVATAR POLICY - person avatars are circular and share the sidebar gradient */
+body .moyo-settings-page .moyo-member-avatar.is-default-profile,
+body .moyo-settings-page .moyo-member-avatar.is-default {
+    border-radius: 50% !important;
+    background: var(--moyo-avatar-gradient, linear-gradient(135deg, #55D5CE 0%, #4288EF 52%, #5A55EE 100%)) !important;
+    color: #fff !important;
+}
+body .moyo-settings-page .moyo-member-avatar.has-image {
+    border-radius: 50% !important;
+    background: transparent !important;
+    background-image: none !important;
+}
+body .moyo-settings-page .moyo-member-avatar.has-image .moyo-member-avatar-fallback { display:none !important; }
+body .moyo-settings-page .moyo-member-avatar.is-default-profile .moyo-member-avatar-fallback,
+body .moyo-settings-page .moyo-member-avatar.is-default .moyo-member-avatar-fallback { color:#fff !important; }
+
+/* Avatar policy regression guard: real image = transparent, fallback only = MOYO gradient. */
+body .moyo-settings-page .moyo-member-avatar {
+    border-radius: 50% !important;
+}
+body .moyo-settings-page .moyo-member-avatar.has-image {
+    background: transparent !important;
+    background-image: none !important;
+}
+body .moyo-settings-page .moyo-member-avatar.has-image > img {
+    border-radius: 50% !important;
+    background: transparent !important;
+}
+body .moyo-settings-page .moyo-member-avatar.is-default-profile,
+body .moyo-settings-page .moyo-member-avatar.is-default {
+    background: var(--moyo-avatar-gradient, linear-gradient(135deg, #55D5CE 0%, #4288EF 52%, #5A55EE 100%)) !important;
+    background-image: var(--moyo-avatar-gradient, linear-gradient(135deg, #55D5CE 0%, #4288EF 52%, #5A55EE 100%)) !important;
+}
+
+/* =====================================================================
+   Common settings states v10
+   ===================================================================== */
+body .moyo-settings-page :is(.project-settings-readonly-notice, .settings-state-notice) {
+    border-color: var(--moyo-state-info-border, #d9e8fb) !important;
+    background: var(--moyo-state-info-bg, #f5f9ff) !important;
+    color: var(--moyo-state-info-text, #52739a) !important;
+}
+
+body .moyo-settings-page :is(.moyo-member-empty, .workspace-member-empty, .project-member-empty) {
+    box-sizing: border-box !important;
+    min-height: 68px !important;
+    padding: 14px 16px !important;
+    border: 1px dashed var(--moyo-state-border, #dce5ef) !important;
+    border-radius: 12px !important;
+    background: var(--moyo-state-surface, #fbfcfe) !important;
+    color: var(--moyo-state-text, #7f8da1) !important;
+    text-align: center !important;
+}
+
+body .moyo-settings-page :is(.workspace-pending-invite-count, .project-pending-count, .pending-count) {
+    border-color: var(--moyo-state-warning-border, #f5dfb8) !important;
+    background: var(--moyo-state-warning-bg, #fff9ef) !important;
+    color: var(--moyo-state-warning-text, #9a6a20) !important;
+}
+
+body .moyo-settings-page :is(.danger-zone.is-delete-pending, .settings-delete-pending) {
+    border-color: var(--moyo-state-danger-border, #f1d0d5) !important;
+    background: var(--moyo-state-danger-bg, #fff7f8) !important;
+}
+
+/* =====================================================================
+   Responsive settings parity v4
+   ===================================================================== */
+@media (max-width: 1024px) {
+    body .workspace-settings-page.moyo-settings-page,
+    body .project-settings-page.moyo-settings-page {
+        width: min(100% - 40px, 1080px) !important;
+    }
+}
+
+@media (max-width: 760px) {
+    body .workspace-settings-page.moyo-settings-page,
+    body .project-settings-page.moyo-settings-page {
+        width: calc(100% - 28px) !important;
+    }
+
+    body .moyo-settings-page .settings-tabs {
+        display: flex !important;
+        flex-wrap: nowrap !important;
+        max-width: 100% !important;
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    body .moyo-settings-page .settings-tab-button {
+        flex: 0 0 auto !important;
+        white-space: nowrap !important;
+    }
+
+    body .moyo-settings-page .settings-section-head-with-action > *,
+    body .moyo-settings-page .member-tab-head > * {
+        min-width: 0 !important;
+        max-width: 100% !important;
+    }
+
+    body .moyo-settings-page .moyo-member-table-wrap {
+        width: 100% !important;
+        max-width: 100% !important;
+        overflow-x: auto !important;
+        overscroll-behavior-inline: contain;
+        -webkit-overflow-scrolling: touch;
+    }
+}
+
+@media (max-width: 520px) {
+    body .workspace-settings-page.moyo-settings-page,
+    body .project-settings-page.moyo-settings-page {
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 18px 14px 28px !important;
+    }
+
+    body .moyo-settings-page .settings-page-heading h1 {
+        font-size: 23px !important;
+    }
+
+    body .moyo-settings-page .settings-section {
+        padding-top: 20px !important;
+        padding-bottom: 22px !important;
+    }
+}
+
+/* =====================================================================
+   Member profile entry trigger regression guard
+   - Keep avatar/name clickable without native button chrome.
+   - Mouse interaction stays visually clean; keyboard focus remains visible.
+   ===================================================================== */
+body .moyo-settings-page .moyo-member-profile-trigger,
+body .moyo-settings-page .moyo-member-name-button {
+    -webkit-appearance: none !important;
+    appearance: none !important;
+    border: 0 !important;
+    background: transparent !important;
+    background-image: none !important;
+    box-shadow: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    color: inherit !important;
+    font: inherit !important;
+    line-height: inherit !important;
+    cursor: pointer !important;
+}
+
+body .moyo-settings-page .moyo-member-profile-trigger {
+    width: 38px !important;
+    height: 38px !important;
+    min-width: 38px !important;
+    min-height: 38px !important;
+    flex: 0 0 38px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-radius: 50% !important;
+}
+
+body .moyo-settings-page .moyo-member-name-button {
+    max-width: 100% !important;
+    display: block !important;
+    text-align: left !important;
+    border-radius: 4px !important;
+}
+
+body .moyo-settings-page .moyo-member-profile-trigger:focus,
+body .moyo-settings-page .moyo-member-name-button:focus {
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+body .moyo-settings-page .moyo-member-profile-trigger:focus-visible {
+    outline: 2px solid rgba(74, 144, 226, .38) !important;
+    outline-offset: 3px !important;
+}
+
+body .moyo-settings-page .moyo-member-name-button:focus-visible {
+    outline: 2px solid rgba(74, 144, 226, .28) !important;
+    outline-offset: 2px !important;
+}
+
+body .moyo-settings-page .moyo-member-profile-trigger:hover .moyo-member-avatar {
+    box-shadow: 0 0 0 2px rgba(74, 144, 226, .12) !important;
+}
+
+body .moyo-settings-page .moyo-member-name-button:hover .moyo-member-name {
+    color: #315f9c !important;
+}

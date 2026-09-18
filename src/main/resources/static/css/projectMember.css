@@ -75,7 +75,7 @@
             
             
             
-            background: linear-gradient(135deg, #4A90E2 0%, #39CDB5 100%);
+            background: var(--moyo-avatar-gradient, linear-gradient(135deg, #55D5CE 0%, #4288EF 52%, #5A55EE 100%));
             color: #fff;
             
             
@@ -539,7 +539,7 @@
     border-radius: 999px !important;
     border: 0 !important;
     outline: 0 !important;
-    background: linear-gradient(135deg, #4A90E2 0%, #39CDB5 100%) !important;
+    background: var(--moyo-avatar-gradient, linear-gradient(135deg, #55D5CE 0%, #4288EF 52%, #5A55EE 100%)) !important;
     color: #ffffff !important;
     font-size: 12px !important;
     font-weight: 900 !important;
@@ -586,7 +586,7 @@
     flex: 0 0 34px !important;
     margin-top: 1px !important;
     border-radius: 50% !important;
-    background: linear-gradient(135deg, #4A90E2 0%, #39CDB5 100%) !important;
+    background: var(--moyo-avatar-gradient, linear-gradient(135deg, #55D5CE 0%, #4288EF 52%, #5A55EE 100%)) !important;
     color: #ffffff !important;
     border: 0 !important;
     outline: 0 !important;
@@ -727,182 +727,6 @@
     display: block;
     object-fit: cover;
     border-radius: 50%;
-}body.project-member-profile-open {
-    overflow: hidden;
-}.project-member-profile-overlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    z-index: 3400;
-    background: rgba(15, 23, 42, .48);
-}.project-member-profile-modal {
-    display: none;
-    position: fixed;
-    z-index: 3401;
-    left: 50%;
-    top: 50%;
-    width: min(520px, calc(100vw - 28px));
-    max-height: calc(100vh - 48px);
-    overflow: hidden;
-    transform: translate(-50%, -50%);
-    border: 1px solid #e5ebf2;
-    border-radius: 18px;
-    background: #fff;
-    box-shadow: 0 26px 70px rgba(15, 23, 42, .24);
-}.project-member-profile-head {
-    min-height: 72px;
-    padding: 18px 20px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    border-bottom: 1px solid #eef2f6;
-}.project-member-profile-head span {
-    display: block;
-    margin-bottom: 3px;
-    color: #8b96a8;
-    font-size: 10.5px;
-}.project-member-profile-head h3 {
-    margin: 0;
-    color: #172033;
-    font-size: 18px;
-}.project-member-profile-head button {
-    width: 32px;
-    height: 32px;
-    padding: 0;
-    border: 0;
-    border-radius: 8px;
-    background: transparent;
-    color: #98a2b3;
-    font-size: 23px;
-    cursor: pointer;
-}.project-member-profile-body {
-    max-height: calc(100vh - 120px);
-    overflow-y: auto;
-    padding: 18px 20px 20px;
-}.project-member-profile-loading {
-    padding: 48px 16px;
-    color: #98a2b3;
-    font-size: 12px;
-    text-align: center;
-}.project-member-profile-summary {
-    padding: 13px;
-    display: flex;
-    align-items: center;
-    gap: 13px;
-    border: 1px solid #e5ecf3;
-    border-radius: 14px;
-    background: #fafcff;
-}.project-member-profile-avatar {
-    width: 58px;
-    height: 58px;
-    flex: 0 0 58px;
-    overflow: hidden;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #4a90e2, #39cdb5);
-    color: #fff;
-    font-size: 19px;
-    font-weight: 700;
-}.project-member-profile-avatar img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}.project-member-profile-summary-copy {
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-}.project-member-profile-summary-copy strong {
-    color: #263244;
-    font-size: 15px;
-}.project-member-profile-summary-copy span {
-    overflow: hidden;
-    color: #667085;
-    font-size: 11px;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}.project-member-profile-summary-copy em {
-    width: max-content;
-    padding: 3px 7px;
-    border-radius: 999px;
-    background: #eef7ff;
-    color: #347fcf;
-    font-size: 10px;
-    font-style: normal;
-    font-weight: 600;
-}.project-member-profile-info {
-    margin-top: 14px;
-    border-top: 1px solid #eef2f6;
-}.project-member-profile-info > div {
-    min-height: 42px;
-    display: grid;
-    grid-template-columns: 135px minmax(0, 1fr);
-    align-items: center;
-    gap: 12px;
-    border-bottom: 1px solid #eef2f6;
-}.project-member-profile-info span {
-    color: #8a94a6;
-    font-size: 11px;
-}.project-member-profile-info strong {
-    overflow: hidden;
-    color: #475569;
-    font-size: 11.5px;
-    font-weight: 500;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}.project-member-profile-role-edit {
-    margin-top: 16px;
-}.project-member-profile-role-edit label {
-    display: block;
-    margin-bottom: 7px;
-    color: #526174;
-    font-size: 11.5px;
-    font-weight: 600;
-}.project-member-profile-role-edit input {
-    width: 100%;
-    height: 40px;
-    padding: 0 11px;
-    border: 1px solid #dfe7ef;
-    border-radius: 10px;
-    color: #263244;
-    font: 13px inherit;
-    outline: none;
-}.project-member-profile-role-edit input:focus {
-    border-color: #79ace7;
-    box-shadow: 0 0 0 3px rgba(74, 144, 226, .1);
-}.project-member-profile-role-edit input:disabled {
-    background: #f2f5f8;
-    color: #8a94a6;
-}.project-member-profile-role-edit p {
-    margin: 7px 0 0;
-    color: #98a2b3;
-    font-size: 10.5px;
-}.project-member-profile-actions {
-    margin-top: 17px;
-    padding-top: 14px;
-    display: flex;
-    justify-content: flex-end;
-    border-top: 1px solid #eef2f6;
-}.project-member-profile-actions button {
-    min-width: 82px;
-    height: 38px;
-    padding: 0 16px;
-    border: 0;
-    border-radius: 10px;
-    background: linear-gradient(135deg, #4a90e2, #39cdb5);
-    color: #fff;
-    font: 600 12px inherit;
-    cursor: pointer;
-    box-shadow: 0 8px 18px rgba(57, 205, 181, .18);
-}.project-member-profile-source-note {
-    margin: 14px 0 0;
-    padding-top: 12px;
-    border-top: 1px solid #eef2f6;
-    color: #98a2b3;
-    font-size: 10.5px;
-    line-height: 1.5;
 }.project-member-add-overlay {
     display: none;
     position: fixed;
@@ -1092,8 +916,6 @@
 /* ===== Personal project main mode ===== */
 body.personal-project-main .project-member-panel,
 body.personal-project-main .project-member-add-overlay,
-body.personal-project-main .project-member-profile-overlay,
-body.personal-project-main .project-member-profile-modal,
 body.personal-project-main .project-personal-owner-panel,
 body.personal-project-main .project-widget-notice-poll {
     display: none !important;
@@ -1145,3 +967,67 @@ body.personal-project-main .project-widget-notice-poll {
     font-weight: 850;
 }
 /* ===== End personal project main mode ===== */
+
+/* Personal project owner stats: match group project member stat chips exactly. */
+.project-owner-card .project-owner-stats {
+    display: grid !important;
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+    gap: 5px !important;
+    width: 100% !important;
+    margin-top: 1px !important;
+    padding-left: 0 !important;
+}
+
+.project-owner-card .project-owner-stats > .moyo-member-stat {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 3px !important;
+    min-width: 0 !important;
+    height: 24px !important;
+    padding: 0 6px !important;
+    white-space: nowrap !important;
+    line-height: 1 !important;
+    font-size: 10px !important;
+    font-weight: 900 !important;
+    letter-spacing: -0.04em !important;
+}
+
+.project-owner-card .project-owner-stats > .moyo-member-stat > strong {
+    display: inline !important;
+    flex: 0 0 auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    font: inherit !important;
+    line-height: 1 !important;
+    color: inherit !important;
+    white-space: nowrap !important;
+}
+
+/* Final avatar state contract: project members are people. */
+.moyo-member-avatar,
+.project-member-avatar,
+.member-avatar { border-radius:50% !important; }
+.moyo-member-avatar.has-image,
+.project-member-avatar.has-image,
+.member-avatar.has-image {
+    background:transparent !important;
+    background-image:none !important;
+    box-shadow:none !important;
+}
+.moyo-member-avatar.has-image > img,
+.project-member-avatar.has-image > img,
+.member-avatar.has-image > img {
+    border-radius:50% !important;
+    background:transparent !important;
+}
+.moyo-member-avatar.is-default-profile,
+.moyo-member-avatar.is-default,
+.project-member-avatar.is-default-profile,
+.project-member-avatar.is-default,
+.member-avatar.is-default-profile,
+.member-avatar.is-default {
+    background:var(--moyo-avatar-gradient, linear-gradient(135deg, #55D5CE 0%, #4288EF 52%, #5A55EE 100%)) !important;
+    background-image:var(--moyo-avatar-gradient, linear-gradient(135deg, #55D5CE 0%, #4288EF 52%, #5A55EE 100%)) !important;
+}

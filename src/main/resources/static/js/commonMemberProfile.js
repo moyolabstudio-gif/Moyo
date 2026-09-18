@@ -466,6 +466,8 @@ function createProfileCropper(config) {
 }
 
 
+window.createProfileCropper = createProfileCropper;
+
 let modalWorkspaceProfileCropper = null;
 let openedWorkspaceMemberProfile = null;
 let workspaceMemberProfileEditMode = false;
@@ -544,6 +546,22 @@ function closeWorkspaceMemberProfile() {
 
 function workspaceProfileValue(data, camel, upper) {
     return data && data[camel] != null ? data[camel] : (data ? data[upper] : null);
+}
+
+function workspaceProfileFormatBirthText(birthDate, calendarType) {
+    const raw = String(birthDate || '').trim();
+    if (!raw) return '등록된 생일 없음';
+
+    const matched = raw.match(/^(\d{1,2})-(\d{1,2})$/);
+    const dateText = matched
+        ? String(Number(matched[1])).padStart(2, '0') + '월 '
+            + String(Number(matched[2])).padStart(2, '0') + '일'
+        : raw;
+    const calendarLabel = String(calendarType || 'SOLAR').toUpperCase() === 'LUNAR'
+        ? '음력'
+        : '양력';
+
+    return dateText + ' · ' + calendarLabel;
 }
 
 function workspacePath(path) {
@@ -656,6 +674,8 @@ function updateWorkspaceMemberProfilePreview() {
     const displayNameInput = document.getElementById('profileDisplayName');
     const positionInput = document.getElementById('profilePositionName');
     const emailInput = document.getElementById('profileContactEmail');
+    const introInput = document.getElementById('profileIntroText');
+    const showEmailInput = document.getElementById('profileShowEmail');
     const phoneInput = document.getElementById('profilePhoneNumber');
     const showPhoneInput = document.getElementById('profileShowPhone');
     if (!useAccountInput || !displayNameInput) return;
@@ -683,6 +703,7 @@ function updateWorkspaceMemberProfilePreview() {
         ? positionInput.value.trim()
         : '';
     const previewEmail = emailInput ? emailInput.value.trim() : '';
+    const previewIntro = introInput ? introInput.value.trim() : '';
     const previewPhone = phoneInput ? phoneInput.value.trim() : '';
     const showPhone = Boolean(previewPhone && showPhoneInput && showPhoneInput.checked);
 
@@ -693,12 +714,18 @@ function updateWorkspaceMemberProfilePreview() {
         previewRoleElement.textContent = previewPosition;
         previewRoleElement.hidden = !previewPosition;
     }
-    document.getElementById('memberProfilePreviewEmail').textContent =
-        previewEmail || '이메일 미입력';
+    const previewEmailElement = document.getElementById('memberProfilePreviewEmail');
+    if (previewEmailElement) previewEmailElement.textContent = previewEmail || '이메일 미입력';
 
     const previewPhoneElement = document.getElementById('memberProfilePreviewPhone');
-    previewPhoneElement.hidden = !showPhone;
-    previewPhoneElement.textContent = previewPhone;
+    if (previewPhoneElement) {
+        previewPhoneElement.hidden = !showPhone;
+        previewPhoneElement.textContent = previewPhone;
+    }
+    const introElement = document.getElementById('memberProfileIntro');
+    if (introElement && previewIntro) {
+        introElement.textContent = previewIntro;
+    }
 
     const previewCanvas = ensureWorkspaceProfilePreviewCanvas();
 
@@ -730,6 +757,8 @@ function bindWorkspaceMemberProfilePreview() {
         'profileDisplayName',
         'profilePositionName',
         'profileContactEmail',
+        'profileIntroText',
+        'profileShowEmail',
         'profilePhoneNumber',
         'profileShowPhone',
         'modalProfileZoom',
@@ -836,8 +865,12 @@ function renderWorkspaceMemberProfile(data) {
     const role = workspaceProfileValue(data, 'workspaceRole', 'WS_ROLE') || 'MEMBER';
     const isOwner = String(workspaceProfileValue(data, 'isOwner', 'IS_OWNER') || 'N') === 'Y';
     const phone = workspaceProfileValue(data, 'phoneNumber', 'PHONE_NUMBER') || '';
+    const introText = workspaceProfileValue(data, 'introText', 'INTRO_TEXT') || '';
+    const showEmail = String(
+        workspaceProfileValue(data, 'showEmail', 'SHOW_EMAIL') || 'Y'
+    ) === 'Y';
     const showPhone = String(
-        workspaceProfileValue(data, 'showPhone', 'SHOW_PHONE') || 'N'
+        workspaceProfileValue(data, 'showPhone', 'SHOW_PHONE') || 'Y'
     ) === 'Y';
     const showBirth = String(
         workspaceProfileValue(data, 'showBirth', 'SHOW_BIRTH') || 'Y'
@@ -907,15 +940,21 @@ function renderWorkspaceMemberProfile(data) {
             : (role === 'ADMIN'
                 ? profileConfig.adminLabel
                 : profileConfig.memberLabel);
-    document.getElementById('memberProfileEmail').textContent = contactEmail || '-';
+    const emailElement = document.getElementById('memberProfileEmail');
+    if (emailElement) emailElement.textContent = contactEmail || (!showEmail && !isMe ? '비공개' : '-');
+    const introElement = document.getElementById('memberProfileIntro');
+    if (introElement) {
+        introElement.textContent = introText;
+        introElement.hidden = !introText;
+    }
     document.getElementById('memberProfileJoinedAt').textContent =
         workspaceProfileValue(data, 'joinedAt', 'JOINED_AT') || '-';
 
     const phoneRow = document.getElementById('memberProfilePhoneRow');
-    const canSeePhone = showPhone;
+    const canSeePhone = isMe || showPhone;
     phoneRow.hidden = !canSeePhone || !phone;
-    document.getElementById('memberProfilePhone').textContent =
-        canSeePhone && phone ? phone : '';
+    const phoneElement = document.getElementById('memberProfilePhone');
+    if (phoneElement) phoneElement.textContent = canSeePhone && phone ? phone : '';
 
     const birthRow = document.getElementById('memberProfileBirthRow');
     const birthElement = document.getElementById('memberProfileBirth');
@@ -933,7 +972,7 @@ function renderWorkspaceMemberProfile(data) {
     if (birthRow && birthElement) {
         birthRow.hidden = !birthDate;
         birthElement.textContent = birthDate
-            ? birthDate + (birthCalendarType === 'LUNAR' ? ' · 음력' : '')
+            ? workspaceProfileFormatBirthText(birthDate, birthCalendarType)
             : '';
     }
 
@@ -943,8 +982,8 @@ function renderWorkspaceMemberProfile(data) {
     if (detailList) {
         const secondaryRows = [
             phoneRow,
-            document.getElementById('memberProfileJoinedAt')?.closest('div'),
-            birthRow
+            birthRow,
+            document.getElementById('memberProfileJoinedAt')?.closest('div')
         ].filter(function(row) {
             return row && !row.hidden;
         });
@@ -1047,11 +1086,23 @@ function renderWorkspaceMemberProfile(data) {
         document.getElementById('profileDisplayName').value =
             workspaceProfileValue(data, 'customDisplayName', 'CUSTOM_DISPLAY_NAME') || displayName;
         document.getElementById('profilePositionName').value = positionName;
+        const introInput = document.getElementById('profileIntroText');
+        if (introInput) introInput.value = introText;
         const contactEmailInput = document.getElementById('profileContactEmail');
         contactEmailInput.value = contactEmail || accountEmail || '';
         contactEmailInput.dataset.accountEmail = accountEmail || '';
         document.getElementById('profilePhoneNumber').value = phone;
+        const showEmailInput = document.getElementById('profileShowEmail');
+        if (showEmailInput) showEmailInput.checked = showEmail;
         document.getElementById('profileShowPhone').checked = showPhone;
+        const birthValue = document.getElementById('profileBirthValue');
+        if (birthValue) {
+            birthValue.textContent = workspaceProfileFormatBirthText(
+                birthDate,
+                birthCalendarType
+            );
+            birthValue.classList.toggle('is-empty', !birthDate);
+        }
         const showBirthInput = document.getElementById('profileShowBirth');
         if (showBirthInput) showBirthInput.checked = showBirth;
         const displayNameInput = document.getElementById('profileDisplayName');
@@ -1418,6 +1469,8 @@ async function saveWorkspaceMemberProfile(event) {
     const useAccount = document.getElementById('profileUseAccount').checked ? 'Y' : 'N';
     const displayName = document.getElementById('profileDisplayName').value.trim();
     const contactEmail = document.getElementById('profileContactEmail').value.trim();
+    const introTextInput = document.getElementById('profileIntroText');
+    const introText = introTextInput ? introTextInput.value.trim() : '';
     const positionName = document.getElementById('profilePositionName').value.trim();
     const phoneNumber = document.getElementById('profilePhoneNumber').value.trim();
 
@@ -1446,6 +1499,9 @@ async function saveWorkspaceMemberProfile(event) {
     formData.append('useAccountProfile', useAccount);
     formData.append('displayName', displayName);
     formData.append('contactEmail', contactEmail);
+    formData.append('introText', introText);
+    const showEmailInput = document.getElementById('profileShowEmail');
+    formData.append('showEmail', showEmailInput && !showEmailInput.checked ? 'N' : 'Y');
     formData.append('positionName', positionName);
     formData.append('phoneNumber', phoneNumber);
     formData.append(
@@ -1521,7 +1577,7 @@ async function saveWorkspaceMemberProfile(event) {
 }
 
 function transferWorkspaceAdminFromProfile(userId) {
-    if (!confirm('이 멤버에게 그룹장 권한을 넘기시겠습니까? 권한을 넘기면 본인은 일반 멤버가 됩니다.')) return;
+    if (!confirm('이 멤버에게 그룹장 권한을 넘기시겠습니까?\n기존 그룹장은 관리자로 유지됩니다.')) return;
     const params = new URLSearchParams();
     params.append('wsId', WORKSPACE_CONFIG.wsId);
     params.append('newAdminId', userId);
@@ -1535,8 +1591,16 @@ function transferWorkspaceAdminFromProfile(userId) {
         if (result === 'success') {
             alert('그룹장 권한을 넘겼습니다.');
             location.reload();
+        } else if (result === 'owner_only') {
+            alert('현재 그룹장만 그룹장 권한을 넘길 수 있습니다.');
+        } else if (result === 'unavailable') {
+            alert('삭제 예정 또는 사용할 수 없는 그룹에서는 그룹장을 위임할 수 없습니다.');
+        } else if (result === 'member_not_found') {
+            alert('현재 그룹 멤버에게만 그룹장 권한을 넘길 수 있습니다.');
+        } else if (result === 'conflict') {
+            alert('그룹장 정보가 이미 변경되었습니다. 화면을 새로고침한 뒤 다시 확인해 주세요.');
         } else {
-            alert('권한 변경에 실패했습니다.');
+            alert('그룹장 위임에 실패했습니다.');
         }
     });
 }
@@ -1562,6 +1626,8 @@ function removeWorkspaceMemberFromProfile(userId) {
             alert('이 멤버를 내보낼 권한이 없습니다.');
         } else if (result === 'member_not_found') {
             alert('그룹 멤버 정보를 찾을 수 없습니다.');
+        } else if (result === 'project_leader_transfer_required') {
+            alert('진행 중인 그룹 프로젝트의 팀장은 먼저 다른 멤버에게 팀장을 위임해야 합니다.');
         } else {
             alert('멤버 내보내기에 실패했습니다.');
         }

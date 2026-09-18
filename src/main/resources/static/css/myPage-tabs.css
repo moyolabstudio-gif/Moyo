@@ -1,3 +1,5 @@
+@import url("common/commonContentCard.css?v=20260809-note-paper-common-v1");
+
 /* MyPage profile stats and tab contents */
 .profile-action.is-muted {
     border-color: #e3eaf4;
@@ -43,6 +45,32 @@
     color: #66758d;
     font-size: 13px;
     font-weight: 800;
+}
+
+
+.profile-stats button.is-private {
+    cursor: default;
+    opacity: .62;
+}
+
+.profile-stats button.is-private strong {
+    color: #8b98aa;
+}
+
+.profile-privacy-policy-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    min-width: 84px;
+    min-height: 30px;
+    padding: 6px 10px;
+    border: 1px solid #e2e8f1;
+    border-radius: 999px;
+    background: #f5f7fb;
+    color: #6f7d91;
+    font-size: 12px;
+    font-weight: 850;
 }
 
 .profile-meta-line {
@@ -592,20 +620,21 @@
     position: relative;
     display: block;
     padding: 0;
-    border: 0;
+    border: 1px solid rgba(220, 229, 243, .78);
     border-radius: 13px;
     background: #fff;
-    box-shadow: none;
+    box-shadow: 0 5px 18px rgba(50, 76, 112, .035);
     overflow: hidden;
     cursor: pointer;
-    transform: none;
+    transform: translateY(0);
+    transition: border-color .16s ease, box-shadow .16s ease, transform .16s ease;
 }
 
 .profile-tab-section--photos .profile-photo-card--square:hover,
 .profile-tab-section--photos .profile-photo-card--square:focus-within {
-    border-color: transparent;
-    box-shadow: none;
-    transform: none;
+    border-color: rgba(111, 145, 236, .34);
+    box-shadow: 0 12px 28px rgba(50, 76, 112, .09);
+    transform: translateY(-2px);
 }
 
 .profile-tab-section--photos .profile-photo-card--square .profile-photo-thumb {
@@ -622,6 +651,8 @@
     height: 100%;
     object-fit: contain;
     object-position: center;
+    box-sizing: border-box;
+    padding: 8px;
     background: #fff;
 }
 
@@ -789,6 +820,13 @@
     }
 }
 
+@media (max-width: 420px) {
+    .profile-tab-section--photos .profile-photo-grid--clean {
+        grid-template-columns: 1fr;
+        max-width: 320px;
+    }
+}
+
 .profile-tab-section--photos .profile-photo-action--collect.is-collected i,
 .profile-tab-section--photos .profile-photo-action--collect[aria-pressed="true"] i {
     color: #8db7ff;
@@ -810,333 +848,196 @@
     margin: 0 auto;
 }
 
-.profile-note-paper-card {
-    min-width: 0;
-}
+/* 노트 종이 카드 본체/메타/호버/반응 스타일은 common/commonContentCard.css에서 공통 관리한다. */
 
-.profile-note-paper-button {
-    display: block;
-    width: 100%;
-    padding: 0;
-    border: 0;
-    background: transparent;
-    text-align: left;
-    cursor: pointer;
-}
 
-.profile-note-paper-button:focus-visible {
-    outline: 3px solid rgba(61, 138, 255, .24);
-    outline-offset: 5px;
-    border-radius: 16px;
-}
-
-.profile-note-paper {
-    position: relative;
-    display: block;
-    width: 100%;
-    aspect-ratio: 210 / 297;
-    overflow: hidden;
-    border: 1px solid #e8eef6;
-    border-radius: 10px;
-    background:
-        linear-gradient(180deg, rgba(255, 255, 255, .98), rgba(255, 255, 255, 1)),
-        #fff;
-    box-shadow: 0 18px 38px rgba(15, 23, 42, .09);
-    transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
-}
-
-.profile-note-paper::before {
-    content: "";
-    position: absolute;
-    inset: 12px;
-    border: 1px solid rgba(232, 238, 246, .7);
-    border-radius: 4px;
-    pointer-events: none;
-}
-
-.profile-note-paper-button:hover .profile-note-paper,
-.profile-note-paper-button:focus-visible .profile-note-paper {
-    border-color: #d9e4f2;
-    box-shadow: 0 24px 54px rgba(15, 23, 42, .15);
-    transform: translateY(-4px);
-}
-
-.profile-note-paper-inner {
-    position: relative;
-    z-index: 1;
+/* MOYO profile group avatar fallback: keep the same group default-avatar language used across the app. */
+.profile-group-avatar-fallback {
     display: flex;
-    flex-direction: column;
-    height: 100%;
-    padding: 32px 28px 26px;
-    color: #2f3a4f;
-}
-
-.profile-note-paper-inner::after {
-    content: "";
-    position: absolute;
-    left: 28px;
-    right: 28px;
-    bottom: 34px;
-    height: 34px;
-    background:
-        linear-gradient(#f0f4f9, #f0f4f9) left top / 86% 1px no-repeat,
-        linear-gradient(#f0f4f9, #f0f4f9) left 11px / 72% 1px no-repeat,
-        linear-gradient(#f0f4f9, #f0f4f9) left 22px / 54% 1px no-repeat;
-    pointer-events: none;
-}
-
-.profile-note-paper-title {
-    display: -webkit-box;
-    min-height: 48px;
-    overflow: hidden;
-    color: #202b40;
-    font-size: 16px;
-    font-weight: 950;
-    letter-spacing: -.35px;
-    line-height: 1.45;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-}
-
-.profile-note-paper-line {
-    display: block;
-    width: 50%;
-    height: 1px;
-    margin: 18px 0 22px;
-    border-radius: 999px;
-    background: #dfe8f3;
-}
-
-.profile-note-paper-body {
-    display: -webkit-box;
-    min-height: 64px;
-    max-height: 64px;
-    overflow: hidden;
-    color: #5f6f87;
-    font-size: 11.5px;
-    font-weight: 700;
-    line-height: 1.75;
-    white-space: pre-line;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
-}
-
-.profile-note-paper-lines {
-    display: grid;
-    gap: 8px;
-    margin-top: auto;
-    padding-bottom: 68px;
-    opacity: .92;
-}
-
-.profile-note-paper-lines span {
-    display: block;
-    height: 1px;
-    border-radius: 999px;
-    background: #edf2f8;
-}
-
-.profile-note-paper-lines span:nth-child(1) { width: 96%; }
-.profile-note-paper-lines span:nth-child(2) { width: 90%; }
-.profile-note-paper-lines span:nth-child(3) { width: 82%; }
-.profile-note-paper-lines span:nth-child(4) { width: 66%; }
-.profile-note-paper-lines span:nth-child(5) { width: 48%; }
-
-.profile-note-moyo-mark {
-    position: absolute;
-    right: 17px;
-    top: 17px;
-    z-index: 6;
-    display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 26px;
-    height: 26px;
-    pointer-events: none;
-    filter: drop-shadow(0 2px 5px rgba(15, 23, 42, .12));
-}
-
-.profile-note-moyo-mark img {
-    display: block;
-    width: 26px;
-    height: 26px;
-    object-fit: contain;
-}
-
-.profile-note-hover {
-    position: absolute;
-    inset: auto 10px 10px 10px;
-    z-index: 5;
-    min-height: 68px;
-    display: flex;
-    align-items: flex-end;
-    padding: 12px 13px 11px;
-    color: #233047;
-    border: 1px solid rgba(224, 233, 244, .82);
-    border-radius: 12px;
-    background: linear-gradient(180deg, rgba(255, 255, 255, .28), rgba(255, 255, 255, .94));
-    box-shadow: 0 12px 26px rgba(15, 23, 42, .1);
-    opacity: 0;
-    transform: translateY(8px);
-    transition: opacity .18s ease, transform .18s ease;
-    pointer-events: none;
-}
-
-.profile-note-paper-button:hover .profile-note-hover,
-.profile-note-paper-button:focus-visible .profile-note-hover,
-.profile-note-paper-button:focus-within .profile-note-hover {
-    opacity: 1;
-    transform: translateY(0);
-}
-
-.profile-note-hover-main {
-    display: grid;
-    gap: 7px;
     width: 100%;
-    min-width: 0;
-}
-
-.profile-note-hover-meta {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    min-width: 0;
-}
-
-.profile-note-hover-meta strong,
-.profile-note-hover-date {
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.profile-note-hover-meta strong {
-    flex: 0 1 auto;
-    max-width: 120px;
-    color: #202b40;
-    font-size: 13px;
-    font-weight: 950;
-    letter-spacing: -.2px;
-}
-
-.profile-note-hover-date {
-    flex: 0 0 auto;
-    color: #6a7890;
-    font-size: 10.5px;
-    font-weight: 850;
-}
-
-.profile-note-hover-dot {
-    flex: 0 0 auto;
-    color: #9aa8ba;
-    font-size: 10px;
-    font-weight: 900;
-}
-
-.profile-note-feed-actions {
-    position: relative;
-    z-index: 2;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    color: #506079;
-    font-size: 12px;
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(135deg, #45d6c8 0%, #4a90e2 52%, #7868f8 100%);
+    color: #fff;
+    font-size: 14px;
     font-weight: 900;
     line-height: 1;
-    pointer-events: auto;
+    text-transform: uppercase;
+    text-shadow: 0 1px 3px rgba(35, 62, 103, .16);
 }
 
-.profile-note-feed-action {
-    display: inline-flex;
-    align-items: center;
-    gap: 3px;
-    min-width: 0;
-    padding: 2px 0;
-    border-radius: 6px;
-    transition: color .16s ease, transform .16s ease, opacity .16s ease;
+.profile-group-avatar-fallback[hidden] {
+    display: none !important;
 }
 
-.profile-note-feed-action[role="button"] {
-    cursor: pointer;
-}
 
-.profile-note-feed-action[role="button"]:hover {
-    color: #26364f;
-    transform: translateY(-1px);
-}
-
-.profile-note-feed-action.is-loading {
-    opacity: .55;
-    pointer-events: none;
-}
-
-.profile-note-feed-action i {
-    flex: 0 0 auto;
-    width: 13px;
+/* 2026-09-06: profile meta hierarchy
+   이메일/생일은 활동 통계보다 한 단계 낮은 보조 프로필 정보로 표시한다. */
+.profile-meta-line {
+    margin-top: 20px;
+    color: #8c99ab;
     font-size: 12px;
-    text-align: center;
+    font-weight: 650;
+    letter-spacing: -.05px;
+    line-height: 1.45;
 }
 
-.profile-note-feed-action span {
-    display: inline-block;
-    min-width: 8px;
-}
-
-.profile-note-feed-action.is-icon-only {
-    gap: 0;
-}
-
-.profile-note-feed-action.is-like i {
-    color: #8b98aa;
-}
-
-.profile-note-feed-action.is-like.is-active,
-.profile-note-feed-action.is-like.is-active i {
-    color: #ff5e73;
-}
-
-.profile-note-feed-action.is-collected,
-.profile-note-feed-action.is-collected i {
-    color: #3d8aff;
-}
-
-/* 프로필 노트 카드 반응 버튼: span/button 여부와 무관하게 같은 모양 유지 */
-.profile-note-feed-actions button.profile-note-feed-action {
-    appearance: none;
-    -webkit-appearance: none;
-    margin: 0;
-    border: 0;
-    background: transparent;
+.profile-meta-line span {
     color: inherit;
-    font: inherit;
-    line-height: inherit;
+    font-size: inherit;
+    font-weight: inherit;
 }
 
-/* 노트 카드 전체 클릭 영역은 비대화형 컨테이너로 두고, 하단 반응 버튼은 카드 푸터 안에서 독립 동작한다. */
-.profile-note-paper-button[role="button"] {
-    position: relative;
+.profile-meta-line span + span::before {
+    width: 3px;
+    height: 3px;
+    background: #c8d1dc;
 }
 
-.profile-note-paper-button[role="button"] .profile-note-feed-actions button {
-    box-sizing: border-box;
-    min-height: 18px;
+/* 2026-09-07: friend profile tab/card responsive unification */
+@media (max-width: 900px) {
+    .profile-note-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 18px;
+    }
+
+    .profile-tab-head {
+        align-items: flex-start;
+    }
 }
 
-/* 프로필 노트 카드: 비대화형 role=button 구조에서도 전체 클릭 영역의 포인터 유지 */
-.profile-note-paper-button[role="button"],
-.profile-note-paper-button[role="button"] > .profile-note-paper,
-.profile-note-paper-button[role="button"] .profile-note-paper-inner,
-.profile-note-paper-button[role="button"] .profile-note-paper-inner *,
-.profile-note-paper-button[role="button"] .profile-note-moyo-mark,
-.profile-note-paper-button[role="button"] .profile-note-moyo-mark *,
-.profile-note-paper-button[role="button"] .profile-note-hover,
-.profile-note-paper-button[role="button"] .profile-note-hover-main,
-.profile-note-paper-button[role="button"] .profile-note-hover-meta {
-    cursor: pointer;
+@media (max-width: 760px) {
+    .profile-note-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+    }
 }
 
-.profile-note-paper-button[role="button"] .profile-note-feed-actions button,
-.profile-note-paper-button[role="button"] .profile-note-feed-action[role="button"] {
-    cursor: pointer;
+@media (max-width: 560px) {
+    .profile-content {
+        padding-top: 20px;
+    }
+
+    .profile-tab-section {
+        gap: 12px;
+    }
+
+    .profile-tab-head {
+        min-height: 0;
+        gap: 10px;
+    }
+
+    .profile-tab-head strong {
+        font-size: 14px;
+    }
+
+    .profile-tab-head p {
+        font-size: 11.5px;
+    }
+
+    .profile-stats {
+        width: 100%;
+        gap: 10px 18px;
+        margin-top: 12px;
+    }
+
+    .profile-stats button {
+        flex: 0 0 auto;
+    }
+
+    .profile-stats strong {
+        font-size: 17px;
+    }
+
+    .profile-stats span {
+        font-size: 12px;
+    }
+
+    .profile-meta-line {
+        justify-content: center;
+        margin-top: 14px;
+        text-align: center;
+    }
+
+    .profile-tabs {
+        position: relative;
+        width: 100%;
+        overflow-x: auto;
+        overscroll-behavior-x: contain;
+        scrollbar-width: none;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .profile-tabs::-webkit-scrollbar {
+        display: none;
+    }
+
+    .profile-tabs button {
+        flex: 1 0 72px;
+        min-width: 72px;
+        height: 44px;
+        padding: 0 8px;
+        white-space: nowrap;
+    }
+
+    .profile-tab-card--list,
+    .profile-calendar-card {
+        padding-left: 12px;
+        padding-right: 12px;
+    }
+
+    .profile-group-row,
+    .profile-calendar-row {
+        grid-template-columns: 40px minmax(0, 1fr) auto;
+        gap: 9px;
+        min-height: 58px;
+    }
+
+    .profile-group-link,
+    .profile-calendar-link {
+        min-width: 42px;
+        height: 28px;
+        padding: 0 9px;
+        font-size: 11px;
+    }
+
+    .profile-empty-state {
+        min-height: 210px;
+        padding: 34px 18px;
+    }
+
+    .profile-note-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+    }
+}
+
+@media (max-width: 420px) {
+    .profile-note-grid {
+        grid-template-columns: 1fr;
+        width: min(100%, 320px);
+    }
+
+    .profile-group-row,
+    .profile-calendar-row {
+        grid-template-columns: 38px minmax(0, 1fr);
+    }
+
+    .profile-group-link,
+    .profile-calendar-link {
+        display: none;
+    }
+
+    .profile-group-avatar {
+        width: 36px;
+        height: 36px;
+    }
+
+    .profile-calendar-date {
+        width: 38px;
+        height: 38px;
+        border-radius: 13px;
+    }
 }

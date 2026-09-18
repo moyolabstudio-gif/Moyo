@@ -20,6 +20,11 @@
     let dirty = false;
     let submitting = false;
     let saveTimer = null;
+    let saveInFlight = false;
+    let saveQueued = false;
+    let changeVersion = 0;
+    let isComposing = false;
+    let compositionDirty = false;
     let selectedFiles = [];
     const initialMemoValue = memo.value || '';
     let editorReady = false;
@@ -233,22 +238,44 @@
         else memo.value = value || '';
     }
 
+    function scheduleAutoSave(delay) {
+        clearTimeout(saveTimer);
+        saveTimer = setTimeout(autoSave, typeof delay === 'number' ? delay : 1500);
+    }
+
     function markDirty() {
         if (!editorReady && isEdit) return;
-        dirty = true;
-        setStatus('저장 대기', 'dirty');
-        clearTimeout(saveTimer);
-        saveTimer = setTimeout(autoSave, 1500);
+
+        changeVersion += 1;
+        if (!dirty) {
+            dirty = true;
+            setStatus('저장 대기', 'dirty');
+        }
+
+        if (isComposing) {
+            compositionDirty = true;
+            return;
+        }
+
+        scheduleAutoSave();
     }
 
     function autoSave() {
+        saveTimer = null;
         if (!dirty || submitting) return;
+
+        if (saveInFlight) {
+            saveQueued = true;
+            return;
+        }
+
         if (isEdit) saveToServer();
         else saveLocalDraft();
     }
 
     function saveLocalDraft() {
         if (!draftKey) return;
+        const savingVersion = changeVersion;
         localStorage.setItem(draftKey, JSON.stringify({
             title: title ? title.value : '',
             memo: getData(),
@@ -257,8 +284,13 @@
             folderId: folder ? folder.value : '',
             savedAt: Date.now()
         }));
-        dirty = false;
-        setStatus('✓ 저장됨', 'saved');
+
+        if (changeVersion === savingVersion) {
+            dirty = false;
+            setStatus('✓ 저장됨', 'saved');
+        } else {
+            scheduleAutoSave(500);
+        }
     }
 
     function restoreLocalDraft() {
@@ -291,28 +323,52 @@
     }
 
     function saveToServer() {
-        if (!noteId) return;
+        if (!noteId || saveInFlight) return;
+
+        saveInFlight = true;
+        saveQueued = false;
         setStatus('저장 중...', 'saving');
-        const body = new URLSearchParams();
-        body.set('noteId', noteId);
-        body.set('noteTitle', (title && title.value.trim()) || '제목 없음');
-        body.set('memo', getData());
-        body.set('category', category ? category.value : 'GENERAL');
-        body.set('icon', icon ? icon.value : '📝');
-        if (folder && folder.value) body.set('folderId', folder.value);
-        fetch('/note/autosave', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'},
-            body: body.toString()
-        }).then(function (res) {
-            if (!res.ok) throw new Error('HTTP ' + res.status);
-            return res.json();
-        }).then(function (data) {
-            if (!data || !data.success) throw new Error((data && data.message) || '자동저장 실패');
-            dirty = false;
-            setStatus('✓ 저장됨', 'saved');
-        }).catch(function () {
+
+        const waitForEditorUploads = (window.MoyoCkeditor && editor)
+            ? window.MoyoCkeditor.waitForUploads(editor)
+            : Promise.resolve();
+
+        waitForEditorUploads.then(function () {
+            const savingVersion = changeVersion;
+            const body = new URLSearchParams();
+            body.set('noteId', noteId);
+            body.set('noteTitle', (title && title.value.trim()) || '제목 없음');
+            body.set('memo', getData());
+            body.set('category', category ? category.value : 'GENERAL');
+            body.set('icon', icon ? icon.value : '📝');
+            if (folder && folder.value) body.set('folderId', folder.value);
+
+            return fetch('/note/autosave', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'},
+                body: body.toString()
+            }).then(function (res) {
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                return res.json();
+            }).then(function (data) {
+                if (!data || !data.success) throw new Error((data && data.message) || '자동저장 실패');
+
+                if (changeVersion === savingVersion) {
+                    dirty = false;
+                    setStatus('✓ 저장됨', 'saved');
+                } else {
+                    dirty = true;
+                    setStatus('저장 대기', 'dirty');
+                }
+            });
+        }).catch(function (error) {
+            console.error('[MOYO Note] 자동저장 실패:', error);
+            dirty = true;
             setStatus('저장 실패', 'error');
+        }).finally(function () {
+            saveInFlight = false;
+            if (submitting || !dirty) return;
+            if (saveQueued) scheduleAutoSave(500);
         });
     }
 
@@ -365,6 +421,7 @@
 
     if (window.MoyoCkeditor) {
         window.MoyoCkeditor.create(memo, {
+            profile: 'NOTE',
             uploadUrl: '/note/image-upload',
             placeholder: '내용을 입력하세요.',
             initialData: initialMemoValue
@@ -374,6 +431,25 @@
                 editor.setData(initialMemoValue);
             }
             editorReady = true;
+
+            const editableElement = editor.ui && typeof editor.ui.getEditableElement === 'function'
+                ? editor.ui.getEditableElement()
+                : null;
+
+            if (editableElement) {
+                editableElement.addEventListener('compositionstart', function () {
+                    isComposing = true;
+                    compositionDirty = false;
+                });
+                editableElement.addEventListener('compositionend', function () {
+                    isComposing = false;
+                    if (compositionDirty) {
+                        compositionDirty = false;
+                        scheduleAutoSave();
+                    }
+                });
+            }
+
             editor.model.document.on('change:data', markDirty);
             restoreLocalDraft();
         }).catch(function (error) {

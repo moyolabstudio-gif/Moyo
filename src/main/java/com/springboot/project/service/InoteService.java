@@ -3,6 +3,7 @@ package com.springboot.project.service;
 import com.springboot.project.dto.noteDTO;
 import com.springboot.project.dto.noteFileDTO;
 import com.springboot.project.dto.noteReplyDTO;
+import com.springboot.project.dto.noteVersionDTO;
 
 import java.util.List;
 import java.util.Map;
@@ -34,7 +35,17 @@ public interface InoteService {
 
     boolean modifyNote(noteDTO note);
 
+    boolean autosaveNote(noteDTO note);
+
+    List<noteVersionDTO> getNoteVersions(Long noteId, Long userId);
+
+    noteVersionDTO restoreNoteVersion(Long noteId, Long noteVersionId, Long userId);
+
+    void recordCurrentNoteVersion(Long noteId, Long changedBy, String changeType, Long restoredFromVersionId);
+
     boolean removeNote(Long noteId);
+
+    boolean removeNoteForAccountWithdrawal(Long noteId);
 
     boolean moveNoteToTrash(Long noteId, Long userId);
 
@@ -55,6 +66,8 @@ public interface InoteService {
     boolean removeNoteFilesByNoteId(Long noteId);
 
     boolean isMoyoPublicNote(Long noteId);
+
+    boolean updateMoyoPublic(Long noteId, Long userId, boolean moyoPublic);
 
     int recordNoteView(Long noteId);
 

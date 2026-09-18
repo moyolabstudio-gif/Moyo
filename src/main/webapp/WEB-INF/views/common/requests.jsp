@@ -7,7 +7,7 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>요청함 - MOYO</title>
+    <title><c:choose><c:when test="${pageMode == 'notifications'}">알림</c:when><c:otherwise>요청함</c:otherwise></c:choose> - MOYO</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <style>
         * { box-sizing:border-box; }
@@ -322,28 +322,83 @@ body { margin:0; background:linear-gradient(115deg, rgba(220,251,247,.72) 0%, rg
     <div class="request-summary">
         <div>
             <span class="request-eyebrow">MOYO 안내</span>
-            <h2>요청함</h2>
-            <p class="request-subtitle">그룹 초대·참여 요청과 사진/노트/일정 공유 요청을 한 곳에서 확인합니다.</p>
+            <c:choose>
+                <c:when test="${pageMode == 'notifications'}">
+                    <h2>알림</h2>
+                    <p class="request-subtitle">일정 변경, 공지, 요청 처리 결과와 MOYO의 새로운 소식을 확인합니다.</p>
+                </c:when>
+                <c:otherwise>
+                    <h2>요청함</h2>
+                    <p class="request-subtitle">친구 요청, 그룹 초대·참여 요청과 사진/노트/일정 공유 요청을 확인합니다.</p>
+                </c:otherwise>
+            </c:choose>
         </div>
-        <div class="request-counts">
-            <span class="request-chip is-pending">전체 대기 ${totalPendingRequestCount}</span>
-            <span class="request-chip">초대 ${inviteRequestCount}</span>
-            <span class="request-chip">참여 요청 ${joinRequestCount}</span>
-            <span class="request-chip">공유 ${shareRequestCount}</span>
-        </div>
+        <c:choose>
+            <c:when test="${pageMode == 'notifications'}">
+                <div class="request-counts">
+                    <span class="request-chip ${unreadNoticeCount > 0 ? 'is-pending' : ''}">읽지 않음 ${unreadNoticeCount}</span>
+                </div>
+            </c:when>
+            <c:otherwise>
+                <div class="request-counts">
+                    <span class="request-chip is-pending">전체 대기 ${totalPendingRequestCount}</span>
+                    <span class="request-chip">초대 ${inviteRequestCount}</span>
+                    <span class="request-chip">참여 요청 ${joinRequestCount}</span>
+                    <span class="request-chip">친구 ${friendRequestCount}</span>
+                    <span class="request-chip">공유 ${shareRequestCount}</span>
+                </div>
+            </c:otherwise>
+        </c:choose>
     </div>
 
-    <div class="request-tabs" role="tablist" aria-label="요청함 탭">
-        <button type="button" class="request-tab is-active" data-request-tab="received">받은 요청</button>
-        <button type="button" class="request-tab" data-request-tab="sent">보낸 요청</button>
-        <button type="button" class="request-tab" data-request-tab="done">완료됨</button>
-        <button type="button" class="request-tab" data-request-tab="notifications">전체 알림 <c:if test="${unreadNoticeCount > 0}"><span class="request-tab-count">${unreadNoticeCount}</span></c:if></button>
-    </div>
+    <c:choose>
+        <c:when test="${pageMode == 'notifications'}">
+            <div class="request-tabs" role="tablist" aria-label="알림 필터">
+                <button type="button" class="request-tab is-active" data-notification-filter="all">전체</button>
+                <button type="button" class="request-tab" data-notification-filter="unread">미읽음 <c:if test="${unreadNoticeCount > 0}"><span class="request-tab-count">${unreadNoticeCount}</span></c:if></button>
+                <button type="button" class="request-tab" data-notification-filter="read">읽음</button>
+            </div>
+        </c:when>
+        <c:otherwise>
+            <div class="request-tabs" role="tablist" aria-label="요청함 탭">
+                <button type="button" class="request-tab is-active" data-request-tab="received">받은 요청</button>
+                <button type="button" class="request-tab" data-request-tab="sent">보낸 요청</button>
+                <button type="button" class="request-tab" data-request-tab="done">완료됨</button>
+            </div>
+        </c:otherwise>
+    </c:choose>
 
+    <c:if test="${pageMode != 'notifications'}">
     <section class="request-panel is-active" data-request-panel="received">
         <h3 class="request-section-title">받은 요청</h3>
 
         <c:set var="hasReceivedPending" value="${false}" />
+
+        <c:forEach var="friend" items="${friendRequestList}">
+            <c:set var="hasReceivedPending" value="${true}" />
+            <div class="request-card is-pending" id="friend-request-${friend.friendId}">
+                <span class="request-card-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2"/><path d="M3 19c.7-3.3 3-5 6-5s5.3 1.7 6 5"/><path d="M14.5 15c2.6.2 4.3 1.5 5 4"/></svg>
+                </span>
+                <div class="request-info">
+                    <div class="request-title-line">
+                        <span class="request-type-badge">친구 요청</span>
+                        <h3><c:out value="${friend.userName}"/></h3>
+                    </div>
+                    <p><strong><c:out value="${friend.userName}"/></strong>님이 친구 요청을 보냈습니다.</p>
+                    <c:if test="${not empty friend.email}"><p><c:out value="${friend.email}"/></p></c:if>
+                    <div class="request-meta">
+                        <span class="request-chip">친구</span>
+                        <span class="request-chip is-pending">수락 대기</span>
+                    </div>
+                </div>
+                <div class="btn-group">
+                    <button type="button" class="btn btn-accept" onclick="respondFriendRequest(${friend.friendId}, 'ACCEPTED')">수락</button>
+                    <button type="button" class="btn btn-reject" onclick="respondFriendRequest(${friend.friendId}, 'REJECTED')">거절</button>
+                </div>
+            </div>
+        </c:forEach>
+
         <c:forEach var="share" items="${receivedShareRequests}">
             <c:if test="${share.shareStatus == 'PENDING'}">
                 <c:set var="hasReceivedPending" value="${true}" />
@@ -682,7 +737,10 @@ body { margin:0; background:linear-gradient(115deg, rgba(220,251,247,.72) 0%, rg
         </c:if>
     </section>
 
-    <section class="request-panel" data-request-panel="notifications">
+    </c:if>
+
+    <c:if test="${pageMode == 'notifications'}">
+    <section class="request-panel is-active" data-request-panel="notifications">
         <h3 class="request-section-title">전체 알림</h3>
         <c:choose>
             <c:when test="${empty allNotices}">
@@ -702,6 +760,7 @@ body { margin:0; background:linear-gradient(115deg, rgba(220,251,247,.72) 0%, rg
                         </c:choose>
                         <button type="button"
                                 class="notification-card ${notice.isRead == 'N' ? 'is-unread' : ''}"
+                                data-notification-state="${notice.isRead == 'N' ? 'unread' : 'read'}"
                                 data-notification-id="${notice.alarmId}"
                                 data-notification-link="<c:out value='${noticeLink}'/>"
                                 data-alert-type="<c:out value='${notice.alertType}'/>"
@@ -771,6 +830,7 @@ body { margin:0; background:linear-gradient(115deg, rgba(220,251,247,.72) 0%, rg
             </c:otherwise>
         </c:choose>
     </section>
+    </c:if>
 </div>
 
 <script>
@@ -781,6 +841,20 @@ document.addEventListener('click', function(e) {
     document.querySelectorAll('[data-request-tab]').forEach(el => el.classList.toggle('is-active', el === tab));
     document.querySelectorAll('[data-request-panel]').forEach(panel => {
         panel.classList.toggle('is-active', panel.getAttribute('data-request-panel') === key);
+    });
+});
+
+
+document.addEventListener('click', function(e) {
+    const filter = e.target.closest('[data-notification-filter]');
+    if (!filter) return;
+    const key = filter.getAttribute('data-notification-filter') || 'all';
+    document.querySelectorAll('[data-notification-filter]').forEach(function(el) {
+        el.classList.toggle('is-active', el === filter);
+    });
+    document.querySelectorAll('[data-notification-id]').forEach(function(card) {
+        const state = card.getAttribute('data-notification-state') || 'read';
+        card.style.display = key === 'all' || key === state ? '' : 'none';
     });
 });
 
@@ -802,6 +876,7 @@ document.addEventListener('click', async function(e) {
                 body: body.toString()
             });
             card.classList.remove('is-unread');
+            card.setAttribute('data-notification-state', 'read');
             const state = card.querySelector('.notification-read-state');
             if (state) state.textContent = '읽음';
         } catch (error) {
@@ -971,6 +1046,31 @@ document.addEventListener("DOMContentLoaded", function () {
     window.history.replaceState({}, document.title, cleanUrl);
 });
 
+function respondFriendRequest(friendId, status) {
+    const url = status === 'ACCEPTED'
+        ? '${pageContext.request.contextPath}/friends/api/accept'
+        : '${pageContext.request.contextPath}/friends/api/reject';
+
+    $.post(url, { friendId: friendId })
+        .done(function(res) {
+            const ok = res === true || res === 'success' || (res && (res.success === true || res.success === 'true'));
+            if (!ok) {
+                alert(res && res.message ? res.message : '친구 요청 처리 중 오류가 발생했습니다.');
+                return;
+            }
+            $('#friend-request-' + friendId).remove();
+            if ($('[data-request-panel="received"] .request-card.is-pending').length === 0) {
+                $('[data-request-panel="received"]').append('<p class="empty-msg">처리할 받은 요청이 없습니다.</p>');
+            }
+            if (typeof window.refreshHeaderNotifications === 'function') {
+                window.refreshHeaderNotifications();
+            }
+        })
+        .fail(function() {
+            alert('서버 통신 중 오류가 발생했습니다.');
+        });
+}
+
 function respondJoinRequest(requestId, status) {
     if (!requestId) {
         alert('참여 요청 정보를 확인할 수 없습니다.');
@@ -999,7 +1099,7 @@ function respondJoinRequest(requestId, status) {
     formData.append('rejectionReason', rejectionReason);
 
     $.ajax({
-        url: '/workspace/api/join-request/respond',
+        url: '${pageContext.request.contextPath}/workspace/api/join-request/respond',
         type: 'POST',
         processData: false,
         contentType: false,
@@ -1035,7 +1135,7 @@ function respondJoinRequest(requestId, status) {
 function respondShareRequest(shareId, status) {
     const message = status === 'ACCEPTED' ? '공유 요청을 수락하시겠습니까?' : '공유 요청을 거절하시겠습니까?';
     if (!confirm(message)) return;
-    $.post('/share/api/requests/' + shareId + '/respond', { status: status }, function(res) {
+    $.post('${pageContext.request.contextPath}/share/api/requests/' + shareId + '/respond', { status: status }, function(res) {
         if (!res || !(res.success === true || res.success === 'true')) {
             alert((res && res.message) ? res.message : '처리 중 오류가 발생했습니다.');
             return;
@@ -1048,7 +1148,7 @@ function respondShareRequest(shareId, status) {
 
 function releaseShareRequest(shareId) {
     if (!confirm('공유를 해지하시겠습니까?')) return;
-    $.post('/share/api/requests/' + shareId + '/release', function(res) {
+    $.post('${pageContext.request.contextPath}/share/api/requests/' + shareId + '/release', function(res) {
         if (!res || !(res.success === true || res.success === 'true')) {
             alert((res && res.message) ? res.message : '처리 중 오류가 발생했습니다.');
             return;
@@ -1066,7 +1166,7 @@ function rejectInvite(inviteId) {
     formData.append('status', 'REJECTED');
 
     $.ajax({
-        url: '/workspace/api/invitation/process',
+        url: '${pageContext.request.contextPath}/workspace/api/invitation/process',
         type: 'POST',
         processData: false,
         contentType: false,

@@ -10,6 +10,7 @@ public interface IfriendService {
     List<friendDTO> getFriends(Long userId, String keyword);
     List<friendDTO> getReceivedRequests(Long userId);
     List<friendDTO> getSentRequests(Long userId);
+    List<friendDTO> getRecommendations(Long userId);
     int getPendingReceivedCount(Long userId);
     friendDTO getRelation(Long userId, Long targetUserId);
     Map<String, Object> requestFriend(Long userId, Long targetUserId);

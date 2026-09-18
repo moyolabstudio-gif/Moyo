@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.springboot.project.dao.IusersDao">
 
     <sql id="UserColumns">
@@ -22,13 +22,15 @@
         NVL(PROFILE_NOTES_PUBLIC_YN, 'Y') AS profileNotesPublicYn,
         NVL(PROFILE_CALENDAR_PUBLIC_YN, 'Y') AS profileCalendarPublicYn,
         NVL(PROFILE_GROUPS_PUBLIC_YN, 'Y') AS profileGroupsPublicYn,
+        NVL(PROFILE_FRIENDS_PUBLIC_YN, 'Y') AS profileFriendsPublicYn,
         NVL((SELECT SCHEDULE_ALARM_YN FROM USER_NOTIFICATION_SETTINGS S WHERE S.USER_ID = USERS.USER_ID), 'Y') AS notifyScheduleYn,
         NVL((SELECT SHARE_ALARM_YN FROM USER_NOTIFICATION_SETTINGS S WHERE S.USER_ID = USERS.USER_ID), 'Y') AS notifyShareYn,
         NVL((SELECT REQUEST_ALARM_YN FROM USER_NOTIFICATION_SETTINGS S WHERE S.USER_ID = USERS.USER_ID), 'Y') AS notifyRequestYn,
         NVL((SELECT COMMENT_ALARM_YN FROM USER_NOTIFICATION_SETTINGS S WHERE S.USER_ID = USERS.USER_ID), 'Y') AS notifyCommentYn,
         NVL((SELECT LIKE_ALARM_YN FROM USER_NOTIFICATION_SETTINGS S WHERE S.USER_ID = USERS.USER_ID), 'Y') AS notifyLikeYn,
         TO_CHAR(WITHDRAW_REQUESTED_AT, 'YYYY-MM-DD') AS withdrawRequestedAt,
-        TO_CHAR(WITHDRAW_DEADLINE_AT, 'YYYY-MM-DD') AS withdrawDeadlineAt
+        TO_CHAR(WITHDRAW_DEADLINE_AT, 'YYYY-MM-DD') AS withdrawDeadlineAt,
+        NVL(SECURITY_VERSION, 0) AS securityVersion
     </sql>
 
     <select id="findAll" resultType="com.springboot.project.dto.usersDto">
@@ -46,7 +48,8 @@
             PROFILE_CROP_X, PROFILE_CROP_Y, PROFILE_AVATAR_TYPE, PROFILE_INTRO,
             BIRTH_DATE, BIRTH_CALENDAR_TYPE, BIRTH_PUBLIC_YN,
             PROFILE_PHOTOS_PUBLIC_YN, PROFILE_NOTES_PUBLIC_YN,
-            PROFILE_CALENDAR_PUBLIC_YN, PROFILE_GROUPS_PUBLIC_YN
+            PROFILE_CALENDAR_PUBLIC_YN, PROFILE_GROUPS_PUBLIC_YN,
+            PROFILE_FRIENDS_PUBLIC_YN
         ) VALUES (
             #{userId},
             #{email},
@@ -70,7 +73,8 @@
             NVL(#{profilePhotosPublicYn, jdbcType=VARCHAR}, 'Y'),
             NVL(#{profileNotesPublicYn, jdbcType=VARCHAR}, 'Y'),
             NVL(#{profileCalendarPublicYn, jdbcType=VARCHAR}, 'Y'),
-            NVL(#{profileGroupsPublicYn, jdbcType=VARCHAR}, 'Y')
+            NVL(#{profileGroupsPublicYn, jdbcType=VARCHAR}, 'Y'),
+            NVL(#{profileFriendsPublicYn, jdbcType=VARCHAR}, 'Y')
         )
     </insert>
 
@@ -108,6 +112,7 @@
             <if test="profileNotesPublicYn != null">PROFILE_NOTES_PUBLIC_YN = #{profileNotesPublicYn},</if>
             <if test="profileCalendarPublicYn != null">PROFILE_CALENDAR_PUBLIC_YN = #{profileCalendarPublicYn},</if>
             <if test="profileGroupsPublicYn != null">PROFILE_GROUPS_PUBLIC_YN = #{profileGroupsPublicYn},</if>
+            <if test="profileFriendsPublicYn != null">PROFILE_FRIENDS_PUBLIC_YN = #{profileFriendsPublicYn},</if>
         </set>
         WHERE USER_ID = #{userId}
     </update>
@@ -163,11 +168,24 @@
         )
     </insert>
 
-    <select id="login" parameterType="com.springboot.project.dto.usersDto" resultType="com.springboot.project.dto.usersDto">
-        SELECT <include refid="UserColumns" />
+
+    <select id="findAuthByEmail" parameterType="string" resultType="com.springboot.project.dto.usersDto">
+        SELECT USER_ID AS userId,
+               EMAIL AS email,
+               PWD_HASH AS pwdHash,
+               STATUS AS status,
+               USER_ROLE AS userRole,
+               NVL(LOGIN_FAIL_COUNT, 0) AS loginFailCount,
+               TO_CHAR(LOGIN_LOCKED_UNTIL, 'YYYY-MM-DD HH24:MI:SS') AS loginLockedUntil,
+               NVL(SECURITY_VERSION, 0) AS securityVersion
           FROM USERS
          WHERE UPPER(TRIM(EMAIL)) = UPPER(TRIM(#{email}))
-           AND PWD_HASH = #{pwdHash}
+    </select>
+
+    <select id="findPasswordHashByUserId" parameterType="long" resultType="string">
+        SELECT PWD_HASH
+          FROM USERS
+         WHERE USER_ID = #{userId}
     </select>
 
     <select id="searchUsersByEmail" parameterType="string" resultType="com.springboot.project.dto.usersDto">
@@ -188,18 +206,82 @@
          WHERE USER_ID = #{userId}
     </select>
 
-
-    <select id="countByUserIdAndPassword" resultType="int">
-        SELECT COUNT(*)
-          FROM USERS
-         WHERE USER_ID = #{userId}
-           AND PWD_HASH = #{pwdHash}
-           AND NVL(STATUS, 'ACTIVE') != 'QUIT'
-    </select>
-
     <update id="updatePassword">
         UPDATE USERS
            SET PWD_HASH = #{pwdHash}
+         WHERE USER_ID = #{userId}
+    </update>
+
+    <update id="resetPasswordAndBumpSecurityVersion">
+        UPDATE USERS
+           SET PWD_HASH = #{pwdHash},
+               SECURITY_VERSION = NVL(SECURITY_VERSION, 0) + 1,
+               LOGIN_FAIL_COUNT = 0,
+               LOGIN_LOCKED_UNTIL = NULL
+         WHERE USER_ID = #{userId}
+    </update>
+
+    <select id="findSecurityVersionByUserId" resultType="long">
+        SELECT NVL(SECURITY_VERSION, 0)
+          FROM USERS
+         WHERE USER_ID = #{userId}
+    </select>
+
+    <insert id="insertPasswordHistory">
+        INSERT INTO USER_PASSWORD_HISTORY (
+            HISTORY_ID, USER_ID, PWD_HASH, CREATED_AT
+        ) VALUES (
+            SEQ_USER_PASSWORD_HISTORY_ID.NEXTVAL, #{userId}, #{pwdHash}, SYSTIMESTAMP
+        )
+    </insert>
+
+    <select id="findRecentPasswordHashes" resultType="string">
+        SELECT PWD_HASH
+          FROM USER_PASSWORD_HISTORY
+         WHERE USER_ID = #{userId}
+           AND CREATED_AT &gt;= SYSTIMESTAMP - NUMTODSINTERVAL(30, 'DAY')
+         ORDER BY CREATED_AT DESC, HISTORY_ID DESC
+    </select>
+
+    <delete id="deleteExpiredPasswordHistory">
+        DELETE FROM USER_PASSWORD_HISTORY
+         WHERE USER_ID = #{userId}
+           AND CREATED_AT &lt; SYSTIMESTAMP - NUMTODSINTERVAL(30, 'DAY')
+    </delete>
+
+    <update id="clearExpiredLoginLock">
+        UPDATE USERS
+           SET LOGIN_FAIL_COUNT = 0,
+               LOGIN_LOCKED_UNTIL = NULL
+         WHERE USER_ID = #{userId}
+           AND LOGIN_LOCKED_UNTIL IS NOT NULL
+           AND LOGIN_LOCKED_UNTIL &lt;= SYSTIMESTAMP
+    </update>
+
+    <select id="countActiveLoginLock" resultType="int">
+        SELECT COUNT(*)
+          FROM USERS
+         WHERE USER_ID = #{userId}
+           AND LOGIN_LOCKED_UNTIL IS NOT NULL
+           AND LOGIN_LOCKED_UNTIL &gt; SYSTIMESTAMP
+    </select>
+
+    <update id="recordLoginFailure">
+        UPDATE USERS
+           SET LOGIN_FAIL_COUNT = NVL(LOGIN_FAIL_COUNT, 0) + 1,
+               LOGIN_LOCKED_UNTIL =
+                   CASE
+                       WHEN NVL(LOGIN_FAIL_COUNT, 0) + 1 &gt;= #{maxFailures}
+                       THEN SYSTIMESTAMP + NUMTODSINTERVAL(#{lockMinutes}, 'MINUTE')
+                       ELSE LOGIN_LOCKED_UNTIL
+                   END
+         WHERE USER_ID = #{userId}
+    </update>
+
+    <update id="resetLoginFailures">
+        UPDATE USERS
+           SET LOGIN_FAIL_COUNT = 0,
+               LOGIN_LOCKED_UNTIL = NULL
          WHERE USER_ID = #{userId}
     </update>
 
@@ -228,6 +310,209 @@
            AND STATUS = 'WITHDRAW_PENDING'
            AND WITHDRAW_DEADLINE_AT >= SYSDATE
     </select>
+
+    <!-- 계정 탈퇴 전 위임이 필요한 공동 자산 확인 -->
+    <select id="countOwnedWorkspacesForWithdrawal" resultType="int">
+        SELECT COUNT(*)
+          FROM WORKSPACES
+         WHERE OWNER_ID = #{userId}
+           AND NVL(STATUS, 'ACTIVE') = 'ACTIVE'
+    </select>
+
+    <select id="countLedGroupProjectsForWithdrawal" resultType="int">
+        SELECT COUNT(*)
+          FROM PROJECTS
+         WHERE LEADER_ID = #{userId}
+           AND PROJ_SCOPE = 'GROUP'
+           AND NVL(STATUS, 'ACTIVE') = 'ACTIVE'
+    </select>
+
+    <!-- 30일 유예가 끝난 탈퇴 대기 계정 -->
+    <select id="findExpiredWithdrawalUserIds" resultType="long">
+        SELECT USER_ID
+          FROM USERS
+         WHERE STATUS = 'WITHDRAW_PENDING'
+           AND WITHDRAW_DEADLINE_AT IS NOT NULL
+           AND WITHDRAW_DEADLINE_AT &lt;= SYSDATE
+         ORDER BY WITHDRAW_DEADLINE_AT, USER_ID
+    </select>
+
+    <select id="findWithdrawalProfileImagePaths" resultType="string">
+        SELECT PATH
+          FROM (
+                SELECT PROFILE_IMAGE_PATH AS PATH FROM USERS WHERE USER_ID = #{userId}
+                UNION
+                SELECT PROFILE_ORIGINAL_IMAGE_PATH AS PATH FROM USERS WHERE USER_ID = #{userId}
+                UNION
+                SELECT CROPPED_IMAGE_PATH AS PATH FROM USER_PROFILE_IMAGES WHERE USER_ID = #{userId}
+                UNION
+                SELECT ORIGINAL_IMAGE_PATH AS PATH FROM USER_PROFILE_IMAGES WHERE USER_ID = #{userId}
+               )
+         WHERE PATH IS NOT NULL
+    </select>
+
+    <select id="findWithdrawalPrivateNoteIds" resultType="long">
+        SELECT NOTE_ID
+          FROM NOTES
+         WHERE USER_ID = #{userId}
+           AND SCOPE_TYPE = 'PRIVATE'
+    </select>
+
+    <select id="findWithdrawalPersonalPhotoPostIds" resultType="long">
+        SELECT POST_ID
+          FROM PHOTO_POSTS
+         WHERE CREATED_BY = #{userId}
+           AND SCOPE_TYPE = 'PERSONAL'
+    </select>
+
+    <select id="findWithdrawalPersonalContentFilePaths" resultType="string">
+        SELECT FILE_PATH
+          FROM CONTENT_FILES
+         WHERE SCOPE_TYPE = 'PERSONAL'
+           AND OWNER_USER_ID = #{userId}
+           AND FILE_PATH IS NOT NULL
+    </select>
+
+    <delete id="deleteWithdrawalPersonalContentFiles">
+        DELETE FROM CONTENT_FILES
+         WHERE SCOPE_TYPE = 'PERSONAL'
+           AND OWNER_USER_ID = #{userId}
+    </delete>
+
+    <delete id="deleteWithdrawalPersonalPhotoAlbums">
+        DELETE FROM PHOTO_ALBUMS
+         WHERE SCOPE_TYPE = 'PERSONAL'
+           AND CREATED_BY = #{userId}
+    </delete>
+
+    <delete id="deleteWithdrawalPersonalNoteFolders">
+        DELETE FROM NOTE_FOLDERS
+         WHERE SCOPE_TYPE = 'PRIVATE'
+           AND OWNER_USER_ID = #{userId}
+    </delete>
+
+    <delete id="deleteWithdrawalPersonalFileFolders">
+        DELETE FROM CONTENT_FILE_FOLDERS
+         WHERE SCOPE_TYPE = 'PERSONAL'
+           AND OWNER_USER_ID = #{userId}
+    </delete>
+
+    <delete id="deleteWithdrawalPersonalEventShares">
+        DELETE FROM CONTENT_SHARES
+         WHERE CONTENT_TYPE = 'CALENDAR'
+           AND CONTENT_ID IN (
+               SELECT EVENT_ID FROM EVENTS
+                WHERE USER_ID = #{userId}
+                  AND WS_ID IS NULL
+                  AND PROJ_ID IS NULL
+           )
+    </delete>
+
+    <delete id="deleteWithdrawalPersonalEventReactions">
+        DELETE FROM CONTENT_REACTIONS
+         WHERE CONTENT_TYPE = 'EVENT'
+           AND CONTENT_ID IN (
+               SELECT EVENT_ID FROM EVENTS
+                WHERE USER_ID = #{userId}
+                  AND WS_ID IS NULL
+                  AND PROJ_ID IS NULL
+           )
+    </delete>
+
+    <delete id="deleteWithdrawalPersonalEventDependencies">
+        DELETE FROM EVENT_ATTENDEES
+         WHERE EVENT_ID IN (
+               SELECT EVENT_ID FROM EVENTS
+                WHERE USER_ID = #{userId}
+                  AND WS_ID IS NULL
+                  AND PROJ_ID IS NULL
+         )
+    </delete>
+
+    <delete id="deleteWithdrawalPersonalEvents">
+        DELETE FROM EVENTS
+         WHERE USER_ID = #{userId}
+           AND WS_ID IS NULL
+           AND PROJ_ID IS NULL
+    </delete>
+
+    <delete id="deleteWithdrawalProfileImages">
+        DELETE FROM USER_PROFILE_IMAGES WHERE USER_ID = #{userId}
+    </delete>
+
+    <delete id="deleteWithdrawalNotificationSettings">
+        DELETE FROM USER_NOTIFICATION_SETTINGS WHERE USER_ID = #{userId}
+    </delete>
+
+    <delete id="deleteWithdrawalFriendRelations">
+        DELETE FROM USER_FRIENDS
+         WHERE REQUESTER_ID = #{userId}
+            OR ADDRESSEE_ID = #{userId}
+    </delete>
+
+    <delete id="deleteWithdrawalPasswordHistory">
+        DELETE FROM USER_PASSWORD_HISTORY WHERE USER_ID = #{userId}
+    </delete>
+
+    <delete id="deleteWithdrawalWorkspaceInvitations">
+        DELETE FROM WS_INVITATIONS
+         WHERE INVITEE_ID = #{userId}
+    </delete>
+
+    <delete id="deleteWithdrawalWorkspaceJoinRequests">
+        DELETE FROM WS_JOIN_REQUESTS
+         WHERE REQUESTER_ID = #{userId}
+    </delete>
+
+    <delete id="deleteWithdrawalTargetedShares">
+        DELETE FROM CONTENT_SHARES
+         WHERE TARGET_TYPE = 'USER'
+           AND TARGET_ID = #{userId}
+    </delete>
+
+    <delete id="deleteWithdrawalWorkspaceMemberships">
+        DELETE FROM WS_MEMBERS WHERE USER_ID = #{userId}
+    </delete>
+
+    <delete id="deleteWithdrawalProjectMemberships">
+        DELETE FROM PROJ_MEMBERS pm
+         WHERE pm.USER_ID = #{userId}
+           AND EXISTS (
+               SELECT 1 FROM PROJECTS p
+                WHERE p.PROJ_ID = pm.PROJ_ID
+                  AND p.PROJ_SCOPE = 'GROUP'
+           )
+    </delete>
+
+    <update id="finalizeWithdrawalAccount">
+        UPDATE USERS
+           SET EMAIL = 'withdrawn_' || USER_ID || '_' || TO_CHAR(SYSTIMESTAMP, 'YYYYMMDDHH24MISSFF3') || '@deleted.moyo.local',
+               PWD_HASH = #{pwdHash},
+               USER_NAME = '탈퇴한 사용자',
+               STATUS = 'QUIT',
+               USER_ROLE = 'USER',
+               PROFILE_IMAGE_PATH = NULL,
+               PROFILE_ORIGINAL_IMAGE_PATH = NULL,
+               PROFILE_CROP_SCALE = NULL,
+               PROFILE_CROP_X = NULL,
+               PROFILE_CROP_Y = NULL,
+               PROFILE_AVATAR_TYPE = 'DEFAULT',
+               PROFILE_INTRO = NULL,
+               BIRTH_DATE = NULL,
+               BIRTH_CALENDAR_TYPE = 'SOLAR',
+               BIRTH_PUBLIC_YN = 'N',
+               PROFILE_PHOTOS_PUBLIC_YN = 'N',
+               PROFILE_NOTES_PUBLIC_YN = 'N',
+               PROFILE_CALENDAR_PUBLIC_YN = 'N',
+               PROFILE_GROUPS_PUBLIC_YN = 'N',
+               LOGIN_FAIL_COUNT = 0,
+               LOGIN_LOCKED_UNTIL = NULL,
+               SECURITY_VERSION = NVL(SECURITY_VERSION, 0) + 1
+         WHERE USER_ID = #{userId}
+           AND STATUS = 'WITHDRAW_PENDING'
+           AND WITHDRAW_DEADLINE_AT IS NOT NULL
+           AND WITHDRAW_DEADLINE_AT &lt;= SYSDATE
+    </update>
 
 
     <select id="findProfileImageHistory" resultType="map">
@@ -288,6 +573,7 @@
           FROM WORKSPACES W
           JOIN WS_MEMBERS M ON W.WS_ID = M.WS_ID
          WHERE M.USER_ID = #{userId}
+           AND NVL(W.STATUS, 'ACTIVE') = 'ACTIVE'
          ORDER BY W.WS_ID DESC
     </select>
 

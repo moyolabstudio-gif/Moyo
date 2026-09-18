@@ -17,7 +17,7 @@ body.moyo-board-body {
     flex-direction: column;
     background: var(--board-bg) !important;
     color: var(--board-text);
-    font-family: 'Pretendard', sans-serif;
+    font-family: "Pretendard", sans-serif;
 }
 body.moyo-board-body > .moyo-header { flex: 0 0 auto; }
 body.moyo-board-body > .moyo-footer {
@@ -76,7 +76,7 @@ body.moyo-board-body > .moyo-footer {
 .write-card::before,
 .form-card::before,
 .detail-card::before {
-    content: '';
+    content: "";
     position: absolute;
     inset: 0 0 auto 0;
     height: 132px;
@@ -86,7 +86,7 @@ body.moyo-board-body > .moyo-footer {
 .write-card::after,
 .form-card::after,
 .detail-card::after {
-    content: '';
+    content: "";
     position: absolute;
     left: 0;
     top: 30px;
@@ -372,7 +372,7 @@ body.moyo-board-body > .moyo-footer {
         #fafbfc !important;
 }
 .board-empty::before {
-    content: '아직 표시할 게시글이 없어요';
+    content: "아직 표시할 게시글이 없어요";
     display: block;
     color: #64748b;
     font-size: 16px;
@@ -522,7 +522,7 @@ body.moyo-board-body > .moyo-footer {
 
 body.moyo-board-body {
     background: #fff !important;
-    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+    font-family: "Pretendard", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
 }
 
 .board-page {
@@ -561,7 +561,7 @@ body.moyo-board-body {
     background: linear-gradient(180deg, var(--moyo-blue), var(--moyo-mint)) !important;
 }
 .board-hero::after {
-    content: '';
+    content: "";
     position: absolute;
     right: -82px;
     top: -104px;
@@ -704,7 +704,7 @@ body.moyo-board-body {
     font-weight: 800 !important;
 }
 .board-empty::before {
-    content: '게시글을 기다리는 중이에요' !important;
+    content: "게시글을 기다리는 중이에요" !important;
     color: #475569 !important;
     font-size: 15px !important;
     font-weight: 900 !important;
@@ -1167,7 +1167,7 @@ body.moyo-board-body .form-card .ck-editor__editable_inline {
 .board-file-form-page .form-label::after,
 .board-file-form-page label[for="title"]::after,
 .board-file-form-page label[for="editor"]::after {
-    content: '';
+    content: "";
 }
 
 .board-file-dropzone.is-file-board {
@@ -1488,7 +1488,7 @@ body.moyo-board-body .board-hero {
     overflow: hidden !important;
 }
 body.moyo-board-body .board-hero::before {
-    content: '' !important;
+    content: "" !important;
     position: absolute !important;
     left: 0 !important;
     top: 28px !important;
@@ -1499,7 +1499,7 @@ body.moyo-board-body .board-hero::before {
     pointer-events: none !important;
 }
 body.moyo-board-body .board-hero::after {
-    content: '' !important;
+    content: "" !important;
     position: absolute !important;
     right: -72px !important;
     top: -84px !important;
@@ -3022,7 +3022,6 @@ body.moyo-board-body .ck-content figure.table.ck-widget_with-selection-handle {
 }
 
 
-
 /* ===== Board editor toolbar v8 =====
    표 선택 드롭다운은 v7의 안정화 방식을 유지하고,
    상용 게시판에서 필요한 서식 지우기/되돌리기/다시실행 버튼만 추가한다. */
@@ -3046,7 +3045,6 @@ body.moyo-board-body .modify-page .ck.ck-toolbar .ck-dropdown__button {
     padding-left: 4px !important;
     padding-right: 4px !important;
 }
-
 
 
 /* ===== Board editor toolbar/table picker v9 =====
@@ -3694,3 +3692,196 @@ body.moyo-board-body .board-panel .board-table tbody tr:only-child .board-empty-
     }
 }
 /* ===== End Board empty rich state final override ===== */
+
+/* =========================================================
+   MOYO Stage 3 - List Screen Unification / Board List only
+   ========================================================= */
+body.moyo-board-body {
+    background: var(--moyo-color-page) !important;
+    color: var(--moyo-color-text);
+    font-family: var(--moyo-font-family);
+}
+body.moyo-board-body .board-page {
+    width: min(1180px, calc(100% - 48px)) !important;
+    max-width: 1180px !important;
+    margin: 28px auto 48px !important;
+    padding: 0 !important;
+}
+.board-page .board-top-link {
+    min-height: var(--moyo-control-height-compact);
+    margin-bottom: 10px;
+    color: var(--moyo-color-text-soft) !important;
+    font-size: var(--moyo-font-size-sm) !important;
+}
+.board-page .board-hero {
+    position: relative;
+    overflow: hidden;
+    min-height: 136px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    margin: 0 0 16px !important;
+    padding: 26px 30px !important;
+    border: var(--moyo-border) !important;
+    border-radius: var(--moyo-radius-lg) !important;
+    background: var(--moyo-color-surface) !important;
+    box-shadow: var(--moyo-shadow-sm) !important;
+}
+.board-page .board-hero::before {
+    content: "";
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 4px;
+    background: var(--moyo-color-primary);
+}
+.board-page .board-hero::after { display: none !important; }
+.board-page .board-hero h2 {
+    margin: 0 !important;
+    color: var(--moyo-color-text) !important;
+    font-size: clamp(28px, 3vw, 36px) !important;
+    font-weight: var(--moyo-font-weight-heavy) !important;
+    line-height: 1.15 !important;
+    letter-spacing: -.04em !important;
+}
+.board-page .board-hero p {
+    margin: 8px 0 0 !important;
+    color: var(--moyo-color-text-soft) !important;
+    font-size: var(--moyo-font-size-md) !important;
+}
+.board-page .board-hero-actions { gap: 8px !important; }
+.board-page .board-write-btn,
+.board-page .board-report-manage-btn {
+    min-height: var(--moyo-control-height-large) !important;
+    padding: 0 16px !important;
+    border-radius: var(--moyo-radius-md) !important;
+    font-size: var(--moyo-font-size-sm) !important;
+    font-weight: var(--moyo-font-weight-bold) !important;
+}
+.board-page .board-write-btn {
+    border: 1px solid var(--moyo-color-primary) !important;
+    background: var(--moyo-color-primary) !important;
+    box-shadow: var(--moyo-shadow-primary) !important;
+}
+.board-page .board-report-manage-btn {
+    border: var(--moyo-border-strong) !important;
+    background: var(--moyo-color-surface) !important;
+    color: #596579 !important;
+    box-shadow: none !important;
+}
+.board-page .board-search-panel {
+    min-height: 68px;
+    margin-bottom: 16px;
+    padding: 13px 16px;
+    border: var(--moyo-border);
+    border-radius: var(--moyo-radius-lg);
+    background: var(--moyo-color-surface);
+    box-shadow: var(--moyo-shadow-xs);
+}
+.board-page .board-list-summary {
+    color: var(--moyo-color-text-soft);
+    font-size: var(--moyo-font-size-sm);
+}
+.board-page .board-search-select,
+.board-page .board-search-input,
+.board-page .board-search-btn,
+.board-page .board-search-reset {
+    height: var(--moyo-control-height) !important;
+    min-height: var(--moyo-control-height) !important;
+    border-radius: var(--moyo-radius-md) !important;
+    font-size: var(--moyo-font-size-sm) !important;
+}
+.board-page .board-search-select,
+.board-page .board-search-input {
+    border: var(--moyo-border-strong) !important;
+    color: var(--moyo-control-text) !important;
+    font-weight: var(--moyo-font-weight-medium) !important;
+}
+.board-page .board-search-btn {
+    border: 1px solid var(--moyo-color-primary) !important;
+    background: var(--moyo-color-primary) !important;
+    box-shadow: var(--moyo-shadow-primary) !important;
+}
+.board-page .board-search-reset {
+    border: var(--moyo-border-strong) !important;
+    background: var(--moyo-color-surface) !important;
+    color: #596579 !important;
+}
+.board-page .board-panel {
+    overflow: hidden;
+    border: var(--moyo-border) !important;
+    border-radius: var(--moyo-radius-lg) !important;
+    background: var(--moyo-color-surface) !important;
+    box-shadow: var(--moyo-shadow-xs) !important;
+}
+.board-page .board-table th {
+    background: var(--moyo-color-surface-soft) !important;
+    color: var(--moyo-color-text-soft) !important;
+    font-size: var(--moyo-font-size-xs) !important;
+}
+.board-page .board-table td {
+    color: var(--moyo-color-text) !important;
+    font-size: var(--moyo-font-size-sm) !important;
+}
+.board-page .board-empty {
+    border-radius: var(--moyo-radius-md) !important;
+    background: var(--moyo-color-surface-soft) !important;
+    color: var(--moyo-color-text-muted) !important;
+}
+.board-page .board-pagination { gap: 6px; margin-top: 18px; }
+.board-page .board-pagination .page-btn,
+.board-page .board-pagination .page-number {
+    min-width: var(--moyo-control-height-compact);
+    height: var(--moyo-control-height-compact);
+    padding: 0 10px;
+    border: var(--moyo-border);
+    border-radius: var(--moyo-radius-md);
+    background: var(--moyo-color-surface);
+    color: var(--moyo-color-text-soft);
+    box-shadow: none;
+}
+.board-page .board-pagination .page-number.active {
+    border-color: var(--moyo-color-primary);
+    background: var(--moyo-color-primary);
+    color: #fff;
+    box-shadow: var(--moyo-shadow-primary);
+}
+@media (max-width: 760px) {
+    body.moyo-board-body .board-page { width: calc(100% - 24px) !important; margin-top: 16px !important; }
+    .board-page .board-hero { min-height: 0; padding: 20px !important; align-items: stretch; flex-direction: column; }
+    .board-page .board-hero-actions { width: 100%; display: flex; }
+    .board-page .board-hero-actions > * { flex: 1 1 0; }
+}
+
+
+/* =========================================================
+   MOYO Stage 3 refinement - restrained scope accent
+   게시판은 MOYO primary blue를 기준색으로 유지하고 그라데이션 강조 제거
+   ========================================================= */
+body.moyo-board-body .board-empty-action {
+    border: 1px solid var(--moyo-color-primary) !important;
+    background: var(--moyo-color-primary) !important;
+    box-shadow: var(--moyo-shadow-primary) !important;
+}
+body.moyo-board-body .board-empty-action:hover {
+    border-color: var(--moyo-color-primary-strong) !important;
+    background: var(--moyo-color-primary-strong) !important;
+}
+.board-page .board-hero::before {
+    width: 3px;
+    opacity: .78;
+}
+
+
+/* MOYO brand CTA gradient restoration - primary write action only */
+.board-page .board-write-btn {
+    border-color: rgba(74, 144, 226, .18) !important;
+    background: linear-gradient(135deg, #55D6C2 0%, #4A90E2 54%, #7567F4 100%) !important;
+    color: #fff !important;
+    box-shadow: 0 8px 18px rgba(74, 144, 226, .22) !important;
+}
+.board-page .board-write-btn:hover {
+    border-color: rgba(63, 130, 212, .24) !important;
+    background: linear-gradient(135deg, #45C7B3 0%, #3F82D4 54%, #6758E6 100%) !important;
+    box-shadow: 0 10px 22px rgba(74, 144, 226, .26) !important;
+}

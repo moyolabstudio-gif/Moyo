@@ -11,6 +11,8 @@ import com.springboot.project.service.IboardService;
 import com.springboot.project.dto.usersDto;
 import com.springboot.project.dto.projectRequestDTO;
 import com.springboot.project.service.IprojectService;
+import com.springboot.project.service.IprojectAuthorizationService;
+import com.springboot.project.service.BoardAuthorizationService;
 import jakarta.servlet.http.HttpSession;
 
 @Controller
@@ -22,6 +24,12 @@ public class projectBoardController {
 
     @Autowired
     private IprojectService projectService;
+
+    @Autowired
+    private IprojectAuthorizationService projectAuthorizationService;
+
+    @Autowired
+    private BoardAuthorizationService boardAuthorizationService;
 
 
     private Long currentUserId(HttpSession session) {
@@ -114,31 +122,32 @@ public class projectBoardController {
         if (post == null || getAccessibleProject(post.getProjId(), post.getWsId(), session) == null) {
             return Map.of("status", "NO_PERMISSION");
         }
-        post.setUserId(currentUserId(session));
+        Long userId = currentUserId(session);
+        boolean canManage = boardAuthorizationService.canManageBoard(post.getWsId(), post.getProjId(), userId);
+        if ("NOTICE".equalsIgnoreCase(post.getBoardType()) && !canManage) {
+            return Map.of("status", "NO_PERMISSION");
+        }
+        post.setUserId(userId);
+        if (!canManage || !"Y".equalsIgnoreCase(post.getIsPinned())) {
+            post.setIsPinned("N");
+            post.setPinStartDt(null);
+            post.setPinEndDt(null);
+        }
         return Map.of("status", iboardService.registerPost(post) ? "SUCCESS" : "FAIL");
     }
 
     @DeleteMapping("/api/delete/{postId}")
     @ResponseBody
-    public Map<String, String> delete(@PathVariable Long postId) {
+    public Map<String, String> delete(@PathVariable Long postId, HttpSession session) {
+        Long userId = currentUserId(session);
+        if (userId == null) return Map.of("status", "LOGIN_REQUIRED");
+        if (!boardAuthorizationService.canDeletePost(postId, userId)) return Map.of("status", "NO_PERMISSION");
         return Map.of("status", iboardService.deletePost(postId) ? "SUCCESS" : "FAIL");
     }
 
     private projectRequestDTO getAccessibleProject(Long projId, Long requestedWsId, HttpSession session) {
         Long userId = currentUserId(session);
         if (projId == null || userId == null) return null;
-        projectRequestDTO project = projectService.getProjectById(projId);
-        if (project == null) return null;
-        String scope = project.getProjScope() == null ? "GROUP" : project.getProjScope().trim().toUpperCase();
-        if ("PERSONAL".equals(scope)) {
-            return project.getWsId() == null && userId.equals(project.getLeaderId()) ? project : null;
-        }
-        if (!"GROUP".equals(scope) || project.getWsId() == null) return null;
-        if (requestedWsId != null && !requestedWsId.equals(project.getWsId())) return null;
-        boolean member = projectService.getProjectMembers(projId).stream().anyMatch(m -> {
-            Object value = m.get("USER_ID");
-            return value != null && userId.equals(Long.valueOf(String.valueOf(value)));
-        });
-        return member || userId.equals(project.getLeaderId()) ? project : null;
+        return projectAuthorizationService.getAccessibleProject(projId, requestedWsId, userId);
     }
 }

@@ -18,19 +18,23 @@ public class fileUploadService {
 
     private final String publicPrefix;
     private final Path uploadDir;
+    private final UploadSecurityService uploadSecurityService;
 
     public fileUploadService(
             @Value("${moyo.upload.workspace-dir:C:/uploads/workspace/}") String workspaceUploadDir,
-            @Value("${moyo.upload.workspace-public-prefix:/uploads/workspace/}") String workspacePublicPrefix) {
+            @Value("${moyo.upload.workspace-public-prefix:/uploads/workspace/}") String workspacePublicPrefix,
+            UploadSecurityService uploadSecurityService) {
 
         this.uploadDir = Paths.get(workspaceUploadDir)
                 .toAbsolutePath()
                 .normalize();
         this.publicPrefix = normalizePublicPrefix(workspacePublicPrefix);
+        this.uploadSecurityService = uploadSecurityService;
     }
 
     public String upload(MultipartFile file) {
         if (file == null || file.isEmpty()) return null;
+        uploadSecurityService.validateImage(file, 10L * 1024L * 1024L, false);
 
         try {
             Files.createDirectories(uploadDir);

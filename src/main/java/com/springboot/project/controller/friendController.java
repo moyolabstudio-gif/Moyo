@@ -61,6 +61,16 @@ public class friendController {
         return result;
     }
 
+    @GetMapping("/api/recommendations")
+    @ResponseBody
+    public Map<String, Object> recommendations(HttpSession session) {
+        usersDto user = getLoginUser(session);
+        if (user == null) return fail("로그인이 필요합니다.");
+        Map<String, Object> result = ok();
+        result.put("recommendations", friendService.getRecommendations(user.getUserId()));
+        return result;
+    }
+
     @GetMapping("/api/count")
     @ResponseBody
     public Map<String, Object> count(HttpSession session) {

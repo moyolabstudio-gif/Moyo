@@ -22,11 +22,15 @@ public class noticeService {
     @Autowired
     private IuserNoticeDAO userNoticeDAO; // 알림 저장하는 DAO
 
+    @Autowired
+    private ContentInputSecurityService contentInputSecurityService;
+
     public List<noticeDTO> getNoticeList() {
         return noticeDAO.selectNoticeList();
     }
 
     public void writeNotice(noticeDTO notice) {
+        sanitizeNotice(notice);
         // 1. 공지사항 저장
         noticeDAO.insertNotice(notice);
         
@@ -55,6 +59,7 @@ public class noticeService {
 
         // 2. 수정 처리
         public void updateNotice(noticeDTO notice) {
+            sanitizeNotice(notice);
             noticeDAO.updateNotice(notice);
         }
 
@@ -62,4 +67,10 @@ public class noticeService {
         public void deleteNotice(Long noticeId) {
             noticeDAO.deleteNotice(noticeId);
         }
+    private void sanitizeNotice(noticeDTO notice) {
+        if (notice == null) throw new IllegalArgumentException("공지 내용을 확인해주세요.");
+        notice.setTitle(contentInputSecurityService.singleLine(notice.getTitle(), 200, true));
+        notice.setContent(contentInputSecurityService.richHtml(notice.getContent()));
+    }
+
 }

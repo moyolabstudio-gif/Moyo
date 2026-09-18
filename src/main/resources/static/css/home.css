@@ -1573,11 +1573,16 @@ body.moyo-home-body {
 
 .moyo-home-hero {
     position: relative;
-    min-height: clamp(760px, calc(100vh - 70px), 920px);
+    min-height: clamp(720px, calc(100vh - 70px), 860px);
     display: flex;
-    align-items: center;
-    padding: 72px 0 84px;
+    align-items: flex-start;
+    padding: 42px 0 76px;
     overflow: hidden;
+}
+
+/* Public home uses a lighter header, so keep a little more breathing room below it. */
+.moyo-home-body.is-guest .moyo-home-hero {
+    padding-top: 90px;
 }
 
 .moyo-home-depth-grid {
@@ -2755,4 +2760,50 @@ body.moyo-home-body {
         padding-bottom: 44px;
     }
 
+}
+
+/* MOYO home final feature grouping */
+.moyo-home-feature-card.project-flow {
+    grid-column: 1 / -1;
+    min-height: 178px;
+}
+
+.moyo-home-feature-card.project-flow .feature-art {
+    margin-top: 20px;
+    padding-top: 0;
+}
+
+.project-flow-art {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.project-flow-art span {
+    display: block;
+    height: 12px;
+    border-radius: 999px;
+    background: #EEF3FA;
+    overflow: hidden;
+}
+
+.project-flow-art span i {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, #6E8FE8, #8B6CFF);
+}
+
+.project-flow-art span:nth-child(1) i { width: 78%; }
+.project-flow-art span:nth-child(2) i { width: 56%; }
+.project-flow-art span:nth-child(3) i { width: 36%; }
+
+@media (max-width: 760px) {
+    .moyo-home-feature-card.project-flow {
+        grid-column: auto;
+    }
+
+    .project-flow-art {
+        grid-template-columns: 1fr;
+    }
 }

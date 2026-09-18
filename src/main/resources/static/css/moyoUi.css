@@ -1,28 +1,115 @@
+/* =========================================================
+   MOYO Design Tokens
+   - 이 파일의 :root 값을 MOYO 전체 UI의 공식 기준으로 사용한다.
+   - 화면별 CSS에서는 가능한 한 이 값을 재정의하지 않는다.
+   ========================================================= */
 :root {
-    --moyo-primary: #4A90E2;
-    --moyo-primary-hover: #397fca;
-    --moyo-blue: var(--moyo-primary);
-    --moyo-mint: #39CDB5;
-    --moyo-purple: #8b5cf6;
-    --moyo-personal: var(--moyo-blue);
-    --moyo-friend: #f6b642;
-    --moyo-friend-deep: #d99a17;
-    --moyo-group: var(--moyo-mint);
-    --moyo-project: var(--moyo-purple);
-    --moyo-danger: #ef5b67;
-    --moyo-danger-hover: #dc4554;
-    --moyo-text: #1f2937;
-    --moyo-text-soft: #667085;
-    --moyo-text-muted: #98a2b3;
-    --moyo-line: #e5ebf1;
-    --moyo-line-strong: #d8e1ea;
-    --moyo-surface: #ffffff;
-    --moyo-surface-soft: #f8fafc;
+    /* Brand / scope colors */
+    --moyo-color-primary: #4A90E2;
+    --moyo-color-primary-hover: #397FCA;
+    --moyo-color-primary-strong: #2563EB;
+    --moyo-color-personal: #4A90E2;
+    --moyo-color-friend: #F6B642;
+    --moyo-color-friend-strong: #D99A17;
+    --moyo-color-group: #39CDB5;
+    --moyo-color-project: #8B5CF6;
+
+    /* Official MOYO default-avatar gradient: mint -> blue -> violet */
+    --moyo-avatar-gradient: linear-gradient(135deg, #55D5CE 0%, #4288EF 52%, #5A55EE 100%);
+
+    /* Official MOYO primary CTA gradient: top-left -> bottom-right */
+    --moyo-primary-gradient: linear-gradient(135deg, #39CDB5 0%, #4A90E2 54%, #7358E8 100%);
+    --moyo-primary-gradient-hover: linear-gradient(135deg, #32BFA9 0%, #3F82D4 54%, #6758E6 100%);
+
+    /* Semantic colors */
+    --moyo-color-danger: #EF5B67;
+    --moyo-color-danger-hover: #DC4554;
+    --moyo-color-success: #22A06B;
+    --moyo-color-warning: #F59E0B;
+
+    /* Text */
+    --moyo-color-text: #1F2937;
+    --moyo-color-text-soft: #667085;
+    --moyo-color-text-muted: #98A2B3;
+    --moyo-color-text-inverse: #FFFFFF;
+
+    /* Surface / background */
+    --moyo-color-surface: #FFFFFF;
+    --moyo-color-surface-soft: #F8FAFC;
+    --moyo-color-surface-hover: #F7FBFF;
+    --moyo-color-page: #F7F9FC;
+
+    /* Border */
+    --moyo-border-color: #E5EBF1;
+    --moyo-border-color-strong: #D8E1EA;
+    --moyo-border-width: 1px;
+    --moyo-border: var(--moyo-border-width) solid var(--moyo-border-color);
+    --moyo-border-strong: var(--moyo-border-width) solid var(--moyo-border-color-strong);
+
+    /* Radius */
+    --moyo-radius-xs: 8px;
     --moyo-radius-sm: 9px;
     --moyo-radius-md: 12px;
     --moyo-radius-lg: 18px;
-    --moyo-shadow: 0 8px 24px rgba(15, 23, 42, .07);
-    --moyo-focus: 0 0 0 4px rgba(74, 144, 226, .12);
+    --moyo-radius-xl: 20px;
+    --moyo-radius-pill: 999px;
+
+    /* Shadow */
+    --moyo-shadow-xs: 0 2px 8px rgba(15, 23, 42, .05);
+    --moyo-shadow-sm: 0 6px 14px rgba(15, 23, 42, .06);
+    --moyo-shadow-md: 0 8px 24px rgba(15, 23, 42, .07);
+    --moyo-shadow-lg: 0 24px 70px rgba(15, 23, 42, .22);
+    --moyo-shadow-primary: 0 6px 14px rgba(74, 144, 226, .18);
+
+    /* Typography */
+    --moyo-font-family: "Pretendard", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --moyo-font-size-xs: 12px;
+    --moyo-font-size-sm: 13px;
+    --moyo-font-size-md: 14px;
+    --moyo-font-size-lg: 16px;
+    --moyo-font-size-xl: 20px;
+    --moyo-font-weight-regular: 400;
+    --moyo-font-weight-medium: 500;
+    --moyo-font-weight-semibold: 700;
+    --moyo-font-weight-bold: 800;
+    --moyo-font-weight-heavy: 900;
+    --moyo-line-height-body: 1.55;
+
+    /* Control heights */
+    --moyo-control-height-compact: 34px;
+    --moyo-control-height: 40px;
+    --moyo-control-height-large: 44px;
+    --moyo-control-padding-x: 16px;
+
+    /* Focus */
+    --moyo-focus-ring: 0 0 0 4px rgba(74, 144, 226, .12);
+
+    /* -----------------------------------------------------
+       Legacy aliases
+       기존 화면을 깨지 않고 2단계부터 순차적으로 공식 토큰으로 전환한다.
+       ----------------------------------------------------- */
+    --moyo-primary: var(--moyo-color-primary);
+    --moyo-primary-hover: var(--moyo-color-primary-hover);
+    --moyo-blue: var(--moyo-color-personal);
+    --moyo-blue-strong: var(--moyo-color-primary-strong);
+    --moyo-mint: var(--moyo-color-group);
+    --moyo-purple: var(--moyo-color-project);
+    --moyo-personal: var(--moyo-color-personal);
+    --moyo-friend: var(--moyo-color-friend);
+    --moyo-friend-deep: var(--moyo-color-friend-strong);
+    --moyo-group: var(--moyo-color-group);
+    --moyo-project: var(--moyo-color-project);
+    --moyo-danger: var(--moyo-color-danger);
+    --moyo-danger-hover: var(--moyo-color-danger-hover);
+    --moyo-text: var(--moyo-color-text);
+    --moyo-text-soft: var(--moyo-color-text-soft);
+    --moyo-text-muted: var(--moyo-color-text-muted);
+    --moyo-line: var(--moyo-border-color);
+    --moyo-line-strong: var(--moyo-border-color-strong);
+    --moyo-surface: var(--moyo-color-surface);
+    --moyo-surface-soft: var(--moyo-color-surface-soft);
+    --moyo-shadow: var(--moyo-shadow-md);
+    --moyo-focus: var(--moyo-focus-ring);
 }
 
 body,
@@ -30,7 +117,7 @@ button,
 input,
 select,
 textarea {
-    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-family: var(--moyo-font-family);
 }
 
 body { color: var(--moyo-text); }
@@ -61,26 +148,26 @@ body.moyo-app-sidebar-enabled .work-board-help,
 body.moyo-app-sidebar-enabled .schedule-help,
 body.moyo-app-sidebar-enabled .template-help {
     color: var(--moyo-text-soft) !important;
-    font-size: 13px !important;
-    font-weight: 500 !important;
-    line-height: 1.55 !important;
+    font-size: var(--moyo-font-size-sm) !important;
+    font-weight: var(--moyo-font-weight-medium) !important;
+    line-height: var(--moyo-line-height-body) !important;
 }
 
 /* 입력 요소 */
-body.moyo-app-sidebar-enabled input:not([type='checkbox']):not([type='radio']):not([type='file']),
+body.moyo-app-sidebar-enabled input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
 body.moyo-app-sidebar-enabled select,
 body.moyo-app-sidebar-enabled textarea,
 body.moyo-app-sidebar-enabled .modal-input,
 body.moyo-app-sidebar-enabled .modal-select {
     border: 1px solid var(--moyo-line-strong);
     border-radius: var(--moyo-radius-md);
-    background: #fff;
+    background: var(--moyo-color-surface);
     color: var(--moyo-text);
     outline: none;
     transition: border-color .16s ease, box-shadow .16s ease, background .16s ease;
 }
 
-body.moyo-app-sidebar-enabled input:not([type='checkbox']):not([type='radio']):not([type='file']):focus,
+body.moyo-app-sidebar-enabled input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):focus,
 body.moyo-app-sidebar-enabled select:focus,
 body.moyo-app-sidebar-enabled textarea:focus,
 body.moyo-app-sidebar-enabled .modal-input:focus,
@@ -99,11 +186,11 @@ body.moyo-app-sidebar-enabled :is(
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-height: 40px;
-    padding: 0 16px;
+    min-height: var(--moyo-control-height);
+    padding: 0 var(--moyo-control-padding-x);
     border-radius: var(--moyo-radius-md);
-    font-size: 13px;
-    font-weight: 800;
+    font-size: var(--moyo-font-size-sm);
+    font-weight: var(--moyo-font-weight-bold);
     line-height: 1;
     text-decoration: none;
     cursor: pointer;
@@ -117,8 +204,8 @@ body.moyo-app-sidebar-enabled :is(
 ) {
     border: 1px solid var(--moyo-primary) !important;
     background: var(--moyo-primary) !important;
-    color: #fff !important;
-    box-shadow: 0 6px 14px rgba(74, 144, 226, .18);
+    color: var(--moyo-color-text-inverse) !important;
+    box-shadow: var(--moyo-shadow-primary);
 }
 
 body.moyo-app-sidebar-enabled :is(
@@ -148,7 +235,7 @@ body.moyo-app-sidebar-enabled :is(
     .action-btn.edit-btn, .post-action-btn:not(.danger)
 ):hover {
     border-color: #bfd3e7 !important;
-    background: #f7fbff !important;
+    background: var(--moyo-color-surface-hover) !important;
     color: var(--moyo-primary) !important;
 }
 
@@ -169,7 +256,7 @@ body.moyo-app-sidebar-enabled :is(
 ):hover {
     border-color: var(--moyo-danger) !important;
     background: var(--moyo-danger) !important;
-    color: #fff !important;
+    color: var(--moyo-color-text-inverse) !important;
 }
 
 body.moyo-app-sidebar-enabled button:disabled,
@@ -193,7 +280,7 @@ body.moyo-app-sidebar-enabled :is(.section-more-link, .detail-link-text, .projec
 
 /* 모달 공통 외형 */
 body.moyo-app-sidebar-enabled :is(.my-modal-overlay, .modal-backdrop-custom, .poll-modal) {
-    backdrop-filter: blur(3px);
+    backdrop-filter: none;
 }
 
 body.moyo-app-sidebar-enabled .my-modal-overlay,
@@ -203,9 +290,9 @@ body.moyo-app-sidebar-enabled .modal-backdrop-custom {
 
 body.moyo-app-sidebar-enabled :is(.my-modal-content, .poll-modal-dialog, .work-modal) {
     border: 1px solid var(--moyo-line) !important;
-    border-radius: 20px !important;
-    background: var(--moyo-surface) !important;
-    box-shadow: 0 24px 70px rgba(15, 23, 42, .22) !important;
+    border-radius: var(--moyo-radius-xl) !important;
+    background: var(--moyo-color-surface) !important;
+    box-shadow: var(--moyo-shadow-lg) !important;
 }
 
 body.moyo-app-sidebar-enabled :is(.modal-title-row, .poll-modal-header, .work-modal-header) {
@@ -218,8 +305,8 @@ body.moyo-app-sidebar-enabled :is(.modal-title-row, .poll-modal-header, .work-mo
 body.moyo-app-sidebar-enabled :is(.modal-title-row h2, .modal-title-row h3, .poll-modal-header h3, .work-modal-header h3) {
     margin: 0;
     color: var(--moyo-text);
-    font-size: 20px !important;
-    font-weight: 900 !important;
+    font-size: var(--moyo-font-size-xl) !important;
+    font-weight: var(--moyo-font-weight-heavy) !important;
     letter-spacing: -.035em;
 }
 
@@ -287,7 +374,7 @@ body.moyo-app-sidebar-enabled :is(
     background: var(--moyo-primary) !important;
     background-image: none !important;
     border-color: var(--moyo-primary) !important;
-    color: #fff !important;
+    color: var(--moyo-color-text-inverse) !important;
     box-shadow: 0 6px 14px rgba(74, 144, 226, .18) !important;
 }
 
@@ -310,7 +397,7 @@ body.moyo-app-sidebar-enabled :is(
 ) {
     background: var(--moyo-primary) !important;
     background-image: none !important;
-    color: #fff !important;
+    color: var(--moyo-color-text-inverse) !important;
     border-color: transparent !important;
     box-shadow: none !important;
 }
@@ -340,28 +427,26 @@ body.moyo-app-sidebar-enabled :is(
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
-    background: linear-gradient(135deg, #397BE8 0%, #4A90E2 45%, #39CDB5 100%) !important;
+    
     background-color: transparent !important;
-    color: #fff !important;
+    
     font-size: 14px !important;
-    font-weight: 900 !important;
+    font-weight: var(--moyo-font-weight-heavy) !important;
     box-shadow: 0 4px 12px rgba(57,145,216,.24) !important;
     border: 0 !important;
-}
 
-/* Workspace/project header avatar normalization: projectMain.css uses the solid MOYO blue for header user avatar. */
-.moyo-header .user-avatar {
+
     background: #4A90E2 !important;
     background-image: none !important;
-    color: #fff !important;
+    color: var(--moyo-color-text-inverse) !important;
 }
 
 /* FINAL HEADER AVATAR OVERRIDE: project/workspace 공통 헤더 아바타 */
 .moyo-header .user-avatar,
 body.moyo-app-sidebar-enabled .moyo-header .user-avatar {
-    background: linear-gradient(135deg, #397BE8 0%, #4A90E2 45%, #39CDB5 100%) !important;
-    background-image: linear-gradient(135deg, #397BE8 0%, #4A90E2 45%, #39CDB5 100%) !important;
-    color: #fff !important;
+    background: var(--moyo-avatar-gradient) !important;
+    background-image: var(--moyo-avatar-gradient) !important;
+    color: var(--moyo-color-text-inverse) !important;
     box-shadow: 0 4px 12px rgba(57,145,216,.24) !important;
 }
 
@@ -373,9 +458,9 @@ body.moyo-app-sidebar-enabled header.moyo-header .user-avatar {
     height: 32px !important;
     flex: 0 0 32px !important;
     border-radius: 50% !important;
-    background: linear-gradient(135deg, #397BE8 0%, #4A90E2 45%, #39CDB5 100%) !important;
-    background-image: linear-gradient(135deg, #397BE8 0%, #4A90E2 45%, #39CDB5 100%) !important;
-    color: #fff !important;
+    background: var(--moyo-avatar-gradient) !important;
+    background-image: var(--moyo-avatar-gradient) !important;
+    color: var(--moyo-color-text-inverse) !important;
     box-shadow: 0 4px 12px rgba(57,145,216,.24) !important;
     border: 0 !important;
 }
@@ -439,7 +524,7 @@ body.moyo-app-sidebar-enabled header.moyo-header .user-avatar {
     border: 1px solid var(--moyo-scope-border);
     background: var(--moyo-scope-soft);
     color: var(--moyo-scope-color);
-    font-size: 13px;
+    font-size: var(--moyo-font-size-sm);
     font-weight: 700;
     white-space: nowrap;
 }
@@ -453,11 +538,77 @@ body.moyo-app-sidebar-enabled header.moyo-header .user-avatar {
 }
 
 .moyo-scope-topline::before {
-    content: '';
+    content: "";
     position: absolute;
     left: 0;
     right: 0;
     top: 0;
     height: 3px;
     background: linear-gradient(90deg, var(--moyo-scope-color), rgba(101, 216, 200, .55));
+}
+
+/* ===== MOYO HEADER UPLOADED PROFILE IMAGE =====
+   작은 헤더 아바타는 링 없이 업로드 이미지만 깔끔하게 표시한다. */
+.moyo-header .user-avatar.is-uploaded-profile:not(.no-image),
+body.moyo-app-sidebar-enabled .moyo-header .user-avatar.is-uploaded-profile:not(.no-image),
+body.moyo-app-sidebar-enabled header.moyo-header .user-avatar.is-uploaded-profile:not(.no-image) {
+    padding: 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+    background-image: none !important;
+    box-shadow: none !important;
+}
+
+.moyo-header .user-avatar.is-uploaded-profile:not(.no-image) img {
+    width: 100%;
+    height: 100%;
+    display: block;
+    border-radius: 50% !important;
+    object-fit: cover;
+    background: transparent !important;
+}
+
+/* =====================================================================
+   MOYO COMMON STATE TOKENS v1
+   Same semantic state = same visual language across group/project UI.
+   Layout stays owned by each component stylesheet.
+   ===================================================================== */
+:root {
+    --moyo-state-surface: #fbfcfe;
+    --moyo-state-border: #dce5ef;
+    --moyo-state-text: #7f8da1;
+    --moyo-state-text-strong: #56667b;
+    --moyo-state-info-bg: #f5f9ff;
+    --moyo-state-info-border: #d9e8fb;
+    --moyo-state-info-text: #52739a;
+    --moyo-state-success-bg: #f1fbf7;
+    --moyo-state-success-border: #ccefe1;
+    --moyo-state-success-text: #2f806b;
+    --moyo-state-warning-bg: #fff9ef;
+    --moyo-state-warning-border: #f5dfb8;
+    --moyo-state-warning-text: #9a6a20;
+    --moyo-state-danger-bg: #fff7f8;
+    --moyo-state-danger-border: #f1d0d5;
+    --moyo-state-danger-text: #ad5561;
+    --moyo-state-skeleton-base: #edf2f7;
+    --moyo-state-skeleton-shine: #f8fafc;
+}
+
+@keyframes moyo-state-shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+.moyo-state-skeleton {
+    border-radius: 999px;
+    background: linear-gradient(90deg,
+        var(--moyo-state-skeleton-base) 25%,
+        var(--moyo-state-skeleton-shine) 42%,
+        var(--moyo-state-skeleton-base) 62%);
+    background-size: 220% 100%;
+    animation: moyo-state-shimmer 1.25s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .moyo-state-skeleton { animation: none; }
 }

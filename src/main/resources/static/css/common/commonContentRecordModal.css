@@ -1,0 +1,3232 @@
+.moyo-record-modal[hidden]{display:none!important;}
+.moyo-record-modal{position:fixed;inset:0;z-index:15000!important;display:flex;align-items:center;justify-content:center;padding:24px;}
+.moyo-record-modal__backdrop{position:absolute;inset:0;background:rgba(15,23,42,.44);backdrop-filter:none;}
+.moyo-record-modal__panel{position:relative;z-index:1;width:min(720px,calc(100vw - 32px));display:flex;flex-direction:column;overflow:hidden;border:1px solid rgba(214,225,240,.94);border-radius:22px;background:#fff;box-shadow:0 28px 80px rgba(31,51,84,.25);}
+.moyo-record-modal__header{position:relative;display:flex;align-items:flex-start;justify-content:space-between;gap:18px;padding:20px 22px 17px;}
+.moyo-record-modal__header:after{content:"";position:absolute;left:0;right:0;bottom:0;height:2px;background:linear-gradient(90deg,#35e0b7 0%,#3f8cff 52%,#7a5cff 100%);}
+.moyo-record-modal__header h3{margin:0;color:#16243a;font-size:20px;font-weight:900;letter-spacing:-.4px;}
+.moyo-record-modal__header p{margin:6px 0 0;color:#8290a4;font-size:12px;font-weight:600;}
+.moyo-record-modal__close{width:34px;height:34px;display:inline-flex;align-items:center;justify-content:center;border:0;border-radius:999px;background:transparent;color:#64748b;font-size:19px;cursor:pointer;}
+.moyo-record-modal__close:hover{background:#f2f6fb;color:#263851;}
+.moyo-record-modal__permission{margin:12px 22px 0;padding:10px 12px;border:1px solid #dce7f5;border-radius:12px;background:#f8fbff;color:#607089;font-size:12px;}
+.moyo-record-modal__permission i{margin-right:6px;color:#4778f2;}
+.moyo-record-modal__tabs{display:flex;align-items:stretch;gap:10px;min-height:56px;padding:8px 22px 0;overflow-x:auto;overflow-y:hidden;border-bottom:1px solid #e3eaf4;background:#fff;scrollbar-width:none;}
+.moyo-record-modal__tabs::-webkit-scrollbar{display:none;}
+.moyo-record-modal__tabs button{position:relative;flex:0 0 auto;height:48px;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:0 4px;border:0;background:transparent;color:#91a0b3;font-size:13px;font-weight:800;cursor:pointer;white-space:nowrap;}
+.moyo-record-modal__tabs button>i{color:#9aa8ba;font-size:13px;}
+.moyo-record-modal__tabs button>b{min-width:19px;height:19px;display:inline-flex;align-items:center;justify-content:center;padding:0 5px;border-radius:999px;background:#eef2f7;color:#8f9cad;font-size:10px;font-weight:900;}
+.moyo-record-modal__tabs button.is-active{color:#172a46;font-weight:900;}
+.moyo-record-modal__tabs button.is-active>i{color:#347ff0;}
+.moyo-record-modal__tabs button.is-active>b{background:#3f8cff;color:#fff;box-shadow:0 3px 8px rgba(63,140,255,.24);}
+.moyo-record-modal__tabs button.is-active:after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:3px;border-radius:3px 3px 0 0;background:linear-gradient(90deg,#35e0b7 0%,#3f8cff 52%,#7a5cff 100%);}
+.moyo-record-modal__body{padding:14px 22px 20px;overflow:auto;}
+.moyo-record-modal__loading{min-height:220px;display:flex;align-items:center;justify-content:center;gap:8px;color:#8492a6;}
+.moyo-record-modal__loading[hidden]{display:none!important;}
+.moyo-record-section[hidden]{display:none!important;}
+.moyo-record-section__header{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:14px;}
+.moyo-record-section__header>div{display:grid;gap:3px;}
+.moyo-record-section__header strong{color:#1f3049;font-size:15px;font-weight:900;}
+.moyo-record-section__header span{color:#8b98aa;font-size:11px;}
+.moyo-record-inline-add,.moyo-record-modal__form-actions button,.moyo-record-link-form>button{height:38px;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:0 14px;border:0;border-radius:12px;background:linear-gradient(135deg,#35e0b7 0%,#3f8cff 54%,#7a5cff 100%);color:#fff;font-size:12px;font-weight:900;box-shadow:0 7px 16px rgba(66,102,240,.22);cursor:pointer;}
+.moyo-record-inline-form,.moyo-record-location-form{display:grid;gap:10px;margin-bottom:14px;padding:14px;border:1px solid #dce7f5;border-radius:16px;background:#f8fbff;}
+.moyo-record-inline-form[hidden]{display:none!important;}
+.moyo-record-inline-form label,.moyo-record-location-form label{display:grid;gap:6px;color:#354761;font-size:12px;font-weight:800;}
+.moyo-record-inline-form input,.moyo-record-inline-form textarea,.moyo-record-location-form input,.moyo-record-location-form textarea,.moyo-record-link-form input,.moyo-record-link-form textarea,.moyo-record-note-form input,.moyo-record-note-form textarea{width:100%;padding:10px 12px;border:1px solid #d8e3f1;border-radius:12px;background:#fff;color:#22304a;font:inherit;outline:0;resize:vertical;}
+.moyo-record-modal__form-actions{display:flex;justify-content:flex-end;}
+.moyo-record-modal__location-row{display:grid;grid-template-columns:1fr auto;gap:8px;}
+.moyo-record-modal__location-row button{padding:0 12px;border:1px solid #cfe0f3;border-radius:12px;background:#fff;color:#315ebc;font-size:12px;font-weight:900;cursor:pointer;}
+.moyo-record-note-tabs{display:flex;align-items:flex-end;gap:6px;min-height:42px;padding:0 4px;border-bottom:1px solid #dce5f1;overflow-x:auto;}
+.moyo-record-note-tabs button{max-width:150px;height:36px;padding:0 13px;border:1px solid transparent;border-bottom:0;border-radius:10px 10px 0 0;background:#f3f6fa;color:#78879a;font-size:12px;font-weight:800;cursor:pointer;}
+.moyo-record-note-tabs button span{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.moyo-record-note-tabs button.is-active{height:40px;background:#fff;border-color:#dce5f1;color:#1f3049;box-shadow:0 -3px 10px rgba(31,51,84,.04);}
+.moyo-record-note-tabs .moyo-record-note-tabs__add{width:36px;padding:0;border-radius:10px 10px 0 0;color:#3f8cff;}
+
+
+.moyo-record-note-form textarea{min-height:200px;}
+.moyo-record-note-form__footer{grid-template-columns:1fr auto;}
+
+.moyo-record-note-view{min-height:230px;border:1px solid #e0e8f3;border-radius:14px;background:#fff;}
+.moyo-record-note-view header{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid #edf1f6;}
+.moyo-record-note-view header strong{color:#24364f;font-size:13px;}
+.moyo-record-note-view header time{color:#9aa7b8;font-size:10px;}
+.moyo-record-note-view__content{padding:16px;color:#516178;font-size:13px;line-height:1.75;white-space:pre-wrap;}
+.moyo-record-photo-grid{display:grid;align-content:start;}
+.moyo-record-photo-item{position:relative;overflow:hidden;background:#eef3fa;}
+.moyo-record-photo-item__open{position:relative;width:100%;height:100%;display:block;padding:0;border:0;background:none;cursor:pointer;}
+.moyo-record-photo-item__open>img,.moyo-record-photo-item__open>.moyo-record-photo-item__placeholder{width:100%;height:100%;display:flex;align-items:center;justify-content:center;object-fit:cover;background:#f1f5fb;color:#7e93b8;font-size:28px;transition:transform .2s ease;}
+.moyo-record-photo-item:hover .moyo-record-photo-item__open>img{transform:scale(1.035);}
+.moyo-record-photo-item__meta{position:absolute;width:auto!important;height:auto!important;left:0;right:0;bottom:0;color:#fff;text-align:left;transition:opacity .18s ease,transform .18s ease;}
+
+.moyo-record-photo-item__delete{position:absolute;top:8px;right:8px;width:32px;height:32px;display:grid;place-items:center;border:0;border-radius:50%;background:rgba(255,255,255,.94);color:#6f7f95;box-shadow:0 4px 14px rgba(28,49,80,.18);opacity:0;transform:translateY(-4px);transition:opacity .18s ease,transform .18s ease,color .18s ease,background-color .18s ease;cursor:pointer;}
+.moyo-record-photo-item:hover .moyo-record-photo-item__delete,.moyo-record-photo-item:focus-within .moyo-record-photo-item__delete{opacity:1;transform:none;}
+.moyo-record-photo-item__delete:hover{background:#fff1f2;color:#e4455f;}.moyo-record-photo-item__delete:disabled{opacity:.45;cursor:wait;}
+.moyo-record-file-list,.moyo-record-link-list{display:grid;gap:8px;}
+.moyo-record-file-item,.moyo-record-link-item,.moyo-record-location-card{display:grid;grid-template-columns:40px minmax(0,1fr) auto;align-items:center;gap:10px;padding:10px 12px;border:1px solid #dce6f3;border-radius:14px;background:#fff;}
+.moyo-record-file-item>span,.moyo-record-link-item>span,.moyo-record-location-card>span{width:40px;height:40px;display:flex;align-items:center;justify-content:center;border-radius:12px;background:linear-gradient(135deg,rgba(99,219,199,.2),rgba(71,120,242,.17));color:#4778f2;}
+.moyo-record-file-item>div,.moyo-record-link-item>div,.moyo-record-location-card>div{min-width:0;display:grid;gap:2px;}.moyo-record-file-item strong,.moyo-record-link-item strong,.moyo-record-location-card strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#20324c;font-size:13px;}.moyo-record-file-item small,.moyo-record-link-item small,.moyo-record-location-card small,.moyo-record-location-card p{margin:0;color:#8b98a9;font-size:10px;}.moyo-record-link-item a{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#4778f2;font-size:11px;text-decoration:none;}
+.moyo-record-link-form textarea{grid-column:1/-1;}
+.moyo-record-location-current{margin-bottom:12px;}.moyo-record-location-form{margin-bottom:0;}
+.moyo-record-section__empty{min-height:210px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;color:#8a98aa;}.moyo-record-section__empty>i{margin-bottom:10px;color:#7891ba;font-size:25px;}.moyo-record-section__empty strong{color:#3b4d67;font-size:14px;}.moyo-record-section__empty span{margin-top:5px;font-size:11px;}.moyo-record-location-empty{min-height:120px;border:1px dashed #d7e2ef;border-radius:14px;background:#fbfcfe;}
+.moyo-record-modal-open{overflow:hidden;}
+@media(max-width:720px){.moyo-record-modal{align-items:flex-end;padding:10px;}.moyo-record-modal__panel{width:100%;max-height:calc(100vh - 20px);border-radius:20px;}.moyo-record-modal__header,.moyo-record-modal__tabs,.moyo-record-modal__body{padding-left:16px;padding-right:16px;}.moyo-record-photo-grid{grid-template-columns:repeat(2,minmax(0,1fr));}.moyo-record-link-form{grid-template-columns:1fr;}.moyo-record-link-form textarea{grid-column:auto;}.moyo-record-note-form__footer{grid-template-columns:1fr;}.moyo-record-modal__location-row{grid-template-columns:1fr;}}
+
+/* v2: 기록 노트 탭 CKEditor */
+.moyo-record-note-editor{min-height:310px;padding-top:12px;}
+.moyo-record-note-form{display:flex;min-height:300px;flex-direction:column;gap:10px;}
+.moyo-record-note-source{min-height:260px;}
+.moyo-record-note-form>.ck-editor{display:flex;min-height:270px;flex:1 1 auto;flex-direction:column;}
+.moyo-record-note-form>.ck-editor .ck-editor__main{display:flex;min-height:220px;flex:1 1 auto;}
+.moyo-record-note-form>.ck-editor .ck-editor__editable_inline{width:100%;min-height:220px;max-height:360px;overflow-y:auto;border-color:#d8e3f1!important;border-radius:0 0 12px 12px!important;box-shadow:none!important;color:#31425a;font-size:14px;line-height:1.75;}
+.moyo-record-note-form>.ck-editor .ck-toolbar{border-color:#d8e3f1!important;border-radius:12px 12px 0 0!important;background:#f8faff!important;}
+.moyo-record-note-form>.ck-editor .ck-toolbar__items{flex-wrap:nowrap!important;overflow:visible!important;}
+.moyo-record-note-form__footer{display:flex;min-height:42px;align-items:center;justify-content:flex-end;gap:12px;}
+.moyo-record-note-form__footer [data-note-save-status]{margin-right:auto;color:#8a98aa;font-size:11px;font-weight:700;}
+.moyo-record-note-form__footer [data-note-save-status][data-status="saving"]{color:#3f8cff;}
+.moyo-record-note-form__footer [data-note-save-status][data-status="saved"]{color:#17a882;}
+.moyo-record-note-form__footer [data-note-save-status][data-status="error"]{color:#e45261;}
+.moyo-record-note-form__footer button{height:40px;padding:0 17px;border:0;border-radius:12px;background:linear-gradient(135deg,#35e0b7,#3f8cff 54%,#7a5cff);color:#fff;font-weight:900;cursor:pointer;}
+.moyo-record-note-form__footer button:disabled{cursor:wait;opacity:.65;}
+.moyo-record-note-form .ck-read-only .ck-toolbar{display:none;}
+.moyo-record-note-form .ck-read-only .ck-editor__editable_inline{border-radius:12px!important;background:#fff;}
+@media(max-width:720px){.moyo-record-note-form>.ck-editor .ck-editor__editable_inline{max-height:300px;}.moyo-record-note-form__footer{flex-direction:row;}}
+
+
+/* Compact record-note editor toolbar and collaboration audit */
+.moyo-record-note-form .ck.ck-toolbar {
+    flex-wrap: nowrap;
+    overflow: visible;
+}
+.moyo-record-note-form .ck.ck-toolbar > .ck-toolbar__items {
+    flex-wrap: nowrap;
+    min-width: 0;
+}
+.moyo-record-note-form .ck.ck-toolbar .ck-toolbar__separator {
+    margin-inline: 2px;
+}
+.moyo-record-note-audit {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 16px;
+    padding: 10px 4px 2px;
+    color: #7b8ba3;
+    font-size: 12px;
+    line-height: 1.5;
+}
+.moyo-record-note-audit span {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+.moyo-record-note-audit i { color: #5f83e8; }
+
+
+/* Record note CKEditor table picker safety */
+/* Record note CKEditor table dropdown alignment.
+   Keep the table picker inside the modal when toolbar space is tight. */
+.moyo-record-note-form .ck.ck-dropdown:has(> .ck-dropdown__panel .ck-insert-table-dropdown__grid) > .ck-dropdown__panel,
+.moyo-record-note-form .ck.ck-dropdown:has(> .ck-dropdown__panel .ck-insert-table-dropdown-grid) > .ck-dropdown__panel {
+    left: auto !important;
+    right: 0 !important;
+}
+
+.moyo-record-modal .ck.ck-balloon-panel,
+.moyo-record-modal .ck.ck-dropdown__panel {
+    z-index: 10050 !important;
+}
+.moyo-record-note-form .ck.ck-dropdown__panel .ck-insert-table-dropdown__grid,
+.moyo-record-note-form .ck.ck-dropdown__panel .ck-insert-table-dropdown__grid.ck-grid {
+    display: grid !important;
+    grid-template-columns: repeat(10, 18px) !important;
+    grid-auto-rows: 18px !important;
+    gap: 3px !important;
+    width: max-content !important;
+    max-width: none !important;
+    max-height: none !important;
+    overflow: visible !important;
+    padding: 10px !important;
+    box-sizing: content-box !important;
+}
+.moyo-record-note-form .ck.ck-dropdown__panel .ck-insert-table-dropdown-grid-box,
+.moyo-record-note-form .ck.ck-dropdown__panel .ck-insert-table-dropdown__grid-box,
+.moyo-record-note-form .ck.ck-dropdown__panel .ck-insert-table-dropdown__grid .ck-button,
+.moyo-record-note-form .ck.ck-dropdown__panel .ck-insert-table-dropdown__grid button {
+    display: block !important;
+    flex: none !important;
+    width: 18px !important;
+    min-width: 18px !important;
+    max-width: 18px !important;
+    height: 18px !important;
+    min-height: 18px !important;
+    max-height: 18px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border-radius: 3px !important;
+    box-sizing: border-box !important;
+}
+.moyo-record-note-form .ck.ck-dropdown__panel .ck-insert-table-dropdown__label {
+    display: block !important;
+    width: max-content !important;
+    min-width: 0 !important;
+    padding: 0 10px 10px !important;
+    white-space: nowrap !important;
+}
+.moyo-record-note-form .ck.ck-dropdown__panel .ck-insert-table-dropdown,
+.moyo-record-note-form .ck.ck-dropdown__panel .ck-insert-table-dropdown__button,
+.moyo-record-note-form .ck.ck-dropdown__panel .ck-insert-table-dropdown__grid-wrapper {
+    width: max-content !important;
+    max-width: none !important;
+    overflow: visible !important;
+}
+
+/* Record note CKEditor table alignment.
+   The default table is left-aligned, while explicit table-property alignment is preserved. */
+.moyo-record-note-form .ck-content figure.table:not(.table-style-align-center):not(.table-style-align-right):not([style*="float: right"]):not([style*="float:right"]),
+.moyo-record-note-form .ck-content .table:not(.table-style-align-center):not(.table-style-align-right):not([style*="float: right"]):not([style*="float:right"]) {
+    float: none !important;
+    width: auto;
+    margin: 0.9em auto 0.9em 0 !important;
+}
+.moyo-record-note-form .ck-content figure.table.table-style-align-center,
+.moyo-record-note-form .ck-content .table.table-style-align-center {
+    float: none !important;
+    width: auto;
+    margin: 0.9em auto !important;
+}
+.moyo-record-note-form .ck-content figure.table.table-style-align-right,
+.moyo-record-note-form .ck-content .table.table-style-align-right,
+.moyo-record-note-form .ck-content figure.table[style*="float: right"],
+.moyo-record-note-form .ck-content figure.table[style*="float:right"],
+.moyo-record-note-form .ck-content .table[style*="float: right"],
+.moyo-record-note-form .ck-content .table[style*="float:right"] {
+    float: none !important;
+    width: auto;
+    margin: 0.9em 0 0.9em auto !important;
+}
+.moyo-record-note-form .ck-content figure.table > table,
+.moyo-record-note-form .ck-content .table > table {
+    width: auto;
+    min-width: 0;
+    margin: 0;
+}
+
+
+/* CKEditor contextual table toolbar is appended outside the modal DOM.
+   Keep table properties / cell properties above the record modal. */
+body > .ck.ck-balloon-panel,
+body > .ck-body-wrapper .ck.ck-balloon-panel,
+.ck.ck-balloon-panel.ck-balloon-panel_visible {
+    z-index: 10080 !important;
+}
+
+/* Keep the table contextual toolbar and property form usable above the editor. */
+.ck.ck-balloon-panel .ck.ck-toolbar,
+.ck.ck-balloon-panel .ck-form__header,
+.ck.ck-balloon-panel .ck-form__row {
+    overflow: visible !important;
+}
+
+/* v3: 기록 노트 모달 단일 스크롤 구조
+   - 모달/본문 이중 스크롤 제거
+   - CKEditor 본문만 스크롤
+   - 작성·수정 정보와 저장 영역은 항상 하단에 유지 */
+.moyo-record-modal__panel {
+    height: min(760px, calc(100vh - 40px));
+    max-height: min(760px, calc(100vh - 40px));
+}
+
+.moyo-record-modal__body {
+    flex: 1 1 auto;
+    min-height: 0;
+    max-height: none;
+}
+
+.moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-modal__body {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.moyo-record-modal[data-active-record-type="NOTE"] [data-record-section="NOTE"] {
+    display: flex;
+    min-height: 0;
+    flex: 1 1 auto;
+    flex-direction: column;
+}
+
+.moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-note-tabs {
+    flex: 0 0 auto;
+}
+
+.moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-note-editor {
+    display: flex;
+    min-height: 0;
+    flex: 1 1 auto;
+    flex-direction: column;
+}
+
+.moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-note-form {
+    min-height: 0;
+    height: 100%;
+    flex: 1 1 auto;
+}
+
+.moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-note-form > .ck-editor {
+    min-height: 0;
+    flex: 1 1 auto;
+}
+
+.moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-note-form > .ck-editor .ck-editor__main {
+    min-height: 0;
+    flex: 1 1 auto;
+    overflow: hidden;
+}
+
+.moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-note-form > .ck-editor .ck-editor__editable_inline {
+    
+    max-height: none;
+    height: 100%;
+    flex: 1 1 auto;
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
+.moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-note-audit,
+.moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-note-form__footer {
+    flex: 0 0 auto;
+}
+
+.moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-note-form__footer {
+    padding-top: 2px;
+}
+
+@media (max-width: 720px) {
+    .moyo-record-modal__panel {
+        height: calc(100vh - 20px);
+        max-height: calc(100vh - 20px);
+    }
+
+    .moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-note-form > .ck-editor .ck-editor__editable_inline {
+        max-height: none;
+    }
+}
+
+
+/* v4: compact note tabs and balanced record-note height */
+.moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-modal__panel {
+    height: min(700px, calc(100vh - 48px));
+    max-height: min(700px, calc(100vh - 48px));
+}
+
+.moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-note-tabs-shell {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 36px;
+    align-items: end;
+    
+    min-width: 0;
+    
+}
+
+.moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-note-tabs {
+    position: relative;
+    
+    
+    
+    
+    
+    
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+    overscroll-behavior-x: contain;
+}
+
+.moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-note-tabs::-webkit-scrollbar {
+    display: none;
+}
+
+.moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-note-tabs button:not(.moyo-record-note-tabs__add) {
+    flex: 0 0 auto;
+    width: auto;
+    min-width: 74px;
+    max-width: 142px;
+    height: 34px;
+    padding: 0 12px;
+    border-color: transparent;
+    background: #f2f5f9;
+    color: #8693a5;
+    box-shadow: none;
+}
+
+.moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-note-tabs button:not(.moyo-record-note-tabs__add).is-active {
+    height: 37px;
+    border-color: #d7e2ef;
+    background: #fff;
+    color: #1f3049;
+    box-shadow: 0 -2px 8px rgba(31, 51, 84, .05);
+}
+
+.moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-note-tabs button span {
+    max-width: 118px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-note-tabs-shell > .moyo-record-note-tabs__add {
+    position: relative;
+    z-index: 2;
+    width: 36px;
+    
+    padding: 0;
+    border: 1px solid #dce5f1;
+    
+    
+    background: #f5f8fc;
+    color: #3f8cff;
+    box-shadow: none;
+}
+
+.moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-note-tabs-shell > .moyo-record-note-tabs__add[hidden] {
+    display: none;
+}
+
+
+.moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-note-form > .ck-editor .ck-editor__editable_inline {
+    min-height: 210px;
+}
+
+.moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-note-audit:empty {
+    display: none;
+}
+
+@media (max-width: 720px) {
+    .moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-modal__panel {
+        height: calc(100vh - 20px);
+        max-height: calc(100vh - 20px);
+    }
+
+    .moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-note-tabs button:not(.moyo-record-note-tabs__add) {
+        max-width: 126px;
+    }
+
+    .moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-note-tabs button span {
+        max-width: 102px;
+    }
+}
+
+
+/* v5: note tab wheel and pointer drag scrolling */
+.moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-note-tabs {
+    cursor: grab;
+    user-select: none;
+    touch-action: pan-y;
+}
+
+.moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-note-tabs.is-dragging {
+    cursor: grabbing;
+    scroll-behavior: auto;
+}
+
+.moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-note-tabs.is-dragging button {
+    pointer-events: none;
+}
+
+/* v9: active note rename/delete controls */
+.moyo-record-note-actions {
+    
+    align-items: center;
+    gap: 4px;
+}
+
+.moyo-record-note-form__footer .moyo-record-note-action {
+    display: inline-grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: #718198;
+    box-shadow: none;
+}
+
+.moyo-record-note-form__footer .moyo-record-note-action:hover {
+    background: #eef4ff;
+    color: #3f70dc;
+}
+
+.moyo-record-note-form__footer .moyo-record-note-action.is-danger:hover {
+    background: #fff0f2;
+    color: #e24c61;
+}
+
+.moyo-record-note-tab-title-input {
+    
+    
+    
+    border: 1px solid #5b8cff;
+    border-radius: 6px;
+    outline: 0;
+    
+    color: #1f3049;
+    font: inherit;
+    font-weight: 800;
+}
+
+/* v10: active tab menu for rename/delete */
+.moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-note-tabs {
+    align-items: flex-end;
+}
+
+.moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-note-tab {
+    
+    
+    align-items: center;
+    
+    
+    
+    
+    
+    
+    
+    color: #8693a5;
+    
+}
+
+
+.moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-note-tab__select {
+    
+    max-width: none;
+    
+    flex: 1 1 auto;
+    
+    
+    
+    
+    
+    
+}
+
+
+.moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-note-tab__menu {
+    flex: 0 0 28px;
+    
+    
+    
+    
+    
+    
+    
+    
+}
+
+.moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-note-tab__menu:hover {
+    color: #3f70dc;
+    background: #eef4ff;
+}
+
+.moyo-record-note-tab-menu {
+    position: fixed;
+    
+    
+    
+    border: 1px solid #dce5f1;
+    
+    background: #fff;
+    box-shadow: 0 12px 30px rgba(31, 48, 73, .16);
+}
+
+.moyo-record-note-tab-menu[hidden] { display: none; }
+
+.moyo-record-note-tab-menu button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    
+    
+    border: 0;
+    border-radius: 7px;
+    background: transparent;
+    color: #34435a;
+    
+    font-weight: 700;
+    text-align: left;
+}
+
+.moyo-record-note-tab-menu button:hover { background: #f2f6fc; }
+.moyo-record-note-tab-menu button.is-danger { color: #d94b60; }
+.moyo-record-note-tab-menu button.is-danger:hover { background: #fff0f2; }
+
+.moyo-record-note-tab-title-input {
+    
+    min-width: 0;
+    
+}
+
+.moyo-record-note-actions { display: none !important; }
+
+
+/* v11: active note tab clarity and action menu */
+.moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-note-tab {
+    
+    
+    
+    border-color: transparent;
+    
+}
+
+.moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-note-tab.is-active {
+    
+    
+    height: 38px;
+    position: relative;
+    
+    
+    
+}
+
+
+.moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-note-tab__select {
+    padding-left: 12px;
+    
+    
+}
+
+
+.moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-note-tab.is-active .moyo-record-note-tab__select span {
+    max-width: 142px;
+    color: #1d2d45;
+    font-weight: 850;
+}
+
+.moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-note-tab__menu {
+    
+    
+    flex-basis: 32px;
+    
+    
+    border-left: 0;
+    
+    font-size: 14px;
+}
+
+
+.moyo-record-note-tab-menu {
+    width: 152px;
+    padding: 7px;
+    border-radius: 11px;
+}
+
+.moyo-record-note-tab-menu button {
+    height: 36px;
+    padding: 0 11px;
+    font-size: 12px;
+}
+
+.moyo-record-note-tab-title-input {
+    width: 100%;
+    height: 28px;
+    padding: 0 8px;
+    border-color: #4e82ef;
+    background: #fff;
+}
+
+
+/* v12: unified active note tab and visible action menu */
+
+.moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-note-tab.is-active::after {
+    content: none !important;
+}
+.moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-note-tab__select,
+.moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-note-tab__menu {
+    border: 0 !important;
+    background: transparent;
+}
+.moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-note-tab__menu {
+    margin-right: 4px;
+    
+}
+
+
+/* v13: unified note tab surface; menu trigger overlays the tab */
+
+
+.moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-note-tab.is-active::before,
+.moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-note-tab.is-active::after {
+    content: none !important;
+    display: none !important;
+}
+
+
+.moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-note-tab__select:hover,
+.moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-note-tab__select:focus-visible {
+    background: transparent !important;
+    outline: none;
+}
+
+
+/* v14: keep the truncated title and action trigger visually separate inside one tab */
+
+
+.moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-note-tab__select {
+    box-sizing: border-box;
+    
+}
+
+.moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-note-tab__select span {
+    box-sizing: border-box;
+    
+    padding-right: 4px;
+}
+
+
+.moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-note-tab__menu i {
+    display: block;
+    line-height: 1;
+}
+
+/* v15: definitive single-surface note tab layout */
+.moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-note-tab {
+    position: relative !important;
+    display: block !important;
+    flex: 0 0 auto !important;
+    
+    
+    
+    height: 38px !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    border: 1px solid transparent !important;
+    border-bottom: 0 !important;
+    border-radius: 10px 10px 0 0 !important;
+    background: #f3f6fa !important;
+    box-shadow: none !important;
+}
+
+.moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-note-tab.is-active {
+    
+    
+    
+    background: #fff !important;
+    border-color: #a7b7ca !important;
+    color: #1d2d45 !important;
+    box-shadow: 0 -2px 8px rgba(31, 51, 84, .05) !important;
+}
+
+.moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-note-tab::before,
+.moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-note-tab::after {
+    content: none !important;
+    display: none !important;
+}
+
+.moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-note-tab__select {
+    position: absolute !important;
+    inset: 0 !important;
+    z-index: 1 !important;
+    display: block !important;
+    width: 100% !important;
+    height: 100% !important;
+    
+    margin: 0 !important;
+    padding: 0 42px 0 12px !important;
+    overflow: hidden !important;
+    border: 0 !important;
+    border-radius: inherit !important;
+    background: transparent !important;
+    color: inherit !important;
+    box-shadow: none !important;
+    text-align: left !important;
+}
+
+.moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-note-tab__select span {
+    
+    
+    
+    
+    padding: 0 !important;
+    
+    color: inherit !important;
+    font-weight: 800 !important;
+    line-height: 37px !important;
+    
+    
+}
+
+.moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-note-tab__menu {
+    position: absolute !important;
+    top: 50% !important;
+    right: 6px !important;
+    z-index: 3 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 28px !important;
+    min-width: 28px !important;
+    height: 28px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    transform: translateY(-50%) !important;
+    border: 0 !important;
+    border-radius: 50% !important;
+    background: transparent !important;
+    color: #718198 !important;
+    box-shadow: none !important;
+    cursor: pointer !important;
+}
+
+.moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-note-tab__menu span {
+    display: block !important;
+    width: auto !important;
+    height: auto !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    color: inherit !important;
+    font-size: 19px !important;
+    font-weight: 800 !important;
+    line-height: 1 !important;
+    letter-spacing: 0 !important;
+    text-overflow: clip !important;
+}
+
+.moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-note-tab__menu:hover,
+.moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-note-tab__menu:focus-visible {
+    background: #edf3fb !important;
+    color: #315fc8 !important;
+    outline: none !important;
+}
+
+.moyo-record-note-tab-menu {
+    z-index: 30000 !important;
+}
+
+
+/* 기록 노트 제목 편집: 탭 전체 폭 사용 */
+
+
+.moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-note-tab.is-renaming .moyo-record-note-tab__menu {
+    display: none !important;
+}
+
+.moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-note-tab-title-input {
+    display: block !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    height: 30px !important;
+    margin: 0 !important;
+    padding: 0 9px !important;
+    border: 1px solid #4f8cff !important;
+    border-radius: 8px !important;
+    background: #fff !important;
+    color: #17243a !important;
+    font: inherit !important;
+    font-weight: 800 !important;
+    line-height: 28px !important;
+    outline: none !important;
+    box-sizing: border-box !important;
+}
+
+.moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-note-tab-title-input:focus {
+    border-color: #4f8cff !important;
+    box-shadow: 0 0 0 3px rgba(79, 140, 255, 0.14) !important;
+}
+
+/* 기록 모달 초기 진입: 데이터와 CKEditor 준비가 끝날 때까지 실제 본문을 노출하지 않는다. */
+.moyo-record-modal.is-loading .moyo-record-section{visibility:hidden;pointer-events:none;}
+.moyo-record-modal.is-loading .moyo-record-modal__loading{display:flex!important;}
+.moyo-record-modal.is-loading .moyo-record-modal__body{position:relative;}
+.moyo-record-modal.is-loading .moyo-record-modal__loading{position:absolute;inset:0;z-index:5;background:#fff;min-height:0;}
+
+
+/* 읽기 전용 기록은 CKEditor 도구 모음을 노출하지 않고 본문만 표시한다. */
+.moyo-record-modal.is-read-only .moyo-record-note-form .ck-editor__top,
+.moyo-record-modal.is-read-only .moyo-record-note-form .ck-toolbar {
+    display: none !important;
+}
+.moyo-record-modal.is-read-only .moyo-record-note-form .ck-editor__main > .ck-editor__editable,
+.moyo-record-modal.is-read-only .moyo-record-note-form .ck-editor__editable_inline {
+    border-top: 1px solid var(--moyo-record-border, #d7e2f2) !important;
+    border-radius: 12px !important;
+    background: #fff !important;
+}
+
+/* 기록 노트 탭 제목 노출 폭 조정 */
+.moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-note-tab {
+    width: 176px !important;
+    min-width: 176px !important;
+    max-width: 176px !important;
+}
+
+.moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-note-tab.is-active {
+    width: 190px !important;
+    min-width: 190px !important;
+    max-width: 190px !important;
+}
+
+/* 메뉴가 없는 비활성 탭은 오른쪽 공간을 미리 비워두지 않는다. */
+.moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-note-tab__select {
+    padding-right: 12px !important;
+}
+
+.moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-note-tab.is-active .moyo-record-note-tab__select {
+    padding-right: 42px !important;
+}
+
+.moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-note-tab.is-renaming .moyo-record-note-tab__select {
+    padding-right: 10px !important;
+}
+
+/* 기록 노트 탭: 남은 영역 균등 분배, 최소 폭 이하에서만 가로 스크롤 */
+.moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-note-tabs {
+    display: flex !important;
+    min-width: 0 !important;
+}
+
+.moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-note-tab,
+.moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-note-tab.is-active {
+    flex: 1 1 0 !important;
+    width: auto !important;
+    min-width: 145px !important;
+    max-width: 190px !important;
+}
+
+.moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-note-tab__select {
+    min-width: 0 !important;
+}
+
+.moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-note-tab__select span {
+    display: block !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+}
+
+@media (max-width: 720px) {
+    .moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-note-tab,
+    .moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-note-tab.is-active {
+        min-width: 132px !important;
+        max-width: 176px !important;
+    }
+}
+
+/* Record note autosave status: keep it on the creator/update line */
+.moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-note-form__footer {
+    display: none !important;
+}
+
+.moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-note-audit {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: nowrap;
+    gap: 16px;
+    min-height: 28px;
+    padding: 10px 4px 2px;
+}
+
+.moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-note-audit__meta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px 16px;
+    min-width: 0;
+}
+
+.moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-note-audit__status {
+    flex: 0 0 auto;
+    margin-left: auto;
+    color: #8a98aa;
+    font-size: 11px;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-note-audit__status[data-status="waiting"] {
+    color: #7b8ba3;
+}
+
+.moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-note-audit__status[data-status="saving"] {
+    color: #3f8cff;
+}
+
+.moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-note-audit__status[data-status="saved"] {
+    color: #17a882;
+}
+
+.moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-note-audit__status[data-status="error"] {
+    color: #e45261;
+}
+
+.moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-note-audit.is-new .moyo-record-note-audit__meta:empty {
+    display: block;
+}
+
+@media (max-width: 720px) {
+    .moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-note-audit {
+        gap: 10px;
+    }
+}
+
+/* 기록 사진: 사진첩 등록 방식의 선택/드롭 영역 */
+.moyo-record-photo-upload{margin:0 0 14px;}
+.moyo-record-photo-upload input[hidden]{display:none!important;}
+.moyo-record-photo-dropzone{width:100%;min-height:142px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;padding:22px;border:1px dashed #c8d9ef;border-radius:16px;background:#fbfdff;color:#7588a3;text-align:center;cursor:pointer;transition:border-color .18s ease,background-color .18s ease,box-shadow .18s ease,transform .18s ease;}
+.moyo-record-photo-dropzone>i{margin-bottom:2px;background:linear-gradient(135deg,#35d7bd,#4b87ff 60%,#725cff);-webkit-background-clip:text;background-clip:text;color:transparent;font-size:34px;}
+.moyo-record-photo-dropzone>strong{color:#233650;font-size:14px;font-weight:900;}
+.moyo-record-photo-dropzone>span{color:#8090a6;font-size:11px;font-weight:600;}
+.moyo-record-photo-dropzone:hover,.moyo-record-photo-dropzone.is-dragover{border-color:#6ca0ff;background:#f5f9ff;box-shadow:0 10px 24px rgba(72,116,223,.10);}
+.moyo-record-photo-dropzone.is-dragover{transform:translateY(-1px);}
+.moyo-record-photo-dropzone:disabled{cursor:not-allowed;opacity:.58;box-shadow:none;transform:none;}
+.moyo-record-photo-list-wrap{min-height:260px;padding:12px;border:1px solid #dce6f3;border-radius:16px;background:#fff;overflow-y:auto;}
+.moyo-record-photo-list-wrap .moyo-record-section__empty{min-height:230px;}
+.moyo-record-photo-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;}
+.moyo-record-photo-item{aspect-ratio:1/1.08;border:0;border-radius:14px;box-shadow:0 8px 22px rgba(31,51,84,.10);}
+.moyo-record-photo-item__meta{padding:42px 12px 12px;background:linear-gradient(180deg,transparent 0%,rgba(18,28,46,.16) 28%,rgba(18,28,46,.82) 100%);font-size:11px;font-weight:800;line-height:1.35;}
+
+@media(max-width:720px){.moyo-record-photo-dropzone{min-height:124px;}.moyo-record-photo-list-wrap{min-height:220px;}.moyo-record-photo-grid{grid-template-columns:repeat(2,minmax(0,1fr));}}
+
+/* 기록 사진: 사진첩 공통 미리보기 동작 */
+.moyo-record-modal [hidden]{display:none!important;}
+.moyo-record-photo-list-wrap .moyo-record-section__empty[hidden]{display:none!important;}
+.moyo-record-photo-item__meta{display:flex!important;flex-direction:column;align-items:flex-start;justify-content:flex-end;gap:1px;opacity:0!important;transform:translateY(8px)!important;}
+.moyo-record-photo-item:hover .moyo-record-photo-item__meta,.moyo-record-photo-item:focus-within .moyo-record-photo-item__meta{opacity:1!important;transform:none!important;}
+.moyo-record-photo-item__writer{display:block;font-size:12px;font-weight:900;line-height:1.25;color:#fff;}
+.moyo-record-photo-item__date{display:block;font-size:10px;font-weight:700;line-height:1.25;color:rgba(255,255,255,.88);}
+.moyo-record-photo-item__stats{font-size:10px;font-weight:800;color:#fff;}
+.moyo-record-photo-item__stats>span{display:inline-flex;align-items:center;gap:3px;}
+.moyo-record-photo-item__stats i{font-size:11px;}
+
+
+/* Photo tab: interactive reactions, instant-sync cards, and two-row viewport */
+.moyo-record-modal[data-active-record-type="PHOTO"] .moyo-record-modal__body{
+    display:flex;
+    min-height:0;
+    overflow:hidden;
+}
+.moyo-record-modal[data-active-record-type="PHOTO"] [data-record-section="PHOTO"]{
+    display:flex;
+    min-height:0;
+    flex:1 1 auto;
+    flex-direction:column;
+}
+.moyo-record-modal[data-active-record-type="PHOTO"] .moyo-record-photo-upload{
+    flex:0 0 auto;
+    margin-bottom:12px;
+}
+.moyo-record-modal[data-active-record-type="PHOTO"] .moyo-record-photo-dropzone{
+    min-height:118px;
+    padding:16px;
+}
+.moyo-record-modal[data-active-record-type="PHOTO"] .moyo-record-photo-list-wrap{
+    
+    
+    padding:12px;
+    overflow-x:hidden;
+    overflow-y:auto;
+}
+.moyo-record-modal[data-active-record-type="PHOTO"] .moyo-record-photo-grid{
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:12px;
+}
+
+
+.moyo-record-photo-item__reaction{
+    display:inline-flex;
+    align-items:center;
+    gap:3px;
+    padding:0;
+    border:0;
+    background:transparent;
+    color:#fff;
+    font:inherit;
+    font-weight:800;
+    cursor:pointer;
+}
+.moyo-record-photo-item__reaction:hover,
+.moyo-record-photo-item__reaction:focus-visible{
+    color:#dbe7ff;
+    outline:none;
+}
+.moyo-record-photo-item__reaction.is-liked,
+.moyo-record-photo-item__reaction.is-liked i{
+    color:#ff6b7f;
+}
+@media(max-width:720px){
+    .moyo-record-modal[data-active-record-type="PHOTO"] .moyo-record-modal__body{overflow:auto;}
+    .moyo-record-modal[data-active-record-type="PHOTO"] [data-record-section="PHOTO"]{display:block;}
+    .moyo-record-modal[data-active-record-type="PHOTO"] .moyo-record-photo-dropzone{min-height:108px;}
+    .moyo-record-modal[data-active-record-type="PHOTO"] .moyo-record-photo-list-wrap{overflow:visible;}
+    .moyo-record-modal[data-active-record-type="PHOTO"] .moyo-record-photo-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
+}
+
+/* Photo cards: MOYO square preview + valid interactive hover overlay */
+.moyo-record-modal[data-active-record-type="PHOTO"] .moyo-record-photo-item{
+    aspect-ratio:1/1;
+}
+.moyo-record-photo-item__meta{
+    z-index:2;
+    pointer-events:none;
+}
+.moyo-record-photo-item__stats{
+    display:flex!important;
+    align-items:center;
+    gap:10px;
+    margin-top:4px;
+    opacity:1!important;
+    visibility:visible!important;
+    pointer-events:auto;
+}
+.moyo-record-photo-item__reaction{
+    position:relative;
+    z-index:3;
+    opacity:1!important;
+    visibility:visible!important;
+}
+.moyo-record-photo-item__delete{
+    z-index:4;
+}
+
+/* 기록 사진 게시물에 여러 장이 포함된 경우 대표 이미지 위에 장수 표시 */
+.moyo-record-photo-item__count{
+  position:absolute;
+  top:9px;
+  left:9px;
+  z-index:3;
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  min-height:28px;
+  padding:0 9px;
+  border:1px solid rgba(255,255,255,.72);
+  border-radius:999px;
+  background:rgba(20,31,49,.72);
+  color:#fff;
+  font-size:11px;
+  font-weight:800;
+  line-height:1;
+  box-shadow:0 4px 12px rgba(17,29,49,.18);
+  backdrop-filter:blur(5px);
+  pointer-events:none;
+}
+.moyo-record-photo-item__count i{font-size:12px;}
+
+/* v16: final record modal height and note tab/editor seam regression fix */
+.moyo-record-modal .moyo-record-modal__panel {
+    height: min(700px, calc(100vh - 48px)) !important;
+    max-height: min(700px, calc(100vh - 48px)) !important;
+}
+
+.moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-note-tabs-shell {
+    gap: 0 !important;
+    margin: 0 !important;
+    border-bottom: 0 !important;
+}
+
+.moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-note-tabs {
+    min-height: 38px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    gap: 5px !important;
+    border-bottom: 1px solid #dce5f1 !important;
+}
+
+.moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-note-tabs-shell > .moyo-record-note-tabs__add {
+    height: 38px !important;
+    margin: 0 !important;
+    border-color: #dce5f1 !important;
+    border-bottom: 0 !important;
+    border-radius: 10px 10px 0 0 !important;
+}
+
+.moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-note-editor {
+    padding-top: 0 !important;
+    margin-top: 0 !important;
+}
+
+.moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-note-form {
+    gap: 0 !important;
+}
+
+.moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-note-form > .ck-editor {
+    margin-top: 0 !important;
+}
+
+.moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-note-form > .ck-editor .ck-toolbar {
+    border-top-color: #dce5f1 !important;
+    border-radius: 0 !important;
+}
+
+.moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-note-form > .ck-editor .ck-editor__editable_inline {
+    border-radius: 0 0 12px 12px !important;
+}
+
+@media (max-width: 720px) {
+    .moyo-record-modal .moyo-record-modal__panel {
+        height: calc(100vh - 20px) !important;
+        max-height: calc(100vh - 20px) !important;
+    }
+}
+
+/* 기록 노트 하단 공통 이력 보기 링크형 버튼 */
+.moyo-record-note-history-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    min-height: 28px;
+    padding: 4px 8px;
+    margin: 0;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: #7183a3;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    transition: color .16s ease, background-color .16s ease, box-shadow .16s ease;
+}
+
+.moyo-record-note-history-button i {
+    font-size: 13px;
+    color: currentColor;
+}
+
+.moyo-record-note-history-button:hover {
+    color: #3b82f6;
+    background: #f1f6ff;
+}
+
+.moyo-record-note-history-button:focus {
+    outline: none;
+}
+
+.moyo-record-note-history-button:focus-visible {
+    color: #3b82f6;
+    background: #f1f6ff;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, .18);
+}
+
+.moyo-record-note-history-button:disabled {
+    color: #b4bfd0;
+    background: transparent;
+    cursor: default;
+    box-shadow: none;
+}
+
+
+/* 기록 링크 탭 */
+.moyo-record-link-form {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-auto-flow: row;
+    
+    margin-bottom: 12px;
+    
+    border: 1px solid #dce7f5;
+    border-radius: 14px;
+    background: #f8fbff;
+    transition: border-color .18s ease, background .18s ease, box-shadow .18s ease;
+}
+
+.moyo-record-link-form > input[type="hidden"] {
+    display: none;
+}
+
+.moyo-record-link-form__url-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 7px;
+    align-items: stretch;
+}
+
+.moyo-record-link-form__url-row > input {
+    min-width: 0;
+}
+
+.moyo-record-link-form__details {
+    display: grid;
+    grid-template-columns: minmax(180px, .8fr) minmax(240px, 1.2fr);
+    gap: 7px;
+}
+
+.moyo-record-link-form__details > input,
+.moyo-record-link-form__details > textarea {
+    min-width: 0;
+    min-height: 40px;
+    padding-top: 9px;
+    padding-bottom: 9px;
+}
+
+.moyo-record-link-form__details > textarea {
+    height: 40px;
+    overflow: hidden;
+    line-height: 20px;
+    resize: none;
+    transition: height .16s ease, box-shadow .16s ease;
+}
+
+.moyo-record-link-form__details > textarea:focus {
+    height: 64px;
+    overflow-y: auto;
+    resize: vertical;
+}
+
+.moyo-record-link-form__actions {
+    display: flex;
+    align-items: stretch;
+    justify-content: flex-end;
+    gap: 6px;
+}
+
+.moyo-record-link-form__actions > button {
+    
+    
+    
+    border: 0;
+    
+    
+    font-weight: 900;
+    cursor: pointer;
+}
+
+.moyo-record-link-form__actions > button[type="submit"] {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    background: linear-gradient(135deg, #35e0b7 0%, #3f8cff 54%, #7a5cff 100%);
+    color: #fff;
+    box-shadow: 0 6px 14px rgba(66, 102, 240, .2);
+}
+
+.moyo-record-link-cancel {
+    background: #edf2f8;
+    color: #6d7b90;
+}
+
+.moyo-record-link-cancel[hidden] {
+    display: none !important;
+}
+
+.moyo-record-link-form.is-editing {
+    border-color: #a9c3ff;
+    background: #f6f9ff;
+    box-shadow: 0 0 0 3px rgba(71, 120, 242, .08);
+}
+
+.moyo-record-link-list {
+    gap: 7px;
+}
+
+.moyo-record-link-item {
+    position: relative;
+    display: block;
+    padding: 0;
+    overflow: hidden;
+    border-radius: 13px;
+    transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease;
+}
+
+.moyo-record-link-item:hover {
+    border-color: #b9cdf5;
+    box-shadow: 0 6px 16px rgba(48, 78, 130, .08);
+    transform: none;
+}
+
+.moyo-record-link-item__open {
+    display: grid;
+    grid-template-columns: 36px minmax(0, 1fr) 16px;
+    align-items: center;
+    gap: 9px;
+    min-height: 60px;
+    padding: 8px 82px 8px 10px;
+    color: inherit;
+    text-decoration: none;
+}
+
+.moyo-record-link-item__icon {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 11px;
+    background: linear-gradient(135deg, rgba(99, 219, 199, .2), rgba(71, 120, 242, .17));
+    color: #4778f2;
+    font-size: 15px;
+}
+
+.moyo-record-link-item__content {
+    min-width: 0;
+    display: grid;
+    grid-template-columns: minmax(0, auto) minmax(0, 1fr);
+    align-items: baseline;
+    column-gap: 8px;
+    row-gap: 1px;
+}
+
+.moyo-record-link-item__content strong {
+    max-width: 240px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: #20324c;
+    font-size: 12px;
+}
+
+.moyo-record-link-item__host {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: #4778f2;
+    font-size: 10px;
+    font-weight: 750;
+}
+
+.moyo-record-link-item__content p,
+.moyo-record-link-item__content small {
+    grid-column: 1 / -1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.moyo-record-link-item__content p {
+    margin: 0;
+    color: #66758b;
+    font-size: 10px;
+}
+
+.moyo-record-link-item__content small {
+    color: #98a4b4;
+    font-size: 9px;
+}
+
+.moyo-record-link-item__external {
+    color: #a3afbf;
+    font-size: 10px;
+}
+
+.moyo-record-link-item__actions {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    display: flex;
+    gap: 4px;
+    transform: translateY(-50%);
+    opacity: 0;
+    transition: opacity .16s ease;
+}
+
+.moyo-record-link-item:hover .moyo-record-link-item__actions,
+.moyo-record-link-item:focus-within .moyo-record-link-item__actions {
+    opacity: 1;
+}
+
+.moyo-record-link-item__actions button {
+    width: 29px;
+    height: 29px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 0;
+    border-radius: 9px;
+    appearance: none;
+    -webkit-appearance: none;
+    background: #f2f6fb;
+    color: #78879b;
+    font: inherit;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.moyo-record-link-item__actions button i {
+    pointer-events: none;
+}
+
+.moyo-record-link-item__actions button:hover {
+    background: #e7efff;
+    color: #4778f2;
+}
+
+.moyo-record-link-item__actions [data-record-link-delete]:hover {
+    background: #fff0f0;
+    color: #e45757;
+}
+
+@media (max-width: 720px) {
+    .moyo-record-link-form__url-row,
+    .moyo-record-link-form__details {
+        grid-template-columns: 1fr;
+    }
+
+    .moyo-record-link-form__actions {
+        justify-content: stretch;
+    }
+
+    .moyo-record-link-form__actions > button {
+        flex: 1;
+        
+    }
+
+    .moyo-record-link-item__open {
+        padding-right: 76px;
+    }
+
+    .moyo-record-link-item__content {
+        grid-template-columns: 1fr;
+    }
+
+    .moyo-record-link-item__content strong {
+        max-width: none;
+    }
+
+    .moyo-record-link-item__host {
+        display: none;
+    }
+
+    .moyo-record-link-item__actions {
+        opacity: 1;
+    }
+}
+
+/* 링크 탭 최종 공간 효율 보정 */
+.moyo-record-link-form .moyo-record-link-form__details {
+    grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+}
+
+.moyo-record-link-form .moyo-record-link-form__details > input,
+.moyo-record-link-form .moyo-record-link-form__details > textarea {
+    grid-column: auto !important;
+    width: 100%;
+}
+
+.moyo-record-link-form .moyo-record-link-form__details > textarea {
+    min-height: 40px;
+    height: 40px;
+}
+
+.moyo-record-link-item .moyo-record-link-item__open {
+    grid-template-columns: 34px minmax(0, 1fr) 14px;
+    min-height: 56px;
+    padding: 7px 88px 7px 9px;
+    gap: 8px;
+}
+
+.moyo-record-link-item .moyo-record-link-item__icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+}
+
+.moyo-record-link-item .moyo-record-link-item__content {
+    grid-template-columns: minmax(0, auto) minmax(0, 1fr);
+    column-gap: 7px;
+    row-gap: 0;
+}
+
+.moyo-record-link-item .moyo-record-link-item__actions {
+    right: 8px;
+    top: 50%;
+    
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    align-items: center;
+    gap: 4px;
+    transform: translateY(-50%);
+}
+
+.moyo-record-link-item .moyo-record-link-item__actions button {
+    flex: 0 0 28px;
+    width: 28px;
+    min-width: 28px;
+    height: 28px;
+    min-height: 28px;
+}
+
+@media (max-width: 720px) {
+    .moyo-record-link-form .moyo-record-link-form__details {
+        grid-template-columns: 1fr;
+    }
+
+    
+}
+
+/* 링크 탭 입력 크기 및 더보기 메뉴 최종 보정 */
+.moyo-record-link-form {
+    gap: 6px;
+    padding: 9px;
+}
+
+.moyo-record-link-form__url-row,
+.moyo-record-link-form .moyo-record-link-form__details {
+    gap: 6px;
+}
+
+.moyo-record-link-form__url-row > input,
+.moyo-record-link-form .moyo-record-link-form__details > input,
+.moyo-record-link-form .moyo-record-link-form__details > textarea {
+    min-height: 34px;
+    height: 34px;
+    padding: 6px 10px;
+    border-radius: 10px;
+    font-size: 13px;
+    line-height: 20px;
+}
+
+.moyo-record-link-form .moyo-record-link-form__details > textarea,
+.moyo-record-link-form .moyo-record-link-form__details > textarea:focus {
+    min-height: 34px;
+    height: 34px;
+    overflow: hidden;
+    resize: none;
+}
+
+.moyo-record-link-form__actions > button {
+    min-width: 62px;
+    min-height: 34px;
+    height: 34px;
+    padding: 0 12px;
+    border-radius: 10px;
+    font-size: 11px;
+}
+
+.moyo-record-link-item .moyo-record-link-item__open {
+    padding-right: 46px;
+}
+
+.moyo-record-link-item__menu {
+    position: absolute;
+    top: 50%;
+    right: 8px;
+    z-index: 3;
+    transform: translateY(-50%);
+}
+
+
+/* 이전 개별 수정/삭제 액션 규칙 무효화 */
+.moyo-record-link-item .moyo-record-link-item__actions {
+    display: none !important;
+}
+
+@media (max-width: 720px) {
+    .moyo-record-link-form__actions > button {
+        min-height: 34px;
+        height: 34px;
+    }
+
+    .moyo-record-link-item .moyo-record-link-item__open {
+        padding-right: 46px;
+    }
+}
+
+
+/* 링크 탭: 상단 입력 영역 고정 + 목록 단일 스크롤 */
+.moyo-record-modal[data-active-record-type="LINK"] .moyo-record-modal__body {
+    display: flex;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.moyo-record-modal[data-active-record-type="LINK"] [data-record-section="LINK"] {
+    display: flex;
+    min-width: 0;
+    min-height: 0;
+    flex: 1 1 auto;
+    flex-direction: column;
+}
+
+.moyo-record-modal[data-active-record-type="LINK"] [data-record-section="LINK"] > .moyo-record-section__header {
+    flex: 0 0 auto;
+    margin-bottom: 8px;
+}
+
+.moyo-record-modal[data-active-record-type="LINK"] [data-record-section="LINK"] > .moyo-record-section__header > div {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    min-width: 0;
+}
+
+.moyo-record-modal[data-active-record-type="LINK"] [data-record-section="LINK"] > .moyo-record-section__header strong {
+    flex: 0 0 auto;
+    font-size: 14px;
+}
+
+.moyo-record-modal[data-active-record-type="LINK"] [data-record-section="LINK"] > .moyo-record-section__header span {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 10px;
+}
+
+.moyo-record-modal[data-active-record-type="LINK"] .moyo-record-link-form {
+    flex: 0 0 auto;
+    margin-bottom: 10px;
+}
+
+.moyo-record-modal[data-active-record-type="LINK"] .moyo-record-link-list {
+    min-height: 0;
+    flex: 1 1 auto;
+    align-content: start;
+    overflow-x: visible !important;
+    overflow-y: auto !important;
+    padding-right: 5px;
+    padding-bottom: 0;
+    overscroll-behavior: contain;
+}
+
+.moyo-record-modal[data-active-record-type="LINK"] .moyo-record-link-list::-webkit-scrollbar {
+    width: 7px;
+}
+
+.moyo-record-modal[data-active-record-type="LINK"] .moyo-record-link-list::-webkit-scrollbar-thumb {
+    border: 2px solid transparent;
+    border-radius: 999px;
+    background: #aeb8c6;
+    background-clip: padding-box;
+}
+
+.moyo-record-modal[data-active-record-type="LINK"] .moyo-record-link-list::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.moyo-record-modal[data-active-record-type="LINK"] [data-record-empty="LINK"] {
+    min-height: 0;
+    flex: 1 1 auto;
+}
+
+@media (max-width: 720px) {
+    .moyo-record-modal[data-active-record-type="LINK"] [data-record-section="LINK"] > .moyo-record-section__header > div {
+        gap: 6px;
+    }
+}
+
+
+/* 장소 기록: 직접 입력을 기본으로 하고, 주소 검색 시 상세 위치와 지도만 확장한다. */
+.moyo-record-location-header>div{display:flex;align-items:baseline;gap:8px;}
+.moyo-record-location-form{display:grid;gap:8px;margin:0 0 10px;padding:10px;border:1px solid #dce7f5;border-radius:14px;background:#f8fbff;}
+.moyo-record-location-form__primary{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;}
+.moyo-record-location-form input{height:36px;padding:0 11px;border:1px solid #d8e3f1;border-radius:10px;background:#fff;color:#22304a;font-size:12px;font-weight:500;outline:0;}
+.moyo-record-location-form input:focus{border-color:#77a1fa;box-shadow:0 0 0 3px rgba(71,120,242,.08);}
+.moyo-record-location-form__primary>button{height:36px;padding:0 14px;border:1px solid #d4e0f0;border-radius:10px;background:#fff;color:#2958bd;font-size:12px;font-weight:800;white-space:nowrap;}
+.moyo-record-location-form__primary>button i{margin-right:5px;}
+.moyo-record-location-detail{display:block;}
+.moyo-record-location-preview{overflow:hidden;border:1px solid #dbe5f2;border-radius:12px;background:#fff;}
+.moyo-record-location-preview__head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 10px;}
+.moyo-record-location-preview__head>div{min-width:0;display:grid;gap:2px;}
+.moyo-record-location-preview__head strong{color:#2c3f5b;font-size:11px;}
+.moyo-record-location-preview__head span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#7f8da1;font-size:10px;}
+.moyo-record-location-preview__head button{border:0;background:transparent;color:#356ce5;font-size:10px;font-weight:800;}
+.moyo-record-location-preview iframe{display:block;width:100%;height:132px;border:0;}
+.moyo-record-location-form .moyo-record-modal__form-actions{display:flex;justify-content:flex-end;margin:0;}
+.moyo-record-location-form .moyo-record-modal__form-actions button{height:34px;min-width:68px;padding:0 13px;border:0;border-radius:10px;background:linear-gradient(135deg,#3bd4c5,#4c68f5 72%,#7656f7);color:#fff;font-size:12px;font-weight:800;box-shadow:0 5px 12px rgba(74,103,241,.18);}
+.moyo-record-location-form .moyo-record-modal__form-actions button i{margin-right:4px;}
+.moyo-record-location-current{margin:0;}
+.moyo-record-location-card{min-height:58px;padding:8px 10px;}
+.moyo-record-location-card>button{display:inline-flex;align-items:center;gap:5px;border:0;background:transparent;color:#7086a5;font-size:10px;font-weight:700;white-space:nowrap;}
+.moyo-record-location-card>button:hover{color:#356ce5;}
+@media(max-width:640px){.moyo-record-location-form__primary{grid-template-columns:minmax(0,1fr) auto;}.moyo-record-location-preview iframe{height:118px;}}
+
+
+/* 장소 기록 v2: 기본 한 줄 입력 + 검색 시 상세 위치/지도 확장 */
+.moyo-record-modal[data-active-record-type="LOCATION"] .moyo-record-location-form{
+    display:grid;gap:8px;padding:10px;border:1px solid #dce7f5;border-radius:14px;background:#f8fbff;
+}
+.moyo-record-modal[data-active-record-type="LOCATION"] .moyo-record-location-form__primary{
+    display:grid;align-items:center;gap:7px;
+}
+.moyo-record-modal[data-active-record-type="LOCATION"] .moyo-record-location-form__primary input,
+.moyo-record-modal[data-active-record-type="LOCATION"] .moyo-record-location-detail input{
+    width:100%;height:34px;padding:0 10px;border:1px solid #d8e3f1;border-radius:10px;background:#fff;color:#22304a;font-size:12px;font-weight:500;outline:0;
+}
+.moyo-record-modal[data-active-record-type="LOCATION"] .moyo-record-location-form__primary button{
+    height:34px;padding:0 12px;border-radius:10px;font-size:12px;font-weight:800;white-space:nowrap;cursor:pointer;
+}
+.moyo-record-modal[data-active-record-type="LOCATION"] .moyo-record-location-search{
+    border:1px solid #cfe0f3;background:#fff;color:#315ebc;
+}
+
+.moyo-record-modal[data-active-record-type="LOCATION"] .moyo-record-location-submit{
+    border:0;background:linear-gradient(135deg,#35d6c1,#4778f2 58%,#755cff);color:#fff;box-shadow:0 5px 12px rgba(74,103,241,.18);
+}
+.moyo-record-modal[data-active-record-type="LOCATION"] .moyo-record-location-submit i,
+.moyo-record-modal[data-active-record-type="LOCATION"] .moyo-record-location-search i{margin-right:4px;}
+
+.moyo-record-modal[data-active-record-type="LOCATION"] .moyo-record-location-preview{overflow:hidden;border:1px solid #dbe5f2;border-radius:12px;background:#fff;}
+.moyo-record-modal[data-active-record-type="LOCATION"] .moyo-record-location-preview__head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 10px;}
+.moyo-record-modal[data-active-record-type="LOCATION"] .moyo-record-location-preview__head>div{min-width:0;display:grid;gap:2px;}
+.moyo-record-modal[data-active-record-type="LOCATION"] .moyo-record-location-preview__head strong{color:#2c3f5b;font-size:11px;}
+.moyo-record-modal[data-active-record-type="LOCATION"] .moyo-record-location-preview__head span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#7f8da1;font-size:10px;}
+.moyo-record-modal[data-active-record-type="LOCATION"] .moyo-record-location-preview__head button{display:inline-flex;align-items:center;gap:4px;border:0;background:transparent;color:#356ce5;font-size:10px;font-weight:800;cursor:pointer;}
+.moyo-record-modal[data-active-record-type="LOCATION"] .moyo-record-location-preview iframe{display:block;width:100%;height:132px;border:0;}
+.moyo-record-modal[data-active-record-type="LOCATION"] .moyo-record-location-current{margin:0;display:grid;gap:8px;}
+.moyo-record-modal[data-active-record-type="LOCATION"] .moyo-record-location-card{position:relative;display:grid;grid-template-columns:38px minmax(0,1fr) auto;align-items:center;gap:9px;min-height:58px;padding:8px 10px;border:1px solid #dce6f3;border-radius:14px;background:#fff;overflow:visible;}
+.moyo-record-modal[data-active-record-type="LOCATION"] .moyo-record-location-card>span{width:38px;height:38px;display:flex;align-items:center;justify-content:center;border-radius:11px;background:linear-gradient(135deg,rgba(99,219,199,.2),rgba(71,120,242,.17));color:#4778f2;}
+.moyo-record-modal[data-active-record-type="LOCATION"] .moyo-record-location-card__content{min-width:0;display:grid;gap:2px;}
+.moyo-record-modal[data-active-record-type="LOCATION"] .moyo-record-location-card__content strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#20324c;font-size:12px;}
+.moyo-record-modal[data-active-record-type="LOCATION"] .moyo-record-location-card__content p,
+.moyo-record-modal[data-active-record-type="LOCATION"] .moyo-record-location-card__content small{margin:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#8b98a9;font-size:10px;}
+.moyo-record-modal[data-active-record-type="LOCATION"] .moyo-record-location-card__content p{color:#4778f2;}
+.moyo-record-modal[data-active-record-type="LOCATION"] .moyo-record-location-card__actions{display:flex;align-items:center;gap:3px;}
+.moyo-record-modal[data-active-record-type="LOCATION"] .moyo-record-location-card__map{display:inline-flex;align-items:center;gap:4px;height:28px;padding:0 7px;border:0;border-radius:8px;background:transparent;color:#7086a5;font-size:10px;font-weight:700;cursor:pointer;}
+.moyo-record-modal[data-active-record-type="LOCATION"] .moyo-record-location-card__map:hover{background:#f2f6fb;color:#356ce5;}
+
+@media(max-width:720px){
+  .moyo-record-modal[data-active-record-type="LOCATION"] .moyo-record-location-form__primary{grid-template-columns:minmax(0,1fr) auto auto;}
+  .moyo-record-modal[data-active-record-type="LOCATION"] .moyo-record-location-cancel{grid-column:2;}
+  .moyo-record-modal[data-active-record-type="LOCATION"] .moyo-record-location-submit{grid-column:3;}
+  .moyo-record-modal[data-active-record-type="LOCATION"] .moyo-record-location-preview iframe{height:118px;}
+}
+.moyo-record-modal[data-active-record-type="LOCATION"] .moyo-record-location-detail[hidden],
+.moyo-record-modal[data-active-record-type="LOCATION"] .moyo-record-location-preview[hidden],
+.moyo-record-modal[data-active-record-type="LOCATION"] .moyo-record-location-cancel[hidden]{display:none!important;}
+
+/* 장소 기록 v3: 저장 후 입력 폼 접기 + 카드 클릭 지도 미리보기 */
+.moyo-record-modal[data-active-record-type="LOCATION"] .moyo-record-location-form[hidden]{display:none!important;}
+.moyo-record-modal[data-active-record-type="LOCATION"] .moyo-record-location-entry{display:grid;gap:8px;}
+.moyo-record-modal[data-active-record-type="LOCATION"] .moyo-record-location-card.is-clickable{cursor:pointer;transition:border-color .16s ease,box-shadow .16s ease,background .16s ease;}
+.moyo-record-modal[data-active-record-type="LOCATION"] .moyo-record-location-card.is-clickable:hover{border-color:#b9cff8;background:#fbfdff;box-shadow:0 5px 16px rgba(58,91,148,.08);}
+.moyo-record-modal[data-active-record-type="LOCATION"] .moyo-record-location-card.is-clickable:focus-visible{outline:0;border-color:#77a1fa;box-shadow:0 0 0 3px rgba(71,120,242,.12);}
+.moyo-record-modal[data-active-record-type="LOCATION"] .moyo-record-location-card__toggle-icon{width:24px;height:24px;display:flex;align-items:center;justify-content:center;color:#8fa0b5;font-size:10px;transition:transform .18s ease,color .18s ease;}
+.moyo-record-modal[data-active-record-type="LOCATION"] .moyo-record-location-card.is-expanded .moyo-record-location-card__toggle-icon{transform:rotate(180deg);color:#4778f2;}
+.moyo-record-modal[data-active-record-type="LOCATION"] .moyo-record-location-card-preview{overflow:hidden;border:1px solid #dbe5f2;border-radius:13px;background:#fff;}
+.moyo-record-modal[data-active-record-type="LOCATION"] .moyo-record-location-card-preview[hidden]{display:none!important;}
+.moyo-record-modal[data-active-record-type="LOCATION"] .moyo-record-location-card-preview__head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 10px;}
+.moyo-record-modal[data-active-record-type="LOCATION"] .moyo-record-location-card-preview__head>div{min-width:0;display:grid;gap:2px;}
+.moyo-record-modal[data-active-record-type="LOCATION"] .moyo-record-location-card-preview__head strong{color:#2c3f5b;font-size:11px;}
+.moyo-record-modal[data-active-record-type="LOCATION"] .moyo-record-location-card-preview__head span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#7f8da1;font-size:10px;}
+.moyo-record-modal[data-active-record-type="LOCATION"] .moyo-record-location-card-preview__head button{display:inline-flex;align-items:center;gap:4px;border:0;background:transparent;color:#356ce5;font-size:10px;font-weight:800;cursor:pointer;white-space:nowrap;}
+.moyo-record-modal[data-active-record-type="LOCATION"] .moyo-record-location-card-preview iframe{display:block;width:100%;height:150px;border:0;background:#f5f8fc;}
+@media(max-width:720px){.moyo-record-modal[data-active-record-type="LOCATION"] .moyo-record-location-card-preview iframe{height:128px;}}
+
+/* Multiple record locations */
+.moyo-record-location-header{display:flex;align-items:center;justify-content:space-between;gap:12px;}
+.moyo-record-location-add{display:inline-flex;align-items:center;gap:6px;border:0;background:transparent;color:#3978ef;font-weight:700;font-size:13px;cursor:pointer;padding:6px 8px;border-radius:8px;}
+.moyo-record-location-add:hover{background:#eef5ff;}
+.moyo-record-location-current{display:flex;flex-direction:column;gap:10px;}
+.moyo-record-location-card__title{display:flex;align-items:center;gap:7px;min-width:0;}
+.moyo-record-location-card__title em{font-style:normal;font-size:10px;line-height:18px;padding:0 7px;border-radius:999px;color:#fff;background:linear-gradient(135deg,#27d6c5,#4c6fff);}
+.moyo-record-location-entry.is-primary .moyo-record-location-card{border-color:#8ca9ff;box-shadow:0 0 0 1px rgba(76,111,255,.08);}
+
+/* 링크 추가 폼: 항목이 있으면 접고 상단 추가/취소로 제어 */
+.moyo-record-link-header{display:flex;align-items:center;justify-content:space-between;gap:12px;}
+.moyo-record-link-header>div{display:flex;align-items:baseline;gap:8px;min-width:0;}
+.moyo-record-link-add{display:inline-flex;align-items:center;gap:6px;border:0;background:transparent;color:#3978ef;font-weight:700;font-size:13px;cursor:pointer;padding:6px 8px;border-radius:8px;white-space:nowrap;}
+.moyo-record-link-add:hover{background:#eef5ff;}
+.moyo-record-link-add.is-cancel{color:#66758b;}
+.moyo-record-link-form[hidden]{display:none!important;}
+
+
+/* 링크·장소 빈 상태 통일: 입력 폼 바로 아래에 같은 크기로 표시 */
+
+.moyo-record-modal [data-record-section="LINK"] > [data-record-empty="LINK"][hidden],
+.moyo-record-modal [data-record-section="LOCATION"] > [data-record-empty="LOCATION"][hidden] {
+    display: none !important;
+}
+
+/* 링크·장소 빈 상태: 완성된 사진 탭의 콘텐츠 카드 기준으로 통일 */
+.moyo-record-modal [data-record-section="LINK"]:has(> [data-record-empty="LINK"]:not([hidden])) > .moyo-record-link-list,
+.moyo-record-modal [data-record-section="LOCATION"]:has(> [data-record-empty="LOCATION"]:not([hidden])) > .moyo-record-location-current {
+    display: none !important;
+}
+
+.moyo-record-modal [data-record-section="LINK"] > [data-record-empty="LINK"],
+.moyo-record-modal [data-record-section="LOCATION"] > [data-record-empty="LOCATION"] {
+    width: 100%;
+    min-height: 360px !important;
+    margin-top: 10px;
+    flex: 1 1 360px !important;
+    
+    
+    
+}
+
+.moyo-record-modal [data-record-section="LINK"] > [data-record-empty="LINK"] > i,
+.moyo-record-modal [data-record-section="LOCATION"] > [data-record-empty="LOCATION"] > i {
+    margin-bottom: 10px;
+    color: #7891ba;
+    font-size: 25px;
+}
+
+@media (max-width: 720px) {
+    .moyo-record-modal [data-record-section="LINK"] > [data-record-empty="LINK"],
+    .moyo-record-modal [data-record-section="LOCATION"] > [data-record-empty="LOCATION"] {
+        min-height: 280px !important;
+        flex-basis: 280px !important;
+    }
+}
+
+/* 링크·장소 빈 상태: 별도 컨테이너 없이 남은 영역 중앙 표시 */
+.moyo-record-modal [data-record-section="LINK"] > [data-record-empty="LINK"],
+.moyo-record-modal [data-record-section="LOCATION"] > [data-record-empty="LOCATION"] {
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+}
+
+
+/* 장소 입력: 상세 위치·설명은 검색 여부와 무관하게 항상 노출 */
+.moyo-record-modal[data-active-record-type="LOCATION"] .moyo-record-location-detail{
+    display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;
+}
+.moyo-record-modal[data-active-record-type="LOCATION"] .moyo-record-location-detail[hidden]{display:grid!important;}
+.moyo-record-modal[data-active-record-type="LOCATION"] .moyo-record-location-card__description{color:#66758c!important;}
+@media(max-width:640px){
+    .moyo-record-modal[data-active-record-type="LOCATION"] .moyo-record-location-detail{grid-template-columns:1fr;}
+}
+
+/* 사진 빈 상태: 링크·장소처럼 남은 목록 영역의 중앙에 표시 */
+.moyo-record-modal[data-active-record-type="PHOTO"] .moyo-record-photo-list-wrap {
+    display: flex;
+    min-height: 0;
+    flex: 1 1 auto;
+    flex-direction: column;
+}
+
+.moyo-record-modal[data-active-record-type="PHOTO"] .moyo-record-photo-list-wrap > .moyo-record-section__empty:not([hidden]) {
+    width: 100%;
+    min-height: 0 !important;
+    flex: 1 1 auto;
+}
+
+.moyo-record-modal[data-active-record-type="PHOTO"] .moyo-record-photo-list-wrap > .moyo-record-photo-grid:not([hidden]) {
+    width: 100%;
+    flex: 0 0 auto;
+}
+
+
+/* 공통 기록 파일: 다운로드·연결 해제 액션 */
+.moyo-record-file-item>a,
+.moyo-record-file-item>.moyo-record-file-delete{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    width:30px;
+    height:30px;
+    flex:0 0 auto;
+    border:0;
+    border-radius:50%;
+    background:transparent;
+    color:#7f8b9b;
+    text-decoration:none;
+    cursor:pointer;
+}
+.moyo-record-file-item>a:hover{background:#eef6ff;color:#3478c9;}
+.moyo-record-file-item>.moyo-record-file-delete:hover{background:#fff1f3;color:#e25563;}
+.moyo-record-file-item>.moyo-record-file-delete:disabled{opacity:.45;cursor:wait;}
+
+
+/* 공통 기록 파일 탭: 접이식 업로드 및 간결한 파일 카드 */
+.moyo-record-file-upload[hidden]{display:none!important;}
+.moyo-record-file-upload{display:grid;gap:12px;margin-bottom:14px;padding:14px;border:1px solid #dce7f5;border-radius:16px;background:#f8fbff;}
+.moyo-record-file-dropzone{display:flex;align-items:center;gap:12px;width:100%;min-height:72px;padding:12px 14px;border:1px dashed #bdd1e8;border-radius:14px;background:#fff;color:#4c5d73;text-align:left;cursor:pointer;transition:border-color .16s ease,background-color .16s ease,box-shadow .16s ease;}
+.moyo-record-file-dropzone:hover,.moyo-record-file-dropzone.is-dragover{border-color:#62a5e9;background:#f5faff;box-shadow:0 0 0 3px rgba(74,144,226,.08);}
+.moyo-record-file-dropzone.has-files{border-style:solid;border-color:#9fc7eb;background:#f8fcff;}
+.moyo-record-file-dropzone__icon{display:grid;place-items:center;flex:0 0 auto;width:42px;height:42px;border-radius:13px;background:linear-gradient(135deg,rgba(85,221,191,.18),rgba(74,144,226,.17),rgba(117,104,216,.14));color:#4a90e2;font-size:17px;}
+.moyo-record-file-dropzone__copy{display:flex;min-width:0;flex:1;flex-direction:column;gap:4px;}
+.moyo-record-file-dropzone__copy strong{color:#26364c;font-size:12px;font-weight:900;}
+.moyo-record-file-dropzone__copy small{overflow:hidden;color:#8491a2;font-size:10px;font-weight:700;text-overflow:ellipsis;white-space:nowrap;}
+.moyo-record-file-dropzone.has-files .moyo-record-file-dropzone__copy small{color:#3478c9;}
+.moyo-record-file-dropzone__button{display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;height:34px;padding:0 12px;border:1px solid #cfe0f2;border-radius:10px;background:#fff;color:#3478c9;font-size:11px;font-weight:850;}
+.moyo-record-file-upload__actions{display:flex;justify-content:flex-end;gap:8px;}
+.moyo-record-file-upload__actions button{height:36px;padding:0 14px;border-radius:10px;font-size:11px;font-weight:850;cursor:pointer;}
+.moyo-record-file-upload__cancel{border:1px solid #dce4ed;background:#fff;color:#68778a;}
+.moyo-record-file-upload__cancel:hover{background:#f6f8fb;}
+.moyo-record-file-upload__submit{display:inline-flex;align-items:center;gap:6px;border:0;background:linear-gradient(135deg,#35e0b7 0%,#3f8cff 54%,#7a5cff 100%);color:#fff;box-shadow:0 6px 14px rgba(66,102,240,.18);}
+.moyo-record-file-upload__submit:disabled{opacity:.42;box-shadow:none;cursor:not-allowed;}
+.moyo-record-file-list-wrap{display:flex;min-height:0;flex:1 1 auto;flex-direction:column;}
+.moyo-record-file-list-wrap.is-empty>.moyo-record-section__empty:not([hidden]){width:100%;min-height:0!important;flex:1 1 auto;}
+.moyo-record-file-item{grid-template-columns:40px minmax(0,1fr) auto!important;min-height:58px;padding:9px 11px!important;}
+.moyo-record-file-item__copy{min-width:0;display:flex!important;flex-direction:column;gap:3px!important;}
+.moyo-record-file-item__copy strong{font-size:12px!important;}
+.moyo-record-file-item__copy small{font-size:10px!important;}
+.moyo-record-file-item__actions{display:flex;align-items:center;gap:2px;}
+.moyo-record-file-item__actions>a{display:inline-grid;place-items:center;width:32px;height:32px;border:0;border-radius:50%;background:transparent;color:#7f8b9b;text-decoration:none;cursor:pointer;}
+.moyo-record-file-item__actions>a:hover{background:#eef5fb;color:#3478c9;}
+.moyo-record-file-menu{position:relative;}
+.moyo-record-inline-add[hidden]{display:none!important;}
+@media(max-width:560px){.moyo-record-file-dropzone{align-items:flex-start;}.moyo-record-file-dropzone__button{display:none;}.moyo-record-file-dropzone__copy small{white-space:normal;}.moyo-record-file-item__actions{gap:0;}}
+
+/* 공통 기록 상단 탭: 활성 밑줄만 유지 */
+.moyo-record-modal__tabs button:focus,
+.moyo-record-modal__tabs button:focus-visible{
+    outline:none!important;
+    box-shadow:none!important;
+}
+.moyo-record-modal__tabs button:focus::before,
+.moyo-record-modal__tabs button:focus-visible::before{
+    content:none!important;
+    display:none!important;
+}
+
+
+/* 공통 기록 파일 탭: 사진 탭과 동일한 상시 드롭존 흐름 */
+.moyo-record-modal[data-active-record-type="FILE"] .moyo-record-file-upload{
+  display:block;
+  margin:0 0 14px;
+  padding:0;
+  border:0;
+  background:transparent;
+}
+.moyo-record-modal[data-active-record-type="FILE"] .moyo-record-file-upload input[hidden]{
+  display:none!important;
+}
+.moyo-record-modal[data-active-record-type="FILE"] .moyo-record-file-dropzone{
+  width:100%;
+  min-height:120px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:7px;
+  padding:20px;
+  border:1px dashed #9fbcff;
+  border-radius:16px;
+  background:#f8fbff;
+  color:#7588a3;
+  text-align:center;
+  cursor:pointer;
+  transition:border-color .18s ease,background-color .18s ease,box-shadow .18s ease,transform .18s ease;
+}
+.moyo-record-modal[data-active-record-type="FILE"] .moyo-record-file-dropzone>i{
+  margin-bottom:2px;
+  background:linear-gradient(135deg,#35d7bd,#4b87ff 60%,#725cff);
+  -webkit-background-clip:text;
+  background-clip:text;
+  color:transparent;
+  font-size:31px;
+}
+.moyo-record-modal[data-active-record-type="FILE"] .moyo-record-file-dropzone>strong{
+  color:#233650;
+  font-size:14px;
+  font-weight:900;
+}
+.moyo-record-modal[data-active-record-type="FILE"] .moyo-record-file-dropzone>span{
+  color:#8090a6;
+  font-size:11px;
+  font-weight:600;
+}
+.moyo-record-modal[data-active-record-type="FILE"] .moyo-record-file-dropzone>em{
+  
+  align-items:center;
+  justify-content:center;
+  min-width:82px;
+  height:30px;
+  margin-top:3px;
+  padding:0 12px;
+  border:1px solid #cfe0f2;
+  border-radius:9px;
+  background:#fff;
+  color:#3478c9;
+  font-size:11px;
+  font-style:normal;
+  font-weight:850;
+}
+.moyo-record-modal[data-active-record-type="FILE"] .moyo-record-file-dropzone:hover,
+.moyo-record-modal[data-active-record-type="FILE"] .moyo-record-file-dropzone.is-dragover{
+  border-color:#5d91ff;
+  background:#f3f8ff;
+  box-shadow:0 10px 24px rgba(72,116,223,.10);
+}
+.moyo-record-modal[data-active-record-type="FILE"] .moyo-record-file-dropzone.is-dragover{
+  transform:translateY(-1px);
+}
+.moyo-record-modal[data-active-record-type="FILE"] .moyo-record-file-dropzone:disabled,
+.moyo-record-modal[data-active-record-type="FILE"] .moyo-record-file-dropzone.is-uploading{
+  cursor:wait;
+  opacity:.65;
+  transform:none;
+}
+.moyo-record-modal[data-active-record-type="FILE"] .moyo-record-file-list-wrap{
+  min-height:260px;
+  padding:12px;
+  border:1px solid #dce6f3;
+  border-radius:16px;
+  background:#fff;
+  overflow-y:auto;
+}
+.moyo-record-modal[data-active-record-type="FILE"] .moyo-record-file-list-wrap.is-empty{
+  display:flex;
+}
+.moyo-record-modal[data-active-record-type="FILE"] .moyo-record-file-list-wrap .moyo-record-section__empty{
+  width:100%;
+  min-height:230px!important;
+}
+.moyo-record-modal[data-active-record-type="FILE"] .moyo-record-file-list{
+  display:grid;
+  gap:9px;
+  width:100%;
+}
+@media(max-width:720px){
+  .moyo-record-modal[data-active-record-type="FILE"] .moyo-record-file-dropzone{min-height:108px;}
+  .moyo-record-modal[data-active-record-type="FILE"] .moyo-record-file-list-wrap{min-height:220px;}
+}
+
+
+/* 파일 드롭존: 사진 탭과 동일하게 영역 전체를 선택 버튼으로 사용 */
+.moyo-record-modal[data-active-record-type="FILE"] .moyo-record-file-dropzone>em{
+  display:none!important;
+}
+
+
+/* 사진·파일·링크·장소 공통 컨텐츠 UI */
+.moyo-record-modal .moyo-record-content-section{
+  min-height:100%;
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+}
+.moyo-record-modal .moyo-record-content-section[hidden]{display:none!important;}
+
+/* 상단 추가 영역의 공통 간격 */
+.moyo-record-modal .moyo-record-content-section>.moyo-record-photo-upload,
+.moyo-record-modal .moyo-record-content-section>.moyo-record-file-upload,
+.moyo-record-modal .moyo-record-content-section>.moyo-record-link-form,
+.moyo-record-modal .moyo-record-content-section>.moyo-record-location-form{
+  flex:0 0 auto;
+  width:100%;
+  box-sizing:border-box;
+  margin:0!important;
+}
+
+/* 링크·장소의 추가 버튼 전용 툴바: 입력 폼이 펼쳐져 있으면 숨김 */
+.moyo-record-modal .moyo-record-content-section>.moyo-record-link-header,
+.moyo-record-modal .moyo-record-content-section>.moyo-record-location-header{
+  flex:0 0 auto;
+  min-height:32px;
+  margin:0!important;
+}
+.moyo-record-modal .moyo-record-content-section>.moyo-record-link-header>div,
+.moyo-record-modal .moyo-record-content-section>.moyo-record-location-header>div{
+  display:none!important;
+}
+.moyo-record-modal .moyo-record-content-section>.moyo-record-link-header:has(button[hidden]),
+.moyo-record-modal .moyo-record-content-section>.moyo-record-location-header:has(button[hidden]){
+  display:none!important;
+}
+.moyo-record-modal .moyo-record-content-section>.moyo-record-link-header,
+.moyo-record-modal .moyo-record-content-section>.moyo-record-location-header{
+  justify-content:flex-end;
+}
+
+/* 링크·장소 입력 패널 정합 */
+.moyo-record-modal .moyo-record-content-section>.moyo-record-link-form,
+.moyo-record-modal .moyo-record-content-section>.moyo-record-location-form{
+  padding:10px!important;
+  border:1px solid #dce7f5!important;
+  border-radius:14px!important;
+  background:#f8fbff!important;
+  box-shadow:none!important;
+}
+
+/* 네 탭 하단 목록 컨테이너 통일 */
+.moyo-record-modal .moyo-record-content-list-wrap{
+  position:relative;
+  flex:1 1 auto;
+  
+  width:100%;
+  box-sizing:border-box;
+  padding:12px!important;
+  border:1px solid #dce6f3!important;
+  border-radius:16px!important;
+  background:#fff!important;
+  overflow-x:visible;
+  overflow-y:auto;
+}
+.moyo-record-modal .moyo-record-content-list-wrap.is-empty{
+  display:flex;
+  
+  
+}
+.moyo-record-modal .moyo-record-content-list-wrap>.moyo-record-photo-grid,
+.moyo-record-modal .moyo-record-content-list-wrap>.moyo-record-file-list,
+.moyo-record-modal .moyo-record-content-list-wrap>.moyo-record-link-list,
+.moyo-record-modal .moyo-record-content-list-wrap>.moyo-record-location-current{
+  width:100%;
+  margin:0!important;
+}
+
+/* 네 탭 빈 상태의 크기와 텍스트 위계 통일 */
+.moyo-record-modal .moyo-record-content-list-wrap>.moyo-record-section__empty{
+  width:100%;
+  min-height:274px!important;
+  margin:0!important;
+  padding:24px!important;
+  box-sizing:border-box;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  border:0!important;
+  background:transparent!important;
+  text-align:center;
+}
+.moyo-record-modal .moyo-record-content-list-wrap>.moyo-record-section__empty[hidden]{display:none!important;}
+.moyo-record-modal .moyo-record-content-list-wrap>.moyo-record-section__empty>i{
+  margin:0 0 5px!important;
+  color:#7896c5!important;
+  font-size:26px!important;
+  line-height:1;
+}
+.moyo-record-modal .moyo-record-content-list-wrap>.moyo-record-section__empty>strong{
+  color:#334760!important;
+  font-size:13px!important;
+  font-weight:900!important;
+  line-height:1.35;
+}
+.moyo-record-modal .moyo-record-content-list-wrap>.moyo-record-section__empty>span{
+  color:#8a9bb2!important;
+  font-size:11px!important;
+  font-weight:600!important;
+  line-height:1.45;
+}
+
+/* 사진·파일 드롭존 크기와 문구 위계 통일 */
+.moyo-record-modal .moyo-record-photo-dropzone,
+.moyo-record-modal .moyo-record-file-dropzone{
+  min-height:120px!important;
+  padding:20px!important;
+  border-radius:16px!important;
+  box-sizing:border-box;
+}
+.moyo-record-modal .moyo-record-photo-dropzone>i,
+.moyo-record-modal .moyo-record-file-dropzone>i{
+  margin:0 0 3px!important;
+  font-size:31px!important;
+}
+.moyo-record-modal .moyo-record-photo-dropzone>strong,
+.moyo-record-modal .moyo-record-file-dropzone>strong{
+  color:#233650!important;
+  font-size:14px!important;
+  font-weight:900!important;
+  line-height:1.35;
+}
+.moyo-record-modal .moyo-record-photo-dropzone>span,
+.moyo-record-modal .moyo-record-file-dropzone>span{
+  color:#8090a6!important;
+  font-size:11px!important;
+  font-weight:600!important;
+  line-height:1.4;
+}
+
+/* 목록 내부 간격 통일 */
+.moyo-record-modal .moyo-record-content-list-wrap .moyo-record-photo-grid,
+.moyo-record-modal .moyo-record-content-list-wrap .moyo-record-file-list,
+.moyo-record-modal .moyo-record-content-list-wrap .moyo-record-link-list,
+.moyo-record-modal .moyo-record-content-list-wrap .moyo-record-location-current{
+  display:grid;
+  gap:9px!important;
+}
+
+@media(max-width:720px){
+  .moyo-record-modal .moyo-record-content-section{gap:12px;}
+  .moyo-record-modal .moyo-record-content-list-wrap{min-height:240px;padding:10px!important;}
+  .moyo-record-modal .moyo-record-content-list-wrap>.moyo-record-section__empty{min-height:214px!important;padding:18px!important;}
+  .moyo-record-modal .moyo-record-photo-dropzone,
+  .moyo-record-modal .moyo-record-file-dropzone{min-height:108px!important;padding:16px!important;}
+}
+
+
+/* 링크·장소 마감 정리 */
+.moyo-record-modal .moyo-record-content-list-wrap{
+  display:flex;
+  flex-direction:column;
+  min-height:300px!important;
+}
+.moyo-record-modal .moyo-record-content-list-wrap.is-empty{
+  align-items:stretch;
+  justify-content:stretch;
+}
+.moyo-record-modal .moyo-record-content-list-wrap.is-empty>.moyo-record-section__empty:not([hidden]){
+  flex:1 1 auto;
+  min-height:0!important;
+  width:100%;
+}
+
+/* 링크 입력 placeholder를 장소 입력과 동일하게 통일 */
+.moyo-record-modal[data-active-record-type="LINK"] .moyo-record-link-form input,
+.moyo-record-modal[data-active-record-type="LINK"] .moyo-record-link-form textarea,
+.moyo-record-modal[data-active-record-type="LOCATION"] .moyo-record-location-form input,
+.moyo-record-modal[data-active-record-type="LOCATION"] .moyo-record-location-form textarea{
+  font-size:12px!important;
+  font-weight:500!important;
+}
+.moyo-record-modal[data-active-record-type="LINK"] .moyo-record-link-form input::placeholder,
+.moyo-record-modal[data-active-record-type="LINK"] .moyo-record-link-form textarea::placeholder,
+.moyo-record-modal[data-active-record-type="LOCATION"] .moyo-record-location-form input::placeholder,
+.moyo-record-modal[data-active-record-type="LOCATION"] .moyo-record-location-form textarea::placeholder{
+  color:#8c99aa!important;
+  font-size:12px!important;
+  font-weight:500!important;
+  opacity:1!important;
+}
+
+/* 링크/장소 저장 버튼 문구 길이에 맞춘 동일 규격 */
+
+
+/* 장소 저장 버튼 오른쪽 정렬 보정 */
+.moyo-record-modal[data-active-record-type="LOCATION"] .moyo-record-location-form__primary{
+  width:100%;
+  box-sizing:border-box;
+}
+.moyo-record-modal[data-active-record-type="LOCATION"] .moyo-record-location-submit{
+  
+  margin-right:0!important;
+
+
+  grid-column:auto!important;
+  justify-self:stretch!important;
+  margin:0!important;
+}
+.moyo-record-modal[data-active-record-type="LINK"] .moyo-record-link-form input::placeholder,
+.moyo-record-modal[data-active-record-type="LINK"] .moyo-record-link-form textarea::placeholder{
+  color:#8c99aa!important;
+  font-size:12px!important;
+  font-weight:500!important;
+  opacity:1!important;
+}
+
+
+/* 링크 빈 상태 위치 보정: 빈 목록이 차지하던 상단 공간 제거 */
+.moyo-record-modal[data-active-record-type="LINK"]
+.moyo-record-content-list-wrap.is-empty
+> .moyo-record-link-list{
+  display:none!important;
+}
+.moyo-record-modal[data-active-record-type="LINK"]
+.moyo-record-content-list-wrap.is-empty
+> .moyo-record-section__empty:not([hidden]){
+  display:flex!important;
+  flex:1 1 auto!important;
+  width:100%!important;
+  min-height:0!important;
+  margin:0!important;
+  padding:24px!important;
+  align-items:center!important;
+  justify-content:center!important;
+}
+
+
+/* 링크·장소: 상단 입력 영역 상시 유지, 별도 추가 라인 제거 */
+.moyo-record-modal [data-record-link-add],
+.moyo-record-modal [data-record-location-add]{
+  display:none!important;
+}
+.moyo-record-modal[data-active-record-type="LINK"] .moyo-record-link-header,
+.moyo-record-modal[data-active-record-type="LOCATION"] .moyo-record-location-header{
+  display:none!important;
+}
+.moyo-record-modal[data-active-record-type="LINK"] .moyo-record-link-form:not([hidden]),
+.moyo-record-modal[data-active-record-type="LOCATION"] .moyo-record-location-form:not([hidden]){
+  display:grid!important;
+}
+
+
+/* 장소 상시 입력 폼: 검색 · 취소 · 장소 저장 액션 정렬 */
+.moyo-record-modal[data-active-record-type="LOCATION"] .moyo-record-location-form__primary{
+  grid-template-columns:minmax(0,1fr) auto auto auto!important;
+  column-gap:7px!important;
+}
+.moyo-record-modal[data-active-record-type="LOCATION"] .moyo-record-location-cancel{
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  min-width:58px!important;
+  height:34px!important;
+  margin:0!important;
+  padding:0 12px!important;
+  border:1px solid #d5e1ee!important;
+  border-radius:10px!important;
+  background:#fff!important;
+  color:#66768b!important;
+  font-family:inherit!important;
+  font-size:11px!important;
+  font-weight:850!important;
+  line-height:1!important;
+  white-space:nowrap!important;
+  box-sizing:border-box!important;
+  cursor:pointer!important;
+  transition:border-color .16s ease,background-color .16s ease,color .16s ease,box-shadow .16s ease!important;
+}
+.moyo-record-modal[data-active-record-type="LOCATION"] .moyo-record-location-cancel:hover{
+  border-color:#a9c9e8!important;
+  background:#f5faff!important;
+  color:#3478c9!important;
+}
+.moyo-record-modal[data-active-record-type="LOCATION"] .moyo-record-location-cancel:focus,
+.moyo-record-modal[data-active-record-type="LOCATION"] .moyo-record-location-cancel:focus-visible{
+  outline:0!important;
+  border-color:#8db9e5!important;
+  box-shadow:0 0 0 3px rgba(74,144,226,.10)!important;
+}
+@media(max-width:640px){
+  .moyo-record-modal[data-active-record-type="LOCATION"] .moyo-record-location-form__primary{
+    grid-template-columns:minmax(0,1fr) auto auto!important;
+  }
+  .moyo-record-modal[data-active-record-type="LOCATION"] .moyo-record-location-search{
+    grid-column:2;
+  }
+  .moyo-record-modal[data-active-record-type="LOCATION"] .moyo-record-location-cancel{
+    grid-column:2;
+  }
+  .moyo-record-modal[data-active-record-type="LOCATION"] .moyo-record-location-submit{
+    grid-column:3;
+  }
+}
+
+
+/* 링크·장소 입력 액션과 텍스트 스타일 완전 통일 */
+
+.moyo-record-modal[data-active-record-type="LINK"] .moyo-record-link-form__actions{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:flex-end!important;
+  gap:7px!important;
+}
+.moyo-record-modal[data-active-record-type="LINK"] .moyo-record-link-cancel,
+.moyo-record-modal[data-active-record-type="LOCATION"] .moyo-record-location-cancel{
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  min-width:58px!important;
+  height:34px!important;
+  min-height:34px!important;
+  margin:0!important;
+  padding:0 12px!important;
+  border:1px solid #d5e1ee!important;
+  border-radius:10px!important;
+  background:#fff!important;
+  color:#66768b!important;
+  font-family:inherit!important;
+  font-size:11px!important;
+  font-weight:850!important;
+  line-height:1!important;
+  letter-spacing:-.01em!important;
+  white-space:nowrap!important;
+  box-sizing:border-box!important;
+  cursor:pointer!important;
+}
+.moyo-record-modal[data-active-record-type="LINK"] .moyo-record-link-cancel:hover,
+.moyo-record-modal[data-active-record-type="LOCATION"] .moyo-record-location-cancel:hover{
+  border-color:#a9c9e8!important;
+  background:#f5faff!important;
+  color:#3478c9!important;
+}
+.moyo-record-modal[data-active-record-type="LINK"] .moyo-record-link-form__actions>button[type="submit"],
+.moyo-record-modal[data-active-record-type="LOCATION"] .moyo-record-location-submit{
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:6px!important;
+  min-width:94px!important;
+  height:34px!important;
+  min-height:34px!important;
+  margin:0!important;
+  padding:0 13px!important;
+  border:0!important;
+  border-radius:10px!important;
+  background:linear-gradient(135deg,#34d6bc 0%,#478ff2 58%,#705cf5 100%)!important;
+  color:#fff!important;
+  font-family:inherit!important;
+  font-size:11px!important;
+  font-weight:900!important;
+  line-height:1!important;
+  
+  white-space:nowrap!important;
+  box-sizing:border-box!important;
+  box-shadow:0 7px 16px rgba(74,144,226,.18)!important;
+}
+.moyo-record-modal[data-active-record-type="LINK"] .moyo-record-link-form input,
+.moyo-record-modal[data-active-record-type="LOCATION"] .moyo-record-location-form input{
+  font-family:inherit!important;
+  font-size:12px!important;
+  font-weight:500!important;
+  line-height:1.35!important;
+}
+.moyo-record-modal[data-active-record-type="LINK"] .moyo-record-link-form input::placeholder,
+.moyo-record-modal[data-active-record-type="LOCATION"] .moyo-record-location-form input::placeholder{
+  color:#8c99aa!important;
+  font-family:inherit!important;
+  font-size:12px!important;
+  font-weight:500!important;
+  opacity:1!important;
+}
+
+
+/* 링크 추가 / 장소 추가 버튼 텍스트 자간 완전 통일 */
+.moyo-record-modal[data-active-record-type="LINK"]
+.moyo-record-link-form__actions>button[type="submit"],
+.moyo-record-modal[data-active-record-type="LOCATION"]
+.moyo-record-location-submit{
+  letter-spacing:0!important;
+}
+.moyo-record-modal[data-active-record-type="LINK"]
+.moyo-record-link-form__actions>button[type="submit"] span,
+.moyo-record-modal[data-active-record-type="LOCATION"]
+.moyo-record-location-submit span{
+  letter-spacing:0!important;
+  font-kerning:normal!important;
+  text-rendering:optimizeLegibility!important;
+}
+
+
+/* 링크 입력 구조를 장소 입력 구조와 동일하게 정렬 */
+.moyo-record-modal[data-active-record-type="LINK"] .moyo-record-link-form__url-row{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) auto auto!important;
+  align-items:center!important;
+  gap:7px!important;
+}
+.moyo-record-modal[data-active-record-type="LINK"] .moyo-record-link-form__details{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;
+  gap:7px!important;
+}
+.moyo-record-modal[data-active-record-type="LINK"] .moyo-record-link-form__details>input{
+  width:100%!important;
+  min-width:0!important;
+  box-sizing:border-box!important;
+}
+
+/* 링크 추가 / 장소 추가 버튼을 동일 DOM 규격으로 고정 */
+.moyo-record-modal[data-active-record-type="LINK"] .moyo-record-link-submit,
+.moyo-record-modal[data-active-record-type="LOCATION"] .moyo-record-location-submit{
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:6px!important;
+  width:94px!important;
+  min-width:94px!important;
+  max-width:94px!important;
+  height:34px!important;
+  min-height:34px!important;
+  margin:0!important;
+  padding:0!important;
+  border:0!important;
+  border-radius:10px!important;
+  background:linear-gradient(135deg,#34d6bc 0%,#478ff2 58%,#705cf5 100%)!important;
+  color:#fff!important;
+  font-family:inherit!important;
+  font-size:11px!important;
+  font-style:normal!important;
+  font-weight:900!important;
+  line-height:1!important;
+  letter-spacing:0!important;
+  white-space:nowrap!important;
+  box-sizing:border-box!important;
+  box-shadow:0 7px 16px rgba(74,144,226,.18)!important;
+}
+.moyo-record-modal[data-active-record-type="LINK"] .moyo-record-link-submit i,
+.moyo-record-modal[data-active-record-type="LOCATION"] .moyo-record-location-submit i{
+  flex:0 0 auto!important;
+  width:10px!important;
+  margin:0!important;
+  padding:0!important;
+  font-size:10px!important;
+  line-height:1!important;
+  text-align:center!important;
+}
+.moyo-record-modal[data-active-record-type="LINK"] .moyo-record-link-submit span,
+.moyo-record-modal[data-active-record-type="LOCATION"] .moyo-record-location-submit span{
+  flex:0 0 auto!important;
+  margin:0!important;
+  padding:0!important;
+  color:inherit!important;
+  font-family:inherit!important;
+  font-size:11px!important;
+  font-weight:900!important;
+  line-height:1!important;
+  letter-spacing:0!important;
+  font-kerning:normal!important;
+}
+@media(max-width:640px){
+  .moyo-record-modal[data-active-record-type="LINK"] .moyo-record-link-form__url-row{
+    grid-template-columns:minmax(0,1fr) auto auto!important;
+  }
+  .moyo-record-modal[data-active-record-type="LINK"] .moyo-record-link-form__details{
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;
+  }
+}
+
+
+/* 장소 탭: 상단 입력 고정 · 목록만 스크롤 · 하단 설명 고정 */
+.moyo-record-modal[data-active-record-type="LOCATION"] .moyo-record-modal__body{
+  display:flex!important;
+  flex-direction:column!important;
+  min-height:0!important;
+  overflow:hidden!important;
+}
+.moyo-record-modal[data-active-record-type="LOCATION"] [data-record-section="LOCATION"]{
+  display:flex!important;
+  flex:1 1 auto!important;
+  min-height:0!important;
+  flex-direction:column!important;
+  gap:12px!important;
+  overflow:hidden!important;
+}
+.moyo-record-modal[data-active-record-type="LOCATION"] [data-record-section="LOCATION"][hidden]{
+  display:none!important;
+}
+.moyo-record-modal[data-active-record-type="LOCATION"] .moyo-record-location-form{
+  flex:0 0 auto!important;
+  margin:0!important;
+}
+.moyo-record-modal[data-active-record-type="LOCATION"] [data-record-location-list-wrap]{
+  flex:1 1 auto!important;
+  min-height:150px!important;
+  overflow-x:hidden!important;
+  overflow-y:auto!important;
+  overscroll-behavior:contain;
+  scrollbar-gutter:stable;
+}
+.moyo-record-modal[data-active-record-type="LOCATION"] .moyo-record-location-footer{
+  
+  flex:0 0 auto;
+  min-height:28px;
+  align-items:center;
+  justify-content:flex-end;
+  padding:0 4px;
+  color:#7f8fa5;
+  font-size:11px;
+  font-weight:700;
+  line-height:1.4;
+  text-align:right;
+}
+.moyo-record-modal[data-active-record-type="LOCATION"] .moyo-record-location-footer i{
+  margin-right:5px;
+  color:#6688c8;
+  font-size:10px;
+}
+@media(max-width:640px){
+  .moyo-record-modal[data-active-record-type="LOCATION"] .moyo-record-location-footer{
+    justify-content:flex-start;
+    text-align:left;
+  }
+}
+
+
+/* 사진·파일·링크·장소: 상단 고정 / 목록 스크롤 / 하단 설명 공통 구조 */
+.moyo-record-modal[data-active-record-type="PHOTO"] .moyo-record-modal__body,
+.moyo-record-modal[data-active-record-type="FILE"] .moyo-record-modal__body,
+.moyo-record-modal[data-active-record-type="LINK"] .moyo-record-modal__body,
+.moyo-record-modal[data-active-record-type="LOCATION"] .moyo-record-modal__body{
+  display:flex!important;
+  flex-direction:column!important;
+  min-height:0!important;
+  overflow:hidden!important;
+}
+
+.moyo-record-modal[data-active-record-type="PHOTO"] [data-record-section="PHOTO"],
+.moyo-record-modal[data-active-record-type="FILE"] [data-record-section="FILE"],
+.moyo-record-modal[data-active-record-type="LINK"] [data-record-section="LINK"],
+.moyo-record-modal[data-active-record-type="LOCATION"] [data-record-section="LOCATION"]{
+  display:flex!important;
+  flex:1 1 auto!important;
+  min-height:0!important;
+  flex-direction:column!important;
+  gap:12px!important;
+  overflow:hidden!important;
+}
+
+.moyo-record-modal[data-active-record-type="PHOTO"] [data-record-section="PHOTO"][hidden],
+.moyo-record-modal[data-active-record-type="FILE"] [data-record-section="FILE"][hidden],
+.moyo-record-modal[data-active-record-type="LINK"] [data-record-section="LINK"][hidden],
+.moyo-record-modal[data-active-record-type="LOCATION"] [data-record-section="LOCATION"][hidden]{
+  display:none!important;
+}
+
+.moyo-record-modal[data-active-record-type="PHOTO"] .moyo-record-photo-upload,
+.moyo-record-modal[data-active-record-type="FILE"] .moyo-record-file-upload,
+.moyo-record-modal[data-active-record-type="LINK"] .moyo-record-link-form,
+.moyo-record-modal[data-active-record-type="LOCATION"] .moyo-record-location-form{
+  flex:0 0 auto!important;
+  margin:0!important;
+}
+
+.moyo-record-modal[data-active-record-type="PHOTO"] [data-record-photo-list-wrap],
+.moyo-record-modal[data-active-record-type="FILE"] [data-record-file-list-wrap],
+.moyo-record-modal[data-active-record-type="LINK"] [data-record-link-list-wrap],
+.moyo-record-modal[data-active-record-type="LOCATION"] [data-record-location-list-wrap]{
+  flex:1 1 auto!important;
+  min-height:150px!important;
+  overflow-x:hidden!important;
+  overflow-y:auto!important;
+  overscroll-behavior:contain;
+  
+}
+
+.moyo-record-content-footer{
+  display:flex;
+  flex:0 0 auto;
+  min-height:28px;
+  align-items:center;
+  justify-content:flex-end;
+  padding:0 4px;
+  color:#7f8fa5;
+  font-size:11px;
+  font-weight:700;
+  line-height:1.4;
+  text-align:right;
+  white-space:nowrap;
+}
+
+.moyo-record-content-footer i{
+  margin-right:5px;
+  color:#6688c8;
+  font-size:10px;
+}
+
+/* 기존 장소 전용 하단 설명 스타일 제거 우선순위 */
+.moyo-record-modal[data-active-record-type="LOCATION"] .moyo-record-location-footer{
+  display:none!important;
+}
+
+@media(max-width:640px){
+  .moyo-record-content-footer{
+    justify-content:flex-start;
+    text-align:left;
+    white-space:normal;
+  }
+}
+
+
+/* 장소 더보기: 일반 버튼 + body 포털 메뉴 */
+.moyo-record-modal[data-active-record-type="LOCATION"] .moyo-record-location-card__menu{position:relative;}
+.moyo-record-modal[data-active-record-type="LOCATION"] .moyo-record-location-card__menu-toggle{
+  width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;
+  padding:0;border:0;border-radius:9px;background:transparent;color:#8fa0b5;cursor:pointer;
+}
+.moyo-record-modal[data-active-record-type="LOCATION"] .moyo-record-location-card__menu-toggle.is-open,
+.moyo-record-modal[data-active-record-type="LOCATION"] .moyo-record-location-card__menu-toggle:focus-visible{
+  outline:0;box-shadow:0 0 0 2px #17253a;color:#17253a;
+}
+
+/* 파일·링크·장소 더보기: 공통 body 포털 */
+.moyo-record-file-menu__toggle,
+.moyo-record-link-item__menu-toggle{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  padding:0;
+  border:0;
+  background:transparent;
+  color:#8c99aa;
+  cursor:pointer;
+}
+.moyo-record-file-menu__toggle{
+  width:32px;
+  height:32px;
+  border-radius:50%;
+}
+.moyo-record-link-item__menu-toggle{
+  width:28px;
+  height:28px;
+  border-radius:9px;
+}
+.moyo-record-file-menu__toggle:hover,
+.moyo-record-file-menu__toggle.is-open,
+.moyo-record-link-item__menu-toggle:hover,
+.moyo-record-link-item__menu-toggle.is-open{
+  background:#eef3fa;
+  color:#52647d;
+}
+[data-record-action-menu-panel][hidden]{display:none!important;}
+body > .moyo-record-action-menu-portal{
+  display:block!important;
+  position:fixed!important;
+  right:auto!important;
+  bottom:auto!important;
+  z-index:30100!important;
+  visibility:visible;
+  pointer-events:auto!important;
+  margin:0!important;
+  padding:6px;
+  border:1px solid #dbe4ef;
+  border-radius:11px;
+  background:#fff;
+  box-shadow:0 10px 28px rgba(28,45,72,.14);
+}
+body > .moyo-record-file-menu__panel.moyo-record-action-menu-portal{min-width:150px;}
+body > .moyo-record-link-item__menu-panel.moyo-record-action-menu-portal{min-width:96px;}
+body > .moyo-record-location-card__menu-panel.moyo-record-action-menu-portal{width:132px;}
+body > .moyo-record-action-menu-portal button{
+  width:100%;
+  min-height:32px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:7px 9px;
+  border:0;
+  border-radius:8px;
+  background:transparent;
+  color:#52647d;
+  font-size:11px;
+  font-weight:750;
+  line-height:1.2;
+  text-align:left;
+  white-space:nowrap;
+  cursor:pointer;
+}
+body > .moyo-record-action-menu-portal button:hover{background:#f1f5fa;}
+body > .moyo-record-action-menu-portal button.is-danger,
+body > .moyo-record-action-menu-portal button[data-record-file-delete],
+body > .moyo-record-action-menu-portal button[data-record-link-delete],
+body > .moyo-record-action-menu-portal button[data-record-location-delete]{color:#d94f5d;}
+body > .moyo-record-action-menu-portal button.is-danger:hover,
+body > .moyo-record-action-menu-portal button[data-record-file-delete]:hover,
+body > .moyo-record-action-menu-portal button[data-record-link-delete]:hover,
+body > .moyo-record-action-menu-portal button[data-record-location-delete]:hover{
+  background:#fff1f3;
+  color:#e25563;
+}
+
+/* 사진·파일·링크·장소 목록: 실제 스크롤이 생길 때만 스크롤바 폭 사용 */
+.moyo-record-modal[data-active-record-type="PHOTO"] [data-record-photo-list-wrap],
+.moyo-record-modal[data-active-record-type="FILE"] [data-record-file-list-wrap],
+.moyo-record-modal[data-active-record-type="LINK"] [data-record-link-list-wrap],
+.moyo-record-modal[data-active-record-type="LOCATION"] [data-record-location-list-wrap]{
+  scrollbar-gutter:auto!important;
+}
+
+
+/* 링크 추가·수정 버튼 hover/focus 표시 */
+.moyo-record-modal[data-active-record-type="LINK"] .moyo-record-link-submit{
+  cursor:pointer!important;
+  transition:transform .16s ease,box-shadow .16s ease,filter .16s ease!important;
+}
+.moyo-record-modal[data-active-record-type="LINK"] .moyo-record-link-submit:hover:not(:disabled),
+.moyo-record-modal[data-active-record-type="LINK"] .moyo-record-link-submit:focus-visible:not(:disabled){
+  transform:translateY(-1px)!important;
+  filter:brightness(1.04) saturate(1.06)!important;
+  box-shadow:0 10px 22px rgba(74,110,242,.28)!important;
+  outline:none!important;
+}
+.moyo-record-modal[data-active-record-type="LINK"] .moyo-record-link-submit:active:not(:disabled){
+  transform:translateY(0)!important;
+  box-shadow:0 5px 12px rgba(74,110,242,.22)!important;
+}
+.moyo-record-modal[data-active-record-type="LINK"] .moyo-record-link-submit:disabled{
+  cursor:default!important;
+  opacity:.62!important;
+}
+
+/* 링크 수정 중 카드 표시 */
+.moyo-record-modal[data-active-record-type="LINK"] .moyo-record-link-item.is-editing{
+  border-color:#7fa4ff!important;
+  background:#f7f9ff!important;
+  box-shadow:0 0 0 3px rgba(71,120,242,.10)!important;
+}
+.moyo-record-modal[data-active-record-type="LINK"] .moyo-record-link-item.is-editing::after{
+  content:"수정 중";
+  position:absolute;
+  top:7px;
+  right:42px;
+  padding:3px 7px;
+  border-radius:999px;
+  background:#eef3ff;
+  color:#4d73dc;
+  font-size:10px;
+  font-weight:800;
+  line-height:1;
+  pointer-events:none;
+}
+
+/* 파일 카드: 다운로드·더보기 한 줄 정렬 + 카드 높이 축소 */
+.moyo-record-modal[data-active-record-type="FILE"] .moyo-record-file-item{
+  min-height:50px!important;
+  padding:6px 10px!important;
+  grid-template-columns:36px minmax(0,1fr) auto!important;
+  gap:8px!important;
+}
+.moyo-record-modal[data-active-record-type="FILE"] .moyo-record-file-item__icon{
+  width:36px!important;
+  height:36px!important;
+  border-radius:10px!important;
+}
+.moyo-record-modal[data-active-record-type="FILE"] .moyo-record-file-item__copy{
+  gap:2px!important;
+}
+.moyo-record-modal[data-active-record-type="FILE"] .moyo-record-file-item__actions{
+  display:flex!important;
+  flex-direction:row!important;
+  flex-wrap:nowrap!important;
+  align-items:center!important;
+  justify-content:flex-end!important;
+  gap:2px!important;
+  align-self:center!important;
+  white-space:nowrap!important;
+}
+.moyo-record-modal[data-active-record-type="FILE"] .moyo-record-file-item__actions>a,
+.moyo-record-modal[data-active-record-type="FILE"] .moyo-record-file-menu__toggle{
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  flex:0 0 28px!important;
+  width:28px!important;
+  height:28px!important;
+  margin:0!important;
+  padding:0!important;
+  line-height:1!important;
+}
+.moyo-record-modal[data-active-record-type="FILE"] .moyo-record-file-menu{
+  display:inline-flex!important;
+  align-items:center!important;
+  flex:0 0 28px!important;
+  width:28px!important;
+  height:28px!important;
+}
+
+
+/* 파일 확장자별 대표 아이콘 */
+.moyo-record-modal[data-active-record-type="FILE"] .moyo-record-file-item__icon{
+  font-size:17px!important;
+}
+.moyo-record-modal[data-active-record-type="FILE"] .moyo-record-file-item__icon.is-image{
+  color:#4d8df7!important;
+  background:#edf5ff!important;
+}
+.moyo-record-modal[data-active-record-type="FILE"] .moyo-record-file-item__icon.is-pdf{
+  color:#e05252!important;
+  background:#fff0f0!important;
+}
+.moyo-record-modal[data-active-record-type="FILE"] .moyo-record-file-item__icon.is-word{
+  color:#3f73d8!important;
+  background:#eef4ff!important;
+}
+.moyo-record-modal[data-active-record-type="FILE"] .moyo-record-file-item__icon.is-sheet{
+  color:#2f9b68!important;
+  background:#ecf9f2!important;
+}
+.moyo-record-modal[data-active-record-type="FILE"] .moyo-record-file-item__icon.is-slide{
+  color:#e4773f!important;
+  background:#fff3ec!important;
+}
+.moyo-record-modal[data-active-record-type="FILE"] .moyo-record-file-item__icon.is-archive{
+  color:#8c6ad8!important;
+  background:#f4efff!important;
+}
+.moyo-record-modal[data-active-record-type="FILE"] .moyo-record-file-item__icon.is-code{
+  color:#53657f!important;
+  background:#eef2f7!important;
+}
+.moyo-record-modal[data-active-record-type="FILE"] .moyo-record-file-item__icon.is-video{
+  color:#d4559c!important;
+  background:#fff0f8!important;
+}
+.moyo-record-modal[data-active-record-type="FILE"] .moyo-record-file-item__icon.is-audio{
+  color:#5d75dc!important;
+  background:#eef1ff!important;
+}
+
+
+/* 파일 카드: 업로더 메타와 이름 변경 */
+.moyo-record-modal[data-active-record-type="FILE"] .moyo-record-file-item__copy{min-width:0;}
+.moyo-record-modal[data-active-record-type="FILE"] .moyo-record-file-item__copy strong,
+.moyo-record-modal[data-active-record-type="FILE"] .moyo-record-file-item__copy small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.moyo-record-action-menu-portal [data-record-file-rename]{color:#334155;}
+.moyo-record-action-menu-portal [data-record-file-rename]:hover{background:#f1f5ff;color:#2563eb;}
+
+
+/* 사진·파일·링크·장소 하단 설명: 공통 왼쪽 정렬 */
+.moyo-record-modal[data-active-record-type="PHOTO"] .moyo-record-content-footer,
+.moyo-record-modal[data-active-record-type="FILE"] .moyo-record-content-footer,
+.moyo-record-modal[data-active-record-type="LINK"] .moyo-record-content-footer,
+.moyo-record-modal[data-active-record-type="LOCATION"] .moyo-record-content-footer{
+  justify-content:flex-start!important;
+  text-align:left!important;
+}
+
+/* 노트 탭 실시간 순서 변경 및 추가 버튼 피드백 */
+.moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-note-tab[data-note-draggable="true"] .moyo-record-note-tab__select{
+    cursor:grab!important;
+    touch-action:none!important;
+    user-select:none!important;
+    -webkit-user-select:none!important;
+}
+.moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-note-tabs.is-reordering{
+    cursor:grabbing!important;
+    user-select:none!important;
+    -webkit-user-select:none!important;
+}
+.moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-note-tab.is-drag-placeholder{
+    visibility:visible!important;
+    border-color:#b8c8e2!important;
+    background:#eef3f9!important;
+    box-shadow:inset 0 0 0 1px rgba(126,166,255,.10)!important;
+}
+.moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-note-tab.is-drag-placeholder > *{
+    visibility:hidden!important;
+}
+.moyo-record-note-drag-preview{
+    position:fixed!important;
+    z-index:2147483640!important;
+    display:flex!important;
+    align-items:center!important;
+    min-width:0!important;
+    margin:0!important;
+    padding:0 13px!important;
+    overflow:hidden!important;
+    box-sizing:border-box!important;
+    border:1px solid #9fb8e8!important;
+    border-bottom-color:#dce5f1!important;
+    border-radius:10px 10px 0 0!important;
+    background:#fff!important;
+    color:#1f3049!important;
+    box-shadow:0 5px 12px rgba(38,68,118,.14)!important;
+    font-size:12px!important;
+    font-weight:800!important;
+    line-height:1!important;
+    white-space:nowrap!important;
+    text-overflow:ellipsis!important;
+    pointer-events:none!important;
+    transform:translateY(-2px)!important;
+    opacity:1!important;
+    filter:none!important;
+    backdrop-filter:none!important;
+    -webkit-backdrop-filter:none!important;
+}
+body.moyo-record-note-reordering,
+body.moyo-record-note-reordering *{
+    cursor:grabbing!important;
+}
+.moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-note-tab{
+    will-change:transform;
+}
+.moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-note-tabs-shell > .moyo-record-note-tabs__add{
+    cursor:pointer!important;
+    filter:none!important;
+    backdrop-filter:none!important;
+    -webkit-backdrop-filter:none!important;
+}
+.moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-note-tabs-shell > .moyo-record-note-tabs__add:hover,
+.moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-note-tabs-shell > .moyo-record-note-tabs__add:focus-visible{
+    border-color:#8eafff!important;
+    background:#eef4ff!important;
+    color:#276fe8!important;
+    box-shadow:none!important;
+    outline:none!important;
+}
+
+/* v17: 기록 링크 탭 - 상단 입력/하단 안내 고정, 목록 내부 스크롤, 카드 행 높이 복원 */
+.moyo-record-modal[data-active-record-type="LINK"] .moyo-record-modal__body{
+  display:flex!important;
+  flex-direction:column!important;
+  min-height:0!important;
+  overflow:hidden!important;
+}
+
+.moyo-record-modal[data-active-record-type="LINK"] [data-record-section="LINK"]{
+  display:flex!important;
+  flex:1 1 auto!important;
+  min-height:0!important;
+  flex-direction:column!important;
+  gap:12px!important;
+  overflow:hidden!important;
+}
+
+.moyo-record-modal[data-active-record-type="LINK"] .moyo-record-link-form,
+.moyo-record-modal[data-active-record-type="LINK"] .moyo-record-content-footer{
+  flex:0 0 auto!important;
+}
+
+.moyo-record-modal[data-active-record-type="LINK"] [data-record-link-list-wrap]{
+  display:flex!important;
+  flex:1 1 auto!important;
+  min-height:0!important;
+  max-height:none!important;
+  overflow-x:hidden!important;
+  overflow-y:auto!important;
+  overscroll-behavior:contain;
+  scrollbar-gutter:stable;
+  padding:12px!important;
+}
+
+.moyo-record-modal[data-active-record-type="LINK"] [data-record-link-list-wrap].is-empty{
+  align-items:stretch!important;
+  justify-content:stretch!important;
+}
+
+.moyo-record-modal[data-active-record-type="LINK"] .moyo-record-link-list{
+  display:grid!important;
+  grid-auto-rows:minmax(68px, auto);
+  align-content:start!important;
+  gap:10px!important;
+  width:100%!important;
+  min-height:0!important;
+  overflow:visible!important;
+  padding-right:0!important;
+}
+
+.moyo-record-modal[data-active-record-type="LINK"] .moyo-record-link-item{
+  display:block!important;
+  min-height:68px!important;
+  border:1px solid #dce6f3!important;
+  border-radius:14px!important;
+  background:#fff!important;
+  overflow:hidden!important;
+  flex:0 0 auto!important;
+}
+
+.moyo-record-modal[data-active-record-type="LINK"] .moyo-record-link-item__open{
+  display:grid!important;
+  grid-template-columns:36px minmax(0,1fr) 16px!important;
+  align-items:center!important;
+  gap:10px!important;
+  min-height:68px!important;
+  padding:10px 48px 10px 10px!important;
+}
+
+.moyo-record-modal[data-active-record-type="LINK"] .moyo-record-link-item__icon{
+  width:36px!important;
+  height:36px!important;
+  border-radius:11px!important;
+}
+
+.moyo-record-modal[data-active-record-type="LINK"] .moyo-record-link-item__content{
+  display:grid!important;
+  grid-template-columns:minmax(0,auto) minmax(0,1fr)!important;
+  align-items:baseline!important;
+  column-gap:8px!important;
+  row-gap:2px!important;
+  min-width:0!important;
+}
+
+.moyo-record-modal[data-active-record-type="LINK"] .moyo-record-link-item__content strong{
+  max-width:none!important;
+  font-size:13px!important;
+}
+
+.moyo-record-modal[data-active-record-type="LINK"] .moyo-record-link-item__host{
+  font-size:11px!important;
+}
+
+.moyo-record-modal[data-active-record-type="LINK"] .moyo-record-link-item__content p{
+  font-size:11px!important;
+}
+
+.moyo-record-modal[data-active-record-type="LINK"] .moyo-record-link-item__content small{
+  font-size:10px!important;
+}
+
+.moyo-record-modal[data-active-record-type="LINK"] .moyo-record-link-item__external{
+  font-size:11px!important;
+}
+
+.moyo-record-modal[data-active-record-type="LINK"] .moyo-record-link-item__menu{
+  position:absolute!important;
+  top:50%!important;
+  right:8px!important;
+  transform:translateY(-50%)!important;
+}
+
+.moyo-record-modal[data-active-record-type="LINK"] [data-record-empty="LINK"]{
+  flex:1 1 auto!important;
+  min-height:0!important;
+}
+
+@media (max-width:720px){
+  .moyo-record-modal[data-active-record-type="LINK"] .moyo-record-link-item__open{
+    padding-right:46px!important;
+  }
+
+  .moyo-record-modal[data-active-record-type="LINK"] .moyo-record-link-item__content{
+    grid-template-columns:1fr!important;
+  }
+
+  .moyo-record-modal[data-active-record-type="LINK"] .moyo-record-link-item__host{
+    display:none!important;
+  }
+}
+
+
+/* =========================================================
+   MOYO Stage 7 - Common record modal visual alignment
+   ========================================================= */
+.moyo-record-modal__panel {
+    border: var(--moyo-border, 1px solid #e5ebf1) !important;
+    border-radius: var(--moyo-radius-xl, 20px) !important;
+    background: var(--moyo-color-surface, #fff) !important;
+    box-shadow: 0 24px 70px rgba(15,23,42,.22) !important;
+}
+.moyo-record-modal__header:after {
+    height: 1px !important;
+    background: var(--moyo-border-color, #e5ebf1) !important;
+}
+.moyo-record-modal__tabs {
+    border-bottom-color: var(--moyo-border-color, #e5ebf1) !important;
+}
+.moyo-record-modal__tabs button.is-active {
+    color: var(--moyo-color-text, #1f2937) !important;
+}
+.moyo-record-modal__tabs button.is-active>i {
+    color: var(--moyo-color-primary, #4A90E2) !important;
+}
+.moyo-record-modal__tabs button.is-active>b {
+    background: var(--moyo-color-primary, #4A90E2) !important;
+    box-shadow: none !important;
+}
+.moyo-record-modal__tabs button.is-active:after {
+    height: 2px !important;
+    background: linear-gradient(90deg, #38CDB6 0%, #4A90E2 56%, #7368F6 100%) !important;
+}
+.moyo-record-inline-form,
+.moyo-record-location-form,
+.moyo-record-note-view,
+.moyo-record-file-item,
+.moyo-record-link-item,
+.moyo-record-location-card {
+    border-color: var(--moyo-border-color, #e5ebf1) !important;
+    border-radius: var(--moyo-radius-md, 12px) !important;
+    background: var(--moyo-color-surface, #fff) !important;
+}
+.moyo-record-inline-form input,
+.moyo-record-inline-form textarea,
+.moyo-record-location-form input,
+.moyo-record-location-form textarea,
+.moyo-record-link-form input,
+.moyo-record-link-form textarea,
+.moyo-record-note-form input,
+.moyo-record-note-form textarea {
+    border-color: var(--moyo-border-color, #e5ebf1) !important;
+    border-radius: var(--moyo-radius-md, 12px) !important;
+}
+.moyo-record-inline-add,
+.moyo-record-modal__form-actions button,
+.moyo-record-link-form>button,
+.moyo-record-note-form__footer button {
+    min-height: var(--moyo-control-height, 40px) !important;
+    border: 0 !important;
+    border-radius: var(--moyo-radius-md, 12px) !important;
+    background: linear-gradient(135deg, #38CDB6 0%, #4A90E2 56%, #7368F6 100%) !important;
+    color: #fff !important;
+    box-shadow: 0 8px 18px rgba(74,144,226,.18) !important;
+}
+
+/* 기록 > 노트 탭: 좁은 폭에서는 툴바를 한 줄로 유지하고 우측을 자연스럽게 잘라낸다. */
+.moyo-record-note-form > .ck-editor .ck.ck-toolbar {
+    flex-wrap: nowrap !important;
+    overflow: hidden !important;
+}
+.moyo-record-note-form > .ck-editor .ck.ck-toolbar > .ck-toolbar__items {
+    flex-wrap: nowrap !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    overflow: hidden !important;
+}
+.moyo-record-note-form > .ck-editor .ck.ck-toolbar .ck-toolbar__grouped-dropdown {
+    display: none !important;
+}

@@ -35,3 +35,19 @@ out/
 
 ### VS Code ###
 .vscode/
+
+### MOYO local/production secrets ###
+.env
+.env.*
+!.env.example
+config/application-local-secret.properties
+config/application-prod-secret.properties
+application-local-secret.properties
+application-prod-secret.properties
+*.jks
+*.p12
+*.pfx
+*.keystore
+*.key
+*.pem
+

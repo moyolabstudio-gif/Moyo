@@ -1,68 +1,259 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE mapper 
-	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
-	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <mapper namespace="com.springboot.project.dao.IcsDAO">
 
     <select id="getCategoryList" resultType="com.springboot.project.dto.csInquiryDTO">
-        SELECT CATEGORY_ID AS categoryId, CATEGORY_NAME AS categoryName 
-        FROM CS_CATEGORIES 
-        ORDER BY CATEGORY_ID ASC
+        SELECT CATEGORY_ID AS categoryId,
+               CATEGORY_NAME AS categoryName
+          FROM CS_CATEGORIES
+         ORDER BY CATEGORY_ID ASC
+    </select>
+
+    <select id="findAllCsLogs" resultType="com.springboot.project.dto.csDTO">
+        SELECT CS_ID AS csId,
+               USER_ID AS userId,
+               EXT_KEY AS extKey,
+               CS_STATUS AS csStatus
+          FROM CS_LOGS
+         ORDER BY CS_ID DESC
     </select>
 
     <select id="findCsByUserId" resultType="com.springboot.project.dto.csDTO">
-        SELECT 
-            CS_ID AS csId,
-            USER_ID AS userId,
-            EXT_KEY AS extKey,
-            CS_STATUS AS csStatus
-        FROM CS_LOGS
-        WHERE USER_ID = #{userId}
-        ORDER BY CS_ID DESC
+        SELECT CS_ID AS csId,
+               USER_ID AS userId,
+               EXT_KEY AS extKey,
+               CS_STATUS AS csStatus
+          FROM CS_LOGS
+         WHERE USER_ID = #{userId}
+         ORDER BY CS_ID DESC
     </select>
 
     <insert id="insertCsLog" parameterType="com.springboot.project.dto.csDTO">
         <selectKey keyProperty="csId" resultType="long" order="BEFORE">
             SELECT SEQ_CS_ID.NEXTVAL FROM DUAL
         </selectKey>
-        INSERT INTO CS_LOGS (CS_ID, USER_ID, EXT_KEY, CS_STATUS) 
-        VALUES (#{csId}, #{userId}, 'NONE', 'OPEN')
+        INSERT INTO CS_LOGS (CS_ID, USER_ID, EXT_KEY, CS_STATUS)
+        VALUES (#{csId}, #{userId}, 'WEB-' || #{csId}, 'OPEN')
     </insert>
 
     <insert id="insertCsMessage" parameterType="com.springboot.project.dto.csInquiryDTO">
-       INSERT INTO CS_MESSAGES (MSG_ID, CS_ID, SENDER_ID, CATEGORY_ID, TITLE, CONTENT, CREATED_AT)
-       VALUES (
-           SEQ_CS_MSG_ID.NEXTVAL, 
-           #{csId, jdbcType=BIGINT}, 
-           #{senderId, jdbcType=BIGINT}, 
-           #{categoryId, jdbcType=BIGINT}, 
-           #{title, jdbcType=VARCHAR}, 
-           #{content, jdbcType=VARCHAR}, 
-           SYSDATE
-       )
+        <selectKey keyProperty="msgId" resultType="long" order="BEFORE">
+            SELECT SEQ_CS_MSG_ID.NEXTVAL FROM DUAL
+        </selectKey>
+        INSERT INTO CS_MESSAGES (
+            MSG_ID, CS_ID, SENDER_ID, SENDER_TYPE, CATEGORY_ID, TITLE, CONTENT, CREATED_AT
+        ) VALUES (
+            #{msgId},
+            #{csId, jdbcType=BIGINT},
+            #{senderId, jdbcType=BIGINT},
+            #{senderType, jdbcType=VARCHAR},
+            #{categoryId, jdbcType=BIGINT},
+            #{title, jdbcType=VARCHAR},
+            #{content, jdbcType=VARCHAR},
+            SYSDATE
+        )
     </insert>
+
     <select id="findMessagesByCsId" resultType="com.springboot.project.dto.csInquiryDTO">
-        SELECT 
-            MSG_ID AS msgId,
-            CS_ID AS csId,
-            SENDER_ID AS senderId,
-            CATEGORY_ID AS categoryId,
-            TITLE AS title,
-            CONTENT AS content,
-            CREATED_AT AS createdAt
-        FROM CS_MESSAGES
-        WHERE CS_ID = #{csId}
-        ORDER BY CREATED_AT ASC
+        SELECT M.MSG_ID AS msgId,
+               M.CS_ID AS csId,
+               M.SENDER_ID AS senderId,
+               M.SENDER_TYPE AS senderType,
+               M.CATEGORY_ID AS categoryId,
+               C.CATEGORY_NAME AS categoryName,
+               M.TITLE AS title,
+               M.CONTENT AS content,
+               M.CREATED_AT AS createdAt
+          FROM CS_MESSAGES M
+          LEFT JOIN CS_CATEGORIES C ON C.CATEGORY_ID = M.CATEGORY_ID
+         WHERE M.CS_ID = #{csId}
+         ORDER BY M.CREATED_AT ASC, M.MSG_ID ASC
     </select>
-    
+
     <select id="findActiveLogByUserId" resultType="com.springboot.project.dto.csDTO">
         SELECT * FROM (
-            SELECT CS_ID AS csId, USER_ID AS userId 
-            FROM CS_LOGS 
-            WHERE USER_ID = #{userId} AND CS_STATUS = 'OPEN'
-            ORDER BY CS_ID DESC
+            SELECT CS_ID AS csId,
+                   USER_ID AS userId,
+                   EXT_KEY AS extKey,
+                   CS_STATUS AS csStatus
+              FROM CS_LOGS
+             WHERE USER_ID = #{userId}
+               AND CS_STATUS = 'OPEN'
+             ORDER BY CS_ID DESC
         ) WHERE ROWNUM = 1
+    </select>
+
+    <select id="findCsByIdAndUserId" resultType="com.springboot.project.dto.csDTO">
+        SELECT CS_ID AS csId,
+               USER_ID AS userId,
+               EXT_KEY AS extKey,
+               CS_STATUS AS csStatus
+          FROM CS_LOGS
+         WHERE CS_ID = #{csId}
+           AND USER_ID = #{userId}
+    </select>
+
+    <select id="findInquiryListByUserId" resultType="com.springboot.project.dto.csDTO">
+        SELECT L.CS_ID AS csId,
+               L.USER_ID AS userId,
+               L.CS_STATUS AS csStatus,
+               FM.CATEGORY_ID AS categoryId,
+               C.CATEGORY_NAME AS categoryName,
+               FM.TITLE AS title,
+               LM.CONTENT AS lastContent,
+               LM.SENDER_ID AS lastSenderId,
+               LM.SENDER_TYPE AS lastSenderType,
+               FM.CREATED_AT AS createdAt,
+               LM.CREATED_AT AS updatedAt
+          FROM CS_LOGS L
+          JOIN (
+                SELECT CS_ID, CATEGORY_ID, TITLE, CREATED_AT
+                  FROM (
+                        SELECT M.CS_ID,
+                               M.CATEGORY_ID,
+                               M.TITLE,
+                               M.CREATED_AT,
+                               ROW_NUMBER() OVER (
+                                   PARTITION BY M.CS_ID
+                                   ORDER BY M.CREATED_AT ASC, M.MSG_ID ASC
+                               ) AS RN
+                          FROM CS_MESSAGES M
+                       )
+                 WHERE RN = 1
+               ) FM ON FM.CS_ID = L.CS_ID
+          JOIN (
+                SELECT CS_ID, CONTENT, SENDER_ID, SENDER_TYPE, CREATED_AT
+                  FROM (
+                        SELECT M.CS_ID,
+                               M.CONTENT,
+                               M.SENDER_ID,
+                               M.SENDER_TYPE,
+                               M.CREATED_AT,
+                               ROW_NUMBER() OVER (
+                                   PARTITION BY M.CS_ID
+                                   ORDER BY M.CREATED_AT DESC, M.MSG_ID DESC
+                               ) AS RN
+                          FROM CS_MESSAGES M
+                       )
+                 WHERE RN = 1
+               ) LM ON LM.CS_ID = L.CS_ID
+          LEFT JOIN CS_CATEGORIES C ON C.CATEGORY_ID = FM.CATEGORY_ID
+         WHERE L.USER_ID = #{userId}
+         ORDER BY LM.CREATED_AT DESC, L.CS_ID DESC
+    </select>
+
+    <select id="findAdminInquiryList" resultType="com.springboot.project.dto.csDTO">
+        SELECT L.CS_ID AS csId,
+               L.USER_ID AS userId,
+               U.USER_NAME AS userName,
+               U.EMAIL AS email,
+               L.EXT_KEY AS extKey,
+               L.CS_STATUS AS csStatus,
+               FM.CATEGORY_ID AS categoryId,
+               C.CATEGORY_NAME AS categoryName,
+               FM.TITLE AS title,
+               LM.CONTENT AS lastContent,
+               LM.SENDER_ID AS lastSenderId,
+               LM.SENDER_TYPE AS lastSenderType,
+               FM.CREATED_AT AS createdAt,
+               LM.CREATED_AT AS updatedAt
+          FROM CS_LOGS L
+          JOIN USERS U ON U.USER_ID = L.USER_ID
+          JOIN (
+                SELECT CS_ID, CATEGORY_ID, TITLE, CREATED_AT
+                  FROM (
+                        SELECT M.CS_ID, M.CATEGORY_ID, M.TITLE, M.CREATED_AT,
+                               ROW_NUMBER() OVER (
+                                   PARTITION BY M.CS_ID
+                                   ORDER BY M.CREATED_AT ASC, M.MSG_ID ASC
+                               ) AS RN
+                          FROM CS_MESSAGES M
+                       )
+                 WHERE RN = 1
+               ) FM ON FM.CS_ID = L.CS_ID
+          JOIN (
+                SELECT CS_ID, CONTENT, SENDER_ID, SENDER_TYPE, CREATED_AT
+                  FROM (
+                        SELECT M.CS_ID, M.CONTENT, M.SENDER_ID, M.SENDER_TYPE, M.CREATED_AT,
+                               ROW_NUMBER() OVER (
+                                   PARTITION BY M.CS_ID
+                                   ORDER BY M.CREATED_AT DESC, M.MSG_ID DESC
+                               ) AS RN
+                          FROM CS_MESSAGES M
+                       )
+                 WHERE RN = 1
+               ) LM ON LM.CS_ID = L.CS_ID
+          LEFT JOIN CS_CATEGORIES C ON C.CATEGORY_ID = FM.CATEGORY_ID
+         ORDER BY LM.CREATED_AT DESC, L.CS_ID DESC
+    </select>
+
+    <select id="findCsById" resultType="com.springboot.project.dto.csDTO">
+        SELECT CS_ID AS csId,
+               USER_ID AS userId,
+               EXT_KEY AS extKey,
+               CS_STATUS AS csStatus
+          FROM CS_LOGS
+         WHERE CS_ID = #{csId}
+    </select>
+
+    <update id="updateCsStatus">
+        UPDATE CS_LOGS
+           SET CS_STATUS = #{status}
+         WHERE CS_ID = #{csId}
+    </update>
+
+    <insert id="insertAttachment" parameterType="com.springboot.project.dto.csInquiryAttachmentDTO">
+        <selectKey keyProperty="attachmentId" resultType="long" order="BEFORE">
+            SELECT SEQ_CS_ATTACHMENT_ID.NEXTVAL FROM DUAL
+        </selectKey>
+        INSERT INTO CS_MESSAGE_ATTACHMENTS (
+            ATTACHMENT_ID, MSG_ID, ORIGINAL_NAME, STORED_NAME, CONTENT_TYPE, FILE_SIZE, CREATED_AT
+        ) VALUES (
+            #{attachmentId}, #{msgId}, #{originalName}, #{storedName}, #{contentType}, #{fileSize}, SYSDATE
+        )
+    </insert>
+
+    <select id="findAttachmentsByMsgId" resultType="com.springboot.project.dto.csInquiryAttachmentDTO">
+        SELECT ATTACHMENT_ID AS attachmentId,
+               MSG_ID AS msgId,
+               ORIGINAL_NAME AS originalName,
+               STORED_NAME AS storedName,
+               CONTENT_TYPE AS contentType,
+               FILE_SIZE AS fileSize,
+               CREATED_AT AS createdAt
+          FROM CS_MESSAGE_ATTACHMENTS
+         WHERE MSG_ID = #{msgId}
+         ORDER BY ATTACHMENT_ID ASC
+    </select>
+
+    <select id="findAttachmentById" resultType="com.springboot.project.dto.csInquiryAttachmentDTO">
+        SELECT ATTACHMENT_ID AS attachmentId,
+               MSG_ID AS msgId,
+               ORIGINAL_NAME AS originalName,
+               STORED_NAME AS storedName,
+               CONTENT_TYPE AS contentType,
+               FILE_SIZE AS fileSize,
+               CREATED_AT AS createdAt
+          FROM CS_MESSAGE_ATTACHMENTS
+         WHERE ATTACHMENT_ID = #{attachmentId}
+    </select>
+
+    <select id="findAttachmentByIdAndUserId" resultType="com.springboot.project.dto.csInquiryAttachmentDTO">
+        SELECT A.ATTACHMENT_ID AS attachmentId,
+               A.MSG_ID AS msgId,
+               A.ORIGINAL_NAME AS originalName,
+               A.STORED_NAME AS storedName,
+               A.CONTENT_TYPE AS contentType,
+               A.FILE_SIZE AS fileSize,
+               A.CREATED_AT AS createdAt
+          FROM CS_MESSAGE_ATTACHMENTS A
+          JOIN CS_MESSAGES M ON M.MSG_ID = A.MSG_ID
+          JOIN CS_LOGS L ON L.CS_ID = M.CS_ID
+         WHERE A.ATTACHMENT_ID = #{attachmentId}
+           AND L.USER_ID = #{userId}
     </select>
 
 </mapper>

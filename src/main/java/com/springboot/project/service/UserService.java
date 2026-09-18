@@ -4,17 +4,32 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.springboot.project.dao.IusersDao;
 import com.springboot.project.dto.usersDto;
 import com.springboot.project.dto.workspaceDTO;
+import com.springboot.project.util.UserProfileValidator;
 
 @Service
 public class UserService {
     @Autowired
     private IusersDao usersDao;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private LoginFailureService loginFailureService;
+
+    @Value("${moyo.security.login.max-failures:5}")
+    private int maxLoginFailures;
+
+    @Value("${moyo.security.login.lock-minutes:15}")
+    private int loginLockMinutes;
 
     public List<usersDto> getAllUsers() {
         return usersDao.findAll();
@@ -22,6 +37,17 @@ public class UserService {
 
     @Transactional
     public void registerUser(usersDto user) {
+        user.setUserName(UserProfileValidator.normalizeRequiredName(user.getUserName()));
+        user.setBirthDate(UserProfileValidator.normalizeOptionalBirthDate(user.getBirthDate()));
+        user.setBirthCalendarType(UserProfileValidator.normalizeBirthCalendarType(user.getBirthCalendarType()));
+
+        String rawPassword = user.getPwdHash() == null ? "" : user.getPwdHash().trim();
+        if (rawPassword.isEmpty()) {
+            throw new IllegalArgumentException("비밀번호를 입력해주세요.");
+        }
+        validatePasswordPolicy(rawPassword);
+        user.setPwdHash(passwordEncoder.encode(rawPassword));
+
         if (user.getStatus() == null || user.getStatus().trim().isEmpty()) {
             user.setStatus("ACTIVE");
         }
@@ -52,8 +78,62 @@ public class UserService {
         return usersDao.findByEmail(email.trim()) != null;
     }
 
+    @Transactional
     public usersDto login(usersDto user) {
-        return usersDao.login(user);
+        if (user == null) return null;
+
+        String email = user.getEmail() == null ? "" : user.getEmail().trim();
+        String rawPassword = user.getPwdHash() == null ? "" : user.getPwdHash().trim();
+        if (email.isEmpty() || rawPassword.isEmpty()) return null;
+
+        usersDto authUser = usersDao.findAuthByEmail(email);
+        if (authUser == null || authUser.getPwdHash() == null) return null;
+
+        Long userId = authUser.getUserId();
+
+        // 잠금 시간이 지난 계정은 실패 횟수와 임시 잠금을 자동 초기화한다.
+        loginFailureService.clearExpiredLoginLock(userId);
+
+        // 임시 잠금 중에는 비밀번호 해시 비교 자체를 하지 않는다.
+        if (loginFailureService.countActiveLoginLock(userId) > 0) {
+            throw new LoginTemporarilyBlockedException();
+        }
+
+        String storedPassword = authUser.getPwdHash();
+        if (!passwordMatches(rawPassword, storedPassword)) {
+            loginFailureService.recordLoginFailure(userId, maxLoginFailures, loginLockMinutes);
+
+            if (loginFailureService.countActiveLoginLock(userId) > 0) {
+                throw new LoginTemporarilyBlockedException();
+            }
+            return null;
+        }
+
+        // 정상 비밀번호 입력 시 이전 실패 기록을 즉시 초기화한다.
+        loginFailureService.resetLoginFailures(userId);
+
+        // 기존 평문 계정은 비밀번호 검증 성공 시 BCrypt로 자동 마이그레이션한다.
+        if (!isBcryptHash(storedPassword)) {
+            usersDao.updatePassword(userId, passwordEncoder.encode(rawPassword));
+        }
+
+        usersDto loginUser = usersDao.findById(userId);
+        if (loginUser == null) return null;
+
+        String status = loginUser.getStatus() == null
+                ? ""
+                : loginUser.getStatus().trim().toUpperCase();
+
+        // 로그인은 ACTIVE만 허용한다. 알 수 없는 신규 상태도 기본 차단한다.
+        if (!"ACTIVE".equals(status)) {
+            if ("WITHDRAW_PENDING".equals(status)
+                    && usersDao.countCancelableWithdrawal(loginUser.getUserId()) < 1) {
+                throw new AccountStatusLoginException(loginUser.getUserId(), "WITHDRAW_EXPIRED");
+            }
+            throw new AccountStatusLoginException(loginUser.getUserId(), status.isEmpty() ? "UNKNOWN" : status);
+        }
+
+        return loginUser;
     }
 
     public usersDto findById(Long userId) {
@@ -65,6 +145,17 @@ public class UserService {
 
     @Transactional
     public void updateProfile(usersDto user) {
+        if (user.getUserName() != null) {
+            user.setUserName(UserProfileValidator.normalizeRequiredName(user.getUserName()));
+        }
+        if (user.getBirthDate() != null) {
+            String normalizedBirthDate = UserProfileValidator.normalizeOptionalBirthDate(user.getBirthDate());
+            user.setBirthDate(normalizedBirthDate == null ? "" : normalizedBirthDate);
+        }
+        if (user.getBirthCalendarType() != null) {
+            user.setBirthCalendarType(UserProfileValidator.normalizeBirthCalendarType(user.getBirthCalendarType()));
+        }
+
         usersDao.updateUser(user);
         usersDao.upsertNotificationSettings(user);
         if ("IMAGE".equals(user.getProfileAvatarType()) && user.getProfileImagePath() != null) {
@@ -150,9 +241,8 @@ public class UserService {
 
 
     /**
-     * 현재 비밀번호 검증은 로그인과 같은 DAO/login 조건을 그대로 사용한다.
-     * 계정 설정에서 별도 COUNT 쿼리로 직접 비교하면 로그인은 되는데
-     * 비밀번호 변경/탈퇴에서 불일치가 나는 상황이 생길 수 있다.
+     * BCrypt 계정과 이전 평문 계정을 모두 검증한다.
+     * 이전 평문 계정은 비밀번호 확인에 성공한 시점에 BCrypt로 자동 변환한다.
      */
     private boolean matchesCurrentPassword(Long userId, String currentPassword) {
         if (userId == null) return false;
@@ -160,15 +250,78 @@ public class UserService {
         String current = currentPassword == null ? "" : currentPassword.trim();
         if (current.isEmpty()) return false;
 
-        usersDto storedUser = usersDao.findById(userId);
-        if (storedUser == null || storedUser.getEmail() == null) return false;
+        String storedPassword = usersDao.findPasswordHashByUserId(userId);
+        if (storedPassword == null || !passwordMatches(current, storedPassword)) return false;
 
-        usersDto loginProbe = new usersDto();
-        loginProbe.setEmail(storedUser.getEmail());
-        loginProbe.setPwdHash(current);
+        if (!isBcryptHash(storedPassword)) {
+            usersDao.updatePassword(userId, passwordEncoder.encode(current));
+        }
+        return true;
+    }
 
-        usersDto matchedUser = usersDao.login(loginProbe);
-        return matchedUser != null && userId.equals(matchedUser.getUserId());
+    private boolean passwordMatches(String rawPassword, String storedPassword) {
+        if (rawPassword == null || storedPassword == null) return false;
+        if (isBcryptHash(storedPassword)) {
+            return passwordEncoder.matches(rawPassword, storedPassword);
+        }
+        // 3단계 전환 기간에만 기존 평문 계정 호환용으로 사용한다.
+        return rawPassword.equals(storedPassword);
+    }
+
+    private boolean isBcryptHash(String value) {
+        return value != null
+                && (value.startsWith("$2a$")
+                    || value.startsWith("$2b$")
+                    || value.startsWith("$2y$"));
+    }
+
+    /**
+     * MOYO 공통 비밀번호 정책.
+     * 회원가입/마이페이지 변경/비밀번호 재설정에서 모두 같은 규칙을 사용한다.
+     */
+    public void validatePasswordPolicy(String rawPassword) {
+        String password = rawPassword == null ? "" : rawPassword.trim();
+        if (password.length() < 8) {
+            throw new IllegalArgumentException("비밀번호는 8자리 이상 입력해주세요.");
+        }
+        if (password.length() > 72) {
+            throw new IllegalArgumentException("비밀번호는 72자리 이하로 입력해주세요.");
+        }
+        if (!password.matches(".*[A-Za-z].*")) {
+            throw new IllegalArgumentException("비밀번호에 영문을 1자 이상 포함해주세요.");
+        }
+        if (!password.matches(".*[0-9].*")) {
+            throw new IllegalArgumentException("비밀번호에 숫자를 1자 이상 포함해주세요.");
+        }
+        if (!password.matches(".*[^A-Za-z0-9\\s].*")) {
+            throw new IllegalArgumentException("비밀번호에 특수문자를 1자 이상 포함해주세요.");
+        }
+    }
+
+    private boolean isRecentlyUsedPassword(Long userId, String rawPassword, String currentStoredPassword) {
+        if (currentStoredPassword != null && passwordMatches(rawPassword, currentStoredPassword)) {
+            return true;
+        }
+
+        List<String> recentHashes = usersDao.findRecentPasswordHashes(userId);
+        if (recentHashes == null) return false;
+        for (String previousHash : recentHashes) {
+            if (previousHash != null && passwordEncoder.matches(rawPassword, previousHash)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void saveCurrentPasswordToHistory(Long userId, String storedPassword) {
+        if (userId == null || storedPassword == null || storedPassword.isBlank()) return;
+
+        // 과거 평문 계정이 남아 있어도 비밀번호 이력에는 평문을 절대 저장하지 않는다.
+        String historyHash = isBcryptHash(storedPassword)
+                ? storedPassword
+                : passwordEncoder.encode(storedPassword);
+        usersDao.insertPasswordHistory(userId, historyHash);
+        usersDao.deleteExpiredPasswordHistory(userId);
     }
 
     @Transactional
@@ -183,22 +336,50 @@ public class UserService {
         if (current.isEmpty()) {
             throw new IllegalArgumentException("현재 비밀번호를 입력해주세요.");
         }
-        if (next.length() < 4) {
-            throw new IllegalArgumentException("새 비밀번호는 4자리 이상 입력해주세요.");
-        }
+        validatePasswordPolicy(next);
         if (!next.equals(confirm)) {
             throw new IllegalArgumentException("새 비밀번호 확인이 일치하지 않습니다.");
         }
-        if (current.equals(next)) {
-            throw new IllegalArgumentException("현재 비밀번호와 다른 비밀번호를 입력해주세요.");
-        }
-        if (!matchesCurrentPassword(userId, current)) {
+
+        String storedPassword = usersDao.findPasswordHashByUserId(userId);
+        if (storedPassword == null || !passwordMatches(current, storedPassword)) {
             throw new IllegalArgumentException("현재 비밀번호가 일치하지 않습니다.");
         }
+        if (isRecentlyUsedPassword(userId, next, storedPassword)) {
+            throw new IllegalArgumentException("최근 30일 이내 사용한 비밀번호는 다시 사용할 수 없습니다.");
+        }
 
-        usersDao.updatePassword(userId, next);
+        saveCurrentPasswordToHistory(userId, storedPassword);
+        usersDao.updatePassword(userId, passwordEncoder.encode(next));
     }
 
+
+
+    @Transactional
+    public void resetPassword(Long userId, String newPassword, String confirmPassword) {
+        if (userId == null) {
+            throw new IllegalArgumentException("재설정할 계정을 확인할 수 없습니다.");
+        }
+
+        String next = newPassword == null ? "" : newPassword.trim();
+        String confirm = confirmPassword == null ? "" : confirmPassword.trim();
+
+        validatePasswordPolicy(next);
+        if (!next.equals(confirm)) {
+            throw new IllegalArgumentException("새 비밀번호 확인이 일치하지 않습니다.");
+        }
+
+        String storedPassword = usersDao.findPasswordHashByUserId(userId);
+        if (storedPassword == null) {
+            throw new IllegalArgumentException("재설정할 계정을 확인할 수 없습니다.");
+        }
+        if (isRecentlyUsedPassword(userId, next, storedPassword)) {
+            throw new IllegalArgumentException("최근 30일 이내 사용한 비밀번호는 다시 사용할 수 없습니다.");
+        }
+
+        saveCurrentPasswordToHistory(userId, storedPassword);
+        usersDao.resetPasswordAndBumpSecurityVersion(userId, passwordEncoder.encode(next));
+    }
 
 
     @Transactional
@@ -212,6 +393,12 @@ public class UserService {
         }
         if (!matchesCurrentPassword(userId, current)) {
             throw new IllegalArgumentException("현재 비밀번호가 일치하지 않습니다.");
+        }
+        if (usersDao.countOwnedWorkspacesForWithdrawal(userId) > 0) {
+            throw new IllegalArgumentException("그룹장을 다른 멤버에게 위임한 뒤 회원 탈퇴를 신청해주세요.");
+        }
+        if (usersDao.countLedGroupProjectsForWithdrawal(userId) > 0) {
+            throw new IllegalArgumentException("그룹 프로젝트의 팀장을 다른 멤버에게 위임한 뒤 회원 탈퇴를 신청해주세요.");
         }
         usersDao.requestWithdrawal(userId);
     }
@@ -232,7 +419,7 @@ public class UserService {
             user.setStatus("ACTIVE");
         }
         usersDao.updateUser(user);
-        return usersDao.login(user);
+        return usersDao.findById(user.getUserId());
     }
 
     public List<workspaceDTO> getWorkspacesByUserId(Long userId) {

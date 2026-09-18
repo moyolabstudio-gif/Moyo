@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.springboot.project.dao.IphotoAlbumDAO">
 
     <select id="selectAlbums" resultType="map">
-        SELECT A.ALBUM_ID, A.SCOPE_TYPE, A.SCOPE_ID, A.ALBUM_NAME, A.ALBUM_DESCRIPTION,
+        SELECT A.ALBUM_ID, A.SCOPE_TYPE, A.SCOPE_ID, A.PARENT_ALBUM_ID, A.ALBUM_NAME, A.ALBUM_DESCRIPTION,
                A.COVER_PHOTO_ID, A.CREATED_BY, U.USER_NAME AS CREATOR_NAME,
                TO_CHAR(A.CREATED_AT, 'YYYY-MM-DD') AS CREATED_AT,
                TO_CHAR(A.UPDATED_AT, 'YYYY-MM-DD HH24:MI') AS UPDATED_AT,
+               (SELECT COUNT(*) FROM PHOTO_ALBUMS CA WHERE CA.PARENT_ALBUM_ID = A.ALBUM_ID) AS CHILD_ALBUM_COUNT,
                (SELECT COUNT(*) FROM PHOTO_POSTS PP WHERE PP.ALBUM_ID = A.ALBUM_ID AND NVL(PP.DELETED_YN, 'N') = 'N') AS POST_COUNT,
                (SELECT COUNT(*) FROM PHOTOS P JOIN PHOTO_POSTS PP ON PP.POST_ID = P.POST_ID
                  WHERE PP.ALBUM_ID = A.ALBUM_ID AND NVL(PP.DELETED_YN, 'N') = 'N') AS PHOTO_COUNT,
@@ -20,7 +21,7 @@
     </select>
 
     <select id="selectAlbum" resultType="map">
-        SELECT A.ALBUM_ID, A.SCOPE_TYPE, A.SCOPE_ID, A.ALBUM_NAME, A.ALBUM_DESCRIPTION,
+        SELECT A.ALBUM_ID, A.SCOPE_TYPE, A.SCOPE_ID, A.PARENT_ALBUM_ID, A.ALBUM_NAME, A.ALBUM_DESCRIPTION,
                A.COVER_PHOTO_ID, A.CREATED_BY, U.USER_NAME AS CREATOR_NAME,
                TO_CHAR(A.CREATED_AT, 'YYYY-MM-DD HH24:MI') AS CREATED_AT,
                TO_CHAR(A.UPDATED_AT, 'YYYY-MM-DD HH24:MI') AS UPDATED_AT,
@@ -37,10 +38,10 @@
             SELECT SEQ_PHOTO_ALBUM_ID.NEXTVAL FROM DUAL
         </selectKey>
         INSERT INTO PHOTO_ALBUMS (
-            ALBUM_ID, SCOPE_TYPE, SCOPE_ID, ALBUM_NAME, ALBUM_DESCRIPTION,
+            ALBUM_ID, SCOPE_TYPE, SCOPE_ID, PARENT_ALBUM_ID, ALBUM_NAME, ALBUM_DESCRIPTION,
             CREATED_BY, CREATED_AT, UPDATED_AT
         ) VALUES (
-            #{albumId}, #{scopeType}, #{scopeId}, #{albumName}, #{albumDescription,jdbcType=VARCHAR},
+            #{albumId}, #{scopeType}, #{scopeId}, #{parentAlbumId,jdbcType=BIGINT}, #{albumName}, #{albumDescription,jdbcType=VARCHAR},
             #{createdBy}, SYSDATE, SYSDATE
         )
     </insert>
@@ -53,6 +54,26 @@
          WHERE ALBUM_ID = #{albumId}
     </update>
 
+    <update id="updateAlbumParent">
+        UPDATE PHOTO_ALBUMS
+           SET PARENT_ALBUM_ID = #{parentAlbumId,jdbcType=BIGINT}, UPDATED_AT = SYSDATE
+         WHERE ALBUM_ID = #{albumId}
+    </update>
+
+    <update id="promoteChildAlbums">
+        UPDATE PHOTO_ALBUMS
+           SET PARENT_ALBUM_ID = #{parentAlbumId,jdbcType=BIGINT}, UPDATED_AT = SYSDATE
+         WHERE PARENT_ALBUM_ID = #{albumId}
+    </update>
+
+    <select id="countAlbumDescendant" resultType="int">
+        SELECT COUNT(*)
+          FROM PHOTO_ALBUMS
+         WHERE ALBUM_ID = #{candidateParentId}
+         START WITH PARENT_ALBUM_ID = #{albumId}
+       CONNECT BY NOCYCLE PRIOR ALBUM_ID = PARENT_ALBUM_ID
+    </select>
+
     <delete id="deleteAlbum">
         DELETE FROM PHOTO_ALBUMS WHERE ALBUM_ID = #{albumId}
     </delete>
@@ -61,14 +82,90 @@
         PP.POST_ID, PP.SCOPE_TYPE, PP.SCOPE_ID, PP.ALBUM_ID,
         A.ALBUM_NAME, PP.TITLE, PP.DESCRIPTION, PP.CREATED_BY,
         PP.CREATED_BY AS USER_ID,
+        U.STATUS AS CREATOR_STATUS,
         NVL(PP.DELETED_YN, 'N') AS DELETED_YN, PP.DELETED_AT, PP.DELETED_BY, PP.ORIGINAL_ALBUM_ID,
         TO_CHAR(PP.DELETED_AT, 'YYYY-MM-DD HH24:MI') AS DELETED_AT_LABEL,
         TO_CHAR(PP.DELETED_AT + 30, 'YYYY-MM-DD HH24:MI') AS TRASH_EXPIRE_AT_LABEL,
         CASE WHEN PP.DELETED_AT IS NOT NULL THEN GREATEST(0, CEIL(PP.DELETED_AT + 30 - SYSDATE)) END AS TRASH_DAYS_LEFT,
         NVL(PP.VISIBILITY_TYPE, 'PRIVATE') AS VISIBILITY_TYPE,
-        U.USER_NAME AS CREATOR_NAME,
-        U.PROFILE_IMAGE_PATH AS CREATOR_PROFILE_IMAGE_PATH,
-        U.PROFILE_IMAGE_PATH AS PROFILE_IMAGE_PATH,
+        CASE
+            WHEN PP.SCOPE_TYPE = 'PROJECT' THEN NVL((
+                SELECT CASE
+                           WHEN NVL(WMP.USE_ACCOUNT_PROFILE, 'Y') = 'N'
+                               THEN NVL(WMP.DISPLAY_NAME, U.USER_NAME)
+                           ELSE U.USER_NAME
+                       END
+                  FROM PROJECTS PR
+                  LEFT JOIN WS_MEMBER_PROFILES WMP
+                    ON WMP.WS_ID = PR.WS_ID
+                   AND WMP.USER_ID = PP.CREATED_BY
+                 WHERE PR.PROJ_ID = PP.SCOPE_ID
+                   AND PR.WS_ID IS NOT NULL
+            ), U.USER_NAME)
+            WHEN PP.SCOPE_TYPE IN ('WORKSPACE', 'GROUP') THEN NVL((
+                SELECT CASE
+                           WHEN NVL(WMP.USE_ACCOUNT_PROFILE, 'Y') = 'N'
+                               THEN NVL(WMP.DISPLAY_NAME, U.USER_NAME)
+                           ELSE U.USER_NAME
+                       END
+                  FROM WS_MEMBER_PROFILES WMP
+                 WHERE WMP.WS_ID = PP.SCOPE_ID
+                   AND WMP.USER_ID = PP.CREATED_BY
+            ), U.USER_NAME)
+            ELSE U.USER_NAME
+        END AS CREATOR_NAME,
+        CASE
+            WHEN PP.SCOPE_TYPE = 'PROJECT' THEN (
+                SELECT CASE
+                           WHEN NVL(WMP.USE_ACCOUNT_PROFILE, 'Y') = 'N'
+                               THEN WMP.PROFILE_IMAGE_PATH
+                           ELSE CASE WHEN NVL(U.PROFILE_AVATAR_TYPE, 'DEFAULT') = 'IMAGE' THEN U.PROFILE_IMAGE_PATH END
+                       END
+                  FROM PROJECTS PR
+                  LEFT JOIN WS_MEMBER_PROFILES WMP
+                    ON WMP.WS_ID = PR.WS_ID
+                   AND WMP.USER_ID = PP.CREATED_BY
+                 WHERE PR.PROJ_ID = PP.SCOPE_ID
+                   AND PR.WS_ID IS NOT NULL
+            )
+            WHEN PP.SCOPE_TYPE IN ('WORKSPACE', 'GROUP') THEN (
+                SELECT CASE
+                           WHEN NVL(WMP.USE_ACCOUNT_PROFILE, 'Y') = 'N'
+                               THEN WMP.PROFILE_IMAGE_PATH
+                           ELSE CASE WHEN NVL(U.PROFILE_AVATAR_TYPE, 'DEFAULT') = 'IMAGE' THEN U.PROFILE_IMAGE_PATH END
+                       END
+                  FROM WS_MEMBER_PROFILES WMP
+                 WHERE WMP.WS_ID = PP.SCOPE_ID
+                   AND WMP.USER_ID = PP.CREATED_BY
+            )
+            ELSE CASE WHEN NVL(U.PROFILE_AVATAR_TYPE, 'DEFAULT') = 'IMAGE' THEN U.PROFILE_IMAGE_PATH END
+        END AS CREATOR_PROFILE_IMAGE_PATH,
+        CASE
+            WHEN PP.SCOPE_TYPE = 'PROJECT' THEN (
+                SELECT CASE
+                           WHEN NVL(WMP.USE_ACCOUNT_PROFILE, 'Y') = 'N'
+                               THEN WMP.PROFILE_IMAGE_PATH
+                           ELSE CASE WHEN NVL(U.PROFILE_AVATAR_TYPE, 'DEFAULT') = 'IMAGE' THEN U.PROFILE_IMAGE_PATH END
+                       END
+                  FROM PROJECTS PR
+                  LEFT JOIN WS_MEMBER_PROFILES WMP
+                    ON WMP.WS_ID = PR.WS_ID
+                   AND WMP.USER_ID = PP.CREATED_BY
+                 WHERE PR.PROJ_ID = PP.SCOPE_ID
+                   AND PR.WS_ID IS NOT NULL
+            )
+            WHEN PP.SCOPE_TYPE IN ('WORKSPACE', 'GROUP') THEN (
+                SELECT CASE
+                           WHEN NVL(WMP.USE_ACCOUNT_PROFILE, 'Y') = 'N'
+                               THEN WMP.PROFILE_IMAGE_PATH
+                           ELSE CASE WHEN NVL(U.PROFILE_AVATAR_TYPE, 'DEFAULT') = 'IMAGE' THEN U.PROFILE_IMAGE_PATH END
+                       END
+                  FROM WS_MEMBER_PROFILES WMP
+                 WHERE WMP.WS_ID = PP.SCOPE_ID
+                   AND WMP.USER_ID = PP.CREATED_BY
+            )
+            ELSE CASE WHEN NVL(U.PROFILE_AVATAR_TYPE, 'DEFAULT') = 'IMAGE' THEN U.PROFILE_IMAGE_PATH END
+        END AS PROFILE_IMAGE_PATH,
         TO_CHAR(PP.CREATED_AT, 'YYYY-MM-DD HH24:MI') AS CREATED_AT,
         TO_CHAR(PP.UPDATED_AT, 'YYYY-MM-DD HH24:MI') AS UPDATED_AT,
         (SELECT COUNT(1) FROM PHOTOS PX WHERE PX.POST_ID = PP.POST_ID) AS PHOTO_COUNT,
@@ -126,6 +223,9 @@
                    AND CL.REACTION_TYPE LIKE 'SRC_%'
                    AND ROWNUM = 1
           )) AS COLLECTED_SOURCE_CREATOR_NAME,
+        (SELECT MIN(PX.PHOTO_ID) KEEP (DENSE_RANK FIRST ORDER BY NVL(PX.SORT_ORDER, 0), PX.PHOTO_ID)
+           FROM PHOTOS PX
+          WHERE PX.POST_ID = PP.POST_ID) AS COVER_PHOTO_ID,
         (SELECT MIN(PX.FILE_PATH) KEEP (DENSE_RANK FIRST ORDER BY NVL(PX.SORT_ORDER, 0), PX.PHOTO_ID)
            FROM PHOTOS PX
           WHERE PX.POST_ID = PP.POST_ID) AS COVER_PATH,
@@ -189,9 +289,84 @@
         TO_CHAR(PP.DELETED_AT + 30, 'YYYY-MM-DD HH24:MI') AS TRASH_EXPIRE_AT_LABEL,
         CASE WHEN PP.DELETED_AT IS NOT NULL THEN GREATEST(0, CEIL(PP.DELETED_AT + 30 - SYSDATE)) END AS TRASH_DAYS_LEFT,
         NVL(PP.VISIBILITY_TYPE, 'PRIVATE') AS VISIBILITY_TYPE,
-        U.USER_NAME AS CREATOR_NAME,
-        U.PROFILE_IMAGE_PATH AS CREATOR_PROFILE_IMAGE_PATH,
-        U.PROFILE_IMAGE_PATH AS PROFILE_IMAGE_PATH,
+        CASE
+            WHEN PP.SCOPE_TYPE = 'PROJECT' THEN NVL((
+                SELECT CASE
+                           WHEN NVL(WMP.USE_ACCOUNT_PROFILE, 'Y') = 'N'
+                               THEN NVL(WMP.DISPLAY_NAME, U.USER_NAME)
+                           ELSE U.USER_NAME
+                       END
+                  FROM PROJECTS PR
+                  LEFT JOIN WS_MEMBER_PROFILES WMP
+                    ON WMP.WS_ID = PR.WS_ID
+                   AND WMP.USER_ID = PP.CREATED_BY
+                 WHERE PR.PROJ_ID = PP.SCOPE_ID
+                   AND PR.WS_ID IS NOT NULL
+            ), U.USER_NAME)
+            WHEN PP.SCOPE_TYPE IN ('WORKSPACE', 'GROUP') THEN NVL((
+                SELECT CASE
+                           WHEN NVL(WMP.USE_ACCOUNT_PROFILE, 'Y') = 'N'
+                               THEN NVL(WMP.DISPLAY_NAME, U.USER_NAME)
+                           ELSE U.USER_NAME
+                       END
+                  FROM WS_MEMBER_PROFILES WMP
+                 WHERE WMP.WS_ID = PP.SCOPE_ID
+                   AND WMP.USER_ID = PP.CREATED_BY
+            ), U.USER_NAME)
+            ELSE U.USER_NAME
+        END AS CREATOR_NAME,
+        CASE
+            WHEN PP.SCOPE_TYPE = 'PROJECT' THEN (
+                SELECT CASE
+                           WHEN NVL(WMP.USE_ACCOUNT_PROFILE, 'Y') = 'N'
+                               THEN WMP.PROFILE_IMAGE_PATH
+                           ELSE CASE WHEN NVL(U.PROFILE_AVATAR_TYPE, 'DEFAULT') = 'IMAGE' THEN U.PROFILE_IMAGE_PATH END
+                       END
+                  FROM PROJECTS PR
+                  LEFT JOIN WS_MEMBER_PROFILES WMP
+                    ON WMP.WS_ID = PR.WS_ID
+                   AND WMP.USER_ID = PP.CREATED_BY
+                 WHERE PR.PROJ_ID = PP.SCOPE_ID
+                   AND PR.WS_ID IS NOT NULL
+            )
+            WHEN PP.SCOPE_TYPE IN ('WORKSPACE', 'GROUP') THEN (
+                SELECT CASE
+                           WHEN NVL(WMP.USE_ACCOUNT_PROFILE, 'Y') = 'N'
+                               THEN WMP.PROFILE_IMAGE_PATH
+                           ELSE CASE WHEN NVL(U.PROFILE_AVATAR_TYPE, 'DEFAULT') = 'IMAGE' THEN U.PROFILE_IMAGE_PATH END
+                       END
+                  FROM WS_MEMBER_PROFILES WMP
+                 WHERE WMP.WS_ID = PP.SCOPE_ID
+                   AND WMP.USER_ID = PP.CREATED_BY
+            )
+            ELSE CASE WHEN NVL(U.PROFILE_AVATAR_TYPE, 'DEFAULT') = 'IMAGE' THEN U.PROFILE_IMAGE_PATH END
+        END AS CREATOR_PROFILE_IMAGE_PATH,
+        CASE
+            WHEN PP.SCOPE_TYPE = 'PROJECT' THEN (
+                SELECT CASE
+                           WHEN NVL(WMP.USE_ACCOUNT_PROFILE, 'Y') = 'N'
+                               THEN WMP.PROFILE_IMAGE_PATH
+                           ELSE CASE WHEN NVL(U.PROFILE_AVATAR_TYPE, 'DEFAULT') = 'IMAGE' THEN U.PROFILE_IMAGE_PATH END
+                       END
+                  FROM PROJECTS PR
+                  LEFT JOIN WS_MEMBER_PROFILES WMP
+                    ON WMP.WS_ID = PR.WS_ID
+                   AND WMP.USER_ID = PP.CREATED_BY
+                 WHERE PR.PROJ_ID = PP.SCOPE_ID
+                   AND PR.WS_ID IS NOT NULL
+            )
+            WHEN PP.SCOPE_TYPE IN ('WORKSPACE', 'GROUP') THEN (
+                SELECT CASE
+                           WHEN NVL(WMP.USE_ACCOUNT_PROFILE, 'Y') = 'N'
+                               THEN WMP.PROFILE_IMAGE_PATH
+                           ELSE CASE WHEN NVL(U.PROFILE_AVATAR_TYPE, 'DEFAULT') = 'IMAGE' THEN U.PROFILE_IMAGE_PATH END
+                       END
+                  FROM WS_MEMBER_PROFILES WMP
+                 WHERE WMP.WS_ID = PP.SCOPE_ID
+                   AND WMP.USER_ID = PP.CREATED_BY
+            )
+            ELSE CASE WHEN NVL(U.PROFILE_AVATAR_TYPE, 'DEFAULT') = 'IMAGE' THEN U.PROFILE_IMAGE_PATH END
+        END AS PROFILE_IMAGE_PATH,
         TO_CHAR(PP.CREATED_AT, 'YYYY-MM-DD HH24:MI') AS CREATED_AT,
         TO_CHAR(PP.UPDATED_AT, 'YYYY-MM-DD HH24:MI') AS UPDATED_AT,
         (SELECT COUNT(1) FROM PHOTOS PX WHERE PX.POST_ID = PP.POST_ID) AS PHOTO_COUNT,
@@ -249,6 +424,9 @@
                    AND CL.REACTION_TYPE LIKE 'SRC_%'
                    AND ROWNUM = 1
           )) AS COLLECTED_SOURCE_CREATOR_NAME,
+        (SELECT MIN(PX.PHOTO_ID) KEEP (DENSE_RANK FIRST ORDER BY NVL(PX.SORT_ORDER, 0), PX.PHOTO_ID)
+           FROM PHOTOS PX
+          WHERE PX.POST_ID = PP.POST_ID) AS COVER_PHOTO_ID,
         (SELECT MIN(PX.FILE_PATH) KEEP (DENSE_RANK FIRST ORDER BY NVL(PX.SORT_ORDER, 0), PX.PHOTO_ID)
            FROM PHOTOS PX
           WHERE PX.POST_ID = PP.POST_ID) AS COVER_PATH,
@@ -310,21 +488,6 @@
           LEFT JOIN PHOTO_ALBUMS A ON A.ALBUM_ID = PP.ALBUM_ID
          WHERE (
                 (PP.SCOPE_TYPE = #{scopeType} AND PP.SCOPE_ID = #{scopeId})
-                OR (#{scopeType} = 'PERSONAL'
-                    AND #{albumId,jdbcType=NUMERIC} IS NULL
-                    AND PP.SCOPE_TYPE = 'PERSONAL'
-                    AND NVL(PP.VISIBILITY_TYPE, 'PRIVATE') = 'FRIENDS'
-                    AND PP.CREATED_BY &lt;&gt; #{userId}
-                    AND EXISTS (
-                        SELECT 1
-                          FROM USER_FRIENDS UF
-                         WHERE UF.STATUS = 'ACCEPTED'
-                           AND (
-                                (UF.REQUESTER_ID = #{userId} AND UF.ADDRESSEE_ID = PP.CREATED_BY)
-                                OR (UF.ADDRESSEE_ID = #{userId} AND UF.REQUESTER_ID = PP.CREATED_BY)
-                           )
-                    )
-                )
                 OR EXISTS (
                     SELECT 1
                       FROM CONTENT_SHARES CS
@@ -334,8 +497,7 @@
                        AND NVL(CS.SHARE_STATUS, 'ACCEPTED') = 'ACCEPTED'
                        AND (CS.EXPIRES_AT IS NULL OR CS.EXPIRES_AT >= SYSDATE)
                        AND (
-                            (#{scopeType} = 'PERSONAL' AND CS.TARGET_TYPE = 'USER' AND CS.TARGET_ID = #{userId})
-                         OR (#{scopeType} = 'WORKSPACE' AND CS.TARGET_TYPE = 'WS' AND CS.TARGET_ID = #{scopeId}
+                            (#{scopeType} = 'WORKSPACE' AND CS.TARGET_TYPE = 'WS' AND CS.TARGET_ID = #{scopeId}
                              AND EXISTS (SELECT 1 FROM WS_MEMBERS WSM WHERE WSM.WS_ID = CS.TARGET_ID AND WSM.USER_ID = #{userId}))
                          OR (#{scopeType} = 'PROJECT' AND CS.TARGET_TYPE = 'PROJ' AND CS.TARGET_ID = #{scopeId}
                              AND EXISTS (SELECT 1 FROM PROJ_MEMBERS PM WHERE PM.PROJ_ID = CS.TARGET_ID AND PM.USER_ID = #{userId}))
@@ -349,6 +511,61 @@
          ORDER BY PP.CREATED_AT DESC, PP.POST_ID DESC
     </select>
 
+    <select id="selectFriendSharedPosts" resultType="map">
+        SELECT <include refid="postListColumns"/>
+          FROM PHOTO_POSTS PP
+          JOIN USERS U ON U.USER_ID = PP.CREATED_BY
+          LEFT JOIN PHOTO_ALBUMS A ON A.ALBUM_ID = PP.ALBUM_ID
+         WHERE PP.CREATED_BY = #{ownerId}
+           AND UPPER(NVL(PP.SCOPE_TYPE, 'PERSONAL')) = 'PERSONAL'
+           AND NVL(PP.DELETED_YN, 'N') = 'N'
+           AND (
+                EXISTS (
+                    SELECT 1
+                      FROM CONTENT_SHARES CS
+                     WHERE CS.CONTENT_TYPE = 'PHOTO'
+                       AND CS.CONTENT_ID = PP.POST_ID
+                       AND CS.TARGET_TYPE = 'USER'
+                       AND CS.TARGET_ID = #{userId}
+                       AND CS.OWNER_ID = #{ownerId}
+                       AND CS.ACTIVE_YN = 'Y'
+                       AND NVL(CS.SHARE_STATUS, 'ACCEPTED') = 'ACCEPTED'
+                       AND (CS.EXPIRES_AT IS NULL OR CS.EXPIRES_AT >= SYSDATE)
+                )
+                OR EXISTS (
+                    SELECT 1
+                      FROM CONTENT_RECORD_ITEMS CRI
+                      JOIN CONTENT_RECORD_TARGETS CRT
+                        ON CRT.RECORD_TARGET_ID = CRI.RECORD_TARGET_ID
+                      JOIN EVENTS E
+                        ON CRT.TARGET_TYPE = 'EVENT'
+                       AND CRT.TARGET_ID = E.EVENT_ID
+                     WHERE CRI.RECORD_TYPE = 'PHOTO'
+                       AND CRI.CONTENT_ID = PP.POST_ID
+                       AND CRI.DELETED_YN = 'N'
+                       AND CRT.TARGET_STATUS = 'ACTIVE'
+                       AND CRT.SCOPE_TYPE = 'PERSONAL'
+                       AND E.ITEM_TYPE = 'PRIVATE'
+                       AND E.USER_ID = #{ownerId}
+                       AND NVL(E.RECORD_ENABLED_YN, 'N') = 'Y'
+                       AND (
+                            EXISTS (SELECT 1 FROM EVENT_ATTENDEES EA WHERE EA.EVENT_ID = E.EVENT_ID AND EA.USER_ID = #{userId})
+                            OR EXISTS (
+                                SELECT 1 FROM CONTENT_SHARES ECS
+                                 WHERE ECS.CONTENT_TYPE = 'CALENDAR'
+                                   AND ECS.CONTENT_ID = E.EVENT_ID
+                                   AND ECS.TARGET_TYPE = 'USER'
+                                   AND ECS.TARGET_ID = #{userId}
+                                   AND ECS.ACTIVE_YN = 'Y'
+                                   AND NVL(ECS.SHARE_STATUS, 'ACCEPTED') = 'ACCEPTED'
+                                   AND (ECS.EXPIRES_AT IS NULL OR ECS.EXPIRES_AT >= SYSDATE)
+                            )
+                       )
+                )
+           )
+         ORDER BY PP.UPDATED_AT DESC, PP.POST_ID DESC
+    </select>
+
     <select id="selectRecentPosts" resultType="map">
         SELECT * FROM (
             SELECT <include refid="postListColumns"/>
@@ -357,20 +574,6 @@
               LEFT JOIN PHOTO_ALBUMS A ON A.ALBUM_ID = PP.ALBUM_ID
              WHERE (
                     (PP.SCOPE_TYPE = #{scopeType} AND PP.SCOPE_ID = #{scopeId})
-                    OR (#{scopeType} = 'PERSONAL'
-                        AND PP.SCOPE_TYPE = 'PERSONAL'
-                        AND NVL(PP.VISIBILITY_TYPE, 'PRIVATE') = 'FRIENDS'
-                        AND PP.CREATED_BY &lt;&gt; #{userId}
-                        AND EXISTS (
-                            SELECT 1
-                              FROM USER_FRIENDS UF
-                             WHERE UF.STATUS = 'ACCEPTED'
-                               AND (
-                                    (UF.REQUESTER_ID = #{userId} AND UF.ADDRESSEE_ID = PP.CREATED_BY)
-                                    OR (UF.ADDRESSEE_ID = #{userId} AND UF.REQUESTER_ID = PP.CREATED_BY)
-                               )
-                        )
-                    )
                 OR EXISTS (
                     SELECT 1
                       FROM CONTENT_SHARES CS
@@ -380,8 +583,7 @@
                        AND NVL(CS.SHARE_STATUS, 'ACCEPTED') = 'ACCEPTED'
                        AND (CS.EXPIRES_AT IS NULL OR CS.EXPIRES_AT >= SYSDATE)
                        AND (
-                            (#{scopeType} = 'PERSONAL' AND CS.TARGET_TYPE = 'USER' AND CS.TARGET_ID = #{userId})
-                         OR (#{scopeType} = 'WORKSPACE' AND CS.TARGET_TYPE = 'WS' AND CS.TARGET_ID = #{scopeId}
+                            (#{scopeType} = 'WORKSPACE' AND CS.TARGET_TYPE = 'WS' AND CS.TARGET_ID = #{scopeId}
                              AND EXISTS (SELECT 1 FROM WS_MEMBERS WSM WHERE WSM.WS_ID = CS.TARGET_ID AND WSM.USER_ID = #{userId}))
                          OR (#{scopeType} = 'PROJECT' AND CS.TARGET_TYPE = 'PROJ' AND CS.TARGET_ID = #{scopeId}
                              AND EXISTS (SELECT 1 FROM PROJ_MEMBERS PM WHERE PM.PROJ_ID = CS.TARGET_ID AND PM.USER_ID = #{userId}))
@@ -430,7 +632,19 @@
           JOIN USERS U ON U.USER_ID = PP.CREATED_BY
           LEFT JOIN PHOTO_ALBUMS A ON A.ALBUM_ID = PP.ORIGINAL_ALBUM_ID
          WHERE NVL(PP.DELETED_YN, 'N') = 'Y'
-           AND PP.DELETED_BY = #{userId}
+           AND PP.SCOPE_TYPE = #{scopeType}
+           AND PP.SCOPE_ID = #{scopeId}
+           AND (
+                PP.CREATED_BY = #{userId}
+                OR (PP.SCOPE_TYPE = 'WORKSPACE' AND (
+                    EXISTS (SELECT 1 FROM WORKSPACES W WHERE W.WS_ID = PP.SCOPE_ID AND W.OWNER_ID = #{userId})
+                    OR EXISTS (SELECT 1 FROM WS_MEMBERS WM WHERE WM.WS_ID = PP.SCOPE_ID AND WM.USER_ID = #{userId} AND UPPER(NVL(WM.WS_ROLE, 'MEMBER')) = 'ADMIN')
+                ))
+                OR (PP.SCOPE_TYPE = 'PROJECT' AND (
+                    EXISTS (SELECT 1 FROM PROJECTS P WHERE P.PROJ_ID = PP.SCOPE_ID AND P.LEADER_ID = #{userId})
+                    OR EXISTS (SELECT 1 FROM PROJ_MEMBERS PM WHERE PM.PROJ_ID = PP.SCOPE_ID AND PM.USER_ID = #{userId} AND UPPER(NVL(PM.PROJ_ROLE, 'MEMBER')) IN ('ADMIN', 'LEADER', 'OWNER', 'PM'))
+                ))
+           )
          ORDER BY PP.DELETED_AT DESC, PP.POST_ID DESC
     </select>
 
@@ -442,7 +656,17 @@
          WHERE PP.POST_ID = #{postId}
            AND NVL(PP.DELETED_YN, 'N') = 'Y'
         <if test="userId != null">
-           AND PP.DELETED_BY = #{userId}
+           AND (
+                PP.CREATED_BY = #{userId}
+                OR (PP.SCOPE_TYPE = 'WORKSPACE' AND (
+                    EXISTS (SELECT 1 FROM WORKSPACES W WHERE W.WS_ID = PP.SCOPE_ID AND W.OWNER_ID = #{userId})
+                    OR EXISTS (SELECT 1 FROM WS_MEMBERS WM WHERE WM.WS_ID = PP.SCOPE_ID AND WM.USER_ID = #{userId} AND UPPER(NVL(WM.WS_ROLE, 'MEMBER')) = 'ADMIN')
+                ))
+                OR (PP.SCOPE_TYPE = 'PROJECT' AND (
+                    EXISTS (SELECT 1 FROM PROJECTS P WHERE P.PROJ_ID = PP.SCOPE_ID AND P.LEADER_ID = #{userId})
+                    OR EXISTS (SELECT 1 FROM PROJ_MEMBERS PM WHERE PM.PROJ_ID = PP.SCOPE_ID AND PM.USER_ID = #{userId} AND UPPER(NVL(PM.PROJ_ROLE, 'MEMBER')) IN ('ADMIN', 'LEADER', 'OWNER', 'PM'))
+                ))
+           )
         </if>
     </select>
 
@@ -538,15 +762,35 @@
                PP.UPDATED_AT = SYSDATE
          WHERE PP.POST_ID = #{postId}
            AND NVL(PP.DELETED_YN, 'N') = 'Y'
-           AND PP.DELETED_BY = #{userId}
+           AND (
+                PP.CREATED_BY = #{userId}
+                OR (PP.SCOPE_TYPE = 'WORKSPACE' AND (
+                    EXISTS (SELECT 1 FROM WORKSPACES W WHERE W.WS_ID = PP.SCOPE_ID AND W.OWNER_ID = #{userId})
+                    OR EXISTS (SELECT 1 FROM WS_MEMBERS WM WHERE WM.WS_ID = PP.SCOPE_ID AND WM.USER_ID = #{userId} AND UPPER(NVL(WM.WS_ROLE, 'MEMBER')) = 'ADMIN')
+                ))
+                OR (PP.SCOPE_TYPE = 'PROJECT' AND (
+                    EXISTS (SELECT 1 FROM PROJECTS P WHERE P.PROJ_ID = PP.SCOPE_ID AND P.LEADER_ID = #{userId})
+                    OR EXISTS (SELECT 1 FROM PROJ_MEMBERS PM WHERE PM.PROJ_ID = PP.SCOPE_ID AND PM.USER_ID = #{userId} AND UPPER(NVL(PM.PROJ_ROLE, 'MEMBER')) IN ('ADMIN', 'LEADER', 'OWNER', 'PM'))
+                ))
+           )
     </update>
 
     <select id="countTrashOwner" resultType="int">
         SELECT COUNT(*)
-          FROM PHOTO_POSTS
-         WHERE POST_ID = #{postId}
-           AND NVL(DELETED_YN, 'N') = 'Y'
-           AND DELETED_BY = #{userId}
+          FROM PHOTO_POSTS PP
+         WHERE PP.POST_ID = #{postId}
+           AND NVL(PP.DELETED_YN, 'N') = 'Y'
+           AND (
+                PP.CREATED_BY = #{userId}
+                OR (PP.SCOPE_TYPE = 'WORKSPACE' AND (
+                    EXISTS (SELECT 1 FROM WORKSPACES W WHERE W.WS_ID = PP.SCOPE_ID AND W.OWNER_ID = #{userId})
+                    OR EXISTS (SELECT 1 FROM WS_MEMBERS WM WHERE WM.WS_ID = PP.SCOPE_ID AND WM.USER_ID = #{userId} AND UPPER(NVL(WM.WS_ROLE, 'MEMBER')) = 'ADMIN')
+                ))
+                OR (PP.SCOPE_TYPE = 'PROJECT' AND (
+                    EXISTS (SELECT 1 FROM PROJECTS P WHERE P.PROJ_ID = PP.SCOPE_ID AND P.LEADER_ID = #{userId})
+                    OR EXISTS (SELECT 1 FROM PROJ_MEMBERS PM WHERE PM.PROJ_ID = PP.SCOPE_ID AND PM.USER_ID = #{userId} AND UPPER(NVL(PM.PROJ_ROLE, 'MEMBER')) IN ('ADMIN', 'LEADER', 'OWNER', 'PM'))
+                ))
+           )
     </select>
 
     <delete id="deletePost">
@@ -689,8 +933,26 @@
                     ELSE C.COMMENT_CONTENT
                 END AS COMMENT_CONTENT,
                NVL(C.DELETED_YN, 'N') AS DELETED_YN,
-               U.USER_NAME,
-               U.PROFILE_IMAGE_PATH,
+               CASE
+                   WHEN PP.SCOPE_TYPE = 'PROJECT' AND PR.WS_ID IS NOT NULL
+                    AND NVL(WMP_COMMENT.USE_ACCOUNT_PROFILE, 'Y') = 'N'
+                       THEN NVL(WMP_COMMENT.DISPLAY_NAME, U.USER_NAME)
+                   WHEN PP.SCOPE_TYPE IN ('WORKSPACE', 'GROUP')
+                    AND NVL(WMP_COMMENT.USE_ACCOUNT_PROFILE, 'Y') = 'N'
+                       THEN NVL(WMP_COMMENT.DISPLAY_NAME, U.USER_NAME)
+                   ELSE U.USER_NAME
+               END AS USER_NAME,
+               CASE
+                   WHEN PP.SCOPE_TYPE = 'PROJECT' AND PR.WS_ID IS NOT NULL
+                    AND NVL(WMP_COMMENT.USE_ACCOUNT_PROFILE, 'Y') = 'N'
+                       THEN WMP_COMMENT.PROFILE_IMAGE_PATH
+                   WHEN PP.SCOPE_TYPE IN ('WORKSPACE', 'GROUP')
+                    AND NVL(WMP_COMMENT.USE_ACCOUNT_PROFILE, 'Y') = 'N'
+                       THEN WMP_COMMENT.PROFILE_IMAGE_PATH
+                   WHEN NVL(U.PROFILE_AVATAR_TYPE, 'DEFAULT') = 'IMAGE'
+                       THEN U.PROFILE_IMAGE_PATH
+                   ELSE NULL
+               END AS PROFILE_IMAGE_PATH,
                TO_CHAR(C.CREATED_AT, 'YYYY-MM-DD HH24:MI') AS CREATED_AT,
                TO_CHAR(C.UPDATED_AT, 'YYYY-MM-DD HH24:MI') AS UPDATED_AT,
                CASE WHEN NVL(C.DELETED_YN, 'N') = 'Y' THEN 0 ELSE (
@@ -711,7 +973,16 @@
                     ) THEN 1 ELSE 0 END
                ) END AS LIKED_BY_ME
           FROM PHOTO_POST_COMMENTS C
+          JOIN PHOTO_POSTS PP ON PP.POST_ID = C.POST_ID
           JOIN USERS U ON U.USER_ID = C.USER_ID
+          LEFT JOIN PROJECTS PR ON PR.PROJ_ID = CASE WHEN PP.SCOPE_TYPE = 'PROJECT' THEN PP.SCOPE_ID END
+          LEFT JOIN WS_MEMBER_PROFILES WMP_COMMENT
+            ON WMP_COMMENT.WS_ID = CASE
+                 WHEN PP.SCOPE_TYPE = 'PROJECT' THEN PR.WS_ID
+                 WHEN PP.SCOPE_TYPE IN ('WORKSPACE', 'GROUP') THEN PP.SCOPE_ID
+                 ELSE NULL
+               END
+           AND WMP_COMMENT.USER_ID = C.USER_ID
          WHERE C.POST_ID = #{postId}
            AND (
                 NVL(C.DELETED_YN, 'N') = 'N'

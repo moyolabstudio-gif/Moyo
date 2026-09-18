@@ -62,7 +62,7 @@ body{margin:0;background:#f6f8fa;color:#111827;font-family:'Pretendard',sans-ser
 .poll-list-count{display:inline-flex;align-items:center;justify-content:center;min-width:24px;height:24px;padding:0 7px;border-radius:999px;background:#eef6ff;color:#2563eb;font-size:11px;font-weight:900}
 .poll-modal{position:fixed;inset:0;z-index:9999;display:none;align-items:center;justify-content:center;padding:24px;box-sizing:border-box}
 .poll-modal.open{display:flex}
-.poll-modal-backdrop{position:absolute;inset:0;background:rgba(15,23,42,.48);backdrop-filter:blur(3px)}
+.poll-modal-backdrop{position:absolute;inset:0;background:rgba(15,23,42,.48);backdrop-filter:none}
 .poll-modal-dialog{position:relative;z-index:1;width:min(520px,100%);max-height:calc(100vh - 48px);overflow:auto;border:1px solid #e4ebf2;border-radius:24px;background:#fff;box-shadow:0 24px 70px rgba(15,23,42,.22)}
 .poll-modal-body{padding:28px}
 .poll-modal-header{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:18px}

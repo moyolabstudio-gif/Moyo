@@ -15,6 +15,7 @@ public class calendarResponseDTO {
     private String itemType; 
     private Long userId; 
     private Long projId;
+    private Long taskId;
     private Long wsId;    
     private String color;
     private String visibilityType;
@@ -25,10 +26,14 @@ public class calendarResponseDTO {
     private String endTimeSlot;
     private String wsName;
     private String projName;
+    private String projType;
     private String projectWorkspaceName;
     private String projectScope;
     private String projectItemKind;
     private String wsImagePath;
+    // 월간 달력에서 친구 일정 작성자 식별용
+    private String ownerName;
+    private String ownerProfileImagePath;
 
     // 프로젝트 업무 캘린더 연결 정보
     private Long assigneeUserId;
@@ -49,8 +54,13 @@ public class calendarResponseDTO {
     private String reminderYn;
     private Integer reminderMinutes;
     private List<Long> attendeeUserIds;
+    // 월간 달력 필터용 참석자 ID 목록(CSV). 상세/수정용 attendeeUserIds와 분리한다.
+    private String attendeeUserIdCsv;
+    private String directShareYn;
     private List<Map<String, Object>> attendeeTargets;
     private List<Map<String, Object>> shareTargets;
+    private String draftKey;
+    private String recordEnabledYn;
     
     private String allDay;
     private String timezone;

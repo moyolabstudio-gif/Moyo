@@ -1,0 +1,5657 @@
+:root {
+    --moyo-mint: #37d2c8;
+    --moyo-blue: #4d83f4;
+    --moyo-purple: #735cf4;
+    --moyo-ink: #172033;
+    --moyo-muted: #738096;
+    --moyo-line: #dfe7f1;
+    --moyo-line-soft: #e9eef5;
+    --moyo-surface: #ffffff;
+    --moyo-bg: #f7f9fc;
+    --moyo-blue-soft: #eef5ff;
+    --moyo-shadow: 0 8px 24px rgba(42, 67, 112, 0.06);
+}
+
+/* 프로젝트 메인과 이질적인 별도 브랜드 라벨은 노출하지 않음 */
+.moyo-btn > span[aria-hidden="true"] {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 900;
+    line-height: 1;
+}
+
+.moyo-btn--primary {
+    color: #fff;
+    background: linear-gradient(135deg, #55DDBF 0%, #4a90e2 56%, #7568d8 100%);
+    box-shadow: 0 8px 20px rgba(74, 144, 226, .20);
+}
+
+.moyo-btn--primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 11px 24px rgba(74, 144, 226, .25);
+}
+
+.file-search {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 38px;
+    min-height: 38px;
+    box-sizing: border-box;
+    border: 1px solid var(--moyo-line);
+    border-radius: 10px;
+    padding: 0 10px;
+    background: #fff;
+    box-shadow: none;
+    transition: border-color .15s ease, box-shadow .15s ease, background .15s ease;
+}
+
+.file-search__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    color: #5579c9;
+    font-size: 12px;
+    line-height: 1;
+}
+
+.file-search:focus-within {
+    border-color: #8eaeef;
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(84, 135, 230, .08);
+}
+
+.file-search input {
+    flex: 1 1 auto;
+    width: 210px;
+    min-width: 0;
+    border: 0;
+    outline: 0;
+    padding: 0;
+    color: var(--moyo-ink);
+    background: transparent;
+    font: inherit;
+}
+
+.file-search input::placeholder {
+    color: #8f9aad;
+    opacity: 1;
+}
+
+.file-search input::-webkit-search-cancel-button {
+    display: none;
+}
+
+.file-search__clear {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 24px;
+    width: 24px;
+    height: 24px;
+    border: 0;
+    border-radius: 8px;
+    color: #7d899d;
+    background: transparent;
+    cursor: pointer;
+    transition: color .15s ease, background .15s ease;
+}
+
+.file-search__clear:hover {
+    color: #386ed6;
+    background: #f1f5fd;
+}
+
+.file-search__clear[hidden] {
+    display: none;
+}
+
+.file-sort-button, .view-toggle {
+    height: 38px;
+    border: 1px solid var(--moyo-line);
+    border-radius: 10px;
+    background: #fff;
+    color: var(--moyo-ink);
+    padding: 0 10px;
+}
+
+.view-toggle {
+    width: 38px;
+    padding: 0;
+    cursor: pointer;
+}
+
+.view-toggle:hover {
+    border-color: #9eb9ef;
+    background: #f8fbff;
+}
+
+.view-toggle.is-active {
+    border-color: #78a2f3;
+    color: #2f69d8;
+    background: #eef4ff;
+}
+
+.file-item.is-selected {
+    transform: translateY(-2px);
+    border-color: #78a1ef;
+    background: #fbfdff;
+    box-shadow: 0 8px 20px rgba(55, 91, 157, 0.1);
+}
+
+
+/* Keep the explorer visually and physically stable while the item popover is open. */
+.file-explorer.is-context-menu-open .file-browser-grid,
+.file-explorer.is-context-menu-open #fileFolderTree {
+    pointer-events: none;
+}
+
+.file-browser-grid:not(.is-list) .file-item.is-context-menu-source {
+    border-color: #b9c9e5;
+    background: #fcfdff;
+    box-shadow: 0 4px 12px rgba(45, 75, 131, .07);
+}
+
+.file-browser-grid:not(.is-list) .file-item.is-context-menu-source .file-item__actions {
+    opacity: 1 !important;
+    visibility: visible !important;
+    pointer-events: none !important;
+}
+
+.file-context-menu {
+    position: fixed;
+    z-index: 9999;
+    width: 160px;
+    padding: 6px;
+    border: 1px solid var(--moyo-line);
+    border-radius: 12px;
+    background: #fff;
+    box-shadow: 0 12px 30px rgba(35, 49, 78, 0.16);
+}
+
+.file-context-menu button {
+    width: 100%;
+    border: 0;
+    border-radius: 8px;
+    padding: 9px 10px;
+    background: transparent;
+    text-align: left;
+    cursor: pointer;
+}
+
+.file-context-menu button:hover {
+    background: #f3f6fb;
+}
+
+.file-context-menu .danger {
+    color: #e04d60;
+}
+
+.file-context-menu hr {
+    border: 0;
+    border-top: 1px solid var(--moyo-line-soft);
+}
+
+
+.file-sort-control {
+    position: relative;
+    width: 112px;
+    height: 38px;
+    flex: 0 0 auto;
+}
+
+.file-sort-button {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 0 10px 0 12px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.file-sort-button:hover,
+.file-sort-button[aria-expanded="true"] {
+    border-color: #9eb9ef;
+    background: #f8fbff;
+}
+
+.file-sort-button i {
+    font-size: 10px;
+    color: #60718f;
+    transition: transform .16s ease;
+}
+
+.file-sort-button[aria-expanded="true"] i {
+    transform: rotate(180deg);
+}
+
+.file-sort-menu {
+    position: absolute;
+    z-index: 10020;
+    top: calc(100% + 6px);
+    right: 0;
+    width: 138px;
+    padding: 5px;
+    border: 1px solid var(--moyo-line);
+    border-radius: 10px;
+    background: #fff;
+    box-shadow: 0 10px 24px rgba(35, 49, 78, .14);
+}
+
+.file-sort-option {
+    width: 100%;
+    min-height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    border: 0;
+    border-radius: 7px;
+    padding: 6px 9px;
+    background: transparent;
+    color: var(--moyo-ink);
+    text-align: left;
+    cursor: pointer;
+    font-size: 13px;
+}
+
+.file-sort-option:hover {
+    background: #f3f6fb;
+}
+
+.file-sort-option.is-active {
+    color: #386fd7;
+    background: #f1f6ff;
+    font-weight: 700;
+}
+
+.file-sort-option i {
+    font-size: 11px;
+    color: #4d83f4;
+}
+
+.file-explorer.is-sort-menu-open .file-browser-grid,
+.file-explorer.is-sort-menu-open #fileFolderTree {
+    pointer-events: none;
+}
+
+.file-browser-empty div {
+    font-size: 52px;
+}
+
+.file-browser-empty[hidden] {
+    display: none;
+}
+
+.moyo-dialog form > div {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 18px;
+}
+
+.moyo-dialog button {
+    border: 0;
+    border-radius: 10px;
+    padding: 10px 15px;
+    cursor: pointer;
+}
+
+.moyo-dialog button:last-child {
+    color: #fff;
+    background: var(--moyo-primary-gradient, linear-gradient(135deg, var(--moyo-mint) 0%, var(--moyo-blue) 54%, var(--moyo-purple) 100%));
+}
+
+.file-explorer__title-icon svg, .file-browser-empty__icon svg {
+    width: 23px;
+    height: 23px;
+    fill: none;
+    stroke: #4179e2;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.file-explorer h1 {
+    margin: 0;
+    line-height: 1.25;
+    letter-spacing: -0.035em;
+    color: var(--moyo-ink);
+    font-size: 27px;
+}
+
+.file-explorer__header p:last-child {
+    margin: 8px 0 0;
+    color: var(--moyo-muted);
+    font-size: 14px;
+    margin-top: 5px;
+}
+
+.file-explorer__header-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.moyo-btn {
+    
+    height: 34px;
+    padding: 0 13px;
+    border: 0;
+    font-size: 12px;
+    font-weight: 900;
+    line-height: 1;
+    cursor: pointer;
+    transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease, background-color .18s ease, color .18s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    min-height: 39px;
+    border-radius: 12px;
+}
+
+.moyo-btn--ghost {
+    
+    border: 1px solid var(--moyo-line);
+    box-shadow: 0 2px 7px rgba(50, 72, 112, 0.03);
+    color: #345b98;
+    background: linear-gradient(180deg, #ffffff, #f8fbff);
+    border-color: #dbe5f3;
+}
+
+.moyo-btn--ghost:hover {
+    border-color: #aec4ed;
+    background: #f4f8ff;
+    box-shadow: 0 7px 18px rgba(54, 91, 155, 0.08);
+}
+
+.file-tree-panel::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: -1px;
+    width: 1px;
+    height: 88px;
+    background: linear-gradient(180deg, rgba(63, 210, 199, 0.42), rgba(76, 132, 244, 0.2), transparent);
+}
+
+.file-tree-root.is-active, .file-tree-row.is-active {
+    
+    color: #2f67d0;
+    background: linear-gradient(90deg, rgba(70, 126, 240, 0.12), rgba(70, 126, 240, 0.055));
+    box-shadow: inset 2px 0 0 #4a80ea;
+}
+
+.file-breadcrumb button {
+    border: 0;
+    background: transparent;
+    color: #637087;
+    font-weight: 700;
+    cursor: pointer;
+    padding: 5px 7px;
+    border-radius: 8px;
+}
+
+.file-search, .file-sort-button, .view-toggle {
+    background: rgba(255, 255, 255, 0.88);
+}
+
+.file-item {
+    position: relative;
+    min-height: 128px;
+    padding: 14px;
+    border: 1px solid var(--moyo-line);
+    border-radius: 13px;
+    
+    cursor: pointer;
+    transition: transform 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
+    overflow: hidden;
+    border-color: #e1e8f2;
+    background: linear-gradient(180deg, #ffffff 0%, #fcfdff 100%);
+}
+
+.file-item::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    opacity: 0;
+    background: linear-gradient(90deg, #47cfc5, #4a82ed 62%, #725cf1);
+    transition: opacity 0.16s ease;
+}
+
+.file-item:hover::before, .file-item.is-selected::before {
+    opacity: 1;
+}
+
+.file-item:hover {
+    transform: translateY(-2px);
+    border-color: #b7c9e8;
+    box-shadow: 0 10px 24px rgba(45, 75, 131, 0.09);
+}
+
+.file-item__icon {
+    display: flex;
+    align-items: center;
+    width: 48px;
+    height: 48px;
+    margin-bottom: 7px;
+    justify-content: center;
+    border-radius: 14px;
+    background: linear-gradient(145deg, #f5f8ff, #eef4ff);
+    font-size: 30px;
+}
+
+.file-item__name {
+    overflow: hidden;
+    font-size: 14px;
+    font-weight: 750;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    color: #1d2940;
+}
+
+.file-item__menu {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    font-size: 18px;
+    cursor: pointer;
+    color: #687790;
+}
+
+.file-item__menu:hover {
+    
+    color: #326bd4;
+    background: #edf4ff;
+}
+
+.file-browser-empty__icon svg {
+    width: 30px;
+    height: 30px;
+}
+
+.file-browser-empty strong {
+    display: block;
+    margin: 12px 0 6px;
+    color: var(--moyo-ink);
+    margin-top: 16px;
+    font-size: 15px;
+}
+
+.file-tree-row.is-active .file-tree-row__icon {
+    color: #3f76dd;
+}
+
+.file-browser-empty {
+    padding: 68px 20px;
+    color: var(--moyo-muted);
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-radius: 14px;
+    position: relative;
+    margin-top: 14px;
+    border-color: #dce6f3;
+    
+    min-height: 310px;
+    border: 0;
+    background: transparent;
+}
+
+.file-browser-empty__icon {
+    display: grid;
+    place-items: center;
+    border: 1px solid rgba(76, 132, 244, 0.13);
+    
+    width: 58px;
+    height: 58px;
+    border-radius: 18px;
+    background: linear-gradient(145deg, rgba(76, 132, 244, 0.10), rgba(94, 115, 239, 0.055));
+    box-shadow: none;
+}
+
+body {
+    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.moyo-footer {
+    flex: 0 0 auto;
+    margin-top: 0 !important;
+    background: var(--moyo-bg);
+}
+
+@media (max-height: 820px) and (min-width: 901px) {
+    .file-explorer {
+        padding-top: 18px;
+        padding-bottom: 20px;
+    }
+
+    .file-explorer__shell {
+        min-height: 450px;
+    }
+}
+
+.file-browser-grid.is-list .file-item::before {
+    display: none;
+}
+
+.file-browser-grid.is-list .file-item:hover {
+    transform: none;
+    border-color: #e8edf4;
+    background: #f7faff;
+    box-shadow: none;
+}
+
+.file-browser-grid.is-list .file-folder-mark::before {
+    top: -4px;
+    width: 10px;
+    height: 6px;
+}
+
+/* 상단 통합 필터 · 현재 경로 · MOYO 프로필 정책 */
+.file-browser-location {
+    
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+    padding: 9px 14px;
+    border-bottom: 1px solid var(--moyo-line-soft);
+    background: #fff;
+}
+
+.file-user-avatar {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    width: 30px;
+    height: 30px;
+    overflow: hidden;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #50d7c8 0%, #4f82f5 58%, #765ff3 100%);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.72);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 800;
+    line-height: 1;
+}
+
+.file-user-avatar.is-small {
+    width: 25px;
+    height: 25px;
+    font-size: 10px;
+}
+
+.file-user-avatar img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: inherit;
+}
+
+.file-user-avatar.has-image {
+    background: #fff;
+}
+
+.file-user-avatar.has-image .file-user-avatar__initial {
+    display: none;
+}
+
+.file-uploader-cell {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    min-width: 0;
+    color: #5d6d84;
+}
+
+.file-uploader-cell > span:last-child {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.file-browser-grid:not(.is-list) .file-uploader-cell {
+    max-width: 100%;
+}
+
+.file-browser-grid.is-list .file-item__uploader, .file-browser-grid.is-list .file-uploader-cell {
+    grid-column: 1;
+}
+
+.file-browser-grid.is-list .file-item__size, .file-browser-grid.is-list .file-item__count {
+    grid-column: 3;
+    text-align: right;
+}
+
+.file-browser-grid.is-list .file-item__menu {
+    position: static;
+    align-self: center;
+    width: 32px;
+    height: 32px;
+    display: grid;
+    place-items: center;
+    padding: 0;
+    grid-area: menu;
+    justify-self: center;
+    grid-column: 6;
+}
+
+@media (max-width: 1100px) {
+    .file-browser-actions {
+        justify-content: flex-end;
+    }
+
+    .file-browser-toolbar {
+        flex-direction: row;
+        align-items: center;
+    }
+
+    .file-browser-actions .file-search {
+        flex-basis: 230px;
+        width: 230px;
+    }
+}
+
+/* 현재 경로를 도구 모음 안에 배치 */
+.file-explorer__header {
+    display: flex;
+    justify-content: space-between;
+    gap: 24px;
+    align-items: center;
+    margin-bottom: 16px;
+    flex: 0 0 auto;
+}
+
+.file-tree-panel, .file-browser-panel {
+    min-height: 0;
+    overflow: hidden;
+}
+
+.file-tree-panel__title, .file-tree-root {
+    flex: 0 0 auto;
+}
+
+.file-browser-toolbar, .file-browser-location {
+    flex: 0 0 auto;
+}
+
+/* Header/folder labels: icon only, no button-like tile */
+.file-explorer__title-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    padding-left: 0;
+    gap: 10px;
+}
+
+.file-explorer__title-icon {
+    
+    flex: 0 0 auto;
+    place-items: center;
+    
+    
+    display: inline-flex;
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+}
+
+.file-explorer__title-icon svg {
+    width: 24px;
+    height: 24px;
+}
+
+.file-explorer__title-icon > i {
+    display: inline-block;
+    font-size: 24px;
+    line-height: 1;
+    background: linear-gradient(135deg, #55DDBF 0%, #4a90e2 56%, #7568d8 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+}
+
+/* Prevent horizontal clipping inside the sidebar layout */
+.file-explorer, .file-explorer__shell, .file-browser-panel, .file-browser-toolbar, .file-browser-location, .file-browser-grid {
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+.file-browser-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--moyo-line-soft);
+    margin: -18px -22px 0;
+    
+    
+    gap: 12px;
+    padding: 10px 14px;
+    background: linear-gradient(90deg, rgba(238, 246, 255, 0.9), rgba(250, 252, 255, 0.96));
+    width: 100%;
+    flex-wrap: nowrap;
+}
+
+.file-browser-actions {
+    
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    flex: 0 0 auto;
+    min-width: 0;
+    max-width: 100%;
+}
+
+.file-browser-actions .file-search {
+    flex: 0 0 270px;
+    width: 270px;
+    min-width: 180px;
+    max-width: 270px;
+}
+
+.file-browser-grid.is-list {
+    display: block;
+    padding-top: 8px;
+    width: 100%;
+}
+
+/* File explorer work/trash bar */
+.file-work-actions, .file-trash-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.file-work-actions button, .file-trash-actions button {
+    height: 30px;
+    padding: 0 12px;
+    border: 1px solid #d8e3f3;
+    border-radius: 10px;
+    background: #fff;
+    color: #315fbd;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.file-work-actions button.danger, .file-trash-actions button.danger {
+    color: #d94b5a;
+}
+
+.file-tree-trash:hover {
+    background: #f1f6ff;
+    color: #2f67d8;
+}
+
+.file-explorer.is-trash-mode .file-explorer__header-actions, .file-explorer.is-trash-mode .file-drop-zone {
+    display: none !important;
+}
+
+.file-explorer.is-trash-mode .file-breadcrumb::before {
+    content: "휴지통";
+    font-weight: 800;
+    color: #1e3152;
+}
+
+.file-explorer.is-trash-mode .file-breadcrumb > * {
+    display: none;
+}
+
+.file-browser-status .file-work-actions button, .file-browser-status .file-trash-actions button {
+    height: 28px;
+    padding: 0 11px;
+    border-radius: 9px;
+    font-size: 12px;
+}
+
+/* Final bottom status line: one message only, actions on the right. */
+.file-browser-status__message {
+    color: #66758a;
+    font-size: 12px;
+    line-height: 1.4;
+    min-width: 0;
+    flex: 1 1 auto;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Final bottom rail: continuous across folder panel and file panel. */
+.file-browser-panel {
+    min-width: 0;
+    padding: 18px 22px 24px;
+    background: linear-gradient(180deg, rgba(247, 250, 255, 0.72) 0, rgba(255,255,255,0) 88px),
+        #fff;
+    min-height: min(620px, calc(100vh - 245px));
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    padding-bottom: 0;
+}
+
+.file-tree-trash__icon {
+    width: 14px;
+    height: 14px;
+    flex: 0 0 14px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.file-browser-status {
+    flex: 0 0 auto;
+    
+    
+    color: #66758a;
+    font-size: 12px;
+    line-height: 1;
+    user-select: none;
+    
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    min-height: 40px;
+    margin: auto -22px 0;
+    padding: 0 16px;
+    border-top: 1px solid #e2eaf5;
+    border-bottom-right-radius: 17px;
+    background: #fbfcff;
+}
+
+/* Selection polish: select cards, never browser text. */
+.file-browser-grid, .file-browser-grid .file-item, .file-browser-grid .file-item * {
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+.file-browser-grid .file-item:focus {
+    outline: none;
+}
+
+.file-browser-grid .file-item:focus-visible {
+    outline: 2px solid rgba(66, 126, 247, 0.42);
+    outline-offset: 2px;
+}
+
+.file-browser-grid .file-item.is-selected, .file-browser-grid .file-item.is-selected * {
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+/* Batch actions are controlled explicitly by JS state. */
+.file-browser-status .file-work-actions, .file-browser-status .file-trash-actions {
+    flex: 0 0 auto;
+    display: none;
+    align-items: center;
+    gap: 8px;
+}
+
+.file-browser-status .file-work-actions.is-visible, .file-browser-status .file-trash-actions.is-visible {
+    display: flex !important;
+}
+
+.file-browser-status .file-work-actions[hidden], .file-browser-status .file-trash-actions[hidden] {
+    display: none !important;
+}
+
+/* Mutually exclusive navigation state: trash vs folders */
+.file-explorer.is-trash-mode [data-tree-root]::before, .file-explorer.is-trash-mode .file-tree-row::before {
+    display: none !important;
+}
+
+.file-tree-trash:focus {
+    outline: none;
+}
+
+.file-tree-trash:focus-visible {
+    outline: none;
+    box-shadow: inset 0 0 0 2px rgba(70, 127, 245, 0.28);
+}
+
+.file-tree-root, .file-tree-row, .file-tree-trash {
+    transition: background-color .16s ease, color .16s ease, box-shadow .16s ease;
+}
+
+.file-tree-root:hover, .file-tree-row:hover, .file-tree-trash:hover {
+    background: rgba(70, 127, 245, 0.055);
+    color: #2f5fae;
+    box-shadow: none;
+}
+
+.file-tree-root.is-active::before, .file-tree-row.is-active::before, .file-explorer.is-trash-mode .file-tree-trash::before {
+    display: none !important;
+}
+
+.file-tree-root.is-active .file-tree-row__icon, .file-tree-row.is-active .file-tree-row__icon, .file-explorer.is-trash-mode .file-tree-trash__icon {
+    color: #3972dc;
+}
+
+.file-explorer.is-trash-mode [data-tree-root], .file-explorer.is-trash-mode .file-tree-row {
+    
+    
+    color: #61708a !important;
+    background: transparent !important;
+    box-shadow: none !important;
+}
+
+.file-tree-root:focus, .file-tree-row:focus, .file-tree-trash:focus {
+    outline: none;
+}
+
+.file-tree-root:focus-visible, .file-tree-row:focus-visible, .file-tree-trash:focus-visible {
+    outline: none;
+    box-shadow: inset 0 0 0 2px rgba(70, 127, 245, 0.22);
+}
+
+.file-tree-root:hover, .file-tree-row:hover {
+    background: #f2f6fc;
+    color: #356edb;
+    border-radius: 0;
+}
+
+.file-tree-root, .file-tree-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border: 0;
+    padding: 9px 10px;
+    background: transparent;
+    color: #4f5b70;
+    text-align: left;
+    cursor: pointer;
+    position: relative;
+    min-height: 36px;
+    font-weight: 650;
+    margin-inline: -12px;
+    box-sizing: border-box;
+    width: 100%;
+    margin: 0;
+    border-radius: 0;
+}
+
+.file-tree-root {
+    padding-inline: 22px;
+    padding-left: 20px;
+    padding-right: 20px;
+}
+
+/* Breadcrumb is a path, not a selected navigation item. */
+.file-breadcrumb button:focus, .file-breadcrumb button:focus-visible {
+    outline: none;
+    box-shadow: none !important;
+}
+
+.file-tree-row__icon, .file-tree-root .file-tree-row__icon, .file-item__icon.is-folder, .file-folder-mark {
+    color: #f2b52f;
+}
+
+.file-tree-row__icon svg, .file-tree-root .file-tree-row__icon svg {
+    stroke: currentColor;
+}
+
+.file-tree-root.is-active, .file-tree-row.is-active, .file-explorer.is-trash-mode .file-tree-trash {
+    
+    
+    width: 100%;
+    margin: 0;
+    border-radius: 0;
+    color: #173f82;
+    background: linear-gradient(
+        90deg,
+        rgba(77, 218, 202, 0.18) 0%,
+        rgba(70, 127, 245, 0.19) 56%,
+        rgba(126, 92, 255, 0.14) 100%
+    );
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.55), inset 0 -1px 0 rgba(73, 126, 239, .08);
+}
+
+.file-browser-grid:not(.is-list) .file-item.is-selected, .file-browser-grid.is-list .file-item.is-selected {
+    border-color: rgba(70, 127, 245, 0.72);
+    background: linear-gradient(
+        135deg,
+        rgba(77, 218, 202, 0.13) 0%,
+        rgba(70, 127, 245, 0.15) 58%,
+        rgba(126, 92, 255, 0.10) 100%
+    );
+    box-shadow: 0 0 0 1px rgba(70, 127, 245, 0.10);
+}
+
+.file-tree-row__icon {
+    transform: scaleX(1.15);
+    position: relative;
+    display: inline-block;
+    flex: 0 0 16px;
+    width: 16px;
+    height: 12px;
+    margin-right: 8px;
+    font-size: 0;
+    line-height: 1;
+    color: transparent;
+    border-radius: 2px 2px 3px 3px;
+    background: linear-gradient(180deg, #ffd66a 0%, #f5b932 100%);
+    box-shadow: inset 0 0 0 1px rgba(204, 139, 13, 0.18);
+}
+
+.file-tree-row__icon::before {
+    content: "";
+    position: absolute;
+    left: 1px;
+    top: -3px;
+    width: 7px;
+    height: 4px;
+    border-radius: 2px 2px 0 0;
+    background: #f7c444;
+}
+
+.file-tree-root.is-active .file-tree-row__icon, .file-tree-row.is-active .file-tree-row__icon {
+    color: transparent;
+    background: linear-gradient(180deg, #ffd66a 0%, #f5b932 100%);
+}
+
+.file-item__icon.is-folder {
+    
+    background: rgba(75, 130, 238, 0.06);
+}
+
+.file-folder-mark {
+    position: relative;
+    display: block;
+    
+    width: 29px;
+    height: 21px;
+    border-radius: 5px 5px 6px 6px;
+    background: linear-gradient(180deg, #ffd66a 0%, #f7b936 100%);
+    box-shadow: inset 0 0 0 1px rgba(204, 139, 13, 0.17),
+        0 4px 9px rgba(191, 133, 22, 0.13);
+}
+
+.file-folder-mark::before {
+    content: "";
+    position: absolute;
+    
+    top: -5px;
+    left: 2px;
+    width: 12px;
+    height: 7px;
+    border-radius: 4px 4px 0 0;
+    background: #f7c444;
+}
+
+/* Grid selection: MOYO gradient fill without a blue underline or edge. */
+.file-browser-grid.is-list .file-item.is-selected {
+    transform: none;
+    border-color: #d8e4f7;
+    
+    
+    border-left: 0;
+    border-top-color: transparent;
+    border-right-color: transparent;
+    border-left-color: transparent;
+    border-bottom-color: #e1e8f3;
+    background: linear-gradient(
+        90deg,
+        rgba(77, 218, 202, 0.14) 0%,
+        rgba(70, 127, 245, 0.15) 58%,
+        rgba(126, 92, 255, 0.10) 100%
+    );
+    box-shadow: none;
+}
+
+.file-browser-grid.is-list .file-item.is-selected::before, .file-browser-grid.is-list .file-item.is-selected::after {
+    content: none;
+}
+
+.file-browser-grid:not(.is-list) .file-item__icon > img, .file-browser-grid:not(.is-list) .file-item__icon > svg {
+    width: 38px;
+    height: 38px;
+    max-width: 38px;
+    max-height: 38px;
+    object-fit: contain;
+}
+
+.file-browser-grid:not(.is-list) .file-item__icon.is-folder {
+    background: transparent;
+}
+
+.file-browser-grid:not(.is-list) .file-folder-mark {
+    width: 38px;
+    height: 28px;
+    margin: 0 auto;
+    border-radius: 6px 6px 7px 7px;
+}
+
+.file-browser-grid:not(.is-list) .file-folder-mark::before {
+    top: -6px;
+    left: 3px;
+    width: 16px;
+    height: 8px;
+}
+
+.file-browser-grid:not(.is-list) .file-item[data-kind="file"] .file-uploader-cell > span:last-child {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.file-browser-grid:not(.is-list) .file-item__date, .file-browser-grid:not(.is-list) .file-item__size, .file-browser-grid:not(.is-list) .file-item__count {
+    display: none;
+}
+
+.file-browser-grid:not(.is-list) .file-item[data-kind="file"] .file-item__meta {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    min-width: 0;
+    margin-top: auto;
+    color: #6f7e94;
+    justify-content: flex-start;
+    text-align: left;
+}
+
+.file-browser-grid:not(.is-list) .file-item[data-kind="file"] .file-uploader-cell {
+    display: inline-flex;
+    align-items: center;
+    min-width: 0;
+    max-width: 100%;
+    gap: 6px;
+    justify-content: flex-start;
+    width: 100%;
+    text-align: left;
+}
+
+.file-browser-grid.is-list .file-item__icon, .file-browser-grid.is-list .file-item__icon.is-folder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+}
+
+.file-browser-grid.is-list .file-item__icon > img, .file-browser-grid.is-list .file-item__icon > svg {
+    width: 30px;
+    height: 30px;
+    max-width: 30px;
+    max-height: 30px;
+    object-fit: contain;
+}
+
+.file-browser-grid.is-list .file-folder-mark {
+    width: 25px;
+    height: 18px;
+    margin: 0;
+    box-shadow: none;
+}
+
+.file-folder-back[hidden] {
+    display: none !important;
+}
+
+.file-folder-back:hover {
+    border-color: #b9cff1;
+    background: linear-gradient(135deg, rgba(65, 207, 197, 0.10), rgba(75, 132, 242, 0.11) 62%, rgba(115, 92, 242, 0.07));
+    color: #315fd1;
+}
+
+.file-folder-back:focus {
+    outline: none;
+}
+
+.file-folder-back:focus-visible {
+    box-shadow: 0 0 0 3px rgba(76, 132, 244, 0.16);
+}
+
+.file-folder-back {
+    flex: 0 0 30px;
+    width: 30px;
+    height: 30px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 1px solid #d9e4f3;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.92);
+    color: #4267a8;
+    cursor: pointer;
+    box-shadow: 0 3px 10px rgba(47, 85, 145, 0.06);
+    align-self: center;
+}
+
+.file-folder-back svg {
+    width: 17px;
+    height: 17px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    transform: translateY(1px);
+}
+
+.file-tree-row-wrap:hover {
+    background: rgba(70, 127, 245, 0.055);
+}
+
+.file-tree-row-wrap .file-tree-row {
+    flex: 1 1 auto;
+    min-width: 0;
+    width: auto;
+    padding-left: calc(20px + (var(--tree-depth, 0) * 14px));
+    padding-right: 38px;
+    background: transparent !important;
+    box-shadow: none !important;
+}
+
+.file-tree-row__name {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.file-tree-row-wrap:hover .file-tree-row__more, .file-tree-row-wrap.is-active .file-tree-row__more, .file-tree-row__more:focus-visible {
+    opacity: 1;
+}
+
+.file-tree-row__more:hover {
+    background: rgba(70, 127, 245, 0.10);
+    color: #2f67d0;
+}
+
+.file-tree-row__more:focus, .file-tree-row__more:focus-visible {
+    outline: none;
+}
+
+.file-tree-row__more:focus-visible {
+    box-shadow: 0 0 0 2px rgba(70, 127, 245, 0.24);
+}
+
+.file-explorer.is-trash-mode .file-tree-row-wrap, .file-explorer.is-trash-mode .file-tree-row-wrap:hover, .file-explorer.is-trash-mode .file-tree-row-wrap.is-active {
+    background: transparent !important;
+}
+
+html, body {
+    margin: 0;
+    
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+    background: radial-gradient(circle at 7% 0%,
+            rgba(55, 210, 200, 0.11) 0%,
+            rgba(55, 210, 200, 0.045) 19%,
+            rgba(55, 210, 200, 0) 38%),
+        radial-gradient(circle at 52% -4%,
+            rgba(77, 131, 244, 0.105) 0%,
+            rgba(77, 131, 244, 0.04) 23%,
+            rgba(77, 131, 244, 0) 43%),
+        radial-gradient(circle at 96% 0%,
+            rgba(115, 92, 244, 0.085) 0%,
+            rgba(115, 92, 244, 0.032) 22%,
+            rgba(115, 92, 244, 0) 40%),
+        #f8faff;
+    background-attachment: fixed;
+}
+
+.file-explorer {
+    padding: 24px 44px 36px;
+    
+    color: var(--moyo-ink);
+    
+    flex: 1 0 auto;
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    height: calc(100vh - 68px);
+    min-height: 0;
+    padding-top: 18px;
+    padding-bottom: 12px;
+    overflow: hidden;
+    width: auto;
+    max-width: 100%;
+    overflow-x: clip;
+    background: radial-gradient(circle at 4% 0%,
+            rgba(55, 210, 200, 0.095) 0%,
+            rgba(55, 210, 200, 0.032) 22%,
+            rgba(55, 210, 200, 0) 40%),
+        radial-gradient(circle at 51% -5%,
+            rgba(77, 131, 244, 0.09) 0%,
+            rgba(77, 131, 244, 0.03) 25%,
+            rgba(77, 131, 244, 0) 44%),
+        radial-gradient(circle at 98% 0%,
+            rgba(115, 92, 244, 0.072) 0%,
+            rgba(115, 92, 244, 0.024) 22%,
+            rgba(115, 92, 244, 0) 39%),
+        linear-gradient(180deg, #f8faff 0%, #fbfcff 48%, #ffffff 100%);
+}
+
+.file-explorer__shell {
+    display: grid;
+    grid-template-columns: 210px minmax(0, 1fr);
+    overflow: hidden;
+    background: var(--moyo-surface);
+    border: 1px solid var(--moyo-line);
+    border-radius: 18px;
+    border-color: #dce6f2;
+    flex: 1 1 auto;
+    height: auto;
+    min-height: 0;
+    max-height: none;
+    width: 100%;
+    box-shadow: 0 12px 34px rgba(47, 77, 128, 0.075);
+}
+
+.file-browser-grid:not(.is-list) .file-item.is-selected::before {
+    opacity: 0;
+}
+
+/* File name dialog - MOYO common modal style */
+.moyo-dialog {
+    width: min(420px, calc(100vw - 32px));
+    max-width: none;
+    overflow: hidden;
+    border: 1px solid rgba(120, 145, 190, 0.18);
+    border-radius: 18px;
+    padding: 0;
+    background: #fff;
+    box-shadow: 0 24px 70px rgba(25, 39, 72, 0.22);
+}
+
+.moyo-dialog::backdrop {
+    
+    background: rgba(27, 36, 56, 0.34);
+    backdrop-filter: blur(1px);
+}
+
+.moyo-dialog__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.moyo-dialog h2 {
+    margin: 0;
+    color: #101b34;
+    font-size: 22px;
+    font-weight: 900;
+    line-height: 1.3;
+}
+
+.moyo-dialog__close {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border: 0;
+    border-radius: 50%;
+    padding: 0;
+    color: #64748b;
+    background: transparent;
+    cursor: pointer;
+    transition: color .16s ease, background .16s ease, transform .16s ease;
+}
+
+.moyo-dialog__close svg {
+    width: 18px;
+    height: 18px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+}
+
+.moyo-dialog__close:hover {
+    color: #315fcb;
+    background: linear-gradient(135deg, rgba(61, 211, 194, .13), rgba(74, 132, 255, .11) 56%, rgba(126, 91, 255, .10));
+    transform: rotate(3deg);
+}
+
+.moyo-dialog__close:focus-visible {
+    outline: 0;
+    box-shadow: 0 0 0 3px rgba(75, 132, 247, .16);
+}
+
+.moyo-dialog__divider {
+    height: 2px;
+    margin: 13px 0 16px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, rgba(61, 211, 194, .78), rgba(74, 132, 255, .76) 55%, rgba(126, 91, 255, .74));
+}
+
+.moyo-dialog input {
+    box-sizing: border-box;
+    width: 100%;
+    height: 42px;
+    border: 1px solid #d9e2f0;
+    border-radius: 11px;
+    padding: 0 13px;
+    color: #17223b;
+    background: #fff;
+    font: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    transition: border-color .16s ease, box-shadow .16s ease, background .16s ease;
+}
+
+.moyo-dialog input:hover {
+    border-color: #c3d2e8;
+}
+
+.moyo-dialog input:focus {
+    outline: 0;
+    border-color: #8caef4;
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(77, 131, 244, .10);
+}
+
+.moyo-dialog .moyo-dialog__confirm:active {
+    transform: translateY(0);
+}
+
+.moyo-dialog .moyo-dialog__confirm:focus-visible {
+    outline: 0;
+    box-shadow: 0 0 0 3px rgba(77, 131, 244, .17), 0 8px 18px rgba(74, 125, 230, .22);
+}
+
+.moyo-dialog form > .moyo-dialog__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-top: 0;
+}
+
+.moyo-dialog form > .moyo-dialog__divider {
+    display: block;
+    margin: 13px 0 16px;
+}
+
+.moyo-dialog button.moyo-dialog__close, .moyo-dialog button.moyo-dialog__close:last-child {
+    width: 32px;
+    height: 32px;
+    border: 0;
+    border-radius: 50%;
+    padding: 0;
+    color: #64748b;
+    background: transparent;
+    box-shadow: none;
+}
+
+.moyo-dialog button.moyo-dialog__close:hover, .moyo-dialog button.moyo-dialog__close:last-child:hover {
+    color: #315fcb;
+    background: linear-gradient(135deg, rgba(61, 211, 194, .13), rgba(74, 132, 255, .11) 56%, rgba(126, 91, 255, .10));
+}
+
+.moyo-dialog form {
+    box-sizing: border-box;
+    width: 100%;
+    padding: 20px 22px 18px;
+}
+
+.moyo-dialog form > .moyo-dialog__divider, .moyo-dialog__divider {
+    width: auto;
+    margin: 13px -22px 18px;
+    border-radius: 0;
+}
+
+.moyo-dialog__field {
+    display: block;
+    margin: 0;
+}
+
+.moyo-dialog .moyo-dialog__confirm {
+    
+    cursor: pointer;
+    transition: transform .16s ease, box-shadow .16s ease, filter .16s ease;
+    min-width: 0;
+    width: auto;
+    height: 34px;
+    padding: 0 13px;
+    border: 0;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #55DDBF 0%, #4a90e2 56%, #7568d8 100%);
+    box-shadow: 0 8px 20px rgba(74, 144, 226, .20);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 900;
+    line-height: 1;
+}
+
+.moyo-dialog .moyo-dialog__confirm:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 11px 24px rgba(74, 144, 226, .25);
+    filter: none;
+}
+
+/* File name/new folder dialog: MOYO full-width primary action */
+.moyo-dialog .moyo-dialog__confirm:hover, .moyo-dialog button.moyo-dialog__confirm:hover, .moyo-dialog button.moyo-dialog__confirm:last-child:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 12px 26px rgba(74, 144, 226, .28);
+    filter: none;
+}
+
+.moyo-dialog .moyo-dialog__confirm:active, .moyo-dialog button.moyo-dialog__confirm:active {
+    transform: translateY(0);
+    box-shadow: 0 7px 17px rgba(74, 144, 226, .21);
+}
+
+/* Compact file-name/new-folder dialog: right-aligned MOYO primary action */
+.moyo-dialog__actions, .moyo-dialog form > .moyo-dialog__actions {
+    
+    
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    width: 100%;
+    margin-top: 14px;
+}
+
+.moyo-dialog .moyo-dialog__confirm, .moyo-dialog button.moyo-dialog__confirm, .moyo-dialog button.moyo-dialog__confirm:last-child {
+    
+    border: 0;
+    color: #fff;
+    background: linear-gradient(135deg, #55DDBF 0%, #4A90E2 56%, #7568D8 100%);
+    box-shadow: 0 9px 22px rgba(74, 144, 226, .22);
+    font-weight: 900;
+    line-height: 1;
+    cursor: pointer;
+    transition: transform .16s ease, box-shadow .16s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: auto;
+    min-width: 72px;
+    height: 36px;
+    padding: 0 16px;
+    border-radius: 10px;
+    font-size: 12px;
+}
+
+/* 자료실 좌측 현재 그룹·프로젝트 식별 영역 */
+.file-tree-context__avatar img, .file-tree-context__fallback {
+    width: 100%;
+    height: 100%;
+}
+
+.file-tree-context__avatar img {
+    display: block;
+    object-fit: cover;
+    background: transparent;
+}
+
+.file-tree-context__avatar.is-default {
+    background: linear-gradient(135deg, rgba(55, 210, 200, .96), rgba(77, 131, 244, .95) 56%, rgba(115, 92, 244, .94));
+    box-shadow: 0 5px 14px rgba(77, 131, 244, .16);
+}
+
+.file-tree-context__fallback {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 15px;
+    font-weight: 900;
+}
+
+.file-tree-context__fallback[hidden] {
+    display: none;
+}
+
+.file-tree-context__avatar.is-personal {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    color: var(--moyo-blue);
+    background: var(--moyo-blue-soft);
+    font-size: 17px;
+}
+
+.file-tree-context__text strong, .file-tree-context__text span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.file-tree-context__avatar {
+    position: relative;
+    flex: 0 0 38px;
+    overflow: hidden;
+    background: transparent;
+    flex-basis: 44px;
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+}
+
+.file-tree-context__text {
+    display: flex;
+    flex: 1 1 auto;
+    min-width: 0;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.file-tree-context__text strong {
+    color: var(--moyo-ink);
+    font-size: 13px;
+    font-weight: 900;
+    line-height: 1.3;
+}
+
+.file-tree-context__text span {
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1.35;
+    color: #66758d;
+}
+
+.file-browser-grid:not(.is-list) .file-item[data-kind="folder"] .file-item__meta {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-width: 0;
+    margin-top: auto;
+    color: #78879b;
+    text-align: center;
+}
+
+.file-browser-grid:not(.is-list) .file-item[data-kind="folder"] .file-item__count {
+    display: block;
+    width: 100%;
+    overflow: hidden;
+    color: #78879b;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.3;
+    text-align: center;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.file-browser-grid:not(.is-list) .file-item[data-kind="file"] .file-item__meta, .file-browser-grid:not(.is-list) .file-item[data-kind="file"] .file-uploader-cell {
+    justify-content: center;
+    text-align: center;
+}
+
+.file-scope-nav__item.is-current {
+    color: #315fe8;
+    background: linear-gradient(90deg, rgba(73, 213, 199, .10), rgba(80, 132, 245, .10), rgba(137, 92, 246, .08));
+}
+
+.file-scope-nav__item.is-current i {
+    color: #4d7ff1;
+}
+
+.file-scope-group > summary > .fa-chevron-down {
+    margin-left: auto;
+    font-size: 10px;
+    color: #9ba7b7;
+    transition: transform .18s ease;
+}
+
+.file-scope-group[open] > summary > .fa-chevron-down {
+    transform: rotate(180deg);
+}
+
+.file-browser-grid:not(.is-list) .file-item[data-kind="file"] .file-item__meta, .file-browser-grid:not(.is-list) .file-item[data-kind="folder"] .file-item__meta {
+    margin-top: 11px;
+}
+
+.file-browser-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(145px, 170px));
+    gap: 12px;
+    padding-top: 18px;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    
+    position: relative;
+    isolation: isolate;
+}
+
+.file-browser-grid .file-item {
+    position: relative;
+    z-index: 1;
+}
+
+.file-browser-grid .file-selection-box {
+    position: absolute;
+    z-index: 50;
+    display: block;
+    box-sizing: border-box;
+    min-width: 1px;
+    min-height: 1px;
+    border: 1px solid rgba(82, 119, 245, 0.72);
+    border-radius: 6px;
+    background: linear-gradient(
+        135deg,
+        rgba(55, 207, 190, 0.16) 0%,
+        rgba(75, 139, 244, 0.14) 52%,
+        rgba(125, 91, 255, 0.14) 100%
+    );
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.42);
+    pointer-events: none;
+    user-select: none;
+}
+
+/* 개인/그룹 자료실 안의 프로젝트는 별도 페이지 링크가 아니라 탐색 가능한 특수 폴더다. */
+.file-tree-root > i {
+    width: 17px;
+    color: #f0b72f;
+    text-align: center;
+}
+
+.file-project-row__chevron {
+    width: 12px;
+    font-size: 9px;
+    color: #a1a9b8;
+    transition: transform .18s ease;
+}
+
+.file-project-node.is-open > .file-project-row .file-project-row__chevron {
+    transform: rotate(90deg);
+}
+
+.file-project-row__name {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 13px;
+    font-weight: 750;
+}
+
+.file-explorer.is-trash-mode .file-tree-new-folder {
+    display: none !important;
+}
+
+.file-tree {
+    overscroll-behavior: contain;
+    width: 100%;
+    flex: 0 1 auto;
+    min-height: 0;
+    max-height: 38%;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.file-project-tree__title {
+    color: #8993a6;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .04em;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    margin: -10px 0 0;
+    padding: 12px 20px 8px;
+    background: #fff;
+}
+
+.file-project-row {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 8px 9px;
+    border: 0;
+    background: transparent;
+    color: #525e73;
+    text-align: left;
+    cursor: pointer;
+    min-height: 38px;
+    padding-left: 20px;
+    padding-right: 14px;
+    border-radius: 0;
+}
+
+.file-project-row:hover, .file-project-row.is-active {
+    background: linear-gradient(90deg, rgba(55, 210, 200, .09), rgba(77, 131, 244, .09), rgba(115, 92, 244, .10));
+    color: #5948c8;
+    border-radius: 0;
+}
+
+/* Trash remains the only element anchored to the panel bottom. */
+.file-tree-panel > .file-tree {
+    flex: 0 0 auto !important;
+    width: 100%;
+    min-height: 0;
+    max-height: 220px;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.file-tree-panel > .file-project-tree {
+    flex: 0 0 220px !important;
+    width: 100%;
+    min-height: 220px;
+    max-height: 220px;
+    margin: 8px 0 0 !important;
+    padding-top: 10px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    border-top: 1px solid var(--moyo-line-soft);
+}
+
+.file-project-row, .file-project-row:focus, .file-project-row:focus-visible {
+    border: 0;
+    outline: 0;
+    box-shadow: none;
+}
+
+.file-tree-root-row .file-tree-root {
+    flex: 1 1 auto;
+    min-width: 0;
+    width: 100%;
+    min-height: 46px;
+    padding-left: 20px;
+    padding-right: 20px;
+}
+
+.file-explorer.is-trash-mode .file-tree-bottom-actions {
+    display: none !important;
+}
+
+.file-tree-panel > .file-tree-trash-wrap {
+    
+    margin-top: auto !important;
+    flex: 0 0 auto;
+}
+
+.file-project-node.is-open > .file-project-row:not(.is-active) {
+    background: transparent;
+    color: #525e73;
+}
+
+/* Project child folders use the whole tree row as the active surface. */
+.file-project-children .file-tree-row-wrap {
+    width: 100%;
+    margin-left: 0;
+    border-radius: 0;
+}
+
+.file-project-children .file-tree-row-wrap.is-active {
+    width: 100%;
+    background: linear-gradient(90deg, rgba(55, 210, 200, .10), rgba(77, 131, 244, .10), rgba(115, 92, 244, .12));
+}
+
+.file-project-children .file-tree-row-wrap.is-active .file-tree-row {
+    background: transparent !important;
+}
+
+/* 최근 파일 */
+.file-explorer.is-trash-mode .file-tree-recent {
+    pointer-events: auto;
+}
+
+/* 최근 파일은 전체 파일과 동일한 시스템 행 디자인을 사용한다. */
+.file-tree-recent:hover {
+    
+    background: rgba(79, 209, 197, .055);
+}
+
+.file-tree-recent.is-active {
+    
+    background: linear-gradient(90deg, rgba(79, 209, 197, .13), rgba(91, 141, 239, .12), rgba(145, 105, 220, .12));
+    color: #24324b;
+}
+
+.file-tree-recent.is-active::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: linear-gradient(180deg, #4fd1c5, #5b8def, #9169dc);
+}
+
+.file-tree-recent i {
+    width: 18px;
+    flex: 0 0 18px;
+    text-align: center;
+    color: #71809a;
+    font-size: 15px;
+}
+
+.file-tree-recent.is-active i {
+    color: #5b78df;
+}
+
+/* === MOYO file tree final hierarchy === */
+.file-tree-nav-row, .file-tree-root, .file-tree-recent, .file-project-row, .file-friend-share-row, .file-tree-row {
+    position: relative;
+    box-sizing: border-box;
+    width: 100%;
+    min-height: 38px;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    margin: 0;
+    padding: 0 12px;
+    border: 0;
+    border-radius: 10px;
+    outline: 0;
+    background: transparent;
+    color: #5f6b7c;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    text-align: left;
+    cursor: pointer;
+}
+
+.file-tree-nav-row:hover, .file-tree-root:hover, .file-tree-recent:hover, .file-project-row:hover, .file-friend-share-row:hover, .file-tree-row:hover {
+    background: #f3f6fa;
+    color: #39445a;
+}
+
+.file-tree-nav-row.is-active, .file-tree-root.is-active, .file-tree-recent.is-active, .file-project-row.is-active, .file-friend-share-row.is-active, .file-tree-row.is-active, .file-tree-row-wrap.is-active {
+    border: 0 !important;
+    outline: 0 !important;
+    box-shadow: none !important;
+    background: linear-gradient(90deg, rgba(79,209,197,.13), rgba(91,141,239,.12), rgba(145,105,220,.12)) !important;
+    color: #39445a !important;
+}
+
+/* 활성 앞 세로 바는 어느 항목에도 사용하지 않는다. */
+.file-tree-nav-row::before, .file-tree-root::before, .file-tree-recent::before, .file-project-row::before, .file-friend-share-row::before, .file-tree-row::before, .file-tree-row-wrap::before, .file-tree-nav-row.is-active::before, .file-tree-root.is-active::before, .file-tree-recent.is-active::before, .file-project-row.is-active::before, .file-friend-share-row.is-active::before, .file-tree-row.is-active::before, .file-tree-row-wrap.is-active::before {
+    content: none !important;
+    display: none !important;
+}
+
+.file-tree-nav-row:focus, .file-tree-root:focus, .file-tree-recent:focus, .file-project-row:focus, .file-friend-share-row:focus, .file-tree-row:focus, .file-tree-nav-row:focus-visible, .file-tree-root:focus-visible, .file-tree-recent:focus-visible, .file-project-row:focus-visible, .file-friend-share-row:focus-visible, .file-tree-row:focus-visible {
+    outline: 0 !important;
+    box-shadow: none !important;
+}
+
+.file-tree-section--owned > .file-tree {
+    margin-top: 2px;
+}
+
+.file-project-tree {
+    min-height: 150px;
+    margin-top: 8px;
+    padding-top: 10px;
+    border-top: 1px solid var(--moyo-line-soft);
+    flex: 0 0 auto;
+    max-height: 230px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 0;
+}
+
+.file-project-row__icon {
+    width: 17px;
+    
+    font-size: 16px;
+    color: #765ce8 !important;
+}
+
+.file-project-children .file-tree-row {
+    width: 100%;
+    border-radius: 0;
+    padding-left: calc(28px + (var(--tree-depth, 0) * 16px));
+}
+
+.file-project-row.is-active .file-project-row__chevron {
+    transform: rotate(90deg);
+}
+
+.file-friend-share-tree {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.file-friend-share-row i {
+    color: #e2a73b;
+}
+
+.file-explorer.is-trash-mode .file-tree-trash {
+    
+    
+    box-shadow: inset 3px 0 0 #4a7ff5;
+    background: linear-gradient(90deg, rgba(79,209,197,.13), rgba(91,141,239,.12), rgba(145,105,220,.12));
+    color: #39445a;
+}
+
+.file-tree-panel {
+    
+    border-right: 1px solid var(--moyo-line-soft);
+    position: relative;
+    background: linear-gradient(180deg, rgba(240, 246, 255, 0.72), rgba(251, 252, 254, 0.96) 150px),
+        #fbfcfe;
+    
+    padding-bottom: 0;
+    padding: 18px 0 0;
+    
+    
+    display: flex;
+    flex-direction: column;
+    
+    min-height: 0 !important;
+    overflow: hidden !important;
+}
+
+.file-tree-quick, .file-tree-section, .file-tree-section--owned, .file-tree-section--friend, .file-project-tree, .file-friend-share-tree, #fileFolderTree, .file-tree, .file-project-children {
+    flex: 0 0 auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    height: auto !important;
+    overflow: visible !important;
+}
+
+.file-tree-section--owned > .file-tree, .file-tree-panel > .file-tree, .file-tree-panel > .file-project-tree, .file-project-tree {
+    max-height: none !important;
+    overflow-x: visible !important;
+    overflow-y: visible !important;
+}
+
+.file-tree-row-wrap, .file-project-node, .file-project-children, .file-friend-share-tree {
+    width: 100%;
+}
+
+.file-tree-row-wrap, .file-tree-row, .file-project-row, .file-friend-share-row, .file-tree-root, .file-tree-recent {
+    max-width: 100%;
+}
+
+/* 내부 스크롤에서 생기던 잘린 폴더 아이콘과 별도 스크롤바 제거 */
+#fileFolderTree::-webkit-scrollbar, .file-project-tree::-webkit-scrollbar, .file-project-children::-webkit-scrollbar, .file-friend-share-tree::-webkit-scrollbar {
+    display: none;
+}
+
+.file-tree-row-wrap {
+    
+    display: flex;
+    align-items: stretch;
+    min-width: 0;
+    transition: background .16s ease, color .16s ease;
+    
+    
+    position: relative;
+    width: 100% !important;
+    max-width: none !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    box-sizing: border-box;
+    border-radius: 10px;
+}
+
+.file-tree-row-wrap.is-active {
+    
+    width: 100% !important;
+    max-width: none !important;
+    background: linear-gradient(90deg, rgba(79, 209, 197, .13), rgba(91, 141, 239, .12), rgba(145, 105, 220, .12)) !important;
+}
+
+.file-tree-row-wrap.is-active .file-tree-row {
+    
+    width: 100% !important;
+    max-width: none !important;
+    box-sizing: border-box;
+    background: transparent !important;
+}
+
+.file-tree-row {
+    padding-left: calc(12px + (var(--tree-depth, 0) * 16px));
+    padding-right: 34px;
+    width: 100% !important;
+    max-width: none !important;
+    box-sizing: border-box;
+}
+
+/* Use the same left marker for every selectable tree row. */
+.file-tree-nav-row, .file-tree-root, .file-tree-recent, .file-project-row, .file-friend-share-row, .file-tree-row-wrap {
+    position: relative;
+}
+
+.file-tree-nav-row.is-active::before, .file-tree-root.is-active::before, .file-tree-recent.is-active::before, .file-project-row.is-active::before, .file-friend-share-row.is-active::before, .file-tree-row-wrap.is-active::before {
+    content: "" !important;
+    display: block !important;
+    position: absolute;
+    left: 0;
+    top: 7px;
+    bottom: 7px;
+    width: 3px;
+    border-radius: 0 3px 3px 0;
+    background: linear-gradient(180deg, #4fd1c5 0%, #5b8def 52%, #9169dc 100%);
+    pointer-events: none;
+}
+
+/* The inner button must not create a second active marker. */
+.file-tree-row.is-active::before {
+    content: none !important;
+    display: none !important;
+}
+
+.file-tree-row__more {
+    position: absolute;
+    z-index: 2;
+    display: inline-grid;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: #66758e;
+    font-size: 18px;
+    line-height: 1;
+    opacity: 0;
+    cursor: pointer;
+    transition: opacity .15s ease, background .15s ease, color .15s ease;
+    
+    
+    
+    top: 50% !important;
+    right: 10px !important;
+    transform: translateY(-50%) !important;
+}
+
+.file-tree-quick, .file-tree-section, .file-tree-section--owned, .file-tree-section--friend, .file-project-tree, .file-friend-share-tree, #fileFolderTree, .file-tree, .file-project-node, .file-project-children, .file-tree-row-wrap, .file-tree-nav-row, .file-tree-root, .file-tree-recent, .file-project-row, .file-friend-share-row {
+    width: 100% !important;
+    max-width: none !important;
+    box-sizing: border-box !important;
+}
+
+.file-tree-trash-wrap {
+    
+    
+    
+    
+    
+    
+    
+    
+    margin-inline: 0;
+    
+    margin-top: auto;
+    padding-top: 10px;
+    flex: 0 0 40px !important;
+    min-height: 40px !important;
+    height: 40px !important;
+    margin: 0 -12px 0 !important;
+    padding: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    border-top: 1px solid #e2eaf5 !important;
+    background: #fbfcff !important;
+    width: calc(100% + 24px) !important;
+    max-width: none !important;
+    margin-left: -12px !important;
+    margin-right: -12px !important;
+    box-sizing: border-box !important;
+}
+
+.file-tree-trash {
+    
+    
+    gap: 8px;
+    border: 0;
+    background: transparent;
+    color: #61708a;
+    font-weight: 700;
+    cursor: pointer;
+    
+    
+    
+    margin: 0;
+    padding-left: 20px;
+    padding-right: 20px;
+    
+    height: 40px !important;
+    min-height: 40px !important;
+    padding: 0 22px !important;
+    border-radius: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+.file-tree-nav-row, .file-tree-root, .file-tree-recent, .file-project-row, .file-friend-share-row, .file-tree-row-wrap, .file-tree-row {
+    border-radius: 0 !important;
+}
+
+.file-tree-nav-row.is-active, .file-tree-root.is-active, .file-tree-recent.is-active, .file-project-row.is-active, .file-friend-share-row.is-active, .file-tree-row-wrap.is-active, .file-tree-row.is-active, .file-tree-row-wrap.is-active .file-tree-row {
+    border-radius: 0 !important;
+}
+
+.file-selection-box--viewport {
+    position: fixed;
+    box-sizing: border-box;
+    min-width: 1px;
+    min-height: 1px;
+    border: 1px solid rgba(82, 119, 245, 0.82);
+    border-radius: 3px;
+    background: linear-gradient(135deg, rgba(55, 207, 190, 0.20), rgba(75, 139, 244, 0.18) 52%, rgba(125, 91, 255, 0.18));
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.48);
+    pointer-events: none;
+    user-select: none;
+}
+
+.file-tree-recent {
+    
+    
+    position: relative;
+    width: 100%;
+    
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 20px;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    color: #31415c;
+    font: inherit;
+    font-weight: 800;
+    text-align: left;
+    cursor: pointer;
+    min-height: 36px !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+}
+
+.file-tree-section {
+    
+    width: 100%;
+    margin-top: 6px !important;
+}
+
+.file-tree-section + .file-tree-section {
+    
+    margin-top: 14px !important;
+}
+
+.file-tree-section__title, .file-project-tree__title {
+    margin: 0;
+    padding: 0 12px 7px;
+    color: #7f8a9d;
+    font-size: 11px;
+    font-weight: 900;
+    line-height: 1.3;
+    letter-spacing: .04em;
+    position: static !important;
+    top: auto !important;
+    z-index: auto !important;
+    background: transparent !important;
+    padding-top: 0 !important;
+    padding-bottom: 5px !important;
+}
+
+.file-browser-location--toolbar {
+    flex: 1 1 auto;
+    min-height: 0;
+    padding: 0;
+    border-bottom: 0;
+    background: transparent;
+    overflow: hidden;
+    
+    min-width: 0;
+    column-gap: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.file-breadcrumb {
+    
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #8a96a8;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+.file-breadcrumb > span:not(:last-child) {
+    color: #a0abbb;
+    font-weight: 600;
+}
+
+.file-breadcrumb > span:last-child {
+    color: #20304b;
+    font-weight: 800;
+}
+
+.file-breadcrumb button, .file-breadcrumb button:last-child {
+    
+    
+    
+    
+    min-width: 0;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    color: #68758a;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.file-breadcrumb button:last-child {
+    background: rgba(76, 132, 244, 0.075);
+    
+    
+    color: #20304b !important;
+    font-weight: 800 !important;
+}
+
+.file-breadcrumb button:hover {
+    
+    
+    background: transparent !important;
+    
+    text-underline-offset: 3px;
+    color: #3d6fd8 !important;
+    text-decoration: none !important;
+}
+
+.file-breadcrumb-count {
+    white-space: nowrap;
+    
+    flex: 0 0 auto;
+    padding: 3px 7px;
+    border: 1px solid #e1e8f2;
+    border-radius: 999px;
+    background: #fff;
+    color: #8794a8;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.file-tree-context {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    gap: 12px;
+    margin: -2px 0 12px;
+    padding: 2px 10px 15px;
+    border-bottom: 1px solid rgba(72, 111, 170, 0.18);
+    margin-bottom: 2px !important;
+}
+
+.file-tree-navigation {
+    display: flex;
+    
+    
+    flex-direction: column;
+    
+    
+    
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    
+    padding: 12px 2px 14px !important;
+    scrollbar-gutter: auto !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    padding-top: 0 !important;
+}
+
+.file-tree-quick {
+    
+    margin-top: 0 !important;
+    margin-bottom: 2px !important;
+}
+
+.file-item[data-kind="folder"], .file-tree-root, .file-tree-row, .file-project-row, .file-friend-share-row {
+    position: relative;
+}
+
+.file-item[data-kind="folder"].is-drop-target {
+    z-index: 4;
+    border-color: #5d8df5 !important;
+    background: linear-gradient(135deg, rgba(67, 211, 193, .22), rgba(91, 141, 239, .20) 52%, rgba(145, 105, 220, .19)) !important;
+    box-shadow: 0 0 0 3px rgba(91, 141, 239, .14), 0 12px 26px rgba(58, 88, 154, .14) !important;
+    transform: translateY(-2px);
+}
+
+.file-item[data-kind="folder"].is-drop-target .file-item__icon, .file-item[data-kind="folder"].is-drop-target .file-folder-icon, .file-item[data-kind="folder"].is-drop-target > i {
+    transform: scale(1.09);
+    filter: drop-shadow(0 5px 8px rgba(76, 105, 171, .18));
+}
+
+.file-item[data-kind="folder"].is-drop-target::after, .file-item[data-kind="folder"].is-drop-forbidden::after {
+    content: attr(data-drop-label);
+    position: absolute;
+    left: 50%;
+    bottom: 13px;
+    z-index: 6;
+    transform: translateX(-50%);
+    min-width: 86px;
+    padding: 5px 10px;
+    border-radius: 999px;
+    background: rgba(255,255,255,.94);
+    box-shadow: 0 5px 14px rgba(41, 61, 105, .14);
+    color: #3f67c8;
+    font-size: 11px;
+    font-weight: 800;
+    line-height: 1;
+    text-align: center;
+    white-space: nowrap;
+    pointer-events: none;
+}
+
+.file-item[data-kind="folder"].is-drop-forbidden {
+    border-color: rgba(224, 89, 101, .72) !important;
+    background: rgba(255, 239, 241, .92) !important;
+    box-shadow: 0 0 0 3px rgba(224, 89, 101, .10) !important;
+}
+
+.file-item[data-kind="folder"].is-drop-forbidden::after {
+    color: #cf4d5b;
+}
+
+.file-tree-root.is-drop-target, .file-tree-row.is-drop-target, .file-project-row.is-drop-target, .file-friend-share-row.is-drop-target {
+    background: linear-gradient(90deg, rgba(67, 211, 193, .18), rgba(91, 141, 239, .14) 58%, rgba(145, 105, 220, .12)) !important;
+    box-shadow: inset 3px 0 0 #58a1ef;
+}
+
+.file-tree-root.is-drop-target::after, .file-tree-row.is-drop-target::after, .file-project-row.is-drop-target::after, .file-friend-share-row.is-drop-target::after {
+    content: attr(data-drop-label);
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #4f72c9;
+    font-size: 10px;
+    font-weight: 800;
+    pointer-events: none;
+}
+
+.file-item.is-drag-source {
+    opacity: .58;
+}
+
+.file-item__actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 4px;
+}
+
+.file-item__menu {
+    width: 28px;
+    height: 28px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: #71819a;
+    display: inline-grid;
+    place-items: center;
+    padding: 0;
+    cursor: pointer;
+}
+
+.file-item__menu:hover {
+    background: #eef4ff;
+    color: #426fd2;
+}
+
+.file-browser-grid:not(.is-list) .file-item__uploader, .file-browser-grid:not(.is-list) .file-item__date, .file-browser-grid:not(.is-list) .file-item__size {
+    display: none;
+}
+
+.file-browser-grid.is-list .file-item {
+    
+    border-width: 0 0 1px;
+    overflow: visible;
+    border: 0;
+    border-bottom: 1px solid #e8edf4;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    transform: none;
+    
+    display: grid;
+    grid-template-columns: 44px minmax(220px, 1fr) 170px 138px 88px 72px;
+    grid-template-areas: "icon name uploader date size actions";
+    column-gap: 14px;
+    align-items: center;
+    min-height: 62px;
+    padding: 10px 12px;
+}
+
+.file-browser-grid.is-list .file-item__icon {
+    width: 36px;
+    height: 36px;
+    margin: 0;
+    border-radius: 10px;
+    font-size: 24px;
+    justify-self: center;
+    grid-column: 1;
+    grid-area: icon;
+}
+
+.file-browser-grid.is-list .file-item__uploader {
+    grid-area: uploader;
+    min-width: 0;
+    color: #6f7d92;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.file-browser-grid.is-list .file-item__date {
+    grid-column: 2;
+    grid-area: date;
+    color: #6f7d92;
+    text-align: right;
+    white-space: nowrap;
+}
+
+.file-browser-grid.is-list .file-item__size {
+    grid-area: size;
+    color: #6f7d92;
+    text-align: right;
+    white-space: nowrap;
+}
+
+.file-browser-grid.is-list .file-item__actions {
+    grid-area: actions;
+    position: static;
+    justify-self: end;
+    width: 72px;
+}
+
+.file-browser-grid.is-list .file-item__menu {
+    position: static;
+    margin: 0;
+}
+
+.file-browser-grid.is-list .file-item__meta {
+    align-self: center;
+    margin: 0;
+    color: #6f7d92;
+    white-space: nowrap;
+    grid-area: meta;
+    justify-self: end;
+    text-align: right;
+    grid-column: 3 / 6;
+    
+    grid-template-columns: minmax(150px, 190px) 108px 88px;
+    align-items: center;
+    gap: 0;
+    width: 100%;
+    display: none !important;
+}
+
+@media (max-width: 1180px) {
+    .file-browser-grid.is-list .file-item {
+        grid-template-columns: 40px minmax(180px, 1fr) 130px 110px 70px 72px;
+        column-gap: 10px;
+    }
+}
+
+/* Restore compact explorer typography in list view. */
+.file-browser-grid.is-list .file-item__name {
+    align-self: center;
+    justify-self: stretch;
+    text-align: left;
+    grid-column: 2;
+    grid-area: name;
+    font-size: 13px;
+    line-height: 1.35;
+    font-weight: 700;
+}
+
+.file-browser-grid.is-list .file-item__uploader, .file-browser-grid.is-list .file-item__date, .file-browser-grid.is-list .file-item__size, .file-browser-grid.is-list .file-item__count {
+    font-size: 12px;
+    line-height: 1.35;
+}
+
+.file-browser-grid:not(.is-list) {
+    width: 100%;
+    grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
+    align-content: start;
+    gap: 14px;
+    grid-auto-rows: minmax(170px, auto);
+    align-items: start;
+}
+
+@media (max-width: 1100px) and (min-width: 901px) {
+    .file-explorer__header p:last-child {
+        
+        display: block;
+        overflow: hidden;
+        max-width: 360px;
+        text-overflow: ellipsis;
+    }
+}
+
+.file-browser-grid:not(.is-list) .file-item__icon > img, .file-browser-grid:not(.is-list) .file-item__icon > svg, .file-browser-grid:not(.is-list) .file-item__icon > i, .file-browser-grid:not(.is-list) .file-item__icon .file-folder-mark {
+    flex: 0 0 auto;
+    margin: 0;
+}
+
+.file-browser-grid:not(.is-list) .file-item__meta {
+    align-items: center;
+    
+    
+    display: none !important;
+}
+
+.file-browser-grid:not(.is-list) .file-item__actions {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 3;
+    gap: 0;
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+}
+
+.file-browser-grid:not(.is-list) .file-item:hover .file-item__actions, .file-browser-grid:not(.is-list) .file-item:focus-within .file-item__actions {
+    opacity: 1 !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+}
+
+/* Selection alone must never expose the menu. */
+.file-browser-grid:not(.is-list) .file-item.is-selected:not(:hover):not(:focus-within) .file-item__actions {
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+}
+
+.file-browser-grid:not(.is-list) .file-item__icon {
+    
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    font-size: 38px;
+    line-height: 1;
+    width: 100%;
+    height: 48px;
+    margin-top: 0;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 48px;
+    margin: 0 0 8px;
+}
+
+.file-browser-grid:not(.is-list) .file-item__name {
+    
+    color: #1d2940;
+    font-weight: 700;
+    
+    white-space: normal;
+    text-overflow: clip;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    width: 100%;
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    line-height: 1.38;
+    text-align: center;
+    flex: 0 1 auto;
+    min-height: 0;
+    max-height: 38px;
+    margin: 0;
+}
+
+@media (max-width: 1180px) and (min-width: 901px) {
+    .file-browser-toolbar {
+        gap: 14px;
+    }
+
+    .file-browser-actions .file-search {
+        flex-basis: 220px;
+        width: 220px;
+    }
+}
+
+.file-browser-grid:not(.is-list) .file-item, .file-browser-grid:not(.is-list) .file-item:hover, .file-browser-grid:not(.is-list) .file-item.is-selected {
+    transform: none;
+}
+
+.file-browser-grid:not(.is-list) .file-item {
+    min-width: 0;
+    max-width: 100%;
+    aspect-ratio: 1 / 1;
+    
+    padding: 16px 14px 13px;
+    padding-top: 14px;
+    padding-bottom: 14px;
+    width: 100%;
+    min-height: 170px;
+    height: auto;
+    box-sizing: border-box;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    justify-content: center;
+    border-color: #dfe7f2;
+    background: #fff;
+    box-shadow: none;
+    transition: border-color .16s ease, background-color .16s ease, box-shadow .16s ease;
+}
+
+.file-browser-grid:not(.is-list) .file-item::before {
+    content: none;
+}
+
+.file-browser-grid:not(.is-list) .file-item:hover {
+    border-color: #b9c9e5;
+    background: #fcfdff;
+    box-shadow: 0 4px 12px rgba(45, 75, 131, .07);
+}
+
+.file-browser-grid:not(.is-list) .file-item:focus {
+    outline: none;
+}
+
+.file-browser-grid:not(.is-list) .file-item:focus-visible {
+    outline: 2px solid rgba(70, 127, 245, .42);
+    outline-offset: 2px;
+}
+
+@media (min-width: 901px) {
+    .file-browser-toolbar, .file-drop-zone {
+        position: relative;
+        z-index: 2;
+        flex: 0 0 auto;
+    }
+
+    .file-browser-grid {
+        min-height: 0;
+        align-content: start;
+        overflow-y: auto;
+        overflow-x: hidden;
+        padding: 30px 4px 22px 2px;
+        overscroll-behavior: contain;
+        scrollbar-gutter: stable;
+    }
+
+    .file-browser-grid.is-list {
+        padding-top: 22px;
+    }
+
+    .file-browser-grid[hidden], .file-browser-empty[hidden] {
+        display: none;
+    }
+
+    #fileTree, .file-browser-grid {
+        scrollbar-width: thin;
+        scrollbar-color: #c5d2e5 transparent;
+    }
+
+    #fileTree::-webkit-scrollbar, .file-browser-grid::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    #fileTree::-webkit-scrollbar-track, .file-browser-grid::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    #fileTree::-webkit-scrollbar-thumb, .file-browser-grid::-webkit-scrollbar-thumb {
+        border: 2px solid transparent;
+        border-radius: 999px;
+        background: #c5d2e5;
+        background-clip: padding-box;
+    }
+
+    #fileTree::-webkit-scrollbar-thumb:hover, .file-browser-grid::-webkit-scrollbar-thumb:hover {
+        background: #9fb2ce;
+        background-clip: padding-box;
+    }
+
+    .file-browser-empty {
+        min-height: 0;
+        height: 100%;
+        overflow: hidden;
+        grid-row: 4;
+    }
+
+    #fileFolderTree {
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow-y: auto;
+        overflow-x: hidden;
+        overscroll-behavior: contain;
+        scrollbar-width: thin;
+        scrollbar-color: #c5d2e5 transparent;
+    }
+
+    body.moyo-app-sidebar-enabled .file-explorer {
+        width: 100%;
+        max-width: 100%;
+    }
+
+    body.moyo-app-sidebar-enabled {
+        width: 100vw;
+        max-width: 100vw;
+        box-sizing: border-box;
+        overflow: hidden;
+    }
+
+    /* 1200px 이하에서는 앱 사이드바가 오버레이로 숨겨지므로 본문 폭을 빼지 않는다. */
+    body.moyo-app-sidebar-enabled > main.file-explorer {
+        width: 100vw;
+        max-width: 100vw;
+        min-width: 0;
+    }
+
+    /* 데스크톱에서 사이드바가 실제로 자리를 차지할 때만 272px을 제외한다. */
+    @media (min-width: 1201px) {
+        body.moyo-app-sidebar-enabled:not(.moyo-app-sidebar-collapsed) > main.file-explorer {
+            width: calc(100vw - var(--moyo-app-sidebar-width, 272px));
+            max-width: calc(100vw - var(--moyo-app-sidebar-width, 272px));
+        }
+    }
+
+    body.moyo-app-sidebar-enabled.moyo-app-sidebar-collapsed > main.file-explorer {
+        width: 100vw;
+        max-width: 100vw;
+    }
+
+    .file-browser-panel {
+        min-height: 0;
+        height: 100%;
+        display: grid;
+        overflow: hidden;
+        padding-bottom: 0;
+        grid-template-rows: auto auto auto minmax(0, 1fr);
+        width: auto;
+        max-width: 100%;
+        min-width: 0;
+    }
+
+    .file-tree-panel {
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        width: auto;
+    }
+
+    .file-explorer {
+        padding: 16px 20px 6px;
+        height: calc(100dvh - 82px);
+        margin-bottom: 14px;
+        padding-bottom: 0;
+        padding-top: 14px;
+    }
+
+    .file-explorer__header {
+        align-items: center;
+        min-height: 48px;
+        margin-bottom: 12px;
+    }
+
+    .file-explorer__title-wrap {
+        align-items: flex-start;
+        gap: 9px;
+        padding-left: 10px;
+    }
+
+    .file-explorer__title-icon {
+        
+        width: 25px;
+        height: 25px;
+        margin-top: 1px;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        box-shadow: none;
+    }
+
+    .file-explorer__title-icon svg {
+        width: 21px;
+        height: 21px;
+        stroke-width: 1.9;
+    }
+
+    .file-explorer__title-wrap > div {
+        
+        align-items: baseline;
+        gap: 10px;
+        display: block;
+        min-width: 0;
+    }
+
+    .file-explorer h1 {
+        flex: 0 0 auto;
+        font-size: 24px;
+        line-height: 1.15;
+        letter-spacing: -0.035em;
+    }
+
+    .file-explorer__header p:last-child {
+        min-width: 0;
+        display: block;
+        margin: 4px 0 0;
+        color: #738096;
+        font-size: 12px;
+        line-height: 1.35;
+        white-space: nowrap;
+    }
+
+    .file-explorer__header-actions {
+        align-self: center;
+        gap: 8px;
+    }
+
+    .file-explorer__header-actions .moyo-btn {
+        height: 34px;
+        min-height: 24px;
+        padding-inline: 12px;
+        border-radius: 10px;
+    }
+
+    .file-explorer__shell {
+        height: clamp(470px, calc(100vh - 300px), 640px);
+        overflow: hidden;
+        max-width: 100%;
+        min-width: 0;
+        flex: 1 1 auto;
+        width: 100%;
+        min-height: 0;
+        max-height: none;
+        grid-template-columns: 210px minmax(0, 1fr);
+    }
+
+    .file-tree-panel__title img, .file-tree-panel__title .profile-image, .file-tree-panel__title .file-tree-panel__badge {
+        flex: 0 0 auto;
+    }
+
+    .file-tree-root, .file-tree-row, .file-project-row, .file-friend-share-row, .file-tree-row-wrap {
+        min-height: 24px;
+    }
+
+    .file-tree-root, .file-tree-row, .file-project-row, .file-friend-share-row {
+        padding-top: 6px;
+        padding-bottom: 6px;
+    }
+
+    .file-browser-grid.is-list .file-item {
+        min-height: 58px;
+        padding-top: 8px;
+        padding-bottom: 8px;
+    }
+
+    .file-browser-grid:not(.is-list) .file-item__icon {
+        width: 48px;
+        height: 48px;
+        margin-bottom: 8px;
+        font-size: 31px;
+    }
+
+    .file-browser-grid:not(.is-list) .file-item__name {
+        font-size: 13px;
+        min-height: 36px;
+        line-height: 1.38;
+    }
+
+    .file-browser-toolbar {
+        width: auto;
+        max-width: none;
+        padding-top: 10px;
+        padding-bottom: 10px;
+        min-height: 58px;
+        padding: 10px 14px;
+        gap: 24px;
+    }
+
+    .file-browser-location--toolbar {
+        flex: 1 1 auto;
+        min-width: 0;
+        gap: 8px;
+    }
+
+    .file-breadcrumb {
+        flex: 0 1 auto;
+        min-width: 0;
+        overflow: hidden;
+        font-size: 13px;
+    }
+
+    .file-breadcrumb > span:last-child, .file-breadcrumb button:last-child {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .file-breadcrumb-count {
+        flex: 0 0 auto;
+        padding: 3px 7px;
+        font-size: 11px;
+    }
+
+    .file-browser-actions {
+        flex: 0 0 auto;
+        gap: 8px;
+    }
+
+    .file-browser-actions .file-search {
+        flex: 0 0 clamp(250px, 21vw, 292px);
+        width: clamp(250px, 21vw, 292px);
+        height: 38px;
+        min-height: 38px;
+        box-sizing: border-box;
+        padding: 0 10px;
+        border-radius: 10px;
+    }
+
+    .file-search input {
+        width: 100%;
+        min-width: 0;
+        height: 100%;
+        min-height: 0;
+        padding: 0;
+        font-size: 13px;
+    }
+
+    .file-browser-actions .file-sort-control {
+        width: 112px;
+        height: 38px;
+        padding: 0;
+        border-radius: 10px;
+        font-size: 13px;
+    }
+
+    .file-browser-actions .view-toggle {
+        flex: 0 0 38px;
+        width: 38px;
+        height: 38px;
+        border-radius: 10px;
+    }
+
+    .file-browser-grid:not(.is-list) {
+        width: auto;
+        max-width: 100%;
+        padding: 12px 16px 18px;
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+        grid-auto-rows: 166px;
+        gap: 12px;
+    }
+
+    .file-browser-grid:not(.is-list) .file-item {
+        aspect-ratio: auto;
+        min-height: 166px;
+        height: 166px;
+        padding: 18px 13px 14px;
+    }
+}
+
+.file-browser-grid:not(.is-list) .file-item.is-selected {
+    
+    
+    
+    border-color: #8eacf0;
+    background: linear-gradient(
+        135deg,
+        rgba(77, 218, 202, .035) 0%,
+        rgba(70, 127, 245, .045) 58%,
+        rgba(126, 92, 255, .03) 100%
+    );
+    box-shadow: none;
+}
+
+.file-browser-grid:not(.is-list) .file-item.is-selected:hover {
+    border-color: #7f9fe8;
+    background: linear-gradient(
+        135deg,
+        rgba(77, 218, 202, .045) 0%,
+        rgba(70, 127, 245, .055) 58%,
+        rgba(126, 92, 255, .04) 100%
+    );
+    box-shadow: 0 4px 12px rgba(45, 75, 131, .07);
+}
+
+@media (max-width: 900px) {
+    .file-search {
+        flex: 1;
+    }
+
+    .file-search input {
+        width: 100%;
+    }
+
+    .file-browser-location {
+        width: 100%;
+    }
+
+    .file-tree-panel, .file-browser-panel {
+        padding-bottom: 0;
+    }
+
+    .file-tree-trash-wrap {
+        margin-inline: -12px;
+    }
+
+    html, body {
+        
+        width: 100%;
+        height: 100%;
+        min-height: 0;
+        overflow: hidden !important;
+    }
+
+    .file-explorer {
+        
+        width: 100%;
+        height: calc(100dvh - 68px);
+        min-height: 0;
+        margin: 0;
+        padding: 12px 12px 8px;
+        overflow: hidden !important;
+    }
+
+    .file-explorer__header {
+        flex: 0 0 auto;
+        min-height: 44px;
+        margin-bottom: 10px;
+        align-items: center;
+        flex-direction: row;
+        gap: 12px;
+    }
+
+    .file-explorer__title-wrap {
+        min-width: 0;
+        flex: 1 1 auto;
+        align-items: flex-start;
+        padding-left: 0;
+    }
+
+    .file-explorer__title-icon {
+        
+        display: inline-flex;
+        flex: 0 0 22px;
+        width: 22px;
+        height: 22px;
+        margin-top: 1px;
+    }
+
+    .file-explorer__title-icon svg {
+        width: 20px;
+        height: 20px;
+    }
+
+    .file-explorer h1 {
+        overflow: hidden;
+        font-size: 21px;
+        line-height: 1.15;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .file-explorer__header p:last-child {
+        display: none;
+    }
+
+    .file-explorer__shell {
+        grid-template-columns: 1fr;
+        
+        display: block;
+        flex: 1 1 auto;
+        width: 100%;
+        height: auto;
+        min-height: 0;
+        overflow: hidden !important;
+        border-radius: 15px;
+    }
+
+    .file-tree-panel {
+        
+        display: none !important;
+    }
+
+    .file-browser-panel {
+        
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        height: 100%;
+        min-height: 0;
+        padding: 0;
+        overflow: hidden !important;
+    }
+
+    .file-breadcrumb {
+        min-width: 0;
+        overflow: hidden;
+    }
+
+    .file-breadcrumb > span:last-child, .file-breadcrumb button:last-child {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .file-browser-actions .file-sort-control + .view-toggle {
+        margin-left: 44px;
+    }
+
+    .file-browser-actions .view-toggle + .view-toggle {
+        margin-left: 86px;
+    }
+
+    .file-browser-grid:not(.is-list) {
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+        grid-auto-rows: 166px;
+        gap: 12px;
+    }
+
+    .file-browser-grid:not(.is-list) .file-item {
+        aspect-ratio: auto;
+        min-height: 166px;
+        height: 166px;
+        padding: 18px 13px 14px;
+    }
+
+    .file-browser-status {
+        padding-inline: 12px;
+        flex-wrap: nowrap;
+        align-items: center;
+        padding-block: 0;
+        margin-inline: -14px;
+        flex: 0 0 40px;
+        min-height: 40px;
+        margin: 0;
+        padding: 0 12px;
+        border-radius: 0 0 15px 15px;
+        overflow: hidden;
+    }
+
+    .file-browser-status__message {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .file-browser-status .file-work-actions, .file-browser-status .file-trash-actions {
+        gap: 6px;
+    }
+
+    .file-browser-status .file-work-actions button, .file-browser-status .file-trash-actions button {
+        height: 28px;
+        padding-inline: 9px;
+        font-size: 11px;
+    }
+
+    .file-browser-grid.is-list {
+        padding: 0 12px 14px;
+    }
+
+    .file-browser-grid.is-list .file-item {
+        grid-template-columns: 36px minmax(0, 1fr) 64px;
+        grid-template-areas: "icon name actions";
+        min-height: 56px;
+        padding: 8px 4px;
+        column-gap: 8px;
+    }
+
+    .file-browser-grid.is-list .file-item__uploader, .file-browser-grid.is-list .file-item__date, .file-browser-grid.is-list .file-item__size, .file-browser-grid.is-list .file-item__count {
+        display: none !important;
+    }
+
+    .file-browser-grid.is-list .file-item__actions {
+        width: 64px;
+    }
+
+    .file-explorer__header-actions {
+        gap: 6px;
+        flex: 0 0 auto;
+    }
+
+    .file-explorer__header-actions .moyo-btn {
+        height: 32px;
+        min-height: 32px;
+        padding-inline: 10px;
+        border-radius: 9px;
+        font-size: 11px;
+        flex: 0 0 auto;
+        min-width: max-content;
+        white-space: nowrap;
+    }
+
+    .file-browser-toolbar {
+        flex: 0 0 auto;
+        width: 100%;
+        min-height: 0;
+        margin: 0;
+        
+        grid-template-columns: minmax(0, 1fr) auto;
+        grid-template-areas: "location location"
+            "search controls";
+        border-bottom: 1px solid var(--moyo-line-soft);
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+        padding: 10px 12px 11px;
+    }
+
+    .file-browser-location--toolbar {
+        grid-area: location;
+        min-width: 0;
+        overflow: hidden;
+        order: 1;
+        width: 100%;
+        min-height: 28px;
+    }
+
+    .file-browser-actions {
+        flex-wrap: wrap;
+        
+        order: 2;
+        width: 100%;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 112px 36px 36px;
+        grid-template-areas: "search search search search"
+            ". sort grid list";
+        align-items: center;
+        gap: 8px;
+    }
+
+    .file-browser-actions .file-search {
+        flex: 1 1 220px;
+        margin: 0;
+        grid-area: search;
+        width: 100%;
+        min-width: 0;
+        max-width: none;
+        height: 38px;
+    }
+
+    .file-browser-actions .file-sort-control {
+        grid-area: sort;
+        justify-self: stretch;
+        width: 112px;
+        height: 36px;
+        margin: 0;
+        padding: 0;
+    }
+
+    .file-browser-actions .view-toggle {
+        width: 36px;
+        height: 36px;
+        margin: 0 !important;
+    }
+
+    .file-browser-actions .view-toggle:nth-of-type(1) {
+        grid-area: grid;
+    }
+
+    .file-browser-actions .view-toggle:nth-of-type(2) {
+        grid-area: list;
+    }
+
+    .file-browser-grid:not(.is-list) .file-item__name {
+        display: -webkit-box;
+        min-height: 0;
+        max-height: 38px;
+        overflow: hidden;
+        white-space: normal;
+        word-break: break-word;
+        overflow-wrap: anywhere;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
+        line-clamp: 2;
+        text-overflow: clip;
+    }
+
+    .file-browser-grid:not(.is-list) .file-item.is-selected {
+        border-color: rgba(92, 132, 222, .52);
+        background: linear-gradient(
+            135deg,
+            rgba(77, 218, 202, .022) 0%,
+            rgba(70, 127, 245, .030) 58%,
+            rgba(126, 92, 255, .020) 100%
+        );
+        box-shadow: none;
+    }
+
+    .file-browser-grid:not(.is-list) .file-item.is-selected:hover {
+        border-color: rgba(92, 132, 222, .60);
+        background: linear-gradient(
+            135deg,
+            rgba(77, 218, 202, .030) 0%,
+            rgba(70, 127, 245, .038) 58%,
+            rgba(126, 92, 255, .026) 100%
+        );
+        box-shadow: 0 3px 10px rgba(45, 75, 131, .055);
+    }
+
+    .file-browser-actions, .file-browser-actions .file-search {
+        box-sizing: border-box;
+        min-width: 0;
+        max-width: 100%;
+    }
+
+    .file-browser-actions .file-search input {
+        flex: 1 1 auto;
+        width: auto;
+        min-width: 0;
+        max-width: 100%;
+    }
+
+    .file-browser-grid {
+        
+        flex: 1 1 auto;
+        width: 100%;
+        min-height: 0;
+        max-height: none !important;
+        margin: 0;
+        padding: 30px 12px 18px;
+        overflow-x: hidden;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        scrollbar-gutter: stable;
+        padding-right: 18px;
+    }
+}
+
+@media (max-width: 600px) {
+    .file-explorer__header-actions > * {
+        flex: 1;
+    }
+
+    .file-browser-panel {
+        padding: 15px;
+    }
+
+    .file-browser-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .file-explorer {
+        padding-inline: 8px;
+    }
+
+    .file-browser-grid:not(.is-list) .file-item {
+        min-width: 0;
+    }
+
+    .file-explorer__header {
+        flex-direction: column;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .file-explorer__title-wrap {
+        min-width: 0;
+    }
+
+    .file-explorer__header-actions {
+        display: flex;
+        flex-wrap: nowrap;
+        gap: 6px;
+    }
+
+    .file-explorer__header-actions .moyo-btn {
+        min-width: 0;
+        padding-inline: 9px;
+        font-size: 11px;
+    }
+
+    .file-browser-grid:not(.is-list) {
+        padding-inline: 10px;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+        padding-left: 10px;
+        padding-right: 18px;
+    }
+}
+
+/* Regression correction: preserve the compact recent-file row after selector consolidation. */
+.file-tree-recent {
+    color: #5f6b7c;
+    font-size: 13px;
+    font-weight: 700;
+    gap: 9px;
+    padding-left: 12px;
+    padding-right: 12px;
+}
+/* Desktop browser row contract: one full-width column.
+   Grid and empty state share the same content row, so an empty folder cannot
+   create a second implicit column. */
+@media (min-width: 901px) {
+    .file-explorer > .file-explorer__shell {
+        grid-template-columns: 210px minmax(0, 1fr);
+    }
+
+    .file-explorer > .file-explorer__shell > .file-browser-panel {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-rows: auto auto 24px minmax(0, 1fr) auto;
+        grid-column: 2;
+        width: auto;
+        min-width: 0;
+        max-width: none;
+        align-self: stretch;
+        justify-self: stretch;
+    }
+
+    .file-browser-panel > .file-browser-toolbar,
+    .file-browser-panel > .file-drop-zone,
+    .file-browser-panel > .file-selection-canvas,
+    .file-browser-panel > .file-browser-grid,
+    .file-browser-panel > .file-browser-empty,
+    .file-browser-panel > .file-browser-status {
+        grid-column: 1;
+        width: auto;
+        min-width: 0;
+        max-width: none;
+        box-sizing: border-box;
+    }
+
+    .file-browser-panel > .file-browser-toolbar { grid-row: 1; }
+    .file-browser-panel > .file-drop-zone { grid-row: 2; }
+    .file-browser-panel > .file-selection-canvas { grid-row: 3; }
+    .file-browser-panel > .file-browser-grid,
+    .file-browser-panel > .file-browser-empty { grid-row: 4; }
+    .file-browser-panel > .file-browser-status { grid-row: 5; }
+
+    .file-browser-panel > .file-browser-grid[hidden],
+    .file-browser-panel > .file-browser-empty[hidden] {
+        display: none;
+    }
+
+    .file-browser-panel > .file-browser-empty:not([hidden]) {
+        display: flex;
+        width: auto;
+        height: auto;
+        min-height: 0;
+        margin: 0;
+        padding: 40px 20px;
+        align-self: stretch;
+        justify-self: stretch;
+        align-items: center;
+        justify-content: center;
+        transform: none;
+    }
+
+    .file-browser-panel > .file-browser-status {
+        margin-top: 0;
+    }
+}
+
+/* Empty folder presentation: compact emphasis without a large floating card. */
+.file-browser-empty:not([hidden]) {
+    width: auto;
+    min-height: 0;
+    margin: 0;
+    padding: 0 24px;
+    align-self: stretch;
+    justify-self: stretch;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+}
+
+.file-browser-empty__icon {
+    width: 62px;
+    height: 62px;
+    border: 1px solid rgba(77, 131, 244, 0.16);
+    border-radius: 19px;
+    background: linear-gradient(145deg, rgba(55, 210, 200, 0.12), rgba(77, 131, 244, 0.13) 58%, rgba(115, 92, 244, 0.08));
+    box-shadow: 0 8px 20px rgba(77, 131, 244, 0.10);
+}
+
+.file-browser-empty__icon svg {
+    width: 30px;
+    height: 30px;
+}
+
+.file-browser-empty__icon > i {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 27px;
+    line-height: 1;
+    color: #4a7ff0;
+}
+
+.file-explorer[data-content-type="PHOTO"] .file-browser-empty__icon > i {
+    background: linear-gradient(135deg, #55DDBF 0%, #4a90e2 56%, #7568d8 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+}
+
+
+/* 2026-08-07 공통 탐색기 리스트 슬롯 */
+.file-explorer {
+  --explorer-list-columns: 58px minmax(260px, 1fr) 188px 156px 120px 92px 34px 34px;
+  --explorer-list-gap: 14px;
+}
+.file-explorer .file-browser-grid.is-list > .file-item.explorer-list-row {
+  display:grid; grid-template-columns:var(--explorer-list-columns)!important;
+  grid-template-areas:"preview name uploader date specific status download menu"!important;
+  column-gap:var(--explorer-list-gap)!important; align-items:center; min-height:72px; padding:9px 12px;
+}
+.file-explorer .file-browser-grid.is-list .explorer-list-slot--preview{grid-area:preview!important;}
+.file-explorer .file-browser-grid.is-list .explorer-list-slot--name{grid-area:name!important;min-width:0;}
+.file-explorer .file-browser-grid.is-list .explorer-list-slot--uploader{grid-area:uploader!important;min-width:0;}
+.file-explorer .file-browser-grid.is-list .explorer-list-slot--date{grid-area:date!important;white-space:nowrap;}
+.file-explorer .file-browser-grid.is-list .explorer-list-slot--specific{grid-area:specific!important;min-width:0;}
+.file-explorer .file-browser-grid.is-list .explorer-list-slot--status{grid-area:status!important;min-width:0;}
+.file-explorer .file-browser-grid.is-list .explorer-list-slot--download{grid-area:download!important;justify-self:center;}
+.file-explorer .file-browser-grid.is-list .explorer-list-slot--menu{grid-area:menu!important;justify-self:center!important;width:34px!important;}
+.file-explorer .file-browser-grid.is-list .file-item__download,.file-explorer .file-browser-grid.is-list .file-item__menu{width:28px;height:28px;}
+@media(max-width:1220px){.file-explorer{--explorer-list-columns:54px minmax(220px,1fr) 164px 146px 108px 82px 32px 32px;--explorer-list-gap:11px;}}
+@media(max-width:980px){.file-explorer{--explorer-list-columns:54px minmax(200px,1fr) 142px 104px 74px 32px 32px;--explorer-list-gap:10px;}.file-explorer .file-browser-grid.is-list>.file-item.explorer-list-row{grid-template-areas:"preview name date specific status download menu"!important;}.file-explorer .file-browser-grid.is-list .explorer-list-slot--uploader{display:none!important;}}
+
+/* FILE / PHOTO / NOTE 공통 리스트 행 골격
+   카드(Grid)는 타입별 전용, 리스트(List)는 이 좌표/높이/간격을 공통으로 사용한다. */
+.file-explorer .file-browser-grid.is-list > .file-item.explorer-list-row {
+    width: 100% !important;
+    box-sizing: border-box !important;
+    grid-template-columns: var(--explorer-list-columns) !important;
+    grid-template-areas: "preview name uploader date specific status download menu" !important;
+    column-gap: var(--explorer-list-gap) !important;
+    min-height: 72px !important;
+    height: auto !important;
+    padding: 9px 12px !important;
+    align-items: center !important;
+    transform: none !important;
+}
+
+
+.file-explorer .file-browser-grid.is-list > .file-item.explorer-list-row:hover {
+    transform: none !important;
+}
+
+.file-explorer .file-browser-grid.is-list > .file-item.explorer-list-row > .explorer-list-slot {
+    min-width: 0;
+    align-self: center !important;
+}
+
+.file-explorer .file-browser-grid.is-list .explorer-list-slot--date {
+    justify-self: start !important;
+    text-align: left !important;
+}
+
+.file-explorer .file-browser-grid.is-list .explorer-list-slot--download,
+.file-explorer .file-browser-grid.is-list .explorer-list-slot--menu {
+    position: static !important;
+    inset: auto !important;
+    margin: 0 !important;
+    transform: none !important;
+    justify-self: center !important;
+    align-self: center !important;
+}
+
+@media (max-width: 980px) {
+    .file-explorer .file-browser-grid.is-list > .file-item.explorer-list-row {
+        grid-template-areas: "preview name date specific status download menu" !important;
+    }
+}
+
+/* 2026-08-10 FILE / PHOTO / NOTE 공통 리스트 세로 리듬
+   리스트 외곽은 콘텐츠 타입과 무관하게 하나의 연속된 행 목록으로 렌더링한다. */
+.file-explorer .file-browser-grid.is-list {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0 !important;
+    row-gap: 0 !important;
+}
+
+.file-explorer .file-browser-grid.is-list > .file-item.explorer-list-row {
+    flex: 0 0 auto;
+    margin: 0 !important;
+    border-radius: 0 !important;
+    border-top: 0 !important;
+    border-right: 0 !important;
+    border-left: 0 !important;
+    border-bottom: 1px solid #e8edf4 !important;
+}
+
+/* 공통 탐색기 하단 작업바: MOYO 액션 아이콘 정렬 */
+.file-work-actions #contentBatchMoyoButton img {
+    width: 15px;
+    height: 15px;
+    object-fit: contain;
+    vertical-align: -2px;
+    margin-right: 4px;
+}
+
+
+/* 모아보기: 제목은 breadcrumb에 맡기고 전환 버튼만 콘텐츠 위에 간결하게 노출 */
+.file-tree-collection > i:first-child{color:#7188bd;}.file-tree-collection.is-active > i:first-child{color:#4d76e8;}
+
+/* === MOYO collection view: tree children === */
+.file-tree-collection-group {
+    width: 100%;
+}
+.file-tree-collection {
+    padding-right: 10px;
+}
+.file-tree-collection__chevron {
+    margin-left: auto;
+    color: #97a4ba !important;
+    font-size: 10px;
+    transition: transform .16s ease;
+}
+.file-tree-collection-group.is-collapsed .file-tree-collection__chevron {
+    transform: rotate(-90deg);
+}
+.file-tree-collection-children {
+    position: relative;
+    display: grid;
+    gap: 1px;
+    padding: 1px 0 3px 22px;
+}
+.file-tree-collection-group.is-collapsed .file-tree-collection-children {
+    display: none;
+}
+.file-tree-collection-children::before {
+    content: "";
+    position: absolute;
+    left: 15px;
+    top: 2px;
+    bottom: 6px;
+    width: 1px;
+    background: #e5eaf3;
+}
+.file-tree-collection-child {
+    min-height: 34px;
+    padding: 0 10px !important;
+    border-radius: 8px !important;
+    font-size: 12.5px !important;
+    font-weight: 700 !important;
+}
+.file-tree-collection-child > i:first-child {
+    width: 16px;
+    color: #8190aa;
+    text-align: center;
+}
+.file-tree-collection-child > img {
+    width: 17px;
+    height: 17px;
+    object-fit: contain;
+    flex: 0 0 17px;
+}
+.file-tree-collection-child.is-active {
+    background: linear-gradient(90deg, rgba(79,209,197,.10), rgba(91,141,239,.10), rgba(145,105,220,.10)) !important;
+    color: #39445a !important;
+}
+.file-tree-collection-child.is-active > i:first-child {
+    color: #4f75e8;
+}
+
+
+/* === collection tree alignment with recent row === */
+.file-tree-collection {
+    min-height: 44px !important;
+    padding: 0 12px !important;
+    gap: 9px !important;
+}
+.file-tree-collection > i:first-child {
+    width: 18px;
+    flex: 0 0 18px;
+    text-align: center;
+    font-size: 15px;
+    transform: translateX(-1px);
+}
+.file-tree-collection__chevron {
+    width: auto !important;
+    flex: 0 0 auto !important;
+}
+
+/* === collection child optical alignment === */
+.file-tree-collection-children {
+    padding-left: 20px;
+}
+.file-tree-collection-children::before {
+    left: 13px;
+}
+
+/* =========================================================
+   2026-08-10 responsive consolidation
+   - 축소 구간에서 툴바/리스트가 누적 보정값에 흔들리지 않도록 최종 계약을 한 곳에서 고정
+   - desktop(901px+) 구조는 유지하고, tablet/mobile에서만 재배치한다.
+   ========================================================= */
+@media (max-width: 900px) {
+    .file-explorer {
+        padding: 12px 10px 8px;
+    }
+
+    .file-explorer__shell {
+        border-radius: 14px;
+    }
+
+    .file-browser-toolbar {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) !important;
+        grid-template-rows: auto auto !important;
+        gap: 8px !important;
+        padding: 9px 10px 10px !important;
+        align-items: stretch !important;
+    }
+
+    .file-browser-location--toolbar {
+        width: 100% !important;
+        min-width: 0 !important;
+        min-height: 26px !important;
+        order: initial !important;
+    }
+
+    .file-browser-actions {
+        display: grid !important;
+        grid-template-columns: minmax(180px, 1fr) 112px 38px 38px !important;
+        grid-template-areas: "search sort grid list" !important;
+        align-items: center !important;
+        gap: 8px !important;
+        width: 100% !important;
+        min-width: 0 !important;
+    }
+
+    .file-browser-actions .file-search {
+        grid-area: search !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: none !important;
+        height: 38px !important;
+        min-height: 38px !important;
+        margin: 0 !important;
+    }
+
+    .file-browser-actions .file-sort-control {
+        grid-area: sort !important;
+        width: 112px !important;
+        height: 38px !important;
+        margin: 0 !important;
+    }
+
+    .file-browser-actions .view-toggle {
+        width: 38px !important;
+        height: 38px !important;
+        margin: 0 !important;
+    }
+
+    .file-browser-actions .view-toggle:nth-of-type(1) {
+        grid-area: grid !important;
+    }
+
+    .file-browser-actions .view-toggle:nth-of-type(2) {
+        grid-area: list !important;
+    }
+
+    /* 예전 모바일 보정값이 버튼을 오른쪽으로 이중 이동시키지 않게 무효화 */
+    .file-browser-actions .file-sort-control + .view-toggle,
+    .file-browser-actions .view-toggle + .view-toggle {
+        margin-left: 0 !important;
+    }
+
+    .file-browser-grid {
+        padding-top: 18px !important;
+        padding-left: 10px !important;
+        padding-right: 16px !important;
+        padding-bottom: 16px !important;
+    }
+
+    .file-browser-grid:not(.is-list) {
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+        gap: 12px;
+    }
+
+    .file-browser-status {
+        min-height: 40px;
+        flex-basis: 40px;
+    }
+}
+
+@media (max-width: 680px) {
+    .file-browser-actions {
+        grid-template-columns: 112px minmax(0, 1fr) 38px 38px !important;
+        grid-template-areas:
+            "search search search search"
+            "sort . grid list" !important;
+        row-gap: 7px !important;
+        column-gap: 7px !important;
+    }
+
+    .file-explorer__header {
+        gap: 8px;
+    }
+
+    .file-explorer__header-actions {
+        gap: 5px;
+    }
+
+    .file-browser-grid:not(.is-list) {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 10px !important;
+    }
+}
+
+@media (max-width: 520px) {
+    .file-explorer {
+        padding-inline: 7px;
+    }
+
+    .file-browser-toolbar {
+        padding-inline: 8px !important;
+    }
+
+    .file-explorer__header-actions .moyo-btn {
+        padding-inline: 8px;
+    }
+
+    .file-browser-grid {
+        padding-left: 8px !important;
+        padding-right: 12px !important;
+    }
+}
+
+/* 공통 리스트 반응형 축약: 좁아질수록 정보 열만 단계적으로 숨기고 핵심 액션은 유지 */
+@media (max-width: 760px) {
+    .file-explorer {
+        --explorer-list-columns: 46px minmax(0, 1fr) 104px 72px 30px 30px;
+        --explorer-list-gap: 8px;
+    }
+
+    .file-explorer .file-browser-grid.is-list > .file-item.explorer-list-row {
+        grid-template-areas: "preview name date status download menu" !important;
+        min-height: 66px !important;
+        padding: 8px 8px !important;
+    }
+
+    .file-explorer .file-browser-grid.is-list .explorer-list-slot--uploader,
+    .file-explorer .file-browser-grid.is-list .explorer-list-slot--specific {
+        display: none !important;
+    }
+}
+
+@media (max-width: 560px) {
+    .file-explorer {
+        --explorer-list-columns: 42px minmax(0, 1fr) 68px 30px 30px;
+        --explorer-list-gap: 7px;
+    }
+
+    .file-explorer .file-browser-grid.is-list > .file-item.explorer-list-row {
+        grid-template-areas: "preview name status download menu" !important;
+        min-height: 62px !important;
+        padding: 7px 6px !important;
+    }
+
+    .file-explorer .file-browser-grid.is-list .explorer-list-slot--date {
+        display: none !important;
+    }
+}
+
+/* =========================================================
+   2026-08-10 compact viewport mobile list
+   Desktop list columns stay untouched. At phone widths the same shared slots
+   are rearranged into a compact card-like row instead of being squeezed.
+   ========================================================= */
+@media (max-width: 560px) {
+    .file-explorer .file-browser-grid.is-list {
+        gap: 8px !important;
+        row-gap: 8px !important;
+        padding-top: 10px !important;
+        background: transparent !important;
+    }
+
+    .file-explorer .file-browser-grid.is-list > .file-item.explorer-list-row {
+        display: grid !important;
+        grid-template-columns: 46px minmax(0, 1fr) auto auto 30px !important;
+        grid-template-rows: auto auto !important;
+        grid-template-areas:
+            "preview name name name menu"
+            "preview specific status download menu" !important;
+        column-gap: 8px !important;
+        row-gap: 6px !important;
+        min-height: 82px !important;
+        padding: 10px 9px !important;
+        align-items: center !important;
+        border: 1px solid #e3eaf4 !important;
+        border-radius: 12px !important;
+        background: rgba(255, 255, 255, .94) !important;
+        box-shadow: 0 2px 8px rgba(42, 67, 111, .035) !important;
+        overflow: visible !important;
+    }
+
+    .file-explorer .file-browser-grid.is-list > .file-item.explorer-list-row:hover {
+        border-color: #d8e2f1 !important;
+        background: #fff !important;
+        box-shadow: 0 3px 10px rgba(42, 67, 111, .055) !important;
+    }
+
+    .file-explorer .file-browser-grid.is-list > .file-item.explorer-list-row.is-selected {
+        border-color: #90adff !important;
+        background: linear-gradient(135deg, rgba(80, 214, 198, .045), rgba(82, 126, 239, .055), rgba(128, 97, 226, .04)) !important;
+        box-shadow: 0 0 0 1px rgba(92, 131, 238, .10) !important;
+    }
+
+    .file-explorer .file-browser-grid.is-list .explorer-list-slot--preview {
+        grid-area: preview !important;
+        align-self: center !important;
+        justify-self: center !important;
+    }
+
+    .file-explorer .file-browser-grid.is-list .explorer-list-slot--name {
+        grid-area: name !important;
+        align-self: end !important;
+        min-width: 0 !important;
+    }
+
+    .file-explorer .file-browser-grid.is-list .explorer-list-slot--specific {
+        display: flex !important;
+        grid-area: specific !important;
+        align-self: start !important;
+        justify-self: start !important;
+        min-width: 0 !important;
+    }
+
+    .file-explorer .file-browser-grid.is-list .explorer-list-slot--status {
+        display: flex !important;
+        grid-area: status !important;
+        align-self: start !important;
+        justify-self: end !important;
+        min-width: 0 !important;
+    }
+
+    .file-explorer .file-browser-grid.is-list .explorer-list-slot--download {
+        display: inline-flex !important;
+        grid-area: download !important;
+        align-self: start !important;
+        justify-self: center !important;
+    }
+
+    .file-explorer .file-browser-grid.is-list .explorer-list-slot--menu {
+        grid-area: menu !important;
+        align-self: center !important;
+        justify-self: center !important;
+        width: 30px !important;
+    }
+
+    .file-explorer .file-browser-grid.is-list .explorer-list-slot--uploader,
+    .file-explorer .file-browser-grid.is-list .explorer-list-slot--date {
+        display: none !important;
+    }
+
+    .file-explorer .file-browser-grid.is-list .file-item__menu,
+    .file-explorer .file-browser-grid.is-list .file-item__download {
+        width: 28px !important;
+        height: 28px !important;
+    }
+
+    /* Folders/albums/libraries use the same mobile row but remain intentionally quiet. */
+    .file-explorer .file-browser-grid.is-list > .file-item[data-kind="folder"] {
+        min-height: 68px !important;
+        grid-template-rows: 1fr auto !important;
+    }
+
+    /* NOTE: title/meta + two-line body, then reactions/status below. */
+    .file-explorer[data-content-type="NOTE"] .file-browser-grid.is-list .explorer-note-list-preview-icon {
+        width: 40px !important;
+        height: 40px !important;
+        border-radius: 10px !important;
+        font-size: 17px !important;
+    }
+
+    .file-explorer[data-content-type="NOTE"] .file-browser-grid.is-list .explorer-note-list-main {
+        gap: 3px !important;
+        justify-content: flex-end !important;
+    }
+
+    .file-explorer[data-content-type="NOTE"] .file-browser-grid.is-list .explorer-note-list-heading {
+        gap: 5px !important;
+    }
+
+    .file-explorer[data-content-type="NOTE"] .file-browser-grid.is-list .explorer-note-list-title {
+        font-size: 13px !important;
+    }
+
+    .file-explorer[data-content-type="NOTE"] .file-browser-grid.is-list .explorer-note-list-content-meta {
+        gap: 4px !important;
+        font-size: 10px !important;
+    }
+
+    .file-explorer[data-content-type="NOTE"] .file-browser-grid.is-list .explorer-note-list-preview {
+        display: -webkit-box !important;
+        overflow: hidden !important;
+        white-space: normal !important;
+        -webkit-box-orient: vertical !important;
+        -webkit-line-clamp: 2 !important;
+        line-clamp: 2 !important;
+        text-overflow: ellipsis !important;
+        font-size: 11px !important;
+        line-height: 1.35 !important;
+        color: #6b7890 !important;
+    }
+
+    .file-explorer[data-content-type="NOTE"] .file-browser-grid.is-list .explorer-note-list-reactions,
+    .file-explorer[data-content-type="NOTE"] .file-browser-grid.is-list .explorer-note-list-actions {
+        gap: 6px !important;
+    }
+
+    /* PHOTO: keep a recognizable thumbnail and place reactions/actions on the second line. */
+    .file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .file-item__photo-preview {
+        width: 42px !important;
+        height: 42px !important;
+        min-width: 42px !important;
+        border-radius: 10px !important;
+        overflow: hidden !important;
+    }
+
+    .file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .photo-list-name strong {
+        display: block !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+        font-size: 13px !important;
+    }
+
+    .file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .photo-list-name__sub {
+        margin-top: 3px !important;
+        font-size: 10px !important;
+    }
+
+    .file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .photo-list-reactions,
+    .file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .photo-list-states {
+        gap: 7px !important;
+    }
+
+    /* FILE: filename dominates; size + download stay available without extra desktop columns. */
+    .file-explorer[data-content-type="FILE"] .file-browser-grid.is-list .explorer-list-slot--name {
+        font-size: 12px !important;
+        line-height: 1.35 !important;
+    }
+
+
+    .file-explorer[data-content-type="FILE"] .file-browser-grid.is-list .explorer-list-slot--status,
+    .file-explorer[data-content-type="FILE"] .file-browser-grid.is-list .explorer-list-slot--download,
+    .file-explorer[data-content-type="FILE"] .file-browser-grid.is-list .explorer-list-slot--menu {
+        align-self: center !important;
+    }
+
+    .file-explorer[data-content-type="FILE"] .file-browser-grid.is-list .explorer-list-slot--specific {
+        color: #718098 !important;
+        font-size: 10px !important;
+    }
+}
+
+/* 2026-08-10 FILE mobile list density refinement */
+@media (max-width: 560px) {
+    .file-explorer[data-content-type="FILE"] .file-browser-grid.is-list {
+        gap: 6px !important;
+        row-gap: 6px !important;
+        padding-top: 8px !important;
+    }
+
+    .file-explorer[data-content-type="FILE"] .file-browser-grid.is-list > .file-item.explorer-list-row {
+        grid-template-columns: 38px minmax(0, 1fr) auto 28px 28px !important;
+        grid-template-rows: 20px 18px !important;
+        grid-template-areas:
+            "preview name name name menu"
+            "preview specific status download menu" !important;
+        column-gap: 7px !important;
+        row-gap: 2px !important;
+        min-height: 58px !important;
+        padding: 8px 8px !important;
+        border-radius: 10px !important;
+        align-items: center !important;
+    }
+
+    .file-explorer[data-content-type="FILE"] .file-browser-grid.is-list > .file-item[data-kind="folder"] {
+        min-height: 56px !important;
+        grid-template-rows: 20px 17px !important;
+    }
+
+    .file-explorer[data-content-type="FILE"] .file-browser-grid.is-list .explorer-list-slot--preview {
+        width: 34px !important;
+        min-width: 34px !important;
+        height: 34px !important;
+    }
+
+    .file-explorer[data-content-type="FILE"] .file-browser-grid.is-list .file-item__icon {
+        width: 34px !important;
+        height: 34px !important;
+        min-width: 34px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        font-size: 21px !important;
+    }
+
+    .file-explorer[data-content-type="FILE"] .file-browser-grid.is-list .file-item__name {
+        display: block !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+        font-size: 12px !important;
+        font-weight: 700 !important;
+        line-height: 20px !important;
+    }
+
+    .file-explorer[data-content-type="FILE"] .file-browser-grid.is-list .explorer-list-slot--specific {
+        min-width: 0 !important;
+        height: 18px !important;
+        align-items: center !important;
+        color: #7a879b !important;
+        font-size: 10px !important;
+        line-height: 18px !important;
+    }
+
+    .file-explorer[data-content-type="FILE"] .file-browser-grid.is-list .file-item__size,
+    .file-explorer[data-content-type="FILE"] .file-browser-grid.is-list .file-item__count {
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+    }
+
+    .file-explorer[data-content-type="FILE"] .file-browser-grid.is-list .explorer-list-slot--status {
+        height: 18px !important;
+        align-items: center !important;
+        justify-content: flex-end !important;
+        font-size: 11px !important;
+    }
+
+    .file-explorer[data-content-type="FILE"] .file-browser-grid.is-list .explorer-list-slot--download {
+        height: 18px !important;
+        align-self: center !important;
+        justify-self: center !important;
+    }
+
+    .file-explorer[data-content-type="FILE"] .file-browser-grid.is-list .file-item__download,
+    .file-explorer[data-content-type="FILE"] .file-browser-grid.is-list .file-item__menu {
+        width: 26px !important;
+        height: 26px !important;
+        min-width: 26px !important;
+        padding: 0 !important;
+    }
+
+    .file-explorer[data-content-type="FILE"] .file-browser-grid.is-list .explorer-list-slot--menu {
+        width: 28px !important;
+        align-self: center !important;
+    }
+}
+
+/* 2026-08-10 FILE mobile filename/action column lock */
+@media (max-width: 560px) {
+    .file-explorer[data-content-type="FILE"] .file-browser-grid.is-list > .file-item.explorer-list-row {
+        grid-template-columns: 38px minmax(0, 1fr) 28px 28px !important;
+        grid-template-rows: 20px 18px !important;
+        grid-template-areas:
+            "preview name download menu"
+            "preview specific status menu" !important;
+    }
+
+    .file-explorer[data-content-type="FILE"] .file-browser-grid.is-list .explorer-list-slot--name {
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        overflow: hidden !important;
+        align-self: center !important;
+    }
+
+    .file-explorer[data-content-type="FILE"] .file-browser-grid.is-list .explorer-list-slot--name > .file-item__name,
+    .file-explorer[data-content-type="FILE"] .file-browser-grid.is-list .file-item__name {
+        display: block !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+    }
+
+    .file-explorer[data-content-type="FILE"] .file-browser-grid.is-list .explorer-list-slot--download {
+        grid-area: download !important;
+        align-self: center !important;
+        justify-self: center !important;
+        width: 28px !important;
+        min-width: 28px !important;
+        height: 28px !important;
+    }
+
+    .file-explorer[data-content-type="FILE"] .file-browser-grid.is-list .explorer-list-slot--menu {
+        grid-area: menu !important;
+        align-self: center !important;
+        justify-self: center !important;
+        width: 28px !important;
+        min-width: 28px !important;
+    }
+
+    .file-explorer[data-content-type="FILE"] .file-browser-grid.is-list .explorer-list-slot--specific {
+        width: 100% !important;
+        min-width: 0 !important;
+        overflow: hidden !important;
+    }
+}
+
+/* 2026-08-10 FILE mobile true two-line row */
+@media (max-width: 560px) {
+    .file-explorer[data-content-type="FILE"] .file-browser-grid.is-list > .file-item.explorer-list-row {
+        grid-template-columns: 38px minmax(0, 1fr) 28px 28px !important;
+        grid-template-rows: 22px 16px !important;
+        grid-template-areas:
+            "preview name download menu"
+            "preview specific status menu" !important;
+        min-height: 62px !important;
+        padding: 9px 8px !important;
+        row-gap: 3px !important;
+        overflow: hidden !important;
+    }
+
+    .file-explorer[data-content-type="FILE"] .file-browser-grid.is-list .explorer-list-slot--name {
+        grid-area: name !important;
+        min-width: 0 !important;
+        width: 100% !important;
+        overflow: hidden !important;
+        align-self: center !important;
+    }
+
+    .file-explorer[data-content-type="FILE"] .file-browser-grid.is-list .explorer-list-slot--name .file-item__name,
+    .file-explorer[data-content-type="FILE"] .file-browser-grid.is-list .file-item__name {
+        display: block !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+        line-height: 22px !important;
+    }
+
+    .file-explorer[data-content-type="FILE"] .file-browser-grid.is-list .explorer-list-slot--specific,
+    .file-explorer[data-content-type="FILE"] .file-browser-grid.is-list .file-item__size {
+        display: flex !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        grid-area: specific !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        align-self: center !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        height: 16px !important;
+        overflow: hidden !important;
+        color: #7b8799 !important;
+        font-size: 10px !important;
+        font-weight: 500 !important;
+        line-height: 16px !important;
+        white-space: nowrap !important;
+        text-overflow: ellipsis !important;
+    }
+
+    .file-explorer[data-content-type="FILE"] .file-browser-grid.is-list .explorer-list-slot--status {
+        display: flex !important;
+        grid-area: status !important;
+        align-self: center !important;
+        justify-self: end !important;
+        align-items: center !important;
+        height: 16px !important;
+        min-width: 0 !important;
+        gap: 5px !important;
+    }
+
+    .file-explorer[data-content-type="FILE"] .file-browser-grid.is-list .explorer-list-slot--download {
+        grid-area: download !important;
+        align-self: center !important;
+        justify-self: center !important;
+        width: 28px !important;
+        height: 28px !important;
+    }
+
+    .file-explorer[data-content-type="FILE"] .file-browser-grid.is-list .explorer-list-slot--menu {
+        grid-area: menu !important;
+        align-self: center !important;
+        justify-self: center !important;
+        width: 28px !important;
+        height: 100% !important;
+    }
+
+    .file-explorer[data-content-type="FILE"] .file-browser-grid.is-list > .file-item[data-kind="folder"] {
+        min-height: 60px !important;
+    }
+}
+
+/* 2026-08-10 FILE mobile: share / download / more stay on the title row */
+@media (max-width: 560px) {
+    .file-explorer[data-content-type="FILE"] .file-browser-grid.is-list > .file-item.explorer-list-row {
+        grid-template-columns: 38px minmax(0, 1fr) auto 28px 28px !important;
+        grid-template-rows: 22px 16px !important;
+        grid-template-areas:
+            "preview name status download menu"
+            "preview specific status download menu" !important;
+        min-height: 62px !important;
+        padding: 9px 8px !important;
+        column-gap: 4px !important;
+        row-gap: 3px !important;
+    }
+
+    .file-explorer[data-content-type="FILE"] .file-browser-grid.is-list .explorer-list-slot--status {
+        grid-area: status !important;
+        align-self: center !important;
+        justify-self: end !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: flex-end !important;
+        width: auto !important;
+        min-width: 0 !important;
+        height: 28px !important;
+        gap: 4px !important;
+    }
+
+    .file-explorer[data-content-type="FILE"] .file-browser-grid.is-list .explorer-list-slot--specific {
+        grid-area: specific !important;
+        align-self: center !important;
+        justify-self: stretch !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        height: 16px !important;
+        padding-right: 0 !important;
+    }
+
+    .file-explorer[data-content-type="FILE"] .file-browser-grid.is-list .explorer-list-slot--download,
+    .file-explorer[data-content-type="FILE"] .file-browser-grid.is-list .explorer-list-slot--menu {
+        align-self: center !important;
+        justify-self: center !important;
+        width: 28px !important;
+        height: 28px !important;
+    }
+
+    .file-explorer[data-content-type="FILE"] .file-browser-grid.is-list .explorer-list-slot--menu {
+        grid-area: menu !important;
+    }
+
+    .file-explorer[data-content-type="FILE"] .file-browser-grid.is-list .explorer-list-slot--download {
+        grid-area: download !important;
+    }
+}
+
+/* 2026-08-10 FILE mobile: balanced two-row action rail + clickable share state */
+@media (max-width: 560px) {
+    .file-explorer[data-content-type="FILE"] .file-browser-grid.is-list > .file-item.explorer-list-row {
+        grid-template-columns: 38px minmax(0, 1fr) auto auto auto !important;
+        grid-template-rows: 22px 16px !important;
+        grid-template-areas:
+            "preview name status download menu"
+            "preview specific status download menu" !important;
+        column-gap: 7px !important;
+        padding-right: 10px !important;
+    }
+
+    .file-explorer[data-content-type="FILE"] .file-browser-grid.is-list .explorer-list-slot--status,
+    .file-explorer[data-content-type="FILE"] .file-browser-grid.is-list .explorer-list-slot--download,
+    .file-explorer[data-content-type="FILE"] .file-browser-grid.is-list .explorer-list-slot--menu {
+        align-self: stretch !important;
+        justify-self: center !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        height: 100% !important;
+        min-width: 28px !important;
+        width: 28px !important;
+        margin: 0 !important;
+    }
+
+    .file-explorer[data-content-type="FILE"] .file-browser-grid.is-list .explorer-list-slot--status:empty {
+        display: none !important;
+        min-width: 0 !important;
+        width: 0 !important;
+    }
+
+    .file-explorer[data-content-type="FILE"] .file-browser-grid.is-list .file-item__share-status,
+    .file-explorer[data-content-type="FILE"] .file-browser-grid.is-list .file-item__download,
+    .file-explorer[data-content-type="FILE"] .file-browser-grid.is-list .file-item__menu {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 28px !important;
+        height: 28px !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        border: 0 !important;
+        border-radius: 8px !important;
+        background: transparent !important;
+        cursor: pointer !important;
+        line-height: 1 !important;
+    }
+
+    .file-explorer[data-content-type="FILE"] .file-browser-grid.is-list .file-item__share-status:hover,
+    .file-explorer[data-content-type="FILE"] .file-browser-grid.is-list .file-item__download:hover,
+    .file-explorer[data-content-type="FILE"] .file-browser-grid.is-list .file-item__menu:hover {
+        background: #f2f6fd !important;
+    }
+}
+
+/* 2026-08-10 FILE list: keep long filenames inside the name column on desktop/tablet. */
+.file-explorer[data-content-type="FILE"] .file-browser-grid.is-list .explorer-list-slot--name {
+    min-width: 0 !important;
+    max-width: 100% !important;
+    overflow: hidden !important;
+}
+
+.file-explorer[data-content-type="FILE"] .file-browser-grid.is-list .explorer-list-slot--name > .file-item__name,
+.file-explorer[data-content-type="FILE"] .file-browser-grid.is-list .file-item__name {
+    display: block !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    overflow: hidden !important;
+    white-space: nowrap !important;
+    text-overflow: ellipsis !important;
+}
+
+@media (min-width: 981px) {
+    .file-explorer[data-content-type="FILE"] .file-browser-grid.is-list > .file-item.explorer-list-row {
+        overflow: hidden !important;
+    }
+
+    .file-explorer[data-content-type="FILE"] .file-browser-grid.is-list .explorer-list-slot--uploader,
+    .file-explorer[data-content-type="FILE"] .file-browser-grid.is-list .explorer-list-slot--date,
+    .file-explorer[data-content-type="FILE"] .file-browser-grid.is-list .explorer-list-slot--specific,
+    .file-explorer[data-content-type="FILE"] .file-browser-grid.is-list .explorer-list-slot--status,
+    .file-explorer[data-content-type="FILE"] .file-browser-grid.is-list .explorer-list-slot--download,
+    .file-explorer[data-content-type="FILE"] .file-browser-grid.is-list .explorer-list-slot--menu {
+        min-width: 0 !important;
+    }
+}
+
+/* 2026-08-10 FILE share status: clickable affordance on every list breakpoint. */
+.file-explorer[data-content-type="FILE"] .file-browser-grid.is-list .file-item__share-status {
+    cursor: pointer !important;
+}
+
+.file-explorer[data-content-type="FILE"] .file-browser-grid.is-list .file-item__share-status:hover {
+    color: #4f76e8 !important;
+    background: #f2f6fd !important;
+}
+
+/* 2026-08-10 PHOTO compact viewport list: title/count + reactions + compact action rail */
+@media (max-width: 680px) {
+    .file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list > .file-item.explorer-list-row {
+        grid-template-columns: 46px minmax(0, 1fr) auto 30px !important;
+        grid-template-rows: auto auto !important;
+        grid-template-areas:
+            "preview name status menu"
+            "preview specific status menu" !important;
+        column-gap: 8px !important;
+        row-gap: 3px !important;
+        min-height: 66px !important;
+        padding: 8px 9px !important;
+        align-items: center !important;
+    }
+
+    .file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .explorer-list-slot--preview {
+        grid-area: preview !important;
+        align-self: center !important;
+    }
+
+    .file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .explorer-list-slot--name {
+        grid-area: name !important;
+        align-self: end !important;
+        min-width: 0 !important;
+        overflow: hidden !important;
+    }
+
+    .file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .photo-list-name {
+        display: flex !important;
+        align-items: center !important;
+        gap: 6px !important;
+        min-width: 0 !important;
+        overflow: hidden !important;
+        white-space: nowrap !important;
+    }
+
+    .file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .photo-list-name > strong {
+        display: block !important;
+        flex: 0 1 auto !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+    }
+
+    .file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .photo-list-name__sub {
+        display: inline-flex !important;
+        flex: 0 0 auto !important;
+        align-items: center !important;
+        gap: 3px !important;
+        margin: 0 !important;
+        font-size: 10px !important;
+        line-height: 1 !important;
+        color: #75839a !important;
+        white-space: nowrap !important;
+    }
+
+    .file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .explorer-list-slot--specific {
+        display: flex !important;
+        grid-area: specific !important;
+        align-self: start !important;
+        justify-self: start !important;
+        min-width: 0 !important;
+    }
+
+    .file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .photo-list-reactions {
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+        min-width: 0 !important;
+    }
+
+    .file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .photo-list-reaction {
+        min-width: 0 !important;
+        padding: 0 !important;
+        font-size: 11px !important;
+        line-height: 1 !important;
+    }
+
+    .file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .explorer-list-slot--status {
+        display: inline-flex !important;
+        grid-area: status !important;
+        align-self: center !important;
+        justify-self: end !important;
+        align-items: center !important;
+        gap: 7px !important;
+        min-width: 0 !important;
+        white-space: nowrap !important;
+    }
+
+    .file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .photo-list-state {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 24px !important;
+        height: 28px !important;
+        margin: 0 !important;
+    }
+
+    .file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .photo-list-state.is-collect {
+        display: none !important;
+    }
+
+    .file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .explorer-list-slot--download,
+    .file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .file-item__download {
+        display: none !important;
+    }
+
+    .file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .explorer-list-slot--menu {
+        display: flex !important;
+        grid-area: menu !important;
+        align-self: center !important;
+        justify-self: end !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 30px !important;
+        min-width: 30px !important;
+    }
+
+    .file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .file-item__menu {
+        width: 28px !important;
+        height: 28px !important;
+        margin: 0 !important;
+    }
+
+    .file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list > .file-item[data-kind="folder"] {
+        grid-template-columns: 46px minmax(0, 1fr) 30px !important;
+        grid-template-rows: 1fr !important;
+        grid-template-areas: "preview name menu" !important;
+        min-height: 62px !important;
+    }
+
+    .file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list > .file-item[data-kind="folder"] .photo-list-name__sub {
+        display: inline-flex !important;
+    }
+}
+
+/* 2026-08-10 PHOTO narrow list final: title + MOYO / count below / reactions + more */
+.photo-list-name__title-row {
+    display: contents;
+}
+
+.photo-list-name__moyo {
+    display: none;
+}
+
+@media (max-width: 680px) {
+    .file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list > .file-item.explorer-list-row {
+        grid-template-columns: 46px minmax(0, 1fr) auto 30px !important;
+        grid-template-rows: auto auto !important;
+        grid-template-areas:
+            "preview name specific menu"
+            "preview name specific menu" !important;
+        column-gap: 8px !important;
+        row-gap: 0 !important;
+        min-height: 66px !important;
+        padding: 8px 9px !important;
+        align-items: center !important;
+    }
+
+    .file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .explorer-list-slot--preview {
+        grid-area: preview !important;
+        align-self: center !important;
+    }
+
+    .file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .explorer-list-slot--name {
+        grid-area: name !important;
+        align-self: center !important;
+        min-width: 0 !important;
+        overflow: hidden !important;
+    }
+
+    .file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .photo-list-name {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        justify-content: center !important;
+        gap: 3px !important;
+        min-width: 0 !important;
+        overflow: hidden !important;
+        white-space: normal !important;
+    }
+
+    .file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .photo-list-name__title-row {
+        display: flex !important;
+        align-items: center !important;
+        gap: 5px !important;
+        width: 100% !important;
+        min-width: 0 !important;
+    }
+
+    .file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .photo-list-name__title-row > strong {
+        display: block !important;
+        flex: 0 1 auto !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+        font-size: 13px !important;
+        line-height: 1.25 !important;
+    }
+
+    .file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .photo-list-name__moyo {
+        display: inline-flex !important;
+        flex: 0 0 18px !important;
+        width: 18px !important;
+        height: 18px !important;
+        align-items: center !important;
+        justify-content: center !important;
+        margin: 0 !important;
+    }
+
+    .file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .photo-list-name__moyo img {
+        display: block !important;
+        width: 18px !important;
+        height: 18px !important;
+        object-fit: contain !important;
+    }
+
+    .file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .photo-list-name__sub {
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 3px !important;
+        margin: 0 !important;
+        font-size: 10px !important;
+        line-height: 1.1 !important;
+        color: #75839a !important;
+        white-space: nowrap !important;
+    }
+
+    .file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .explorer-list-slot--specific {
+        display: inline-flex !important;
+        grid-area: specific !important;
+        align-self: center !important;
+        justify-self: end !important;
+        min-width: 0 !important;
+    }
+
+    .file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .photo-list-reactions {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: flex-end !important;
+        gap: 7px !important;
+        white-space: nowrap !important;
+    }
+
+    .file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .photo-list-reaction {
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 3px !important;
+        min-width: 0 !important;
+        padding: 0 !important;
+        font-size: 11px !important;
+        line-height: 1 !important;
+    }
+
+    /* Narrow PHOTO list keeps only MOYO beside the title; other state actions stay out of the row. */
+    .file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .explorer-list-slot--status,
+    .file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .photo-list-states,
+    .file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .explorer-list-slot--download,
+    .file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .file-item__download {
+        display: none !important;
+    }
+
+    .file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .explorer-list-slot--menu {
+        display: flex !important;
+        grid-area: menu !important;
+        align-self: center !important;
+        justify-self: end !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 30px !important;
+        min-width: 30px !important;
+    }
+
+    .file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .file-item__menu {
+        width: 28px !important;
+        height: 28px !important;
+        margin: 0 !important;
+    }
+
+    .file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list > .file-item[data-kind="folder"] {
+        grid-template-columns: 46px minmax(0, 1fr) 30px !important;
+        grid-template-rows: 1fr !important;
+        grid-template-areas: "preview name menu" !important;
+        min-height: 62px !important;
+    }
+
+    .file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list > .file-item[data-kind="folder"] .explorer-list-slot--specific,
+    .file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list > .file-item[data-kind="folder"] .explorer-list-slot--status,
+    .file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list > .file-item[data-kind="folder"] .explorer-list-slot--download {
+        display: none !important;
+    }
+}
+
+/* 2026-08-10 PHOTO narrow list optical spacing/alignment */
+@media (max-width: 680px) {
+    .file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .explorer-list-slot--menu {
+        margin-left: -4px !important;
+    }
+
+    .file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .photo-list-name__moyo {
+        transform: translateY(-2px) !important;
+    }
+}
+
+/* 2026-08-10 PHOTO mobile: reaction position baseline */
+@media (max-width: 680px) {
+    .file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .explorer-list-slot--specific {
+        transform: none !important;
+    }
+}
+
+/* 2026-08-10 mobile toolbar: consolidated spacing/alignment */
+@media (max-width: 680px) {
+    .file-browser-toolbar {
+        gap: 2px !important;
+        padding-top: 5px !important;
+        padding-bottom: 4px !important;
+        background: transparent !important;
+        box-shadow: none !important;
+    }
+
+    .file-browser-location--toolbar {
+        min-height: 20px !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        line-height: 20px !important;
+    }
+
+    .file-browser-actions {
+        row-gap: 2px !important;
+        column-gap: 7px !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    .file-browser-actions .file-search {
+        justify-self: stretch !important;
+        margin: 0 !important;
+    }
+
+    .file-browser-actions .file-sort-control {
+        justify-self: start !important;
+        margin: 0 !important;
+        transform: none !important;
+    }
+
+    .file-browser-actions .view-toggle {
+        margin-top: 0 !important;
+        margin-bottom: 0 !important;
+    }
+
+    .file-browser-grid {
+        padding-top: 6px !important;
+    }
+
+    .file-browser-grid.is-list {
+        padding-top: 5px !important;
+    }
+}
+
+@media (max-width: 520px) {
+    .file-browser-toolbar {
+        padding-top: 4px !important;
+        padding-bottom: 3px !important;
+    }
+
+    .file-browser-grid {
+        padding-top: 5px !important;
+    }
+
+    .file-browser-grid.is-list {
+        padding-top: 4px !important;
+    }
+}
+
+/* 2026-08-29 breadcrumb overflow: keep current path readable on long project/folder names */
+.file-browser-location--toolbar {
+    flex: 1 1 0;
+    overflow: hidden;
+}
+
+.file-breadcrumb {
+    flex: 1 1 0;
+    overflow: hidden;
+}
+
+.file-breadcrumb > span {
+    flex: 0 0 auto;
+}
+
+.file-breadcrumb > button {
+    display: block;
+    flex: 0 1 auto;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* The project/root name may be very long. Let it yield space first. */
+.file-breadcrumb > button:first-child:not(:last-child) {
+    max-width: clamp(120px, 24vw, 330px);
+}
+
+/* Intermediate folders should not consume the whole toolbar. */
+.file-breadcrumb > button:not(:first-child):not(:last-child) {
+    max-width: 180px;
+}
+
+/* Give the current folder the strongest visual priority. */
+.file-breadcrumb > button:last-child {
+    min-width: 0;
+    max-width: clamp(100px, 18vw, 240px);
+    flex-shrink: 1;
+}
+
+.file-breadcrumb-count {
+    flex: 0 0 auto;
+}
+
+@media (max-width: 1100px) {
+    .file-breadcrumb > button:first-child:not(:last-child) {
+        max-width: 190px;
+    }
+
+    .file-breadcrumb > button:not(:first-child):not(:last-child) {
+        max-width: 120px;
+    }
+
+    .file-breadcrumb > button:last-child {
+        max-width: 170px;
+    }
+}
+
+/* 2026-08-10 MOYO view toggle: consolidated soft capsule */
+.view-toggle {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 33px;
+    min-width: 33px;
+    height: 36px;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden;
+    border-top: 1px solid #e4eaf3;
+    border-bottom: 1px solid #e4eaf3;
+    background: #fff;
+    color: transparent;
+    font-size: 0;
+    line-height: 1;
+    box-shadow: none;
+    transform: none;
+    transition: background .16s ease, border-color .16s ease, box-shadow .16s ease;
+}
+
+.file-browser-actions .view-toggle[data-view="grid"] {
+    border-left: 1px solid #e4eaf3;
+    border-right: 0;
+    border-radius: 13px 0 0 13px;
+}
+
+.file-browser-actions .view-toggle[data-view="list"] {
+    border-left: 0;
+    border-right: 1px solid #e4eaf3;
+    border-radius: 0 13px 13px 0;
+}
+
+.file-browser-actions .view-toggle[data-view="grid"]:hover,
+.file-browser-actions .view-toggle[data-view="list"]:hover {
+    z-index: 1;
+    background: #f8faff;
+    border-color: #d8e2f1;
+}
+
+.file-browser-actions .view-toggle[data-view="grid"].is-active,
+.file-browser-actions .view-toggle[data-view="list"].is-active {
+    z-index: 2;
+    border-color: #d4e0f2;
+    background: #f4f7fd;
+    box-shadow: inset 2px 2px 0 rgba(255,255,255,.78), inset -2px -2px 0 rgba(255,255,255,.78);
+}
+
+.file-browser-actions .view-toggle[data-view="grid"].is-active {
+    border-radius: 13px 10px 10px 13px;
+}
+
+.file-browser-actions .view-toggle[data-view="list"].is-active {
+    border-radius: 10px 13px 13px 10px;
+}
+
+.file-browser-actions .view-toggle[data-view="grid"]:focus-visible,
+.file-browser-actions .view-toggle[data-view="list"]:focus-visible {
+    z-index: 3;
+    outline: none;
+    box-shadow: inset 2px 2px 0 rgba(255,255,255,.78), inset -2px -2px 0 rgba(255,255,255,.78),
+                0 0 0 3px rgba(82, 129, 235, .10);
+}
+
+/* grid: four soft rounded cards */
+.view-toggle[data-view="grid"]::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 2px;
+    background: #8198ba;
+    box-shadow: 9px 0 0 #8198ba, 0 9px 0 #8198ba, 9px 9px 0 #8198ba;
+    transform: translate(-4.5px, -4.5px);
+}
+
+.file-browser-actions .view-toggle[data-view="grid"].is-active::before {
+    background: #6287cf;
+    box-shadow: 9px 0 0 #6d91d5, 0 9px 0 #72a1d7, 9px 9px 0 #788bd2;
+}
+
+/* list: rounded bullets + short lines, optically centered */
+.view-toggle[data-view="list"]::before {
+    content: "";
+    position: absolute;
+    left: 7.5px;
+    top: 12px;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: #8198ba;
+    box-shadow: 0 6px 0 #8198ba, 0 12px 0 #8198ba;
+    transform: translateY(-1px);
+}
+
+.view-toggle[data-view="list"]::after {
+    content: "";
+    position: absolute;
+    left: 14.5px;
+    top: 12.5px;
+    width: 11px;
+    height: 3px;
+    border-radius: 999px;
+    background: #8198ba;
+    box-shadow: 0 6px 0 #8198ba, 0 12px 0 #8198ba;
+    transform: translateY(-1px);
+}
+
+.file-browser-actions .view-toggle[data-view="list"].is-active::before,
+.file-browser-actions .view-toggle[data-view="list"].is-active::after {
+    background: #6287cf;
+    box-shadow: 0 6px 0 #6d91d5, 0 12px 0 #788bd2;
+}
+
+/* 2026-08-10: mobile explorer hero compact + narrow wrap */
+@media (max-width: 680px) {
+    .file-explorer__header {
+        min-height: 42px;
+        margin-bottom: 8px;
+        gap: 6px 8px;
+    }
+
+    .file-explorer__title-wrap {
+        gap: 7px;
+    }
+
+    .file-explorer__title-icon {
+        width: 23px;
+        height: 23px;
+        margin-top: 0;
+    }
+
+    .file-explorer__title-icon svg {
+        width: 20px;
+        height: 20px;
+    }
+
+    .file-explorer h1 {
+        font-size: 23px;
+        line-height: 1.1;
+    }
+
+    .file-explorer__header p:last-child {
+        margin-top: 3px;
+        line-height: 1.25;
+    }
+
+    .file-explorer__header-actions .moyo-btn {
+        height: 32px;
+        min-height: 32px;
+    }
+}
+
+@media (max-width: 390px) {
+    .file-explorer__header {
+        grid-template-columns: minmax(0, 1fr);
+        align-items: start;
+        row-gap: 6px;
+    }
+
+    .file-explorer__header-actions {
+        justify-self: stretch;
+        width: 100%;
+        justify-content: flex-end;
+    }
+
+    .file-explorer__header-actions > * {
+        flex: 0 1 auto;
+    }
+}
+
+/* 2026-08-29 breadcrumb flex width: use all toolbar space before ellipsis */
+.file-browser-location--toolbar {
+    flex: 1 1 auto;
+    width: auto;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.file-breadcrumb {
+    flex: 1 1 auto;
+    width: 100%;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.file-breadcrumb > button {
+    min-width: 0;
+    max-width: none;
+}
+
+/* Root/project name receives the unused toolbar width and only shrinks when necessary. */
+.file-breadcrumb > button:first-child:not(:last-child) {
+    flex: 1 1 360px;
+    max-width: none;
+}
+
+/* Intermediate folders remain compact so the current location can stay visible. */
+.file-breadcrumb > button:not(:first-child):not(:last-child) {
+    flex: 0 1 180px;
+    max-width: 180px;
+}
+
+/* Current folder keeps its natural width, but can yield on genuinely narrow screens. */
+.file-breadcrumb > button:last-child {
+    flex: 0 1 auto;
+    max-width: min(260px, 32vw);
+}
+
+/* At the project/root level there is no reason to cap the only breadcrumb label. */
+.file-breadcrumb > button:first-child:last-child {
+    flex: 1 1 auto;
+    width: 100%;
+    max-width: none;
+}
+
+@media (max-width: 1100px) {
+    .file-breadcrumb > button:first-child:not(:last-child) {
+        flex-basis: 260px;
+        max-width: none;
+    }
+
+    .file-breadcrumb > button:not(:first-child):not(:last-child) {
+        max-width: 140px;
+    }
+
+    .file-breadcrumb > button:last-child {
+        max-width: min(220px, 34vw);
+    }
+}
+
+
+/* =========================================================
+   MOYO Stage 7 - Note / Photo / File common explorer unification
+   - 기능/DOM 구조 유지
+   - neutral surface + MOYO blue interaction
+   - 핵심 CTA만 brand gradient
+   ========================================================= */
+.file-explorer {
+    background: var(--moyo-color-page, #f6f8fb) !important;
+    color: var(--moyo-color-text, #1f2937);
+    font-family: var(--moyo-font-family, Pretendard, "Noto Sans KR", sans-serif);
+}
+.file-explorer__shell {
+    border: var(--moyo-border, 1px solid #e5ebf1) !important;
+    border-radius: var(--moyo-radius-lg, 18px) !important;
+    background: var(--moyo-color-surface, #fff) !important;
+    box-shadow: var(--moyo-shadow-sm, 0 8px 24px rgba(15,23,42,.06)) !important;
+}
+.file-tree-panel {
+    border-right: var(--moyo-border, 1px solid #e5ebf1) !important;
+    background: var(--moyo-color-surface-soft, #fbfcfe) !important;
+}
+.file-browser-panel {
+    background: var(--moyo-color-surface, #fff) !important;
+}
+.file-explorer__header {
+    border-bottom-color: var(--moyo-border-color, #e5ebf1) !important;
+}
+.file-explorer h1 {
+    color: var(--moyo-color-text, #1f2937) !important;
+}
+.file-explorer__header p:last-child,
+.file-browser-location,
+.file-breadcrumb {
+    color: var(--moyo-color-text-soft, #667085) !important;
+}
+.file-tree-row-wrap,
+.file-tree-root,
+.file-tree-recent,
+.file-project-row,
+.file-friend-share-row {
+    border-radius: var(--moyo-radius-md, 12px) !important;
+}
+.file-tree-row-wrap.is-active,
+.file-tree-root.is-active,
+.file-tree-row.is-active {
+    background: linear-gradient(
+        100deg,
+        rgba(56,205,182,.07) 0%,
+        rgba(74,144,226,.10) 58%,
+        rgba(115,104,246,.055) 100%
+    ) !important;
+    color: var(--moyo-color-primary-strong, #397fcf) !important;
+}
+.file-search,
+.file-sort-button,
+.view-toggle {
+    min-height: var(--moyo-control-height, 40px) !important;
+    border-color: var(--moyo-border-color, #e5ebf1) !important;
+    border-radius: var(--moyo-radius-md, 12px) !important;
+    background: var(--moyo-color-surface, #fff) !important;
+    box-shadow: none !important;
+}
+.file-search:focus-within,
+.file-sort-button:focus-visible,
+.view-toggle:focus-visible {
+    border-color: rgba(74,144,226,.48) !important;
+    box-shadow: 0 0 0 3px rgba(74,144,226,.10) !important;
+}
+.file-item {
+    border-color: var(--moyo-border-color, #e5ebf1) !important;
+    border-radius: var(--moyo-radius-lg, 18px) !important;
+    background: var(--moyo-color-surface, #fff) !important;
+    box-shadow: var(--moyo-shadow-xs, 0 4px 12px rgba(15,23,42,.035)) !important;
+}
+.file-item:hover {
+    border-color: var(--moyo-border-color-strong, #cfdae7) !important;
+    box-shadow: var(--moyo-shadow-md, 0 12px 28px rgba(15,23,42,.08)) !important;
+}
+.file-browser-grid.is-list .file-item {
+    border-radius: var(--moyo-radius-md, 12px) !important;
+}
+.file-item.is-selected {
+    border-color: rgba(74,144,226,.34) !important;
+    box-shadow: 0 0 0 3px rgba(74,144,226,.08) !important;
+}
+.moyo-btn {
+    min-height: var(--moyo-control-height, 40px) !important;
+    border-radius: var(--moyo-radius-md, 12px) !important;
+    font-family: inherit !important;
+}
+.moyo-btn--primary {
+    border: 0 !important;
+    background: linear-gradient(135deg, #38CDB6 0%, #4A90E2 56%, #7368F6 100%) !important;
+    color: #fff !important;
+    box-shadow: 0 8px 18px rgba(74,144,226,.20) !important;
+}
+.moyo-btn--primary:hover {
+    background: linear-gradient(135deg, #32BFA9 0%, #3F82D4 56%, #6758E6 100%) !important;
+    box-shadow: 0 10px 22px rgba(74,144,226,.24) !important;
+}
+.moyo-btn--ghost {
+    border: var(--moyo-border-strong, 1px solid #d7e1ed) !important;
+    background: var(--moyo-color-surface, #fff) !important;
+    color: var(--moyo-color-text-soft, #667085) !important;
+}
+.file-browser-empty {
+    border-color: var(--moyo-border-color-strong, #d7e1ed) !important;
+    border-radius: var(--moyo-radius-lg, 18px) !important;
+    background: var(--moyo-color-surface, #fff) !important;
+}
+
+
+/* =========================================================
+   MOYO Search Rule - one control = one border
+   - wrapper는 배치 역할만 담당
+   - 실제 input 하나에만 border/background/focus 적용
+   - Note / Photo / File 공통 탐색기 전체 적용
+   ========================================================= */
+.file-browser-actions .file-search,
+.file-search {
+    position: relative !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    width: 280px;
+    height: var(--moyo-control-height, 40px) !important;
+    min-height: var(--moyo-control-height, 40px) !important;
+    padding: 0 !important;
+    gap: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    overflow: visible !important;
+}
+
+.file-search:focus-within {
+    border: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+}
+
+.file-search__icon {
+    position: absolute !important;
+    left: 13px !important;
+    top: 50% !important;
+    z-index: 2 !important;
+    width: 18px !important;
+    height: 18px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    color: #6883a8 !important;
+    transform: translateY(-50%) !important;
+    pointer-events: none !important;
+}
+
+.file-search input,
+.file-browser-actions .file-search input {
+    width: 100% !important;
+    height: var(--moyo-control-height, 40px) !important;
+    min-height: var(--moyo-control-height, 40px) !important;
+    padding: 0 42px 0 40px !important;
+    border: 1px solid var(--moyo-border-color, #d9e3ef) !important;
+    border-radius: var(--moyo-radius-md, 12px) !important;
+    outline: 0 !important;
+    background: var(--moyo-color-surface, #fff) !important;
+    color: var(--moyo-color-text, #263247) !important;
+    box-shadow: none !important;
+    box-sizing: border-box !important;
+    -webkit-appearance: none !important;
+    appearance: none !important;
+    transition: border-color .16s ease, box-shadow .16s ease, background-color .16s ease !important;
+}
+
+.file-search input:hover {
+    border-color: var(--moyo-border-color-strong, #c8d5e4) !important;
+}
+
+.file-search input:focus,
+.file-search input:focus-visible {
+    border-color: rgba(74,144,226,.52) !important;
+    background: #fff !important;
+    box-shadow: 0 0 0 3px rgba(74,144,226,.10) !important;
+}
+
+.file-search:focus-within .file-search__icon {
+    color: var(--moyo-color-primary, #4A90E2) !important;
+}
+
+.file-search__clear {
+    position: absolute !important;
+    right: 8px !important;
+    top: 50% !important;
+    z-index: 2 !important;
+    transform: translateY(-50%) !important;
+}
+
+@media (max-width: 720px) {
+    .file-browser-actions .file-search,
+    .file-search {
+        width: 100% !important;
+    }
+}
+
+
+/* =========================================================
+   MOYO Explorer Breadcrumb - actual path, left aligned
+   - 경로는 제목이 아니라 실제 탐색 위치
+   - 루트 단독일 때도 중앙으로 늘어나지 않음
+   - 항목 수는 경로 바로 옆
+   - 검색/정렬/보기는 우측 유지
+   ========================================================= */
+.file-browser-toolbar {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 16px !important;
+}
+
+.file-browser-location--toolbar {
+    display: flex !important;
+    flex: 1 1 auto !important;
+    width: auto !important;
+    min-width: 0 !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    gap: 9px !important;
+    overflow: hidden !important;
+    text-align: left !important;
+}
+
+.file-breadcrumb {
+    display: flex !important;
+    flex: 0 1 auto !important;
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    gap: 7px !important;
+    overflow: hidden !important;
+    text-align: left !important;
+    white-space: nowrap !important;
+}
+
+.file-breadcrumb > button,
+.file-breadcrumb > span {
+    flex: 0 1 auto !important;
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: none !important;
+}
+
+.file-breadcrumb > button:first-child:last-child {
+    flex: 0 1 auto !important;
+    width: auto !important;
+    max-width: min(360px, 34vw) !important;
+}
+
+.file-breadcrumb > button:first-child:not(:last-child) {
+    flex: 0 1 auto !important;
+    max-width: min(280px, 24vw) !important;
+}
+
+.file-breadcrumb > button:not(:first-child):not(:last-child) {
+    flex: 0 1 auto !important;
+    max-width: 180px !important;
+}
+
+.file-breadcrumb > button:last-child {
+    flex: 0 1 auto !important;
+    max-width: min(260px, 24vw) !important;
+    color: var(--moyo-color-text, #20304b) !important;
+    font-weight: 800 !important;
+}
+
+.file-breadcrumb > button {
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    text-align: left !important;
+}
+
+.file-breadcrumb > span {
+    color: #a3adbb !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+}
+
+.file-breadcrumb-count {
+    flex: 0 0 auto !important;
+    margin-left: 2px !important;
+}
+
+.file-browser-actions {
+    flex: 0 0 auto !important;
+    margin-left: auto !important;
+}
+
+/* 이전 폴더 버튼도 breadcrumb 시작점에 붙여서 하나의 경로처럼 보이게 */
+.file-folder-back {
+    flex: 0 0 auto !important;
+    margin: 0 1px 0 0 !important;
+}
+
+/* 좁은 화면에서는 경로가 먼저 줄고 우측 컨트롤은 기존 반응형 유지 */
+@media (max-width: 1100px) {
+    .file-breadcrumb > button:first-child:last-child {
+        max-width: min(260px, 28vw) !important;
+    }
+
+    .file-breadcrumb > button:first-child:not(:last-child) {
+        max-width: min(210px, 22vw) !important;
+    }
+
+    .file-breadcrumb > button:not(:first-child):not(:last-child) {
+        max-width: 130px !important;
+    }
+
+    .file-breadcrumb > button:last-child {
+        max-width: min(190px, 22vw) !important;
+    }
+}
+
+@media (max-width: 720px) {
+    .file-browser-toolbar {
+        align-items: stretch !important;
+        flex-direction: column !important;
+        gap: 8px !important;
+    }
+
+    .file-browser-location--toolbar {
+        width: 100% !important;
+    }
+
+    .file-breadcrumb {
+        flex: 1 1 auto !important;
+    }
+
+    .file-breadcrumb > button:first-child:last-child,
+    .file-breadcrumb > button:first-child:not(:last-child),
+    .file-breadcrumb > button:not(:first-child):not(:last-child),
+    .file-breadcrumb > button:last-child {
+        max-width: 42vw !important;
+    }
+
+    .file-browser-actions {
+        width: 100% !important;
+        margin-left: 0 !important;
+    }
+}

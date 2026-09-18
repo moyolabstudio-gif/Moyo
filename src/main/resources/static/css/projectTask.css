@@ -1,1848 +1,1715 @@
-/*
- * MOYO 프로젝트 업무 스타일
- * 업무 현황, 칸반, 업무 카드, 업무 모달을 담당합니다.
- */
+.project-task-product{position:relative;overflow:visible;}.project-task-head{display:flex;justify-content:space-between;gap:24px;}.project-task-heading{min-width:0;}.project-task-kicker{display:block;font-weight:900;}.project-task-heading h3{margin:0;color:#182230;font-weight:900;}.project-task-heading p{margin:7px 0 0;color:#758195;}.project-task-head-actions{display:flex;gap:9px;flex-shrink:0;}.project-task-view-btn,.project-task-add-btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;font-size:12px;font-weight:900;cursor:pointer;transition:.18s ease;}.project-task-view-btn{border:1px solid #dfe7ef;background:#fff;color:#526175;}.project-task-view-btn:hover{border-color:#9fc8ef;background:#f7fbff;color:#377fc7;}.project-task-add-btn{border:0;background:linear-gradient(135deg,#55DDBF 0%,#4a90e2 56%,#7568d8 100%);color:#fff;box-shadow:0 8px 20px rgba(74,144,226,.2);}.project-task-add-btn:hover{transform:translateY(-1px);box-shadow:0 11px 24px rgba(74,144,226,.25);}
+.project-task-summary{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));}.project-task-metric{display:flex;align-items:center;justify-content:space-between;gap:10px;min-width:0;border:1px solid #e7ecf2;color:#697587;cursor:pointer;transition:.18s ease;}.project-task-metric span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:800;}.project-task-metric strong{color:#1d2939;font-weight:900;}.project-task-metric:hover,.project-task-metric.is-active{border-color:#a9caeb;background:#f7fbff;box-shadow:0 6px 16px rgba(74,144,226,.08);}.project-task-metric.is-delay strong{color:#e45c69;}.project-task-metric.is-delay.is-active{border-color:#f3bdc2;background:#fff8f8;color:#d84f5c;}
+.project-task-tools{display:none;align-items:center;gap:10px;margin-bottom:18px;}.project-task-product.is-workspace .project-task-tools{display:flex;}.project-task-search{display:flex;align-items:center;gap:9px;min-width:260px;height:38px;padding:0 12px;border:1px solid #dde5ed;border-radius:12px;background:#fff;color:#99a5b5;}.project-task-search:focus-within{border-color:#86b9e7;box-shadow:0 0 0 3px rgba(74,144,226,.1);}.project-task-search input{width:100%;border:0;outline:0;background:transparent;color:#273142;font-size:12px;}.project-task-person-filter{display:flex;align-items:center;gap:7px;min-width:0;overflow-x:auto;padding:2px;}.project-task-person-filter::-webkit-scrollbar{height:4px;}.project-task-person-chip{display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 10px;border:1px solid #e1e7ee;border-radius:999px;background:#fff;color:#637083;font-size:11px;font-weight:800;white-space:nowrap;cursor:pointer;}.project-task-person-chip.is-active{border-color:#82b9e9;background:#eef7ff;color:#2f7fc9;}.project-task-reset-btn{display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 10px;border:0;background:transparent;color:#8a95a5;font-size:11px;font-weight:800;cursor:pointer;white-space:nowrap;}
+.project-task-board{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));}.project-task-column{min-width:0;border:1px solid #e8edf2;background:#f7f9fb;}.project-task-column>header{display:flex;align-items:center;gap:8px;color:#354052;}.project-task-column>header strong{font-size:13px;font-weight:900;}.project-task-column>header em{display:inline-flex;align-items:center;justify-content:center;min-width:23px;height:22px;padding:0 7px;border-radius:999px;background:#fff;color:#667085;font-size:11px;font-style:normal;font-weight:900;}.project-task-column-dot{width:8px;height:8px;border-radius:50%;}.project-task-column-dot.todo{background:#8ea1b8;}.project-task-column-dot.progress{background:#f0b65a;}.project-task-column-dot.done{background:#55c7ad;}.project-task-list{display:flex;flex-direction:column;gap:9px;}.project-task-card{display:block;width:100%;border:1px solid #e3e9ef;background:#fff;text-align:left;box-shadow:0 4px 12px rgba(31,42,68,.04);cursor:pointer;transition:.18s ease;}.project-task-card:hover{transform:translateY(-2px);border-color:#bad2e8;box-shadow:0 10px 22px rgba(31,42,68,.08);}.project-task-card.is-dragging{opacity:.45;}.project-task-card.is-delayed{border-color:#f0c8cc;background:linear-gradient(180deg,#fff 0%,#fffafa 100%);}.project-task-card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;}.project-task-card-top strong{min-width:0;color:#202b3c;font-weight:900;word-break:break-word;}.project-task-card-top i{margin-top:3px;color:#b4becb;font-size:11px;}.project-task-card-period{display:flex;align-items:center;gap:6px;color:#7b8797;font-weight:750;}.project-task-card-bottom{display:flex;align-items:center;justify-content:space-between;gap:10px;border-top:1px solid #f0f3f6;}.project-task-person{display:flex;align-items:center;min-width:0;}.project-task-person>span:last-child{display:flex;flex-direction:column;min-width:0;}.project-task-person b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#344054;font-weight:900;}.project-task-person small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:700;}.project-task-card-bottom>em{flex-shrink:0;border-radius:999px;background:#f4f7fa;color:#728094;font-size:10px;font-style:normal;font-weight:900;}.project-task-avatar{position:relative;display:inline-grid;place-items:center;overflow:hidden;flex:0 0 auto;padding:0;border:0;border-radius:50%;color:#fff;font-weight:900;box-shadow:none;}.project-task-avatar.small{font-size:10px;}.project-task-avatar.tiny{width:24px;min-width:24px;max-width:24px;height:24px;min-height:24px;max-height:24px;font-size:9px;}.project-task-avatar.has-image{background:transparent!important;background-image:none!important;}.project-task-avatar.is-default-profile{background:var(--moyo-avatar-gradient,linear-gradient(135deg,#55D5CE 0%,#4288EF 52%,#5A55EE 100%));}.project-task-avatar>img{position:absolute;inset:0;display:block;width:100%;height:100%;border:0;border-radius:inherit;background:transparent;}.project-task-avatar>img.is-cover-image{object-fit:cover;transform:none;}.project-task-avatar>img.is-contain-image,.project-task-avatar>img.is-transparent-image{object-fit:contain;transform:scale(1.16);transform-origin:center;}.project-task-avatar.has-image>.moyo-member-avatar-fallback{display:none!important;}.project-task-avatar.is-default-profile>.moyo-member-avatar-fallback{display:grid!important;}.project-task-avatar>.moyo-member-avatar-fallback{position:absolute;inset:0;place-items:center;color:#fff;font-size:inherit;font-weight:900;}
+.project-task-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;color:#a0aaba;font-weight:750;text-align:center;}.project-task-empty i{color:#c2cbd6;}.project-task-empty.is-error{color:#d4606a;}.project-task-product:not(.is-workspace) .project-task-list{overflow:hidden;}.project-task-product.is-workspace{width:100%;max-width:100%;margin:0;}.project-task-product.is-workspace .project-task-board{align-items:start;}
+.project-task-modal-overlay{position:fixed;inset:0;z-index:10000;display:none;align-items:center;justify-content:center;}.project-task-modal-overlay.is-open{display:flex;}.project-task-modal{background:#fff;}.project-task-modal-head span{display:block;margin-bottom:4px;color:#55bfae;font-size:9px;font-weight:900;letter-spacing:.14em;}.project-task-modal-head-actions{display:flex;align-items:center;}.project-task-close-btn,.project-task-delete-btn{display:inline-flex;align-items:center;justify-content:center;color:#7d8999;font-size:20px;cursor:pointer;}.project-task-field{display:flex;flex-direction:column;gap:7px;}.project-task-field-wide{grid-column:1/-1;}.project-task-field>span{color:#4c596b;font-size:11px;font-weight:900;}.project-task-field input,.project-task-field select{width:100%;height:42px;padding:0 12px;border:1px solid #dfe6ed;border-radius:11px;background:#fff;color:#283446;font-size:12px;outline:none;}.project-task-field input:focus,.project-task-field select:focus{border-color:#7eb6e7;box-shadow:0 0 0 3px rgba(74,144,226,.1);}.project-task-time-toggle{display:flex;align-items:center;gap:8px;color:#566274;font-size:11px;font-weight:850;}.project-task-time-toggle input{accent-color:#4a90e2;}.project-task-time-fields{display:none;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;}.project-task-time-fields.is-visible{display:grid;}.project-task-form-note{line-height:1.5;}.project-task-form-note i{margin-right:5px;}.project-task-submit-btn{grid-column:1/-1;cursor:pointer;}.project-task-submit-btn:disabled{opacity:.55;cursor:wait;}.project-task-modal-open{overflow:hidden;}
+@media(max-width:900px){.project-task-summary{grid-template-columns:repeat(3,minmax(0,1fr));}.project-task-board{grid-template-columns:1fr;}.project-task-product:not(.is-workspace) .project-task-list{max-height:none;}.project-task-product.is-workspace{width:auto;margin-left:0;}.project-task-tools{align-items:stretch;flex-direction:column;}.project-task-search{min-width:0;}.project-task-person-filter{width:100%;}}
+.project-task-period-controls{transition:grid-template-columns .18s ease;}
+.project-task-date-control,.project-task-time-control{position:relative;}
+.project-task-date-control input,.project-task-time-control input{font-variant-numeric:tabular-nums;}
+.project-task-period.is-time-enabled .project-task-date-control,.project-task-period.is-time-enabled .project-task-time-control{min-width:0;}
+@media(max-width:640px){.project-task-product{padding:20px!important;}.project-task-head{flex-direction:column;}.project-task-head-actions{width:100%;}.project-task-view-btn,.project-task-add-btn{flex:1;}.project-task-summary{grid-template-columns:repeat(2,minmax(0,1fr));}.project-task-form{grid-template-columns:1fr;}.project-task-field-wide,.project-task-form-note,.project-task-submit-btn{grid-column:1;}.project-task-time-fields{grid-template-columns:1fr;}.project-task-modal-overlay{padding:10px;}.project-task-modal{border-radius:18px;}}
 
-.kanban-column {
-            
-            border: 1px solid #eef0f2;
-            
-            
-            
-            
-        }.kanban-header {
-            
-            text-align: center;
-            
-            
-            border-bottom: 1px solid #eef0f2;
-        }.todo-header { background: #FFF7E6; color: #D48806; }.progress-header { background: #E6F7FF; color: #1890FF; }.done-header { background: #F6FFED; color: #52C41A; }.task-list {
-            
-            
-            background: #fdfdfd;
-        }.task-card {
-            background: #fff !important;
-            border: 1px solid #eef0f2 !important;
-            border-radius: 12px !important;
-            padding: 14px !important;
-            margin-bottom: 10px !important;
-            cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }.work-board-section {
-            position: relative;
-        }@media (max-width: 640px){
-.work-board-actions {
-                width: 100%;
-            }.work-board-more-btn,
-            .work-board-actions .btn {
-                flex: 1;
-            }
-}.work-board-summary {
-            
-            
-            
-            margin-bottom: 18px;
-        }.work-summary-card {
-            min-width: 0;
-            
-            
-            border: 1px solid #eef0f2;
-            background: #fafbfc;
-        }.work-summary-card span {
-            display: block;
-            margin-bottom: 6px;
-            color: #777;
-            
-            
-        }.work-summary-card strong {
-            
-            color: #111;
-            
-            font-weight: 900;
-            
-        }.work-summary-card.total {
-            background: #f7fbff;
-            border-color: #dcebf8;
-        }.work-summary-card.progress {
-            background: #fff8eb;
-            border-color: #ffe8b8;
-        }.work-summary-card.done {
-            background: #f5fffb;
-            border-color: #d7f3ec;
-        }.work-summary-card.delay {
-            background: #fff5f5;
-            border-color: #ffd6d6;
-        }.task-status-pill {
-            display: inline-flex;
-            align-items: center;
-            height: 22px;
-            padding: 0 8px;
-            margin-top: 8px;
-            
-            
-            
-            
-            
-            
-        }.task-status-pill.delay {
-            background: #fff5f5;
-            color: #ff4d4d;
-            border-color: #ffd6d6;
-        }@media (max-width: 900px){
-.work-board-summary {
-                grid-template-columns: repeat(3, minmax(0, 1fr));
-            }
-}@media (max-width: 640px){
-.work-board-summary {
-                grid-template-columns: repeat(2, minmax(0, 1fr));
-            }
-}.task-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 6px 16px rgba(0,0,0,0.04);
-        }.kanban-wrapper {
-            
-            flex-direction: row;
-            
-            
-            
-        }.kanban-column {
-            flex: 1 1 0;
-            
-        }@media (max-width: 760px){
-.kanban-wrapper {
-                flex-direction: column;
-            }
-}@media (max-width: 760px){
-.kanban-wrapper {
-                flex-direction: column;
-            }.kanban-column {
-                min-height: 260px;
-            }.task-list {
-                min-height: 235px;
-            }
-}.calendar-marker.task-marker {
-            background: #F59E0B;
-        }.calendar-legend-item.task-legend {
-            color: #D97706 !important;
-            background: #FFF8E8 !important;
-            border-color: #FFE5A8 !important;
-        }.add-schedule-btn,
-        .add-task-btn,
-        .project-action-btn,
-        .write-btn,
-        .btn-primary,
-        button.save-btn,
-        .save-btn {
-            background: linear-gradient(135deg, var(--moyo-blue) 0%, #39CDB5 100%) !important;
-            border-color: transparent !important;
-            color: #fff !important;
-            box-shadow: 0 6px 14px rgba(57,205,181,0.18) !important;
-        }.add-schedule-btn:hover,
-        .add-task-btn:hover,
-        .project-action-btn:hover,
-        .write-btn:hover,
-        .btn-primary:hover,
-        button.save-btn:hover,
-        .save-btn:hover {
-            filter: brightness(0.98);
-            transform: translateY(-1px);
-        }.work-board-header {
-            align-items: flex-start;
-        }.work-board-actions {
-            
-            
-            gap: 8px;
-            flex-shrink: 0;
-        }.work-board-more-btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 32px;
-            padding: 0 13px;
-            border-radius: 999px;
-            background: #f7fbff;
-            border: 1px solid #dcebf8;
-            color: #4A90E2;
-            text-decoration: none;
-            font-size: 12px;
-            font-weight: 900;
-            white-space: nowrap;
-        }.work-board-more-btn:hover {
-            background: #eef7ff;
-            color: #4A90E2;
-        }@media (max-width: 640px){
-.work-board-actions {
-                width: 100%;
-            }.work-board-more-btn,
-            .work-board-actions .btn {
-                flex: 1;
-            }
-}.task-card-title {
-            font-size: 14px;
-            font-weight: 900;
-            margin-bottom: 7px;
-            color: #222;
-            word-break: break-word;
-            line-height: 1.35;
-        }.task-card-meta {
-            display: flex;
-            flex-direction: column;
-            gap: 3px;
-            color: #777;
-            font-size: 12px;
-            line-height: 1.45;
-        }.task-card-badges {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 5px;
-            margin-top: 9px;
-        }.task-badge {
-            display: inline-flex;
-            align-items: center;
-            height: 22px;
-            padding: 0 8px;
-            border-radius: 999px;
-            background: #f8fafc;
-            border: 1px solid #eef0f2;
-            color: #667085;
-            font-size: 11px;
-            font-weight: 900;
-        }.task-badge.delay {
-            background: #fff5f5;
-            border-color: #ffd6d6;
-            color: #ff4d4d;
-        }.task-badge.progress {
-            background: #fff8eb;
-            border-color: #ffe8b8;
-            color: #d98600;
-        }.task-badge.done {
-            background: #f5fffb;
-            border-color: #d7f3ec;
-            color: #0E9F8B;
-        }.task-card.delayed-task {
-            border-color: #ffd6d6 !important;
-            background: #fffafa !important;
-        }.admin-mode .admin-only-task-field {
-            display: block;
-        }.moyo-task-card {
-            
-            border: none !important;
-            
-            
-            cursor: pointer;
-            
-            
-            transition: transform .16s ease, box-shadow .16s ease, border-color .16s ease;
-            
-        }.moyo-task-card::before {
-            content: "";
-            position: absolute;
-            left: 0;
-            
-            
-            
-            border-radius: 0 999px 999px 0;
-            background: linear-gradient(180deg, #4A90E2, #55DDBF);
-        }.moyo-task-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 22px rgba(74, 144, 226, .12);
-        }.moyo-task-card.delayed-task {
-            
-            box-shadow: 0 6px 16px rgba(255, 77, 77, .08);
-        }.moyo-task-card.delayed-task::before {
-            background: linear-gradient(180deg, #ff6b6b, #ff9f9f);
-        }.moyo-task-top {
-            
-            justify-content: space-between;
-            align-items: flex-start;
-            gap: 10px;
-            
-        }.moyo-task-title {
-            
-            
-            
-            
-            
-            min-width: 0;
-        }.moyo-task-assignee {
-            flex-shrink: 0;
-            
-            
-            justify-content: center;
-            min-width: 26px;
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-        }.moyo-task-date-row {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-            margin-top: 10px;
-            margin-left: 4px;
-        }.moyo-task-date-pill {
-            display: inline-flex;
-            align-items: center;
-            min-height: 24px;
-            padding: 0 8px;
-            border-radius: 999px;
-            background: #f8fafc;
-            border: 1px solid #edf1f5;
-            color: #667085;
-            font-size: 11px;
-            font-weight: 800;
-        }.moyo-task-date-pill.deadline {
-            background: #fff8eb;
-            border-color: #ffe8b8;
-            color: #d98600;
-        }.moyo-task-date-pill.done {
-            background: #f5fffb;
-            border-color: #d7f3ec;
-            color: #0E9F8B;
-        }.moyo-task-date-pill.delay {
-            background: #fff5f5;
-            border-color: #ffd6d6;
-            color: #ff4d4d;
-        }.moyo-task-subline {
-            margin-top: 8px;
-            margin-left: 4px;
-            color: #98a2b3;
-            font-size: 11px;
-            font-weight: 700;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }.moyo-task-top {
-            display: block !important;
-            margin-left: 4px;
-        }.moyo-task-title {
-            display: block;
-            width: 100%;
-            color: #111827;
-            font-size: 14px;
-            font-weight: 900;
-            line-height: 1.45;
-            word-break: break-word;
-            white-space: normal;
-            overflow: visible;
-            text-overflow: clip;
-        }.moyo-task-assignee {
-            display: inline-flex;
-            align-items: center;
-            max-width: 100%;
-            height: 22px;
-            margin-top: 7px;
-            padding: 0 8px;
-            border-radius: 999px;
-            background: #eef7ff;
-            color: #2f7dd1;
-            font-size: 11px;
-            font-weight: 900;
-            white-space: nowrap;
-            overflow: visible;
-            text-overflow: clip;
-        }.moyo-task-range {
-            margin-top: 9px;
-            margin-left: 4px;
-            padding: 8px 10px;
-            border-radius: 12px;
-            background: #f8fafc;
-            border: 1px solid #edf1f5;
-            color: #475467;
-            font-size: 12px;
-            font-weight: 900;
-            line-height: 1.35;
-            text-align: center;
-        }.moyo-task-range.delay {
-            background: #fff5f5;
-            border-color: #ffd6d6;
-            color: #ff4d4d;
-        }.moyo-task-mini-badge {
-            display: inline-flex;
-            align-items: center;
-            height: 21px;
-            padding: 0 7px;
-            border-radius: 999px;
-            background: #fff5f5;
-            border: 1px solid #ffd6d6;
-            color: #ff4d4d;
-            font-size: 11px;
-            font-weight: 900;
-        }.moyo-task-mini-badge.done {
-            background: #f5fffb;
-            border-color: #d7f3ec;
-            color: #0E9F8B;
-        }.moyo-task-card {
-            position: relative;
-            
-            
-            border-radius: 12px !important;
-            background: #fff;
-            box-shadow: 0 4px 12px rgba(32, 48, 64, .045);
-            overflow: hidden;
-        }.moyo-task-card::before {
-            top: 10px !important;
-            bottom: 10px !important;
-            width: 3px !important;
-        }.moyo-task-compact-date {
-            flex-shrink: 0;
-            color: #667085;
-            font-size: 11px;
-            font-weight: 900;
-            letter-spacing: -0.02em;
-            white-space: nowrap;
-        }.moyo-task-compact-bottom {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            margin-top: 6px;
-            padding-left: 4px;
-            min-width: 0;
-        }.moyo-task-compact-member {
-            display: inline-flex;
-            align-items: center;
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-        }.moyo-task-compact-slot {
-            color: #98a2b3;
-            font-size: 10px;
-            font-weight: 800;
-            white-space: nowrap;
-        }.moyo-task-compact-badge {
-            display: inline-flex;
-            align-items: center;
-            height: 18px;
-            padding: 0 6px;
-            border-radius: 999px;
-            font-size: 10px;
-            font-weight: 900;
-            white-space: nowrap;
-        }.moyo-task-compact-badge.delay {
-            background: #fff5f5;
-            color: #ff4d4d;
-            border: 1px solid #ffd6d6;
-        }.moyo-task-compact-badge.done {
-            background: #f5fffb;
-            color: #0E9F8B;
-            border: 1px solid #d7f3ec;
-        }.moyo-task-card.delayed-task {
-            background: #fffafa !important;
-        }.moyo-task-card {
-            min-height: 70px !important;
-            padding: 11px 12px 10px 13px !important;
-        }.moyo-task-compact-top {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 8px;
-            padding-left: 4px;
-            margin-bottom: 7px;
-        }.moyo-task-compact-title {
-            min-width: 0;
-            flex: 1;
-            color: #111827;
-            font-size: 13px;
-            font-weight: 900;
-            line-height: 1.35;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }.moyo-task-compact-member {
-            flex-shrink: 0;
-            max-width: 72px;
-            height: 20px;
-            padding: 0 7px;
-            border-radius: 999px;
-            background: #eef7ff;
-            color: #2f7dd1;
-            font-size: 10px;
-            font-weight: 900;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }.moyo-task-time-lines {
-            margin-left: 4px;
-            padding: 8px 9px;
-            border-radius: 12px;
-            background: #f8fafc;
-            border: 1px solid #edf1f5;
-        }.moyo-task-time-line {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 8px;
-            color: #475467;
-            font-size: 11px;
-            font-weight: 900;
-            line-height: 1.25;
-        }.moyo-task-time-line + .moyo-task-time-line {
-            margin-top: 5px;
-            padding-top: 5px;
-            border-top: 1px dashed #e3e8ee;
-        }.moyo-task-time-label {
-            color: #98a2b3;
-            font-size: 10px;
-            font-weight: 900;
-        }.moyo-task-time-value {
-            color: #344054;
-            white-space: nowrap;
-        }.moyo-task-time-lines.delay {
-            background: #fff5f5;
-            border-color: #ffd6d6;
-        }.moyo-task-time-lines.delay .moyo-task-time-value {
-            color: #ff4d4d;
-        }.moyo-task-mini-badges {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 5px;
-            margin-top: 7px;
-            margin-left: 4px;
-        }.task-stable-modal {
-            width: 430px;
-            max-width: calc(100vw - 32px);
-            padding: 0 !important;
-            overflow: hidden;
-            border-radius: 20px !important;
-            border: 1px solid #e6edf4;
-            box-shadow: 0 22px 50px rgba(17,24,39,.18);
-            background: #fff;
-        }.task-stable-head {
-            padding: 22px 24px 16px;
-            border-bottom: 1px solid #eef0f2;
-            background:
-                radial-gradient(circle at 95% 0%, rgba(85,221,191,.20), transparent 32%),
-                linear-gradient(135deg, rgba(74,144,226,.10), rgba(255,255,255,.95));
-        }.task-stable-head h3 {
-            margin: 0;
-            color: #111827;
-            font-size: 20px;
-            font-weight: 900;
-            letter-spacing: -.04em;
-        }.task-stable-head p {
-            margin: 7px 0 0;
-            color: #6b7280;
-            font-size: 13px;
-            line-height: 1.45;
-        }.task-stable-body {
-            padding: 19px 24px 18px;
-        }.task-field {
-            margin-bottom: 13px;
-        }.task-field label {
-            display: block;
-            margin-bottom: 7px;
-            color: #374151;
-            font-size: 12px;
-            font-weight: 900;
-        }.task-field .modal-input,
-        .task-field .modal-select {
-            width: 100%;
-            min-height: 40px;
-            box-sizing: border-box;
-            border: 1px solid #dbe3ea;
-            border-radius: 12px;
-            padding: 9px 11px;
-            background: #fff;
-            color: #222;
-            font-size: 14px;
-            font-family: inherit;
-            outline: none;
-        }.task-field .modal-input:focus,
-        .task-field .modal-select:focus {
-            border-color: #4A90E2;
-            box-shadow: 0 0 0 4px rgba(74,144,226,.10);
-        }.task-date-card {
-            padding: 14px;
-            margin-bottom: 13px;
-            border: 1px solid #e8eef5;
-            border-radius: 16px;
-            background: #fbfdff;
-        }.task-date-row {
-            display: grid;
-            grid-template-columns: minmax(0, 1fr) 132px;
-            gap: 9px;
-            align-items: start;
-        }.task-date-row + .task-date-row {
-            margin-top: 10px;
-        }.task-stable-footer {
-            display: flex;
-            justify-content: flex-end;
-            gap: 8px;
-            padding: 16px 24px 22px;
-            border-top: 1px solid #eef0f2;
-            background: #fff;
-        }.task-btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 36px;
-            padding: 0 15px;
-            border-radius: 999px;
-            border: 1px solid transparent;
-            font-size: 13px;
-            font-weight: 900;
-            font-family: inherit;
-            cursor: pointer;
-        }.task-btn.ghost {
-            background: #fff;
-            color: #555;
-            border-color: #dde3ea;
-        }.task-btn.primary {
-            background: linear-gradient(135deg, #4A90E2 0%, #39CDB5 100%);
-            color: #fff;
-            box-shadow: 0 8px 18px rgba(57,205,181,.20);
-        }.task-btn.secondary {
-            background: #f7fbff;
-            border-color: #dcebf8;
-            color: #4A90E2;
-        }.task-btn.danger {
-            background: #fff5f5;
-            border-color: #ffd6d6;
-            color: #ff4d4d;
-            margin-right: auto;
-        }@media (max-width: 520px){
-.task-date-row {
-                grid-template-columns: 1fr;
-                gap: 0;
-            }
-}.main-task-card {
-            position: relative;
-            
-            
-            border: 1px solid #edf1f5 !important;
-            
-            background: #fff;
-            box-shadow: 0 6px 16px rgba(32, 48, 64, .045);
-            cursor: pointer;
-            transition: transform .14s ease, box-shadow .14s ease, border-color .14s ease;
-            overflow: hidden;
-        }.main-task-card::before {
-            content: "";
-            position: absolute;
-            left: 0;
-            top: 12px;
-            bottom: 12px;
-            width: 4px;
-            border-radius: 0 999px 999px 0;
-            background: linear-gradient(180deg, #4A90E2, #55DDBF);
-        }.main-task-card:hover {
-            transform: translateY(-1px);
-            border-color: #dcebf8 !important;
-            box-shadow: 0 10px 22px rgba(74, 144, 226, .11);
-        }.main-task-card.delayed-task::before {
-            background: linear-gradient(180deg, #ff6b6b, #ff9f9f);
-        }.main-task-card-title-row {
-            
-            
-            
-            
-            padding-left: 5px;
-        }.main-task-title {
-            min-width: 0;
-            flex: 1;
-            color: #111827;
-            font-size: 13px;
-            font-weight: 900;
-            
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }.main-task-status {
-            flex-shrink: 0;
-            display: inline-flex;
-            align-items: center;
-            height: 22px;
-            padding: 0 8px;
-            border-radius: 999px;
-            font-size: 10px;
-            font-weight: 900;
-            border: 1px solid #edf1f5;
-            background: #f8fafc;
-            color: #667085;
-            white-space: nowrap;
-        }.main-task-status.progress {
-            background: #fff8eb;
-            border-color: #ffe8b8;
-            color: #d98600;
-        }.main-task-status.done {
-            background: #f5fffb;
-            border-color: #d7f3ec;
-            color: #0E9F8B;
-        }.main-task-status.delay {
-            background: #fff5f5;
-            border-color: #ffd6d6;
-            color: #ff4d4d;
-        }.main-task-sub {
-            
-            
-            
-            
-            margin-top: 8px;
-            padding-left: 5px;
-            color: #667085;
-            font-size: 11px;
-            font-weight: 800;
-            line-height: 1.35;
-        }.main-task-assignee {
-            flex-shrink: 0;
-            max-width: 78px;
-            height: 20px;
-            padding: 0 7px;
-            display: inline-flex;
-            align-items: center;
-            border-radius: 999px;
-            background: #eef7ff;
-            color: #2f7dd1;
-            font-size: 10px;
-            font-weight: 900;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }.main-task-period {
-            min-width: 0;
-            color: #98a2b3;
-            font-size: 11px;
-            font-weight: 800;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }.task-polish-modal {
-            width: 440px;
-            max-width: calc(100vw - 32px);
-            padding: 0 !important;
-            overflow: hidden;
-            border-radius: 22px !important;
-            border: 1px solid #e6edf4;
-            background: #fff;
-            box-shadow: 0 22px 52px rgba(17, 24, 39, .18);
-        }.task-polish-head {
-            padding: 22px 24px 16px;
-            border-bottom: 1px solid #eef0f2;
-            background:
-                radial-gradient(circle at 96% 0%, rgba(85, 221, 191, .20), transparent 34%),
-                linear-gradient(135deg, rgba(74, 144, 226, .10), rgba(255,255,255,.96));
-        }.task-polish-head h3 {
-            margin: 0;
-            color: #111827;
-            font-size: 20px;
-            font-weight: 900;
-            letter-spacing: -.04em;
-        }.task-polish-head p {
-            margin: 7px 0 0;
-            color: #6b7280;
-            font-size: 13px;
-        }.task-polish-body {
-            padding: 19px 24px 18px;
-        }.task-polish-field {
-            margin-bottom: 13px;
-        }.task-polish-field label {
-            display: block;
-            margin-bottom: 7px;
-            color: #374151;
-            font-size: 12px;
-            font-weight: 900;
-        }.task-polish-field .modal-input,
-        .task-polish-field .modal-select {
-            width: 100%;
-            min-height: 40px;
-            box-sizing: border-box;
-            border: 1px solid #dbe3ea;
-            border-radius: 12px;
-            padding: 9px 11px;
-            background: #fff;
-            color: #222;
-            font-size: 14px;
-            font-family: inherit;
-            outline: none;
-        }.task-polish-field .modal-input:focus,
-        .task-polish-field .modal-select:focus {
-            border-color: #4A90E2;
-            box-shadow: 0 0 0 4px rgba(74,144,226,.10);
-        }.task-period-card {
-            padding: 14px;
-            margin-bottom: 13px;
-            border: 1px solid #e8eef5;
-            border-radius: 16px;
-            background: #fbfdff;
-        }.task-period-row {
-            display: grid;
-            grid-template-columns: minmax(0, 1fr) 132px;
-            gap: 9px;
-            align-items: start;
-        }.task-period-row + .task-period-row {
-            margin-top: 10px;
-        }.task-status-hidden {
-            display: none !important;
-        }.task-status-pills {
-            display: grid;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
-            gap: 8px;
-        }.task-status-pill {
-            min-height: 38px;
-            border: 1px solid #dbe3ea;
-            border-radius: 999px;
-            background: #fff;
-            color: #667085;
-            font-size: 12px;
-            font-weight: 900;
-            font-family: inherit;
-            cursor: pointer;
-            transition: .14s ease;
-        }.task-status-pill.active {
-            border-color: #4A90E2;
-            background: #eef7ff;
-            color: #2f7dd1;
-            box-shadow: 0 5px 14px rgba(74,144,226,.12);
-        }.task-status-pill[data-status="IN_PROGRESS"].active {
-            border-color: #ffcf7d;
-            background: #fff8eb;
-            color: #d98600;
-        }.task-status-pill[data-status="DONE"].active {
-            border-color: #bcebdd;
-            background: #f5fffb;
-            color: #0E9F8B;
-        }.admin-only-task-field {
-            display: none !important;
-        }body.admin-mode .admin-only-task-field {
-            display: block !important;
-        }.task-polish-footer {
-            display: flex;
-            justify-content: flex-end;
-            gap: 8px;
-            padding: 16px 24px 22px;
-            border-top: 1px solid #eef0f2;
-            background: #fff;
-        }.task-ui-btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 36px;
-            padding: 0 15px;
-            border-radius: 999px;
-            border: 1px solid transparent;
-            font-size: 13px;
-            font-weight: 900;
-            font-family: inherit;
-            cursor: pointer;
-        }.task-ui-btn.ghost {
-            background: #fff;
-            color: #555;
-            border-color: #dde3ea;
-        }.task-ui-btn.primary {
-            background: linear-gradient(135deg, #4A90E2 0%, #39CDB5 100%);
-            color: #fff;
-            box-shadow: 0 8px 18px rgba(57,205,181,.20);
-        }.task-ui-btn.secondary {
-            background: #f7fbff;
-            border-color: #dcebf8;
-            color: #4A90E2;
-        }.task-ui-btn.danger {
-            background: #fff5f5;
-            border-color: #ffd6d6;
-            color: #ff4d4d;
-            margin-right: auto;
-        }@media (max-width: 520px){
-.task-period-row {
-                grid-template-columns: 1fr;
-                gap: 0;
-            }.task-status-pills {
-                grid-template-columns: 1fr;
-            }
-}.task-dashboard-section,
-.work-status-section,
-.project-task-section {
-    margin-bottom: 22px;
-}.kanban-board {
-    
-    height: auto !important;
-}.kanban-column .task-list,
-.task-list,
-.kanban-list {
-    
-    
-    
-    padding-right: 4px;
-}.task-card.main-task-card,
-.main-task-card,
-.task-card {
-    min-height: 58px !important;
-}.task-card + .task-card,
-.main-task-card + .main-task-card {
-    margin-top: 8px !important;
-}.kanban-title,
-.kanban-header {
-    min-height: 42px !important;
-    margin-bottom: 10px !important;
-}.work-summary,
-.task-summary-row,
-.status-summary-row {
-    margin-bottom: 16px !important;
-}.project-board-card,
-.task-board-card,
-.dashboard-card:has(.kanban-board) {
-    padding-bottom: 18px !important;
-}.section-header .section-more-link,
-.note-section-header .section-more-link,
-.work-board-header .section-more-link {
-    background: transparent !important;
-    border: 0 !important;
-    box-shadow: none !important;
-    padding: 0 !important;
-    color: #777 !important;
-    font-size: 12px !important;
-    font-weight: 800 !important;
-    text-decoration: none !important;
-    white-space: nowrap !important;
-}.section-header .section-more-link:hover,
-.note-section-header .section-more-link:hover,
-.work-board-header .section-more-link:hover {
-    color: #4A90E2 !important;
-}.work-board-header .section-actions,
-.work-board-header > div:last-child {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}.work-board-header .btn-light,
-.work-board-header .btn-outline,
-.work-board-header a[href*="work"],
-.work-board-header a[href*="task"] {
-    background: transparent !important;
-    border: 0 !important;
-    box-shadow: none !important;
-    padding: 0 !important;
-    color: #777 !important;
-    font-size: 12px !important;
-    font-weight: 800 !important;
-    text-decoration: none !important;
-}.work-board-header .btn-light:hover,
-.work-board-header .btn-outline:hover,
-.work-board-header a[href*="work"]:hover,
-.work-board-header a[href*="task"]:hover {
-    color: #4A90E2 !important;
-}.work-board-header .btn-primary,
-.work-board-header .work-add-btn {
-    background: linear-gradient(135deg, #4A90E2 0%, #39CDB5 100%) !important;
-    color: #fff !important;
-    border: 0 !important;
-    box-shadow: 0 5px 12px rgba(57,205,181,0.16) !important;
-    padding: 0 13px !important;
-}.work-board-header .section-more-link,
-.work-board-header a {
-    background: transparent !important;
-    border: 0 !important;
-    box-shadow: none !important;
-    padding: 0 !important;
-    color: #777 !important;
-    font-size: 12px !important;
-    font-weight: 800 !important;
-    text-decoration: none !important;
-    white-space: nowrap !important;
-}.work-board-header .section-more-link:hover,
-.work-board-header a:hover {
-    color: #4A90E2 !important;
-}.work-board-section {
-    padding-bottom: 18px !important;
-}.kanban-board {
-    min-height: 430px !important;
-}.task-card,
-.kanban-card {
-    margin-bottom: 10px !important;
-}.kanban-column .task-list::-webkit-scrollbar,
-.task-list::-webkit-scrollbar,
-.kanban-list::-webkit-scrollbar {
-    width: 5px;
-}.kanban-column .task-list::-webkit-scrollbar-thumb,
-.task-list::-webkit-scrollbar-thumb,
-.kanban-list::-webkit-scrollbar-thumb {
-    border-radius: 999px;
-    background: #d8e2ec;
-}.kanban-column .task-list::-webkit-scrollbar-track,
-.task-list::-webkit-scrollbar-track,
-.kanban-list::-webkit-scrollbar-track {
-    background: transparent;
-}@media (max-width: 900px){
-.kanban-board {
-        min-height: auto !important;
-    }.kanban-column {
-        min-height: 320px !important;
-        max-height: none !important;
-    }.kanban-column .task-list,
-    .task-list,
-    .kanban-list {
-        min-height: 240px !important;
-        max-height: none !important;
-    }
-}.board-title > a,
-.section-more-link,
-.work-board-more-btn,
-.work-board-header a {
-    font-size: 12px !important;
-    font-weight: 500 !important;
-    color: #777 !important;
-    text-decoration: none !important;
-    background: transparent !important;
-    border: 0 !important;
-    box-shadow: none !important;
-    padding: 0 !important;
-}.board-title > a:hover,
-.section-more-link:hover,
-.work-board-more-btn:hover,
-.work-board-header a:hover {
-    color: #4A90E2 !important;
-}.work-summary-card {
-    
-    
-    
-    
-    
-    gap: 6px !important;
-    
-    
-}.work-summary-card span {
-    width: 100% !important;
-    text-align: center !important;
-    font-size: 12px !important;
-    font-weight: 700 !important;
-    
-}.work-summary-card strong {
-    width: 100% !important;
-    text-align: center !important;
-    display: block !important;
-    font-size: 24px !important;
-    
-}.work-board-actions {
-    display: flex !important;
-    align-items: center !important;
-    justify-content: flex-end !important;
-}.work-board-actions .work-board-more-btn {
-    min-height: auto !important;
-    height: auto !important;
-    border-radius: 0 !important;
-}@media (max-width: 900px){
-.work-board-summary {
-        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-    }.work-summary-card.total {
-        grid-column: span 2;
-    }
-}.board-title a,
-.board-title > a,
-.section-header a.section-more-link,
-.section-more-link,
-.work-board-more-btn,
-.note-section-header .section-more-link,
-.work-board-header .work-board-more-btn,
-.work-board-header a,
-.note-main-section .section-more-link {
-    font-size: 12px !important;
-    font-weight: 400 !important;
-    color: #777 !important;
-    text-decoration: none !important;
-    background: transparent !important;
-    border: 0 !important;
-    box-shadow: none !important;
-    padding: 0 !important;
-    min-height: auto !important;
-    height: auto !important;
-    line-height: 1.2 !important;
-}.board-title a:hover,
-.section-more-link:hover,
-.work-board-more-btn:hover,
-.work-board-header a:hover,
-.note-main-section .section-more-link:hover {
-    color: #4A90E2 !important;
-}.kanban-column:has(.task-list:empty) {
-    min-height: 520px !important;
-}.kanban-column .task-list:empty {
-    min-height: 445px !important;
-}@media (max-width: 900px){
-.kanban-column {
-        min-height: 360px !important;
-    }.kanban-column .task-list,
-    .task-list,
-    .kanban-list {
-        min-height: 280px !important;
-    }
-}.work-board-section .work-board-header .work-board-actions a.plain-more-link,
-.work-board-section .work-board-header .work-board-actions a.work-board-more-btn,
-.work-board-section .work-board-header a[href*="/project/work/list"] {
-    font-weight: 400 !important;
-    font-family: "Pretendard", sans-serif !important;
-    color: #777 !important;
-    background: transparent !important;
-    border: 0 !important;
-    box-shadow: none !important;
-    padding: 0 !important;
-    min-height: auto !important;
-    height: auto !important;
-    line-height: 1.2 !important;
-    text-decoration: none !important;
-}.work-board-section .work-board-header .work-board-actions a.plain-more-link:hover,
-.work-board-section .work-board-header .work-board-actions a.work-board-more-btn:hover,
-.work-board-section .work-board-header a[href*="/project/work/list"]:hover {
-    color: #4A90E2 !important;
-}.clickable-task-list {
-    cursor: pointer;
-    position: relative;
-}.clickable-task-list:empty::after {
-    content: "+ 빈 칸을 클릭해 업무 추가";
-    position: absolute;
-    left: 50%;
-    
-    transform: translate(-50%, -50%);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 28px;
-    padding: 0 12px;
-    border-radius: 999px;
-    border: 1px dashed #d7e2ec;
-    background: rgba(255,255,255,.72);
-    color: #9aa6b2;
-    font-size: 12px;
-    font-weight: 700;
-    white-space: nowrap;
-    pointer-events: none;
-    opacity: 0;
-    transition: opacity .15s ease;
-}.kanban-column:hover .clickable-task-list:empty::after {
-    opacity: 1;
-}.clickable-task-list:not(:empty) {
-    cursor: default;
-}.kanban-column {
-    cursor: default;
-}.work-board-section {
-    overflow: visible !important;
-}.kanban-wrapper,
-.kanban-board {
-    height: auto !important;
-    min-height: 0 !important;
-    max-height: none !important;
-    align-items: stretch !important;
-}.kanban-column {
-    height: auto !important;
-    min-height: 355px !important;
-    max-height: none !important;
-    
-    display: flex !important;
-    flex-direction: column !important;
-}.kanban-column .task-list,
-.task-list,
-.kanban-list {
-    height: auto !important;
-    min-height: 285px !important;
-    max-height: none !important;
-    overflow-y: visible !important;
-    overflow-x: hidden !important;
-    display: flex !important;
-    flex-direction: column !important;
-}.kanban-column .task-list::-webkit-scrollbar,
-.task-list::-webkit-scrollbar,
-.kanban-list::-webkit-scrollbar {
-    display: none !important;
-}.kanban-column .task-list,
-.task-list,
-.kanban-list {
-    scrollbar-width: none !important;
-}.task-card,
-.kanban-card {
-    flex-shrink: 0 !important;
-}.clickable-task-list:empty {
-    min-height: 285px !important;
-}.clickable-task-list:empty::after {
-    top: 48% !important;
-}@media (max-width: 900px){
-.kanban-column {
-        min-height: 300px !important;
-    }.kanban-column .task-list,
-    .task-list,
-    .kanban-list,
-    .clickable-task-list:empty {
-        min-height: 230px !important;
-    }
-}.work-board-section .kanban-wrapper,
-.work-board-section .kanban-board {
-    height: auto !important;
-    min-height: 0 !important;
-    max-height: none !important;
-    align-items: stretch !important;
-}.work-board-section .kanban-column .task-list::-webkit-scrollbar {
-    display: none !important;
-}.work-board-section .kanban-column .task-list {
-    scrollbar-width: none !important;
-}@media (max-width: 900px){
-.work-board-section .kanban-column {
-        min-height: 285px !important;
-    }.work-board-section .kanban-column .task-list,
-    .work-board-section .kanban-column .task-list:empty,
-    .work-board-section .kanban-column .clickable-task-list:empty {
-        min-height: 220px !important;
-    }
-}.work-board-section .kanban-column {
-    flex: 1 1 0 !important;
-    
-    
-    
-    
-    
-}.work-board-section .kanban-column .task-list {
-    
-     /* 빈 칸 기준: 카드 약 3개 분량 */
-    
-    
-    
-    
-    
-    gap: 0 !important;
-    
-}.work-board-section .task-status-pill.progress,
-.work-board-section .task-status-pill.in-progress,
-.work-board-section .task-status-pill.inprogress,
-.work-board-section .task-status-pill[data-status="IN_PROGRESS"],
-.work-board-section .status-pill.progress,
-.work-board-section .status-pill.in-progress,
-.work-board-section .badge-progress,
-.work-board-section .task-badge.progress {
-    background: #eef7ff !important;
-    color: #1682e6 !important;
-    border-color: #bfe3ff !important;
-}.work-board-section .task-card .task-status-pill:not(.delay):not(.done):not(.todo) {
-    border-color: #bfe3ff;
-}@media (max-width: 900px){
-.work-board-section .kanban-wrapper {
-        flex-direction: column !important;
-    }.work-board-section .kanban-column {
-        width: 100% !important;
-    }.work-board-section .kanban-column .task-list,
-    .work-board-section .kanban-column .task-list:empty,
-    .work-board-section .kanban-column .clickable-task-list:empty {
-        min-height: 180px !important;
-    }
-}.work-board-section .task-status-pill.progress,
-.work-board-section .task-status-pill.in-progress,
-.work-board-section .task-status-pill.inprogress,
-.work-board-section .task-status-pill.status-progress,
-.work-board-section .task-status-pill.status-in-progress,
-.work-board-section .task-status-pill[data-status="IN_PROGRESS"],
-.work-board-section .status-pill.progress,
-.work-board-section .status-pill.in-progress,
-.work-board-section .status-pill.inprogress,
-.work-board-section .badge-progress,
-.work-board-section .task-badge.progress,
-.work-board-section .task-badge.in-progress,
-.work-board-section .status-badge.progress,
-.work-board-section .status-badge.in-progress,
-.work-board-section .task-chip.progress,
-.work-board-section .task-chip.in-progress {
-    background: #eef7ff !important;
-    color: #1682e6 !important;
-    border-color: #bfe3ff !important;
-}.work-board-section .task-card:not(.delayed-task) .task-status-pill.warning,
-.work-board-section .task-card:not(.delayed-task) .task-status-pill.orange,
-.work-board-section .task-card:not(.delayed-task) .task-status-pill.ing,
-.work-board-section .task-card:not(.delayed-task) .status-badge.warning,
-.work-board-section .task-card:not(.delayed-task) .status-badge.orange {
-    background: #eef7ff !important;
-    color: #1682e6 !important;
-    border-color: #bfe3ff !important;
-}.work-board-section .main-task-status.delay {
-    
-    align-items: center !important;
-    justify-content: center !important;
-    min-height: 22px !important;
-    padding: 0 8px !important;
-    border-radius: 999px !important;
-    background: #fff5f5 !important;
-    color: #f04444 !important;
-    border: 1px solid #ffcaca !important;
-    font-size: 11px !important;
-    font-weight: 900 !important;
-    white-space: nowrap !important;
-}#addTaskModal .task-status-pill,
-.task-modal .task-status-pill {
-    display: inline-flex !important;
-}.work-board-section .work-summary-card.todo {
-    background: #fff8eb !important;
-    border-color: #ffe0a3 !important;
-}.work-board-section .work-summary-card.todo span,
-.work-board-section .work-summary-card.todo strong {
-    color: #d48806 !important;
-}.work-board-section .todo-header {
-    background: #fff7e6 !important;
-    color: #d48806 !important;
-}.work-board-section .work-summary-card.progress span,
-.work-board-section .work-summary-card.progress strong {
-    color: #1682e6 !important;
-}.work-board-section .work-summary-card.progress {
-    background: #f2f8ff !important;
-    border-color: #cfe8ff !important;
-}.work-board-section .work-summary-card.progress span {
-    color: #2378c9 !important;
-}.work-board-section .work-summary-card.progress strong {
-    color: #1682e6 !important;
-}.work-board-section .progress-header {
-    background: #eef8ff !important;
-    color: #1682e6 !important;
-    border-color: #d7efff !important;
-}.work-board-section .task-status-pill.progress,
-.work-board-section .task-status-pill.in-progress,
-.work-board-section .task-status-pill.inprogress,
-.work-board-section .main-task-status.progress {
-    background: #f2f8ff !important;
-    color: #1682e6 !important;
-    border-color: #cfe8ff !important;
-}@media (max-width: 900px){
-.work-board-summary {
-        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-    }
-}.work-board-section .task-card,
-.work-board-section .kanban-card {
-    flex: 0 0 auto !important;
-    flex-shrink: 0 !important;
-}.work-board-section .main-task-sub {
-    gap: 8px !important;
-}.work-board-section .main-task-period {
-    white-space: nowrap !important;
-}.work-board-section .kanban-column .task-list:not(:empty) {
-    justify-content: flex-start !important;
-}@media (max-width: 900px){
-.work-board-section .kanban-wrapper {
-        grid-template-columns: 1fr !important;
-    }.work-board-section .kanban-column .task-list,
-    .work-board-section .kanban-column .task-list:empty,
-    .work-board-section .kanban-column .clickable-task-list:empty {
-        min-height: 190px !important;
-    }
-}.work-board-section .kanban-wrapper {
-    
-    
-    
-    
-    height: auto !important;
-    min-height: 0 !important;
-    max-height: none !important;
-}.work-board-section .kanban-column {
-    
-    
-    max-height: none !important;
-    
-    
-    
-    
-}.work-board-section .kanban-header {
-    flex: 0 0 auto !important;
-}.work-board-section .kanban-column .task-list {
-    
-    height: auto !important;
-       /* 기본 카드 3개 정도 */
-    
-    
-    overflow-y: visible !important;
-    overflow-x: hidden !important;
-    padding: 12px !important;
-    display: flex !important;
-    flex-direction: column !important;
-    justify-content: flex-start !important;
-}.work-board-section .kanban-column .task-list:empty,
-.work-board-section .kanban-column .clickable-task-list:empty {
-    min-height: 255px !important;
-    height: auto !important;
-}.work-board-section .clickable-task-list:empty::after {
-    top: 50% !important;
-}.work-board-section .task-card,
-.work-board-section .kanban-card,
-.work-board-section .main-task-card {
-    flex: 0 0 auto !important;
-    flex-shrink: 0 !important;
-}.work-board-section .kanban-column[style],
-.work-board-section .task-list[style] {
-    max-height: none !important;
-}.work-board-section .work-add-bottom-actions {
-    margin-top: 12px !important;
-    padding-top: 12px !important;
-}@media (max-width: 900px){
-.work-board-section .kanban-wrapper {
-        grid-template-columns: 1fr !important;
-    }.work-board-section .kanban-column .task-list,
-    .work-board-section .kanban-column .task-list:empty,
-    .work-board-section .kanban-column .clickable-task-list:empty {
-        min-height: 210px !important;
-    }
-}#addTaskModal .task-status-pills {
-    display: grid !important;
-    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
-    gap: 10px !important;
-}#addTaskModal .task-status-pill {
-    border: 1px solid #dfe7ef !important;
-    background: #fff !important;
-    color: #667085 !important;
-    font-weight: 800 !important;
-    cursor: pointer !important;
-}#addTaskModal .task-status-pill.active[data-status="TODO"] {
-    background: #fff8eb !important;
-    border-color: #ffc96b !important;
-    color: #d48806 !important;
-}#addTaskModal .task-status-pill.active[data-status="IN_PROGRESS"] {
-    background: #f2f8ff !important;
-    border-color: #bfe3ff !important;
-    color: #1682e6 !important;
-}#addTaskModal .task-status-pill.active[data-status="DONE"] {
-    background: #f0fff8 !important;
-    border-color: #b9efd9 !important;
-    color: #10a36f !important;
-}#addTaskModal .task-status-hidden {
-    display: none !important;
-}.work-board-section .clickable-task-list,
-.work-board-section #todo-list,
-.work-board-section #inprogress-list,
-.work-board-section #done-list {
-    cursor: pointer !important;
-}.work-board-section .task-card {
-    cursor: pointer !important;
-}.work-board-section .clickable-task-list::after {
-    content: "+ 빈 칸을 클릭해 업무 추가";
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 28px;
-    padding: 0 12px;
-    border-radius: 999px;
-    border: 1px dashed #d7e2ec;
-    background: rgba(255,255,255,.78);
-    color: #9aa6b2;
-    font-size: 12px;
-    font-weight: 700;
-    white-space: nowrap;
-    pointer-events: none;
-    opacity: 0;
-    transition: opacity .15s ease;
-}.work-board-section .clickable-task-list:not(:empty)::after {
-    display: none !important;
-}.work-board-section .kanban-column:hover .clickable-task-list:empty::after {
-    opacity: 1;
-}.work-board-section .task-list,
-.work-board-section #todo-list,
-.work-board-section #inprogress-list,
-.work-board-section #done-list {
-    cursor: default !important;
-}.work-board-section .task-list::after,
-.work-board-section .clickable-task-list::after,
-.work-board-section #todo-list::after,
-.work-board-section #inprogress-list::after,
-.work-board-section #done-list::after {
-    content: none !important;
-    display: none !important;
-}.work-board-section .task-card,
-.work-board-section .main-task-card {
-    cursor: pointer !important;
-}.work-board-section .kanban-wrapper {
-    display: grid !important;
-    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
-    gap: 15px !important;
-    
-}.work-board-section .kanban-column {
-    display: flex !important;
-    flex-direction: column !important;
-    align-self: stretch !important;
-    overflow: hidden !important;
-}.work-board-section .kanban-column .task-list {
-    flex: 1 1 auto !important;
-    min-height: 245px !important;
-    max-height: none !important;
-    overflow: visible !important;
-}.work-board-section .main-task-card {
-    position: relative !important;
-    overflow: hidden !important;
-}.work-board-section .main-task-card::before {
-    content: "" !important;
-    position: absolute !important;
-    left: 0 !important;
-    top: 12px !important;
-    bottom: 12px !important;
-    width: 4px !important;
-    border-radius: 0 999px 999px 0 !important;
-    background: linear-gradient(180deg, #4A90E2 0%, #55DDBF 100%) !important;
-}.work-board-section .main-task-card.delayed-task::before {
-    background: linear-gradient(180deg, #ff6b6b 0%, #ff9b9b 100%) !important;
-}.work-board-section .main-task-status {
-    display: none !important;
-}.work-board-section .main-task-status.delay {
-    display: inline-flex !important;
-}.work-board-section .work-summary-card.todo,
-.work-board-section .todo-header {
-    background: #fff8eb !important;
-    border-color: #ffe0a3 !important;
-    color: #d48806 !important;
-}.work-board-section .work-summary-card.progress,
-.work-board-section .progress-header {
-    background: #f2f8ff !important;
-    border-color: #cfe8ff !important;
-    color: #1682e6 !important;
-}.work-board-section .work-summary-card.done,
-.work-board-section .done-header {
-    background: #f0fff8 !important;
-    border-color: #b9efd9 !important;
-    color: #10a36f !important;
-}.work-board-section .work-summary-card.delay {
-    background: #fff5f5 !important;
-    border-color: #ffcaca !important;
-    color: #f04444 !important;
-}@media (max-width: 900px){
-.work-board-section .kanban-wrapper {
-        grid-template-columns: 1fr !important;
-    }
-}.work-board-section .main-task-card,
-.work-board-section .task-card {
-    position: relative !important;
-    overflow: hidden !important;
-}.work-board-section .main-task-card::before,
-.work-board-section .task-card::before {
-    content: "" !important;
-    position: absolute !important;
-    left: 0 !important;
-    top: 12px !important;
-    bottom: 12px !important;
-    width: 4px !important;
-    border-radius: 0 999px 999px 0 !important;
-    background: #dfe7ef !important;
-}.work-board-section #todo-list .main-task-card::before,
-.work-board-section #todo-list .task-card::before {
-    background: linear-gradient(180deg, #ffb020 0%, #ffc96b 100%) !important;
-}.work-board-section #inprogress-list .main-task-card::before,
-.work-board-section #inprogress-list .task-card::before {
-    background: linear-gradient(180deg, #4A90E2 0%, #78c6ff 100%) !important;
-}.work-board-section #done-list .main-task-card::before,
-.work-board-section #done-list .task-card::before {
-    background: linear-gradient(180deg, #18c997 0%, #55DDBF 100%) !important;
-}.work-board-section .main-task-card.delayed-task::before,
-.work-board-section .task-card.delayed-task::before,
-.work-board-section #todo-list .main-task-card.delayed-task::before,
-.work-board-section #inprogress-list .main-task-card.delayed-task::before,
-.work-board-section #done-list .main-task-card.delayed-task::before,
-.work-board-section #todo-list .task-card.delayed-task::before,
-.work-board-section #inprogress-list .task-card.delayed-task::before,
-.work-board-section #done-list .task-card.delayed-task::before {
-    background: linear-gradient(180deg, #ff6b6b 0%, #ff9b9b 100%) !important;
-}.work-board-section .main-task-card,
-.work-board-section .task-card {
-    padding-left: 18px !important;
-}.work-board-summary {
-    
-    
-    
-    align-items: stretch !important;
-}.work-board-summary .work-summary-card {
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: center !important;
-    justify-content: center !important;
-    text-align: center !important;
-    gap: 8px !important;
-    min-height: 72px !important;
-    padding: 12px 10px !important;
-}.work-board-summary .work-summary-card span {
-    margin: 0 !important;
-    font-size: 12px !important;
-    font-weight: 800 !important;
-    line-height: 1.2 !important;
-}.work-board-summary .work-summary-card strong {
-    margin: 0 !important;
-    font-size: 24px !important;
-    font-weight: 900 !important;
-    line-height: 1 !important;
-}.work-board-summary .work-summary-card.total {
-    display: flex !important;
-    background: #f5faff !important;
-    border-color: #d6eaff !important;
-}.work-board-summary .work-summary-card.total span {
-    color: #475467 !important;
-}.work-board-summary .work-summary-card.total strong {
-    color: #111827 !important;
-}.work-board-summary .work-summary-card.todo {
-    background: #fff8eb !important;
-    border-color: #ffe0a3 !important;
-}.work-board-summary .work-summary-card.todo span,
-.work-board-summary .work-summary-card.todo strong {
-    color: #d48806 !important;
-}.work-board-summary .work-summary-card.progress {
-    background: #f2f8ff !important;
-    border-color: #cfe8ff !important;
-}.work-board-summary .work-summary-card.progress span,
-.work-board-summary .work-summary-card.progress strong {
-    color: #1682e6 !important;
-}.work-board-summary .work-summary-card.done {
-    background: #f0fff8 !important;
-    border-color: #b9efd9 !important;
-}.work-board-summary .work-summary-card.done span,
-.work-board-summary .work-summary-card.done strong {
-    color: #10a36f !important;
-}.work-board-summary .work-summary-card.delay {
-    background: #fff5f5 !important;
-    border-color: #ffcaca !important;
-}.work-board-summary .work-summary-card.delay span,
-.work-board-summary .work-summary-card.delay strong {
-    color: #f04444 !important;
-}@media (max-width: 900px){
-.work-board-summary {
-        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-    }.work-board-summary .work-summary-card.total {
-        grid-column: span 2;
-    }
-}.work-board-section {
-    padding: 25px !important;
-}.work-board-section .section-header,
-.work-board-header {
-    display: flex !important;
-    align-items: flex-start !important;
-    justify-content: space-between !important;
-    gap: 16px !important;
-    margin-bottom: 18px !important;
-}.work-board-section .section-header h3,
-.work-board-header h3 {
-    margin: 0 !important;
-    line-height: 1.25 !important;
-}.work-board-help {
-    margin: 6px 0 0 !important;
-    color: #777 !important;
-    font-size: 13px !important;
-    line-height: 1.35 !important;
-}.work-board-more-btn,
-.work-board-section .section-header a:not(.btn-primary):not(.work-add-btn),
-.work-board-header a:not(.btn-primary):not(.work-add-btn) {
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    min-height: auto !important;
-    height: auto !important;
-    padding: 2px 0 !important;
-    margin: 0 !important;
-    border: 0 !important;
-    border-radius: 0 !important;
-    background: transparent !important;
-    box-shadow: none !important;
-    color: #8a8f98 !important;
-    font-size: 12px !important;
-    font-weight: 800 !important;
-    line-height: 1.2 !important;
-    text-decoration: none !important;
-    white-space: nowrap !important;
-}.work-board-more-btn:hover,
-.work-board-section .section-header a:not(.btn-primary):not(.work-add-btn):hover,
-.work-board-header a:not(.btn-primary):not(.work-add-btn):hover {
-    color: #4A90E2 !important;
-    background: transparent !important;
-}.work-board-actions,
-.work-board-header .section-actions,
-.work-board-header > div:last-child {
-    display: flex !important;
-    align-items: center !important;
-    justify-content: flex-end !important;
-    gap: 12px !important;
-    flex-shrink: 0 !important;
-}.work-board-summary {
-    display: grid !important;
-    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
-    gap: 12px !important;
-    margin: 0 0 20px 0 !important;
-}.work-summary-card {
-    min-height: 74px !important;
-    padding: 14px 12px !important;
-    border-radius: 15px !important;
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: center !important;
-    justify-content: center !important;
-    text-align: center !important;
-}.work-summary-card span {
-    margin: 0 0 7px 0 !important;
-    line-height: 1 !important;
-}.work-summary-card strong {
-    line-height: 1 !important;
-}.kanban-wrapper {
-    display: grid !important;
-    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
-    gap: 16px !important;
-    align-items: stretch !important;
-    width: 100% !important;
-}.kanban-column {
-    min-width: 0 !important;
-    border-radius: 14px !important;
-    overflow: hidden !important;
-    background: #fff !important;
-}.kanban-header {
-    min-height: 44px !important;
-    padding: 13px 12px !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    font-size: 14px !important;
-    font-weight: 900 !important;
-    line-height: 1.2 !important;
-}.task-list {
-    min-height: 270px !important;
-    padding: 14px !important;
-    display: flex !important;
-    flex-direction: column !important;
-    gap: 12px !important;
-}.task-list .task-card,
-.task-list .main-task-card {
-    margin: 0 !important;
-}.main-task-card {
-    min-height: 72px !important;
-    padding: 14px 15px !important;
-    border-radius: 13px !important;
-    box-sizing: border-box !important;
-}.main-task-card-title-row {
-    display: flex !important;
-    align-items: flex-start !important;
-    justify-content: space-between !important;
-    gap: 8px !important;
-    margin-bottom: 10px !important;
-}.main-task-title {
-    line-height: 1.3 !important;
-}.main-task-sub {
-    display: flex !important;
-    align-items: center !important;
-    gap: 8px !important;
-    min-width: 0 !important;
-}.work-board-footer,
-.work-board-add-row {
-    display: flex !important;
-    justify-content: flex-end !important;
-    margin-top: 16px !important;
-}.work-add-btn,
-.work-board-section .btn-primary.work-add-btn,
-.work-board-section .btn-primary,
-.work-board-footer .btn-primary,
-.work-board-add-row .btn-primary {
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    min-height: 34px !important;
-    height: 34px !important;
-    padding: 0 15px !important;
-    border-radius: 999px !important;
-    border: 0 !important;
-    background: linear-gradient(135deg, #4A90E2 0%, #39CDB5 100%) !important;
-    color: #fff !important;
-    font-size: 12px !important;
-    font-weight: 900 !important;
-    text-decoration: none !important;
-    box-shadow: 0 5px 12px rgba(57, 205, 181, 0.16) !important;
-}.work-add-btn:hover,
-.work-board-section .btn-primary.work-add-btn:hover,
-.work-board-section .btn-primary:hover,
-.work-board-footer .btn-primary:hover,
-.work-board-add-row .btn-primary:hover {
-    transform: translateY(-1px) !important;
-    box-shadow: 0 8px 18px rgba(57, 205, 181, 0.22) !important;
-}@media (max-width: 900px){
-.work-board-summary {
-        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
-    }.kanban-wrapper {
-        grid-template-columns: 1fr !important;
-    }.task-list {
-        min-height: 220px !important;
-    }
-}@media (max-width: 640px){
-.work-board-section {
-        padding: 22px 18px !important;
-    }.work-board-section .section-header,
-    .work-board-header {
-        flex-direction: row !important;
-        align-items: flex-start !important;
-    }.work-board-summary {
-        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-        gap: 10px !important;
-    }.work-summary-card {
-        min-height: 68px !important;
-    }
-}.work-board-section .work-board-header .work-board-actions .work-board-more-btn {
-    cursor: pointer !important;
-    transition: color .18s ease, background .18s ease, transform .18s ease !important;
-}.work-board-section .work-board-header .work-board-actions .work-board-more-btn:hover,
-.work-board-section .work-board-header .work-board-actions .work-board-more-btn:focus-visible {
-    color: #2563eb !important;
-    background: #eef6ff !important;
-    border-radius: 8px !important;
-    padding: 5px 9px !important;
-    transform: translateY(-1px) !important;
-    text-decoration: none !important;
-    outline: none !important;
-}.work-board-section .kanban-wrapper {
-    align-items: start !important;
-}.work-board-section .kanban-column {
-    height: auto !important;
-    min-height: 0 !important;
-}.work-board-section .kanban-column .task-list,
-.work-board-section .kanban-column .clickable-task-list,
-.work-board-section .kanban-column .task-list:empty,
-.work-board-section .kanban-column .clickable-task-list:empty,
-.task-list {
-    min-height: 220px !important;
-    height: auto !important;
-}.work-board-section .kanban-column .task-list:not(:empty),
-.work-board-section .kanban-column .clickable-task-list:not(:empty) {
-    min-height: 220px !important;
-    max-height: none !important;
-    overflow: visible !important;
-}@media (max-width: 1050px){
-.work-board-section .kanban-column .task-list,
-    .work-board-section .kanban-column .clickable-task-list,
-    .work-board-section .kanban-column .task-list:empty,
-    .work-board-section .kanban-column .clickable-task-list:empty,
-    .task-list {
-        min-height: 180px !important;
-    }
-}.work-board-section .work-board-header .work-board-actions .work-board-more-btn,
-.work-board-section .work-board-header .work-board-actions .work-board-more-btn:hover,
-.work-board-section .work-board-header .work-board-actions .work-board-more-btn:focus,
-.work-board-section .work-board-header .work-board-actions .work-board-more-btn:focus-visible {
-    cursor: pointer !important;
-    color: #777 !important;
-    background: transparent !important;
-    border: 0 !important;
-    box-shadow: none !important;
-    transform: none !important;
-    text-decoration: none !important;
-    outline: none !important;
-    padding: 0 !important;
-}.task-time-toggle {
-    display: flex;
-    align-items: center;
-    gap: 7px;
-    margin: 0 0 12px;
-    padding: 10px 12px;
-    border-radius: 12px;
-    background: #f8fafc;
-    border: 1px solid #e8eef5;
-    color: #334155;
-    font-size: 12px;
-    font-weight: 900;
-    cursor: pointer;
-}.task-time-toggle input { width: 15px; height: 15px; margin: 0; accent-color: #4A90E2; }.task-time-toggle small { margin-left: auto; color: #94a3b8; font-size: 11px; font-weight: 700; }.task-time-field.disabled { opacity: .55; }.task-time-field input:disabled { background: #f8fafc; color: #94a3b8; cursor: not-allowed; }
+/* 업무 현황 제품화 마감: 요약 밀도·정보 위계·전체 보기 분리 */
 
-body.personal-project-main .personal-task-assignee-field {
-    display: none !important;
+.project-task-head{margin-bottom:16px;}
+.project-task-kicker{margin-bottom:5px;color:#43b9a6;font-size:9px;letter-spacing:.08em;}
+.project-task-heading h3{font-size:20px;letter-spacing:-.035em;}
+.project-task-heading p{margin-top:5px;font-size:12px;line-height:1.45;}
+
+.project-task-summary{gap:8px;margin-bottom:12px;padding:4px;border:1px solid #edf1f5;border-radius:14px;background:#f8fafc;}
+.project-task-metric{height:44px;padding:0 12px;border-color:transparent;border-radius:10px;background:transparent;box-shadow:none;}
+.project-task-metric span{font-size:11px;}
+.project-task-metric strong{font-size:16px;}
+.project-task-metric:hover{border-color:#e2e9f0;background:#fff;box-shadow:none;}
+.project-task-metric.is-active{border-color:#c9ddf0;background:#fff;color:#337ac0;box-shadow:0 3px 10px rgba(55,127,199,.08);}
+.project-task-board{gap:12px;}
+.project-task-column{padding:11px;border-radius:14px;}
+.project-task-column>header{height:30px;padding:0 3px 8px;}
+.project-task-list{min-height:112px;}
+.project-task-empty{min-height:96px;font-size:10px;}
+.project-task-empty i{font-size:17px;}
+.project-task-card{padding:14px;border-radius:13px;}
+.project-task-card-top strong{font-size:14px;line-height:1.5;}
+.project-task-card-period{margin-top:9px;font-size:11px;}
+.project-task-card-bottom{margin-top:11px;padding-top:10px;}
+.project-task-avatar.small{width:32px;min-width:32px;max-width:32px;height:32px;min-height:32px;max-height:32px;}
+.project-task-person{gap:9px;}
+.project-task-person b{font-size:12px;}
+.project-task-person small{margin-top:1px;font-size:10px;color:#7f8b9b;}
+.project-task-card-bottom>em{padding:5px 8px;}
+
+.project-task-product.is-workspace{padding:28px!important;}
+.project-task-product.is-workspace .project-task-head{margin-bottom:18px;}
+.project-task-product.is-workspace .project-task-tools{margin-bottom:14px;}
+.project-task-product.is-workspace .project-task-list{min-height:330px;}
+.project-task-product.is-workspace .project-task-column{min-height:408px;}
+.project-task-product.is-workspace .project-task-empty{min-height:300px;}
+@media(max-width:900px){.project-task-product.is-workspace .project-task-list{min-height:180px;}.project-task-product.is-workspace .project-task-column{min-height:0;}.project-task-product.is-workspace .project-task-empty{min-height:150px;}}
+@media(max-width:640px){.project-task-product{padding:18px!important;}.project-task-heading h3{font-size:19px;}.project-task-summary{grid-template-columns:repeat(2,minmax(0,1fr));background:transparent;border:0;padding:0;}.project-task-metric{border:1px solid #e7ecf2;background:#fff;}.project-task-list{min-height:96px;}}
+
+/* MOYO 공통 위젯 제목 체계 정렬 */
+.project-task-product{padding:20px 20px 22px!important;}
+.project-task-head{align-items:center;margin:0 0 14px;padding:0 0 12px;border-bottom:1px solid #edf1f5;}
+.project-task-title-wrap{display:flex;align-items:center;min-width:0;}
+.project-task-title{display:flex;align-items:center;gap:8px;margin:0;color:#182230;font-size:16px;font-weight:900;letter-spacing:-.025em;line-height:1.2;}
+.project-task-title i{display:inline-flex;align-items:center;justify-content:center;width:18px;color:#4a90e2;font-size:14px;}
+.project-task-heading,.project-task-kicker{display:none!important;}
+.project-task-head-actions{align-items:center;}
+.project-task-view-btn,.project-task-add-btn{height:34px;padding:0 13px;border-radius:10px;}
+.project-task-summary{margin-top:0;}
+@media(max-width:640px){.project-task-product{padding:16px!important;}.project-task-head{align-items:flex-start;gap:12px;}.project-task-title{font-size:15px;}.project-task-head-actions{width:auto;margin-left:auto;}.project-task-view-btn,.project-task-add-btn{flex:0 0 auto;padding:0 11px;}}
+
+/* 업무 카드 hover 상단 잘림 보정 */
+.project-task-product:not(.is-workspace) .project-task-list{
+  box-sizing:border-box;
+  padding:4px 3px 7px;
+  margin:-4px -3px -7px;
 }
-body.personal-project-main .work-board-section {
-    order: 2;
+.project-task-product:not(.is-workspace) .project-task-card:hover{
+  transform:translateY(-1px);
+}
+
+/* 업무 등록/수정 모달 - MOYO 프로젝트 멤버 프로필 선택 */
+.project-task-modal-head>div:first-child>span{display:none;}
+.project-task-assignee-field{gap:8px;}
+.project-task-assignee-picker{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;max-height:190px;overflow:auto;padding:2px;}
+.project-task-assignee-option{position:relative;display:flex;align-items:center;gap:10px;min-width:0;padding:10px 36px 10px 10px;border:1px solid #e2e8ef;border-radius:12px;background:#fff;color:#263247;text-align:left;cursor:pointer;transition:border-color .16s ease,box-shadow .16s ease,background .16s ease;}
+.project-task-assignee-option:hover{border-color:#b9d5ee;background:#fafdff;}
+.project-task-assignee-option.is-selected{border-color:#78b9ea;background:#f4faff;box-shadow:0 0 0 3px rgba(74,144,226,.10);}
+.project-task-assignee-option>.fa-check{position:absolute;right:12px;top:50%;transform:translateY(-50%);display:none;color:#4a90e2;font-size:12px;}
+.project-task-assignee-option.is-selected>.fa-check{display:block;}
+.project-task-avatar.picker{width:38px;height:38px;min-width:38px;}
+.project-task-assignee-copy{display:flex;min-width:0;flex-direction:column;gap:3px;}
+.project-task-assignee-copy b{overflow:hidden;color:#1f2b3d;font-size:12px;font-weight:900;text-overflow:ellipsis;white-space:nowrap;}
+.project-task-assignee-copy small{color:#738095;font-size:10px;font-weight:750;}
+.project-task-assignee-empty{grid-column:1/-1;padding:18px;border:1px dashed #dce4ec;border-radius:12px;color:#8794a5;font-size:11px;text-align:center;}
+
+.project-task-delete-btn[hidden]{display:none!important;}
+@media(max-width:640px){.project-task-assignee-picker{grid-template-columns:1fr;max-height:220px;}}
+
+/* 다중 담당자 표시 및 공통 프로젝트 멤버 모달 연결 */
+.project-task-avatar-stack{display:inline-flex;align-items:center;flex:0 0 auto;padding-left:2px;}
+.project-task-avatar-stack .project-task-avatar{margin-left:-7px;box-shadow:0 0 0 2px #fff;}
+.project-task-avatar-stack .project-task-avatar:first-child{margin-left:0;}
+.project-task-avatar-more{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;margin-left:-7px;border:2px solid #fff;border-radius:50%;background:#edf3f8;color:#526174;font-size:10px;font-weight:850;}
+.project-task-person>.project-task-avatar-stack{margin-right:2px;}
+.project-task-assignee-label-row{display:flex;align-items:center;justify-content:space-between;gap:12px;}
+.project-task-assignee-label-row>em{color:#64748b;font-size:11px;font-style:normal;font-weight:800;}
+.project-task-assignee-summary{display:flex;width:100%;align-items:center;justify-content:space-between;gap:12px;border:1px solid #dce5ed;background:#fff;color:#263247;text-align:left;cursor:pointer;transition:border-color .16s ease,box-shadow .16s ease,background .16s ease;}
+
+.project-task-assignee-summary:after{content:"변경";flex:0 0 auto;color:#4a90e2;font-size:11px;font-weight:850;}
+.project-task-assignee-selected,.project-task-assignee-unselected{display:flex;min-width:0;align-items:center;gap:11px;}
+.project-task-assignee-selected>span:last-child,.project-task-assignee-unselected>span:last-child{display:flex;min-width:0;flex-direction:column;gap:3px;}
+.project-task-assignee-selected b,.project-task-assignee-unselected b{overflow:hidden;color:#1f2b3d;font-size:12px;font-weight:900;text-overflow:ellipsis;white-space:nowrap;}
+.project-task-assignee-selected small,.project-task-assignee-unselected small{color:#718096;font-size:10px;font-weight:700;}
+.project-task-assignee-empty-avatar{display:inline-flex;width:38px;height:38px;align-items:center;justify-content:center;border-radius:50%;background:#edf5fb;color:#4a90e2;}
+.project-task-assignee-summary .project-task-avatar-more{width:38px;height:38px;}
+.project-task-assignee-summary .project-task-avatar.picker{width:38px;height:38px;}
+@media(max-width:640px){.project-task-assignee-summary{min-height:62px;}.project-task-assignee-unselected small{white-space:normal;}}
+
+/* 업무 모달 기간 입력: 간편 일정 등록 모달과 동일한 행 구조 */
+.project-task-assignee-field>span{color:#4c596b;font-size:11px;font-weight:900;}
+.project-task-period{display:flex;flex-direction:column;}
+.project-task-period-title{padding-bottom:2px;color:#4c596b;font-size:11px;font-weight:900;}
+.project-task-period-row{display:grid;align-items:center;}
+
+.project-task-period-controls{display:grid;grid-template-columns:minmax(0,1fr);min-width:0;}
+.project-task-date-control{display:block;min-width:0;}.project-task-time-control{min-width:0;}
+.project-task-date-control input,.project-task-time-control input{width:100%;height:42px;padding:0 12px;border:1px solid #dfe6ed;border-radius:11px;background:#fff;color:#283446;font-size:12px;outline:none;box-sizing:border-box;}
+.project-task-date-control input:focus,.project-task-time-control input:focus{border-color:#7eb6e7;box-shadow:0 0 0 3px rgba(74,144,226,.1);}
+.project-task-time-control{display:none;}
+
+.project-task-period.is-time-enabled .project-task-time-control{display:block;}
+.project-task-period .project-task-time-toggle{cursor:pointer;}.project-task-period .project-task-time-toggle input{width:16px;height:16px;margin:0;}
+.project-task-assignee-selected .project-task-avatar-stack{flex:0 0 auto;}
+.project-task-assignee-selected>span:last-child{gap:0;}
+@media(max-width:640px){
+  .project-task-period-row{grid-template-columns:38px minmax(0,1fr);gap:9px;}
+  .project-task-period .project-task-time-toggle{margin-left:47px;}
+  .project-task-period.is-time-enabled .project-task-period-controls{grid-template-columns:1fr 1fr;}
+}
+
+/* MOYO modal header divider: mint → blue → purple */
+
+
+/* MOYO MODAL HEADER DIVIDER — unified */
+.project-task-modal-head{
+    
+    border-bottom:0!important;
+}
+.project-task-modal-head::after{
+    content:""!important;
+    position:absolute!important;
+    left:0!important;
+    right:0!important;
+    bottom:0!important;
+    height:2px!important;
+    background:linear-gradient(90deg,#55DDBF 0%,#4a90e2 56%,#7568d8 100%)!important;
+    pointer-events:none!important;
+}
+
+
+/* 업무 등록/수정 모달 — MOYO 간편 일정 등록 모달 스타일 통일 */
+.project-task-modal-overlay{
+  padding:18px;
+  background:rgba(35,44,58,.44);
+  backdrop-filter:blur(6px);
+}
+.project-task-modal{
+  width:min(520px,100%);
+  max-height:calc(100vh - 36px);
+  border:1px solid rgba(226,232,240,.92);
+  border-radius:20px;
+  box-shadow:0 24px 64px rgba(30,41,59,.24);
+  overflow:auto;
+}
+.project-task-modal-head{
+  position:sticky!important;
+  top:0;
+  z-index:4;
+  min-height:64px;
+  padding:0 20px!important;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:#fff;
+}
+.project-task-modal-head>div:first-child{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.project-task-modal-head h3{
+  margin:0;
+  color:#182230;
+  font-size:18px;
+  font-weight:900;
+  letter-spacing:-.035em;
+  line-height:1;
+  text-align:center;
+}
+.project-task-modal-head-actions{
+  position:absolute;
+  right:18px;
+  top:50%;
+  transform:translateY(-50%);
+  
+}
+.project-task-close-btn,.project-task-delete-btn{
+  width:34px;
+  height:34px;
+  border:1px solid #dfe7ef;
+  border-radius:10px;
+  background:#fff;
+  box-shadow:none;
+}
+.project-task-close-btn{
+  color:#718096;
+  font-size:19px;
+  line-height:1;
+}
+.project-task-delete-btn{
+  
+  font-size:13px;
+}
+.project-task-close-btn:hover,.project-task-delete-btn:hover{
+  background:#f8fafc;
+  border-color:#cdd8e5;
+}
+.project-task-form{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:0;
+  padding:18px 20px 0;
+}
+.project-task-field,
+.project-task-assignee-field{
+  gap:7px;
+  margin:0 0 16px;
+}
+.project-task-field>span,
+.project-task-assignee-field>span,
+.project-task-period-title{
+  color:#344054;
+  font-size:11px;
+  font-weight:900;
+  letter-spacing:-.01em;
+}
+.project-task-field input,
+.project-task-field select,
+.project-task-date-control input,
+.project-task-time-control input{
+  height:42px;
+  border:1px solid #d9e3ee;
+  border-radius:13px;
+  background:#fff;
+  color:#273142;
+  font-size:12px;
+}
+.project-task-field input,
+.project-task-field select{
+  padding:0 13px;
+}
+.project-task-field input:focus,
+.project-task-field select:focus,
+.project-task-date-control input:focus,
+.project-task-time-control input:focus{
+  border-color:#6baef0;
+  box-shadow:0 0 0 3px rgba(74,144,226,.11);
+}
+.project-task-assignee-summary{
+  min-height:64px;
+  padding:10px 13px;
+  border-color:#d9e3ee;
+  border-radius:13px;
+}
+.project-task-assignee-summary:hover{
+  border-color:#9fc8eb;
+  background:#fbfdff;
+  box-shadow:0 0 0 3px rgba(74,144,226,.07);
+}
+.project-task-period{
+  
+  
+  padding:16px 0 0;
+  
+}
+.project-task-period-title{
+  margin-bottom:2px;
+}
+.project-task-period-row{
+  grid-template-columns:42px minmax(0,1fr);
+  gap:10px;
+}
+.project-task-period-label{
+  color:#667085;
+  font-size:11px;
+  font-weight:850;
+}
+.project-task-period-controls{
+  gap:10px;
+}
+.project-task-date-control input,
+.project-task-time-control input{
+  padding:0 13px;
+}
+.project-task-period.is-time-enabled .project-task-period-controls{
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+}
+.project-task-period .project-task-time-toggle{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  width:max-content;
+  
+  
+  border:1px solid #d9e3ee;
+  border-radius:12px;
+  background:#fff;
+  color:#475467;
+  font-size:11px;
+  font-weight:850;
+}
+.project-task-period .project-task-time-toggle:hover{
+  border-color:#b9cbe0;
+  background:#f9fbfd;
+}
+.project-task-form-note{
+  grid-column:1/-1;
+  display:flex;
+  align-items:center;
+  gap:7px;
+  margin:0 0 18px;
+  padding:9px 11px;
+  border-radius:11px;
+  background:#f7f9fc;
+  color:#7b8798;
+  font-size:10px;
+  font-weight:750;
+}
+.project-task-form-note i{
+  color:#4a90e2;
+}
+.project-task-modal-actions{
+  grid-column:1/-1;
+  margin:0 -20px;
+  padding:13px 20px 16px;
+  border-top:1px solid #e6edf4;
+  background:#fff;
+}
+.project-task-submit-btn{
+  width:100%;
+  height:44px;
+  margin:0;
+  border:0;
+  border-radius:13px;
+  background:linear-gradient(90deg,#55DDBF 0%,#4a90e2 56%,#7568d8 100%);
+  color:#fff;
+  font-size:13px;
+  font-weight:900;
+  box-shadow:none;
+}
+.project-task-submit-btn:hover{
+  transform:none;
+  filter:brightness(.99);
+  box-shadow:0 8px 18px rgba(74,144,226,.16);
+}
+@media(max-width:640px){
+  .project-task-modal-overlay{padding:12px;}
+  .project-task-modal{width:100%;max-height:calc(100vh - 24px);border-radius:18px;}
+  .project-task-modal-head{min-height:60px;padding:0 16px!important;}
+  .project-task-modal-head-actions{right:14px;}
+  .project-task-form{padding:16px 16px 0;}
+  .project-task-modal-actions{margin:0 -16px;padding:12px 16px 14px;}
+  .project-task-period-row{grid-template-columns:38px minmax(0,1fr);gap:8px;}
+  .project-task-period .project-task-time-toggle{margin-left:46px;}
+}
+
+/* 업무 기간: 간편 일정 공통 날짜/시간 선택기 사용 */
+.project-task-period .moyo-quick-date-field,
+.project-task-period .moyo-quick-time-field{position:relative;display:flex;align-items:center;min-width:0;border:1px solid #d7e2ee;border-radius:14px;background:#fff;transition:border-color .18s ease,box-shadow .18s ease;}
+.project-task-period .moyo-quick-date-field:focus-within,
+.project-task-period .moyo-quick-time-field:focus-within{border-color:#67a8f7;box-shadow:0 0 0 3px rgba(79,145,236,.12);}
+.project-task-period .project-task-picker-input{width:100%;min-width:0;border:0!important;background:transparent!important;box-shadow:none!important;padding:0 42px 0 14px!important;font-size:13px;color:#27364a;outline:0;}
+.project-task-period .moyo-quick-time-field .project-task-picker-input{padding-left:58px!important;}
+.project-task-period .moyo-quick-date-trigger,
+.project-task-period .moyo-quick-time-trigger{position:absolute;border:0;background:transparent;color:#53677f;display:grid;place-items:center;cursor:pointer;}
+.project-task-period .moyo-quick-time-meridiem{position:absolute;left:12px;top:50%;transform:translateY(-50%);z-index:1;padding:3px 7px;border-radius:999px;font-size:11px;font-weight:800;line-height:1;color:#169f8e;background:#e9fbf6;pointer-events:none;}
+.project-task-period .moyo-quick-time-meridiem.is-pm{color:#4c72db;background:#eef3ff;}
+.project-task-period:not(.is-time-enabled) .project-task-time-control{display:none!important;}
+.project-task-period:not(.is-time-enabled) .project-task-period-controls{grid-template-columns:minmax(0,1fr)!important;}
+
+/* 업무 기간 헤더/선택기 정렬 보정 */
+.project-task-period-head{display:flex;align-items:center;justify-content:space-between;gap:16px;}
+.project-task-period-head .project-task-period-title{margin:0;}
+.project-task-period .project-task-time-toggle{margin:0!important;padding:7px 10px;flex:0 0 auto;}
+.project-task-period .moyo-quick-date-field,
+.project-task-period .moyo-quick-time-field{height:42px;box-sizing:border-box;overflow:hidden;}
+.project-task-period .moyo-quick-date-trigger,
+.project-task-period .moyo-quick-time-trigger{top:50%!important;right:0!important;bottom:auto!important;transform:translateY(-50%)!important;width:42px!important;height:42px!important;min-width:42px;margin:0!important;padding:0!important;line-height:1!important;z-index:2;}
+.project-task-period .moyo-quick-date-trigger i,
+.project-task-period .moyo-quick-time-trigger i{display:block;line-height:1;}
+.project-task-period .project-task-picker-input{height:40px!important;line-height:40px!important;}
+@media(max-width:640px){.project-task-period-head{margin-bottom:10px;}.project-task-period .project-task-time-toggle{margin:0!important;}}
+
+/* 업무 모달 마감: 액션 아이콘·기간 여백·안내 영역 정리 */
+
+
+.project-task-close-btn:focus-visible,
+.project-task-delete-btn:focus-visible{
+  outline:2px solid rgba(74,144,226,.28);
+  outline-offset:2px;
+}
+
+.project-task-period{
+  
+  
+  gap:9px;
+}
+.project-task-period-head{
+  margin-bottom:1px;
+}
+.project-task-period-row + .project-task-period-row{
+  margin-top:1px;
+}
+.project-task-form-note{
+  margin-top:12px;
+  margin-bottom:18px;
+  min-height:34px;
+}
+
+
+/* 업무 모달 헤더 아이콘: 간편 일정 모달과 동일한 원형 호버 */
+.project-task-modal-head-actions{
+  gap:2px;
+}
+.project-task-close-btn,
+.project-task-delete-btn{
+  width:34px;
+  height:34px;
+  border:0!important;
+  border-radius:50%!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  color:#7f8b9d;
+  transition:color .16s ease, background-color .16s ease;
+}
+.project-task-close-btn:hover{
+  color:#4b5565;
+  background:rgba(113,128,150,.10)!important;
+}
+.project-task-delete-btn{
+  color:#8a96a6;
+}
+.project-task-delete-btn:hover{
+  color:#ef4d5f;
+  background:rgba(239,77,95,.10)!important;
+}
+
+/* 업무 모달 최종 간격 정리 */
+.project-task-period{
+  border-top:0!important;
+  padding-top:2px!important;
+  margin-top:0!important;
+  margin-bottom:14px!important;
+}
+.project-task-period + .project-task-field{
+  margin-bottom:8px!important;
+}
+.project-task-period + .project-task-field + .project-task-form-note{
+  margin-top:0!important;
+}
+
+
+/* 업무 상태: 한눈에 보이는 3단 선택 */
+.project-task-status-field{
+  gap:7px;
+}
+.project-task-status-segment{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:4px;
+  padding:4px;
+  border:1px solid #dce5ee;
+  border-radius:13px;
+  background:#f6f8fb;
+}
+.project-task-status-option{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  min-width:0;
+  height:36px;
+  padding:0 9px;
+  border:0;
+  border-radius:9px;
+  outline:0;
+  background:transparent;
+  color:#778598;
+  font-size:11px;
+  font-weight:800;
+  cursor:pointer;
+  box-shadow:none;
+  transition:background-color .16s ease,color .16s ease;
+}
+.project-task-status-option i{
+  width:13px;
+  font-size:11px;
+  text-align:center;
+}
+.project-task-status-option:hover{
+  background:rgba(255,255,255,.7);
+  color:#445267;
+}
+.project-task-status-option:focus,
+.project-task-status-option:focus-visible{
+  outline:0;
+  box-shadow:none;
+}
+.project-task-status-option.is-selected{
+  box-shadow:none;
+}
+.project-task-status-option[data-task-status="TODO"].is-selected{
+  background:#fff;
+  color:#4f6074;
+}
+.project-task-status-option[data-task-status="IN_PROGRESS"].is-selected{
+  background:#fff4e2;
+  color:#c67a12;
+}
+.project-task-status-option[data-task-status="DONE"].is-selected{
+  background:#e8f9f4;
+  color:#169f84;
+}
+@media(max-width:420px){
+  .project-task-status-option{gap:4px;padding:0 5px;font-size:10px;}
+}
+
+/* 할 일 상태 아이콘만 시각 크기 보정 */
+.project-task-status-option[data-task-status="TODO"] i{
+  width:14px;
+  font-size:12px;
+}
+
+/* 프로젝트 메인 업무 보드: 카드 하단 잘림 방지 및 열 내부 스크롤 */
+.project-task-product:not(.is-workspace) .project-task-column{
+  display:flex;
+  flex-direction:column;
+  height:390px;
+  min-height:390px;
+}
+.project-task-product:not(.is-workspace) .project-task-list{
+  flex:1 1 auto;
+  min-height:0;
+  max-height:336px;
+  overflow-x:hidden;
+  overflow-y:auto;
+  scrollbar-gutter:auto;
+  padding-right:0;
+}
+.project-task-product:not(.is-workspace) .project-task-list::-webkit-scrollbar{
+  width:5px;
+}
+.project-task-product:not(.is-workspace) .project-task-list::-webkit-scrollbar-thumb{
+  border-radius:999px;
+  background:rgba(113,128,150,.28);
+}
+.project-task-product:not(.is-workspace) .project-task-list::-webkit-scrollbar-track{
+  background:transparent;
+}
+.project-task-product:not(.is-workspace) .project-task-card:last-child{
+  margin-bottom:2px;
+}
+.project-task-product.is-workspace .project-task-list{
+  max-height:none;
+  overflow:visible;
+}
+
+
+/* 업무 상세 → 수정 흐름 */
+.project-task-edit-btn{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:34px;height:34px;border:0;border-radius:50%;
+  background:transparent;color:#7f8b9d;font-size:13px;cursor:pointer;
+  transition:color .16s ease,background-color .16s ease;
+}
+.project-task-edit-btn:hover{color:#4a90e2;background:rgba(74,144,226,.10);}
+.project-task-edit-btn[hidden]{display:none!important;}
+.project-task-detail{
+  padding:20px;
+  display:flex;
+  flex-direction:column;
+  gap:0;
+}
+.project-task-detail__item{
+  display:grid;
+  grid-template-columns:92px minmax(0,1fr);
+  align-items:start;
+  gap:14px;
+  padding:15px 2px;
+  border-bottom:1px solid #edf1f5;
+  color:#344054;
+  font-size:12px;
+  line-height:1.55;
+}
+.project-task-detail__item:last-child{border-bottom:0;}
+.project-task-detail__label{color:#7b8798;font-size:11px;font-weight:850;}
+.project-task-detail__title{color:#182230;font-size:15px;font-weight:900;word-break:break-word;}
+.project-task-detail__assignees{display:flex;}
+
+.project-task-detail__assignees b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#263247;font-size:12px;}
+.project-task-detail__empty{color:#98a2b3;}
+.project-task-detail__status{
+  display:inline-flex;width:max-content;align-items:center;justify-content:center;
+  min-height:26px;padding:0 10px;border-radius:999px;font-size:11px;font-weight:900;
+}
+.project-task-detail__status.status-todo{
+  background:var(--moyo-task-todo-bg,#fff8ed);
+  color:var(--moyo-task-todo-text,#c77700);
+  border:1px solid var(--moyo-task-todo-border,#ffe4b8);
+}
+.project-task-detail__status.status-in_progress{
+  background:var(--moyo-task-progress-bg,#eef6ff);
+  color:var(--moyo-task-progress-text,#1d6fd8);
+  border:1px solid var(--moyo-task-progress-border,#beddff);
+}
+.project-task-detail__status.status-done{
+  background:var(--moyo-task-done-bg,#effcf8);
+  color:var(--moyo-task-done-text,#07966f);
+  border:1px solid var(--moyo-task-done-border,#c7f0e3);
+}
+.project-task-assignee-summary.is-readonly{pointer-events:none;background:#f8fafc;}
+@media(max-width:640px){
+  .project-task-detail{padding:16px;}
+  .project-task-detail__item{grid-template-columns:76px minmax(0,1fr);gap:10px;}
+}
+
+
+/* 업무 상세 정보 강화: 담당자 전체 보기 / 기간 정보 */
+.project-task-detail__assignee-wrap{
+  min-width:0;
+  width:100%;
+}
+.project-task-detail__assignee-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  min-width:0;
+}
+.project-task-detail__assignees{
+  min-width:0;
+  align-items:center;
+  
+}
+.project-task-detail__assignees>span:last-child{
+  display:flex;
+  min-width:0;
+  flex-direction:column;
+  justify-content:center;
+  
+  
+}
+.project-task-detail__assignees>span:last-child b{
+  overflow:hidden;
+  
+  
+  
+  
+  
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
+.project-task-detail__assignee-more{
+  flex:0 0 auto;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width:60px;
+  height:30px;
+  padding:0 11px;
+  border:1px solid #dce6ef;
+  border-radius:9px;
+  background:#fff;
+  color:#4a90e2;
+  font-size:11px;
+  line-height:1;
+  font-weight:850;
+  cursor:pointer;
+  outline:0;
+  box-shadow:none;
+  transition:border-color .16s ease,background-color .16s ease,color .16s ease,box-shadow .16s ease;
+}
+.project-task-detail__assignee-more:hover{
+  border-color:#a9cdea;
+  background:#f5faff;
+  color:#2f79c0;
+}
+.project-task-detail__assignee-more:focus,
+.project-task-detail__assignee-more:focus-visible{
+  outline:0;
+  border-color:#a9cdea;
+  background:#f5faff;
+  color:#2f79c0;
+  box-shadow:0 0 0 3px rgba(74,144,226,.10);
+}
+.project-task-detail__assignee-list{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:8px;
+  margin-top:11px;
+  padding-top:11px;
+  border-top:1px solid #edf1f5;
+}
+.project-task-detail__assignee-list[hidden]{
+  display:none!important;
+}
+.project-task-detail__assignee-person{
+  display:flex;
+  align-items:center;
+  gap:9px;
+  min-width:0;
+  padding:8px 9px;
+  border:1px solid #e5ebf1;
+  border-radius:11px;
+  background:#fff;
+  color:#283548;
+  text-align:left;
+  cursor:pointer;
+  transition:border-color .16s ease,background-color .16s ease;
+}
+.project-task-detail__assignee-person:hover{
+  border-color:#bfd7ea;
+  background:#f9fcff;
+}
+.project-task-detail__assignee-person>span:nth-child(2){
+  display:flex;
+  min-width:0;
+  flex:1;
+  flex-direction:column;
+  gap:2px;
+}
+.project-task-detail__assignee-person b{
+  overflow:hidden;
+  font-size:11px;
+  font-weight:900;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.project-task-detail__assignee-person small{
+  color:#8793a3;
+  font-size:9px;
+  font-weight:750;
+}
+.project-task-detail__assignee-person>i{
+  flex:0 0 auto;
+  color:#a7b3c1;
+  font-size:9px;
+}
+.project-task-detail__period{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  min-width:0;
+}
+.project-task-detail__period-icon{
+  display:inline-grid;
+  place-items:center;
+  flex:0 0 auto;
+  width:34px;
+  height:34px;
+  border-radius:10px;
+  background:#eef6ff;
+  color:#4a90e2;
+  font-size:13px;
+}
+.project-task-detail__period-copy{
+  display:flex;
+  min-width:0;
+  flex-direction:column;
+  gap:3px;
+}
+.project-task-detail__period-copy strong{
+  color:#263348;
+  font-size:12px;
+  font-weight:900;
+  line-height:1.45;
+}
+.project-task-detail__period-copy small{
+  display:flex;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:4px;
+  color:#7d8999;
+  font-size:10px;
+  font-weight:750;
+  line-height:1.4;
+}
+.project-task-detail__period-separator{
+  color:#b0bac7;
+}
+.project-task-detail__period-copy em{
+  color:#e25563;
+  font-size:10px;
+  font-style:normal;
+  font-weight:850;
+}
+@media(max-width:520px){
+  .project-task-detail__assignee-head{align-items:flex-start;flex-direction:column;}
+  .project-task-detail__assignee-list{grid-template-columns:1fr;}
+}
+
+/* 전체 보기 담당자 필터: 요약 칩 + 검색 가능한 더보기 팝오버 */
+.project-task-person-filter{position:relative;overflow:visible!important;flex:1 1 auto;}
+.project-task-person-more{display:inline-flex;align-items:center;gap:5px;height:34px;padding:0 10px;border:1px solid #d9e4ef;border-radius:999px;background:#fff;color:#4a79ad;font-size:11px;font-weight:850;white-space:nowrap;cursor:pointer;transition:.16s ease;}
+.project-task-person-more:hover,.project-task-person-more:focus-visible{border-color:#9fc8eb;background:#f2f8ff;outline:0;}
+.project-task-person-more i{font-size:9px;}
+.project-task-person-picker{position:absolute;left:0;top:calc(100% + 8px);z-index:35;width:min(330px,calc(100vw - 48px));padding:12px;border:1px solid #dce6ef;border-radius:16px;background:#fff;box-shadow:0 18px 42px rgba(31,42,68,.16);}
+.project-task-person-picker[hidden]{display:none!important;}
+.project-task-person-picker-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:9px;padding:0 2px;}
+.project-task-person-picker-head strong{color:#263247;font-size:12px;font-weight:900;}
+.project-task-person-picker-head button{display:grid;place-items:center;width:28px;height:28px;border:0;border-radius:50%;background:transparent;color:#7d8999;cursor:pointer;}
+.project-task-person-picker-head button:hover{background:#f2f5f8;color:#4b5565;}
+.project-task-person-picker-search{display:flex;align-items:center;gap:8px;height:36px;margin-bottom:9px;padding:0 10px;border:1px solid #dce5ee;border-radius:11px;color:#98a3b3;}
+.project-task-person-picker-search:focus-within{border-color:#86b9e7;box-shadow:0 0 0 3px rgba(74,144,226,.08);}
+.project-task-person-picker-search input{width:100%;border:0;outline:0;background:transparent;color:#273142;font-size:11px;}
+.project-task-person-picker-list{display:flex;flex-direction:column;gap:4px;max-height:280px;overflow-y:auto;padding-right:2px;}
+.project-task-person-picker-item{display:flex;align-items:center;gap:10px;width:100%;min-height:48px;padding:7px 9px;border:0;border-radius:11px;background:#fff;color:#263247;text-align:left;cursor:pointer;}
+.project-task-person-picker-item:hover{background:#f7fbff;}
+.project-task-person-picker-item.is-active{background:#edf7ff;}
+.project-task-person-picker-item>span{display:flex;min-width:0;flex:1;flex-direction:column;gap:2px;}
+.project-task-person-picker-item b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;font-weight:900;}
+.project-task-person-picker-item small{color:#8a96a6;font-size:9px;font-weight:700;}
+.project-task-person-picker-item>i{color:#4a90e2;font-size:11px;}
+.project-task-person-picker-empty{margin:0;padding:22px 8px;color:#8a96a6;font-size:11px;text-align:center;}
+@media(max-width:900px){.project-task-person-filter{width:100%;overflow-x:auto!important;overflow-y:visible!important;padding-bottom:4px;}.project-task-person-picker{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(330px,calc(100vw - 32px));}}
+
+
+/* 업무 카드 상태 이동 안내 */
+.project-task-card.is-draggable{cursor:grab;}
+.project-task-card.is-draggable:active{cursor:grabbing;}
+.project-task-drag-handle{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  flex:0 0 auto;
+  
+  
+  
+  
+  
+  
+  transition:background-color .16s ease,color .16s ease;
+}
+.project-task-card.is-draggable:hover .project-task-drag-handle{
+  background:#eef5fb;
+  color:#4a90e2;
+}
+.project-task-board.is-drag-active .project-task-column{
+  transition:border-color .16s ease,background-color .16s ease,box-shadow .16s ease;
+}
+.project-task-board.is-drag-active .project-task-column.is-drop-target{
+  border-color:#7eb6e7;
+  background:#f3f9ff;
+  box-shadow:inset 0 0 0 2px rgba(74,144,226,.08);
+}
+@media(max-width:640px){
+  }
+
+
+/* 업무 카드 드래그 인지성과 빈 상태 안내 */
+.project-task-drag-handle{
+  position:relative;
+  width:30px;
+  height:30px;
+  margin:-6px -6px 0 0;
+  border-radius:9px;
+  color:#91a1b4;
+  font-size:14px;
+}
+.project-task-drag-handle::after{
+  content:attr(data-tooltip);
+  position:absolute;
+  right:0;
+  top:calc(100% + 7px);
+  z-index:20;
+  width:max-content;
+  max-width:150px;
+  padding:6px 9px;
+  border:1px solid #dce7f1;
+  border-radius:8px;
+  background:#fff;
+  color:#536274;
+  font-size:10px;
+  font-weight:800;
+  line-height:1.2;
+  box-shadow:0 8px 20px rgba(31,42,68,.12);
+  opacity:0;
+  visibility:hidden;
+  transform:translateY(-3px);
+  pointer-events:none;
+  transition:opacity .15s ease,transform .15s ease,visibility .15s ease;
+}
+.project-task-drag-handle:hover::after{
+  opacity:1;
+  visibility:visible;
+  transform:translateY(0);
+}
+.project-task-empty{
+  padding:10px 8px;
+  gap:5px;
+}
+.project-task-empty span{
+  color:#929eae;
+  font-weight:800;
+}
+.project-task-empty small{
+  display:block;
+  max-width:240px;
+  color:#a5afbd;
+  font-size:9px;
+  font-weight:700;
+  line-height:1.45;
+}
+.project-task-empty.has-drag-guide{
+  border:0;
+  border-radius:0;
+  background:transparent;
+}
+.project-task-empty.has-drag-guide i{
+  color:#8fb5da;
+  font-size:15px;
+}
+.project-task-empty.has-drag-guide small{
+  color:#8e9daf;
+}
+
+/* 작업 기록 */
+.project-task-record-setting{padding-top:14px;}.project-task-record-setting__head label{display:flex;gap:8px;align-items:center;font-size:13px;}
+
+/* task records UI refinement */
+.project-task-record-setting[hidden],
+.project-task-record-visibility[hidden]{display:none!important;}
+.project-task-record-setting{padding:16px 0 0;border-top:1px solid #edf1f6;}
+.project-task-record-setting__head{display:flex;align-items:center;justify-content:space-between;gap:20px;}
+.project-task-record-setting__title{display:grid;gap:4px;min-width:0;}
+
+
+.project-task-record-toggle{display:inline-flex!important;align-items:center!important;gap:9px!important;flex:0 0 auto;cursor:pointer;user-select:none;}
+.project-task-record-toggle>input{position:absolute!important;inline-size:1px!important;block-size:1px!important;opacity:0!important;pointer-events:none!important;margin:0!important;}
+.project-task-record-toggle__track{position:relative;display:block;inline-size:38px;block-size:22px;border-radius:999px;background:#dce3eb;box-shadow:inset 0 0 0 1px rgba(47,62,83,.06);transition:.18s ease;}
+.project-task-record-toggle__track>span{position:absolute;left:3px;top:3px;inline-size:16px;block-size:16px;border-radius:50%;background:#fff;box-shadow:0 2px 5px rgba(38,52,73,.22);transition:.18s ease;}
+.project-task-record-toggle>input:checked+.project-task-record-toggle__track{background:linear-gradient(135deg,#55ddbf,#4a90e2);}
+.project-task-record-toggle>input:checked+.project-task-record-toggle__track>span{transform:translateX(16px);}
+.project-task-record-toggle>input:focus-visible+.project-task-record-toggle__track{outline:3px solid rgba(74,144,226,.2);outline-offset:2px;}
+.project-task-record-toggle__text{white-space:nowrap;}
+.project-task-record-visibility{border-top:1px solid #f0f3f7;display:grid;}
+.project-task-record-visibility>label{font-size:13px;font-weight:700;color:#5d6878;}
+.project-task-record-visibility select{width:100%;height:40px;border:1px solid #d7e0eb;border-radius:10px;padding:0 34px 0 12px;background:#fff;font-size:13px;outline:none;}
+
+.project-task-record-visibility small{display:flex;align-items:center;gap:6px;}
+.project-task-record-visibility small i{color:#7b8ba0;}
+
+/* 기록 설정 최종 간격 및 공개 범위 선택 상태 */
+.project-task-record-setting{
+  margin-bottom:8px!important;
+}
+
+.project-task-record-visibility select{
+  appearance:none;
+  -webkit-appearance:none;
+  border-color:#9fc8eb;
+  background-color:#f7fbff;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5 6 6.5l5-5' fill='none' stroke='%235f7187' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;
+  background-position:right 13px center;
+  color:#27364a;
+  font-weight:750;
+  box-shadow:inset 0 0 0 1px rgba(74,144,226,.035);
+}
+.project-task-record-visibility select:hover{
+  border-color:#78afe5;
+  background-color:#f2f8ff;
+}
+.project-task-record-visibility select:focus{
+  border-color:#4a90e2;
+  background-color:#fff;
+  box-shadow:0 0 0 3px rgba(74,144,226,.14);
+}
+.project-task-record-visibility select option{
+  color:#27364a;
+  background:#fff;
+  font-weight:600;
+}
+.project-task-record-visibility small{
+  margin-top:0;
+}
+.project-task-record-setting + .project-task-form-note{
+  margin-top:0!important;
+  margin-bottom:14px;
+}
+
+/* 기록 공개 범위 2분할 선택 및 폼 텍스트 정합 */
+.project-task-record-setting__title strong{
+  color:#4c596b;
+  font-size:11px;
+  font-weight:900;
+  line-height:1.35;
+}
+.project-task-record-setting__title small{
+  color:#8a94a3;
+  font-size:10px;
+  font-weight:650;
+  line-height:1.5;
+}
+.project-task-record-toggle{
+  color:#566274;
+  font-size:11px!important;
+  font-weight:850;
+}
+.project-task-record-toggle__text{font-weight:850;}
+.project-task-record-visibility{
+  margin-top:8px;
+  padding-top:10px;
+  grid-template-columns:90px minmax(0,1fr);
+  gap:7px 12px;
+  align-items:center;
+}
+.project-task-record-visibility__label{
+  color:#4c596b;
+  font-size:11px;
+  font-weight:900;
+}
+.project-task-record-visibility-options{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:6px;
+  padding:4px;
+  border:1px solid #dfe6ed;
+  border-radius:11px;
+  background:#f6f9fc;
+}
+.project-task-record-visibility-option{
+  min-width:0;
+  height:34px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  border:0;
+  border-radius:8px;
+  background:transparent;
+  color:#718094;
+  font-size:11px;
+  font-weight:850;
+  cursor:pointer;
+  transition:background .16s ease,color .16s ease,box-shadow .16s ease;
+}
+.project-task-record-visibility-option i{font-size:10px;}
+.project-task-record-visibility-option:hover{background:#fff;color:#4a6f99;}
+.project-task-record-visibility-option.is-selected{
+  background:#fff;
+  color:#2777cf;
+  box-shadow:0 2px 7px rgba(42,74,112,.12);
+}
+.project-task-record-visibility-option:focus-visible{
+  outline:3px solid rgba(74,144,226,.18);
+  outline-offset:1px;
+}
+.project-task-record-visibility small{
+  grid-column:2;
+  color:#8993a2;
+  font-size:10px;
+  font-weight:650;
+  line-height:1.45;
+}
+.project-task-record-visibility small i{font-size:9px;}
+@media(max-width:560px){
+  .project-task-record-visibility{grid-template-columns:1fr;}
+  .project-task-record-visibility small{grid-column:1;}
+  .project-task-record-visibility-options{grid-template-columns:1fr 1fr;}
+}
+
+/* 작업 상세 마지막 상태 행 구분선 제거 */
+.project-task-detail__item--status{border-bottom:0;}
+
+
+/* 작업 상세 공통 기록 요약 */
+.project-task-detail__title-row{display:flex;align-items:center;justify-content:space-between;gap:12px;min-width:0;}
+.project-task-detail__title-row .project-task-detail__title{min-width:0;flex:1;}
+.project-task-detail__title-row .project-task-detail__status{flex:0 0 auto;}
+.project-task-record-summary[hidden]{display:none!important;}
+.project-task-record-summary{display:grid;grid-template-columns:96px minmax(0,1fr);gap:14px;align-items:center;padding:14px 0;}
+.project-task-record-summary__content{display:flex;align-items:center;gap:10px;min-width:0;}
+.project-task-record-summary__counts{display:flex;align-items:center;min-width:0;}
+.project-task-record-summary__counts>span{display:inline-flex;align-items:center;height:auto;padding:0;border:0;border-radius:0;background:transparent;color:#68778b;line-height:1;white-space:nowrap;}
+.project-task-record-summary__counts>span i{color:#66768c;}
+.project-task-record-summary__counts>span b{color:#536277;font-weight:700;}
+.project-task-record-summary__counts>small{color:#98a2b3;font-size:12px;}
+.project-task-record-view-btn{margin-left:auto;flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;min-width:60px;height:30px;padding:0 11px;border:1px solid #dce6ef;border-radius:9px;background:#fff;color:#4a90e2;font-size:11px;font-weight:850;line-height:1;cursor:pointer;outline:0;box-shadow:none;transition:border-color .16s ease,background-color .16s ease,color .16s ease,box-shadow .16s ease;}
+.project-task-record-view-btn:hover{border-color:#a9cdea;background:#f5faff;color:#2f79c0;}
+.project-task-record-view-btn:focus,.project-task-record-view-btn:focus-visible{outline:0;border-color:#a9cdea;background:#f5faff;color:#2f79c0;box-shadow:0 0 0 3px rgba(74,144,226,.10);}
+@media(max-width:620px){.project-task-record-summary{grid-template-columns:76px minmax(0,1fr);gap:10px;}.project-task-record-summary__content{flex-wrap:wrap;}.project-task-record-view-btn{margin-left:0;}}
+/* 작업 기록 공통 모달 전환 */
+
+/* 기록 OFF: 마지막으로 보이는 진행 기간 행의 하단 구분선 제거 */
+.project-task-detail__item:has(+ .project-task-record-summary[hidden]){
+  border-bottom:0;
+}
+
+/* 작업 상세 기록 아이콘 크기·간격 조정 */
+.project-task-record-summary__counts{
+  gap:18px;
+}
+.project-task-record-summary__counts>span{
+  gap:6px;
+  font-size:13px;
+}
+.project-task-record-summary__counts>span i{
+  font-size:18px;
+  line-height:1;
+}
+.project-task-record-summary__counts>span b{
+  font-size:13px;
+  line-height:1;
+}
+
+
+/* 작업 기간 날짜 표시: 날짜와 요일을 하나의 텍스트 값으로 표시 */
+.project-task-period .project-task-date-control{
+  position:relative;
+}
+.project-task-period .project-task-date-control .project-task-date-raw{
+  position:absolute!important;
+  inset:0 40px 0 0;
+  width:auto!important;
+  opacity:0;
+  pointer-events:none;
+}
+.project-task-period .project-task-date-control .project-task-date-display{
+  width:100%;
+  height:100%;
+  border:0;
+  outline:0;
+  background:transparent;
+  padding:0 44px 0 14px;
+  font:inherit;
+  font-size:13px;
+  font-weight:600;
+  color:#26364d;
+  cursor:pointer;
+}
+.project-task-period .project-task-date-control .project-task-date-display:focus{
+  outline:none;
+}
+
+
+/* 진행 보드 마감 배지: 중요도별 색상 구분 */
+.project-task-card-bottom>em.is-today{
+  background:#fff3e2;
+  color:#e97a16;
+  box-shadow:inset 0 0 0 1px rgba(233,122,22,.08);
+}
+.project-task-card-bottom>em.is-soon{
+  background:#f1eeff;
+  color:#6758d9;
+  box-shadow:inset 0 0 0 1px rgba(103,88,217,.08);
+}
+.project-task-card-bottom>em.is-neutral{
+  background:#f4f7fa;
+  color:#728094;
+}
+.project-task-card-bottom>em.is-delay{
+  background:#fff0f1;
+  color:#db5260;
+}
+.project-task-card-bottom>em.is-done{
+  background:#eefaf7;
+  color:#279d86;
+}
+
+/* 작업 상세 담당자 표시를 진행 보드 카드 정책과 동일하게 정렬 */
+.project-task-detail__assignees{
+  gap:8px;
+}
+.project-task-detail__assignees>span:last-child{
+  gap:0;
+  line-height:normal;
+}
+.project-task-detail__assignees>span:last-child b{
+  color:#344054;
+  font-size:11px;
+  font-weight:900;
+  line-height:1.35;
+  letter-spacing:0;
+}
+.project-task-detail__assignees>span:last-child small{
+  color:#98a2b3;
+  font-size:9px;
+  font-weight:700;
+  line-height:1.35;
+}
+
+
+/* 작업 상세 대표 담당자: 진행 보드 카드와 동일 구조 */
+.project-task-detail__assignee-primary{
+  all:unset;
+  
+  
+  
+  min-width:0;
+  max-width:100%;
+  cursor:pointer;
+}
+span.project-task-detail__assignee-primary{cursor:default;}
+.project-task-detail__assignee-primary>.project-task-avatar{flex:0 0 auto;}
+.project-task-detail__assignee-primary>span:last-child{
+  display:flex;
+  min-width:0;
+  flex-direction:column;
+  gap:0;
+}
+.project-task-detail__assignee-primary>span:last-child b{
+  overflow:hidden;
+  color:#344054;
+  
+  font-weight:900;
+  
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.project-task-detail__assignee-primary>span:last-child small{
+  overflow:hidden;
+  
+  
+  
+  font-weight:700;
+  
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
+
+/* 작업 상세 대표 담당자: 진행 보드 카드 최종 표시값과 정확히 통일 */
+
+.project-task-detail__assignee-primary>span:last-child b{font-size:12px;line-height:1.35;}
+.project-task-detail__assignee-primary>span:last-child small{margin-top:1px;color:#7f8b9b;font-size:10px;line-height:1.35;}
+
+
+/* 작업 상세 담당자: 진행 보드와 동일한 프로필 스택 정책 */
+.project-task-detail__assignee-primary{
+  display:flex;
+  align-items:center;
+  gap:9px;
+}
+.project-task-detail__assignee-stack{
+  flex:0 0 auto;
+}
+.project-task-detail__assignee-avatar-link,
+.project-task-detail__assignee-name-link{
+  appearance:none;
+  border:0;
+  background:transparent;
+  padding:0;
+  color:inherit;
+  font:inherit;
+  cursor:pointer;
+}
+.project-task-detail__assignee-avatar-link{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  margin-left:-7px;
+  border-radius:50%;
+}
+.project-task-detail__assignee-avatar-link:first-child{margin-left:0;}
+.project-task-detail__assignee-avatar-link .project-task-avatar{margin-left:0;}
+.project-task-detail__assignee-name-link{
+  display:flex;
+  min-width:0;
+  flex-direction:column;
+  align-items:flex-start;
+  text-align:left;
+}
+.project-task-detail__assignee-text{
+  display:flex;
+  min-width:0;
+  flex-direction:column;
+  align-items:flex-start;
+}
+.project-task-detail__assignee-text b{
+  overflow:hidden;
+  max-width:100%;
+  color:#344054;
+  font-size:12px;
+  font-weight:900;
+  line-height:1.35;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.project-task-detail__assignee-text small{
+  margin-top:1px;
+  color:#7f8b9b;
+  font-size:10px;
+  font-weight:700;
+  line-height:1.35;
+}
+
+/* 작업 상세 담당자: 진행 보드와 동일한 가로 배치 강제 */
+.project-task-detail__assignees .project-task-detail__assignee-primary{
+  display:inline-flex;
+  flex-flow:row nowrap;
+  align-items:center;
+  justify-content:flex-start;
+  gap:9px;
+  width:auto;
+  max-width:100%;
+  min-width:0;
+  vertical-align:middle;
+}
+.project-task-detail__assignees .project-task-detail__assignee-stack{
+  display:inline-flex;
+  flex:0 0 auto;
+  flex-flow:row nowrap;
+  align-items:center;
+  width:auto;
+}
+.project-task-detail__assignees .project-task-detail__assignee-name-link{
+  display:inline-flex;
+  flex:0 1 auto;
+  flex-direction:column;
+  align-items:flex-start;
+  justify-content:center;
+  width:auto;
+  min-width:0;
+  margin:0;
+  text-align:left;
+}
+.project-task-detail__assignees .project-task-detail__assignee-text{
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  justify-content:center;
+  min-width:0;
+  gap:0;
+}
+
+
+/* 작업 상세 담당자: 진행 보드 카드와 동일한 실제 DOM 구조 */
+.project-task-detail__assignees.project-task-person{
+  display:flex;
+  align-items:center;
+  gap:9px;
+  min-width:0;
+}
+.project-task-detail__assignees.project-task-person>.project-task-detail__assignee-stack{
+  flex:0 0 auto;
+  margin-right:2px;
+}
+.project-task-detail__assignee-copy{
+  display:flex;
+  min-width:0;
+  flex-direction:column;
+  align-items:flex-start;
+  justify-content:center;
+  gap:0;
+  color:inherit;
+  cursor:pointer;
+}
+.project-task-detail__assignee-copy:focus-visible{
+  outline:2px solid rgba(74,144,226,.35);
+  outline-offset:3px;
+  border-radius:5px;
+}
+.project-task-detail__assignee-copy>.project-task-detail__assignee-text{
+  display:flex;
+  min-width:0;
+  flex-direction:column;
+  align-items:flex-start;
+  justify-content:center;
+  gap:0;
+}
+.project-task-detail__assignee-copy b{
+  overflow:hidden;
+  max-width:100%;
+  color:#344054;
+  font-size:12px;
+  font-weight:900;
+  line-height:1.35;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.project-task-detail__assignee-copy small{
+  overflow:hidden;
+  max-width:100%;
+  margin-top:1px;
+  color:#7f8b9b;
+  font-size:10px;
+  font-weight:700;
+  line-height:1.35;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
+
+/* 작업 상세: 진행 보드와 동일한 마감 배지 정책 */
+.project-task-detail__badges{
+  display:inline-flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap:6px;
+  flex:0 0 auto;
+}
+.project-task-detail__due{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:26px;
+  padding:0 9px;
+  border-radius:999px;
+  background:#f4f7fa;
+  color:#728094;
+  font-size:10px;
+  font-style:normal;
+  font-weight:900;
+  line-height:1;
+  white-space:nowrap;
+}
+.project-task-detail__due.is-today{
+  background:#fff3e2;
+  color:#e97a16;
+  box-shadow:inset 0 0 0 1px rgba(233,122,22,.08);
+}
+.project-task-detail__due.is-soon{
+  background:#f1eeff;
+  color:#6758d9;
+  box-shadow:inset 0 0 0 1px rgba(103,88,217,.08);
+}
+.project-task-detail__due.is-neutral{
+  background:#f4f7fa;
+  color:#728094;
+}
+.project-task-detail__due.is-delay{
+  background:#fff0f1;
+  color:#db5260;
+}
+.project-task-detail__due.is-done{
+  background:#eefaf7;
+  color:#279d86;
+}
+@media(max-width:520px){
+  .project-task-detail__title-row{align-items:flex-start;}
+  .project-task-detail__badges{flex-direction:column;align-items:flex-end;}
+}
+
+
+/* 작업 상세 마감 배지: 진행 기간 오른쪽 배치 */
+.project-task-detail__period-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  min-width:0;
+}
+.project-task-detail__period-row .project-task-detail__period{
+  min-width:0;
+  flex:1 1 auto;
+}
+.project-task-detail__period-row .project-task-detail__due{
+  flex:0 0 auto;
+}
+@media(max-width:520px){
+  .project-task-detail__period-row{
+    align-items:flex-start;
+  }
+}
+
+
+/* 작업 상세 최종 정리: 담당자 텍스트 확대 + 마감 정보 텍스트화 */
+.project-task-detail__assignee-copy b,
+.project-task-detail__assignee-text b{
+  font-size:13px!important;
+  line-height:1.35!important;
+}
+.project-task-detail__assignee-copy small,
+.project-task-detail__assignee-text small{
+  margin-top:2px!important;
+  color:#7f8b9b!important;
+  font-size:11px!important;
+  line-height:1.35!important;
+}
+
+/* 상태는 배지, 마감 정보는 기간 오른쪽 강조 텍스트 */
+.project-task-detail__period-row .project-task-detail__due{
+  min-height:0;
+  padding:0;
+  border-radius:0;
+  background:transparent!important;
+  box-shadow:none!important;
+  font-size:11px;
+  font-weight:900;
+  line-height:1.35;
+}
+.project-task-detail__period-row .project-task-detail__due.is-today{color:#e97a16;}
+.project-task-detail__period-row .project-task-detail__due.is-soon{color:#6758d9;}
+.project-task-detail__period-row .project-task-detail__due.is-neutral{color:#728094;}
+.project-task-detail__period-row .project-task-detail__due.is-delay{color:#db5260;}
+.project-task-detail__period-row .project-task-detail__due.is-done{color:#279d86;}
+
+
+/* 작업 상세 최종 위계: 마감 정보는 진행 기간 보조 문구로 표시 */
+.project-task-detail__period-due{
+  font-size:10px;
+  font-style:normal;
+  font-weight:900;
+  line-height:1.4;
+  white-space:nowrap;
+}
+.project-task-detail__period-due.is-today{color:#e97a16;}
+.project-task-detail__period-due.is-soon{color:#6758d9;}
+.project-task-detail__period-due.is-delay{color:#db5260;}
+
+
+/* 작업 상세 기록 유형별 바로가기 */
+.project-task-record-summary__counts>.project-task-record-summary__shortcut{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  height:30px;
+  padding:0 5px;
+  border:0;
+  border-radius:8px;
+  background:transparent;
+  color:#68778b;
+  font:inherit;
+  cursor:pointer;
+  white-space:nowrap;
+}
+.project-task-record-summary__counts>.project-task-record-summary__shortcut i{
+  color:#66768c;
+  font-size:18px;
+  line-height:1;
+}
+.project-task-record-summary__counts>.project-task-record-summary__shortcut b{
+  color:#536277;
+  font-size:13px;
+  font-weight:700;
+  line-height:1;
+}
+.project-task-record-summary__counts>.project-task-record-summary__shortcut:hover{
+  background:#f1f7ff;
+}
+.project-task-record-summary__counts>.project-task-record-summary__shortcut:hover i,
+.project-task-record-summary__counts>.project-task-record-summary__shortcut:hover b{
+  color:#3478c9;
+}
+.project-task-record-summary__counts>.project-task-record-summary__shortcut:focus-visible{
+  outline:0;
+  background:#f1f7ff;
+  box-shadow:0 0 0 3px rgba(74,144,226,.16);
+}
+
+/* 2026-09-12 업무 시간 지정: 기록 사용과 동일한 토글 스위치 */
+.project-task-period .project-task-time-toggle{
+  display:inline-flex!important;
+  align-items:center!important;
+  gap:9px!important;
+  width:max-content!important;
+  margin:0!important;
+  padding:0!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  color:#475467;
+  cursor:pointer;
+  user-select:none;
+}
+.project-task-period .project-task-time-toggle:hover{
+  border-color:transparent!important;
+  background:transparent!important;
+}
+.project-task-period .project-task-time-toggle>input{
+  position:absolute!important;
+  inline-size:1px!important;
+  block-size:1px!important;
+  opacity:0!important;
+  pointer-events:none!important;
+  margin:0!important;
+}
+.project-task-time-toggle__track{
+  position:relative;
+  display:block;
+  inline-size:38px;
+  block-size:22px;
+  flex:0 0 38px;
+  border-radius:999px;
+  background:#dce3eb;
+  box-shadow:inset 0 0 0 1px rgba(47,62,83,.06);
+  transition:background .18s ease,box-shadow .18s ease;
+}
+.project-task-time-toggle__track>span{
+  position:absolute;
+  left:3px;
+  top:3px;
+  inline-size:16px;
+  block-size:16px;
+  border-radius:50%;
+  background:#fff;
+  box-shadow:0 2px 5px rgba(38,52,73,.22);
+  transition:transform .18s ease;
+}
+.project-task-period .project-task-time-toggle>input:checked+.project-task-time-toggle__track{
+  background:linear-gradient(135deg,#55ddbf,#4a90e2);
+}
+.project-task-period .project-task-time-toggle>input:checked+.project-task-time-toggle__track>span{
+  transform:translateX(16px);
+}
+.project-task-period .project-task-time-toggle>input:focus-visible+.project-task-time-toggle__track{
+  outline:3px solid rgba(74,144,226,.2);
+  outline-offset:2px;
+}
+.project-task-time-toggle__text{
+  color:#475467;
+  font-size:11px;
+  font-weight:850;
+  white-space:nowrap;
+}
+
+/* 2026-09-13 업무 추가/수정 모달 구조 정리: 일정 등록과 동일한 스크롤/프레임 정책 */
+.project-task-modal{
+  display:flex!important;
+  flex-direction:column!important;
+  overflow:hidden!important;
+}
+.project-task-modal-head,
+.project-task-modal-actions{
+  flex:0 0 auto!important;
+}
+.project-task-form,
+.project-task-detail:not([hidden]){
+  flex:1 1 auto!important;
+  min-height:0!important;
+  overflow-x:hidden!important;
+  overflow-y:auto!important;
+  overscroll-behavior:contain;
+  scrollbar-gutter:auto!important;
+  scrollbar-width:none;
+  -ms-overflow-style:none;
+}
+.project-task-form::-webkit-scrollbar,
+.project-task-detail:not([hidden])::-webkit-scrollbar{
+  width:0;
+  height:0;
+}
+.project-task-modal-actions{
+  position:relative!important;
+  bottom:auto!important;
+  z-index:3!important;
+  background:#fff!important;
+}
+
+/* 진행 기간: 일정 등록과 같은 42px 입력 규격 */
+.project-task-period .moyo-quick-date-field,
+.project-task-period .moyo-quick-time-field{
+  height:42px!important;
+  min-height:42px!important;
+  box-sizing:border-box;
+  border-radius:14px;
+}
+.project-task-period .project-task-picker-input{
+  height:40px!important;
+  line-height:40px!important;
+}
+.project-task-period .moyo-quick-date-trigger,
+.project-task-period .moyo-quick-time-trigger{
+  width:42px!important;
+  height:42px!important;
+  min-width:42px!important;
+}
+
+
+/* 2026-09-13 업무 추가/수정: 기록 토글 제거, 기록 공개 범위만 유지 */
+.project-task-record-setting--visibility-only{
+  padding-top:0!important;
+  margin-top:14px!important;
+  margin-bottom:8px!important;
+  border-top:0!important;
+}
+.project-task-record-setting--visibility-only .project-task-record-visibility{
+  margin-top:0!important;
+  padding-top:0!important;
+  border-top:0!important;
+  grid-template-columns:96px minmax(0,1fr)!important;
+  gap:7px 12px!important;
+}
+.project-task-record-setting--visibility-only .project-task-record-visibility__label{
+  white-space:nowrap;
+}
+.project-task-record-setting--visibility-only #projectTaskRecordVisibilityHelp{
+  grid-column:2;
+}
+
+/* 2026-09-13 업무 상세 소속 행 */
+.project-task-detail__scope{
+  color:#344054;
+  font-size:12px;
+  font-weight:750;
+  line-height:1.5;
+  word-break:break-word;
+}
+
+/* 2026-09-14 업무 상세 프로필 이미지 정책: 투명 PNG 뒤 임의 배경 제거 */
+body.moyo-app-sidebar-enabled .project-task-detail .project-task-avatar.has-image,
+body.moyo-app-sidebar-enabled .project-task-detail .project-task-avatar.has-image.moyo-member-avatar {
+    background: transparent !important;
+    background-image: none !important;
+    box-shadow: none !important;
+}
+body.moyo-app-sidebar-enabled .project-task-detail .project-task-avatar.has-image > img {
+    background: transparent !important;
 }

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper 
 	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
-	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+	"https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.springboot.project.dao.IchatDAO"> <select id="getMyChatRooms" parameterType="int" resultType="com.springboot.project.dto.chatRoomDTO">
         SELECT r.ROOM_ID, r.ROOM_NAME, r.CREATE_DATE
         FROM CHAT_ROOMS r

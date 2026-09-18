@@ -8,6 +8,9 @@
         const uploadUrl = options.uploadUrl;
         const imageTypes = options.imageTypes || DEFAULT_IMAGE_TYPES;
         const maxImageSize = options.maxImageSize || DEFAULT_MAX_IMAGE_SIZE;
+        const resolveUploadedUrl = typeof options.resolveUploadedUrl === 'function'
+            ? options.resolveUploadedUrl
+            : function (url) { return url; };
 
         return function MoyoUploadAdapterPlugin(editor) {
             editor._moyoActiveUploads = 0;
@@ -54,7 +57,7 @@
                                             : '이미지 업로드에 실패했습니다.';
                                         throw new Error(message);
                                     }
-                                    return { default: data.url };
+                                    return { default: resolveUploadedUrl(data.url) };
                                 });
                             });
                         }).finally(function () {
@@ -72,25 +75,230 @@
         };
     }
 
+
+
+    async function uploadEmbeddedDataImages(editor, options) {
+        if (!editor || !options || !options.uploadUrl) return;
+
+        const html = editor.getData();
+        if (!/src\s*=\s*["']data:image\//i.test(html)) return;
+
+        const doc = new DOMParser().parseFromString(html, 'text/html');
+        const images = Array.from(doc.querySelectorAll('img[src^="data:image/"]'));
+        if (!images.length) return;
+
+        const imageTypes = options.imageTypes || DEFAULT_IMAGE_TYPES;
+        const maxImageSize = options.maxImageSize || DEFAULT_MAX_IMAGE_SIZE;
+        const resolveUploadedUrl = typeof options.resolveUploadedUrl === 'function'
+            ? options.resolveUploadedUrl
+            : function (url) { return url; };
+
+        editor._moyoActiveUploads += images.length;
+
+        try {
+            for (let i = 0; i < images.length; i += 1) {
+                const image = images[i];
+                const dataUrl = image.getAttribute('src');
+                const commaIndex = dataUrl ? dataUrl.indexOf(',') : -1;
+                if (!dataUrl || commaIndex < 0) {
+                    throw new Error('본문 이미지 데이터를 읽을 수 없습니다.');
+                }
+
+                const header = dataUrl.substring(0, commaIndex);
+                const payload = dataUrl.substring(commaIndex + 1);
+                const mimeMatch = /^data:([^;,]+)(;base64)?$/i.exec(header);
+                if (!mimeMatch) {
+                    throw new Error('본문 이미지 형식을 확인할 수 없습니다.');
+                }
+
+                const mimeType = String(mimeMatch[1] || '').toLowerCase();
+                const isBase64 = !!mimeMatch[2];
+                let bytes;
+                if (isBase64) {
+                    const binary = atob(payload);
+                    bytes = new Uint8Array(binary.length);
+                    for (let j = 0; j < binary.length; j += 1) bytes[j] = binary.charCodeAt(j);
+                } else {
+                    const decoded = decodeURIComponent(payload);
+                    bytes = new TextEncoder().encode(decoded);
+                }
+                const blob = new Blob([bytes], { type: mimeType });
+
+                if (!imageTypes.includes(blob.type)) {
+                    throw new Error('본문 이미지는 jpg, png, gif, webp 형식만 업로드할 수 있습니다.');
+                }
+                if (blob.size > maxImageSize) {
+                    throw new Error('본문 이미지는 5MB 이하만 업로드할 수 있습니다.');
+                }
+
+                const extensionMap = {
+                    'image/jpeg': 'jpg',
+                    'image/png': 'png',
+                    'image/gif': 'gif',
+                    'image/webp': 'webp'
+                };
+                const extension = extensionMap[blob.type] || 'bin';
+                const fileName = 'editor-' + Date.now() + '-' + i + '.' + extension;
+                const file = new File([blob], fileName, { type: blob.type });
+                const formData = new FormData();
+                formData.append('upload', file);
+
+                const response = await fetch(options.uploadUrl, {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json().catch(function () { return {}; });
+                if (!response.ok || !data.uploaded || !data.url) {
+                    const message = data && data.error && data.error.message
+                        ? data.error.message
+                        : '이미지 업로드에 실패했습니다.';
+                    throw new Error(message);
+                }
+
+                image.setAttribute('src', resolveUploadedUrl(data.url));
+            }
+
+            editor.setData(doc.body.innerHTML);
+        } finally {
+            editor._moyoActiveUploads = Math.max(0, editor._moyoActiveUploads - images.length);
+            if (editor._moyoActiveUploads === 0) {
+                editor._moyoUploadWaiters.splice(0).forEach(function (resolve) { resolve(); });
+            }
+        }
+    }
+
+    function collectSelectedSoftBreaks(editor) {
+        const selection = editor.model.document.selection;
+        if (selection.isCollapsed) return [];
+
+        const softBreaks = [];
+        for (const range of selection.getRanges()) {
+            for (const item of range.getItems()) {
+                if (item && item.is && item.is('element', 'softBreak')) {
+                    softBreaks.push(item);
+                }
+            }
+        }
+        return softBreaks;
+    }
+
+    function splitSelectedSoftBreaksIntoParagraphs(editor) {
+        const model = editor.model;
+        const selection = model.document.selection;
+        const softBreaks = collectSelectedSoftBreaks(editor);
+        if (!softBreaks.length) return false;
+
+        model.change(function (writer) {
+            const selectedBlocks = Array.from(selection.getSelectedBlocks());
+            if (!selectedBlocks.length) return;
+
+            const firstBlock = selectedBlocks[0];
+            let lastBlock = selectedBlocks[selectedBlocks.length - 1];
+
+            /*
+             * 뒤쪽 줄바꿈부터 나눠야 앞쪽 offset이 변하지 않는다.
+             * softBreak 자체는 제거하고 그 위치에서 block을 분리한다.
+             */
+            softBreaks.reverse().forEach(function (softBreak) {
+                const block = softBreak.parent;
+                const blockParent = block && block.parent;
+                if (!block || !blockParent) return;
+
+                const splitOffset = softBreak.startOffset;
+                writer.remove(softBreak);
+                const splitResult = writer.split(
+                    writer.createPositionAt(block, splitOffset),
+                    blockParent
+                );
+
+                const rightBlock = splitResult && splitResult.position
+                    ? splitResult.position.nodeAfter
+                    : null;
+                if (block === selectedBlocks[selectedBlocks.length - 1] && rightBlock) {
+                    lastBlock = rightBlock;
+                }
+            });
+
+            writer.setSelection(
+                writer.createPositionAt(firstBlock, 0),
+                writer.createPositionAt(lastBlock, 'end')
+            );
+        });
+
+        return true;
+    }
+
+    function bindCommonListLineNormalization(editor) {
+        if (!editor || editor._moyoListLineNormalizationBound) return;
+        editor._moyoListLineNormalizationBound = true;
+
+        const originalExecute = editor.execute.bind(editor);
+        editor.execute = function (commandName) {
+            const args = Array.prototype.slice.call(arguments, 1);
+            if (commandName === 'numberedList' || commandName === 'bulletedList') {
+                splitSelectedSoftBreaksIntoParagraphs(editor);
+            }
+            return originalExecute.apply(null, [commandName].concat(args));
+        };
+    }
+
+    const MOYO_EDITOR_COLORS = [
+        { color: 'hsl(0, 0%, 0%)', label: 'Black' },
+        { color: 'hsl(0, 0%, 30%)', label: 'Dim gray' },
+        { color: 'hsl(0, 0%, 60%)', label: 'Gray' },
+        { color: 'hsl(0, 0%, 90%)', label: 'Light gray' },
+        { color: 'hsl(0, 75%, 60%)', label: 'Red' },
+        { color: 'hsl(25, 90%, 55%)', label: 'Orange' },
+        { color: 'hsl(45, 95%, 55%)', label: 'Yellow' },
+        { color: 'hsl(145, 65%, 42%)', label: 'Green' },
+        { color: 'hsl(200, 85%, 50%)', label: 'Sky blue' },
+        { color: 'hsl(221, 83%, 53%)', label: 'Blue' },
+        { color: 'hsl(260, 85%, 62%)', label: 'Purple' },
+        { color: 'hsl(330, 80%, 60%)', label: 'Pink' }
+    ];
+
+    const PROFILE_TOOLBARS = {
+        BOARD: [
+            'heading', '|', 'bold', 'italic', 'underline', '|',
+            'fontColor', 'fontBackgroundColor', '|', 'alignment', '|',
+            'numberedList', 'bulletedList', 'outdent', 'indent', '|',
+            'link', 'uploadImage', 'mediaEmbed', 'insertTable', 'blockQuote', '|',
+            'removeFormat', 'undo', 'redo'
+        ],
+        NOTE: [
+            'heading', '|', 'bold', 'italic', 'underline', '|',
+            'fontColor', 'fontBackgroundColor', '|', 'alignment', '|',
+            'numberedList', 'bulletedList', 'outdent', 'indent', '|',
+            'link', 'uploadImage', 'mediaEmbed', 'insertTable', 'blockQuote', '|',
+            'removeFormat', 'undo', 'redo'
+        ],
+        RECORD: [
+            'heading', '|', 'bold', 'italic', 'underline', '|',
+            'numberedList', 'bulletedList', 'outdent', 'indent', '|', 'alignment', '|',
+            'fontColor', 'fontBackgroundColor', '|',
+            'insertTable', 'uploadImage', '|', 'undo', 'redo'
+        ],
+        LEGACY: [
+            'heading', '|', 'bold', 'italic', 'underline', '|',
+            'fontColor', 'fontBackgroundColor', '|', 'alignment', '|',
+            'numberedList', 'bulletedList', '|',
+            'link', 'uploadImage', 'mediaEmbed', 'insertTable', 'blockQuote', '|',
+            'removeFormat', 'undo', 'redo'
+        ]
+    };
+
     function buildConfig(options) {
-        return {
+        const profile = String(options.profile || 'LEGACY').toUpperCase();
+        const toolbarItems = PROFILE_TOOLBARS[profile] || PROFILE_TOOLBARS.LEGACY;
+        const config = {
             language: 'ko',
             placeholder: options.placeholder || '내용을 입력하세요.',
             toolbar: {
-                // Shared board/note toolbar: never collapse tools into the overflow menu.
-                items: [
-                    'heading', '|',
-                    'bold', 'italic', 'underline', '|',
-                    'fontColor', 'fontBackgroundColor', '|',
-                    'alignment', '|',
-                    'numberedList', 'bulletedList', '|',
-                    'link', 'uploadImage', 'mediaEmbed', 'insertTable', 'blockQuote', '|',
-                    'removeFormat', 'undo', 'redo'
-                ],
-                shouldNotGroupWhenFull: true
+                items: toolbarItems.slice(),
+                shouldNotGroupWhenFull: profile !== 'NOTE'
             },
-            fontColor: { columns: 6, documentColors: 12 },
-            fontBackgroundColor: { columns: 6, documentColors: 12 },
+            fontColor: { columns: 6, colors: MOYO_EDITOR_COLORS, documentColors: 0, colorPicker: false },
+            fontBackgroundColor: { columns: 6, colors: MOYO_EDITOR_COLORS, documentColors: 0, colorPicker: false },
             image: {
                 upload: { types: ['jpeg', 'jpg', 'png', 'gif', 'webp'] },
                 resizeUnit: '%',
@@ -98,22 +306,18 @@
                 toolbar: [
                     'imageTextAlternative', 'toggleImageCaption', '|',
                     'imageStyle:inline', 'imageStyle:alignLeft', 'imageStyle:alignCenter',
-                    'imageStyle:alignRight', 'imageStyle:side', '|',
-                    'resizeImage'
+                    'imageStyle:alignRight', 'imageStyle:side', '|', 'resizeImage'
                 ]
             },
             table: {
-                contentToolbar: ['tableColumn', 'tableRow', 'mergeTableCells', '|', 'tableProperties', 'tableCellProperties'],
+                contentToolbar: [
+                    'tableColumn', 'tableRow', 'mergeTableCells', '|',
+                    'tableProperties', 'tableCellProperties'
+                ],
                 defaultHeadings: { rows: 0, columns: 0 }
             },
-            link: {
-                addTargetToExternalLinks: true,
-                defaultProtocol: 'https://'
-            },
-            mediaEmbed: {
-                previewsInData: true
-            },
-            extraPlugins: [createUploadAdapterPlugin(options)],
+            link: { addTargetToExternalLinks: true, defaultProtocol: 'https://' },
+            mediaEmbed: { previewsInData: true },
             removePlugins: [
                 'CKBox', 'CKFinder', 'EasyImage', 'RealTimeCollaborativeComments',
                 'RealTimeCollaborativeTrackChanges', 'RealTimeCollaborativeRevisionHistory',
@@ -123,17 +327,42 @@
                 'TableOfContents', 'PasteFromOfficeEnhanced',
                 'AIAssistant', 'AIAdapter', 'OpenAITextAdapter', 'AzureOpenAITextAdapter',
                 'CKBoxImageEdit', 'ExportPdf', 'ExportWord', 'ImportWord', 'ImportFromWord',
-                'MultiLevelList', 'CaseChange',
-                'ListProperties', 'TodoList',
+                'MultiLevelList', 'CaseChange', 'ListProperties', 'TodoList',
                 'TableColumnResize', 'TableCaption'
             ]
         };
+        if (options.uploadUrl) config.extraPlugins = [createUploadAdapterPlugin(options)];
+        return config;
+    }
+
+    function validateImageSources(html) {
+        const doc = new DOMParser().parseFromString(String(html || ''), 'text/html');
+        const invalidImage = Array.from(doc.querySelectorAll('img')).find(function (image) {
+            const source = String(image.getAttribute('src') || '').trim();
+            return !source || /^data:image\//i.test(source);
+        });
+        if (invalidImage) {
+            throw new Error('본문 이미지 업로드가 완료되지 않았습니다. 이미지를 다시 확인한 뒤 저장해주세요.');
+        }
     }
 
     function waitForUploads(editor) {
-        if (!editor || !editor._moyoActiveUploads) return Promise.resolve();
-        return new Promise(function (resolve) {
-            editor._moyoUploadWaiters.push(resolve);
+        if (!editor) return Promise.resolve();
+
+        const flushEmbedded = editor._moyoUploadOptions && editor._moyoUploadOptions.uploadUrl
+            ? uploadEmbeddedDataImages(editor, editor._moyoUploadOptions)
+            : Promise.resolve();
+
+        return Promise.resolve(flushEmbedded).then(function () {
+            if (!editor._moyoActiveUploads) {
+                validateImageSources(editor.getData());
+                return;
+            }
+            return new Promise(function (resolve) {
+                editor._moyoUploadWaiters.push(resolve);
+            }).then(function () {
+                validateImageSources(editor.getData());
+            });
         });
     }
 
@@ -144,20 +373,80 @@
         form.dataset.moyoCkeditorUploadGuard = 'true';
         form.addEventListener('submit', function (event) {
             sourceElement.value = editor.getData();
-            if (!editor._moyoActiveUploads) return;
+
+            if (form.dataset.moyoCkeditorUploadSubmitting === 'true') {
+                delete form.dataset.moyoCkeditorUploadSubmitting;
+                return;
+            }
+
+            const currentHtml = editor.getData();
+            const hasEmbeddedDataImage = /src\s*=\s*["']data:image\//i.test(currentHtml);
+            try {
+                if (!editor._moyoActiveUploads && !hasEmbeddedDataImage) {
+                    validateImageSources(currentHtml);
+                    return;
+                }
+            } catch (error) {
+                event.preventDefault();
+                console.error('[MOYO CKEditor] 본문 이미지 검증 실패:', error);
+                alert(error && error.message ? error.message : '본문 이미지를 확인해주세요.');
+                return;
+            }
 
             event.preventDefault();
             const submitter = event.submitter || null;
 
             waitForUploads(editor).then(function () {
                 sourceElement.value = editor.getData();
+                form.dataset.moyoCkeditorUploadSubmitting = 'true';
                 if (typeof form.requestSubmit === 'function') {
                     submitter ? form.requestSubmit(submitter) : form.requestSubmit();
                 } else {
                     form.submit();
                 }
+            }).catch(function (error) {
+                console.error('[MOYO CKEditor] 본문 이미지 업로드 실패:', error);
+                alert(error && error.message ? error.message : '본문 이미지 업로드에 실패했습니다.');
             });
         }, true);
+    }
+
+    function stabilizeNoteEditorUi(editor) {
+        if (!editor || !editor.ui || !editor.ui.view) return;
+
+        const root = editor.ui.view.element;
+        if (!root) return;
+
+        function hidePoweredBy() {
+            document.querySelectorAll('.ck-powered-by, .ck-powered-by-balloon, [class*="ck-powered-by"]').forEach(function (node) {
+                node.style.setProperty('display', 'none', 'important');
+                node.style.setProperty('visibility', 'hidden', 'important');
+            });
+
+            document.querySelectorAll('a, span, div').forEach(function (node) {
+                const text = String(node.textContent || '').trim().toLowerCase();
+                if (text === 'powered by ckeditor' || text === 'powered by ckeditor 5') {
+                    const target = node.closest('.ck-balloon-panel') || node;
+                    target.style.setProperty('display', 'none', 'important');
+                    target.style.setProperty('visibility', 'hidden', 'important');
+                }
+            });
+        }
+
+        function refresh() {
+            hidePoweredBy();
+        }
+
+        refresh();
+        requestAnimationFrame(refresh);
+        setTimeout(refresh, 100);
+        setTimeout(refresh, 500);
+
+        const observer = new MutationObserver(refresh);
+        observer.observe(document.body, { childList: true, subtree: true });
+        editor.once('destroy', function () {
+            observer.disconnect();
+        });
     }
 
     function create(elementOrSelector, options) {
@@ -171,10 +460,35 @@
 
         if (!element) return Promise.reject(new Error('CKEditor 대상 요소를 찾을 수 없습니다.'));
         if (!EditorClass) return Promise.reject(new Error('CKEditor 스크립트가 로드되지 않았습니다.'));
-        if (!options.uploadUrl) return Promise.reject(new Error('이미지 업로드 URL이 필요합니다.'));
 
         return EditorClass.create(element, buildConfig(options)).then(function (editor) {
+            const profile = String(options.profile || 'LEGACY').toUpperCase();
+            const editorElement = editor.ui && editor.ui.view && editor.ui.view.element
+                ? editor.ui.view.element
+                : null;
+            if (editorElement) {
+                editorElement.classList.add('moyo-ckeditor');
+                editorElement.classList.add('moyo-ckeditor--' + profile.toLowerCase());
+            }
+            editor._moyoUploadOptions = options;
+            editor.flushEmbeddedDataImages = function () {
+                return uploadEmbeddedDataImages(editor, options);
+            };
+            if (profile === 'NOTE') {
+                stabilizeNoteEditorUi(editor);
+            }
+            if (String(options.profile || '').toUpperCase() === 'BOARD') {
+                Object.defineProperty(editor, '_boardUploadCount', {
+                    configurable: true,
+                    get: function () { return editor._moyoActiveUploads || 0; }
+                });
+                editor.waitForBoardUploads = function () { return waitForUploads(editor); };
+                editor.flushBoardDataImages = function () {
+                    return uploadEmbeddedDataImages(editor, options);
+                };
+            }
             if (typeof options.initialData === 'string') editor.setData(options.initialData);
+            bindCommonListLineNormalization(editor);
             bindFormSubmitAfterUploads(editor, element);
             if (typeof options.onReady === 'function') options.onReady(editor);
             return editor;

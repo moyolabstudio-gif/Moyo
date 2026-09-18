@@ -1,13 +1,20 @@
 package com.springboot.project.service.impl;
 
 import com.springboot.project.dao.InoteDAO;
+import com.springboot.project.dao.IprojectDAO;
 import com.springboot.project.dto.noteDTO;
+import com.springboot.project.dto.projectRequestDTO;
 import com.springboot.project.dto.noteFileDTO;
 import com.springboot.project.dto.noteReplyDTO;
+import com.springboot.project.dto.noteVersionDTO;
 import com.springboot.project.service.InoteService;
 import com.springboot.project.service.IcontentShareService;
+import com.springboot.project.service.ContentInputSecurityService;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,13 +29,22 @@ import java.util.regex.Pattern;
 @Service
 public class noteServiceImpl implements InoteService {
 
-    private static final String NOTE_UPLOAD_PATH = "C:/MoyoLab.Studio/note/";
+    private static final Logger log = LoggerFactory.getLogger(noteServiceImpl.class);
+
+    @Value("${moyo.upload.note-dir:C:/uploads/notes/}")
+    private String noteUploadPath;
 
     @Autowired
     private InoteDAO inoteDAO;
 
     @Autowired
     private IcontentShareService contentShareService;
+
+    @Autowired
+    private IprojectDAO projectDAO;
+
+    @Autowired
+    private ContentInputSecurityService contentInputSecurityService;
 
     @Override
     public List<noteDTO> getNoteList(String scopeType, Long wsId, Long projId, Long userId, String keyword) {
@@ -119,9 +135,12 @@ public class noteServiceImpl implements InoteService {
     }
 
     @Override
+    @Transactional
     public boolean registerNote(noteDTO note) {
         normalizeNote(note);
-        return inoteDAO.insertNote(note) > 0;
+        boolean inserted = inoteDAO.insertNote(note) > 0;
+        if (inserted) recordInitialNoteVersionSafely(note.getNoteId(), note.getUserId());
+        return inserted;
     }
 
     @Override
@@ -129,6 +148,7 @@ public class noteServiceImpl implements InoteService {
     public void registerNoteWithFiles(noteDTO note, List<noteFileDTO> fileList) {
         normalizeNote(note);
         inoteDAO.insertNote(note);
+        recordInitialNoteVersionSafely(note.getNoteId(), note.getUserId());
         if (fileList != null && !fileList.isEmpty()) {
             for (noteFileDTO file : fileList) {
                 file.setNoteId(note.getNoteId());
@@ -138,8 +158,76 @@ public class noteServiceImpl implements InoteService {
     }
 
     @Override
+    @Transactional
     public boolean modifyNote(noteDTO note) {
-        return inoteDAO.updateNote(note) > 0;
+        sanitizeEditableNote(note);
+        noteVersionDTO before = inoteDAO.selectNoteSnapshot(note.getNoteId());
+        boolean updated = inoteDAO.updateNote(note) > 0;
+        if (!updated) return false;
+        noteVersionDTO after = inoteDAO.selectNoteSnapshot(note.getNoteId());
+        if (isVersionChanged(before, after)) {
+            recordCurrentNoteVersion(note.getNoteId(), note.getUpdatedBy(), "UPDATE", null);
+        }
+        return true;
+    }
+
+    @Override
+    @Transactional
+    public boolean autosaveNote(noteDTO note) {
+        sanitizeEditableNote(note);
+        if (note == null || note.getNoteId() == null || note.getUpdatedBy() == null) return false;
+        return inoteDAO.updateNoteAutosave(note) > 0;
+    }
+
+    @Override
+    public List<noteVersionDTO> getNoteVersions(Long noteId, Long userId) {
+        noteDTO readable = getNoteDetail(noteId, userId);
+        if (readable == null) throw new IllegalArgumentException("노트를 찾을 수 없습니다.");
+        return inoteDAO.selectNoteVersions(noteId);
+    }
+
+    @Override
+    @Transactional
+    public noteVersionDTO restoreNoteVersion(Long noteId, Long noteVersionId, Long userId) {
+        noteDTO note = getNoteDetail(noteId, userId);
+        if (note == null) throw new IllegalArgumentException("노트를 찾을 수 없습니다.");
+        if (!note.isCanEdit()) throw new IllegalStateException("노트를 복원할 권한이 없습니다.");
+        noteVersionDTO version = inoteDAO.selectNoteVersion(noteId, noteVersionId);
+        if (version == null) throw new IllegalArgumentException("복원할 버전을 찾을 수 없습니다.");
+        String safeTitle = contentInputSecurityService.singleLine(version.getNoteTitle(), 200, false);
+        String safeContent = contentInputSecurityService.richHtml(version.getNoteContent());
+        if (inoteDAO.restoreNoteVersion(noteId, safeTitle, safeContent, userId) <= 0) {
+            throw new IllegalArgumentException("복원할 노트를 찾을 수 없습니다.");
+        }
+        recordCurrentNoteVersion(noteId, userId, "RESTORE", noteVersionId);
+        return inoteDAO.selectNoteVersions(noteId).get(0);
+    }
+
+    @Override
+    public void recordCurrentNoteVersion(Long noteId, Long changedBy, String changeType, Long restoredFromVersionId) {
+        if (noteId == null || changedBy == null) return;
+        noteVersionDTO current = inoteDAO.selectNoteSnapshot(noteId);
+        if (current == null) return;
+        current.setChangedBy(changedBy);
+        current.setChangeType(changeType == null ? "UPDATE" : changeType.toUpperCase());
+        current.setRestoredFromVersionId(restoredFromVersionId);
+        inoteDAO.insertNoteVersion(current);
+    }
+
+    private void recordInitialNoteVersionSafely(Long noteId, Long changedBy) {
+        try {
+            recordCurrentNoteVersion(noteId, changedBy, "CREATE", null);
+        } catch (RuntimeException ex) {
+            // 버전 이력 저장소가 아직 배포되지 않았거나 일시적으로 실패해도
+            // 노트 본문 생성 자체는 롤백하지 않는다. 이력 기능은 별도로 복구할 수 있다.
+            log.warn("Initial note version save failed. noteId={}", noteId, ex);
+        }
+    }
+
+    private boolean isVersionChanged(noteVersionDTO before, noteVersionDTO after) {
+        if (before == null || after == null) return true;
+        return !java.util.Objects.equals(before.getNoteTitle(), after.getNoteTitle())
+                || !java.util.Objects.equals(before.getNoteContent(), after.getNoteContent());
     }
 
     @Override
@@ -177,6 +265,19 @@ public class noteServiceImpl implements InoteService {
             if (removeNote(noteId)) deletedCount++;
         }
         return deletedCount;
+    }
+
+    @Override
+    @Transactional
+    public boolean removeNoteForAccountWithdrawal(Long noteId) {
+        if (noteId == null) return false;
+        List<noteFileDTO> files = inoteDAO.selectNoteFileList(noteId);
+        if (files != null) {
+            for (noteFileDTO file : files) {
+                if (file != null) deletePhysicalFile(file.getFilePath());
+            }
+        }
+        return removeNote(noteId);
     }
 
     @Override
@@ -222,8 +323,15 @@ public class noteServiceImpl implements InoteService {
 
     @Override
     @Transactional
+    public boolean updateMoyoPublic(Long noteId, Long userId, boolean moyoPublic) {
+        if (noteId == null || userId == null) return false;
+        return inoteDAO.updateMoyoPublic(noteId, userId, moyoPublic ? "Y" : "N") > 0;
+    }
+
+    @Override
+    @Transactional
     public int recordNoteView(Long noteId) {
-        if (!isMoyoPublicNote(noteId)) return 0;
+        if (noteId == null) return 0;
         inoteDAO.incrementNoteViewCount(noteId);
         return inoteDAO.selectNoteViewCount(noteId);
     }
@@ -241,8 +349,8 @@ public class noteServiceImpl implements InoteService {
     @Override
     @Transactional
     public Map<String, Object> toggleNoteLike(Long noteId, Long userId) {
-        if (!isMoyoPublicNote(noteId) || userId == null) {
-            return Map.of("liked", false, "likeCount", 0);
+        if (noteId == null || userId == null) {
+            return Map.of("liked", false, "likeCount", 0, "viewCount", 0);
         }
         boolean liked = inoteDAO.countNoteLike(noteId, userId) > 0;
         if (liked) inoteDAO.deleteNoteLike(noteId, userId);
@@ -308,7 +416,7 @@ public class noteServiceImpl implements InoteService {
         if (filePath == null || filePath.isBlank()) return;
         try {
             File file = new File(filePath);
-            if (!file.isAbsolute()) file = new File(NOTE_UPLOAD_PATH, filePath);
+            if (!file.isAbsolute()) file = new File(noteUploadPath, filePath);
             if (file.exists() && file.isFile()) file.delete();
         } catch (Exception ignored) {
             // 파일 삭제 실패가 DB 휴지통 정리를 막으면 안 된다.
@@ -458,7 +566,28 @@ public class noteServiceImpl implements InoteService {
             note.setProjId(null);
         } else if ("WS".equals(note.getScopeType())) {
             note.setProjId(null);
+        } else if ("PROJ".equals(note.getScopeType())) {
+            // NOTES의 프로젝트 범위는 CK_NOTES_SCOPE_IDS 제약조건상
+            // PROJ_ID만 보관하고 WS_ID는 NULL이어야 한다.
+            // 그룹 프로젝트 여부/소속 그룹은 PROJECTS.WS_ID를 단일 원본으로 조회한다.
+            if (note.getProjId() == null) {
+                throw new IllegalArgumentException("프로젝트 노트에는 프로젝트 ID가 필요합니다.");
+            }
+            projectRequestDTO project = projectDAO.selectProjectById(note.getProjId());
+            if (project == null) {
+                throw new IllegalArgumentException("프로젝트를 찾을 수 없습니다.");
+            }
+            note.setWsId(null);
         }
+        sanitizeEditableNote(note);
+    }
+
+    private void sanitizeEditableNote(noteDTO note) {
+        if (note == null) return;
+        note.setNoteTitle(contentInputSecurityService.singleLine(note.getNoteTitle(), 200, false));
+        String safeMemo = contentInputSecurityService.richHtml(note.getMemo());
+        note.setMemo(safeMemo);
+        note.setDoneContent(safeMemo);
     }
 
     private String normalizeScope(String scopeType) {

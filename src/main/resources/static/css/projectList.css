@@ -98,7 +98,7 @@
 
 .project-list-create {
     color: #fff;
-    background: linear-gradient(135deg, #4d8ff6, #42cdb8);
+    background: var(--moyo-primary-gradient, linear-gradient(135deg, #39CDB5 0%, #4A90E2 54%, #7358E8 100%));
     box-shadow: 0 6px 15px rgba(67, 157, 217, .22);
 }
 
@@ -156,58 +156,8 @@
     gap: 8px;
 }
 
-.project-list-search {
-    width: 240px;
-    height: 38px;
-    display: flex;
-    align-items: center;
-    gap: 7px;
-    padding: 0 11px;
-    border: 1px solid #dde5ef;
-    border-radius: 10px;
-    color: #9aa4b4;
-    background: #fbfcfe;
-}
-
-.project-list-search input {
-    width: 100%;
-    border: 0;
-    outline: 0;
-    background: transparent;
-    color: #263247;
-    font: inherit;
-    font-size: 13px;
-}
-
-#projectListSort {
-    height: 38px;
-    padding: 0 30px 0 11px;
-    border: 1px solid #dde5ef;
-    border-radius: 10px;
-    color: #596579;
-    background: #fff;
-    font: inherit;
-    font-size: 13px;
-}
 
 .project-list-card { padding: 22px; }
-
-.project-list-head {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 14px;
-}
-
-.project-list-head h2 {
-    margin: 0;
-    font-size: 19px;
-}
-
-.project-list-head p {
-    margin: 5px 0 0;
-    color: #8a94a6;
-    font-size: 13px;
-}
 
 .project-list-groups {
     display: grid;
@@ -458,10 +408,7 @@
     }
     .project-list-hero-actions { justify-content: flex-start; }
     .project-list-tools { width: 100%; }
-    .project-list-search {
-        flex: 1;
-        width: auto;
-    }
+    
 }
 
 @media (max-width: 620px) {
@@ -470,8 +417,7 @@
         align-items: stretch;
         flex-direction: column;
     }
-    .project-list-search,
-    #projectListSort { width: 100%; }
+    
     .project-list-hero { padding: 24px 22px; }
     .project-status-section-head {
         align-items: flex-start;
@@ -481,54 +427,7 @@
 }
 
 /* 프로젝트 리스트 디테일 보강: 유형 필터, 검색 여백, 멤버 열거 */
-.project-list-type-filter {
-    height: 38px;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 0 10px 0 12px;
-    border: 1px solid #dde5ef;
-    border-radius: 10px;
-    color: #7b8798;
-    background: #fff;
-    font-size: 12px;
-    white-space: nowrap;
-}
 
-.project-list-type-filter span {
-    color: #8a94a6;
-    font-size: 12px;
-    font-weight: 500;
-}
-
-#projectListType {
-    min-width: 92px;
-    border: 0;
-    outline: 0;
-    color: #536176;
-    background: transparent;
-    font: inherit;
-    font-size: 13px;
-}
-
-.project-list-search {
-    width: 270px;
-    padding: 0 14px;
-}
-
-.project-list-search span {
-    flex: 0 0 auto;
-    color: #9aa4b4;
-    font-size: 14px;
-}
-
-.project-list-search input {
-    padding: 0 3px;
-}
-
-.project-list-search input::placeholder {
-    color: #a7b0bf;
-}
 
 .project-list-link {
     min-height: 188px;
@@ -559,10 +458,7 @@
     .project-list-tools {
         flex-wrap: wrap;
     }
-    .project-list-type-filter,
-    #projectListType {
-        width: 100%;
-    }
+    
 }
 
 /* 워크스페이스 프로젝트 카드와 동일한 흰 배경 + 우측 하단 은은한 상태 그라데이션 */
@@ -620,43 +516,6 @@
     padding: 18px 22px 22px;
 }
 
-.project-list-filter-head {
-    justify-content: flex-end;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 18px;
-    padding-bottom: 14px;
-    border-bottom: 1px solid #edf1f6;
-}
-
-.project-list-filter-head .project-list-tools {
-    width: auto;
-    margin-left: auto;
-}
-
-.project-list-filter-head .project-list-search {
-    width: 300px;
-}
-
-.project-list-filter-head .project-list-type-filter,
-.project-list-filter-head #projectListSort,
-.project-list-filter-head .project-list-search {
-    background: #fff;
-}
-
-@media (max-width: 820px) {
-    .project-list-filter-head {
-        align-items: stretch;
-        justify-content: flex-start;
-    }
-    .project-list-filter-head .project-list-tools {
-        width: 100%;
-        margin-left: 0;
-    }
-    .project-list-filter-head .project-list-search {
-        width: auto;
-    }
-}
 
 /* 프로젝트 리스트 상단 툴바: 상태 탭과 유형/검색/정렬을 한 줄로 통합 */
 .sr-only {
@@ -693,46 +552,10 @@
     margin-left: auto;
 }
 
-.project-list-toolbar-card .project-list-type-filter,
-.project-list-toolbar-card .project-list-search,
-.project-list-toolbar-card #projectListSort {
-    height: 36px;
-    border: 1px solid #dce6f2;
-    border-radius: 12px;
-    background: #fff;
-    box-shadow: none;
-}
-
-.project-list-toolbar-card .project-list-type-filter {
-    width: 128px;
-    padding: 0 10px;
-}
-
-.project-list-toolbar-card #projectListType {
-    width: 100%;
-    min-width: 0;
-}
-
-.project-list-toolbar-card .project-list-search {
-    width: 270px;
-    padding: 0 13px;
-}
-
-.project-list-toolbar-card #projectListSort {
-    width: 132px;
-    padding: 0 30px 0 13px;
-    color: #596579;
-    font: inherit;
-    font-size: 13px;
-}
 
 .project-list-card {
     margin-top: 14px;
     padding-top: 20px;
-}
-
-.project-list-filter-head {
-    display: none;
 }
 
 @media (max-width: 980px) {
@@ -744,10 +567,7 @@
         width: 100%;
         margin-left: 0;
     }
-    .project-list-toolbar-card .project-list-search {
-        flex: 1 1 auto;
-        width: auto;
-    }
+    
 }
 
 @media (max-width: 620px) {
@@ -755,63 +575,13 @@
         align-items: stretch;
         flex-direction: column;
     }
-    .project-list-toolbar-card .project-list-type-filter,
-    .project-list-toolbar-card .project-list-search,
-    .project-list-toolbar-card #projectListSort {
-        width: 100%;
-    }
+    
 }
 
 
 /* 프로젝트 유형 옵션 확장 + 검색창 텍스트 여백 보정 */
 .project-list-toolbar-card .project-list-tools {
     gap: 9px;
-}
-
-.project-list-toolbar-card .project-list-type-filter {
-    width: 156px;
-    padding: 0 12px;
-}
-
-.project-list-toolbar-card #projectListType {
-    color: #536176;
-    cursor: pointer;
-}
-
-.project-list-toolbar-card .project-list-search {
-    width: 310px;
-    gap: 10px;
-    padding: 0 15px 0 16px;
-}
-
-.project-list-toolbar-card .project-list-search span {
-    width: 14px;
-    text-align: center;
-}
-
-.project-list-toolbar-card .project-list-search input {
-    padding-left: 6px;
-}
-
-.project-list-toolbar-card #projectListSort {
-    width: 136px;
-}
-
-@media (max-width: 980px) {
-    .project-list-toolbar-card .project-list-type-filter {
-        width: 156px;
-    }
-    .project-list-toolbar-card .project-list-search {
-        width: auto;
-    }
-}
-
-@media (max-width: 620px) {
-    .project-list-toolbar-card .project-list-type-filter,
-    .project-list-toolbar-card .project-list-search,
-    .project-list-toolbar-card #projectListSort {
-        width: 100%;
-    }
 }
 
 
@@ -859,40 +629,6 @@
     gap: 10px;
 }
 
-.project-list-type-filter {
-    width: 150px;
-    flex: 0 0 150px;
-    padding: 0 11px;
-}
-
-#projectListType {
-    width: 100%;
-    min-width: 0;
-    cursor: pointer;
-}
-
-.project-list-search {
-    width: min(330px, 30vw);
-    min-width: 240px;
-    height: 40px;
-    gap: 10px;
-    padding: 0 15px;
-    background: #fff;
-}
-
-.project-list-search:focus-within,
-.project-list-type-filter:focus-within,
-#projectListSort:focus {
-    border-color: #8db9f2;
-    box-shadow: 0 0 0 3px rgba(77, 143, 246, .10);
-}
-
-#projectListSort {
-    width: 138px;
-    height: 40px;
-    flex: 0 0 138px;
-    cursor: pointer;
-}
 
 .project-list-card {
     padding: 20px 20px 26px;
@@ -983,14 +719,6 @@
     min-height: 30px;
 }
 
-.project-member-avatars {
-    display: flex;
-    align-items: center;
-    min-height: 30px;
-    overflow: visible !important;
-    white-space: normal !important;
-}
-
 .project-member-avatar,
 .project-member-more {
     width: 28px;
@@ -1003,7 +731,7 @@
     border: 2px solid #fff;
     border-radius: 50%;
     color: #fff;
-    background: linear-gradient(135deg, #4d8ff6, #39cdb8);
+    background: var(--moyo-avatar-gradient, linear-gradient(135deg, #55D5CE 0%, #4288EF 52%, #5A55EE 100%));
     box-shadow: 0 2px 6px rgba(51, 87, 128, .14);
     font-size: 11px;
     font-weight: 700;
@@ -1014,19 +742,11 @@
 }
 
 .project-member-avatar:nth-child(2n) {
-    background: linear-gradient(135deg, #6d7df5, #4da9ef);
+    background: var(--moyo-avatar-gradient, linear-gradient(135deg, #55D5CE 0%, #4288EF 52%, #5A55EE 100%));
 }
 
 .project-member-avatar:nth-child(3n) {
-    background: linear-gradient(135deg, #45bba8, #38a4c9);
-}
-
-.project-member-more {
-    margin-left: 4px;
-    border-color: #edf2f8;
-    color: #64748b;
-    background: #edf2f8;
-    box-shadow: none;
+    background: var(--moyo-avatar-gradient, linear-gradient(135deg, #55D5CE 0%, #4288EF 52%, #5A55EE 100%));
 }
 
 .project-member-empty {
@@ -1065,10 +785,7 @@
     .project-list-tools {
         justify-content: flex-start;
     }
-    .project-list-search {
-        flex: 1 1 300px;
-        width: auto;
-    }
+    
 }
 
 @media (max-width: 720px) {
@@ -1081,13 +798,7 @@
     .project-list-tools {
         flex-direction: column;
     }
-    .project-list-type-filter,
-    .project-list-search,
-    #projectListSort {
-        width: 100%;
-        min-width: 0;
-        flex-basis: auto;
-    }
+    
     .project-meta {
         grid-template-columns: 1fr;
     }
@@ -1129,72 +840,6 @@
     gap: 12px;
 }
 
-.project-list-toolbar-card .project-list-type-filter {
-    width: 154px;
-    flex: 0 0 154px;
-}
-
-.project-list-toolbar-card .project-list-search {
-    position: relative;
-    width: clamp(360px, 34vw, 480px);
-    min-width: 360px;
-    height: 46px;
-    flex: 0 1 480px;
-    gap: 11px;
-    padding: 0 17px;
-    border: 1px solid #c4d7ee;
-    border-radius: 14px;
-    background: #fff;
-    box-shadow: 0 5px 14px rgba(45, 91, 150, .08);
-    transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease;
-}
-
-.project-list-toolbar-card .project-list-search > span {
-    flex: 0 0 auto;
-    color: #3f78bc;
-    font-size: 15px;
-    line-height: 1;
-    filter: grayscale(1);
-    opacity: .9;
-}
-
-.project-list-toolbar-card .project-list-search input {
-    width: 100%;
-    min-width: 0;
-    height: 100%;
-    padding: 0;
-    border: 0;
-    outline: 0;
-    color: #26364c;
-    background: transparent;
-    font-size: 13px;
-    font-weight: 600;
-}
-
-.project-list-toolbar-card .project-list-search input::placeholder {
-    color: #8797ad;
-    font-weight: 500;
-    opacity: 1;
-}
-
-.project-list-toolbar-card .project-list-search:focus-within {
-    border-color: #4f95eb;
-    box-shadow: 0 0 0 4px rgba(79, 149, 235, .13), 0 8px 18px rgba(45, 91, 150, .10);
-    transform: translateY(-1px);
-}
-
-.project-list-toolbar-card #projectListSort,
-.project-list-toolbar-card .project-list-type-filter {
-    height: 42px;
-    border-color: #d4e0ee;
-    border-radius: 13px;
-    background: #fff;
-}
-
-.project-list-toolbar-card #projectListSort {
-    width: 142px;
-    flex: 0 0 142px;
-}
 
 .project-list-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1248,11 +893,7 @@
         justify-content: flex-start;
     }
 
-    .project-list-toolbar-card .project-list-search {
-        width: auto;
-        min-width: 280px;
-        flex: 1 1 360px;
-    }
+    
 }
 
 @media (max-width: 860px) {
@@ -1261,19 +902,7 @@
     }
 }
 
-@media (max-width: 720px) {
-    .project-list-toolbar-card .project-list-search,
-    .project-list-toolbar-card .project-list-type-filter,
-    .project-list-toolbar-card #projectListSort {
-        width: 100%;
-        min-width: 0;
-        flex: 0 0 auto;
-    }
 
-    .project-list-toolbar-card .project-list-search {
-        height: 46px;
-    }
-}
 
 /* =========================================================
    v5: 컴팩트 카드 · 전체 미리보기 · 상태별 페이징
@@ -1286,36 +915,6 @@
     gap: 9px;
 }
 
-.project-list-toolbar-card .project-list-type-filter,
-.project-list-toolbar-card #projectListSort,
-.project-list-toolbar-card .project-list-search {
-    height: 40px;
-    border-radius: 12px;
-}
-
-.project-list-toolbar-card .project-list-type-filter {
-    width: 146px;
-    flex-basis: 146px;
-}
-
-.project-list-toolbar-card .project-list-search {
-    width: 320px;
-    min-width: 280px;
-    flex: 0 1 320px;
-    padding: 0 14px;
-    gap: 9px;
-    box-shadow: 0 2px 8px rgba(45, 91, 150, .06);
-}
-
-.project-list-toolbar-card .project-list-search:focus-within {
-    transform: none;
-    box-shadow: 0 0 0 3px rgba(79, 149, 235, .11);
-}
-
-.project-list-toolbar-card #projectListSort {
-    width: 136px;
-    flex-basis: 136px;
-}
 
 .project-list-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1456,80 +1055,19 @@
     }
 }
 
-@media (max-width: 900px) {
-    .project-list-toolbar-card .project-list-search {
-        width: auto;
-        min-width: 240px;
-        flex: 1 1 300px;
-    }
-}
+
 
 @media (max-width: 720px) {
     .project-list-grid {
         grid-template-columns: 1fr;
     }
 
-    .project-list-toolbar-card .project-list-search,
-    .project-list-toolbar-card .project-list-type-filter,
-    .project-list-toolbar-card #projectListSort {
-        width: 100%;
-        min-width: 0;
-        flex: 0 0 auto;
-    }
+    
 }
 
 /* =========================================================
    v6: 검색창 외곽 프레임 제거 · 아이콘 강조
    ========================================================= */
-.project-list-toolbar-card .project-list-search {
-    padding: 0;
-    gap: 10px;
-    border: 0;
-    background: transparent;
-    box-shadow: none;
-}
-
-.project-list-toolbar-card .project-list-search:focus-within {
-    border: 0;
-    box-shadow: none;
-}
-
-.project-list-toolbar-card .project-list-search > span {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    flex: 0 0 24px;
-    width: 24px;
-    height: 24px;
-    color: #4d6687;
-    font-size: 18px;
-    line-height: 1;
-    filter: none;
-    opacity: 1;
-}
-
-.project-list-toolbar-card .project-list-search input {
-    height: 40px;
-    padding: 0 14px;
-    border: 1px solid #cddbeb;
-    border-radius: 12px;
-    background: #fff;
-    box-shadow: 0 2px 7px rgba(45, 91, 150, .05);
-    appearance: none;
-    -webkit-appearance: none;
-}
-
-.project-list-toolbar-card .project-list-search input:focus {
-    border-color: #5b9dee;
-    box-shadow: 0 0 0 3px rgba(79, 149, 235, .10);
-}
-
-.project-list-toolbar-card .project-list-search input::-webkit-search-decoration,
-.project-list-toolbar-card .project-list-search input::-webkit-search-cancel-button,
-.project-list-toolbar-card .project-list-search input::-webkit-search-results-button,
-.project-list-toolbar-card .project-list-search input::-webkit-search-results-decoration {
-    -webkit-appearance: none;
-}
 
 
 /* =========================================================
@@ -1560,16 +1098,6 @@
     background: #dbe5f1;
 }
 
-.project-list-filter-group .project-list-type-filter {
-    width: 136px;
-    height: 38px;
-    flex: 0 0 136px;
-    margin: 0;
-}
-
-.project-list-filter-group .project-list-type-filter select {
-    height: 100%;
-}
 
 .project-list-tools {
     display: flex;
@@ -1609,10 +1137,7 @@
         width: 100%;
     }
 
-    .project-list-filter-group .project-list-type-filter {
-        width: 100%;
-        flex-basis: 100%;
-    }
+    
 }
 
 /* =========================================================
@@ -1620,43 +1145,6 @@
    - 바깥 label 박스 제거
    - 실제 select 하나만 테두리 표시
    ========================================================= */
-.project-list-toolbar-card .project-list-type-filter,
-.project-list-filter-group .project-list-type-filter {
-    padding: 0;
-    border: 0;
-    border-radius: 0;
-    background: transparent;
-    box-shadow: none !important;
-}
-
-.project-list-toolbar-card .project-list-type-filter:focus-within,
-.project-list-filter-group .project-list-type-filter:focus-within {
-    border: 0;
-    box-shadow: none !important;
-}
-
-.project-list-toolbar-card #projectListType,
-.project-list-filter-group #projectListType {
-    width: 100%;
-    height: 38px;
-    padding: 0 34px 0 14px;
-    border: 1px solid #d4e0ee;
-    border-radius: 12px;
-    outline: none !important;
-    background-color: #fff;
-    box-shadow: none !important;
-    color: #536176;
-    cursor: pointer;
-}
-
-.project-list-toolbar-card #projectListType:focus,
-.project-list-toolbar-card #projectListType:focus-visible,
-.project-list-filter-group #projectListType:focus,
-.project-list-filter-group #projectListType:focus-visible {
-    outline: none !important;
-    border-color: #8db9f2;
-    box-shadow: none !important;
-}
 
 
 /* PERSONAL / GROUP 공통 목록 모드 */
@@ -1725,7 +1213,7 @@
     padding: 0 18px;
     border: 0;
     border-radius: 13px;
-    background: linear-gradient(110deg, #35d5bc 0%, #438cf4 54%, #7a5cff 100%);
+    background: var(--moyo-primary-gradient, linear-gradient(135deg, #39CDB5 0%, #4A90E2 54%, #7358E8 100%));
     box-shadow: 0 10px 22px rgba(75, 113, 229, .22);
     transition: transform .16s ease, box-shadow .16s ease, filter .16s ease;
 }
@@ -1742,62 +1230,6 @@
 }
 
 /* Single-layer search field with icon inside */
-.project-list-search {
-    position: relative;
-    width: 260px;
-    height: 40px;
-    display: block;
-    padding: 0;
-    border: 0;
-    border-radius: 11px;
-    color: #8b97aa;
-    background: transparent;
-}
-
-.project-list-search > span {
-    position: absolute;
-    left: 13px;
-    top: 50%;
-    z-index: 1;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 16px;
-    height: 16px;
-    transform: translateY(-50%);
-    font-size: 13px;
-    line-height: 1;
-    pointer-events: none;
-}
-
-.project-list-search input {
-    width: 100%;
-    height: 40px;
-    padding: 0 13px 0 38px;
-    border: 1px solid #d9e3ef;
-    border-radius: 11px;
-    outline: 0;
-    background: #fff;
-    color: #263247;
-    font: inherit;
-    font-size: 13px;
-    box-shadow: none;
-    transition: border-color .16s ease, box-shadow .16s ease;
-    -webkit-appearance: none;
-    appearance: none;
-}
-
-.project-list-search input:focus {
-    border-color: #4e9be9;
-    box-shadow: 0 0 0 3px rgba(61, 202, 190, .12);
-}
-
-.project-list-search input::-webkit-search-decoration,
-.project-list-search input::-webkit-search-cancel-button,
-.project-list-search input::-webkit-search-results-button,
-.project-list-search input::-webkit-search-results-decoration {
-    -webkit-appearance: none;
-}
 
 
 /* =========================================================
@@ -1847,7 +1279,7 @@
     min-height: 44px;
     padding: 0 20px;
     border-radius: 13px;
-    background: linear-gradient(110deg, #35d5bc 0%, #438cf4 54%, #7a5cff 100%);
+    background: var(--moyo-primary-gradient, linear-gradient(135deg, #39CDB5 0%, #4A90E2 54%, #7358E8 100%));
     box-shadow: 0 10px 24px rgba(75, 113, 229, .22);
 }
 
@@ -1932,38 +1364,6 @@
     margin-top: 14px;
 }
 
-.project-list-search {
-    width: 280px;
-}
-
-.project-list-search > .project-list-search-icon {
-    position: absolute;
-    left: 13px;
-    top: 50%;
-    z-index: 2;
-    display: inline-flex;
-    width: 18px;
-    height: 18px;
-    align-items: center;
-    justify-content: center;
-    transform: translateY(-50%);
-    color: #5f7898;
-    pointer-events: none;
-}
-
-.project-list-search > .project-list-search-icon svg {
-    display: block;
-    width: 18px;
-    height: 18px;
-}
-
-.project-list-search input {
-    padding-left: 42px;
-}
-
-.project-list-search:focus-within > .project-list-search-icon {
-    color: #438cf4;
-}
 
 @media (max-width: 1180px) {
     .project-list-grid,
@@ -1982,32 +1382,11 @@
         grid-template-columns: 1fr;
     }
 
-    .project-list-search {
-        width: 100%;
-    }
+    
 }
 
 /* Search icon spacing correction */
-.project-list-toolbar-card .project-list-search {
-    position: relative;
-}
 
-.project-list-toolbar-card .project-list-search > .project-list-search-icon {
-    left: 15px;
-    width: 16px;
-    height: 16px;
-}
-
-.project-list-toolbar-card .project-list-search > .project-list-search-icon svg {
-    width: 16px;
-    height: 16px;
-}
-
-.project-list-toolbar-card .project-list-search input[type="search"] {
-    box-sizing: border-box;
-    padding-left: 44px !important;
-    text-indent: 0;
-}
 
 /* =========================================================
    v14: 개인·그룹 카드 폭/섹션 밀도 공통화
@@ -2192,4 +1571,1440 @@
 
 .project-list-card {
     padding-bottom: 24px;
+}
+
+
+/* 20-21 프로젝트 목록 삭제 예정 배지 */
+.project-list-item[data-delete-status="DELETE_PENDING"] .project-list-link {
+    border-color: #efcdd1;
+    background:
+        linear-gradient(180deg, rgba(255,248,249,.95), rgba(255,255,255,.98));
+}
+
+.project-delete-pending-badge {
+    display: inline-flex;
+    align-items: center;
+    flex: 0 0 auto;
+    min-height: 21px;
+    padding: 0 8px;
+    border: 1px solid #efc6cb;
+    border-radius: 999px;
+    background: #fff4f5;
+    color: #bd5360;
+    font-size: 9.5px;
+    font-weight: 850;
+}
+
+.project-delete-pending-date {
+    min-width: 0;
+    overflow: hidden;
+    color: #9d6570;
+    font-size: 10px;
+    font-weight: 650;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+
+/* 삭제 예정 상태: 진행 중/유형 라인의 오른쪽 */
+.project-card-top {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+}
+
+
+
+.project-list-item[data-delete-status="DELETE_PENDING"] .project-list-link {
+    
+    
+
+
+    border-color: #dce6f1 !important;
+    background: #fff !important;
+}
+
+.project-list-item[data-delete-status="DELETE_PENDING"] .project-list-link:hover {
+    border-color: #cfe0f5 !important;
+}
+
+/* Bootstrap형 알약 탭 제거 */
+.project-list-tabs {
+    position: relative;
+    align-items: stretch;
+    gap: 0;
+}
+
+.project-list-tab {
+    position: relative;
+    min-height: 42px;
+    padding: 0 14px 10px;
+    border: 0;
+    border-radius: 0;
+    background: transparent !important;
+    color: #6f7d90;
+    font-weight: 600;
+    box-shadow: none;
+}
+
+.project-list-tab::after {
+    content: "";
+    position: absolute;
+    left: 14px;
+    right: 14px;
+    bottom: 0;
+    height: 3px;
+    border-radius: 999px;
+    background: transparent;
+    transform: scaleX(.35);
+    opacity: 0;
+    transition: transform .18s ease, opacity .18s ease;
+}
+
+.project-list-tab:hover {
+    color: #365f92;
+    background: transparent !important;
+}
+
+.project-list-tab.is-active {
+    color: #1f4f82;
+    background: transparent !important;
+    font-weight: 800;
+}
+
+.project-list-tab.is-active::after {
+    background: linear-gradient(90deg, #42d1bb 0%, #4b91f3 52%, #8468f5 100%);
+    transform: scaleX(1);
+    opacity: 1;
+}
+
+.project-list-tab.is-active span {
+    color: #3f75ba;
+}
+
+.project-list-tab:focus,
+.project-list-tab:focus-visible {
+    outline: none;
+    box-shadow: none;
+}
+
+@media (max-width: 700px) {
+    .project-list-tab {
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+
+    .project-list-tab::after {
+        left: 10px;
+        right: 10px;
+    }
+}
+
+/* 프로젝트 목록: '프로젝트 열기'를 생성 버튼과 구분되는 보조 액션으로 통일 */
+.project-list-card .project-enter,
+.project-list-body .project-enter {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: fit-content;
+    min-height: 30px;
+    margin-top: 12px;
+    padding: 0 12px;
+    border: 1px solid #bfd8f5;
+    border-radius: 10px;
+    color: #2f78ca;
+    background: #fff;
+    box-shadow: 0 3px 9px rgba(46, 120, 206, .06);
+    font-size: 11.5px;
+    font-weight: 750;
+    line-height: 1;
+    transition: border-color .18s ease, background .18s ease, box-shadow .18s ease, transform .18s ease;
+}
+
+.project-list-card .project-list-link:hover .project-enter,
+.project-list-body .project-list-link:hover .project-enter {
+    border-color: #8fc9ee;
+    color: #286fbf;
+    background: linear-gradient(135deg, rgba(76, 214, 188, .10), rgba(93, 158, 255, .10), rgba(127, 97, 255, .08));
+    box-shadow: 0 5px 12px rgba(46, 120, 206, .10);
+    transform: translateY(-1px);
+}
+
+.project-list-item.is-scheduled .project-enter,
+.project-list-item.is-completed .project-enter {
+    color: #2f78ca;
+}
+
+/* 프로젝트 목록 카드: 바로가기 카드와 동일한 담백한 카드 규격 */
+.project-list-card .project-list-link,
+.project-list-body .project-list-link {
+    padding-left: 17px;
+    overflow: hidden;
+    border-color: #dfe8f3;
+    background: #fff !important;
+    box-shadow: 0 5px 15px rgba(31, 53, 86, .035);
+}
+
+.project-list-card .project-list-link::before,
+.project-list-body .project-list-link::before,
+.project-list-card .project-list-link::after,
+.project-list-body .project-list-link::after {
+    content: none !important;
+    display: none !important;
+}
+
+.project-list-card .project-list-link:hover,
+.project-list-body .project-list-link:hover {
+    border-color: #cfe0f4;
+    background: #fff !important;
+    box-shadow: 0 9px 20px rgba(49, 87, 137, .07);
+    transform: translateY(-1px);
+}
+
+.project-list-item.is-scheduled .project-list-link,
+.project-list-item.is-completed .project-list-link {
+    border-color: #dfe8f3;
+    background: #fff !important;
+}
+
+/* =========================================================
+   프로젝트 목록 카드 크기 정합
+   - 바로가기 카드와 같은 고정 폭·압축 밀도
+   - 넓은 화면 3열, 중간 2열, 모바일 1열
+   ========================================================= */
+.project-list-grid,
+.project-list-body[data-list-mode="PERSONAL"] .project-list-grid,
+.project-list-body[data-list-mode="GROUP"] .project-list-grid {
+    grid-template-columns: repeat(auto-fill, minmax(340px, 390px));
+    justify-content: start;
+    align-items: stretch;
+    gap: 14px;
+}
+
+.project-list-grid > .project-list-item,
+.project-list-grid > .project-list-link,
+.project-list-grid > .project-list-link:only-child {
+    width: 100%;
+    max-width: 390px;
+}
+
+.project-list-link,
+.project-list-body[data-list-mode="PERSONAL"] .project-list-link,
+.project-list-body[data-list-mode="GROUP"] .project-list-link {
+    min-height: 148px;
+    padding: 12px 14px 10px;
+}
+
+.project-card-top {
+    margin-bottom: 6px;
+}
+
+.project-list-link h3 {
+    margin-top: 7px;
+    margin-bottom: 0;
+}
+
+.project-description {
+    min-height: 15px;
+    margin: 3px 0 6px;
+}
+
+.project-meta,
+.project-list-body[data-list-mode="GROUP"] .project-meta {
+    gap: 2px;
+    row-gap: 2px;
+    column-gap: 10px;
+    margin-top: 5px;
+}
+
+.project-list-body[data-list-mode="GROUP"] .project-meta > div,
+.project-meta > div {
+    grid-template-columns: 28px minmax(0, 1fr);
+    gap: 4px;
+}
+
+.project-enter {
+    padding-top: 6px;
+}
+
+.project-list-card .project-enter,
+.project-list-body .project-enter {
+    min-height: 30px;
+    padding-left: 11px;
+    padding-right: 11px;
+}
+
+@media (max-width: 980px) {
+    .project-list-grid,
+    .project-list-body[data-list-mode="PERSONAL"] .project-list-grid,
+    .project-list-body[data-list-mode="GROUP"] .project-list-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .project-list-grid > .project-list-item,
+    .project-list-grid > .project-list-link,
+    .project-list-grid > .project-list-link:only-child {
+        max-width: none;
+    }
+}
+
+@media (max-width: 700px) {
+    .project-list-grid,
+    .project-list-body[data-list-mode="PERSONAL"] .project-list-grid,
+    .project-list-body[data-list-mode="GROUP"] .project-list-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* =========================================================
+   프로젝트 목록 오픈 레이아웃
+   - 그룹 목록/프로필처럼 큰 패널 없이 배경 위에 직접 구성
+   - 카드 자체만 독립된 흰색 표면으로 유지
+   ========================================================= */
+.project-list-container {
+    width: min(1180px, calc(100% - 48px));
+    margin: 0 auto;
+    padding-bottom: 72px;
+}
+
+.project-list-hero {
+    padding-left: 0;
+    padding-right: 0;
+}
+
+.project-list-toolbar-card {
+    margin-top: 14px;
+    padding: 0 0 12px;
+    border: 0;
+    border-bottom: 1px solid rgba(132, 157, 190, .22);
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+}
+
+.project-list-filter-group,
+.project-list-tools {
+    min-width: 0;
+}
+
+.project-list-tabs {
+    gap: 24px;
+}
+
+.project-list-tab {
+    min-height: 44px;
+    padding: 0 0 10px;
+    border-radius: 0;
+    background: transparent;
+}
+
+.project-list-tab::after {
+    left: 0;
+    right: 0;
+    bottom: -13px;
+}
+
+.project-list-filter-divider {
+    height: 24px;
+    background: rgba(132, 157, 190, .25);
+}
+
+.project-list-card {
+    margin-top: 0;
+    padding: 20px 0 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+}
+
+.project-list-groups {
+    gap: 20px;
+}
+
+.project-status-section {
+    padding: 0;
+    border: 0;
+    background: transparent;
+}
+
+.project-status-section + .project-status-section {
+    margin-top: 18px;
+}
+
+.project-section-empty {
+    min-height: 48px;
+    padding: 14px 16px;
+    border: 1px dashed rgba(141, 168, 204, .34);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, .26);
+}
+
+.project-empty-state {
+    min-height: clamp(320px, calc(100vh - 390px), 480px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 24px 20px 48px;
+    border: 0;
+    background: transparent;
+}
+
+.project-empty-state[hidden] {
+    display: none;
+}
+
+@media (max-width: 760px) {
+    .project-list-container {
+        width: min(100% - 28px, 1180px);
+        padding-bottom: 48px;
+    }
+
+    .project-list-toolbar-card {
+        padding-bottom: 14px;
+    }
+
+    .project-list-card {
+        padding-top: 16px;
+    }
+
+    .project-empty-state {
+        min-height: 300px;
+        padding-bottom: 32px;
+    }
+}
+
+/* =========================================================
+   프로젝트 목록 오픈 레이아웃 밀도 최종 보정
+   - 필터 행 과도한 공백 축소
+   - 섹션 간격 및 빈 상태 표현 경량화
+   - 카드 그리드 간격 통일
+   ========================================================= */
+.project-list-toolbar-card {
+    min-height: 54px;
+    margin-top: 10px;
+    padding: 0 0 9px;
+    gap: 18px;
+}
+
+.project-list-filter-group {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    min-width: 0;
+}
+
+.project-list-tabs {
+    gap: 20px;
+    flex-wrap: nowrap;
+}
+
+.project-list-tab {
+    min-height: 40px;
+    padding-bottom: 8px;
+}
+
+.project-list-tab::after {
+    bottom: -10px;
+}
+
+.project-list-filter-divider {
+    height: 20px;
+}
+
+.project-list-tools {
+    flex: 0 1 auto;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+
+.project-list-card {
+    padding-top: 16px;
+}
+
+.project-list-groups {
+    gap: 14px;
+}
+
+.project-status-section + .project-status-section {
+    margin-top: 10px;
+}
+
+.project-status-section-head {
+    margin-bottom: 8px;
+}
+
+.project-list-grid,
+.project-list-body[data-list-mode="PERSONAL"] .project-list-grid,
+.project-list-body[data-list-mode="GROUP"] .project-list-grid {
+    gap: 12px;
+}
+
+.project-section-empty {
+    width: fit-content;
+    min-width: 280px;
+    max-width: 390px;
+    min-height: 0;
+    padding: 9px 13px;
+    border-radius: 10px;
+    text-align: left;
+    color: #8a96a8;
+    background: rgba(255, 255, 255, .18);
+}
+
+@media (max-width: 980px) {
+    .project-list-toolbar-card {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .project-list-tools {
+        width: 100%;
+        justify-content: flex-start;
+    }
+
+    
+}
+
+@media (max-width: 700px) {
+    .project-list-filter-group,
+    .project-list-tools {
+        width: 100%;
+        flex-wrap: wrap;
+    }
+
+    .project-list-tabs {
+        width: 100%;
+        justify-content: space-between;
+        gap: 10px;
+    }
+
+    .project-list-filter-divider {
+        display: none;
+    }
+
+    
+
+    .project-section-empty {
+        width: 100%;
+        min-width: 0;
+        max-width: none;
+    }
+}
+
+
+/* =========================================================
+   프로젝트 목록 탭·검색 정렬 최종 보정
+   - 프로필/그룹 목록과 동일한 하단선 탭
+   - 필터·검색·정렬 수직축 통일
+   - 검색 아이콘 광학 정렬
+   ========================================================= */
+.project-list-toolbar-card {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    min-height: 50px;
+    padding-bottom: 0;
+    border-bottom: 1px solid rgba(132, 157, 190, .24);
+}
+
+.project-list-filter-group,
+.project-list-tools {
+    display: flex;
+    align-items: center;
+    min-height: 40px;
+}
+
+.project-list-tabs {
+    align-items: center;
+    height: 40px;
+    gap: 22px;
+}
+
+.project-list-tab {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 40px;
+    height: 40px;
+    padding: 0;
+    line-height: 1;
+}
+
+.project-list-tab::after {
+    left: 50%;
+    right: auto;
+    bottom: -1px;
+    width: 38px;
+    height: 2px;
+    border-radius: 999px 999px 0 0;
+    transform: translateX(-50%) scaleX(.45);
+}
+
+.project-list-tab.is-active::after {
+    transform: translateX(-50%) scaleX(1);
+}
+
+.project-list-filter-divider {
+    align-self: center;
+    height: 18px;
+    margin-inline: 2px 0;
+}
+
+
+@media (max-width: 980px) {
+    .project-list-toolbar-card {
+        align-items: flex-start;
+        padding-bottom: 10px;
+    }
+}
+
+@media (max-width: 700px) {
+    .project-list-tabs {
+        height: 42px;
+    }
+
+    .project-list-tab,
+    .project-list-tab::after {
+        min-width: 0;
+    }
+}
+
+/* =========================================================
+   프로젝트 목록 MOYO 정렬·컨텍스트 보정
+   - 한 줄 툴바 구조 유지
+   - 그룹명은 깨진 eyebrow 텍스트 대신 컨텍스트 링크로 표시
+   - Bootstrap형 입력 박스 인상을 줄이고 MOYO 소프트 컨트롤 적용
+   ========================================================= */
+.project-list-hero > div:first-child {
+    min-width: 0;
+}
+
+.project-list-toolbar-card {
+    align-items: center;
+    min-height: 58px;
+    gap: clamp(20px, 3vw, 46px);
+    padding: 0 0 10px;
+}
+
+.project-list-filter-group {
+    flex: 1 1 auto;
+    gap: clamp(24px, 2.4vw, 38px);
+}
+
+.project-list-tabs {
+    flex: 0 0 auto;
+    gap: clamp(22px, 2vw, 34px);
+}
+
+.project-list-tab {
+    position: relative;
+    gap: 5px;
+    color: #718096;
+    font-size: 13px;
+    font-weight: 650;
+    letter-spacing: -.01em;
+}
+
+.project-list-tab span {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    margin-left: 0;
+    padding: 0 5px;
+    border-radius: 999px;
+    color: #8ea0b8;
+    background: rgba(115, 145, 185, .08);
+    font-size: 10px;
+    font-weight: 750;
+}
+
+.project-list-tab.is-active {
+    color: #263a5b;
+    background: transparent;
+}
+
+.project-list-tab.is-active span {
+    color: #3978d5;
+    background: rgba(72, 139, 235, .1);
+}
+
+.project-list-tab::after {
+    width: 100%;
+    max-width: 46px;
+    background: linear-gradient(90deg, #43d3bd 0%, #4e9cf4 58%, #7b64f1 100%);
+    box-shadow: 0 1px 5px rgba(77, 151, 239, .18);
+}
+
+
+.project-list-tools {
+    flex: 0 0 auto;
+    gap: 10px;
+}
+
+
+@media (max-width: 1120px) {
+    .project-list-toolbar-card {
+        gap: 18px;
+    }
+
+    .project-list-filter-group {
+        gap: 22px;
+    }
+
+    .project-list-tabs {
+        gap: 20px;
+    }
+
+    
+}
+
+@media (max-width: 980px) {
+    .project-list-toolbar-card {
+        align-items: stretch;
+    }
+
+    .project-list-filter-group {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .project-list-tools {
+        justify-content: flex-end;
+    }
+}
+
+@media (max-width: 700px) {
+
+    .project-list-filter-group {
+        gap: 12px;
+    }
+
+    .project-list-tabs {
+        gap: 8px;
+    }
+}
+
+.project-list-toolbar-card {
+    gap: clamp(14px, 1.8vw, 28px);
+}
+
+.project-list-filter-group {
+    flex: 0 1 auto;
+    gap: clamp(18px, 1.7vw, 28px);
+}
+
+.project-list-tabs {
+    gap: clamp(18px, 1.5vw, 26px);
+}
+
+.project-list-tab {
+    gap: 4px;
+}
+
+.project-list-tab span {
+    min-width: 16px;
+    height: 16px;
+    padding: 0 4px;
+    font-size: 9px;
+}
+
+.project-list-tools {
+    margin-left: auto;
+    margin-right: clamp(0px, 1vw, 14px);
+    gap: 8px;
+}
+
+
+@media (max-width: 1120px) {
+    .project-list-filter-group {
+        gap: 18px;
+    }
+
+    .project-list-tabs {
+        gap: 16px;
+    }
+
+    .project-list-tools {
+        margin-right: 0;
+    }
+}
+
+/* =========================================================
+   프로젝트 목록 탭 라인 밀도 최종 보정
+   - 활성 밑줄을 하단 구분선에 밀착
+   - 탭 라인 상하 여백 압축
+   - 유형 셀렉트를 탭 옆 보조 필터로 통합
+   ========================================================= */
+.project-list-toolbar-card {
+    min-height: 44px;
+    padding: 0;
+    gap: 14px;
+    align-items: flex-end;
+}
+
+.project-list-filter-group,
+.project-list-tools {
+    min-height: 44px;
+}
+
+.project-list-filter-group {
+    gap: 10px;
+}
+
+.project-list-tabs {
+    height: 44px;
+    gap: clamp(18px, 1.4vw, 24px);
+}
+
+.project-list-tab {
+    height: 44px;
+    min-height: 44px;
+    padding-top: 1px;
+}
+
+.project-list-tab::after {
+    bottom: -1px;
+    width: 36px;
+    height: 2px;
+}
+
+
+.project-list-tools {
+    height: 44px;
+    min-height: 44px;
+    align-items: center;
+}
+
+
+@media (max-width: 980px) {
+    .project-list-toolbar-card {
+        padding-bottom: 6px;
+    }
+}
+
+/* =========================================================
+   프로젝트 목록 최종 밀도·그리드 보정
+   - 탭/필터/검색 기준선 통일
+   - 넓은 화면 3열 카드 정렬
+   - 빈 상태를 카드 폭과 동일하게 정합
+   ========================================================= */
+.project-list-toolbar-card {
+    min-height: 40px;
+    align-items: center;
+}
+
+.project-list-filter-group,
+.project-list-tools,
+.project-list-tabs {
+    min-height: 40px;
+    height: 40px;
+    align-items: center;
+}
+
+.project-list-tab {
+    height: 40px;
+    min-height: 40px;
+    padding-top: 0;
+    align-items: center;
+}
+
+.project-list-tab::after {
+    bottom: -1px;
+}
+
+
+.project-list-tools {
+    gap: 8px;
+    margin-right: 0;
+}
+
+
+@media (min-width: 1180px) {
+    .project-list-grid,
+    .project-list-body[data-list-mode="PERSONAL"] .project-list-grid,
+    .project-list-body[data-list-mode="GROUP"] .project-list-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
+    }
+
+    .project-list-grid > .project-list-item,
+    .project-list-grid > .project-list-link,
+    .project-list-grid > .project-list-link:only-child {
+        width: 100%;
+        max-width: none;
+    }
+
+    .project-section-empty {
+        width: calc((100% - 24px) / 3);
+        min-width: 0;
+        max-width: none;
+        box-sizing: border-box;
+    }
+}
+
+@media (min-width: 760px) and (max-width: 1179px) {
+    .project-list-grid,
+    .project-list-body[data-list-mode="PERSONAL"] .project-list-grid,
+    .project-list-body[data-list-mode="GROUP"] .project-list-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .project-list-grid > .project-list-item,
+    .project-list-grid > .project-list-link,
+    .project-list-grid > .project-list-link:only-child {
+        width: 100%;
+        max-width: none;
+    }
+
+    .project-section-empty {
+        width: calc((100% - 12px) / 2);
+        min-width: 0;
+        max-width: none;
+        box-sizing: border-box;
+    }
+}
+
+@media (max-width: 759px) {
+    .project-list-grid,
+    .project-list-body[data-list-mode="PERSONAL"] .project-list-grid,
+    .project-list-body[data-list-mode="GROUP"] .project-list-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .project-section-empty {
+        width: 100%;
+        min-width: 0;
+        max-width: none;
+    }
+}
+
+
+/* =========================================================
+   프로젝트 목록 탭 최종 정리
+   - 탭 카운트 제거
+   - 활성 상태는 텍스트와 하단선으로만 표현
+   - 유형 필터를 탭 라인 안의 보조 컨트롤로 정합
+   ========================================================= */
+.project-list-toolbar-card {
+    min-height: 42px;
+    padding-top: 0;
+    padding-bottom: 0;
+    align-items: stretch;
+}
+
+.project-list-filter-group,
+.project-list-tools {
+    min-height: 42px;
+    height: 42px;
+    align-items: center;
+}
+
+.project-list-filter-group {
+    gap: 14px;
+}
+
+.project-list-tabs {
+    min-height: 42px;
+    height: 42px;
+    gap: clamp(22px, 1.7vw, 30px);
+    align-items: stretch;
+}
+
+.project-list-tab {
+    position: relative;
+    height: 42px;
+    min-height: 42px;
+    padding: 0 1px;
+    border: 0;
+    border-radius: 0;
+    background: transparent !important;
+    box-shadow: none !important;
+    color: #718096;
+    font-size: 12px;
+    font-weight: 650;
+    line-height: 42px;
+}
+
+.project-list-tab:hover {
+    background: transparent !important;
+    color: #334155;
+}
+
+.project-list-tab.is-active {
+    background: transparent !important;
+    color: #17263d;
+    font-weight: 800;
+}
+
+.project-list-tab::after {
+    bottom: -1px;
+    width: 100%;
+    min-width: 34px;
+    height: 2px;
+    border-radius: 999px 999px 0 0;
+}
+
+
+.project-list-tools {
+    gap: 10px;
+}
+
+
+@media (max-width: 760px) {
+    .project-list-toolbar-card,
+    .project-list-filter-group,
+    .project-list-tools {
+        height: auto;
+        min-height: 0;
+    }
+
+    .project-list-tabs {
+        width: 100%;
+        gap: 18px;
+    }
+}
+
+/* =========================================================
+   프로젝트 유형 셀렉트 통일
+   - 우측 기본 정렬 셀렉트와 동일한 입력 컴포넌트 스타일 사용
+   - 폭만 유형 문구에 맞게 축소
+   ========================================================= */
+
+
+/* =========================================================
+   프로젝트 유형/정렬 셀렉트 실제 공통화
+   - 두 셀렉트의 높이·테두리·배경·라운드·패딩·화살표를 완전히 동일화
+   - 폭만 각 용도에 맞게 분리
+   ========================================================= */
+
+
+/* =========================================================
+   프로젝트 목록 툴바 최종 규칙
+   - 캘린더 검색창과 동일한 40px 캡슐형 검색
+   - 전체 유형/기본 정렬은 같은 높이와 표면 사용
+   ========================================================= */
+
+
+/* =========================================================
+   프로젝트 목록 툴바 단일 컴포넌트
+   - legacy ID/중첩 선택자 제거
+   - 검색과 셀렉트는 전용 클래스만 사용
+   ========================================================= */
+.project-list-toolbar-card {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    min-height: 42px;
+    gap: 18px;
+    padding: 0;
+    border-bottom: 1px solid rgba(132, 157, 190, .24);
+}
+
+.project-list-filter-group,
+.project-list-tools {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+}
+
+.project-list-filter-group {
+    gap: 18px;
+}
+
+.project-list-tools {
+    gap: 10px;
+    margin-left: auto;
+}
+
+@media (max-width: 980px) {
+    .project-list-toolbar-card {
+        align-items: stretch;
+        flex-direction: column;
+        gap: 10px;
+        padding-bottom: 10px;
+    }
+
+    .project-list-filter-group,
+    .project-list-tools {
+        width: 100%;
+    }
+
+    .project-list-tools {
+        justify-content: flex-start;
+        margin-left: 0;
+    }
+}
+
+@media (max-width: 700px) {
+    .project-list-filter-group,
+    .project-list-tools {
+        flex-wrap: wrap;
+    }
+}
+
+
+/* 20260823 project list search restore
+   projectList.jsp 복원 후 누락된 검색 UI 스타일 재연결 */
+.project-list-search {
+    position: relative;
+    width: 280px;
+    height: 40px;
+    display: block;
+    flex: 0 0 280px;
+    padding: 0;
+    border: 0;
+    border-radius: 11px;
+    background: transparent;
+    color: #8b97aa;
+}
+
+.project-list-search > .project-list-search-icon {
+    position: absolute;
+    left: 13px;
+    top: 50%;
+    z-index: 2;
+    display: inline-flex;
+    width: 18px;
+    height: 18px;
+    align-items: center;
+    justify-content: center;
+    transform: translateY(-50%);
+    color: #5f7898;
+    pointer-events: none;
+}
+
+.project-list-search > .project-list-search-icon svg {
+    display: block;
+    width: 18px;
+    height: 18px;
+}
+
+.project-list-search input {
+    width: 100%;
+    height: 40px;
+    padding: 0 13px 0 42px;
+    border: 1px solid #d9e3ef;
+    border-radius: 11px;
+    outline: 0;
+    background: #fff;
+    color: #263247;
+    font: inherit;
+    font-size: 13px;
+    box-shadow: none;
+    box-sizing: border-box;
+    -webkit-appearance: none;
+    appearance: none;
+    transition: border-color .16s ease, box-shadow .16s ease;
+}
+
+.project-list-search input::placeholder {
+    color: #8d9aae;
+    opacity: 1;
+}
+
+.project-list-search input:focus {
+    border-color: #4e9be9;
+    box-shadow: 0 0 0 3px rgba(61, 202, 190, .12);
+}
+
+.project-list-search:focus-within > .project-list-search-icon {
+    color: #438cf4;
+}
+
+.project-list-search input::-webkit-search-decoration,
+.project-list-search input::-webkit-search-cancel-button,
+.project-list-search input::-webkit-search-results-button,
+.project-list-search input::-webkit-search-results-decoration {
+    -webkit-appearance: none;
+}
+
+@media (max-width: 1080px) {
+    .project-list-search {
+        width: min(100%, 340px);
+        flex-basis: auto;
+    }
+}
+
+@media (max-width: 720px) {
+    .project-list-search {
+        width: 100%;
+        flex-basis: 100%;
+    }
+}
+
+
+/* 20260823 project list control size/shape unify v4
+   위치는 그대로 두고 전체 유형/검색/기본 정렬의 높이·라운드·테두리만 통일 */
+.project-list-type-filter{
+    display:inline-flex!important;
+    align-items:center!important;
+    height:40px!important;
+    min-height:40px!important;
+    margin:0!important;
+}
+
+.project-list-type-filter select,
+#projectListSort{
+    height:40px!important;
+    min-height:40px!important;
+    margin:0!important;
+    padding:0 36px 0 14px!important;
+    border:1px solid #d9e3ef!important;
+    border-radius:11px!important;
+    background:#fff!important;
+    color:#4f5f76!important;
+    font:inherit!important;
+    font-size:13px!important;
+    font-weight:600!important;
+    line-height:38px!important;
+    box-sizing:border-box!important;
+    outline:0!important;
+}
+
+.project-list-type-filter select{
+    min-width:116px!important;
+}
+
+#projectListSort{
+    min-width:126px!important;
+}
+
+.project-list-type-filter select:hover,
+#projectListSort:hover{
+    border-color:#c4d3e4!important;
+}
+
+.project-list-type-filter select:focus,
+#projectListSort:focus{
+    border-color:#4e9be9!important;
+    box-shadow:0 0 0 3px rgba(61,202,190,.12)!important;
+}
+
+.project-list-search,
+.project-list-search input{
+    height:40px!important;
+    min-height:40px!important;
+    border-radius:11px!important;
+}
+
+.project-list-filter-group,
+.project-list-tools{
+    align-items:center!important;
+}
+
+/* =========================================================
+   MOYO Stage 3 - List Screen Unification / Project
+   ========================================================= */
+.project-list-body {
+    background: var(--moyo-color-page) !important;
+    color: var(--moyo-color-text);
+    font-family: var(--moyo-font-family);
+}
+.project-list-container {
+    width: min(1180px, calc(100% - 48px)) !important;
+    margin: 28px auto 48px !important;
+}
+.project-list-hero {
+    min-height: 136px !important;
+    padding: 26px 30px !important;
+    border: var(--moyo-border) !important;
+    border-radius: var(--moyo-radius-lg) !important;
+    background: var(--moyo-color-surface) !important;
+    box-shadow: var(--moyo-shadow-sm) !important;
+}
+.project-list-hero::before {
+    width: 4px !important;
+    background: var(--moyo-color-project) !important;
+}
+.project-list-hero::after { display: none !important; }
+.project-list-type {
+    margin-bottom: 6px !important;
+    color: var(--moyo-color-text-muted) !important;
+    font-size: var(--moyo-font-size-xs) !important;
+    font-style: normal !important;
+    font-weight: var(--moyo-font-weight-bold) !important;
+}
+.project-list-hero h1 {
+    color: var(--moyo-color-text) !important;
+    font-size: clamp(28px, 3vw, 36px) !important;
+    line-height: 1.15 !important;
+}
+.project-list-hero p {
+    margin-top: 8px !important;
+    color: var(--moyo-color-text-soft) !important;
+    font-size: var(--moyo-font-size-md) !important;
+}
+.project-list-hero-actions { gap: 8px !important; }
+.project-list-hero-actions .project-list-back,
+.project-list-hero-actions .project-list-create {
+    min-height: var(--moyo-control-height-large) !important;
+    padding: 0 16px !important;
+    border-radius: var(--moyo-radius-md) !important;
+    font-size: var(--moyo-font-size-sm) !important;
+    font-weight: var(--moyo-font-weight-bold) !important;
+}
+.project-list-create {
+    border: 1px solid var(--moyo-color-project) !important;
+    background: var(--moyo-color-project) !important;
+    box-shadow: 0 6px 14px rgba(139, 92, 246, .18) !important;
+}
+.project-list-create:hover {
+    background: #7C4DE8 !important;
+    border-color: #7C4DE8 !important;
+}
+.project-list-back {
+    border: var(--moyo-border-strong) !important;
+    background: var(--moyo-color-surface) !important;
+    color: #596579 !important;
+}
+.project-list-toolbar-card,
+.project-list-card {
+    margin-top: 16px !important;
+    border: var(--moyo-border) !important;
+    border-radius: var(--moyo-radius-lg) !important;
+    background: var(--moyo-color-surface) !important;
+    box-shadow: var(--moyo-shadow-xs) !important;
+}
+.project-list-toolbar-card {
+    min-height: 68px !important;
+    padding: 13px 16px !important;
+    gap: 16px !important;
+}
+.project-list-filter-group,
+.project-list-tools {
+    gap: 8px !important;
+}
+.project-list-tabs {
+    gap: 4px !important;
+    padding: 3px !important;
+    border: 1px solid var(--moyo-border-color) !important;
+    border-radius: var(--moyo-radius-md) !important;
+    background: var(--moyo-color-surface-soft) !important;
+}
+.project-list-tab {
+    min-height: var(--moyo-control-height-compact) !important;
+    padding: 0 11px !important;
+    border-radius: var(--moyo-radius-sm) !important;
+    font-size: var(--moyo-font-size-sm) !important;
+    font-weight: var(--moyo-font-weight-bold) !important;
+}
+.project-list-tab::after { display: none !important; }
+.project-list-tab.is-active {
+    background: #f4f1ff !important;
+    color: var(--moyo-color-project) !important;
+    box-shadow: none !important;
+}
+.project-list-tab.is-active span { color: var(--moyo-color-project) !important; }
+.project-list-filter-divider { background: var(--moyo-border-color) !important; }
+.project-list-card { padding: 20px !important; }
+.project-status-section-head { margin-bottom: 12px !important; }
+.project-status-section-head h3 {
+    color: var(--moyo-color-text) !important;
+    font-size: 18px !important;
+    font-weight: var(--moyo-font-weight-heavy) !important;
+}
+.project-list-grid,
+.project-list-body[data-list-mode="PERSONAL"] .project-list-grid,
+.project-list-body[data-list-mode="GROUP"] .project-list-grid {
+    gap: 16px !important;
+}
+.project-list-link,
+.project-list-body[data-list-mode="PERSONAL"] .project-list-link,
+.project-list-body[data-list-mode="GROUP"] .project-list-link {
+    border: var(--moyo-border) !important;
+    border-radius: var(--moyo-radius-lg) !important;
+    background: var(--moyo-color-surface) !important;
+    box-shadow: none !important;
+}
+.project-list-link:hover {
+    border-color: #ddd3fb !important;
+    box-shadow: var(--moyo-shadow-md) !important;
+    transform: translateY(-2px) !important;
+}
+.project-list-pagination { gap: 6px !important; margin-top: 18px !important; }
+.project-list-pagination button {
+    min-width: var(--moyo-control-height-compact) !important;
+    height: var(--moyo-control-height-compact) !important;
+    border: var(--moyo-border) !important;
+    border-radius: var(--moyo-radius-md) !important;
+    background: var(--moyo-color-surface) !important;
+    color: var(--moyo-color-text-soft) !important;
+}
+.project-list-pagination button.is-active {
+    border-color: var(--moyo-color-project) !important;
+    background: var(--moyo-color-project) !important;
+    color: #fff !important;
+}
+.project-section-empty {
+    border-radius: var(--moyo-radius-md) !important;
+    color: var(--moyo-color-text-muted) !important;
+}
+@media (max-width: 760px) {
+    .project-list-container { width: calc(100% - 24px) !important; margin-top: 16px !important; }
+    .project-list-hero { min-height: 0 !important; padding: 20px !important; }
+    .project-list-hero-actions { width: 100% !important; }
+    .project-list-hero-actions .project-list-back,
+    .project-list-hero-actions .project-list-create { flex: 1 1 0 !important; }
+    .project-list-toolbar-card { align-items: stretch !important; }
+}
+
+
+/* =========================================================
+   MOYO Stage 3 refinement - restrained scope accent
+   전체 UI는 MOYO blue/neutral, 프로젝트색은 탭/소형 상태 포인트만 사용
+   ========================================================= */
+.project-list-hero::before {
+    width: 3px !important;
+    background: var(--moyo-color-primary) !important;
+    opacity: .78 !important;
+}
+.project-list-create {
+    border-color: var(--moyo-color-primary) !important;
+    background: var(--moyo-color-primary) !important;
+    box-shadow: var(--moyo-shadow-primary) !important;
+}
+.project-list-create:hover {
+    border-color: var(--moyo-color-primary-strong) !important;
+    background: var(--moyo-color-primary-strong) !important;
+}
+.project-list-tab.is-active {
+    background: rgba(139, 92, 246, .07) !important;
+    color: #7453c7 !important;
+}
+.project-list-tab.is-active span { color: #7453c7 !important; }
+.project-list-link:hover {
+    border-color: var(--moyo-border-color-strong) !important;
+}
+.project-list-pagination button.is-active {
+    border-color: var(--moyo-color-primary) !important;
+    background: var(--moyo-color-primary) !important;
+    box-shadow: none !important;
+}
+
+
+/* MOYO brand CTA gradient restoration */
+.project-list-create {
+    border: 0 !important;
+    background: var(--moyo-primary-gradient, linear-gradient(135deg, #39CDB5 0%, #4A90E2 54%, #7358E8 100%)) !important;
+    color: #fff !important;
+    box-shadow: 0 8px 18px rgba(74, 144, 226, .22) !important;
+}
+.project-list-create:hover {
+    border: 0 !important;
+    background: var(--moyo-primary-gradient-hover, linear-gradient(135deg, #32BFA9 0%, #3F82D4 54%, #6758E6 100%)) !important;
+    box-shadow: 0 10px 22px rgba(74, 144, 226, .26) !important;
+}
+
+/* MOYO CTA edge correction */
+.project-list-create {
+    border: 0 !important;
+    background-clip: padding-box !important;
+    -webkit-background-clip: padding-box !important;
 }

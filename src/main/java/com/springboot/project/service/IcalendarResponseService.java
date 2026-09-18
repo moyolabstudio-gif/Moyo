@@ -8,6 +8,15 @@ public interface IcalendarResponseService {
     // 캘린더 전체 일정 조회 (일반일정 + 공휴일)
     List<calendarResponseDTO> getMonthlyCalendar(Long userId, Long projId, Long wsId, List<String> types, String startDate, String endDate);
 
+    // V2: 화면 컨텍스트를 명시적으로 전달해 서버 조회 단계에서 범위를 제한한다.
+    List<calendarResponseDTO> getMonthlyCalendar(Long userId, String scope, Long friendId, Long projId, Long wsId, List<String> types, String startDate, String endDate);
+
+    Map<String, Object> getProjectTaskSummary(Long userId, Long projId);
+
+    List<Map<String, Object>> getFriendBirthdays(Long userId, int year, int month);
+
+    List<Map<String, Object>> getWorkspaceMemberBirthdays(Long userId, Long wsId, int year, int month);
+
     // 공공데이터 API를 호출하여 DB에 공휴일 데이터 적재
     void fetchAndSaveHolidays(String year);
     

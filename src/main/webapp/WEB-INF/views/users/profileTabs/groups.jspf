@@ -2,7 +2,7 @@
 <section class="profile-tab-section profile-tab-section--groups">
 
     <c:choose>
-        <c:when test="${groupsPublic ne 'N' and showGroups and not empty wsList}">
+        <c:when test="${(isOwnerProfile or groupsPublic ne 'N') and showGroups and not empty wsList}">
             <div class="profile-tab-card profile-tab-card--list profile-group-card">
                 <div class="profile-group-list">
                     <c:forEach var="ws" items="${wsList}">
@@ -91,6 +91,7 @@
                     var memberCount = document.getElementById('profileGroupPreviewMemberCount');
                     var joinType = document.getElementById('profileGroupPreviewJoinType');
                     var primaryButton = document.getElementById('profileGroupPreviewPrimary');
+                    var closeButton = modal.querySelector('.profile-group-preview-close');
                     var currentWorkspaceId = null;
                     var currentWorkspaceName = '';
                     var currentContextPath = '';
@@ -233,14 +234,22 @@
                         modal.setAttribute('aria-hidden', 'false');
                         document.body.classList.add('profile-group-preview-open');
                         refreshMembership();
+                        if (closeButton && typeof closeButton.focus === 'function') {
+                            window.requestAnimationFrame(function () {
+                                closeButton.focus({ preventScroll: true });
+                            });
+                        }
                     }
 
-                    function closeModal() {
+                    function closeModal(restoreKeyboardFocus) {
                         modal.classList.remove('is-open');
                         modal.setAttribute('aria-hidden', 'true');
                         document.body.classList.remove('profile-group-preview-open');
                         if (lastFocus && typeof lastFocus.focus === 'function') {
-                            lastFocus.focus();
+                            lastFocus.focus({ preventScroll: true });
+                            if (restoreKeyboardFocus !== true && typeof lastFocus.blur === 'function') {
+                                lastFocus.blur();
+                            }
                         }
                     }
 
@@ -253,7 +262,7 @@
                         }
                         if (event.target.closest('.js-profile-group-preview-close')) {
                             event.preventDefault();
-                            closeModal();
+                            closeModal(false);
                         }
                     });
 
@@ -302,7 +311,7 @@
                             return;
                         }
 
-                        closeModal();
+                        closeModal(false);
                         if (typeof window.openGroupOpenJoinProfileModal === 'function') {
                             window.openGroupOpenJoinProfileModal(
                                     currentWorkspaceName || '그룹',
@@ -315,7 +324,7 @@
 
                     document.addEventListener('keydown', function (event) {
                         if (event.key === 'Escape' && modal.classList.contains('is-open')) {
-                            closeModal();
+                            closeModal(true);
                         }
                     });
                 })();
@@ -323,11 +332,18 @@
         </c:when>
         <c:otherwise>
             <c:choose>
-                <c:when test="${groupsPublic eq 'N' or not showGroups}">
+                <c:when test="${not isOwnerProfile and not profileAcceptedFriend}">
+                    <div class="profile-tab-card profile-empty-state is-private">
+                        <span>🔒</span>
+                        <strong>그룹 정보는 친구에게만 공개돼요</strong>
+                        <p>친구가 되면 공개된 그룹 정보를 볼 수 있어요.</p>
+                    </div>
+                </c:when>
+                <c:when test="${not isOwnerProfile and groupsPublic eq 'N'}">
                     <div class="profile-tab-card profile-empty-state is-private">
                         <span>🔒</span>
                         <strong>그룹 정보를 공개하지 않았어요</strong>
-                        <p>참여 중인 그룹은 공개 설정 후 표시됩니다.</p>
+                        <p>이 사용자는 참여 중인 그룹을 프로필에 공개하지 않았어요.</p>
                     </div>
                 </c:when>
                 <c:otherwise>

@@ -297,11 +297,6 @@
 }
 
 
-
-
-
-
-
 .note-template-dialog-panel p, .note-template-dialog-panel label {
   display: block; margin: 16px 20px 8px;
   color: #667085; font-size: 13px;
@@ -311,8 +306,6 @@
   margin: 0 20px 18px; border: 1px solid #dbe5f4;
   border-radius: 12px; padding: 0 12px;
 }
-
-
 
 
 .note-share-friend-link {
@@ -891,42 +884,6 @@ body.note-page-body .note-folder-select:disabled {
 }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 .note-list-min-scope-list {
   display: flex; flex-wrap: wrap;
   gap: 5px; align-items: center;
@@ -971,49 +928,6 @@ body.note-page-body .note-folder-select:disabled {
 .note-list-min-scope:not(small) {
   overflow: hidden; text-overflow: ellipsis;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 .note-share-remove {
@@ -1081,164 +995,11 @@ body.note-page-body .note-folder-select:disabled {
 }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 .note-share-chip-permission {
   width: 60px !important; height: 24px !important;
   border-radius: 999px !important; font-size: 10px !important;
   padding: 0 4px !important;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 body.note-page-body input#noteTitle.note-doc-title-input, body.note-page-body input#noteTitle.note-doc-title-input:focus {
@@ -1964,8 +1725,8 @@ body.note-page-body .note-print-document {
   /* print output is content-first: hide attached-file list/cards */
   body.note-page-body .note-print-attachments {
     display: none !important;
-  }
-  body.note-page-body .note-print-attachments {
+  
+
     margin-top: 10mm !important; padding-top: 5mm !important;
     border-top: 1px solid #e5e7eb !important; color: #111827 !important;
     page-break-inside: avoid !important;
@@ -2087,8 +1848,8 @@ body.note-page-body .note-pdf-export-stage .note-print-content table {
 /* pdf/print export keeps only title/meta/body; attached files stay screen-only */
 body.note-page-body .note-pdf-export-stage .note-print-attachments {
   display: none !important;
-}
-body.note-page-body .note-pdf-export-stage .note-print-attachments {
+
+
   margin-top: 38px !important; padding-top: 18px !important;
   border-top: 1px solid #e5e7eb !important; color: #111827 !important;
 }
@@ -3697,7 +3458,7 @@ body.note-page-body .moyo-rich-content oembed {
    v39 safety lock: note editor toolbar boundary
    - toolbar stays one line
    - CKEditor dropdown/table/color panels are not re-skinned here
-   - share modal styling is handled only by commonShareModal.css
+   - share modal styling is handled only by commonPeopleModal.css
    ========================================================================== */
 body.note-page-body .note-editor-canvas .ck.ck-editor__top,
 body.note-page-body .note-editor-canvas .ck.ck-sticky-panel,
@@ -3845,7 +3606,6 @@ body.note-page-body .note-editor-canvas .ck-content figure.table {
   overflow-x: auto !important;
 }
 
-
 /* MOYO brand mascot on note share actions */
 body.note-page-body .note-meta-icon--moyo {
   width: 21px;
@@ -3899,7 +3659,7 @@ body.note-page-body .note-moyo-public-toggle:has(input:checked) {
     font-weight: 800;
 }
 body.note-page-body .note-moyo-public-toggle:has(input:checked) .note-meta-value::after {
-    content: ' 켜짐';
+    content: " 켜짐";
     margin-left: 4px;
     font-size: 11px;
     font-weight: 800;
@@ -3982,7 +3742,7 @@ body.note-page-body .note-template-actions .note-template-moyo-public:has(input:
   filter: none !important;
 }
 body.note-page-body .note-template-actions .note-template-moyo-public:has(input:checked) .note-meta-value::after {
-  content: '' !important;
+  content: "" !important;
 }
 body.note-page-body .note-template-actions .note-meta-icon--plane {
   width: 16px !important;
@@ -4099,4 +3859,94 @@ body.note-page-body .note-detail-moyo-public-badge .note-meta-icon--moyo img {
   height: 22px !important;
   max-width: none !important;
   object-fit: contain !important;
+}
+
+
+/* =========================================================
+   MOYO Stage 7 - Note write/edit/detail unification
+   ========================================================= */
+.note-page-body {
+    background: var(--moyo-color-page, #f6f8fb) !important;
+    color: var(--moyo-color-text, #1f2937) !important;
+    font-family: var(--moyo-font-family, Pretendard, "Noto Sans KR", sans-serif) !important;
+}
+.note-editor-wrap.note-editor-wrap,
+.note-detail-wrap.note-detail-wrap {
+    max-width: 920px;
+}
+.note-topbar {
+    min-height: 40px;
+    align-items: center;
+    margin-bottom: 20px;
+}
+.note-back-link,
+.note-soft-link {
+    color: var(--moyo-color-text-soft, #667085) !important;
+}
+.note-gradient-btn,
+.note-top-save-btn,
+.note-complete-btn,
+.note-doc-save-btn {
+    min-height: var(--moyo-control-height, 40px) !important;
+    border: 0 !important;
+    border-radius: var(--moyo-radius-md, 12px) !important;
+    background: linear-gradient(135deg, #38CDB6 0%, #4A90E2 56%, #7368F6 100%) !important;
+    color: #fff !important;
+    box-shadow: 0 8px 18px rgba(74,144,226,.20) !important;
+}
+.note-gradient-btn:hover,
+.note-top-save-btn:hover,
+.note-complete-btn:hover,
+.note-doc-save-btn:hover {
+    background: linear-gradient(135deg, #32BFA9 0%, #3F82D4 56%, #6758E6 100%) !important;
+    box-shadow: 0 10px 22px rgba(74,144,226,.24) !important;
+}
+.note-soft-btn,
+.note-ghost-btn,
+.note-folder-picker-trigger,
+.note-template-btn,
+.note-template-save-btn {
+    min-height: var(--moyo-control-height-compact, 34px) !important;
+    border: var(--moyo-border-strong, 1px solid #d7e1ed) !important;
+    border-radius: var(--moyo-radius-md, 12px) !important;
+    background: var(--moyo-color-surface, #fff) !important;
+    color: var(--moyo-color-text-soft, #667085) !important;
+    box-shadow: none !important;
+}
+.note-write-head {
+    border-bottom-color: var(--moyo-border-color, #e5ebf1) !important;
+}
+.note-write-meta-panel,
+.note-write-meta-line,
+.note-detail-meta {
+    color: var(--moyo-color-text-soft, #667085) !important;
+}
+.note-meta-chip,
+.note-scope-chip,
+.note-folder-chip,
+.note-share-open-chip {
+    border-color: var(--moyo-border-color, #e5ebf1) !important;
+    background: var(--moyo-color-surface-soft, #fbfcfe) !important;
+}
+.note-editor-canvas,
+.note-attach-panel,
+.note-content-box,
+.note-detail-attach-panel,
+.note-reply-section {
+    border-color: var(--moyo-border-color, #e5ebf1) !important;
+    border-radius: var(--moyo-radius-lg, 18px) !important;
+    background: var(--moyo-color-surface, #fff) !important;
+    box-shadow: var(--moyo-shadow-xs, 0 4px 12px rgba(15,23,42,.035)) !important;
+}
+.note-drop-zone {
+    border-color: var(--moyo-border-color-strong, #d7e1ed) !important;
+    border-radius: var(--moyo-radius-md, 12px) !important;
+    background: var(--moyo-color-surface-soft, #fbfcfe) !important;
+}
+.note-editor-canvas .ck.ck-toolbar {
+    border-color: var(--moyo-border-color, #e5ebf1) !important;
+    background: var(--moyo-color-surface-soft, #fbfcfe) !important;
+}
+.note-editor-canvas .ck.ck-editor__main > .ck-editor__editable {
+    border-color: var(--moyo-border-color, #e5ebf1) !important;
 }

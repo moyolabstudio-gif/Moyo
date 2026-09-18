@@ -3,10 +3,12 @@ package com.springboot.project.controller;
 import com.springboot.project.dto.usersDto;
 import com.springboot.project.dto.contentShareDTO;
 import com.springboot.project.dto.noticeDTO;
+import com.springboot.project.dto.friendDTO;
 import com.springboot.project.service.IcontentShareService;
 import com.springboot.project.service.noticeService;
 import com.springboot.project.service.IworkspaceService;
 import com.springboot.project.service.userNoticeService;
+import com.springboot.project.service.IfriendService;
 
 import jakarta.servlet.http.HttpSession;
 
@@ -38,6 +40,9 @@ public class commonRequestController {
     @Autowired
     private noticeService noticeService;
 
+    @Autowired
+    private IfriendService friendService;
+
     @GetMapping("/requests")
     public String requestsPage(HttpSession session, Model model) {
         usersDto user = (usersDto) session.getAttribute("user");
@@ -49,6 +54,8 @@ public class commonRequestController {
         // 초대 이력 기능 구현 시 서비스/DAO/Mapper를 함께 추가한 뒤 교체합니다.
         List<Map<String, Object>> invitationHistory = new ArrayList<>();
         int shareRequestCount = contentShareService.countPendingShareRequests(user.getUserId());
+        List<friendDTO> friendRequestList = friendService.getReceivedRequests(user.getUserId());
+        int friendRequestCount = friendRequestList == null ? 0 : friendRequestList.size();
         int inviteRequestCount = inviteList == null ? 0 : inviteList.size();
         int joinRequestCount = joinRequestList == null ? 0 : joinRequestList.size();
 
@@ -60,17 +67,31 @@ public class commonRequestController {
         model.addAttribute("shareRequestCount", shareRequestCount);
         model.addAttribute("inviteRequestCount", inviteRequestCount);
         model.addAttribute("joinRequestCount", joinRequestCount);
-        model.addAttribute("totalPendingRequestCount", shareRequestCount + inviteRequestCount + joinRequestCount);
+        model.addAttribute("friendRequestList", friendRequestList);
+        model.addAttribute("friendRequestCount", friendRequestCount);
+        model.addAttribute("totalPendingRequestCount", shareRequestCount + inviteRequestCount + joinRequestCount + friendRequestCount);
         model.addAttribute("accountDisplayName", user.getUSER_NAME() == null ? "" : user.getUSER_NAME());
         model.addAttribute("accountEmail", user.getEMAIL() == null ? "" : user.getEMAIL());
+
+        model.addAttribute("pageMode", "requests");
+        return "common/requests";
+    }
+
+    @GetMapping("/notifications")
+    public String notificationsPage(HttpSession session, Model model) {
+        usersDto user = (usersDto) session.getAttribute("user");
+        if (user == null) return "redirect:/login";
 
         var allNotices = userNoticeService.getMyNotices(user.getUserId());
         long unreadNoticeCount = allNotices == null ? 0 : allNotices.stream()
                 .filter(notice -> "N".equalsIgnoreCase(notice.getIsRead()))
                 .count();
+
+        model.addAttribute("pageMode", "notifications");
         model.addAttribute("allNotices", allNotices);
         model.addAttribute("unreadNoticeCount", unreadNoticeCount);
-
+        model.addAttribute("accountDisplayName", user.getUSER_NAME() == null ? "" : user.getUSER_NAME());
+        model.addAttribute("accountEmail", user.getEMAIL() == null ? "" : user.getEMAIL());
         return "common/requests";
     }
 
@@ -87,6 +108,24 @@ public class commonRequestController {
         }
 
         List<Map<String, Object>> items = new ArrayList<>();
+
+        List<friendDTO> friendRequests = friendService.getReceivedRequests(user.getUserId());
+        if (friendRequests != null) {
+            for (friendDTO friend : friendRequests) {
+                if (!"PENDING".equals(friend.getStatus())) continue;
+
+                Map<String, Object> item = new HashMap<>();
+                item.put("requestType", "FRIEND_REQUEST");
+                item.put("id", friend.getFriendId());
+                item.put("friendId", friend.getFriendId());
+                item.put("requesterId", friend.getRequesterId());
+                item.put("title", friend.getUserName());
+                item.put("requesterName", friend.getUserName());
+                item.put("requesterEmail", friend.getEmail());
+                item.put("createdAt", friend.getRequestedAt());
+                items.add(item);
+            }
+        }
 
         List<contentShareDTO> shareRequests = contentShareService.getReceivedShareRequests(user.getUserId());
         if (shareRequests != null) {
@@ -230,24 +269,23 @@ public class commonRequestController {
             result.put("shareCount", 0);
             result.put("inviteCount", 0);
             result.put("joinRequestCount", 0);
+            result.put("friendRequestCount", 0);
             return result;
         }
 
         int shareCount =
                 contentShareService.countPendingShareRequests(user.getUserId());
 
-        List<Map<String, Object>> invites =
-                workspaceService.getPendingInvitations(user.getUserId());
-        int inviteCount = invites == null ? 0 : invites.size();
+        int inviteCount = workspaceService.countPendingInvitations(user.getUserId());
+        int joinRequestCount = workspaceService.countPendingJoinRequestsForAdmin(user.getUserId());
 
-        List<Map<String, Object>> joinRequests =
-                workspaceService.getPendingJoinRequestsForAdmin(user.getUserId());
-        int joinRequestCount = joinRequests == null ? 0 : joinRequests.size();
+        int friendRequestCount = friendService.getPendingReceivedCount(user.getUserId());
 
-        result.put("count", shareCount + inviteCount + joinRequestCount);
+        result.put("count", shareCount + inviteCount + joinRequestCount + friendRequestCount);
         result.put("shareCount", shareCount);
         result.put("inviteCount", inviteCount);
         result.put("joinRequestCount", joinRequestCount);
+        result.put("friendRequestCount", friendRequestCount);
         return result;
     }
 

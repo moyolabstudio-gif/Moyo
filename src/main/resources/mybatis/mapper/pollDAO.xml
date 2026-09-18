@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <mapper namespace="com.springboot.project.dao.IpollDAO">
 
@@ -12,7 +12,14 @@
                 p.PROJ_ID,
                 p.SCOPE,
                 p.USER_ID,
-                u.USER_NAME AS CREATOR_NAME,
+                CASE
+                    WHEN NVL(wmp.USE_ACCOUNT_PROFILE, 'Y') = 'N' THEN NVL(wmp.DISPLAY_NAME, u.USER_NAME)
+                    ELSE u.USER_NAME
+                END AS CREATOR_NAME,
+                CASE
+                    WHEN NVL(wmp.USE_ACCOUNT_PROFILE, 'Y') = 'N' THEN wmp.PROFILE_IMAGE_PATH
+                    ELSE u.PROFILE_IMAGE_PATH
+                END AS MEMBER_PROFILE_IMAGE_PATH,
                 p.QUESTION,
                 p.STATUS,
                 p.REG_DT,
@@ -21,6 +28,7 @@
                 p.PREV_END_DT
             FROM POLLS p
             JOIN USERS u ON p.USER_ID = u.USER_ID
+            LEFT JOIN WS_MEMBER_PROFILES wmp ON wmp.WS_ID = p.WS_ID AND wmp.USER_ID = p.USER_ID
             WHERE p.WS_ID = #{wsId}
               AND p.SCOPE = 'WORKSPACE'
               AND p.STATUS = 'ACTIVE'
@@ -39,7 +47,14 @@
                 p.PROJ_ID,
                 p.SCOPE,
                 p.USER_ID,
-                u.USER_NAME AS CREATOR_NAME,
+                CASE
+                    WHEN NVL(wmp.USE_ACCOUNT_PROFILE, 'Y') = 'N' THEN NVL(wmp.DISPLAY_NAME, u.USER_NAME)
+                    ELSE u.USER_NAME
+                END AS CREATOR_NAME,
+                CASE
+                    WHEN NVL(wmp.USE_ACCOUNT_PROFILE, 'Y') = 'N' THEN wmp.PROFILE_IMAGE_PATH
+                    ELSE u.PROFILE_IMAGE_PATH
+                END AS MEMBER_PROFILE_IMAGE_PATH,
                 p.QUESTION,
                 p.STATUS,
                 p.REG_DT,
@@ -48,6 +63,7 @@
                 p.PREV_END_DT
             FROM POLLS p
             JOIN USERS u ON p.USER_ID = u.USER_ID
+            LEFT JOIN WS_MEMBER_PROFILES wmp ON wmp.WS_ID = p.WS_ID AND wmp.USER_ID = p.USER_ID
             WHERE p.WS_ID = #{wsId}
               AND p.PROJ_ID = #{projId}
               AND p.SCOPE = 'PROJECT'
@@ -108,7 +124,14 @@
             p.PROJ_ID,
             p.SCOPE,
             p.USER_ID,
-            u.USER_NAME AS CREATOR_NAME,
+            CASE
+                WHEN NVL(wmp.USE_ACCOUNT_PROFILE, 'Y') = 'N' THEN NVL(wmp.DISPLAY_NAME, u.USER_NAME)
+                ELSE u.USER_NAME
+            END AS CREATOR_NAME,
+            CASE
+                WHEN NVL(wmp.USE_ACCOUNT_PROFILE, 'Y') = 'N' THEN wmp.PROFILE_IMAGE_PATH
+                ELSE u.PROFILE_IMAGE_PATH
+            END AS MEMBER_PROFILE_IMAGE_PATH,
             p.QUESTION,
             p.STATUS,
             p.REG_DT,
@@ -117,6 +140,7 @@
             p.PREV_END_DT
         FROM POLLS p
         JOIN USERS u ON p.USER_ID = u.USER_ID
+        LEFT JOIN WS_MEMBER_PROFILES wmp ON wmp.WS_ID = p.WS_ID AND wmp.USER_ID = p.USER_ID
         WHERE p.POLL_ID = #{pollId}
     </select>
 
@@ -268,7 +292,14 @@
             p.PROJ_ID,
             p.SCOPE,
             p.USER_ID,
-            u.USER_NAME AS CREATOR_NAME,
+            CASE
+                WHEN NVL(wmp.USE_ACCOUNT_PROFILE, 'Y') = 'N' THEN NVL(wmp.DISPLAY_NAME, u.USER_NAME)
+                ELSE u.USER_NAME
+            END AS CREATOR_NAME,
+            CASE
+                WHEN NVL(wmp.USE_ACCOUNT_PROFILE, 'Y') = 'N' THEN wmp.PROFILE_IMAGE_PATH
+                ELSE u.PROFILE_IMAGE_PATH
+            END AS MEMBER_PROFILE_IMAGE_PATH,
             p.QUESTION,
             p.STATUS,
             p.REG_DT,
@@ -277,15 +308,18 @@
             COUNT(v.VOTE_ID) AS VOTE_COUNT
         FROM POLLS p
         JOIN USERS u ON p.USER_ID = u.USER_ID
+        LEFT JOIN WS_MEMBER_PROFILES wmp ON wmp.WS_ID = p.WS_ID AND wmp.USER_ID = p.USER_ID
         LEFT JOIN POLL_OPTIONS o ON p.POLL_ID = o.POLL_ID
         LEFT JOIN VOTES v ON o.OPTION_ID = v.OPTION_ID
         WHERE p.WS_ID = #{wsId}
           AND p.SCOPE = 'WORKSPACE'
         GROUP BY
             p.POLL_ID, p.WS_ID, p.PROJ_ID, p.SCOPE, p.USER_ID, u.USER_NAME,
+            wmp.USE_ACCOUNT_PROFILE, wmp.DISPLAY_NAME, wmp.PROFILE_IMAGE_PATH, u.PROFILE_IMAGE_PATH,
             p.QUESTION, p.STATUS, p.REG_DT, p.END_DT, p.EXTEND_COUNT, p.PREV_END_DT
         ORDER BY
-            CASE WHEN p.STATUS = 'ACTIVE' THEN 0 ELSE 1 END,
+            CASE WHEN p.STATUS = 'ACTIVE' AND (p.END_DT IS NULL OR p.END_DT >= SYSDATE) THEN 0 ELSE 1 END,
+            CASE WHEN p.STATUS = 'ACTIVE' AND (p.END_DT IS NULL OR p.END_DT >= SYSDATE) THEN p.END_DT END ASC NULLS LAST,
             p.REG_DT DESC
     </select>
 
@@ -296,7 +330,14 @@
             p.PROJ_ID,
             p.SCOPE,
             p.USER_ID,
-            u.USER_NAME AS CREATOR_NAME,
+            CASE
+                WHEN NVL(wmp.USE_ACCOUNT_PROFILE, 'Y') = 'N' THEN NVL(wmp.DISPLAY_NAME, u.USER_NAME)
+                ELSE u.USER_NAME
+            END AS CREATOR_NAME,
+            CASE
+                WHEN NVL(wmp.USE_ACCOUNT_PROFILE, 'Y') = 'N' THEN wmp.PROFILE_IMAGE_PATH
+                ELSE u.PROFILE_IMAGE_PATH
+            END AS MEMBER_PROFILE_IMAGE_PATH,
             p.QUESTION,
             p.STATUS,
             p.REG_DT,
@@ -305,6 +346,7 @@
             COUNT(v.VOTE_ID) AS VOTE_COUNT
         FROM POLLS p
         JOIN USERS u ON p.USER_ID = u.USER_ID
+        LEFT JOIN WS_MEMBER_PROFILES wmp ON wmp.WS_ID = p.WS_ID AND wmp.USER_ID = p.USER_ID
         LEFT JOIN POLL_OPTIONS o ON p.POLL_ID = o.POLL_ID
         LEFT JOIN VOTES v ON o.OPTION_ID = v.OPTION_ID
         WHERE p.WS_ID = #{wsId}
@@ -312,9 +354,11 @@
           AND p.SCOPE = 'PROJECT'
         GROUP BY
             p.POLL_ID, p.WS_ID, p.PROJ_ID, p.SCOPE, p.USER_ID, u.USER_NAME,
+            wmp.USE_ACCOUNT_PROFILE, wmp.DISPLAY_NAME, wmp.PROFILE_IMAGE_PATH, u.PROFILE_IMAGE_PATH,
             p.QUESTION, p.STATUS, p.REG_DT, p.END_DT, p.EXTEND_COUNT, p.PREV_END_DT
         ORDER BY
-            CASE WHEN p.STATUS = 'ACTIVE' THEN 0 ELSE 1 END,
+            CASE WHEN p.STATUS = 'ACTIVE' AND (p.END_DT IS NULL OR p.END_DT >= SYSDATE) THEN 0 ELSE 1 END,
+            CASE WHEN p.STATUS = 'ACTIVE' AND (p.END_DT IS NULL OR p.END_DT >= SYSDATE) THEN p.END_DT END ASC NULLS LAST,
             p.REG_DT DESC
     </select>
 

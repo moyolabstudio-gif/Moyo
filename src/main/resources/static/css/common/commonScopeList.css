@@ -1,0 +1,348 @@
+/*
+ * MOYO scope list contract
+ * Shared list geometry for group/project list pages.
+ * Scope-specific information and feature controls stay in workspaceList/projectList.
+ */
+
+.moyo-scope-list {
+    width: min(1220px, calc(100% - 48px)) !important;
+    margin: 0 auto !important;
+    padding: 26px 0 42px !important;
+    box-sizing: border-box;
+}
+
+.moyo-scope-list__hero {
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    min-height: 104px !important;
+    padding: 18px 22px !important;
+    border: var(--moyo-border, 1px solid #e3eaf2) !important;
+    border-radius: 20px !important;
+    background: var(--moyo-color-surface, #fff) !important;
+    box-shadow: 0 10px 30px rgba(31, 53, 86, .045) !important;
+}
+
+.moyo-scope-list__hero::before {
+    content: "" !important;
+    position: absolute !important;
+    inset: 0 auto 0 0 !important;
+    width: 4px !important;
+    border-radius: 0 !important;
+    background: linear-gradient(180deg, #39CDB5 0%, #4A90E2 54%, #7358E8 100%) !important;
+    opacity: 1 !important;
+}
+
+.moyo-scope-list--project .moyo-scope-list__hero::after {
+    display: none !important;
+}
+
+.moyo-scope-list__hero h1 {
+    margin: 0 !important;
+    color: var(--moyo-color-text, #172033) !important;
+    font-size: 30px !important;
+    line-height: 1.15 !important;
+    letter-spacing: -.04em !important;
+}
+
+.moyo-scope-list__hero p {
+    max-width: 640px;
+    margin: 5px 0 0 !important;
+    color: var(--moyo-color-text-soft, #748197) !important;
+    font-size: 13px !important;
+    line-height: 1.55 !important;
+}
+
+.moyo-scope-list__eyebrow {
+    display: block;
+    margin: 0 0 5px !important;
+    color: var(--moyo-color-text-muted, #8a94a6) !important;
+    font-size: 11px !important;
+    font-style: normal !important;
+    font-weight: 800 !important;
+    letter-spacing: .045em !important;
+}
+
+.moyo-scope-list__hero-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 0 0 auto;
+}
+
+.moyo-scope-list__primary-action,
+.moyo-scope-list__secondary-action {
+    box-sizing: border-box;
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    min-height: 40px !important;
+    padding: 0 15px !important;
+    border-radius: 11px !important;
+    font-size: 12px !important;
+    font-weight: 800 !important;
+    line-height: 1 !important;
+    text-decoration: none !important;
+    white-space: nowrap;
+    transition: transform .16s ease, border-color .16s ease, box-shadow .16s ease, filter .16s ease;
+}
+
+.moyo-scope-list__primary-action {
+    border: 0 !important;
+    color: #fff !important;
+    background: var(--moyo-primary-gradient, linear-gradient(135deg, #39CDB5 0%, #4A90E2 54%, #7358E8 100%)) !important;
+    box-shadow: 0 7px 17px rgba(74, 144, 226, .20) !important;
+}
+
+.moyo-scope-list__secondary-action {
+    border: 1px solid var(--moyo-border-color, #dce4ef) !important;
+    color: #536176 !important;
+    background: #fff !important;
+    box-shadow: none !important;
+}
+
+.moyo-scope-list__primary-action:hover,
+.moyo-scope-list__secondary-action:hover {
+    transform: translateY(-1px);
+}
+
+.moyo-scope-list__toolbar,
+.moyo-scope-list__section {
+    margin-top: 14px !important;
+    border: var(--moyo-border, 1px solid #e3eaf2) !important;
+    border-radius: 18px !important;
+    background: var(--moyo-color-surface, #fff) !important;
+    box-shadow: 0 6px 20px rgba(31, 53, 86, .028) !important;
+}
+
+.moyo-scope-list__toolbar {
+    padding: 12px 16px !important;
+}
+
+.moyo-scope-list__section {
+    padding: 16px !important;
+}
+
+.moyo-scope-list__section-head {
+    margin-bottom: 12px !important;
+}
+
+.moyo-scope-list__section-head h2,
+.moyo-scope-list__section-head h3 {
+    color: var(--moyo-color-text, #172033) !important;
+    font-weight: 800 !important;
+    letter-spacing: -.025em;
+}
+
+.moyo-scope-list__count {
+    min-width: 24px !important;
+    height: 22px !important;
+    padding: 0 7px !important;
+    border-radius: 999px !important;
+    font-size: 11px !important;
+    font-weight: 800 !important;
+}
+
+.moyo-scope-list__grid {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)) !important;
+    align-items: stretch;
+    gap: 12px !important;
+}
+
+.moyo-scope-list-card {
+    box-sizing: border-box;
+    min-width: 0;
+    border: var(--moyo-border, 1px solid #e0e8f2) !important;
+    border-radius: 14px !important;
+    background: var(--moyo-color-surface, #fff) !important;
+    box-shadow: none !important;
+    transition: transform .16s ease, border-color .16s ease, box-shadow .16s ease !important;
+}
+
+.moyo-scope-list-card:hover {
+    transform: translateY(-2px) !important;
+    border-color: var(--moyo-border-color-strong, #cfdbe8) !important;
+    box-shadow: var(--moyo-shadow-md, 0 10px 22px rgba(49, 87, 137, .08)) !important;
+}
+
+.moyo-scope-list-card__title {
+    color: #273244 !important;
+    font-size: 16px !important;
+    font-weight: 800 !important;
+    line-height: 1.35 !important;
+    letter-spacing: -.02em;
+}
+
+.moyo-scope-list-card__description {
+    color: #7d8999 !important;
+    font-size: 12px !important;
+    line-height: 1.5 !important;
+}
+
+.moyo-scope-list-card__badge {
+    box-sizing: border-box;
+    min-height: 20px;
+    border-radius: 999px;
+    font-size: 10px !important;
+    font-weight: 750 !important;
+    line-height: 1 !important;
+}
+
+.moyo-scope-list-card__badge--quiet {
+    color: #708094 !important;
+}
+
+.moyo-scope-list-card__meta {
+    font-size: 12px !important;
+}
+
+.moyo-scope-list-card__action {
+    font-size: 12px !important;
+    font-weight: 800 !important;
+}
+
+.moyo-scope-list__empty {
+    box-sizing: border-box;
+    min-height: 220px !important;
+    border: 1px dashed var(--moyo-border-color-strong, #cfdbe6) !important;
+    border-radius: 14px !important;
+    background: #fff !important;
+    color: var(--moyo-color-text-soft, #7d8999);
+}
+
+.moyo-scope-list__empty-inline {
+    box-sizing: border-box;
+    min-height: 64px;
+    padding: 18px;
+    border: 1px dashed #d9e2ed;
+    border-radius: 12px;
+    color: #8792a2;
+    background: #fbfcfe;
+    text-align: center;
+}
+
+/* Project list keeps its own filters, but the controls share the same MOYO control rhythm. */
+.moyo-scope-list--project .project-list-search input,
+.moyo-scope-list--project .project-list-tools select,
+.moyo-scope-list--project .project-list-type-filter select {
+    min-height: 38px !important;
+    border-radius: 10px !important;
+    border-color: var(--moyo-border-color, #dce4ef) !important;
+    background-color: #fff !important;
+    font-size: 12px !important;
+}
+
+.moyo-scope-list--project .project-list-tab {
+    min-height: 34px;
+    padding: 0 10px !important;
+    border-radius: 9px !important;
+    font-size: 12px !important;
+}
+
+/* Preserve project semantic state colors while sharing badge geometry. */
+.moyo-scope-list--project .project-list-link::before {
+    top: 12px !important;
+    bottom: 12px !important;
+    width: 3px !important;
+}
+
+@media (max-width: 1024px) {
+    .moyo-scope-list {
+        width: min(100% - 32px, 1220px) !important;
+    }
+
+    .moyo-scope-list__hero {
+        gap: 16px;
+    }
+
+    .moyo-scope-list--project .moyo-scope-list__toolbar {
+        align-items: stretch !important;
+        flex-direction: column !important;
+    }
+
+    .moyo-scope-list__grid {
+        gap: 14px !important;
+    }
+}
+
+@media (max-width: 760px) {
+    .moyo-scope-list {
+        width: calc(100% - 24px) !important;
+        padding: 16px 0 28px !important;
+    }
+
+    .moyo-scope-list__hero {
+        min-height: 0 !important;
+        padding: 16px !important;
+        align-items: stretch !important;
+        flex-direction: column !important;
+        gap: 14px !important;
+    }
+
+    .moyo-scope-list__hero h1 {
+        font-size: 27px !important;
+    }
+
+    .moyo-scope-list__hero-actions {
+        width: 100%;
+    }
+
+    .moyo-scope-list__primary-action,
+    .moyo-scope-list__secondary-action {
+        flex: 1 1 0;
+        min-height: 42px !important;
+    }
+
+    .moyo-scope-list__toolbar,
+    .moyo-scope-list__section {
+        padding: 14px !important;
+    }
+
+    .moyo-scope-list__grid {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+/* Responsive scope-list controls. */
+@media (max-width: 760px) {
+    .moyo-scope-list__hero-actions,
+    .moyo-scope-list__toolbar,
+    .moyo-scope-list--project .project-list-tools {
+        min-width: 0 !important;
+        max-width: 100% !important;
+    }
+
+    .moyo-scope-list--project .project-list-tools,
+    .moyo-scope-list--project .project-list-search,
+    .moyo-scope-list--project .project-list-type-filter {
+        width: 100% !important;
+    }
+
+    .moyo-scope-list--project .project-list-search input,
+    .moyo-scope-list--project .project-list-tools select,
+    .moyo-scope-list--project .project-list-type-filter select {
+        width: 100% !important;
+        max-width: none !important;
+    }
+}
+
+@media (max-width: 520px) {
+    .moyo-scope-list {
+        width: 100% !important;
+        padding: 14px 12px 28px !important;
+    }
+
+    .moyo-scope-list__hero,
+    .moyo-scope-list__toolbar,
+    .moyo-scope-list__section {
+        border-radius: 14px !important;
+    }
+
+    .moyo-scope-list__hero h1 {
+        font-size: 24px !important;
+    }
+}

@@ -32,6 +32,455 @@
         <result property="calendarAttendeeYn" column="CALENDAR_ATTENDEE_YN"/>
     </resultMap>
 
+
+    <!-- NOTE / PHOTO / FILE 공통 접근 정책
+         - 정책 행이 없으면 SECRET_YN=N(기존 동작 유지)
+         - 그룹/프로젝트 일반 콘텐츠는 현재 소속 멤버가 조회
+         - 비밀 콘텐츠는 작성자 또는 CONTENT_SHARES에 ACCEPTED 된 대상만 조회
+         - 편집은 작성자 또는 EDIT 공유 대상만 허용 -->
+    <sql id="acceptedContentShareForUser">
+        EXISTS (
+            SELECT 1
+              FROM CONTENT_SHARES s
+             WHERE s.CONTENT_TYPE = #{contentType}
+               AND s.CONTENT_ID = #{contentId}
+               AND s.ACTIVE_YN = 'Y'
+               AND NVL(s.SHARE_STATUS, 'ACCEPTED') = 'ACCEPTED'
+               AND (s.EXPIRES_AT IS NULL OR s.EXPIRES_AT &gt;= SYSDATE)
+               AND (
+                    (s.TARGET_TYPE = 'USER' AND s.TARGET_ID = #{userId})
+                    OR (s.TARGET_TYPE = 'WS' AND EXISTS (
+                        SELECT 1 FROM WS_MEMBERS wm
+                         WHERE wm.WS_ID = s.TARGET_ID
+                           AND wm.USER_ID = #{userId}
+                    ))
+                    OR (s.TARGET_TYPE = 'PROJ' AND EXISTS (
+                        SELECT 1 FROM PROJ_MEMBERS pm
+                         WHERE pm.PROJ_ID = s.TARGET_ID
+                           AND pm.USER_ID = #{userId}
+                    ))
+               )
+        )
+    </sql>
+
+    <sql id="acceptedContentEditForUser">
+        EXISTS (
+            SELECT 1
+              FROM CONTENT_SHARES s
+             WHERE s.CONTENT_TYPE = #{contentType}
+               AND s.CONTENT_ID = #{contentId}
+               AND s.ACTIVE_YN = 'Y'
+               AND NVL(s.SHARE_STATUS, 'ACCEPTED') = 'ACCEPTED'
+               AND UPPER(NVL(s.PERMISSION_TYPE, 'VIEW')) = 'EDIT'
+               AND (s.EXPIRES_AT IS NULL OR s.EXPIRES_AT &gt;= SYSDATE)
+               AND (
+                    (s.TARGET_TYPE = 'USER' AND s.TARGET_ID = #{userId})
+                    OR (s.TARGET_TYPE = 'WS' AND EXISTS (
+                        SELECT 1 FROM WS_MEMBERS wm
+                         WHERE wm.WS_ID = s.TARGET_ID
+                           AND wm.USER_ID = #{userId}
+                    ))
+                    OR (s.TARGET_TYPE = 'PROJ' AND EXISTS (
+                        SELECT 1 FROM PROJ_MEMBERS pm
+                         WHERE pm.PROJ_ID = s.TARGET_ID
+                           AND pm.USER_ID = #{userId}
+                    ))
+               )
+        )
+    </sql>
+
+    <!-- 그룹/그룹 프로젝트 콘텐츠 공개 범위
+         - 기존 데이터는 별도 마커가 없으므로 전체 공개로 해석한다.
+         - 비밀글은 CONTENT_SHARES 안의 작성자 self VIEW 행을 내부 마커로만 사용한다.
+         - 이 마커는 실제 공유 대상 목록에서는 제외한다. -->
+    <select id="countRestrictedAccessMarker" resultType="int">
+        SELECT COUNT(1)
+          FROM CONTENT_SHARES s
+         WHERE s.CONTENT_TYPE = #{contentType}
+           AND s.CONTENT_ID = #{contentId}
+           AND s.TARGET_TYPE = 'USER'
+           AND s.TARGET_ID = s.OWNER_ID
+           AND s.SHARED_BY = s.OWNER_ID
+           AND UPPER(NVL(s.PERMISSION_TYPE, 'VIEW')) = 'VIEW'
+           AND s.ACTIVE_YN = 'Y'
+           AND NVL(s.SHARE_STATUS, 'ACCEPTED') = 'ACCEPTED'
+    </select>
+
+    <insert id="mergeRestrictedAccessMarker">
+        MERGE INTO CONTENT_SHARES s
+        USING (
+            SELECT #{contentType} CONTENT_TYPE,
+                   #{contentId} CONTENT_ID,
+                   #{ownerId} OWNER_ID
+              FROM DUAL
+        ) x
+        ON (s.CONTENT_TYPE = x.CONTENT_TYPE
+            AND s.CONTENT_ID = x.CONTENT_ID
+            AND s.TARGET_TYPE = 'USER'
+            AND s.TARGET_ID = x.OWNER_ID
+            AND s.SHARED_BY = x.OWNER_ID)
+        WHEN MATCHED THEN UPDATE SET
+            s.PERMISSION_TYPE = 'VIEW',
+            s.ACTIVE_YN = 'Y',
+            s.SHARE_STATUS = 'ACCEPTED',
+            s.RESPONDED_BY = x.OWNER_ID,
+            s.RESPONDED_AT = SYSDATE,
+            s.EXPIRES_AT = NULL,
+            s.UPDATED_AT = SYSDATE
+        WHEN NOT MATCHED THEN INSERT (
+            SHARE_ID, CONTENT_TYPE, CONTENT_ID, OWNER_ID, TARGET_TYPE, TARGET_ID,
+            PERMISSION_TYPE, SHARED_BY, CREATED_AT, UPDATED_AT, EXPIRES_AT,
+            ACTIVE_YN, SHARE_STATUS, RESPONDED_BY, RESPONDED_AT
+        ) VALUES (
+            SEQ_CONTENT_SHARE_ID.NEXTVAL, x.CONTENT_TYPE, x.CONTENT_ID, x.OWNER_ID,
+            'USER', x.OWNER_ID, 'VIEW', x.OWNER_ID, SYSDATE, SYSDATE, NULL,
+            'Y', 'ACCEPTED', x.OWNER_ID, SYSDATE
+        )
+    </insert>
+
+    <delete id="deleteRestrictedAccessMarker">
+        DELETE FROM CONTENT_SHARES
+         WHERE CONTENT_TYPE = #{contentType}
+           AND CONTENT_ID = #{contentId}
+           AND TARGET_TYPE = 'USER'
+           AND TARGET_ID = #{ownerId}
+           AND OWNER_ID = #{ownerId}
+           AND SHARED_BY = #{ownerId}
+           AND UPPER(NVL(PERMISSION_TYPE, 'VIEW')) = 'VIEW'
+    </delete>
+
+    <select id="countNativeScopeReadPermission" resultType="int">
+        SELECT COUNT(*)
+          FROM (
+                SELECT n.NOTE_ID AS CONTENT_ID
+                  FROM NOTES n
+                 WHERE #{contentType}='NOTE'
+                   AND n.NOTE_ID=#{contentId}
+                   AND (
+                        (UPPER(n.SCOPE_TYPE)='WS' AND EXISTS (
+                            SELECT 1 FROM WORKSPACES w
+                             LEFT JOIN WS_MEMBERS wm ON wm.WS_ID=w.WS_ID AND wm.USER_ID=#{userId}
+                            WHERE w.WS_ID=n.WS_ID
+                              AND (w.OWNER_ID=#{userId} OR wm.USER_ID IS NOT NULL)
+                        ))
+                        OR
+                        (UPPER(n.SCOPE_TYPE) IN ('PROJ','PROJECT') AND EXISTS (
+                            SELECT 1 FROM PROJECTS pr
+                             LEFT JOIN PROJ_MEMBERS pm ON pm.PROJ_ID=pr.PROJ_ID AND pm.USER_ID=#{userId}
+                            WHERE pr.PROJ_ID=n.PROJ_ID
+                              AND pr.WS_ID IS NOT NULL
+                              AND (pr.LEADER_ID=#{userId} OR pm.USER_ID IS NOT NULL)
+                        ))
+                   )
+                UNION ALL
+                SELECT pp.POST_ID
+                  FROM PHOTO_POSTS pp
+                 WHERE #{contentType}='PHOTO'
+                   AND pp.POST_ID=#{contentId}
+                   AND NVL(pp.DELETED_YN,'N')='N'
+                   AND (
+                        (UPPER(pp.SCOPE_TYPE) IN ('WORKSPACE','WS','GROUP') AND EXISTS (
+                            SELECT 1 FROM WORKSPACES w
+                             LEFT JOIN WS_MEMBERS wm ON wm.WS_ID=w.WS_ID AND wm.USER_ID=#{userId}
+                            WHERE w.WS_ID=pp.SCOPE_ID
+                              AND (w.OWNER_ID=#{userId} OR wm.USER_ID IS NOT NULL)
+                        ))
+                        OR
+                        (UPPER(pp.SCOPE_TYPE)='PROJECT' AND EXISTS (
+                            SELECT 1 FROM PROJECTS pr
+                             LEFT JOIN PROJ_MEMBERS pm ON pm.PROJ_ID=pr.PROJ_ID AND pm.USER_ID=#{userId}
+                            WHERE pr.PROJ_ID=pp.SCOPE_ID
+                              AND pr.WS_ID IS NOT NULL
+                              AND (pr.LEADER_ID=#{userId} OR pm.USER_ID IS NOT NULL)
+                        ))
+                   )
+                UNION ALL
+                SELECT f.CONTENT_FILE_ID
+                  FROM CONTENT_FILES f
+                 WHERE #{contentType}='FILE'
+                   AND f.CONTENT_FILE_ID=#{contentId}
+                   AND NVL(f.DELETED_YN,'N')='N'
+                   AND (
+                        (UPPER(f.SCOPE_TYPE)='GROUP' AND EXISTS (
+                            SELECT 1 FROM WORKSPACES w
+                             LEFT JOIN WS_MEMBERS wm ON wm.WS_ID=w.WS_ID AND wm.USER_ID=#{userId}
+                            WHERE w.WS_ID=f.WS_ID
+                              AND (w.OWNER_ID=#{userId} OR wm.USER_ID IS NOT NULL)
+                        ))
+                        OR
+                        (UPPER(f.SCOPE_TYPE)='PROJECT' AND EXISTS (
+                            SELECT 1 FROM PROJECTS pr
+                             LEFT JOIN PROJ_MEMBERS pm ON pm.PROJ_ID=pr.PROJ_ID AND pm.USER_ID=#{userId}
+                            WHERE pr.PROJ_ID=f.PROJ_ID
+                              AND pr.WS_ID IS NOT NULL
+                              AND (pr.LEADER_ID=#{userId} OR pm.USER_ID IS NOT NULL)
+                        ))
+                   )
+          )
+    </select>
+
+    <select id="countNativeScopeManagerPermission" resultType="int">
+        SELECT COUNT(*)
+          FROM (
+                SELECT n.NOTE_ID AS CONTENT_ID
+                  FROM NOTES n
+                 WHERE #{contentType}='NOTE'
+                   AND n.NOTE_ID=#{contentId}
+                   AND (
+                        (UPPER(n.SCOPE_TYPE)='WS' AND EXISTS (
+                            SELECT 1 FROM WORKSPACES w
+                             LEFT JOIN WS_MEMBERS wm ON wm.WS_ID=w.WS_ID AND wm.USER_ID=#{userId}
+                            WHERE w.WS_ID=n.WS_ID
+                              AND (w.OWNER_ID=#{userId} OR UPPER(NVL(wm.WS_ROLE,'MEMBER'))='ADMIN')
+                        ))
+                        OR
+                        (UPPER(n.SCOPE_TYPE) IN ('PROJ','PROJECT') AND EXISTS (
+                            SELECT 1 FROM PROJECTS pr
+                             LEFT JOIN PROJ_MEMBERS pm ON pm.PROJ_ID=pr.PROJ_ID AND pm.USER_ID=#{userId}
+                            WHERE pr.PROJ_ID=n.PROJ_ID
+                              AND pr.WS_ID IS NOT NULL
+                              AND (pr.LEADER_ID=#{userId} OR UPPER(NVL(pm.PROJ_ROLE,'MEMBER')) IN ('ADMIN','LEADER','OWNER','PM'))
+                        ))
+                   )
+                UNION ALL
+                SELECT pp.POST_ID
+                  FROM PHOTO_POSTS pp
+                 WHERE #{contentType}='PHOTO'
+                   AND pp.POST_ID=#{contentId}
+                   AND NVL(pp.DELETED_YN,'N')='N'
+                   AND (
+                        (UPPER(pp.SCOPE_TYPE) IN ('WORKSPACE','WS','GROUP') AND EXISTS (
+                            SELECT 1 FROM WORKSPACES w
+                             LEFT JOIN WS_MEMBERS wm ON wm.WS_ID=w.WS_ID AND wm.USER_ID=#{userId}
+                            WHERE w.WS_ID=pp.SCOPE_ID
+                              AND (w.OWNER_ID=#{userId} OR UPPER(NVL(wm.WS_ROLE,'MEMBER'))='ADMIN')
+                        ))
+                        OR
+                        (UPPER(pp.SCOPE_TYPE)='PROJECT' AND EXISTS (
+                            SELECT 1 FROM PROJECTS pr
+                             LEFT JOIN PROJ_MEMBERS pm ON pm.PROJ_ID=pr.PROJ_ID AND pm.USER_ID=#{userId}
+                            WHERE pr.PROJ_ID=pp.SCOPE_ID
+                              AND pr.WS_ID IS NOT NULL
+                              AND (pr.LEADER_ID=#{userId} OR UPPER(NVL(pm.PROJ_ROLE,'MEMBER')) IN ('ADMIN','LEADER','OWNER','PM'))
+                        ))
+                   )
+                UNION ALL
+                SELECT f.CONTENT_FILE_ID
+                  FROM CONTENT_FILES f
+                 WHERE #{contentType}='FILE'
+                   AND f.CONTENT_FILE_ID=#{contentId}
+                   AND NVL(f.DELETED_YN,'N')='N'
+                   AND (
+                        (UPPER(f.SCOPE_TYPE)='GROUP' AND EXISTS (
+                            SELECT 1 FROM WORKSPACES w
+                             LEFT JOIN WS_MEMBERS wm ON wm.WS_ID=w.WS_ID AND wm.USER_ID=#{userId}
+                            WHERE w.WS_ID=f.WS_ID
+                              AND (w.OWNER_ID=#{userId} OR UPPER(NVL(wm.WS_ROLE,'MEMBER'))='ADMIN')
+                        ))
+                        OR
+                        (UPPER(f.SCOPE_TYPE)='PROJECT' AND EXISTS (
+                            SELECT 1 FROM PROJECTS pr
+                             LEFT JOIN PROJ_MEMBERS pm ON pm.PROJ_ID=pr.PROJ_ID AND pm.USER_ID=#{userId}
+                            WHERE pr.PROJ_ID=f.PROJ_ID
+                              AND pr.WS_ID IS NOT NULL
+                              AND (pr.LEADER_ID=#{userId} OR UPPER(NVL(pm.PROJ_ROLE,'MEMBER')) IN ('ADMIN','LEADER','OWNER','PM'))
+                        ))
+                   )
+          )
+    </select>
+
+    <select id="countContentEditPermission" resultType="int">
+        SELECT COUNT(*)
+          FROM (
+                SELECT n.NOTE_ID AS CONTENT_ID
+                  FROM NOTES n
+                 WHERE #{contentType}='NOTE'
+                   AND n.NOTE_ID=#{contentId}
+                   AND (n.USER_ID=#{userId} OR <include refid="acceptedContentEditForUser"/>)
+                UNION ALL
+                SELECT pp.POST_ID AS CONTENT_ID
+                  FROM PHOTO_POSTS pp
+                 WHERE #{contentType}='PHOTO'
+                   AND pp.POST_ID=#{contentId}
+                   AND NVL(pp.DELETED_YN,'N')='N'
+                   AND (pp.CREATED_BY=#{userId} OR <include refid="acceptedContentEditForUser"/>)
+                UNION ALL
+                SELECT f.CONTENT_FILE_ID AS CONTENT_ID
+                  FROM CONTENT_FILES f
+                 WHERE #{contentType}='FILE'
+                   AND f.CONTENT_FILE_ID=#{contentId}
+                   AND NVL(f.DELETED_YN,'N')='N'
+                   AND (f.CREATED_BY=#{userId} OR <include refid="acceptedContentEditForUser"/>)
+          )
+    </select>
+
+    <select id="countNativeContentMember" resultType="int">
+        SELECT COUNT(*)
+          FROM (
+                SELECT n.NOTE_ID AS CONTENT_ID
+                  FROM NOTES n
+                 WHERE #{contentType}='NOTE'
+                   AND n.NOTE_ID=#{contentId}
+                   AND (
+                        (UPPER(n.SCOPE_TYPE)='WS' AND EXISTS (
+                            SELECT 1 FROM WORKSPACES w
+                             LEFT JOIN WS_MEMBERS wm
+                               ON wm.WS_ID=w.WS_ID
+                              AND wm.USER_ID=#{targetUserId}
+                            WHERE w.WS_ID=n.WS_ID
+                              AND (w.OWNER_ID=#{targetUserId} OR wm.USER_ID IS NOT NULL)
+                        ))
+                        OR
+                        (UPPER(n.SCOPE_TYPE) IN ('PROJ','PROJECT') AND EXISTS (
+                            SELECT 1 FROM PROJECTS pr
+                             LEFT JOIN PROJ_MEMBERS pm
+                               ON pm.PROJ_ID=pr.PROJ_ID
+                              AND pm.USER_ID=#{targetUserId}
+                            WHERE pr.PROJ_ID=n.PROJ_ID
+                              AND (pr.LEADER_ID=#{targetUserId} OR pm.USER_ID IS NOT NULL)
+                        ))
+                   )
+                UNION ALL
+                SELECT pp.POST_ID
+                  FROM PHOTO_POSTS pp
+                 WHERE #{contentType}='PHOTO'
+                   AND pp.POST_ID=#{contentId}
+                   AND (
+                        (UPPER(pp.SCOPE_TYPE) IN ('WORKSPACE','WS','GROUP') AND EXISTS (
+                            SELECT 1 FROM WORKSPACES w
+                             LEFT JOIN WS_MEMBERS wm
+                               ON wm.WS_ID=w.WS_ID
+                              AND wm.USER_ID=#{targetUserId}
+                            WHERE w.WS_ID=pp.SCOPE_ID
+                              AND (w.OWNER_ID=#{targetUserId} OR wm.USER_ID IS NOT NULL)
+                        ))
+                        OR
+                        (UPPER(pp.SCOPE_TYPE)='PROJECT' AND EXISTS (
+                            SELECT 1 FROM PROJECTS pr
+                             LEFT JOIN PROJ_MEMBERS pm
+                               ON pm.PROJ_ID=pr.PROJ_ID
+                              AND pm.USER_ID=#{targetUserId}
+                            WHERE pr.PROJ_ID=pp.SCOPE_ID
+                              AND (pr.LEADER_ID=#{targetUserId} OR pm.USER_ID IS NOT NULL)
+                        ))
+                   )
+                UNION ALL
+                SELECT f.CONTENT_FILE_ID
+                  FROM CONTENT_FILES f
+                 WHERE #{contentType}='FILE'
+                   AND f.CONTENT_FILE_ID=#{contentId}
+                   AND (
+                        (UPPER(f.SCOPE_TYPE)='GROUP' AND EXISTS (
+                            SELECT 1 FROM WORKSPACES w
+                             LEFT JOIN WS_MEMBERS wm
+                               ON wm.WS_ID=w.WS_ID
+                              AND wm.USER_ID=#{targetUserId}
+                            WHERE w.WS_ID=f.WS_ID
+                              AND (w.OWNER_ID=#{targetUserId} OR wm.USER_ID IS NOT NULL)
+                        ))
+                        OR
+                        (UPPER(f.SCOPE_TYPE)='PROJECT' AND EXISTS (
+                            SELECT 1 FROM PROJECTS pr
+                             LEFT JOIN PROJ_MEMBERS pm
+                               ON pm.PROJ_ID=pr.PROJ_ID
+                              AND pm.USER_ID=#{targetUserId}
+                            WHERE pr.PROJ_ID=f.PROJ_ID
+                              AND (pr.LEADER_ID=#{targetUserId} OR pm.USER_ID IS NOT NULL)
+                        ))
+                   )
+          )
+    </select>
+
+    <select id="selectNativeContentMemberTargets" resultType="map">
+        SELECT *
+          FROM (
+                SELECT DISTINCT
+                       u.USER_ID AS "targetId",
+                       NVL(u.USER_NAME,u.EMAIL) AS "targetName",
+                       u.EMAIL AS "targetSubtext",
+                       u.PROFILE_IMAGE_PATH AS "profileImagePath"
+                  FROM USERS u
+                 WHERE NVL(u.STATUS,'ACTIVE')='ACTIVE'
+                   AND u.USER_ID != NVL((
+                       SELECT OWNER_ID FROM (
+                           SELECT n.USER_ID OWNER_ID FROM NOTES n WHERE #{contentType}='NOTE' AND n.NOTE_ID=#{contentId}
+                           UNION ALL
+                           SELECT pp.CREATED_BY OWNER_ID FROM PHOTO_POSTS pp WHERE #{contentType}='PHOTO' AND pp.POST_ID=#{contentId}
+                           UNION ALL
+                           SELECT f.CREATED_BY OWNER_ID FROM CONTENT_FILES f WHERE #{contentType}='FILE' AND f.CONTENT_FILE_ID=#{contentId}
+                       ) WHERE ROWNUM=1
+                   ), -1)
+                   AND <include refid="nativeMemberTargetPredicate"/>
+                   <if test="keyword != null and keyword != ''">
+                     AND (
+                         UPPER(NVL(u.USER_NAME,u.EMAIL)) LIKE '%' || UPPER(#{keyword}) || '%'
+                         OR UPPER(u.EMAIL) LIKE '%' || UPPER(#{keyword}) || '%'
+                     )
+                   </if>
+                 ORDER BY NVL(u.USER_NAME,u.EMAIL),u.EMAIL
+          )
+         WHERE ROWNUM &lt;= 100
+    </select>
+
+    <sql id="nativeMemberTargetPredicate">
+        (
+            EXISTS (
+                SELECT 1 FROM NOTES n
+                 WHERE #{contentType}='NOTE'
+                   AND n.NOTE_ID=#{contentId}
+                   AND (
+                        (UPPER(n.SCOPE_TYPE)='WS' AND EXISTS (
+                            SELECT 1 FROM WORKSPACES w
+                             LEFT JOIN WS_MEMBERS wm ON wm.WS_ID=w.WS_ID AND wm.USER_ID=u.USER_ID
+                            WHERE w.WS_ID=n.WS_ID AND (w.OWNER_ID=u.USER_ID OR wm.USER_ID IS NOT NULL)
+                        ))
+                        OR
+                        (UPPER(n.SCOPE_TYPE) IN ('PROJ','PROJECT') AND EXISTS (
+                            SELECT 1 FROM PROJECTS pr
+                             LEFT JOIN PROJ_MEMBERS pm ON pm.PROJ_ID=pr.PROJ_ID AND pm.USER_ID=u.USER_ID
+                            WHERE pr.PROJ_ID=n.PROJ_ID AND (pr.LEADER_ID=u.USER_ID OR pm.USER_ID IS NOT NULL)
+                        ))
+                   )
+            )
+            OR EXISTS (
+                SELECT 1 FROM PHOTO_POSTS pp
+                 WHERE #{contentType}='PHOTO'
+                   AND pp.POST_ID=#{contentId}
+                   AND (
+                        (UPPER(pp.SCOPE_TYPE) IN ('WORKSPACE','WS','GROUP') AND EXISTS (
+                            SELECT 1 FROM WORKSPACES w
+                             LEFT JOIN WS_MEMBERS wm ON wm.WS_ID=w.WS_ID AND wm.USER_ID=u.USER_ID
+                            WHERE w.WS_ID=pp.SCOPE_ID AND (w.OWNER_ID=u.USER_ID OR wm.USER_ID IS NOT NULL)
+                        ))
+                        OR
+                        (UPPER(pp.SCOPE_TYPE)='PROJECT' AND EXISTS (
+                            SELECT 1 FROM PROJECTS pr
+                             LEFT JOIN PROJ_MEMBERS pm ON pm.PROJ_ID=pr.PROJ_ID AND pm.USER_ID=u.USER_ID
+                            WHERE pr.PROJ_ID=pp.SCOPE_ID AND (pr.LEADER_ID=u.USER_ID OR pm.USER_ID IS NOT NULL)
+                        ))
+                   )
+            )
+            OR EXISTS (
+                SELECT 1 FROM CONTENT_FILES f
+                 WHERE #{contentType}='FILE'
+                   AND f.CONTENT_FILE_ID=#{contentId}
+                   AND (
+                        (UPPER(f.SCOPE_TYPE)='GROUP' AND EXISTS (
+                            SELECT 1 FROM WORKSPACES w
+                             LEFT JOIN WS_MEMBERS wm ON wm.WS_ID=w.WS_ID AND wm.USER_ID=u.USER_ID
+                            WHERE w.WS_ID=f.WS_ID AND (w.OWNER_ID=u.USER_ID OR wm.USER_ID IS NOT NULL)
+                        ))
+                        OR
+                        (UPPER(f.SCOPE_TYPE)='PROJECT' AND EXISTS (
+                            SELECT 1 FROM PROJECTS pr
+                             LEFT JOIN PROJ_MEMBERS pm ON pm.PROJ_ID=pr.PROJ_ID AND pm.USER_ID=u.USER_ID
+                            WHERE pr.PROJ_ID=f.PROJ_ID AND (pr.LEADER_ID=u.USER_ID OR pm.USER_ID IS NOT NULL)
+                        ))
+                   )
+            )
+        )
+    </sql>
+
     <select id="countManagePermission" resultType="int">
         SELECT COUNT(*)
         FROM (
@@ -49,6 +498,12 @@
               FROM EVENTS e
              WHERE #{contentType} = 'CALENDAR'
                AND e.EVENT_ID = #{contentId}
+            UNION ALL
+            SELECT f.CREATED_BY AS OWNER_ID
+              FROM CONTENT_FILES f
+             WHERE #{contentType} = 'FILE'
+               AND f.CONTENT_FILE_ID = #{contentId}
+               AND NVL(f.DELETED_YN, 'N') = 'N'
         ) x
         WHERE x.OWNER_ID = #{userId}
     </select>
@@ -86,18 +541,94 @@
               FROM EVENTS e
              WHERE #{contentType} = 'CALENDAR'
                AND e.EVENT_ID = #{contentId}
+            UNION ALL
+            SELECT f.CREATED_BY AS OWNER_ID
+              FROM CONTENT_FILES f
+             WHERE #{contentType} = 'FILE'
+               AND f.CONTENT_FILE_ID = #{contentId}
+               AND NVL(f.DELETED_YN, 'N') = 'N'
         )
         WHERE ROWNUM = 1
     </select>
 
 
-    <select id="countMoyoFeedSharePermission" resultType="int">
-        SELECT COUNT(1)
-          FROM PHOTO_POSTS p
+    <select id="selectCollectedSourceUserId" resultType="long">
+        SELECT SRC.CREATED_BY
+          FROM CONTENT_REACTIONS CL
+          JOIN PHOTO_POSTS SRC
+            ON SRC.POST_ID = TO_NUMBER(SUBSTR(CL.REACTION_TYPE, 5))
          WHERE #{contentType} = 'PHOTO'
-           AND p.POST_ID = #{contentId}
-           AND UPPER(NVL(p.VISIBILITY_TYPE, 'PRIVATE')) IN ('FRIENDS', 'PUBLIC', 'MOYO', 'GLOBAL')
-           AND p.CREATED_BY &lt;&gt; #{userId}
+           AND CL.CONTENT_TYPE = 'PHOTO_COLLECT_LINK'
+           AND CL.CONTENT_ID = #{contentId}
+           AND CL.REACTION_TYPE LIKE 'SRC_%'
+           AND ROWNUM = 1
+    </select>
+
+
+    <select id="countFriendShareScopePermission" resultType="int">
+        SELECT COUNT(*)
+          FROM (
+                SELECT n.NOTE_ID AS CONTENT_ID
+                  FROM NOTES n
+                  LEFT JOIN PROJECTS p ON p.PROJ_ID = n.PROJ_ID
+                 WHERE #{contentType} = 'NOTE'
+                   AND n.NOTE_ID = #{contentId}
+                   AND n.USER_ID = #{userId}
+                   AND (UPPER(NVL(n.SCOPE_TYPE, 'PRIVATE')) IN ('PRIVATE', 'PERSONAL')
+                        OR (UPPER(n.SCOPE_TYPE) = 'PROJECT' AND p.WS_ID IS NULL))
+                UNION ALL
+                SELECT pp.POST_ID AS CONTENT_ID
+                  FROM PHOTO_POSTS pp
+                  LEFT JOIN PROJECTS p ON UPPER(pp.SCOPE_TYPE) = 'PROJECT' AND p.PROJ_ID = pp.SCOPE_ID
+                 WHERE #{contentType} = 'PHOTO'
+                   AND pp.POST_ID = #{contentId}
+                   AND pp.CREATED_BY = #{userId}
+                   AND NVL(pp.DELETED_YN, 'N') = 'N'
+                   AND (UPPER(NVL(pp.SCOPE_TYPE, 'PERSONAL')) = 'PERSONAL'
+                        OR (UPPER(pp.SCOPE_TYPE) = 'PROJECT' AND p.WS_ID IS NULL))
+                UNION ALL
+                SELECT f.CONTENT_FILE_ID AS CONTENT_ID
+                  FROM CONTENT_FILES f
+                  LEFT JOIN PROJECTS p ON UPPER(f.SCOPE_TYPE) = 'PROJECT' AND p.PROJ_ID = f.PROJ_ID
+                 WHERE #{contentType} = 'FILE'
+                   AND f.CONTENT_FILE_ID = #{contentId}
+                   AND f.CREATED_BY = #{userId}
+                   AND NVL(f.DELETED_YN, 'N') = 'N'
+                   AND (UPPER(NVL(f.SCOPE_TYPE, 'PERSONAL')) = 'PERSONAL'
+                        OR (UPPER(f.SCOPE_TYPE) = 'PROJECT' AND p.WS_ID IS NULL))
+          )
+    </select>
+
+    <select id="countMoyoFeedSharePermission" resultType="int">
+        SELECT COUNT(*)
+          FROM (
+                SELECT p.POST_ID AS CONTENT_ID
+                  FROM PHOTO_POSTS p
+                 WHERE #{contentType} = 'PHOTO'
+                   AND p.POST_ID = #{contentId}
+                   AND UPPER(NVL(p.VISIBILITY_TYPE, 'PRIVATE')) = 'FRIENDS'
+                   AND NVL(p.DELETED_YN, 'N') = 'N'
+                   AND p.CREATED_BY &lt;&gt; #{userId}
+                   AND EXISTS (
+                       SELECT 1 FROM USER_FRIENDS mf
+                        WHERE mf.STATUS = 'ACCEPTED'
+                          AND ((mf.REQUESTER_ID = #{userId} AND mf.ADDRESSEE_ID = p.CREATED_BY)
+                            OR (mf.ADDRESSEE_ID = #{userId} AND mf.REQUESTER_ID = p.CREATED_BY))
+                   )
+                UNION ALL
+                SELECT n.NOTE_ID AS CONTENT_ID
+                  FROM NOTES n
+                 WHERE #{contentType} = 'NOTE'
+                   AND n.NOTE_ID = #{contentId}
+                   AND NVL(n.MOYO_PUBLIC_YN, 'N') = 'Y'
+                   AND n.USER_ID &lt;&gt; #{userId}
+                   AND EXISTS (
+                       SELECT 1 FROM USER_FRIENDS mf
+                        WHERE mf.STATUS = 'ACCEPTED'
+                          AND ((mf.REQUESTER_ID = #{userId} AND mf.ADDRESSEE_ID = n.USER_ID)
+                            OR (mf.ADDRESSEE_ID = #{userId} AND mf.REQUESTER_ID = n.USER_ID))
+                   )
+          )
     </select>
 
     <select id="selectShares" resultMap="shareResultMap">
@@ -124,6 +655,7 @@
         LEFT JOIN WORKSPACES w2 ON p.WS_ID = w2.WS_ID
         WHERE s.CONTENT_TYPE = #{contentType}
           AND s.CONTENT_ID = #{contentId}
+          AND NOT (s.TARGET_TYPE='USER' AND s.TARGET_ID=s.OWNER_ID AND s.SHARED_BY=s.OWNER_ID AND UPPER(NVL(s.PERMISSION_TYPE,'VIEW'))='VIEW')
           AND s.ACTIVE_YN = 'Y'
           AND NVL(s.SHARE_STATUS, 'ACCEPTED') IN ('PENDING', 'ACCEPTED')
           AND (s.EXPIRES_AT IS NULL OR s.EXPIRES_AT >= SYSDATE)
@@ -164,6 +696,7 @@
         LEFT JOIN WORKSPACES w2 ON p.WS_ID = w2.WS_ID
         WHERE s.CONTENT_TYPE = #{contentType}
           AND s.CONTENT_ID = #{contentId}
+          AND NOT (s.TARGET_TYPE='USER' AND s.TARGET_ID=s.OWNER_ID AND s.SHARED_BY=s.OWNER_ID AND UPPER(NVL(s.PERMISSION_TYPE,'VIEW'))='VIEW')
           AND s.ACTIVE_YN = 'Y'
           AND NVL(s.SHARE_STATUS, 'ACCEPTED') = 'ACCEPTED'
           AND (s.EXPIRES_AT IS NULL OR s.EXPIRES_AT >= SYSDATE)
@@ -173,6 +706,82 @@
              OR (s.TARGET_TYPE = 'PROJ' AND EXISTS (SELECT 1 FROM PROJ_MEMBERS pm WHERE pm.PROJ_ID = s.TARGET_ID AND pm.USER_ID = #{userId}))
           )
         ORDER BY s.CREATED_AT DESC, s.SHARE_ID DESC
+    </select>
+
+    <select id="selectFriendShareOwners" resultType="map">
+        SELECT shared_rows.OWNER_ID AS "ownerId",
+               MAX(shared_rows.OWNER_NAME) AS "ownerName",
+               COUNT(DISTINCT shared_rows.CONTENT_ID) AS "contentCount"
+          FROM (
+                SELECT s.OWNER_ID, u.USER_NAME AS OWNER_NAME, s.CONTENT_ID
+                  FROM CONTENT_SHARES s
+                  JOIN USERS u ON u.USER_ID = s.OWNER_ID
+                 WHERE s.CONTENT_TYPE = #{contentType}
+                   AND s.TARGET_TYPE = 'USER'
+                   AND s.TARGET_ID = #{userId}
+                   AND s.ACTIVE_YN = 'Y'
+                   AND NVL(s.SHARE_STATUS, 'ACCEPTED') = 'ACCEPTED'
+                   AND (s.EXPIRES_AT IS NULL OR s.EXPIRES_AT >= SYSDATE)
+                   AND (
+                        (#{contentType} = 'NOTE' AND EXISTS (
+                            SELECT 1 FROM NOTES n
+                             WHERE n.NOTE_ID = s.CONTENT_ID
+                               AND n.USER_ID = s.OWNER_ID
+                               AND UPPER(NVL(n.SCOPE_TYPE, 'PRIVATE')) IN ('PRIVATE', 'PERSONAL')
+                               AND NVL(n.DELETED_YN, 'N') = 'N'
+                        ))
+                     OR (#{contentType} = 'PHOTO' AND EXISTS (
+                            SELECT 1 FROM PHOTO_POSTS pp
+                             WHERE pp.POST_ID = s.CONTENT_ID
+                               AND pp.CREATED_BY = s.OWNER_ID
+                               AND UPPER(NVL(pp.SCOPE_TYPE, 'PERSONAL')) = 'PERSONAL'
+                               AND NVL(pp.DELETED_YN, 'N') = 'N'
+                        ))
+                     OR (#{contentType} = 'FILE' AND EXISTS (
+                            SELECT 1 FROM CONTENT_FILES f
+                             WHERE f.CONTENT_FILE_ID = s.CONTENT_ID
+                               AND f.OWNER_USER_ID = s.OWNER_ID
+                               AND UPPER(NVL(f.SCOPE_TYPE, 'PERSONAL')) = 'PERSONAL'
+                               AND NVL(f.DELETED_YN, 'N') = 'N'
+                        ))
+                   )
+                UNION ALL
+                SELECT e.USER_ID AS OWNER_ID, u.USER_NAME AS OWNER_NAME, cri.CONTENT_ID
+                  FROM CONTENT_RECORD_ITEMS cri
+                  JOIN CONTENT_RECORD_TARGETS crt
+                    ON crt.RECORD_TARGET_ID = cri.RECORD_TARGET_ID
+                  JOIN EVENTS e
+                    ON crt.TARGET_TYPE = 'EVENT'
+                   AND crt.TARGET_ID = e.EVENT_ID
+                  JOIN USERS u ON u.USER_ID = e.USER_ID
+                 WHERE cri.RECORD_TYPE = #{contentType}
+                   AND cri.DELETED_YN = 'N'
+                   AND crt.TARGET_STATUS = 'ACTIVE'
+                   AND crt.SCOPE_TYPE = 'PERSONAL'
+                   AND e.ITEM_TYPE = 'PRIVATE'
+                   AND e.USER_ID != #{userId}
+                   AND NVL(e.RECORD_ENABLED_YN, 'N') = 'Y'
+                   AND (
+                        EXISTS (SELECT 1 FROM EVENT_ATTENDEES ea WHERE ea.EVENT_ID = e.EVENT_ID AND ea.USER_ID = #{userId})
+                        OR EXISTS (
+                            SELECT 1 FROM CONTENT_SHARES ecs
+                             WHERE ecs.CONTENT_TYPE = 'CALENDAR'
+                               AND ecs.CONTENT_ID = e.EVENT_ID
+                               AND ecs.TARGET_TYPE = 'USER'
+                               AND ecs.TARGET_ID = #{userId}
+                               AND ecs.ACTIVE_YN = 'Y'
+                               AND NVL(ecs.SHARE_STATUS, 'ACCEPTED') = 'ACCEPTED'
+                               AND (ecs.EXPIRES_AT IS NULL OR ecs.EXPIRES_AT >= SYSDATE)
+                        )
+                   )
+                   AND (
+                        (#{contentType} = 'NOTE' AND EXISTS (SELECT 1 FROM NOTES n WHERE n.NOTE_ID = cri.CONTENT_ID AND n.USER_ID = e.USER_ID AND NVL(n.DELETED_YN, 'N') = 'N'))
+                     OR (#{contentType} = 'PHOTO' AND EXISTS (SELECT 1 FROM PHOTO_POSTS pp WHERE pp.POST_ID = cri.CONTENT_ID AND pp.CREATED_BY = e.USER_ID AND NVL(pp.DELETED_YN, 'N') = 'N'))
+                     OR (#{contentType} = 'FILE' AND EXISTS (SELECT 1 FROM CONTENT_FILES f WHERE f.CONTENT_FILE_ID = cri.CONTENT_ID AND f.OWNER_USER_ID = e.USER_ID AND NVL(f.DELETED_YN, 'N') = 'N'))
+                   )
+          ) shared_rows
+         GROUP BY shared_rows.OWNER_ID
+         ORDER BY LOWER(MAX(shared_rows.OWNER_NAME)), shared_rows.OWNER_ID
     </select>
 
     <update id="ensureContentShareContentConstraint" statementType="CALLABLE">
@@ -196,10 +805,56 @@
                     EXECUTE IMMEDIATE 'ALTER TABLE CONTENT_SHARES DROP CONSTRAINT CK_CONTENT_SHARE_CONTENT';
                 END IF;
 
-                EXECUTE IMMEDIATE 'ALTER TABLE CONTENT_SHARES ADD CONSTRAINT CK_CONTENT_SHARE_CONTENT CHECK (CONTENT_TYPE IN (''NOTE'',''PHOTO'',''ALBUM'',''BOARD'',''EVENT'',''CALENDAR'',''POLL'',''FILE''))';
+                EXECUTE IMMEDIATE 'ALTER TABLE CONTENT_SHARES ADD CONSTRAINT CK_CONTENT_SHARE_CONTENT CHECK (CONTENT_TYPE IN (''NOTE'',''PHOTO'',''ALBUM'',''BOARD'',''EVENT'',''CALENDAR'',''POLL'',''FILE'',''PERIOD_PLAN'',''WEEKLY_PLAN'',''TIME_PLAN''))';
             END IF;
         END;
     </update>
+
+    <insert id="mergeMemberPermissionShare" parameterType="com.springboot.project.dto.contentShareDTO">
+        MERGE INTO CONTENT_SHARES s
+        USING (
+            SELECT #{contentType} CONTENT_TYPE,
+                   #{contentId} CONTENT_ID,
+                   #{targetType} TARGET_TYPE,
+                   #{targetId} TARGET_ID
+              FROM DUAL
+        ) x
+        ON (s.CONTENT_TYPE = x.CONTENT_TYPE
+            AND s.CONTENT_ID = x.CONTENT_ID
+            AND s.TARGET_TYPE = x.TARGET_TYPE
+            AND s.TARGET_ID = x.TARGET_ID)
+        WHEN MATCHED THEN UPDATE SET
+            s.PERMISSION_TYPE = #{permissionType},
+            s.SHARED_BY = CASE
+                WHEN s.ACTIVE_YN = 'Y' AND NVL(s.SHARE_STATUS, 'ACCEPTED') IN ('PENDING', 'ACCEPTED') THEN s.SHARED_BY
+                ELSE #{sharedBy}
+            END,
+            s.OWNER_ID = #{ownerId},
+            s.ACTIVE_YN = 'Y',
+            s.SHARE_STATUS = CASE
+                WHEN s.ACTIVE_YN = 'Y' AND NVL(s.SHARE_STATUS, 'ACCEPTED') IN ('PENDING', 'ACCEPTED') THEN s.SHARE_STATUS
+                ELSE 'PENDING'
+            END,
+            s.RESPONDED_BY = CASE
+                WHEN s.ACTIVE_YN = 'Y' AND NVL(s.SHARE_STATUS, 'ACCEPTED') = 'ACCEPTED' THEN s.RESPONDED_BY
+                ELSE NULL
+            END,
+            s.RESPONDED_AT = CASE
+                WHEN s.ACTIVE_YN = 'Y' AND NVL(s.SHARE_STATUS, 'ACCEPTED') = 'ACCEPTED' THEN s.RESPONDED_AT
+                ELSE NULL
+            END,
+            s.EXPIRES_AT = NULL,
+            s.UPDATED_AT = SYSDATE
+        WHEN NOT MATCHED THEN INSERT (
+            SHARE_ID, CONTENT_TYPE, CONTENT_ID, OWNER_ID, TARGET_TYPE, TARGET_ID,
+            PERMISSION_TYPE, SHARED_BY, CREATED_AT, UPDATED_AT, EXPIRES_AT, ACTIVE_YN,
+            SHARE_STATUS, RESPONDED_BY, RESPONDED_AT
+        ) VALUES (
+            SEQ_CONTENT_SHARE_ID.NEXTVAL, #{contentType}, #{contentId}, #{ownerId},
+            #{targetType}, #{targetId}, #{permissionType}, #{sharedBy},
+            SYSDATE, SYSDATE, NULL, 'Y', 'PENDING', NULL, NULL
+        )
+    </insert>
 
     <insert id="mergeShare" parameterType="com.springboot.project.dto.contentShareDTO">
         MERGE INTO CONTENT_SHARES s
@@ -350,7 +1005,7 @@
            AND (s.EXPIRES_AT IS NULL OR s.EXPIRES_AT >= SYSDATE)
     </sql>
 
-    <sql id="shareRequestGroupedSelect">
+    <sql id="shareRequestGroupedSelectOpen">
         SELECT MIN(x.SHARE_ID) AS SHARE_ID,
                x.CONTENT_TYPE,
                MIN(x.CONTENT_ID) KEEP (DENSE_RANK FIRST ORDER BY x.SHARE_ID) AS CONTENT_ID,
@@ -388,15 +1043,16 @@
                LISTAGG(x.SHARE_ID, ',') WITHIN GROUP (ORDER BY x.SHARE_ID) AS SHARE_IDS
           FROM (
               <include refid="shareRequestJoinedRows"/>
-              ${shareRequestFilter}
+    </sql>
+
+    <sql id="shareRequestGroupedSelectClose">
           ) x
          GROUP BY x.CONTENT_TYPE, x.TARGET_TYPE, x.TARGET_ID, x.PERMISSION_TYPE,
                   x.SHARED_BY, x.CREATED_AT, x.SHARE_STATUS
     </sql>
 
     <select id="selectReceivedShareRequests" resultMap="shareResultMap">
-        <include refid="shareRequestGroupedSelect">
-            <property name="shareRequestFilter" value="
+        <include refid="shareRequestGroupedSelectOpen"/>
                 AND (
                     (s.TARGET_TYPE = 'USER' AND s.TARGET_ID = #{userId})
                  OR (s.TARGET_TYPE = 'WS' AND EXISTS (
@@ -419,16 +1075,16 @@
                            AND pm.USER_ID = #{userId}
                            AND UPPER(NVL(pm.PROJ_ROLE, 'MEMBER')) IN ('ADMIN', 'LEADER', 'OWNER', 'PM')
                     ))
-                )"/>
-        </include>
+                )
+        <include refid="shareRequestGroupedSelectClose"/>
          ORDER BY CASE SHARE_STATUS WHEN 'PENDING' THEN 1 ELSE 2 END,
                   CREATED_AT DESC, SHARE_ID DESC
     </select>
 
     <select id="selectSentShareRequests" resultMap="shareResultMap">
-        <include refid="shareRequestGroupedSelect">
-            <property name="shareRequestFilter" value="AND s.SHARED_BY = #{userId}"/>
-        </include>
+        <include refid="shareRequestGroupedSelectOpen"/>
+              AND s.SHARED_BY = #{userId}
+        <include refid="shareRequestGroupedSelectClose"/>
          ORDER BY CREATED_AT DESC, SHARE_ID DESC
     </select>
 
@@ -494,7 +1150,6 @@
         WHERE CONTENT_TYPE = #{contentType}
           AND CONTENT_ID = #{contentId}
     </delete>
-
     <select id="selectUserTargets" resultType="map">
         SELECT * FROM (
             SELECT u.USER_ID AS "targetId",

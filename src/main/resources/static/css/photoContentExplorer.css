@@ -1,0 +1,1574 @@
+/* =========================================================
+   MOYO Photo Content Explorer
+   - 공통 탐색기 동작/선택 구조는 유지
+   - PHOTO 그리드 카드 표현만 전용으로 분리
+   ========================================================= */
+
+.file-explorer[data-content-type="PHOTO"] .file-item--photo .file-item__photo-preview {
+    overflow: hidden;
+    background: #f4f6fb;
+    color: #9aa3b5;
+}
+
+.file-explorer[data-content-type="PHOTO"] .file-item--photo .file-item__photo-preview img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* ---------- Grid layout lock ---------- */
+
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid:not(.is-list) {
+    --photo-card-min: 218px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(var(--photo-card-min), 1fr));
+    grid-auto-rows: auto;
+    align-items: start;
+    align-content: start;
+    gap: 18px;
+}
+
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid:not(.is-list) > .file-item.photo-grid-card,
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid:not(.is-list) > .file-item.photo-album-card {
+    position: relative;
+    display: block;
+    width: 100%;
+    min-width: 0;
+    height: auto;
+    min-height: 0;
+    max-height: none;
+    aspect-ratio: 1 / 1;
+    padding: 0;
+    overflow: hidden;
+    border: 1px solid #e3eaf4;
+    border-radius: 15px;
+    background: #f4f7fb;
+    box-shadow: none;
+    text-align: left;
+    transform: none;
+    transition: border-color .16s ease, box-shadow .16s ease, transform .16s ease;
+}
+
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid:not(.is-list) > .file-item.photo-grid-card:hover,
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid:not(.is-list) > .file-item.photo-album-card:hover {
+    border-color: #c4d3ec;
+    box-shadow: 0 12px 28px rgba(31, 47, 78, .11);
+    transform: translateY(-2px);
+}
+
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid:not(.is-list) > .file-item.photo-grid-card::before,
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid:not(.is-list) > .file-item.photo-album-card::before {
+    content: none;
+}
+
+/* ---------- Shared media surface ---------- */
+
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid:not(.is-list) .photo-grid-card__media,
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid:not(.is-list) .photo-album-card__cover {
+    position: absolute;
+    inset: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+    min-height: 0;
+    max-width: none;
+    max-height: none;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    border: 0;
+    border-radius: inherit;
+    background: #f4f7fb;
+}
+
+.photo-grid-card__empty,
+.photo-album-card__icon {
+    display: grid;
+    width: 100%;
+    height: 100%;
+    place-items: center;
+}
+
+.photo-grid-card__empty {
+    color: #a7b3c5;
+    font-size: 38px;
+    background: linear-gradient(145deg, #f8fbff, #edf3fb);
+}
+
+.photo-album-card__icon {
+    color: #efaa25;
+    font-size: 52px;
+    background: radial-gradient(circle at 30% 22%, rgba(255, 197, 77, .22), transparent 34%),
+        linear-gradient(145deg, #f9fbff, #edf3fb);
+}
+
+/* ---------- Menu / selection ---------- */
+
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid:not(.is-list) .photo-grid-card .file-item__actions,
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid:not(.is-list) .photo-album-card .file-item__actions {
+    top: 9px;
+    right: 9px;
+    z-index: 8;
+}
+
+/* ---------- Photo overlay ---------- */
+
+.photo-grid-card__count {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 5;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    height: 24px;
+    padding: 0 8px;
+    border-radius: 999px;
+    color: #fff;
+    background: rgba(20, 29, 46, .58);
+    box-shadow: 0 5px 14px rgba(15, 23, 42, .13);
+    font-size: 11px;
+    font-weight: 800;
+    backdrop-filter: blur(7px);
+}
+
+.photo-grid-card__overlay,
+.photo-album-card__overlay {
+    position: absolute;
+    inset: auto 0 0;
+    z-index: 4;
+    color: #fff;
+    text-align: left;
+    background: linear-gradient(180deg, rgba(8,13,24,0), rgba(8,13,24,.80));
+}
+
+.photo-grid-card__overlay {
+    display: grid;
+    gap: 8px;
+    min-height: 116px;
+    padding: 38px 13px 13px;
+}
+
+.photo-grid-card__copy {
+    min-width: 0;
+    display: grid;
+    gap: 2px;
+}
+
+.photo-grid-card__copy strong,
+.photo-grid-card__copy span,
+.photo-grid-card__copy time,
+.photo-album-card__overlay strong,
+.photo-album-card__overlay span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-shadow: 0 1px 4px rgba(0,0,0,.30);
+}
+
+.photo-grid-card__copy strong,
+.photo-album-card__overlay strong {
+    font-size: 14px;
+    font-weight: 900;
+}
+
+.photo-grid-card__copy span,
+.photo-grid-card__copy time,
+.photo-album-card__overlay span {
+    color: rgba(255,255,255,.88);
+    font-size: 11px;
+    font-weight: 750;
+}
+
+.photo-grid-card__status {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 850;
+}
+
+.photo-grid-card__status > span {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    min-width: 0;
+    line-height: 1;
+    text-shadow: 0 1px 4px rgba(0,0,0,.32);
+}
+
+.photo-grid-card__status .is-personal {
+    margin-left: auto;
+}
+
+.photo-grid-card__status .is-personal + .is-personal {
+    margin-left: 0;
+}
+
+.photo-grid-card__status .is-moyo {
+    height: 20px;
+    padding: 0 6px;
+    border: 1px solid rgba(255,255,255,.45);
+    border-radius: 999px;
+    color: #fff;
+    background: linear-gradient(135deg, rgba(62,211,190,.86), rgba(71,120,242,.90) 65%, rgba(123,115,245,.88));
+    font-size: 8px;
+    font-weight: 900;
+    letter-spacing: .02em;
+}
+
+/* ---------- Album overlay ---------- */
+
+.photo-album-card__overlay {
+    display: grid;
+    gap: 4px;
+    min-height: 82px;
+    padding: 31px 13px 12px;
+}
+
+.photo-album-card__overlay span {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+/* 그리드에서는 공통 파일 정보 행을 숨기고 카드 오버레이만 사용 */
+
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid:not(.is-list) .photo-grid-card > .file-item__name,
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid:not(.is-list) .photo-grid-card > .file-item__uploader,
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid:not(.is-list) .photo-grid-card > .file-item__date,
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid:not(.is-list) .photo-grid-card > .file-item__size,
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid:not(.is-list) .photo-album-card > .file-item__name,
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid:not(.is-list) .photo-album-card > .file-item__uploader,
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid:not(.is-list) .photo-album-card > .file-item__date,
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid:not(.is-list) .photo-album-card > .file-item__size,
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid:not(.is-list) .photo-album-card > .photo-album-card__meta {
+    display: none !important;
+}
+
+/* ---------- List view ---------- */
+
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .photo-grid-card__overlay,
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .photo-grid-card__count,
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .photo-album-card__overlay {
+    display: none !important;
+}
+
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .file-item--photo .file-item__photo-preview img {
+    border-radius: 8px;
+}
+
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .photo-album-card__icon {
+    font-size: 18px;
+}
+
+/* ---------- Upload drop zone ---------- */
+
+.file-explorer[data-content-type="PHOTO"] .file-drop-zone input[type="file"] {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    overflow: hidden !important;
+    clip: rect(0 0 0 0) !important;
+    white-space: nowrap !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+
+.file-explorer[data-content-type="PHOTO"] .file-drop-zone button[data-action="upload"] {
+    height: 29px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 11px;
+    border: 1px solid #c9d8ee;
+    border-radius: 9px;
+    color: #315fbd;
+    background: #fff;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 750;
+    line-height: 1;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+}
+
+.file-explorer[data-content-type="PHOTO"] .file-drop-zone button[data-action="upload"]:hover {
+    border-color: #9eb9ee;
+    color: #2456c4;
+    background: #f7faff;
+}
+
+@media (max-width: 900px) {
+
+    .file-explorer[data-content-type="PHOTO"] .file-browser-grid:not(.is-list) {
+        --photo-card-min: 188px;
+        gap: 14px;
+    }
+}
+
+/* =========================================================
+   Profile photo card parity
+   - 프로필 사진 탭 카드의 가벼운 정보 밀도 기준
+   - 제목 비노출, 사진 중심, 하단 정보만 최소 오버레이
+   ========================================================= */
+
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid:not(.is-list) > .photo-grid-card,
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid:not(.is-list) > .photo-album-card {
+    border-color: #e6ebf2;
+    border-radius: 14px;
+    background: #fff;
+    box-shadow: none;
+}
+
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid:not(.is-list) > .photo-grid-card:hover,
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid:not(.is-list) > .photo-album-card:hover {
+    border-color: #d9e2ef;
+    box-shadow: 0 8px 20px rgba(35, 51, 82, .08);
+    transform: translateY(-1px);
+}
+
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid:not(.is-list) .photo-grid-card__media > img,
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid:not(.is-list) .photo-album-card__cover > img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    min-width: 100%;
+    min-height: 100%;
+    max-width: none;
+    max-height: none;
+    margin: 0;
+    object-fit: cover;
+    object-position: center;
+    transition: transform .18s ease;
+}
+
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid:not(.is-list) .photo-grid-card:hover .photo-grid-card__media > img,
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid:not(.is-list) .photo-album-card:hover .photo-album-card__cover > img {
+    transform: scale(1.012);
+    filter: none;
+}
+
+.file-explorer[data-content-type="PHOTO"] .photo-grid-card__overlay {
+    inset: auto 0 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    gap: 6px;
+    padding: 48px 11px 10px;
+    background: linear-gradient(
+        180deg,
+        rgba(10, 16, 29, 0) 0%,
+        rgba(10, 16, 29, .08) 28%,
+        rgba(10, 16, 29, .68) 72%,
+        rgba(10, 16, 29, .80) 100%
+    );
+}
+
+.file-explorer[data-content-type="PHOTO"] .photo-grid-card__copy {
+    display: grid;
+    gap: 1px;
+    min-width: 0;
+}
+
+.file-explorer[data-content-type="PHOTO"] .photo-grid-card__author-row {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    min-width: 0;
+    height: 14px;
+}
+
+.file-explorer[data-content-type="PHOTO"] .photo-grid-card__author-row > span:first-child {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.file-explorer[data-content-type="PHOTO"] .photo-grid-card__copy span {
+    font-size: 11px;
+    font-weight: 800;
+    line-height: 1.25;
+}
+
+.file-explorer[data-content-type="PHOTO"] .photo-grid-card__copy time {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-shadow: 0 1px 3px rgba(0,0,0,.35);
+    color: rgba(255,255,255,.86);
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 1.25;
+}
+
+.file-explorer[data-content-type="PHOTO"] .photo-grid-card__status > span {
+    gap: 3px;
+    text-shadow: 0 1px 3px rgba(0,0,0,.36);
+}
+
+.file-explorer[data-content-type="PHOTO"] .photo-grid-card__status i {
+    font-size: 10px;
+}
+
+.file-explorer[data-content-type="PHOTO"] .photo-grid-card__status .is-moyo {
+    height: 17px;
+    padding: 0 6px;
+    border: 0;
+    box-shadow: 0 3px 8px rgba(52, 99, 205, .18);
+    font-size: 7px;
+}
+
+.file-explorer[data-content-type="PHOTO"] .photo-grid-card__count {
+    top: 9px;
+    left: 9px;
+    height: 22px;
+    padding: 0 7px;
+    gap: 4px;
+    border: 0;
+    background: rgba(29, 36, 49, .50);
+    box-shadow: 0 4px 10px rgba(15, 23, 42, .10);
+    font-size: 10px;
+}
+
+.file-explorer[data-content-type="PHOTO"] .photo-album-card__overlay {
+    min-height: 0;
+    gap: 3px;
+    padding: 50px 11px 10px;
+    background: linear-gradient(
+        180deg,
+        rgba(10, 16, 29, 0) 0%,
+        rgba(10, 16, 29, .06) 32%,
+        rgba(10, 16, 29, .64) 76%,
+        rgba(10, 16, 29, .78) 100%
+    );
+}
+
+.file-explorer[data-content-type="PHOTO"] .photo-album-card__overlay strong {
+    color: #fff;
+    font-size: 12px;
+    font-weight: 850;
+    line-height: 1.3;
+}
+
+.file-explorer[data-content-type="PHOTO"] .photo-album-card__overlay span {
+    color: rgba(255,255,255,.86);
+    font-size: 10px;
+    font-weight: 700;
+}
+
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid:not(.is-list) .photo-grid-card .file-item__menu,
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid:not(.is-list) .photo-album-card .file-item__menu {
+    border-radius: 999px;
+    color: #fff;
+    backdrop-filter: blur(7px);
+    width: 28px;
+    height: 28px;
+    border: 0;
+    background: rgba(22, 30, 45, .48);
+    box-shadow: 0 4px 10px rgba(15, 23, 42, .12);
+}
+
+@media (max-width: 560px) {
+
+    .file-explorer[data-content-type="PHOTO"] .file-browser-grid:not(.is-list) {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+    }
+
+    .photo-grid-card__overlay {
+        min-height: 100px;
+        padding: 29px 10px 10px;
+    }
+
+    .photo-album-card__overlay {
+        min-height: 72px;
+        padding: 25px 10px 10px;
+    }
+
+    .photo-grid-card__copy strong,
+    .photo-album-card__overlay strong {
+        font-size: 12px;
+    }
+
+    .photo-grid-card__copy span,
+    .photo-grid-card__copy time,
+    .photo-album-card__overlay span {
+        font-size: 10px;
+    }
+
+    .photo-grid-card__status {
+        gap: 8px;
+        font-size: 11px;
+    }
+
+    .file-explorer[data-content-type="PHOTO"] .photo-grid-card__overlay {
+        padding: 40px 9px 8px;
+        gap: 5px;
+    }
+
+    .file-explorer[data-content-type="PHOTO"] .photo-album-card__overlay {
+        padding: 42px 9px 8px;
+    }
+
+    .file-explorer[data-content-type="PHOTO"] .photo-grid-card__copy span {
+        font-size: 10px;
+    }
+
+    .file-explorer[data-content-type="PHOTO"] .photo-grid-card__copy time,
+    .file-explorer[data-content-type="PHOTO"] .photo-album-card__overlay span {
+        font-size: 9px;
+    }
+
+    .file-explorer[data-content-type="PHOTO"] .photo-grid-card__status {
+        gap: 7px;
+        font-size: 10px;
+    }
+}
+
+.file-explorer[data-content-type="PHOTO"] .photo-grid-card__reaction:focus-visible {
+    outline: 2px solid rgba(255,255,255,.9);
+    outline-offset: 3px;
+    border-radius: 4px;
+}
+
+.file-explorer[data-content-type="PHOTO"] .photo-grid-card__reaction:disabled {
+    pointer-events: none;
+    opacity: .65;
+}
+
+/* ---------- Photo reaction ---------- */
+
+.file-explorer[data-content-type="PHOTO"] .photo-grid-card__reaction i {
+    font-size: 14px;
+    pointer-events: none;
+}
+
+.file-explorer[data-content-type="PHOTO"] .photo-grid-card__reaction span {
+    min-width: 8px;
+    pointer-events: none;
+}
+
+.file-explorer[data-content-type="PHOTO"] .photo-grid-card__reaction:hover,
+.file-explorer[data-content-type="PHOTO"] .photo-grid-card__reaction:focus-visible {
+    color: #fff;
+    transform: translateY(-1px);
+    background: rgba(255,255,255,.18);
+    outline: none;
+}
+
+.file-explorer[data-content-type="PHOTO"] .photo-grid-card__reaction:active {
+    transform: scale(.94);
+}
+
+.file-explorer[data-content-type="PHOTO"] .photo-grid-card__reaction.is-liked {
+    color: #ff6b87;
+}
+
+/* ---------- Collected photo / compact reaction alignment ---------- */
+
+.file-explorer[data-content-type="PHOTO"] .photo-grid-card__source {
+    flex: 0 0 auto;
+    justify-content: center;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 1.25;
+    width: 15px;
+    height: 15px;
+    margin-left: 1px;
+    border: 1px solid rgba(255, 255, 255, .68);
+    border-radius: 50%;
+    background: rgba(15, 23, 42, .28);
+    color: #fff;
+    cursor: help;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, .28);
+}
+
+.file-explorer[data-content-type="PHOTO"] .photo-grid-card__source i {
+    flex: 0 0 auto;
+    font-size: 8px;
+    transform: translateY(-.5px);
+}
+
+.file-explorer[data-content-type="PHOTO"] .photo-grid-card__reaction {
+    appearance: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    height: 28px;
+    margin: -5px 0;
+    border: 0;
+    border-radius: 8px;
+    color: #fff;
+    background: transparent;
+    font: inherit;
+    line-height: 1;
+    cursor: pointer;
+    text-shadow: 0 1px 4px rgba(0,0,0,.32);
+    transition: background-color .15s ease, transform .15s ease;
+    min-width: 28px;
+    padding: 0 4px;
+}
+
+.file-explorer[data-content-type="PHOTO"] .photo-grid-card__reaction + .photo-grid-card__reaction {
+    margin-left: 0;
+}
+
+.file-explorer[data-content-type="PHOTO"] .photo-grid-card__status > .is-personal:not(.is-moyo) {
+    margin-left: 3px;
+}
+
+/* PHOTO explorer MOYO public mascot
+   - 투명 PNG 원본 유지
+   - 22px, 카드 우하단 8px 고정 */
+
+.file-explorer[data-content-type="PHOTO"] .photo-grid-card__status {
+    display: flex;
+    align-items: center;
+    min-height: 18px;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 800;
+    gap: 2px;
+    padding-right: 30px;
+}
+
+.file-explorer[data-content-type="PHOTO"] .photo-grid-card__status > .is-moyo {
+    margin-left: auto;
+    position: absolute;
+    right: 8px;
+    bottom: 8px;
+    width: 22px;
+    height: 22px;
+    min-width: 22px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    overflow: visible;
+    box-shadow: none;
+    line-height: 1;
+    pointer-events: auto;
+}
+
+.file-explorer[data-content-type="PHOTO"] .photo-grid-card__status > .is-moyo img {
+    width: 22px;
+    height: 22px;
+    max-width: none;
+    max-height: none;
+    object-fit: contain;
+    display: block;
+    filter: none;
+    opacity: 1;
+}
+
+/* 담기/공유 상태 아이콘: 좋아요 · 댓글 · 공유 · 담기 순서 */
+
+.file-explorer[data-content-type="PHOTO"] .photo-grid-card__status > .photo-grid-card__shared,
+.file-explorer[data-content-type="PHOTO"] .photo-grid-card__status > .photo-grid-card__send,
+.file-explorer[data-content-type="PHOTO"] .photo-grid-card__status > .photo-grid-card__collect,
+.file-explorer[data-content-type="PHOTO"] .photo-grid-card__status > .photo-grid-card__collected {
+    width: 13px;
+    min-width: 13px;
+    height: 18px;
+    margin-left: 3px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff !important;
+    opacity: 1;
+    line-height: 1;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, .35);
+}
+
+.file-explorer[data-content-type="PHOTO"] .photo-grid-card__status > .photo-grid-card__shared i,
+.file-explorer[data-content-type="PHOTO"] .photo-grid-card__status > .photo-grid-card__send i,
+.file-explorer[data-content-type="PHOTO"] .photo-grid-card__status > .photo-grid-card__collect i,
+.file-explorer[data-content-type="PHOTO"] .photo-grid-card__status > .photo-grid-card__collected i {
+    color: #fff !important;
+    font-size: 10px;
+    line-height: 1;
+}
+
+/* 공유와 담기가 함께 표시될 때만 아이콘 간격 추가 */
+
+.file-explorer[data-content-type="PHOTO"] .photo-grid-card__status > .photo-grid-card__shared + .photo-grid-card__collected {
+    margin-left: 7px;
+}
+
+.photo-grid-card__shared svg {
+    width: 13px!important;
+    height: 13px!important;
+    display: block!important;
+    fill: none!important;
+    stroke: currentColor!important;
+    stroke-width: 2.2!important;
+    stroke-linecap: round!important;
+    stroke-linejoin: round!important;
+}
+
+.photo-grid-card__shared svg path {
+    fill: none!important;
+    stroke: currentColor!important;
+}
+
+.file-explorer[data-content-type="PHOTO"] .photo-grid-card__shared i.fa-share-nodes {
+    color: #fff!important;
+    font-size: 11px!important;
+    line-height: 1!important;
+    display: block!important;
+}
+
+/* 2026-08-06: PHOTO grid selection visibility
+   - 선택 테두리와 호버를 명확히 분리
+   - 옅은 블루 오버레이 유지, 체크 배지 미사용 */
+
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid:not(.is-list) > .file-item.is-selected {
+    border-color: #70a0ff;
+    border: 2px solid #5f8dff !important;
+    box-shadow: 0 0 0 3px rgba(79, 132, 255, .20),
+        0 10px 24px rgba(54, 91, 180, .16) !important;
+    transform: translateY(-1px);
+}
+
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid:not(.is-list) > .file-item.is-selected::before {
+    content: "" !important;
+    position: absolute;
+    inset: 0;
+    z-index: 6;
+    display: block;
+    border-radius: inherit;
+    background: linear-gradient(
+        135deg,
+        rgba(77, 218, 202, .08) 0%,
+        rgba(70, 127, 245, .13) 58%,
+        rgba(126, 92, 255, .09) 100%
+    );
+    pointer-events: none;
+}
+
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid:not(.is-list) > .file-item.is-selected:hover {
+    border-color: #4f7ff4 !important;
+    box-shadow: 0 0 0 3px rgba(79, 132, 255, .24),
+        0 12px 28px rgba(42, 75, 155, .20) !important;
+}
+
+
+/* ---------- Multi-photo mosaic (기존 카드 내부 배치 유지) ---------- */
+.file-explorer[data-content-type="PHOTO"] .photo-grid-card__mosaic {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    display: grid;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: #eef2f7;
+}
+
+.file-explorer[data-content-type="PHOTO"] .photo-grid-card__tile {
+    position: relative;
+    display: block;
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+    background: #eef2f7;
+}
+
+.file-explorer[data-content-type="PHOTO"] .photo-grid-card__tile > img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.file-explorer[data-content-type="PHOTO"] .photo-grid-card__mosaic.is-count-1 {
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr;
+}
+
+.file-explorer[data-content-type="PHOTO"] .photo-grid-card__mosaic.is-count-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: 1fr;
+    gap: 2px;
+}
+
+.file-explorer[data-content-type="PHOTO"] .photo-grid-card__mosaic.is-count-3 {
+    grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+    grid-template-rows: repeat(2, minmax(0, 1fr));
+    gap: 2px;
+}
+
+.file-explorer[data-content-type="PHOTO"] .photo-grid-card__mosaic.is-count-3 .is-tile-1 {
+    grid-row: 1 / 3;
+}
+
+.file-explorer[data-content-type="PHOTO"] .photo-grid-card__mosaic.is-count-4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: repeat(2, minmax(0, 1fr));
+    gap: 2px;
+}
+
+/* =========================================================
+   Explorer interaction states
+   - 기존 카드 내부 배치는 유지
+   - 선택/내부 이동/외부 사진 드롭 상태만 명확히 구분
+   ========================================================= */
+.file-explorer[data-content-type="PHOTO"] .file-browser-panel {
+    position: relative;
+}
+
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid:not(.is-list) > .file-item.photo-grid-card,
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid:not(.is-list) > .file-item.photo-album-card {
+    transition: border-color .16s ease, box-shadow .16s ease, transform .16s ease, opacity .16s ease;
+}
+
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid:not(.is-list) > .file-item.photo-grid-card:hover,
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid:not(.is-list) > .file-item.photo-album-card:hover {
+    border-color: #b9cae8;
+    box-shadow: 0 8px 22px rgba(45, 72, 118, .11);
+}
+
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid:not(.is-list) > .file-item.is-selected {
+    border-color: #5f8ff1 !important;
+    box-shadow: 0 0 0 2px rgba(77, 131, 244, .20), 0 10px 24px rgba(45, 78, 145, .14) !important;
+}
+
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid:not(.is-list) > .file-item.is-selected::before {
+    border-color: rgba(77, 131, 244, .78) !important;
+}
+
+.file-explorer[data-content-type="PHOTO"] .file-item.is-drag-source {
+    opacity: .48 !important;
+    transform: scale(.985) !important;
+    filter: saturate(.72);
+}
+
+.file-explorer[data-content-type="PHOTO"] .file-item[data-kind="folder"].is-drop-target {
+    border-color: #36cdbf !important;
+    box-shadow: 0 0 0 3px rgba(55, 210, 200, .19), 0 12px 26px rgba(40, 144, 137, .15) !important;
+}
+
+.file-explorer[data-content-type="PHOTO"] .file-item[data-kind="folder"].is-drop-forbidden {
+    border-color: #e56a79 !important;
+    box-shadow: 0 0 0 3px rgba(229, 106, 121, .16) !important;
+}
+
+.file-explorer[data-content-type="PHOTO"].is-external-dragging .file-browser-panel::before {
+    content: "";
+    position: absolute;
+    inset: 10px;
+    z-index: 80;
+    border: 2px dashed #53a9e9;
+    border-radius: 15px;
+    background: linear-gradient(135deg, rgba(236, 255, 251, .94), rgba(239, 246, 255, .95) 55%, rgba(244, 240, 255, .95));
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .72), 0 14px 34px rgba(64, 103, 171, .13);
+    pointer-events: none;
+}
+
+.file-explorer[data-content-type="PHOTO"].is-external-dragging .file-browser-panel::after {
+    content: "사진을 여기에 놓아 업로드";
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    z-index: 81;
+    transform: translate(-50%, -50%);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 46px;
+    padding: 0 22px;
+    border: 1px solid rgba(91, 135, 224, .28);
+    border-radius: 13px;
+    color: #315baf;
+    background: rgba(255, 255, 255, .90);
+    box-shadow: 0 10px 24px rgba(65, 98, 158, .13);
+    font-size: 14px;
+    font-weight: 800;
+    letter-spacing: -.01em;
+    pointer-events: none;
+}
+
+/* =========================================================
+   PHOTO list view
+   - grid card layout is untouched
+   - list view exposes photo-specific information in stable columns
+   ========================================================= */
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid:not(.is-list) .photo-list-name__sub,
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid:not(.is-list) .photo-list-summary {
+    display: none !important;
+}
+
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .file-item {
+    grid-template-columns: 58px minmax(180px, 1fr) minmax(120px, 160px) 126px minmax(150px, 190px) 52px;
+    grid-template-areas: "icon name uploader date size actions";
+    column-gap: 12px;
+    min-height: 72px;
+    padding: 9px 12px;
+}
+
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .file-item__icon,
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .file-item__icon.is-folder {
+    position: relative;
+    width: 48px;
+    height: 48px;
+    overflow: hidden;
+    border: 1px solid #e0e7f1;
+    border-radius: 11px;
+    background: #f3f6fa;
+}
+
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .photo-grid-card__mosaic {
+    position: absolute;
+    inset: 0;
+}
+
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .photo-grid-card__count,
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .photo-album-card__badge {
+    display: none !important;
+}
+
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .photo-list-name {
+    display: grid;
+    gap: 4px;
+    min-width: 0;
+}
+
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .photo-list-name > strong {
+    overflow: hidden;
+    color: #26344a;
+    font-size: 13px;
+    font-weight: 800;
+    line-height: 1.25;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .photo-list-name__sub {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    color: #8995a8;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .photo-list-name__sub i {
+    color: #6f8fd5;
+}
+
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .photo-list-uploader,
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .photo-list-date {
+    min-width: 0;
+    overflow: hidden;
+    color: #718096;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .photo-list-date {
+    text-align: left;
+}
+
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .photo-list-empty {
+    color: #b0bac8;
+}
+
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .photo-list-summary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 10px;
+    min-width: 0;
+    color: #6f7d92;
+    text-align: left;
+}
+
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .photo-list-summary--album {
+    gap: 6px;
+    color: #718096;
+    font-weight: 750;
+}
+
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .photo-list-reaction {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    min-width: 28px;
+    padding: 3px 0;
+    border: 0;
+    background: transparent;
+    color: #65748a;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 750;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .photo-list-reaction:hover,
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .photo-list-reaction:focus-visible {
+    color: #426fd2;
+}
+
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .photo-list-reaction.is-liked {
+    color: #ff5576;
+}
+
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .photo-list-state {
+    display: inline-grid;
+    width: 20px;
+    height: 20px;
+    flex: 0 0 20px;
+    place-items: center;
+    border-radius: 6px;
+    color: #718096;
+    background: #f0f4fa;
+    font-size: 10px;
+}
+
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .photo-list-state.is-moyo {
+    padding: 2px;
+    background: linear-gradient(135deg, rgba(62,211,190,.15), rgba(71,120,242,.15), rgba(123,115,245,.15));
+}
+
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .photo-list-state.is-moyo img {
+    display: block;
+    width: 15px;
+    height: 15px;
+    object-fit: contain;
+}
+
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .file-item__actions {
+    width: 52px;
+}
+
+@media (max-width: 1220px) {
+    .file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .file-item {
+        grid-template-columns: 54px minmax(170px, 1fr) 126px 112px minmax(118px, 150px) 48px;
+        column-gap: 9px;
+    }
+}
+
+@media (max-width: 980px) {
+    .file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .file-item {
+        grid-template-columns: 54px minmax(150px, 1fr) 108px minmax(110px, 145px) 48px;
+        grid-template-areas: "icon name date size actions";
+    }
+
+    .file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .photo-list-uploader {
+        display: none;
+    }
+}
+
+/* =========================================================
+   PHOTO list view refinement
+   - explicit column header
+   - normalized author cell
+   - album rows use a compact name-only structure
+   ========================================================= */
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list {
+    padding-top: 0;
+}
+
+.file-explorer[data-content-type="PHOTO"] .photo-list-header {
+    display: grid;
+    grid-template-columns: 58px minmax(260px, 1fr) 188px 156px 220px 40px;
+    grid-template-areas: "preview name uploader date summary actions";
+    align-items: center;
+    column-gap: 12px;
+    min-height: 38px;
+    padding: 0 12px;
+    border-bottom: 1px solid #dfe7f2;
+    background: #f8faff;
+    color: #8390a4;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: -.01em;
+}
+
+.file-explorer[data-content-type="PHOTO"] .photo-list-header__preview { grid-area: preview; text-align: center; }
+.file-explorer[data-content-type="PHOTO"] .photo-list-header__name { grid-area: name; }
+.file-explorer[data-content-type="PHOTO"] .photo-list-header__uploader { grid-area: uploader; }
+.file-explorer[data-content-type="PHOTO"] .photo-list-header__date { grid-area: date; }
+.file-explorer[data-content-type="PHOTO"] .photo-list-header__summary { grid-area: summary; }
+.file-explorer[data-content-type="PHOTO"] .photo-list-header__actions { grid-area: actions; }
+
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .file-item {
+    grid-template-columns: 58px minmax(260px, 1fr) 188px 156px 220px 40px;
+    column-gap: 12px;
+    min-height: 72px;
+    padding: 9px 12px;
+}
+
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .photo-list-uploader .file-uploader-cell {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    max-width: 100%;
+}
+
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .photo-list-uploader .file-uploader-cell > span:last-child {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .photo-list-summary {
+    gap: 8px;
+    white-space: nowrap;
+}
+
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .photo-list-album-empty {
+    visibility: hidden;
+    pointer-events: none;
+}
+
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .photo-list-name--album {
+    grid-column: name / summary;
+}
+
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .photo-album-card .file-item__actions {
+    grid-column: actions;
+}
+
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .file-item__actions {
+    width: 44px;
+}
+
+@media (max-width: 1220px) {
+    .file-explorer[data-content-type="PHOTO"] .photo-list-header,
+    .file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .file-item {
+        grid-template-columns: 54px minmax(230px, 1fr) 168px 142px 190px 38px;
+        column-gap: 9px;
+    }
+}
+
+@media (max-width: 980px) {
+    .file-explorer[data-content-type="PHOTO"] .photo-list-header,
+    .file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .file-item {
+        grid-template-columns: 54px minmax(210px, 1fr) 132px 176px 38px;
+        grid-template-areas: "preview name date summary actions";
+    }
+
+    .file-explorer[data-content-type="PHOTO"] .photo-list-header__uploader,
+    .file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .photo-list-uploader {
+        display: none;
+    }
+
+    .file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .photo-list-name--album {
+        grid-column: name / summary;
+    }
+}
+
+
+/* 2026-08-07 photo list final column balance */
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .photo-list-summary {
+    justify-content: flex-start;
+    min-width: 0;
+}
+
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .photo-list-state:first-of-type {
+    margin-left: 4px;
+}
+
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .file-item__actions {
+    width: 40px;
+    justify-self: end;
+}
+
+/* 2026-08-07 PHOTO list action final alignment
+   Keep every row menu at the exact same right-side coordinate. */
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .file-item {
+    position: relative;
+    padding-right: 52px;
+}
+
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .file-item > .file-item__actions {
+    position: absolute !important;
+    top: 50%;
+    right: 12px;
+    grid-column: auto !important;
+    grid-row: auto !important;
+    width: 28px !important;
+    height: 28px;
+    margin: 0;
+    transform: translateY(-50%);
+    justify-self: auto;
+    align-self: auto;
+}
+
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .file-item > .file-item__actions .file-item__menu {
+    width: 28px;
+    height: 28px;
+}
+
+/* 2026-08-07 사진 리스트 열 제목 제거 */
+.file-explorer[data-content-type="PHOTO"] .photo-list-header {
+    display: none !important;
+}
+
+/* 2026-08-07 사진 리스트 상태 아이콘: 무배경 유지 */
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .photo-list-state,
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .photo-list-state.is-moyo {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: auto;
+    height: auto;
+    min-width: 0;
+    flex: 0 0 auto;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    color: #718096;
+    font-size: 12px;
+    line-height: 1;
+}
+
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .photo-list-state.is-moyo img {
+    width: 18px;
+    height: 18px;
+}
+
+/* 공통 리스트 슬롯 사용 */
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list>.file-item.explorer-list-row{grid-template-columns:var(--explorer-list-columns)!important;grid-template-areas:"preview name uploader date specific status download menu"!important;column-gap:var(--explorer-list-gap)!important;}
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .photo-list-reactions,.file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .photo-list-states{display:inline-flex;align-items:center;gap:10px;min-width:0;}
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .file-item__download{position:static;display:inline-grid;place-items:center;margin:0;border:0;border-radius:8px;background:transparent;color:#71819a;padding:0;cursor:pointer;}
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .file-item__download:hover{background:#eef4ff;color:#426fd2;}
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid:not(.is-list) .file-item__download{display:none;}
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .file-item__actions{position:static!important;width:34px!important;}
+@media(max-width:980px){.file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list>.file-item.explorer-list-row{grid-template-areas:"preview name date specific status download menu"!important;}}
+
+/* 공통 리스트 슬롯 외의 PHOTO 전용 좌표 선언 무효화 */
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list > .file-item.explorer-list-row {
+    grid-template-columns: var(--explorer-list-columns) !important;
+    grid-template-areas: "preview name uploader date specific status download menu" !important;
+    column-gap: var(--explorer-list-gap) !important;
+    padding: 9px 12px !important;
+    padding-right: 12px !important;
+}
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .file-item__actions,
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .file-item__download,
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .file-item__menu {
+    position: static !important;
+    inset: auto !important;
+    margin: 0 !important;
+    transform: none !important;
+}
+@media (max-width: 980px) {
+    .file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list > .file-item.explorer-list-row {
+        grid-template-areas: "preview name date specific status download menu" !important;
+    }
+}
+
+
+/* 2026-08-07 PHOTO list menu slot final lock */
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list
+> .file-item.explorer-list-row > .explorer-list-slot--menu {
+    display: flex !important;
+    grid-area: menu !important;
+    grid-column: menu !important;
+    grid-row: 1 !important;
+    position: static !important;
+    width: 34px !important;
+    min-width: 34px !important;
+    height: 34px !important;
+    align-items: center !important;
+    justify-content: center !important;
+    justify-self: center !important;
+    align-self: center !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+    inset: auto !important;
+    margin: 0 !important;
+    transform: none !important;
+}
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list
+> .file-item.explorer-list-row > .explorer-list-slot--menu > .file-item__menu {
+    display: inline-grid !important;
+    width: 28px !important;
+    height: 28px !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+}
+/* 이전 album 전용 implicit actions column 무효화 */
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list
+.photo-album-card > .file-item__actions {
+    grid-column: menu !important;
+}
+
+
+/* =========================================================
+   2026-08-09 Photo explorer album identity
+   - 사진 게시물과 앨범을 한눈에 구분
+   - 기존 album badge markup 재사용
+   ========================================================= */
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid:not(.is-list) .photo-album-card__badge{
+    position:absolute;
+    top:10px;
+    left:10px;
+    z-index:7;
+    display:inline-flex;
+    height:25px;
+    align-items:center;
+    gap:5px;
+    padding:0 9px;
+    border:1px solid rgba(255,255,255,.66);
+    border-radius:999px;
+    color:#fff;
+    background:linear-gradient(135deg,rgba(52,210,193,.94) 0%,rgba(74,137,255,.95) 58%,rgba(126,91,255,.94) 100%);
+    box-shadow:0 5px 14px rgba(46,91,178,.20);
+    font-size:10px;
+    font-weight:900;
+    line-height:1;
+    letter-spacing:-.01em;
+    backdrop-filter:blur(7px);
+}
+
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid:not(.is-list) .photo-album-card__badge i{
+    font-size:10px;
+}
+
+/* 커버 안쪽에 얇은 앨범 프레임을 넣어 일반 사진 카드와 질감을 분리 */
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid:not(.is-list) .photo-album-card__cover::after{
+    content:"";
+    position:absolute;
+    inset:7px;
+    z-index:3;
+    border:1px solid rgba(255,255,255,.48);
+    border-radius:10px;
+    box-shadow:
+        inset 0 0 0 1px rgba(79,123,255,.08),
+        0 0 0 1px rgba(255,255,255,.08);
+    pointer-events:none;
+}
+
+/* 앨범 하단은 게시물 반응 영역이 아니라 이름 + 사진 개수만 보여준다. */
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid:not(.is-list) .photo-album-card__overlay{
+    z-index:5;
+    gap:4px;
+    padding:54px 13px 13px;
+}
+
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid:not(.is-list) .photo-album-card__overlay strong{
+    font-size:13px;
+    font-weight:900;
+}
+
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid:not(.is-list) .photo-album-card__overlay span{
+    gap:5px;
+    font-size:10px;
+    font-weight:750;
+}
+
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid:not(.is-list) .photo-album-card__overlay span i{
+    color:#9fd8ff;
+}
+
+/* 앨범 hover는 사진 게시물보다 프레임 강조를 조금 더 준다. */
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid:not(.is-list) > .photo-album-card:hover{
+    border-color:#9fbbef;
+    box-shadow:0 10px 24px rgba(56,91,158,.14);
+}
+
+/* 리스트 보기에서는 기존 리스트형 앨범 표현을 유지 */
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .photo-album-card__badge{
+    display:none!important;
+}
+
+
+/* =========================================================
+   2026-08-09 Album card structural distinction
+   사진 게시물과 달리 "커버 + 고정 정보 바" 구조를 사용한다.
+   ========================================================= */
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid:not(.is-list) > .photo-album-card{
+    overflow:visible;
+    border-color:#dbe5f1;
+    background:#fff;
+}
+
+/* 대표사진 영역은 하단 정보 바와 분리 */
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid:not(.is-list) .photo-album-card__cover{
+    position:absolute;
+    inset:0 0 58px;
+    width:auto;
+    height:auto;
+    overflow:hidden;
+    border-radius:14px 14px 0 0;
+    background:#f3f7fc;
+}
+
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid:not(.is-list) .photo-album-card__cover::after{
+    content:none!important;
+}
+
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid:not(.is-list) .photo-album-card__cover > img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    transition:transform .18s ease;
+}
+
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid:not(.is-list) > .photo-album-card:hover .photo-album-card__cover > img{
+    transform:scale(1.018);
+}
+
+/* 빈 앨범도 사진 placeholder가 아니라 앨범 전용 상태 */
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid:not(.is-list) .photo-album-card__icon{
+    width:100%;
+    height:100%;
+    color:#6f91c9;
+    font-size:42px;
+    background:
+        radial-gradient(circle at 50% 42%, rgba(98,147,221,.10), transparent 35%),
+        linear-gradient(145deg,#f8fbff,#eef4fb);
+}
+
+/* 사진 카드의 어두운 overlay 대신 밝은 고정 정보 바 */
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid:not(.is-list) .photo-album-card__footer{
+    position:absolute;
+    left:0;
+    right:0;
+    bottom:0;
+    z-index:5;
+    display:flex;
+    height:58px;
+    align-items:center;
+    gap:9px;
+    padding:0 12px;
+    border-top:1px solid #e6edf6;
+    border-radius:0 0 14px 14px;
+    color:#243247;
+    background:#fff;
+}
+
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid:not(.is-list) .photo-album-card__footer-icon{
+    display:inline-grid;
+    width:30px;
+    height:30px;
+    flex:0 0 30px;
+    place-items:center;
+    border-radius:9px;
+    color:#f2ae2e;
+    background:#fff7e6;
+    font-size:13px;
+}
+
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid:not(.is-list) .photo-album-card__footer-copy{
+    display:grid;
+    min-width:0;
+    gap:2px;
+}
+
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid:not(.is-list) .photo-album-card__footer-copy strong{
+    overflow:hidden;
+    color:#223047;
+    font-size:12px;
+    font-weight:900;
+    line-height:1.25;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+}
+
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid:not(.is-list) .photo-album-card__footer-copy small{
+    color:#8795a9;
+    font-size:10px;
+    font-weight:700;
+    line-height:1.2;
+}
+
+/* 이전 badge / dark album overlay는 더 이상 사용하지 않는다. */
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid:not(.is-list) .photo-album-card__badge,
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid:not(.is-list) .photo-album-card__overlay{
+    display:none!important;
+}
+
+/* 메뉴는 앨범 커버 우측 상단에 그대로 유지 */
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid:not(.is-list) .photo-album-card .file-item__actions{
+    top:9px;
+    right:9px;
+    z-index:8;
+}
+
+/* 리스트 보기에서는 기존 리스트용 필드를 사용하고 grid footer는 숨김 */
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .photo-album-card__footer{
+    display:none!important;
+}
+
+
+/* 2026-08-10 PHOTO list share/MOYO policy final
+   share + MOYO always visible; send only when MOYO public; collect only for other user's MOYO-public photo. */
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .photo-list-states {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .photo-list-state.is-share-state {
+    color: #a5b1c2;
+}
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .photo-list-state.is-share-state.is-active {
+    color: #5f7fe8;
+}
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .photo-list-state.is-send,
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .photo-list-state.is-collect {
+    color: #71819a;
+}
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .photo-list-state.is-collect.is-active {
+    color: #5f7fe8;
+}
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .photo-list-state.is-moyo img {
+    width: 17px;
+    height: 17px;
+    opacity: .28;
+    filter: grayscale(1) saturate(0);
+}
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .photo-list-state.is-moyo.is-active img {
+    opacity: 1;
+    filter: none;
+}
+
+
+/* PHOTO explorer: grid/list public action policy alignment */
+.file-explorer[data-content-type="PHOTO"] .photo-grid-card__status > .photo-grid-card__send,
+.file-explorer[data-content-type="PHOTO"] .photo-grid-card__status > .photo-grid-card__collect {
+    cursor: default;
+}
+
+
+/* MOYO Stage 7 - Photo explorer visual alignment */
+.file-explorer[data-content-type="PHOTO"] .photo-grid-card,
+.file-explorer[data-content-type="PHOTO"] .photo-album-card,
+.file-explorer[data-content-type="PHOTO"] .file-item--photo {
+    border-radius: var(--moyo-radius-lg, 18px) !important;
+}
+.file-explorer[data-content-type="PHOTO"] .file-item--photo:hover,
+.file-explorer[data-content-type="PHOTO"] .photo-grid-card:hover,
+.file-explorer[data-content-type="PHOTO"] .photo-album-card:hover {
+    border-color: var(--moyo-border-color-strong, #cfdae7) !important;
+}
+.file-explorer[data-content-type="PHOTO"] .file-browser-grid.is-list .file-item--photo {
+    border-radius: var(--moyo-radius-md, 12px) !important;
+}

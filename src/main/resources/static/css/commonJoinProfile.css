@@ -5,7 +5,7 @@
     inset: 0;
     z-index: 5000;
     background: rgba(15, 23, 42, .5);
-    backdrop-filter: blur(3px);
+    backdrop-filter: none;
 }
 
 .join-profile-modal {

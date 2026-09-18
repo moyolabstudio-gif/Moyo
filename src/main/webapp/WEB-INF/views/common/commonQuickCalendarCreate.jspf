@@ -1,0 +1,225 @@
+<%@ page pageEncoding="UTF-8" %>
+<div class="moyo-quick-create-overlay" id="calendarQuickCreateModal" hidden>
+    <section class="moyo-quick-create-panel" role="dialog" aria-modal="true" aria-labelledby="quickCreateTitle">
+        <header class="moyo-quick-create-head">
+            <div class="moyo-quick-create-brand">
+                <div class="moyo-quick-create-titlebox">
+                    <h2 id="quickCreateTitle">일정 등록</h2>
+                </div>
+            </div>
+            <div class="moyo-quick-head-actions">
+                <button type="button" class="moyo-quick-create-close" id="quickCreateClose" aria-label="닫기"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+            </div>
+        </header>
+
+        <div class="moyo-quick-create-body">
+            <section class="moyo-quick-section">
+                <div class="moyo-quick-title-label-row">
+                    <label class="moyo-quick-label" for="quickCreateTitleInput">일정명</label>
+                    <label class="moyo-quick-moyo-public-chip" id="quickCreateVisibilityRow" for="quickCreateMoyoPublic" hidden>
+                        <input type="checkbox" id="quickCreateMoyoPublic">
+                        <span class="moyo-quick-moyo-public-icon" aria-hidden="true">
+                            <img src="${pageContext.request.contextPath}/brand/moyo_mark.png?v=moyo-mark-v34" alt="">
+                        </span>
+                        <span class="moyo-quick-moyo-public-text">모요 공개</span>
+                        <span class="moyo-quick-moyo-public-check" aria-hidden="true">
+                            <i class="fa-solid fa-check"></i>
+                        </span>
+                    </label>
+                </div>
+                <div class="moyo-quick-title-row">
+                    <input type="text" class="moyo-quick-input" id="quickCreateTitleInput" placeholder="예: 친구 약속, 병원 예약, 가족 모임" autocomplete="off">
+                </div>
+            </section>
+
+            <section class="moyo-quick-section moyo-quick-time-section">
+                <div class="moyo-quick-section-head">
+                    <span class="moyo-quick-label">일정 시간</span>
+                    <label class="moyo-quick-time-toggle" for="quickCreateUseTime">
+                        <input type="checkbox" id="quickCreateUseTime" checked>
+                        <span class="moyo-quick-time-switch" aria-hidden="true"><span></span></span>
+                        <span class="moyo-quick-time-toggle__text">시간 지정</span>
+                    </label>
+                </div>
+                <div class="moyo-quick-time-grid">
+                    <span class="moyo-quick-row-label">시작</span>
+                    <div class="moyo-quick-date-field">
+                        <input type="text" class="moyo-quick-input moyo-quick-date-input" id="quickCreateStartDate" inputmode="numeric" autocomplete="off" placeholder="YYYY-MM-DD" data-quick-date-picker>
+                        <button type="button" class="moyo-quick-date-trigger" data-quick-date-target="quickCreateStartDate" aria-label="시작 날짜 선택"><i class="fa-regular fa-calendar" aria-hidden="true"></i></button>
+                    </div>
+                    <div class="moyo-quick-time-field moyo-quick-time-input">
+                        <span class="moyo-quick-time-meridiem is-am" data-quick-time-meridiem-for="quickCreateStartTime">오전</span>
+                        <input type="text" class="moyo-quick-input moyo-quick-time-text" id="quickCreateStartTime" inputmode="numeric" autocomplete="off" placeholder="09:00" data-quick-time-picker>
+                        <button type="button" class="moyo-quick-time-trigger" data-quick-time-target="quickCreateStartTime" aria-label="시작 시간 선택"><i class="fa-regular fa-clock" aria-hidden="true"></i></button>
+                    </div>
+                </div>
+                <div class="moyo-quick-time-grid">
+                    <span class="moyo-quick-row-label">종료</span>
+                    <div class="moyo-quick-date-field">
+                        <input type="text" class="moyo-quick-input moyo-quick-date-input" id="quickCreateEndDate" inputmode="numeric" autocomplete="off" placeholder="YYYY-MM-DD" data-quick-date-picker>
+                        <button type="button" class="moyo-quick-date-trigger" data-quick-date-target="quickCreateEndDate" aria-label="종료 날짜 선택"><i class="fa-regular fa-calendar" aria-hidden="true"></i></button>
+                    </div>
+                    <div class="moyo-quick-time-field moyo-quick-time-input">
+                        <span class="moyo-quick-time-meridiem is-am" data-quick-time-meridiem-for="quickCreateEndTime">오전</span>
+                        <input type="text" class="moyo-quick-input moyo-quick-time-text" id="quickCreateEndTime" inputmode="numeric" autocomplete="off" placeholder="10:00" data-quick-time-picker>
+                        <button type="button" class="moyo-quick-time-trigger" data-quick-time-target="quickCreateEndTime" aria-label="종료 시간 선택"><i class="fa-regular fa-clock" aria-hidden="true"></i></button>
+                    </div>
+                </div>
+            </section>
+
+            <section class="moyo-quick-section moyo-quick-repeat-section">
+                <span class="moyo-quick-label">반복 설정</span>
+                <div class="moyo-quick-setting-grid">
+                    <div class="moyo-quick-select-wrap" data-quick-select-wrap>
+                        <select class="moyo-quick-select moyo-quick-select-native" id="quickCreateRepeat" tabindex="-1" aria-hidden="true">
+                            <option value="">반복 안 함</option>
+                            <option value="DAILY">매일</option>
+                            <option value="WEEKLY">매주</option>
+                            <option value="MONTHLY">매월</option>
+                            <option value="YEARLY">매년</option>
+                            <option value="CUSTOM">사용자 지정</option>
+                        </select>
+                        <button type="button" class="moyo-quick-select-button" data-quick-select-button="quickCreateRepeat" aria-haspopup="listbox" aria-expanded="false">반복 안 함</button>
+                        <div class="moyo-quick-select-menu" data-quick-select-menu="quickCreateRepeat" role="listbox" hidden></div>
+                    </div>
+                    <div class="moyo-quick-select-wrap" data-quick-select-wrap>
+                        <select class="moyo-quick-select moyo-quick-select-native" id="quickCreateTimezone" tabindex="-1" aria-hidden="true">
+                            <option value="Asia/Seoul">서울(GMT+09:00)</option>
+                            <option value="Asia/Tokyo">도쿄(GMT+09:00)</option>
+                            <option value="Asia/Shanghai">상하이(GMT+08:00)</option>
+                            <option value="Asia/Hong_Kong">홍콩(GMT+08:00)</option>
+                            <option value="Asia/Singapore">싱가포르(GMT+08:00)</option>
+                            <option value="Asia/Bangkok">방콕(GMT+07:00)</option>
+                            <option value="Asia/Dubai">두바이(GMT+04:00)</option>
+                            <option value="Europe/London">런던(GMT+00:00)</option>
+                            <option value="Europe/Paris">파리(GMT+01:00)</option>
+                            <option value="Europe/Berlin">베를린(GMT+01:00)</option>
+                            <option value="America/New_York">뉴욕(GMT-05:00)</option>
+                            <option value="America/Chicago">시카고(GMT-06:00)</option>
+                            <option value="America/Denver">덴버(GMT-07:00)</option>
+                            <option value="America/Los_Angeles">로스앤젤레스(GMT-08:00)</option>
+                            <option value="America/Vancouver">밴쿠버(GMT-08:00)</option>
+                            <option value="America/Toronto">토론토(GMT-05:00)</option>
+                            <option value="Australia/Sydney">시드니(GMT+10:00)</option>
+                            <option value="Pacific/Auckland">오클랜드(GMT+12:00)</option>
+                            <option value="UTC">UTC(GMT+00:00)</option>
+                        </select>
+                        <button type="button" class="moyo-quick-select-button" data-quick-select-button="quickCreateTimezone" aria-haspopup="listbox" aria-expanded="false">서울(GMT+09:00)</button>
+                        <div class="moyo-quick-select-menu" data-quick-select-menu="quickCreateTimezone" role="listbox" hidden></div>
+                    </div>
+                    <div class="moyo-quick-calendar-system" role="radiogroup" aria-label="달력 기준">
+                        <select class="moyo-quick-select-native" id="quickCreateLunar" tabindex="-1" aria-hidden="true">
+                            <option value="N">양력</option>
+                            <option value="Y">음력</option>
+                        </select>
+                        <button type="button" class="moyo-quick-calendar-system-option is-active" data-lunar-value="N" role="radio" aria-checked="true">
+                            <i class="fa-regular fa-sun" aria-hidden="true"></i>
+                            <span>양력</span>
+                        </button>
+                        <button type="button" class="moyo-quick-calendar-system-option" data-lunar-value="Y" role="radio" aria-checked="false">
+                            <i class="fa-regular fa-moon" aria-hidden="true"></i>
+                            <span>음력</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="moyo-quick-repeat-custom" id="quickCreateRepeatCustom" hidden>
+                    <div class="moyo-quick-repeat-custom-row moyo-quick-repeat-interval-row">
+                        <label for="quickCreateRepeatInterval">반복 간격</label>
+                        <div class="moyo-quick-repeat-interval-control">
+                            <input type="number" id="quickCreateRepeatInterval" min="1" max="99" value="1" aria-label="반복 간격">
+                            <div class="moyo-quick-select-wrap moyo-quick-repeat-select-wrap" data-quick-select-wrap>
+                                <select class="moyo-quick-select moyo-quick-select-native" id="quickCreateRepeatUnit" tabindex="-1" aria-hidden="true">
+                                    <option value="DAILY">일마다</option>
+                                    <option value="WEEKLY">주마다</option>
+                                    <option value="MONTHLY">개월마다</option>
+                                    <option value="YEARLY">년마다</option>
+                                </select>
+                                <button type="button" class="moyo-quick-select-button" data-quick-select-button="quickCreateRepeatUnit" aria-haspopup="listbox" aria-expanded="false">주마다</button>
+                                <div class="moyo-quick-select-menu" data-quick-select-menu="quickCreateRepeatUnit" role="listbox" hidden></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="moyo-quick-repeat-days" id="quickCreateRepeatDays">
+                        <span>반복 요일</span>
+                        <div>
+                            <button type="button" data-repeat-day="SUN">일</button>
+                            <button type="button" data-repeat-day="MON">월</button>
+                            <button type="button" data-repeat-day="TUE">화</button>
+                            <button type="button" data-repeat-day="WED">수</button>
+                            <button type="button" data-repeat-day="THU">목</button>
+                            <button type="button" data-repeat-day="FRI">금</button>
+                            <button type="button" data-repeat-day="SAT">토</button>
+                        </div>
+                    </div>
+                    <div class="moyo-quick-repeat-end">
+                        <label>반복 종료</label>
+                        <div class="moyo-quick-select-wrap moyo-quick-repeat-select-wrap" data-quick-select-wrap>
+                            <select class="moyo-quick-select moyo-quick-select-native" id="quickCreateRepeatEndType" tabindex="-1" aria-hidden="true">
+                                <option value="NONE">종료 없음</option>
+                                <option value="DATE">날짜 지정</option>
+                            </select>
+                            <button type="button" class="moyo-quick-select-button" data-quick-select-button="quickCreateRepeatEndType" aria-haspopup="listbox" aria-expanded="false">종료 없음</button>
+                            <div class="moyo-quick-select-menu" data-quick-select-menu="quickCreateRepeatEndType" role="listbox" hidden></div>
+                        </div>
+                        <div class="moyo-quick-date-field moyo-quick-repeat-until-field" id="quickCreateRepeatUntilField" hidden>
+                            <input type="text" id="quickCreateRepeatUntil" placeholder="YYYY-MM-DD" data-quick-date-picker inputmode="numeric" autocomplete="off">
+                            <button type="button" class="moyo-quick-date-trigger" data-quick-date-target="quickCreateRepeatUntil" aria-label="반복 종료 날짜 선택"><i class="fa-regular fa-calendar" aria-hidden="true"></i></button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+
+            <section class="moyo-quick-section">
+                <label class="moyo-quick-label" for="quickCreateReminder">알림</label>
+                <div class="moyo-quick-alert-row">
+                    <span class="moyo-quick-alert-icon" aria-hidden="true"><i class="fa-regular fa-bell"></i></span>
+                    <div class="moyo-quick-alert-control">
+                        <div class="moyo-quick-select-wrap" data-quick-select-wrap>
+                        <select class="moyo-quick-select moyo-quick-select-native" id="quickCreateReminder" tabindex="-1" aria-hidden="true">
+                            <option value="">알림 없음</option>
+                            <option value="5">5분 전</option>
+                            <option value="10">10분 전</option>
+                            <option value="30">30분 전</option>
+                            <option value="60">1시간 전</option>
+                            <option value="1440">하루 전</option>
+                        </select>
+                        <button type="button" class="moyo-quick-select-button" data-quick-select-button="quickCreateReminder" aria-haspopup="listbox" aria-expanded="false">알림 없음</button>
+                            <div class="moyo-quick-select-menu" data-quick-select-menu="quickCreateReminder" role="listbox" hidden></div>
+                        </div>
+                        <span class="moyo-quick-alert-caption">일정 시작 전에 알려드려요</span>
+                    </div>
+                </div>
+            </section>
+
+            <section class="moyo-quick-section moyo-quick-link-section">
+                <div class="moyo-quick-attendee-field">
+                    <span class="moyo-quick-summary-label">참석자</span>
+                    <button type="button" class="moyo-quick-attendee-summary" id="quickCreateAttendeeButton" aria-label="참석자 선택">
+                        <span class="moyo-quick-attendee-main">
+                            <span class="moyo-quick-attendee-stack" id="quickCreateAttendeeStack"></span>
+                            <span class="moyo-quick-summary-copy">
+                                <strong id="quickCreateAttendeeTitle">참석자를 선택하세요</strong>
+                                <small id="quickCreateAttendeeMeta" hidden></small>
+                            </span>
+                        </span>
+                        <span class="moyo-quick-summary-action" id="quickCreateAttendeeAction">선택</span>
+                    </button>
+                </div>
+            </section>
+
+        </div>
+
+        <footer class="moyo-quick-create-actions">
+            <div class="moyo-quick-update-scope" id="quickCreateUpdateScopeRow" hidden>
+                <label for="quickCreateUpdateScope">반복 수정</label>
+                <select id="quickCreateUpdateScope">
+                    <option value="ONE">이 일정만</option>
+                    <option value="FUTURE">이후 일정</option>
+                    <option value="ALL">전체 반복</option>
+                </select>
+            </div>
+            <button type="button" class="moyo-quick-btn is-primary" id="quickCreateSave">등록</button>
+        </footer>
+    </section>
+</div>

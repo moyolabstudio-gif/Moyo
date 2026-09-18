@@ -10,6 +10,7 @@
         step: 'LIST',
         projectBranch: null,
         selectedWorkspaceId: null,
+        lockProjectBranch: false,
         keyword: '',
         showCompleted: false,
         onSelect: null,
@@ -177,7 +178,7 @@
         });
         const title = personal ? '개인 프로젝트' : (workspace ? workspace.name : '그룹 프로젝트');
 
-        setHeader(title, true);
+        setHeader(title, !runtime.lockProjectBranch);
         setSearchVisible(true, '프로젝트 검색');
         setCompletedVisible(true);
 
@@ -251,6 +252,7 @@
         if (search) search.focus();
     }
     function goBack() {
+        if (runtime.lockProjectBranch) return;
         if (runtime.scope !== 'PROJ' || runtime.step !== 'PROJECT_LIST') return;
         runtime.step = 'PROJECT_ROOT';
         runtime.projectBranch = null;
@@ -273,9 +275,16 @@
         runtime.imageResolver = options.imageResolver;
         runtime.keyword = '';
         runtime.showCompleted = false;
-        runtime.step = runtime.scope === 'PROJ' ? 'PROJECT_ROOT' : 'LIST';
-        runtime.projectBranch = null;
-        runtime.selectedWorkspaceId = null;
+        runtime.lockProjectBranch = runtime.scope === 'PROJ' && options.lockProjectBranch === true;
+        runtime.projectBranch = runtime.lockProjectBranch
+            ? String(options.projectBranch || '').toUpperCase()
+            : null;
+        runtime.selectedWorkspaceId = runtime.lockProjectBranch
+            ? (options.selectedWorkspaceId || null)
+            : null;
+        runtime.step = runtime.scope === 'PROJ'
+            ? (runtime.lockProjectBranch && ['PERSONAL', 'GROUP'].includes(runtime.projectBranch) ? 'PROJECT_LIST' : 'PROJECT_ROOT')
+            : 'LIST';
 
         const search = el('commonScopeSelectorSearch');
         if (search) search.value = '';
@@ -302,12 +311,30 @@
         const choice = event.target.closest('[data-common-choice]');
         if (choice) applyChoice(choice);
     });
-    document.addEventListener('input', function (event) {
-        if (event.target.id === 'commonScopeSelectorSearch') {
-            runtime.keyword = event.target.value || '';
-            render();
-        }
-    });
+    function bindDebouncedSearch(input, handler, delay) {
+        if (!input || input.dataset.moyoSearchBound === 'true') return;
+        input.dataset.moyoSearchBound = 'true';
+        let timer = null;
+        let composing = false;
+        const schedule = function () {
+            window.clearTimeout(timer);
+            timer = window.setTimeout(handler, delay);
+        };
+        input.addEventListener('compositionstart', function () { composing = true; });
+        input.addEventListener('compositionend', function () {
+            composing = false;
+            schedule();
+        });
+        input.addEventListener('input', function () {
+            if (!composing) schedule();
+        });
+    }
+
+    const scopeSearchInput = el('commonScopeSelectorSearch');
+    bindDebouncedSearch(scopeSearchInput, function () {
+        runtime.keyword = scopeSearchInput.value || '';
+        render();
+    }, 160);
     document.addEventListener('change', function (event) {
         if (event.target.id === 'commonScopeSelectorCompleted') {
             runtime.showCompleted = !!event.target.checked;

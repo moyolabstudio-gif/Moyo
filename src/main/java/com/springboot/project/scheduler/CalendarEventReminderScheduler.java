@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,6 +22,9 @@ import lombok.RequiredArgsConstructor;
 @Component
 @RequiredArgsConstructor
 public class CalendarEventReminderScheduler {
+
+    @Value("${moyo.schema.runtime-ddl-enabled:false}")
+    private boolean runtimeDdlEnabled;
 
     private static final DateTimeFormatter DB_START_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
     private static final DateTimeFormatter ALARM_TEXT_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd a hh:mm", Locale.KOREAN);
@@ -72,6 +76,7 @@ public class CalendarEventReminderScheduler {
     }
 
     private void ensureColumns() {
+        if (!runtimeDdlEnabled) return;
         try {
             calendarDao.ensureCalendarReminderColumns();
         } catch (Exception e) {

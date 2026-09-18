@@ -15,6 +15,8 @@ import com.springboot.project.dto.projectRequestDTO;
 import com.springboot.project.dto.usersDto;
 import com.springboot.project.dto.workspaceDTO;
 
+import jakarta.servlet.DispatcherType;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 
 @ControllerAdvice
@@ -27,7 +29,10 @@ public class globalControllerAdvice {
     private IprojectDAO projectDAO;
 
     @ModelAttribute("userWorkspaces")
-    public List<workspaceDTO> getUserWorkspaces(HttpSession session) {
+    public List<workspaceDTO> getUserWorkspaces(HttpSession session, HttpServletRequest request) {
+        if (request.getDispatcherType() == DispatcherType.ERROR) {
+            return Collections.emptyList();
+        }
         usersDto user = (usersDto) session.getAttribute("user");
         if (user == null) {
             return Collections.emptyList();
@@ -37,22 +42,39 @@ public class globalControllerAdvice {
         return workspaces == null ? Collections.emptyList() : workspaces;
     }
 
+    @ModelAttribute("sidebarPersonalProjects")
+    public List<projectRequestDTO> getSidebarPersonalProjects(HttpSession session, HttpServletRequest request) {
+        if (request.getDispatcherType() == DispatcherType.ERROR) {
+            return Collections.emptyList();
+        }
+        usersDto user = (usersDto) session.getAttribute("user");
+        if (user == null) {
+            return Collections.emptyList();
+        }
+
+        List<projectRequestDTO> projects = projectDAO.selectSidebarPersonalActiveProjects(user.getUserId());
+        return projects == null ? Collections.emptyList() : projects;
+    }
+
     @ModelAttribute("sidebarProjects")
-    public Map<Long, List<projectRequestDTO>> getSidebarProjects(HttpSession session) {
+    public Map<Long, List<projectRequestDTO>> getSidebarProjects(HttpSession session, HttpServletRequest request) {
+        if (request.getDispatcherType() == DispatcherType.ERROR) {
+            return Collections.emptyMap();
+        }
         usersDto user = (usersDto) session.getAttribute("user");
         if (user == null) {
             return Collections.emptyMap();
         }
 
-        List<workspaceDTO> workspaces = workspaceDAO.selectWorkspaceList(user.getUserId());
-        if (workspaces == null || workspaces.isEmpty()) {
+        List<projectRequestDTO> projects = projectDAO.selectSidebarActiveProjectsForUser(user.getUserId());
+        if (projects == null || projects.isEmpty()) {
             return Collections.emptyMap();
         }
 
         Map<Long, List<projectRequestDTO>> result = new LinkedHashMap<>();
-        for (workspaceDTO workspace : workspaces) {
-            List<projectRequestDTO> projects = projectDAO.selectSidebarActiveProjectsByWsId(workspace.getWsId());
-            result.put(workspace.getWsId(), projects == null ? Collections.emptyList() : projects);
+        for (projectRequestDTO project : projects) {
+            if (project == null || project.getWsId() == null) continue;
+            result.computeIfAbsent(project.getWsId(), key -> new java.util.ArrayList<>()).add(project);
         }
         return result;
     }

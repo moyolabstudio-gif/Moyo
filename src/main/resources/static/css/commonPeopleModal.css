@@ -1,0 +1,2956 @@
+/**
+ * CommonPeopleModal
+ * - Visual shell is the former Friend Share modal only.
+ * - Mode-specific code may change content/actions, never geometry.
+ */
+/* =========================================================
+   Unified shell: former CommonShareModal visual system
+   - loaded last intentionally so shell/card geometry is identical.
+   ========================================================= */
+/* =========================================================
+   MOYO Common Share Modal
+   - NOTE / PHOTO / CALENDAR 공통 공유 모달 단일 스타일 기준
+   - 모달 내부는 반드시 .moyo-share-modal 네임스페이스 안에서만 제어한다.
+   - note.css / photoPostForm.css / calendar.css 에서는 모달 내부를 건드리지 않는다.
+   ========================================================= */
+:root{
+    --moyo-share-blue:#4f7cff;
+    --moyo-share-mint:#58cfd0;
+    --moyo-share-violet:#6b65f6;
+    --moyo-share-border:#dbe5f4;
+    --moyo-share-line:#edf2f7;
+    --moyo-share-soft:#f8fafc;
+    --moyo-share-text:#142033;
+    --moyo-share-muted:#8190a6;
+}
+
+.moyo-share-modal[hidden],
+.moyo-share-modal.is-hidden{
+    display:none!important;
+}
+
+.moyo-share-modal{
+    position:fixed!important;
+    inset:0!important;
+    z-index:1200!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    padding:18px!important;
+    background:rgba(15,23,42,.36)!important;
+    box-sizing:border-box!important;
+}
+
+.moyo-share-modal *,
+.moyo-share-modal *::before,
+.moyo-share-modal *::after{
+    box-sizing:border-box!important;
+}
+
+.moyo-share-modal .note-write-share-backdrop,
+.moyo-share-modal .moyo-share-backdrop{
+    position:absolute!important;
+    inset:0!important;
+    background:transparent!important;
+}
+
+.moyo-share-modal .note-write-share-panel,
+.moyo-share-modal .moyo-share-panel{
+    position:relative!important;
+    width:min(580px, calc(100vw - 32px))!important;
+    max-height:min(92vh, 760px)!important;
+    display:flex!important;
+    flex-direction:column!important;
+    overflow:hidden!important;
+    border:1px solid var(--moyo-share-border)!important;
+    border-radius:18px!important;
+    background:#fff!important;
+    color:var(--moyo-share-text)!important;
+    box-shadow:0 26px 72px rgba(15,23,42,.22)!important;
+}
+
+.moyo-share-modal .note-write-share-modal-head,
+.moyo-share-modal .moyo-share-head{
+    flex:0 0 auto!important;
+    min-height:58px!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:space-between!important;
+    gap:12px!important;
+    padding:0 20px!important;
+    border-bottom:1px solid var(--moyo-share-line)!important;
+    background:#fff!important;
+}
+
+.moyo-share-modal .note-write-share-modal-head > div,
+.moyo-share-modal .moyo-share-head > div{
+    min-width:0!important;
+}
+
+.moyo-share-modal .note-write-share-modal-head h3,
+.moyo-share-modal .moyo-share-head h3{
+    margin:0!important;
+    color:var(--moyo-share-text)!important;
+    font-size:18px!important;
+    font-weight:900!important;
+    line-height:1.2!important;
+    letter-spacing:-.02em!important;
+}
+
+.moyo-share-modal .note-write-share-modal-head p,
+.moyo-share-modal .moyo-share-head p{
+    display:none!important;
+}
+
+.moyo-share-modal .note-write-share-close,
+.moyo-share-modal .moyo-share-close{
+    flex:0 0 auto!important;
+    width:32px!important;
+    height:32px!important;
+    display:inline-flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    border:0!important;
+    border-radius:999px!important;
+    background:transparent!important;
+    color:#64748b!important;
+    font-size:22px!important;
+    line-height:1!important;
+    cursor:pointer!important;
+    box-shadow:none!important;
+}
+
+.moyo-share-modal .note-write-share-close:hover,
+.moyo-share-modal .moyo-share-close:hover{
+    background:#f4f7fb!important;
+    color:var(--moyo-share-text)!important;
+}
+
+.moyo-share-modal .note-write-share-tabs,
+.moyo-share-modal .moyo-share-tabs{
+    flex:0 0 auto!important;
+    display:flex!important;
+    align-items:center!important;
+    gap:8px!important;
+    padding:14px 20px 0!important;
+    margin:0!important;
+    border:0!important;
+    background:#fff!important;
+}
+
+.moyo-share-modal .note-write-share-tab,
+.moyo-share-modal .moyo-share-tab{
+    height:32px!important;
+    min-width:0!important;
+    display:inline-flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    padding:0 14px!important;
+    border:1px solid #d7e2f0!important;
+    border-radius:999px!important;
+    background:#fff!important;
+    color:#475569!important;
+    font-size:13px!important;
+    font-weight:800!important;
+    line-height:1!important;
+    white-space:nowrap!important;
+    cursor:pointer!important;
+    box-shadow:none!important;
+    outline:0!important;
+}
+
+.moyo-share-modal .note-write-share-tab:hover,
+.moyo-share-modal .moyo-share-tab:hover{
+    background:#f8fbff!important;
+    border-color:#c4d4ec!important;
+}
+
+.moyo-share-modal .note-write-share-tab.is-active,
+.moyo-share-modal .moyo-share-tab.is-active{
+    border-color:#9dbdff!important;
+    background:#eef4ff!important;
+    color:#3467df!important;
+    box-shadow:none!important;
+}
+
+.moyo-share-modal .note-write-share-toolbar,
+.moyo-share-modal .moyo-share-toolbar{
+    flex:0 0 auto!important;
+    display:flex!important;
+    align-items:center!important;
+    gap:8px!important;
+    width:100%!important;
+    padding:12px 20px 0!important;
+    margin:0!important;
+    background:#fff!important;
+}
+
+.moyo-share-modal .note-write-share-select[hidden],
+.moyo-share-modal .moyo-share-select[hidden]{
+    display:none!important;
+}
+
+.moyo-share-modal .note-write-share-input,
+.moyo-share-modal .note-write-share-select,
+.moyo-share-modal .moyo-share-input,
+.moyo-share-modal .moyo-share-select{
+    width:100%!important;
+    height:38px!important;
+    min-width:0!important;
+    padding:0 13px!important;
+    border:1px solid #d7e2f0!important;
+    border-radius:12px!important;
+    background:#fff!important;
+    color:#1f2937!important;
+    font-size:13px!important;
+    line-height:38px!important;
+    outline:0!important;
+    box-shadow:none!important;
+}
+
+.moyo-share-modal .note-write-share-input:focus,
+.moyo-share-modal .moyo-share-input:focus{
+    border-color:#8fb2ff!important;
+    box-shadow:0 0 0 3px rgba(79,124,255,.14)!important;
+}
+
+.moyo-share-modal .note-write-share-body,
+.moyo-share-modal .moyo-share-body{
+    flex:1 1 auto!important;
+    min-height:0!important;
+    display:block!important;
+    padding:12px 20px 0!important;
+    margin:0!important;
+    overflow:visible!important;
+    background:#fff!important;
+}
+
+.moyo-share-modal .note-write-share-body > div,
+.moyo-share-modal .moyo-share-body > div{
+    min-width:0!important;
+    margin:0!important;
+    padding:0!important;
+}
+
+.moyo-share-modal .note-write-share-body > div + div,
+.moyo-share-modal .moyo-share-body > div + div{
+    margin-top:12px!important;
+}
+
+.moyo-share-modal .note-write-share-picked-wrap{
+    padding:12px 20px 0!important;
+    margin:0!important;
+}
+
+.moyo-share-modal .note-write-share-subtitle,
+.moyo-share-modal .moyo-share-subtitle{
+    display:flex!important;
+    align-items:center!important;
+    gap:7px!important;
+    margin:0 0 8px!important;
+    padding:0!important;
+    color:#27364b!important;
+    font-size:13px!important;
+    font-weight:900!important;
+    line-height:1.25!important;
+}
+
+.moyo-share-modal .note-share-modal-count,
+.moyo-share-modal .moyo-share-modal-count{
+    display:inline-flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    min-width:0!important;
+    height:auto!important;
+    padding:0!important;
+    border:0!important;
+    border-radius:0!important;
+    background:transparent!important;
+    color:var(--moyo-share-blue)!important;
+    font-size:13px!important;
+    font-weight:900!important;
+    line-height:1.25!important;
+}
+
+.moyo-share-modal .note-write-share-list,
+.moyo-share-modal .note-write-share-selected,
+.moyo-share-modal .moyo-share-list,
+.moyo-share-modal .moyo-share-selected{
+    width:100%!important;
+    min-width:0!important;
+    display:flex!important;
+    flex-direction:column!important;
+    gap:8px!important;
+    padding:8px!important;
+    border:1px solid var(--moyo-share-border)!important;
+    border-radius:14px!important;
+    background:var(--moyo-share-soft)!important;
+    overflow-x:hidden!important;
+    overflow-y:auto!important;
+    box-sizing:border-box!important;
+}
+
+.moyo-share-modal .note-write-share-list,
+.moyo-share-modal .moyo-share-list{
+    min-height:116px!important;
+    max-height:min(198px, calc(100vh - 462px))!important;
+}
+
+.moyo-share-modal .note-write-share-selected,
+.moyo-share-modal .moyo-share-selected{
+    min-height:80px!important;
+    max-height:160px!important;
+}
+
+.moyo-share-modal .note-share-target-block,
+.moyo-share-modal .moyo-share-target-block{
+    width:100%!important;
+    margin:0!important;
+    padding:0!important;
+    border:0!important;
+    background:transparent!important;
+}
+
+.moyo-share-modal .note-write-share-picked-list,
+.moyo-share-modal .note-share-selected-list-view,
+.moyo-share-modal .note-share-permission-member-list,
+.moyo-share-modal .moyo-share-picked-list{
+    width:100%!important;
+    display:flex!important;
+    flex-direction:column!important;
+    gap:8px!important;
+    margin:0!important;
+    padding:0!important;
+}
+
+.moyo-share-modal .note-write-share-card,
+.moyo-share-modal .moyo-share-card,
+.moyo-share-modal .note-share-permission-member-row{
+    --share-accent:var(--moyo-share-blue);
+    --share-soft:#eef4ff;
+    position:relative!important;
+    width:100%!important;
+    min-width:0!important;
+    min-height:52px!important;
+    display:flex!important;
+    align-items:center!important;
+    gap:10px!important;
+    margin:0!important;
+    padding:9px 10px!important;
+    border:1px solid var(--moyo-share-border)!important;
+    border-left:3px solid var(--share-accent)!important;
+    border-radius:13px!important;
+    background:#fff!important;
+    color:var(--moyo-share-text)!important;
+    text-align:left!important;
+    box-shadow:none!important;
+    outline:0!important;
+    box-sizing:border-box!important;
+}
+
+.moyo-share-modal .note-write-share-card[role="button"],
+.moyo-share-modal .moyo-share-card[role="button"]{
+    cursor:pointer!important;
+}
+
+.moyo-share-modal .note-write-share-card:hover,
+.moyo-share-modal .note-write-share-card.is-added,
+.moyo-share-modal .note-write-share-card.is-selected,
+.moyo-share-modal .moyo-share-card:hover,
+.moyo-share-modal .note-share-permission-member-row.is-editor{
+    border-color:#bcd0ff!important;
+    border-left-color:var(--share-accent)!important;
+    background:#fff!important;
+    box-shadow:0 8px 18px rgba(31,51,84,.06)!important;
+}
+
+.moyo-share-modal .note-write-share-card.note-share-type-ws,
+.moyo-share-modal .note-share-type-ws .note-write-share-card,
+.moyo-share-modal .note-share-type-ws.note-share-permission-member-row{
+    --share-accent:#60dbc8;
+    --share-soft:#eafffb;
+}
+
+.moyo-share-modal .note-write-share-card.note-share-type-proj,
+.moyo-share-modal .note-share-type-proj .note-write-share-card,
+.moyo-share-modal .note-share-type-proj.note-share-permission-member-row{
+    --share-accent:#7d6bff;
+    --share-soft:#f2efff;
+}
+
+.moyo-share-modal .note-write-share-avatar,
+.moyo-share-modal .note-share-avatar,
+.moyo-share-modal .moyo-share-avatar{
+    flex:0 0 34px!important;
+    width:34px!important;
+    height:34px!important;
+    display:inline-flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    overflow:hidden!important;
+    border-radius:12px!important;
+    background:var(--share-soft, #eef4ff)!important;
+    color:var(--share-accent, var(--moyo-share-blue))!important;
+    font-size:13px!important;
+    font-weight:900!important;
+    line-height:1!important;
+    box-shadow:none!important;
+}
+
+.moyo-share-modal .note-write-share-avatar img,
+.moyo-share-modal .note-share-avatar img,
+.moyo-share-modal .moyo-share-avatar img{
+    width:100%!important;
+    height:100%!important;
+    display:block!important;
+    object-fit:cover!important;
+    border-radius:inherit!important;
+}
+
+.moyo-share-modal .note-write-share-main,
+.moyo-share-modal .note-write-share-info,
+.moyo-share-modal .note-share-text,
+.moyo-share-modal .note-share-permission-member-main,
+.moyo-share-modal .moyo-share-main{
+    min-width:0!important;
+    flex:1 1 auto!important;
+    display:flex!important;
+    flex-direction:column!important;
+    gap:3px!important;
+    margin:0!important;
+}
+
+.moyo-share-modal .note-write-share-main strong,
+.moyo-share-modal .note-write-share-info strong,
+.moyo-share-modal .note-share-text strong,
+.moyo-share-modal .note-share-permission-member-main strong,
+.moyo-share-modal .moyo-share-main strong{
+    display:block!important;
+    overflow:hidden!important;
+    white-space:nowrap!important;
+    text-overflow:ellipsis!important;
+    color:var(--moyo-share-text)!important;
+    font-size:13px!important;
+    font-weight:900!important;
+    line-height:1.2!important;
+}
+
+.moyo-share-modal .note-write-share-main small,
+.moyo-share-modal .note-write-share-info small,
+.moyo-share-modal .note-share-text small,
+.moyo-share-modal .moyo-share-main small{
+    display:block!important;
+    overflow:hidden!important;
+    white-space:nowrap!important;
+    text-overflow:ellipsis!important;
+    color:var(--moyo-share-muted)!important;
+    font-size:11px!important;
+    line-height:1.2!important;
+}
+
+.moyo-share-modal .note-share-candidate-actions,
+.moyo-share-modal .note-share-selected-actions,
+.moyo-share-modal .moyo-share-actions{
+    flex:0 0 auto!important;
+    display:inline-flex!important;
+    align-items:center!important;
+    gap:6px!important;
+    margin-left:auto!important;
+}
+
+.moyo-share-modal .note-share-member-only-badge,
+.moyo-share-modal .note-share-permission-add-btn,
+.moyo-share-modal .moyo-share-register-button{
+    height:28px!important;
+    min-width:48px!important;
+    display:inline-flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    padding:0 13px!important;
+    border:0!important;
+    border-radius:999px!important;
+    background:var(--share-accent, var(--moyo-share-blue))!important;
+    color:#fff!important;
+    font-size:12px!important;
+    font-weight:900!important;
+    line-height:1!important;
+    white-space:nowrap!important;
+    cursor:pointer!important;
+    box-shadow:none!important;
+}
+
+.moyo-share-modal .note-share-readonly-permission{
+    height:26px!important;
+    min-width:42px!important;
+    display:inline-flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    padding:0 10px!important;
+    border-radius:999px!important;
+    background:#f1f6ff!important;
+    color:#3467df!important;
+    font-size:12px!important;
+    font-weight:900!important;
+    line-height:1!important;
+}
+
+.moyo-share-modal .note-share-remove,
+.moyo-share-modal .note-share-remove-text{
+    min-width:34px!important;
+    height:28px!important;
+    display:inline-flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    padding:0 10px!important;
+    border:1px solid #dce6f2!important;
+    border-radius:999px!important;
+    background:#fff!important;
+    color:#64748b!important;
+    font-size:12px!important;
+    font-weight:900!important;
+    line-height:1!important;
+    cursor:pointer!important;
+    box-shadow:none!important;
+}
+
+.moyo-share-modal .note-write-share-check{
+    display:none!important;
+}
+
+.moyo-share-modal .note-write-share-empty{
+    width:100%!important;
+    min-height:58px!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    margin:0!important;
+    padding:14px 16px!important;
+    border:1px dashed #d7e4f7!important;
+    border-radius:12px!important;
+    background:#fff!important;
+    color:#8aa0ba!important;
+    font-size:13px!important;
+    font-weight:700!important;
+    line-height:1.35!important;
+    text-align:center!important;
+}
+
+.moyo-share-modal .note-write-share-empty-compact{
+    min-height:58px!important;
+}
+
+.moyo-share-modal .note-share-source-tags{
+    display:flex!important;
+    align-items:center!important;
+    flex-wrap:wrap!important;
+    gap:4px!important;
+}
+
+.moyo-share-modal .note-share-source-tag{
+    max-width:126px!important;
+    height:18px!important;
+    display:inline-flex!important;
+    align-items:center!important;
+    padding:0 7px!important;
+    border:1px solid transparent!important;
+    border-radius:999px!important;
+    overflow:hidden!important;
+    white-space:nowrap!important;
+    text-overflow:ellipsis!important;
+    font-size:10px!important;
+    font-weight:800!important;
+    line-height:18px!important;
+}
+
+.moyo-share-modal .note-share-source-tag-user{border-color:#b9d7ff!important;background:#eef6ff!important;color:#2563eb!important;}
+.moyo-share-modal .note-share-source-tag-ws{border-color:#9ee9dc!important;background:#eafffb!important;color:#0f9f8f!important;}
+.moyo-share-modal .note-share-source-tag-proj{border-color:#d4c9ff!important;background:#f2efff!important;color:#6d4aff!important;}
+
+.moyo-share-modal .note-write-share-modal-actions,
+.moyo-share-modal .moyo-share-footer{
+    flex:0 0 auto!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:flex-end!important;
+    gap:8px!important;
+    margin:0!important;
+    padding:14px 20px 18px!important;
+    border-top:1px solid var(--moyo-share-line)!important;
+    background:#fff!important;
+}
+
+.moyo-share-modal .note-write-share-modal-actions > div{
+    display:flex!important;
+    align-items:center!important;
+    justify-content:flex-end!important;
+    gap:8px!important;
+    margin:0!important;
+}
+
+.moyo-share-modal .note-soft-btn,
+.moyo-share-modal .moyo-share-cancel-button{
+    min-width:58px!important;
+    height:38px!important;
+    display:inline-flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    padding:0 15px!important;
+    border:1px solid #d7e2f0!important;
+    border-radius:12px!important;
+    background:#fff!important;
+    color:#334155!important;
+    font-size:13px!important;
+    font-weight:900!important;
+    line-height:1!important;
+    box-shadow:none!important;
+    cursor:pointer!important;
+}
+
+.moyo-share-modal .note-gradient-btn,
+.moyo-share-modal .moyo-share-apply-button{
+    min-width:58px!important;
+    height:38px!important;
+    display:inline-flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    padding:0 16px!important;
+    border:0!important;
+    border-radius:12px!important;
+    background:linear-gradient(135deg, var(--moyo-share-mint), var(--moyo-share-violet))!important;
+    color:#fff!important;
+    font-size:13px!important;
+    font-weight:900!important;
+    line-height:1!important;
+    box-shadow:0 8px 18px rgba(79,124,244,.16)!important;
+    cursor:pointer!important;
+}
+
+body.moyo-share-modal-open,
+body.note-share-modal-open{
+    overflow:hidden!important;
+}
+
+@media (max-width:640px){
+    .moyo-share-modal{
+        padding:10px!important;
+    }
+    .moyo-share-modal .note-write-share-panel,
+    .moyo-share-modal .moyo-share-panel{
+        width:calc(100vw - 20px)!important;
+        max-height:94vh!important;
+        border-radius:18px!important;
+    }
+    .moyo-share-modal .note-write-share-list,
+    .moyo-share-modal .moyo-share-list{
+        max-height:190px!important;
+    }
+    .moyo-share-modal .note-write-share-selected,
+    .moyo-share-modal .moyo-share-selected{
+        max-height:150px!important;
+    }
+}
+
+
+.moyo-share-modal .note-share-status-badge{
+    height:26px!important;
+    display:inline-flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    padding:0 9px!important;
+    border-radius:999px!important;
+    font-size:11px!important;
+    font-weight:900!important;
+    line-height:1!important;
+    white-space:nowrap!important;
+}
+.moyo-share-modal .note-share-status-pending{
+    background:#fff7e6!important;
+    color:#b7791f!important;
+}
+.moyo-share-modal .note-share-status-accepted{
+    background:#ecfdf5!important;
+    color:#168257!important;
+}
+.moyo-share-modal .note-share-status-blocked{
+    color:#64748b;
+    background:#f1f5f9;
+    border-color:#e2e8f0;
+}
+
+.moyo-share-modal .note-share-status-rejected,
+.moyo-share-modal .note-share-status-canceled{
+    background:#fef2f2!important;
+    color:#d14343!important;
+}
+
+/* v227: feed-style share modal - send only, status inline */
+.moyo-share-modal .note-write-share-body-feed .note-write-share-selected[hidden],
+.moyo-share-modal .note-write-share-body-feed > div[hidden],
+.moyo-share-modal .note-write-share-subtitle[hidden]{
+    display:none!important;
+}
+
+.moyo-share-modal .note-write-share-body-feed .note-write-share-list,
+.moyo-share-modal .moyo-share-list{
+    min-height:260px!important;
+    max-height:min(420px, calc(100vh - 300px))!important;
+}
+
+.moyo-share-modal .note-share-candidate-actions{
+    margin-left:auto!important;
+    display:inline-flex!important;
+    align-items:center!important;
+    justify-content:flex-end!important;
+    gap:8px!important;
+    flex:0 0 auto!important;
+}
+
+.moyo-share-modal .note-share-send-state{
+    height:28px!important;
+    display:inline-flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    padding:0 12px!important;
+    border-radius:999px!important;
+    background:linear-gradient(135deg,#6aa8ff,#6259f6)!important;
+    color:#fff!important;
+    font-size:12px!important;
+    font-weight:900!important;
+    line-height:1!important;
+    white-space:nowrap!important;
+}
+
+.moyo-share-modal .note-write-share-card.is-selected .note-share-send-state{
+    background:#eef4ff!important;
+    color:var(--moyo-share-blue)!important;
+}
+
+.moyo-share-modal .note-write-share-card.is-share-disabled,
+.moyo-share-modal .note-write-share-card.is-share-disabled:hover{
+    cursor:default!important;
+    opacity:.82!important;
+    border-color:var(--moyo-share-border)!important;
+    border-left-color:var(--share-accent)!important;
+    box-shadow:none!important;
+}
+
+.moyo-share-modal .note-write-share-card.is-share-disabled .note-write-share-check{
+    display:none!important;
+}
+
+.moyo-share-modal .note-share-status-accepted{
+    background:#ecfdf5!important;
+    color:#168257!important;
+}
+
+/* v228: Instagram-like send-only share modal refinement */
+.moyo-share-modal[data-share-mode="share"] .note-write-share-tabs,
+.moyo-share-modal[data-share-mode="share"] .moyo-share-tabs{
+    width:calc(100% - 40px)!important;
+    margin:14px 20px 0!important;
+    padding:0!important;
+    gap:0!important;
+    border:1px solid #dbe5f4!important;
+    border-radius:14px!important;
+    overflow:hidden!important;
+    background:#fff!important;
+}
+
+.moyo-share-modal[data-share-mode="share"] .note-write-share-tab,
+.moyo-share-modal[data-share-mode="share"] .moyo-share-tab{
+    position:relative!important;
+    flex:1 1 0!important;
+    height:42px!important;
+    min-width:0!important;
+    gap:6px!important;
+    padding:0 10px!important;
+    border:0!important;
+    border-radius:0!important;
+    background:#fff!important;
+    color:#475569!important;
+    font-size:13px!important;
+    font-weight:900!important;
+}
+
+.moyo-share-modal[data-share-mode="share"] .note-write-share-tab:not(:last-child)::after,
+.moyo-share-modal[data-share-mode="share"] .moyo-share-tab:not(:last-child)::after{
+    content:""!important;
+    position:absolute!important;
+    right:0!important;
+    top:11px!important;
+    width:1px!important;
+    height:20px!important;
+    background:#e6edf7!important;
+}
+
+.moyo-share-modal[data-share-mode="share"] .note-write-share-tab.is-active,
+.moyo-share-modal[data-share-mode="share"] .moyo-share-tab.is-active{
+    background:#f4f8ff!important;
+    color:#3467df!important;
+    box-shadow:inset 0 -2px 0 #6f95ff!important;
+}
+
+.moyo-share-modal .note-share-tab-label{
+    min-width:0!important;
+    overflow:hidden!important;
+    white-space:nowrap!important;
+    text-overflow:ellipsis!important;
+}
+
+.moyo-share-modal .note-share-tab-count{
+    min-width:18px!important;
+    height:18px!important;
+    display:inline-flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    padding:0 6px!important;
+    border-radius:999px!important;
+    background:#4f7cff!important;
+    color:#fff!important;
+    font-size:11px!important;
+    font-weight:900!important;
+    line-height:18px!important;
+}
+
+.moyo-share-modal[data-share-mode="share"] .note-write-share-card,
+.moyo-share-modal[data-share-mode="share"] .moyo-share-card{
+    min-height:56px!important;
+    padding:9px 10px!important;
+    border-left:1px solid var(--moyo-share-border)!important;
+    border-radius:14px!important;
+    background:#fff!important;
+    box-shadow:none!important;
+}
+
+.moyo-share-modal[data-share-mode="share"] .note-write-share-card:hover,
+.moyo-share-modal[data-share-mode="share"] .note-write-share-card.is-selected{
+    border-color:#b9cdff!important;
+    background:#fbfdff!important;
+    box-shadow:none!important;
+}
+
+.moyo-share-modal[data-share-mode="share"] .note-share-type-user .note-share-avatar,
+.moyo-share-modal[data-share-mode="share"] .note-write-share-card.note-share-type-user .note-share-avatar{
+    border-radius:999px!important;
+}
+
+.moyo-share-modal[data-share-mode="share"] .note-share-type-ws .note-share-avatar,
+.moyo-share-modal[data-share-mode="share"] .note-share-type-proj .note-share-avatar,
+.moyo-share-modal[data-share-mode="share"] .note-write-share-card.note-share-type-ws .note-share-avatar,
+.moyo-share-modal[data-share-mode="share"] .note-write-share-card.note-share-type-proj .note-share-avatar{
+    border-radius:12px!important;
+}
+
+.moyo-share-modal[data-share-mode="share"] .note-share-candidate-actions:empty{
+    display:none!important;
+}
+
+.moyo-share-modal[data-share-mode="share"] .note-write-share-card:not(.is-share-disabled) .note-write-share-check{
+    flex:0 0 22px!important;
+    width:22px!important;
+    height:22px!important;
+    display:inline-flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    margin-left:4px!important;
+    border:1.5px solid #cbd5e1!important;
+    border-radius:999px!important;
+    background:#fff!important;
+    color:#fff!important;
+    font-size:13px!important;
+    font-weight:900!important;
+    line-height:1!important;
+}
+
+.moyo-share-modal[data-share-mode="share"] .note-write-share-card.is-selected .note-write-share-check{
+    border-color:#4f7cff!important;
+    background:#4f7cff!important;
+}
+
+.moyo-share-modal[data-share-mode="share"] .note-write-share-card.is-selected .note-write-share-check::before{
+    content:"✓"!important;
+}
+
+.moyo-share-modal[data-share-mode="share"] .note-write-share-card.is-share-disabled .note-write-share-check{
+    display:none!important;
+}
+
+.moyo-share-modal[data-share-mode="share"] .note-write-share-modal-actions,
+.moyo-share-modal[data-share-mode="share"] .moyo-share-footer{
+    justify-content:center!important;
+    padding:14px 20px 18px!important;
+}
+
+.moyo-share-modal[data-share-mode="share"] .note-write-share-modal-actions > div{
+    width:100%!important;
+    display:flex!important;
+}
+
+.moyo-share-modal[data-share-mode="share"] .note-soft-btn,
+.moyo-share-modal[data-share-mode="share"] .moyo-share-cancel-button{
+    display:none!important;
+}
+
+.moyo-share-modal[data-share-mode="share"] .note-gradient-btn,
+.moyo-share-modal[data-share-mode="share"] .moyo-share-apply-button{
+    width:100%!important;
+    height:42px!important;
+    border-radius:12px!important;
+}
+
+
+/* v229: centered title, inline release, always-active send button */
+.moyo-share-modal[data-share-mode="share"] .note-write-share-modal-head,
+.moyo-share-modal[data-share-mode="share"] .moyo-share-head{
+    position:relative!important;
+    justify-content:center!important;
+    padding:0 56px!important;
+}
+
+.moyo-share-modal[data-share-mode="share"] .note-write-share-modal-head > div,
+.moyo-share-modal[data-share-mode="share"] .moyo-share-head > div{
+    flex:1 1 auto!important;
+    display:flex!important;
+    justify-content:center!important;
+    text-align:center!important;
+}
+
+.moyo-share-modal[data-share-mode="share"] .note-write-share-modal-head h3,
+.moyo-share-modal[data-share-mode="share"] .moyo-share-head h3{
+    width:100%!important;
+    text-align:center!important;
+}
+
+.moyo-share-modal[data-share-mode="share"] .note-write-share-close,
+.moyo-share-modal[data-share-mode="share"] .moyo-share-close{
+    position:absolute!important;
+    right:18px!important;
+    top:50%!important;
+    transform:translateY(-50%)!important;
+}
+
+.moyo-share-modal .note-share-inline-release{
+    height:26px!important;
+    min-width:38px!important;
+    display:inline-flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    padding:0 9px!important;
+    border:1px solid #dce6f2!important;
+    border-radius:999px!important;
+    background:#fff!important;
+    color:#64748b!important;
+    font-size:11px!important;
+    font-weight:900!important;
+    line-height:1!important;
+    white-space:nowrap!important;
+    cursor:pointer!important;
+    box-shadow:none!important;
+}
+
+.moyo-share-modal .note-share-inline-release:hover{
+    border-color:#c8d6e8!important;
+    background:#f8fafc!important;
+    color:#334155!important;
+}
+
+.moyo-share-modal .note-share-inline-release:disabled{
+    opacity:.7!important;
+    cursor:default!important;
+}
+
+.moyo-share-modal[data-share-mode="share"] .note-gradient-btn,
+.moyo-share-modal[data-share-mode="share"] .moyo-share-apply-button,
+.moyo-share-modal[data-share-mode="share"] .note-gradient-btn:disabled,
+.moyo-share-modal[data-share-mode="share"] .moyo-share-apply-button:disabled{
+    opacity:1!important;
+    filter:none!important;
+    background:linear-gradient(135deg, var(--moyo-share-mint), var(--moyo-share-violet))!important;
+    color:#fff!important;
+    cursor:pointer!important;
+}
+
+/* v239: received-share release view inside common share modal */
+/* v263: release-only action button is centered across photo/note/calendar */
+.moyo-share-modal .photo-share-release-panel{
+    width:100%!important;
+    display:flex!important;
+    flex-direction:column!important;
+    align-items:center!important;
+    justify-content:center!important;
+    gap:10px!important;
+    padding:34px 28px 24px!important;
+    text-align:center!important;
+    background:#fff!important;
+}
+.moyo-share-modal .photo-share-release-icon{
+    width:44px!important;
+    height:44px!important;
+    display:inline-flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    border-radius:999px!important;
+    background:#f1f6ff!important;
+    color:#4f7cff!important;
+    font-size:20px!important;
+}
+.moyo-share-modal .photo-share-release-panel strong{
+    color:var(--moyo-share-text)!important;
+    font-size:15px!important;
+    font-weight:900!important;
+    line-height:1.35!important;
+}
+.moyo-share-modal .photo-share-release-panel p{
+    max-width:360px!important;
+    margin:0!important;
+    color:var(--moyo-share-muted)!important;
+    font-size:13px!important;
+    line-height:1.45!important;
+}
+.moyo-share-modal .photo-share-release-apply{
+    width:100%!important;
+    min-width:0!important;
+    height:42px!important;
+    padding:0 24px!important;
+    margin:0!important;
+    border-radius:12px!important;
+    background:linear-gradient(135deg, var(--moyo-share-mint), var(--moyo-share-violet))!important;
+}
+
+/* 선택 대상/편집 권한 chip 표시: 참석자 모달과 같은 확인/제거 흐름 */
+.moyo-share-modal .note-share-chip-list{
+    min-height:46px!important;
+    max-height:124px!important;
+    display:flex!important;
+    flex-direction:row!important;
+    flex-wrap:wrap!important;
+    align-content:flex-start!important;
+    align-items:flex-start!important;
+    justify-content:flex-start!important;
+    gap:7px!important;
+    padding:7px 10px!important;
+    overflow-x:hidden!important;
+    overflow-y:auto!important;
+    border-radius:16px!important;
+    border:1px solid var(--moyo-share-border)!important;
+    background:rgba(248, 251, 255, 0.86)!important;
+    scrollbar-width:thin;
+}
+
+.moyo-share-modal .note-share-chip-list[hidden]{
+    display:none!important;
+}
+
+.moyo-share-modal .note-share-chip{
+    flex:0 0 auto!important;
+    max-width:172px!important;
+    height:30px!important;
+    display:inline-flex!important;
+    align-items:center!important;
+    gap:6px!important;
+    padding:3px 6px 3px 4px!important;
+    border-radius:999px!important;
+    border:1px solid #cfe0ff!important;
+    background:#fff!important;
+    color:#1f2d45!important;
+    box-shadow:none!important;
+}
+
+.moyo-share-modal .note-share-chip.note-share-type-ws{
+    --share-accent:var(--moyo-share-mint);
+    --share-soft:#eafffb;
+    border-color:rgba(89, 210, 194, .48)!important;
+    background:#f8fffd!important;
+}
+
+.moyo-share-modal .note-share-chip.note-share-type-proj{
+    --share-accent:var(--moyo-share-purple);
+    --share-soft:#f2efff;
+    border-color:rgba(125, 107, 255, .36)!important;
+    background:#fbfaff!important;
+}
+
+.moyo-share-modal .note-share-chip .note-write-share-avatar,
+.moyo-share-modal .note-share-chip .note-share-avatar{
+    flex:0 0 24px!important;
+    width:24px!important;
+    height:24px!important;
+    font-size:10px!important;
+}
+
+.moyo-share-modal .note-share-chip.note-share-type-user .note-share-avatar{
+    border-radius:999px!important;
+}
+
+.moyo-share-modal .note-share-chip.note-share-type-ws .note-share-avatar,
+.moyo-share-modal .note-share-chip.note-share-type-proj .note-share-avatar{
+    border-radius:12px!important;
+}
+
+.moyo-share-modal .note-share-chip-name{
+    max-width:108px!important;
+    overflow:hidden!important;
+    text-overflow:ellipsis!important;
+    white-space:nowrap!important;
+    font-size:12px!important;
+    font-weight:800!important;
+    letter-spacing:-.03em!important;
+}
+
+.moyo-share-modal .note-share-chip-remove{
+    width:18px!important;
+    height:18px!important;
+    display:inline-flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    border:0!important;
+    border-radius:999px!important;
+    background:rgba(148, 163, 184, .12)!important;
+    color:#64748b!important;
+    font-size:14px!important;
+    line-height:1!important;
+    cursor:pointer!important;
+}
+
+.moyo-share-modal .note-share-chip-remove:hover{
+    background:rgba(79, 124, 255, .13)!important;
+    color:#3467df!important;
+}
+
+.moyo-share-modal .note-share-chip-list .note-write-share-empty{
+    width:100%!important;
+    min-height:28px!important;
+    padding:0!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+}
+
+/* v246: 선택 chip 3행 확보 - 후보 목록과 선택 영역이 footer에 눌리지 않도록 재조정 */
+.moyo-share-modal[data-share-mode="share"] .note-write-share-panel,
+.moyo-share-modal[data-share-mode="share"] .moyo-share-panel{
+    max-height:min(88vh, 760px)!important;
+}
+
+.moyo-share-modal[data-share-mode="share"] .note-write-share-body,
+.moyo-share-modal[data-share-mode="share"] .moyo-share-body{
+    flex:1 1 auto!important;
+    min-height:0!important;
+    overflow:hidden!important;
+    display:flex!important;
+    flex-direction:column!important;
+    gap:10px!important;
+    padding:10px 20px 0!important;
+}
+
+.moyo-share-modal[data-share-mode="share"] .note-write-share-body > div,
+.moyo-share-modal[data-share-mode="share"] .moyo-share-body > div{
+    min-height:0!important;
+    margin:0!important;
+}
+
+.moyo-share-modal[data-share-mode="share"] .note-write-share-body > div + div,
+.moyo-share-modal[data-share-mode="share"] .moyo-share-body > div + div{
+    margin-top:0!important;
+}
+
+.moyo-share-modal[data-share-mode="share"] .note-write-share-list,
+.moyo-share-modal[data-share-mode="share"] .moyo-share-list{
+    flex:1 1 230px!important;
+    min-height:190px!important;
+    max-height:260px!important;
+}
+
+.moyo-share-modal[data-share-mode="share"] .note-share-chip-list,
+.moyo-share-modal[data-share-mode="share"] .note-write-share-selected,
+.moyo-share-modal[data-share-mode="share"] .moyo-share-selected{
+    flex:0 0 auto!important;
+    min-height:44px!important;
+    max-height:118px!important;
+    padding:7px 10px!important;
+}
+
+.moyo-share-modal[data-share-mode="share"] .note-write-share-modal-actions,
+.moyo-share-modal[data-share-mode="share"] .moyo-share-footer{
+    flex:0 0 auto!important;
+    padding:12px 20px 16px!important;
+}
+
+/* v247: 권한 설정도 공유/참석자와 같은 탭 + 후보 카드 + 선택 chip 흐름 */
+
+.moyo-share-modal[data-share-mode="permission"] .note-write-share-panel,
+.moyo-share-modal[data-share-mode="permission"] .moyo-share-panel{
+    max-height:min(88vh, 760px)!important;
+}
+
+.moyo-share-modal[data-share-mode="permission"] .note-write-share-body,
+.moyo-share-modal[data-share-mode="permission"] .moyo-share-body{
+    flex:1 1 auto!important;
+    min-height:0!important;
+    overflow:hidden!important;
+    display:flex!important;
+    flex-direction:column!important;
+    gap:10px!important;
+    padding:10px 20px 0!important;
+}
+
+.moyo-share-modal[data-share-mode="permission"] .note-write-share-body > div,
+.moyo-share-modal[data-share-mode="permission"] .moyo-share-body > div{
+    min-height:0!important;
+    margin:0!important;
+}
+
+.moyo-share-modal[data-share-mode="permission"] .note-write-share-body > div + div,
+.moyo-share-modal[data-share-mode="permission"] .moyo-share-body > div + div{
+    margin-top:0!important;
+}
+
+.moyo-share-modal[data-share-mode="permission"] .note-write-share-list,
+.moyo-share-modal[data-share-mode="permission"] .moyo-share-list{
+    flex:1 1 230px!important;
+    min-height:190px!important;
+    max-height:260px!important;
+}
+
+.moyo-share-modal[data-share-mode="permission"] .note-share-chip-list,
+.moyo-share-modal[data-share-mode="permission"] .note-write-share-selected,
+.moyo-share-modal[data-share-mode="permission"] .moyo-share-selected{
+    flex:0 0 auto!important;
+    min-height:44px!important;
+    max-height:118px!important;
+    padding:7px 10px!important;
+}
+
+.moyo-share-modal[data-share-mode="permission"] .note-write-share-modal-actions,
+.moyo-share-modal[data-share-mode="permission"] .moyo-share-footer{
+    flex:0 0 auto!important;
+    padding:12px 20px 16px!important;
+}
+
+
+/* v248: 권한 설정 모달도 공유 모달과 동일한 segmented tab/head 디자인으로 고정 */
+.moyo-share-modal .note-write-share-modal-head,
+.moyo-share-modal .moyo-share-head{
+    position:relative!important;
+    justify-content:center!important;
+}
+
+.moyo-share-modal .note-write-share-close,
+.moyo-share-modal .moyo-share-close{
+    position:absolute!important;
+    right:14px!important;
+    top:50%!important;
+    transform:translateY(-50%)!important;
+}
+
+.moyo-share-modal[data-share-mode="permission"] .note-write-share-tabs,
+.moyo-share-modal[data-share-mode="permission"] .moyo-share-tabs{
+    width:calc(100% - 40px)!important;
+    display:flex!important;
+    flex-direction:row!important;
+    align-items:center!important;
+    margin:14px 20px 0!important;
+    padding:0!important;
+    gap:0!important;
+    border:1px solid #dbe5f4!important;
+    border-radius:14px!important;
+    overflow:hidden!important;
+    background:#fff!important;
+}
+
+.moyo-share-modal[data-share-mode="permission"] .note-write-share-tab,
+.moyo-share-modal[data-share-mode="permission"] .moyo-share-tab{
+    position:relative!important;
+    flex:1 1 0!important;
+    width:auto!important;
+    height:42px!important;
+    min-width:0!important;
+    display:inline-flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    gap:6px!important;
+    padding:0 10px!important;
+    border:0!important;
+    border-radius:0!important;
+    background:#fff!important;
+    color:#475569!important;
+    font-size:13px!important;
+    font-weight:900!important;
+    line-height:1!important;
+    white-space:nowrap!important;
+    box-shadow:none!important;
+}
+
+.moyo-share-modal[data-share-mode="permission"] .note-write-share-tab:not(:last-child)::after,
+.moyo-share-modal[data-share-mode="permission"] .moyo-share-tab:not(:last-child)::after{
+    content:""!important;
+    position:absolute!important;
+    right:0!important;
+    top:11px!important;
+    width:1px!important;
+    height:20px!important;
+    background:#e6edf7!important;
+}
+
+.moyo-share-modal[data-share-mode="permission"] .note-write-share-tab.is-active,
+.moyo-share-modal[data-share-mode="permission"] .moyo-share-tab.is-active{
+    background:#f4f8ff!important;
+    color:#3467df!important;
+    box-shadow:inset 0 -2px 0 #6f95ff!important;
+}
+
+.moyo-share-modal[data-share-mode="permission"] .note-write-share-card,
+.moyo-share-modal[data-share-mode="permission"] .moyo-share-card{
+    min-height:56px!important;
+    padding:9px 10px!important;
+    border-left:1px solid var(--moyo-share-border)!important;
+    border-radius:14px!important;
+    background:#fff!important;
+    box-shadow:none!important;
+}
+
+.moyo-share-modal[data-share-mode="permission"] .note-write-share-card:hover,
+.moyo-share-modal[data-share-mode="permission"] .note-write-share-card.is-selected{
+    border-color:#b9cdff!important;
+    background:#fbfdff!important;
+    box-shadow:none!important;
+}
+
+
+/* v252: 권한 설정 후보도 공유 모달처럼 선택 체크 표시 */
+.moyo-share-modal[data-share-mode="permission"] .note-write-share-card .note-write-share-check{
+    flex:0 0 22px!important;
+    width:22px!important;
+    height:22px!important;
+    display:inline-flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    margin-left:4px!important;
+    border:1.5px solid #cbd5e1!important;
+    border-radius:999px!important;
+    background:#fff!important;
+    color:#fff!important;
+    font-size:13px!important;
+    font-weight:900!important;
+    line-height:1!important;
+}
+
+.moyo-share-modal[data-share-mode="permission"] .note-write-share-card.is-selected .note-write-share-check{
+    border-color:#4f7cff!important;
+    background:#4f7cff!important;
+}
+
+.moyo-share-modal[data-share-mode="permission"] .note-write-share-card.is-selected .note-write-share-check::before{
+    content:"✓"!important;
+}
+
+
+/* v249: 권한 설정 하단 버튼을 공유 모달과 같은 단일 선택 완료 버튼으로 통일 */
+.moyo-share-modal[data-share-mode="permission"] .note-write-share-modal-actions,
+.moyo-share-modal[data-share-mode="permission"] .moyo-share-footer{
+    display:flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    gap:0!important;
+    padding:12px 20px 18px!important;
+    border-top:1px solid var(--moyo-share-line)!important;
+    background:#fff!important;
+}
+
+.moyo-share-modal[data-share-mode="permission"] .note-soft-btn,
+.moyo-share-modal[data-share-mode="permission"] .moyo-share-cancel-button{
+    display:none!important;
+}
+
+.moyo-share-modal[data-share-mode="permission"] .note-gradient-btn,
+.moyo-share-modal[data-share-mode="permission"] .moyo-share-apply-button{
+    width:100%!important;
+    min-width:0!important;
+    height:42px!important;
+    border-radius:12px!important;
+    font-size:13px!important;
+    font-weight:900!important;
+}
+
+/* v250: 권한 설정 하단 선택 완료 버튼을 공유 모달과 동일하게 전체 폭으로 고정 */
+.moyo-share-modal[data-share-mode="permission"] .note-write-share-modal-actions > div,
+.moyo-share-modal[data-share-mode="permission"] .moyo-share-footer > div{
+    width:100%!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    gap:0!important;
+    margin:0!important;
+}
+
+.moyo-share-modal[data-share-mode="permission"] .note-write-share-modal-actions .note-gradient-btn,
+.moyo-share-modal[data-share-mode="permission"] .note-write-share-modal-actions .moyo-share-apply-button,
+.moyo-share-modal[data-share-mode="permission"] .moyo-share-footer .note-gradient-btn,
+.moyo-share-modal[data-share-mode="permission"] .moyo-share-footer .moyo-share-apply-button{
+    flex:1 1 auto!important;
+    width:100%!important;
+    max-width:none!important;
+    min-width:0!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+}
+
+
+/* 권한 설정: 그룹/프로젝트 자체와 하위 멤버를 먼저 구분해서 선택 */
+.moyo-share-modal .note-share-permission-scope-toggle{
+    margin-left:auto!important;
+    display:inline-flex!important;
+    align-items:center!important;
+    gap:4px!important;
+    padding:2px!important;
+    border:1px solid #d7e2f0!important;
+    border-radius:999px!important;
+    background:#f8fafc!important;
+}
+
+.moyo-share-modal .note-share-permission-scope-btn{
+    height:24px!important;
+    min-width:54px!important;
+    display:inline-flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    padding:0 10px!important;
+    border:0!important;
+    border-radius:999px!important;
+    background:transparent!important;
+    color:#64748b!important;
+    font-size:11px!important;
+    font-weight:900!important;
+    line-height:1!important;
+    white-space:nowrap!important;
+    cursor:pointer!important;
+    box-shadow:none!important;
+    outline:0!important;
+}
+
+.moyo-share-modal .note-share-permission-scope-btn.is-active{
+    background:#fff!important;
+    color:var(--moyo-share-blue)!important;
+    box-shadow:0 1px 5px rgba(31,51,84,.09)!important;
+}
+
+/* 권한 설정: 개인/친구=블루, 그룹 멤버=민트, 프로젝트 멤버=보라.
+   아바타 모양은 대상 단위 구분용: 개인/멤버는 원형, 그룹/프로젝트 자체는 라운드 사각형. */
+.moyo-share-modal .note-write-share-card.note-share-type-user:not(.note-share-scope-ws-member):not(.note-share-scope-proj-member) .note-share-avatar,
+.moyo-share-modal .note-share-chip.note-share-type-user:not(.note-share-scope-ws-member):not(.note-share-scope-proj-member) .note-share-avatar{
+    --share-accent:var(--moyo-share-blue)!important;
+    --share-soft:#eef4ff!important;
+    border-radius:999px!important;
+}
+
+.moyo-share-modal .note-write-share-card.note-share-type-ws .note-share-avatar,
+.moyo-share-modal .note-write-share-card.note-share-type-proj .note-share-avatar,
+.moyo-share-modal .note-share-chip.note-share-type-ws .note-share-avatar,
+.moyo-share-modal .note-share-chip.note-share-type-proj .note-share-avatar{
+    border-radius:12px!important;
+}
+
+.moyo-share-modal .note-write-share-card.note-share-scope-ws-member,
+.moyo-share-modal .note-share-chip.note-share-scope-ws-member{
+    --share-accent:var(--moyo-share-mint)!important;
+    --share-soft:#eafffb!important;
+    border-color:rgba(89, 210, 194, .48)!important;
+    background:#f8fffd!important;
+}
+
+.moyo-share-modal .note-write-share-card.note-share-scope-proj-member,
+.moyo-share-modal .note-share-chip.note-share-scope-proj-member{
+    --share-accent:var(--moyo-share-violet)!important;
+    --share-soft:#f2efff!important;
+    border-color:rgba(125, 107, 255, .38)!important;
+    background:#fbfaff!important;
+}
+
+.moyo-share-modal .note-write-share-card.note-share-scope-ws-member .note-share-avatar,
+.moyo-share-modal .note-write-share-card.note-share-scope-proj-member .note-share-avatar,
+.moyo-share-modal .note-share-chip.note-share-scope-ws-member .note-share-avatar,
+.moyo-share-modal .note-share-chip.note-share-scope-proj-member .note-share-avatar{
+    border-radius:999px!important;
+    background:var(--share-soft)!important;
+    color:var(--share-accent)!important;
+}
+
+.moyo-share-modal .note-share-chip.note-share-type-proj{
+    --share-accent:var(--moyo-share-violet)!important;
+}
+
+/* 공유받은 콘텐츠: 재공유 방지 / 해지 안내 모드 */
+.note-share-received-panel {
+    min-height: 190px;
+    padding: 34px 24px 28px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 12px;
+    color: #12233d;
+}
+.note-share-received-icon {
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #edf4ff;
+    color: #4f78ff;
+    font-size: 22px;
+    font-weight: 800;
+}
+.note-share-received-panel strong {
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+}
+.note-share-received-panel p {
+    margin: 0;
+    color: #7b8da8;
+    font-size: 13px;
+    line-height: 1.55;
+}
+.note-share-received-action {
+    width: 100%;
+}
+
+/* 공유 모달: 공유 요청과 편집 권한을 한 번에 지정하는 빠른 옵션 */
+.moyo-share-modal .note-share-edit-option{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    min-height:42px;
+    padding:9px 12px;
+    margin-right:auto;
+    border:1px solid rgba(79,120,255,.18);
+    border-radius:14px;
+    background:#f8fbff;
+    color:#183153;
+    cursor:pointer;
+    user-select:none;
+    transition:border-color .16s ease, background .16s ease, box-shadow .16s ease;
+}
+.moyo-share-modal .note-share-edit-option[hidden]{display:none!important;}
+.moyo-share-modal .note-share-edit-option input{
+    width:17px;
+    height:17px;
+    margin:0;
+    accent-color:#4f78ff;
+    flex:0 0 auto;
+}
+.moyo-share-modal .note-share-edit-option-text{
+    display:flex;
+    flex-direction:column;
+    gap:2px;
+    line-height:1.25;
+}
+.moyo-share-modal .note-share-edit-option-text strong{
+    font-size:13px;
+    font-weight:800;
+    letter-spacing:-.02em;
+}
+.moyo-share-modal .note-share-edit-option-text small{
+    font-size:11.5px;
+    color:#7d8da5;
+    font-weight:600;
+}
+.moyo-share-modal .note-share-edit-option.is-active{
+    border-color:rgba(79,120,255,.42);
+    background:#eef4ff;
+    box-shadow:0 8px 18px rgba(79,120,255,.10);
+}
+.moyo-share-modal .note-share-edit-option.is-disabled{
+    opacity:.72;
+}
+.moyo-share-modal .note-share-chip-permission{
+    display:inline-flex;
+    align-items:center;
+    height:20px;
+    padding:0 7px;
+    border-radius:999px;
+    background:#eef4ff;
+    color:#4f78ff;
+    font-size:11px;
+    font-weight:800;
+    letter-spacing:-.02em;
+}
+@media (max-width: 720px){
+    .moyo-share-modal .note-write-share-modal-actions{
+        align-items:stretch;
+    }
+    .moyo-share-modal .note-share-edit-option{
+        width:100%;
+        margin-right:0;
+    }
+}
+
+/* v260: 공유 모달 편집 권한 옵션 추가 후에도 하단 보내기 버튼은 한 행 전체 사용 */
+.moyo-share-modal[data-share-mode="share"] .note-write-share-modal-actions{
+    flex-direction:column!important;
+    align-items:stretch!important;
+    justify-content:center!important;
+    gap:10px!important;
+}
+.moyo-share-modal[data-share-mode="share"] .note-share-edit-option{
+    width:100%!important;
+    margin-right:0!important;
+    box-sizing:border-box!important;
+}
+.moyo-share-modal[data-share-mode="share"] .note-write-share-modal-actions > div{
+    width:100%!important;
+    flex:0 0 auto!important;
+    display:flex!important;
+}
+.moyo-share-modal[data-share-mode="share"] .note-write-share-modal-actions .note-gradient-btn,
+.moyo-share-modal[data-share-mode="share"] .note-write-share-modal-actions .moyo-share-apply-button{
+    width:100%!important;
+}
+
+/* v262: 공유 해지 모드는 사진/노트/캘린더 공통 확인형 레이아웃 */
+.moyo-share-modal.is-received-share-view .note-write-share-tabs,
+.moyo-share-modal.is-received-share-view .moyo-share-tabs,
+.moyo-share-modal.is-received-share-view .note-write-share-toolbar,
+.moyo-share-modal.is-received-share-view .note-write-share-subtitle,
+.moyo-share-modal.is-received-share-view .note-share-edit-option,
+.moyo-share-modal.is-received-share-view .note-write-share-body > div + div{
+    display:none!important;
+}
+
+.moyo-share-modal.is-received-share-view .note-write-share-body,
+.moyo-share-modal .note-write-share-body-received{
+    display:block!important;
+    grid-template-columns:none!important;
+    padding:34px 24px 28px!important;
+    border-top:1px solid #edf2f8!important;
+    background:#fff!important;
+}
+
+.moyo-share-modal.is-received-share-view .note-write-share-body > div:first-child,
+.moyo-share-modal .note-write-share-body-received > div:first-child{
+    display:block!important;
+    width:100%!important;
+    min-width:0!important;
+}
+
+.moyo-share-modal.is-received-share-view .note-write-share-list{
+    width:100%!important;
+    min-height:0!important;
+    max-height:none!important;
+    overflow:visible!important;
+    padding:0!important;
+    border:0!important;
+    border-radius:0!important;
+    background:transparent!important;
+}
+
+.moyo-share-modal.is-received-share-view .note-share-received-panel{
+    min-height:126px!important;
+    padding:0!important;
+    gap:12px!important;
+    display:flex!important;
+    flex-direction:column!important;
+    align-items:center!important;
+    justify-content:center!important;
+    text-align:center!important;
+    border:0!important;
+    background:transparent!important;
+}
+
+.moyo-share-modal.is-received-share-view .note-share-received-icon{
+    width:44px!important;
+    height:44px!important;
+    border-radius:50%!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    background:#eef5ff!important;
+    color:#4f78ff!important;
+}
+
+.moyo-share-modal.is-received-share-view .note-share-received-panel strong{
+    margin-top:2px!important;
+    font-size:15px!important;
+    line-height:1.45!important;
+    font-weight:900!important;
+    color:#12233d!important;
+    letter-spacing:-.03em!important;
+}
+
+.moyo-share-modal.is-received-share-view .note-share-received-panel p{
+    max-width:420px!important;
+    margin:0!important;
+    color:#7b8da8!important;
+    font-size:13px!important;
+    line-height:1.55!important;
+    font-weight:700!important;
+    letter-spacing:-.03em!important;
+}
+
+.moyo-share-modal.is-received-share-view .note-write-share-modal-actions{
+    padding:16px 24px 18px!important;
+    border-top:1px solid #eef2f8!important;
+    display:flex!important;
+    justify-content:stretch!important;
+    align-items:center!important;
+    background:#fff!important;
+}
+
+.moyo-share-modal.is-received-share-view .note-write-share-modal-actions > div{
+    width:100%!important;
+    flex:0 0 100%!important;
+    display:flex!important;
+    justify-content:stretch!important;
+}
+
+.moyo-share-modal.is-received-share-view .note-soft-btn{
+    display:none!important;
+}
+
+.moyo-share-modal.is-received-share-view .note-share-received-action,
+.moyo-share-modal.is-received-share-view .note-gradient-btn{
+    width:100%!important;
+    min-width:0!important;
+    height:42px!important;
+    padding:0 24px!important;
+    margin:0!important;
+    border-radius:12px!important;
+}
+
+/* v264: 공유 해지 모드 아이콘은 공통 종이비행기 라인 아이콘 사용 + 버튼 한 줄 전체 사용 */
+.moyo-share-modal.is-received-share-view .note-share-received-icon svg{
+    width:22px!important;
+    height:22px!important;
+    display:block!important;
+    fill:none!important;
+    stroke:currentColor!important;
+    stroke-width:2.2!important;
+    stroke-linecap:round!important;
+    stroke-linejoin:round!important;
+}
+.moyo-share-modal.is-received-share-view .note-share-received-scope-icon{
+    font-size:13px!important;
+    font-weight:900!important;
+    letter-spacing:-.04em!important;
+}
+
+
+/* v266: 사진/노트/캘린더 공유 해지 모달 종이비행기 아이콘 공통 라인형 고정 */
+.moyo-share-modal .photo-share-release-icon svg{
+    width:22px!important;
+    height:22px!important;
+    display:block!important;
+    fill:none!important;
+    stroke:currentColor!important;
+    stroke-width:2.2!important;
+    stroke-linecap:round!important;
+    stroke-linejoin:round!important;
+}
+
+.moyo-share-modal .photo-share-release-icon svg path{
+    fill:none!important;
+    stroke:currentColor!important;
+}
+
+.moyo-share-modal.is-received-share-view .note-share-received-icon svg path{
+    fill:none!important;
+    stroke:currentColor!important;
+}
+
+/* v265: 공유 해지 전용 모달은 사진/노트/캘린더 모두 동일하게 하단 버튼 한 줄 전체 사용 */
+.moyo-share-modal.photo-share-release-only .note-write-share-modal-actions,
+.moyo-share-modal.is-received-share-view .note-write-share-modal-actions{
+    padding:16px 24px 18px!important;
+    border-top:1px solid #eef2f8!important;
+    display:flex!important;
+    justify-content:stretch!important;
+    align-items:center!important;
+    background:#fff!important;
+}
+
+.moyo-share-modal.photo-share-release-only .note-write-share-modal-actions > div,
+.moyo-share-modal.is-received-share-view .note-write-share-modal-actions > div{
+    width:100%!important;
+    flex:0 0 100%!important;
+    display:flex!important;
+    justify-content:stretch!important;
+    align-items:center!important;
+}
+
+.moyo-share-modal.photo-share-release-only .photo-share-release-apply,
+.moyo-share-modal.photo-share-release-only .note-gradient-btn.photo-share-release-apply,
+.moyo-share-modal.is-received-share-view .note-share-received-action,
+.moyo-share-modal.is-received-share-view .note-gradient-btn.note-share-received-action{
+    width:100%!important;
+    min-width:0!important;
+    max-width:none!important;
+    flex:1 1 auto!important;
+    height:42px!important;
+    padding:0 24px!important;
+    margin:0!important;
+    border-radius:12px!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+}
+
+/* v267: 개인/개인 프로젝트 친구 공유 모달 - 선택 중심 정돈 디자인 */
+.moyo-share-modal[data-share-mode="share"] .note-write-share-panel,
+.moyo-share-modal[data-share-mode="share"] .moyo-share-panel{
+    width:min(560px, calc(100vw - 32px))!important;
+}
+
+.moyo-share-modal[data-share-mode="share"] .note-write-share-modal-head,
+.moyo-share-modal[data-share-mode="share"] .moyo-share-head{
+    min-height:62px!important;
+    border-bottom:0!important;
+}
+
+.moyo-share-modal[data-share-mode="share"] .note-write-share-modal-head::after,
+.moyo-share-modal[data-share-mode="share"] .moyo-share-head::after{
+    content:""!important;
+    position:absolute!important;
+    left:24px!important;
+    right:24px!important;
+    bottom:0!important;
+    height:2px!important;
+    border-radius:999px!important;
+    background:linear-gradient(90deg,#55DDBF 0%,#4a90e2 56%,#7568d8 100%)!important;
+    pointer-events:none!important;
+}
+
+.moyo-share-modal[data-share-mode="share"] .note-write-share-toolbar,
+.moyo-share-modal[data-share-mode="share"] .moyo-share-toolbar{
+    padding:14px 20px 0!important;
+}
+
+.moyo-share-modal[data-share-mode="share"] .note-write-share-body,
+.moyo-share-modal[data-share-mode="share"] .moyo-share-body{
+    padding-top:10px!important;
+}
+
+.moyo-share-modal[data-share-mode="share"] .note-write-share-subtitle,
+.moyo-share-modal[data-share-mode="share"] .moyo-share-subtitle{
+    margin-bottom:7px!important;
+}
+
+.moyo-share-modal[data-share-mode="share"] .note-write-share-list,
+.moyo-share-modal[data-share-mode="share"] .moyo-share-list{
+    gap:7px!important;
+    padding:8px!important;
+    border-color:#e0e8f3!important;
+    background:#f9fbfe!important;
+}
+
+.moyo-share-modal[data-share-mode="share"] .note-write-share-card,
+.moyo-share-modal[data-share-mode="share"] .moyo-share-card{
+    min-height:56px!important;
+    border-color:#dce6f2!important;
+    background:#fff!important;
+    transition:border-color .16s ease, background-color .16s ease, transform .16s ease!important;
+}
+
+.moyo-share-modal[data-share-mode="share"] .note-write-share-card:hover{
+    border-color:#c7d8f3!important;
+    background:#fcfdff!important;
+    transform:translateY(-1px)!important;
+}
+
+.moyo-share-modal[data-share-mode="share"] .note-write-share-card.is-selected{
+    border-color:#9dbbff!important;
+    background:#f3f7ff!important;
+    transform:none!important;
+}
+
+.moyo-share-modal[data-share-mode="share"] .note-share-avatar-default{
+    flex:0 0 34px!important;
+    width:34px!important;
+    height:34px!important;
+    border:0!important;
+    border-radius:999px!important;
+    background:linear-gradient(135deg,#66d8c8 0%,#6098f0 54%,#7768ef 100%)!important;
+    background-clip:padding-box!important;
+    color:#fff!important;
+    box-shadow:0 0 0 1px #dce6f1, 0 3px 10px rgba(76,111,198,.16)!important;
+}
+
+.moyo-share-modal[data-share-mode="share"] .note-share-avatar-default b{
+    color:#fff!important;
+    font-size:12px!important;
+    font-weight:900!important;
+    line-height:1!important;
+    text-shadow:0 1px 2px rgba(31,55,112,.18)!important;
+}
+
+.moyo-share-modal[data-share-mode="share"] .note-share-chip-list,
+.moyo-share-modal[data-share-mode="share"] .note-write-share-selected,
+.moyo-share-modal[data-share-mode="share"] .moyo-share-selected{
+    min-height:46px!important;
+    max-height:74px!important;
+    gap:6px!important;
+    padding:7px 9px!important;
+    border-color:#dbe6f4!important;
+    border-radius:14px!important;
+    background:#f8fbff!important;
+}
+
+.moyo-share-modal[data-share-mode="share"] .note-share-chip{
+    min-height:28px!important;
+    padding:2px 6px 2px 3px!important;
+    border-color:#d3e0f4!important;
+    background:#fff!important;
+}
+
+.moyo-share-modal[data-share-mode="share"] .note-share-chip .note-share-avatar-default{
+    flex-basis:22px!important;
+    width:22px!important;
+    height:22px!important;
+    box-shadow:none!important;
+}
+
+.moyo-share-modal[data-share-mode="share"] .note-share-chip .note-share-avatar-default b{
+    font-size:9px!important;
+}
+
+.moyo-share-modal[data-share-mode="share"] .note-share-chip-name{
+    max-width:124px!important;
+    font-size:11px!important;
+}
+
+.moyo-share-modal[data-share-mode="share"] .note-gradient-btn:disabled,
+.moyo-share-modal[data-share-mode="share"] .moyo-share-apply-button:disabled{
+    background:#dbe3ef!important;
+    color:#8d9aaf!important;
+    cursor:not-allowed!important;
+    opacity:1!important;
+}
+
+.moyo-share-modal[data-share-mode="share"] .note-gradient-btn:not(:disabled),
+.moyo-share-modal[data-share-mode="share"] .moyo-share-apply-button:not(:disabled){
+    background:var(--moyo-primary-gradient,linear-gradient(135deg,#39CDB5 0%,#4A90E2 54%,#7358E8 100%))!important;
+}
+
+
+/* v268: 유지보수 보정 - 기존 프로필 이미지 복구 / 제목 구분선 정렬 */
+.moyo-share-modal[data-share-mode="share"] .note-write-share-modal-head,
+.moyo-share-modal[data-share-mode="share"] .moyo-share-head{
+    position:relative!important;
+}
+
+.moyo-share-modal[data-share-mode="share"] .note-write-share-modal-head::after,
+.moyo-share-modal[data-share-mode="share"] .moyo-share-head::after{
+    left:20px!important;
+    right:20px!important;
+    bottom:0!important;
+    height:2px!important;
+    border-radius:0!important;
+    background:linear-gradient(90deg,#55DDBF 0%,#4a90e2 56%,#7568d8 100%)!important;
+}
+
+.moyo-share-modal[data-share-mode="share"] .note-write-share-avatar,
+.moyo-share-modal[data-share-mode="share"] .note-share-avatar{
+    border-radius:999px!important;
+}
+
+.moyo-share-modal[data-share-mode="share"] .note-write-share-avatar img,
+.moyo-share-modal[data-share-mode="share"] .note-share-avatar img{
+    width:100%!important;
+    height:100%!important;
+    object-fit:cover!important;
+    border-radius:999px!important;
+}
+
+/* v269: 제목 하단 MOYO 구분선 - 모달 좌우 끝까지 */
+.moyo-share-modal[data-share-mode="share"] .note-write-share-modal-head::after,
+.moyo-share-modal[data-share-mode="share"] .moyo-share-head::after{
+    left:0!important;
+    right:0!important;
+    bottom:0!important;
+    width:auto!important;
+    height:2px!important;
+    border-radius:0!important;
+    background:linear-gradient(90deg,#55DDBF 0%,#4a90e2 56%,#7568d8 100%)!important;
+}
+
+
+/* v268: 친구 공유 요청/관리 모달에도 해지 모달과 동일한 상징 아이콘 사용 */
+.moyo-share-modal[data-share-mode="share"] .moyo-friend-share-request-symbol{
+    width:44px!important;
+    height:44px!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    margin:12px auto 0!important;
+    border-radius:999px!important;
+    background:#f1f6ff!important;
+    color:#4f7cff!important;
+    flex:0 0 44px!important;
+}
+.moyo-share-modal[data-share-mode="share"] .moyo-friend-share-request-symbol svg{
+    width:22px!important;
+    height:22px!important;
+    display:block!important;
+    fill:none!important;
+    stroke:currentColor!important;
+    stroke-width:2.2!important;
+    stroke-linecap:round!important;
+    stroke-linejoin:round!important;
+}
+.moyo-share-modal[data-share-mode="share"] .moyo-friend-share-request-symbol svg path{
+    fill:none!important;
+    stroke:currentColor!important;
+}
+.moyo-share-modal[data-share-mode="share"] .moyo-friend-share-request-symbol + .note-write-share-toolbar,
+.moyo-share-modal[data-share-mode="share"] .moyo-friend-share-request-symbol + .moyo-share-toolbar{
+    padding-top:10px!important;
+}
+
+
+/* v269: 친구 공유는 user-check 아이콘으로 통일 */
+.moyo-share-modal[data-share-mode="share"] .moyo-friend-share-request-symbol i,
+.moyo-share-modal.is-received-share-view .note-share-received-icon i,
+.moyo-share-modal .photo-share-release-icon i{
+    font-size:20px!important;
+    line-height:1!important;
+    color:currentColor!important;
+}
+
+/* v270: 친구 공유 상징은 별도 행이 아니라 제목 옆에 배치 */
+.moyo-share-modal[data-share-mode="share"] .moyo-share-head .moyo-friend-share-request-symbol,
+.moyo-share-modal[data-share-mode="share"] .note-write-share-modal-head .moyo-friend-share-request-symbol{
+    width:24px!important;
+    height:24px!important;
+    display:inline-flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    margin:0 0 0 8px!important;
+    border-radius:999px!important;
+    background:#f1f6ff!important;
+    color:#4f7cff!important;
+    vertical-align:middle!important;
+    flex:0 0 24px!important;
+}
+.moyo-share-modal[data-share-mode="share"] .moyo-share-head .moyo-friend-share-request-symbol i,
+.moyo-share-modal[data-share-mode="share"] .note-write-share-modal-head .moyo-friend-share-request-symbol i{
+    font-size:12px!important;
+    line-height:1!important;
+}
+.moyo-share-modal[data-share-mode="share"] .moyo-share-head .moyo-friend-share-request-symbol + *,
+.moyo-share-modal[data-share-mode="share"] .note-write-share-modal-head .moyo-friend-share-request-symbol + *{
+    margin-left:0!important;
+}
+
+
+/* v271: 친구 공유 아이콘을 제목 텍스트 옆에 항상 노출 */
+.moyo-share-modal .note-write-share-modal-head h3,
+.moyo-share-modal .moyo-share-head h3{
+    display:inline-flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    gap:7px!important;
+}
+.moyo-share-modal .note-write-share-modal-head h3 > .moyo-friend-share-request-symbol,
+.moyo-share-modal .moyo-share-head h3 > .moyo-friend-share-request-symbol{
+    width:22px!important;
+    height:22px!important;
+    display:inline-flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    margin:0!important;
+    border-radius:999px!important;
+    background:#f1f6ff!important;
+    color:#4f7cff!important;
+    flex:0 0 22px!important;
+}
+.moyo-share-modal .note-write-share-modal-head h3 > .moyo-friend-share-request-symbol i,
+.moyo-share-modal .moyo-share-head h3 > .moyo-friend-share-request-symbol i{
+    display:block!important;
+    font-size:12px!important;
+    line-height:1!important;
+    color:#4f7cff!important;
+}
+
+/* v272: 제목 텍스트는 정중앙 고정, 친구 공유 아이콘만 텍스트 오른쪽 배치 */
+.moyo-share-modal .note-write-share-modal-head h3,
+.moyo-share-modal .moyo-share-head h3{
+    position:relative!important;
+    display:block!important;
+    width:100%!important;
+    text-align:center!important;
+}
+
+.moyo-share-modal .note-write-share-modal-head h3 > .moyo-friend-share-request-symbol,
+.moyo-share-modal .moyo-share-head h3 > .moyo-friend-share-request-symbol{
+    position:absolute!important;
+    left:calc(50% + 43px)!important;
+    top:50%!important;
+    transform:translateY(-50%)!important;
+    margin:0!important;
+}
+
+/* v273: 친구 공유 / 친구에게 보내기 기능 구분 설명 */
+.moyo-share-modal .note-write-share-modal-actions{
+    display:flex!important;
+    flex-direction:column!important;
+    align-items:stretch!important;
+    gap:10px!important;
+}
+.moyo-share-modal .moyo-share-action-description{
+    margin:0!important;
+    padding:0 2px!important;
+    color:#7b8aa3!important;
+    font-size:12px!important;
+    line-height:1.45!important;
+    text-align:left!important;
+    white-space:normal!important;
+}
+.moyo-share-modal .note-write-share-modal-actions > div{
+    width:100%!important;
+}
+
+
+/* v274: 친구에게 보내기 - 제목은 정중앙, 종이비행기 아이콘만 텍스트 오른쪽 */
+.moyo-share-modal .note-write-share-modal-head h3 > .moyo-friend-share-request-symbol.is-send,
+.moyo-share-modal .moyo-share-head h3 > .moyo-friend-share-request-symbol.is-send{
+    left:calc(50% + 72px)!important;
+}
+.moyo-share-modal .note-write-share-modal-head h3 > .moyo-friend-share-request-symbol.is-send i,
+.moyo-share-modal .moyo-share-head h3 > .moyo-friend-share-request-symbol.is-send i{
+    font-size:11px!important;
+    transform:translateX(-.5px)!important;
+}
+
+
+/* =========================================================
+   CommonPeopleModal behavior bridge
+   - SHARE / SEND / TOGETHER / VIEW all use the same share shell.
+   - Only visibility and right-side action content may differ.
+   ========================================================= */
+#commonPeopleModal{z-index:2147483646!important;}
+#commonPeopleModal[hidden],
+#commonPeopleModal .common-people-modal-description[hidden],
+#commonPeopleModal .common-people-modal-selected-wrap[hidden],
+#commonPeopleModal .common-people-modal-footer[hidden],
+#commonPeopleModal .common-people-modal-footer-left[hidden],
+#commonPeopleModal .common-people-modal-actions[hidden],
+#commonPeopleModal .common-people-modal-secondary[hidden],
+#commonPeopleModal .common-people-modal-count[hidden]{display:none!important;}
+#commonPeopleModal .common-people-modal-list-label[hidden]{display:none!important;}
+
+/* Generic people rows are literally share cards. */
+#commonPeopleModal .common-people-modal-row.note-write-share-card{
+    width:100%!important;
+    max-width:100%!important;
+    min-height:56px!important;
+    display:flex!important;
+    align-items:center!important;
+    gap:10px!important;
+    padding:9px 10px!important;
+    border:1px solid var(--moyo-share-border)!important;
+    border-radius:14px!important;
+    background:#fff!important;
+    box-shadow:none!important;
+}
+#commonPeopleModal .common-people-modal-row.note-write-share-card::before{content:none!important;display:none!important;}
+#commonPeopleModal .common-people-modal-row.note-write-share-card:hover,
+#commonPeopleModal .common-people-modal-row.note-write-share-card.selected,
+#commonPeopleModal .common-people-modal-row.note-write-share-card.is-selected{
+    border-color:#b9cdff!important;
+    background:#fbfdff!important;
+    box-shadow:none!important;
+}
+#commonPeopleModal .common-people-modal-profile-link.note-write-share-profile,
+#commonPeopleModal .common-people-modal-profile.note-write-share-profile{
+    min-width:0!important;
+    flex:1 1 auto!important;
+    display:flex!important;
+    align-items:center!important;
+    gap:10px!important;
+    padding:0!important;
+    border:0!important;
+    background:transparent!important;
+    color:inherit!important;
+    text-align:left!important;
+    cursor:pointer!important;
+}
+#commonPeopleModal .common-people-modal-info.note-write-share-main{min-width:0!important;}
+#commonPeopleModal .common-people-modal-select-toggle{
+    flex:0 0 auto!important;
+    display:inline-flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    padding:0!important;
+    border:0!important;
+    background:transparent!important;
+    cursor:pointer!important;
+}
+#commonPeopleModal .common-people-modal-row.note-write-share-card .note-write-share-check{
+    flex:0 0 22px!important;
+    width:22px!important;
+    height:22px!important;
+    display:inline-flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    margin-left:4px!important;
+    border:1.5px solid #cbd5e1!important;
+    border-radius:999px!important;
+    background:#fff!important;
+    color:#fff!important;
+    font-size:13px!important;
+    font-weight:900!important;
+    line-height:1!important;
+    opacity:1!important;
+}
+#commonPeopleModal .common-people-modal-row.note-write-share-card.selected .note-write-share-check,
+#commonPeopleModal .common-people-modal-row.note-write-share-card.is-selected .note-write-share-check{
+    border-color:#4f7cff!important;
+    background:#4f7cff!important;
+    background-image:none!important;
+}
+#commonPeopleModal .common-people-modal-row.note-write-share-card.selected .note-write-share-check::before,
+#commonPeopleModal .common-people-modal-row.note-write-share-card.is-selected .note-write-share-check::before{
+    content:"✓"!important;
+    color:#fff!important;
+}
+
+/* Profile/default avatar mechanics; dimensions are owned by .note-share-avatar above. */
+#commonPeopleModal .common-profile-avatar-viewport.signup-profile-viewport{
+    position:relative!important;
+    display:inline-flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    overflow:hidden!important;
+    border:1px solid #dce6f1!important;
+    cursor:pointer!important;
+}
+#commonPeopleModal .common-profile-avatar-viewport .signup-avatar-preview{
+    position:absolute!important;
+    inset:0!important;
+    display:inline-flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    overflow:hidden!important;
+    border-radius:inherit!important;
+    color:#fff!important;
+    background:linear-gradient(135deg,var(--moyo-blue,#4f7cff) 0%,var(--moyo-mint,#58cfd0) 100%)!important;
+    font-size:13px!important;
+    font-weight:900!important;
+    line-height:1!important;
+}
+#commonPeopleModal .common-profile-avatar-viewport canvas[hidden]{display:none!important;}
+#commonPeopleModal .common-profile-avatar-viewport.has-image .signup-avatar-preview{display:none!important;}
+#commonPeopleModal .common-profile-avatar-viewport img{
+    width:100%!important;
+    height:100%!important;
+    display:block!important;
+    object-fit:cover!important;
+    border-radius:inherit!important;
+}
+
+/* Selected target chips use the share chip component without another layout layer. */
+#commonPeopleModal .common-people-modal-selected-list.note-share-chip-list{
+    overflow-x:auto!important;
+    overflow-y:hidden!important;
+}
+#commonPeopleModal .common-people-modal-selected-chip.note-share-chip{cursor:pointer!important;}
+#commonPeopleModal .common-people-modal-selected-empty{
+    width:100%!important;
+    min-height:30px!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    border:1px dashed #d7e3f4!important;
+    border-radius:10px!important;
+    background:#fff!important;
+    color:#94a3b8!important;
+    font-size:12px!important;
+    font-weight:800!important;
+}
+
+/* Relationship/profile-list mode: same card shell, only the right action changes. */
+#commonPeopleModal .common-people-modal-action,
+#commonPeopleModal .common-people-modal-status,
+#commonPeopleModal .common-people-modal-role{
+    flex:0 0 auto!important;
+    min-width:64px!important;
+    height:32px!important;
+    display:inline-flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    padding:0 12px!important;
+    border:1px solid #e1e8f2!important;
+    border-radius:12px!important;
+    background:#f7f9fc!important;
+    color:#7b8ba2!important;
+    font-size:12px!important;
+    font-weight:900!important;
+    line-height:1!important;
+    white-space:nowrap!important;
+}
+#commonPeopleModal .common-people-modal-action{cursor:pointer!important;}
+#commonPeopleModal .common-people-modal-action:hover{
+    border-color:#c9d8ee!important;
+    background:#f1f6fd!important;
+    color:#4f6f9f!important;
+}
+#commonPeopleModal .common-people-modal-action.is-danger{
+    border-color:#f1d9dc!important;
+    background:#fff7f8!important;
+    color:#c95c68!important;
+}
+#commonPeopleModal .common-people-modal-action.is-danger:hover{
+    border-color:#e8bec4!important;
+    background:#fff0f2!important;
+    color:#b64754!important;
+}
+
+/* The share footer already owns spacing. Never expose the old generic summary line. */
+#commonPeopleModal .common-people-modal-footer-left{display:none!important;}
+#commonPeopleModal .common-people-modal-actions{
+    width:100%!important;
+    display:flex!important;
+}
+#commonPeopleModal .common-people-modal-primary{
+    width:100%!important;
+}
+
+/* =========================================================
+   CommonPeopleModal final avatar baseline
+   - FRIEND SHARE is the single visual source of truth.
+   - SHARE / SEND / TOGETHER / FRIEND_LIST use the exact same
+     default-avatar and selected-card presentation.
+   ========================================================= */
+#commonPeopleModal .note-share-avatar-default,
+#commonPeopleModal .common-profile-avatar-viewport--default,
+#commonPeopleModal .common-profile-avatar-viewport--fallback{
+    flex:0 0 34px!important;
+    width:34px!important;
+    height:34px!important;
+    border:1px solid rgba(95,132,232,.16)!important;
+    border-radius:999px!important;
+    background:linear-gradient(135deg,#66d8c8 0%,#6098f0 54%,#7768ef 100%)!important;
+    color:#fff!important;
+    box-shadow:0 3px 10px rgba(76,111,198,.16)!important;
+}
+#commonPeopleModal .note-share-avatar-default .signup-avatar-preview,
+#commonPeopleModal .common-profile-avatar-viewport--default .signup-avatar-preview,
+#commonPeopleModal .common-profile-avatar-viewport--fallback .signup-avatar-preview{
+    position:absolute!important;
+    inset:0!important;
+    display:inline-flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    border-radius:999px!important;
+    background:transparent!important;
+    color:#fff!important;
+    font-size:12px!important;
+    font-weight:900!important;
+    line-height:1!important;
+    text-shadow:0 1px 2px rgba(31,55,112,.18)!important;
+}
+#commonPeopleModal .note-share-chip .note-share-avatar-default,
+#commonPeopleModal .common-people-modal-selected-chip .common-profile-avatar-viewport--default,
+#commonPeopleModal .common-people-modal-selected-chip .common-profile-avatar-viewport--fallback{
+    flex-basis:22px!important;
+    width:22px!important;
+    height:22px!important;
+    box-shadow:none!important;
+}
+#commonPeopleModal .note-share-chip .note-share-avatar-default .signup-avatar-preview,
+#commonPeopleModal .common-people-modal-selected-chip .common-profile-avatar-viewport--default .signup-avatar-preview,
+#commonPeopleModal .common-people-modal-selected-chip .common-profile-avatar-viewport--fallback .signup-avatar-preview{
+    font-size:9px!important;
+}
+#commonPeopleModal .common-people-modal-row.note-write-share-card.selected,
+#commonPeopleModal .common-people-modal-row.note-write-share-card.is-selected{
+    border-color:#9dbbff!important;
+    background:#f3f7ff!important;
+    transform:none!important;
+}
+
+
+/* Friend-list relation action: the list keeps the calm "친구" button.
+   The action menu itself is mounted under body so list overflow cannot clip it. */
+#commonPeopleModal .common-people-modal-action.is-friend{
+    min-width:64px!important;
+    border-color:#e1e8f2!important;
+    background:#f7f9fc!important;
+    color:#7b8ba2!important;
+}
+#commonPeopleModal .common-people-modal-action.is-friend:hover,
+#commonPeopleModal .common-people-modal-action.is-friend[aria-expanded="true"]{
+    border-color:#c9d8ee!important;
+    background:#f1f6fd!important;
+    color:#4f6f9f!important;
+}
+.common-people-friend-popover{
+    position:fixed!important;
+    z-index:2147483647!important;
+    width:132px!important;
+    padding:6px!important;
+    box-sizing:border-box!important;
+    border:1px solid #e3eaf4!important;
+    border-radius:12px!important;
+    background:#fff!important;
+    box-shadow:0 12px 30px rgba(31,52,86,.18)!important;
+}
+.common-people-friend-popover-item{
+    width:100%!important;
+    height:34px!important;
+    display:flex!important;
+    align-items:center!important;
+    padding:0 10px!important;
+    box-sizing:border-box!important;
+    border:0!important;
+    border-radius:8px!important;
+    background:transparent!important;
+    color:#41516a!important;
+    font-size:12px!important;
+    font-weight:800!important;
+    line-height:1!important;
+    text-align:left!important;
+    cursor:pointer!important;
+}
+.common-people-friend-popover-item:hover{background:#f4f7fb!important;}
+.common-people-friend-popover-item.is-danger{color:#c55360!important;}
+.common-people-friend-popover-item.is-danger:hover{
+    background:#fff3f5!important;
+    color:#b94351!important;
+}
+
+/* NOTE 친구 공유: 대상별 VIEW / EDIT - 상태보다 한 단계 차분한 보조 컨트롤 */
+.moyo-share-modal .note-share-inline-permission{
+    display:inline-flex;
+    align-items:stretch;
+    flex:0 0 auto;
+    padding:0;
+    overflow:hidden;
+    border:1px solid #dbe4f0;
+    border-radius:7px;
+    background:#f8fafc;
+}
+.moyo-share-modal .note-share-inline-permission-btn{
+    min-width:38px;
+    height:26px;
+    padding:0 8px;
+    border:0;
+    border-radius:0;
+    background:transparent;
+    color:#7a879a;
+    font-size:12px;
+    font-weight:700;
+    line-height:1;
+    cursor:pointer;
+    transition:background .15s ease,color .15s ease;
+}
+.moyo-share-modal .note-share-inline-permission-btn + .note-share-inline-permission-btn{
+    border-left:1px solid #e4eaf2;
+}
+.moyo-share-modal .note-share-inline-permission-btn:hover{
+    color:#4768b8;
+    background:#f0f4fb;
+}
+.moyo-share-modal .note-share-inline-permission-btn.is-active{
+    color:#365fae;
+    background:#eaf1ff;
+    box-shadow:none;
+}
+.moyo-share-modal .note-share-inline-permission-btn:disabled{
+    opacity:.55;
+    cursor:default;
+}
+.moyo-share-modal[data-share-mode="share"] .note-share-candidate-actions{
+    
+    
+
+
+    width:88px!important;
+    min-width:88px!important;
+    margin-left:auto!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:flex-end!important;
+    gap:0!important;
+}
+.moyo-share-modal[data-share-mode="share"] .note-share-candidate-state{
+    width:58px!important;
+    min-width:58px!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:flex-end!important;
+    margin-left:8px!important;
+}
+.moyo-share-modal[data-share-mode="share"] .note-share-candidate-state .note-write-share-check{
+    position:static!important;
+    inset:auto!important;
+    margin:0!important;
+    flex:0 0 auto!important;
+}
+.moyo-share-modal[data-share-mode="share"] .note-write-share-card.is-share-disabled .note-share-candidate-state .note-write-share-check{
+    visibility:hidden!important;
+    display:inline-flex!important;
+}
+.moyo-share-modal[data-share-mode="share"] .note-share-status-manage{
+    border:0!important;
+    cursor:pointer!important;
+    transition:filter .15s ease, box-shadow .15s ease, transform .15s ease!important;
+}
+.moyo-share-modal[data-share-mode="share"] .note-share-status-manage:hover{
+    filter:saturate(1.05) brightness(.99)!important;
+    box-shadow:0 3px 10px rgba(31,52,86,.08)!important;
+}
+.moyo-share-modal[data-share-mode="share"] .note-share-status-manage:active{
+    transform:translateY(1px)!important;
+}
+.note-share-status-popover{
+    position:fixed!important;
+    z-index:1000005!important;
+    width:132px!important;
+    padding:6px!important;
+    border:1px solid #dde6f3!important;
+    border-radius:10px!important;
+    background:#fff!important;
+    box-shadow:0 12px 30px rgba(31,52,86,.18)!important;
+}
+.note-share-status-popover-item{
+    width:100%!important;
+    height:34px!important;
+    display:flex!important;
+    align-items:center!important;
+    padding:0 10px!important;
+    box-sizing:border-box!important;
+    border:0!important;
+    border-radius:8px!important;
+    background:transparent!important;
+    color:#41516a!important;
+    font-size:12px!important;
+    font-weight:800!important;
+    text-align:left!important;
+    cursor:pointer!important;
+}
+.note-share-status-popover-item.is-danger{color:#c55360!important;}
+.note-share-status-popover-item.is-danger:hover{background:#fff3f5!important;color:#b94351!important;}
+
+
+/* Share status badge = status + management trigger */
+.moyo-share-modal[data-share-mode="share"] .note-share-status-manage{
+    display:inline-flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    gap:5px!important;
+    padding-left:10px!important;
+    padding-right:8px!important;
+}
+.moyo-share-modal[data-share-mode="share"] .note-share-status-manage .note-share-status-chevron{
+    font-size:8px!important;
+    color:currentColor!important;
+    opacity:.62!important;
+    transition:transform .15s ease, opacity .15s ease!important;
+}
+.moyo-share-modal[data-share-mode="share"] .note-share-status-manage:hover .note-share-status-chevron{
+    opacity:1!important;
+}
+.moyo-share-modal[data-share-mode="share"] .note-share-status-manage[aria-expanded="true"] .note-share-status-chevron{
+    transform:rotate(180deg)!important;
+    opacity:1!important;
+}
+.note-share-status-popover{
+    width:146px!important;
+    padding:7px!important;
+}
+.note-share-status-popover-title{
+    height:28px!important;
+    display:flex!important;
+    align-items:center!important;
+    padding:0 9px!important;
+    box-sizing:border-box!important;
+    color:#728198!important;
+    font-size:11px!important;
+    font-weight:800!important;
+    border-bottom:1px solid #edf1f7!important;
+    margin-bottom:4px!important;
+}
+.note-share-status-popover-item{
+    gap:7px!important;
+}
+.note-share-status-popover-item > i{
+    width:13px!important;
+    text-align:center!important;
+    font-size:11px!important;
+    opacity:.9!important;
+}
+
+/* NOTE / PHOTO / FILE 공통 멤버 접근 정책 */
+.note-write-share-modal.moyo-share-modal{z-index:2400!important;}
+.moyo-member-secret-control{display:flex;align-items:flex-start;gap:10px;margin:0 0 10px;padding:10px 12px;border:1px solid #e7ebf2;border-radius:11px;background:#f8fafc;color:#253047;cursor:pointer;}
+.moyo-member-secret-control[hidden]{display:none!important;}
+.moyo-member-secret-control input{margin-top:2px;accent-color:#6157f5;}
+.moyo-member-secret-control>span{display:flex;flex-direction:column;gap:2px;min-width:0;}
+.moyo-member-secret-control strong{font-size:13px;font-weight:750;}
+.moyo-member-secret-control small{font-size:11px;line-height:1.45;color:#8b95a7;}
+
+/* 그룹/그룹 프로젝트 콘텐츠 공개 범위: 진행 보드의 전체 공개/담당자 공개 패턴과 동일한 역할 */
+.moyo-member-access-range{
+    display:grid;
+    grid-template-columns:92px minmax(0,1fr);
+    align-items:center;
+    gap:8px 12px;
+    margin:2px 0 14px;
+}
+.moyo-member-access-range__label{
+    color:#6f7d92;
+    font-size:12px;
+    font-weight:800;
+}
+.moyo-member-access-range__options{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    min-width:0;
+    padding:3px;
+    border:1px solid #dbe4f2;
+    border-radius:12px;
+    background:#f7f9fc;
+}
+.moyo-member-access-range__option{
+    min-width:0;
+    height:36px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:7px;
+    border:0;
+    border-radius:9px;
+    background:transparent;
+    color:#77859a;
+    font-size:12px;
+    font-weight:800;
+    cursor:pointer;
+}
+.moyo-member-access-range__option.is-selected{
+    background:#fff;
+    color:#426fe9;
+    box-shadow:0 1px 5px rgba(65,86,125,.10);
+}
+.moyo-member-access-range__option:disabled{cursor:wait;opacity:.65;}
+.moyo-member-access-range__help{
+    grid-column:2;
+    color:#8390a2;
+    font-size:11px;
+    line-height:1.45;
+}
+.moyo-member-access-range__help i{margin-right:5px;}
+@media (max-width:640px){
+    .moyo-member-access-range{grid-template-columns:1fr;}
+    .moyo-member-access-range__help{grid-column:1;}
+}
+
+
+/* v275: CommonPeopleModal profile-list empty/loading state
+   - 그룹 설정 멤버 초대는 legacy workspace modal이 아니라 공통 사람 모달만 사용한다.
+   - 검색 전/검색 결과 없음 문구를 목록 중앙에서 두 줄로 안정적으로 표시한다. */
+#commonPeopleModal .common-people-modal-empty{
+    width:100%!important;
+    min-height:96px!important;
+    display:flex!important;
+    flex:1 1 auto!important;
+    flex-direction:column!important;
+    align-items:center!important;
+    justify-content:center!important;
+    gap:5px!important;
+    margin:0!important;
+    padding:18px!important;
+    color:#8a99ad!important;
+    text-align:center!important;
+    line-height:1.4!important;
+    box-sizing:border-box!important;
+}
+
+#commonPeopleModal .common-people-modal-empty strong{
+    display:block!important;
+    margin:0!important;
+    color:#53647b!important;
+    font-size:13px!important;
+    font-weight:800!important;
+    line-height:1.4!important;
+}
+
+#commonPeopleModal .common-people-modal-empty span{
+    display:block!important;
+    margin:0!important;
+    color:#96a4b6!important;
+    font-size:11px!important;
+    font-weight:600!important;
+    line-height:1.4!important;
+}
+
+#commonPeopleModal .common-people-modal-loading{
+    width:100%!important;
+    padding:10px!important;
+    color:#8a99ad!important;
+    font-size:11px!important;
+    font-weight:700!important;
+    text-align:center!important;
+}
+
+
+/* v20260906-avatar-isolation-59
+   CommonPeopleModal 기본 아바타는 회원가입/마이페이지 편집용 signup-* 클래스를 사용하지 않는다.
+   화면별 signup CSS와 충돌해 글자가 아이콘처럼 커지던 문제를 차단한다. */
+#commonPeopleModal .common-profile-avatar-viewport--default,
+#commonPeopleModal .common-profile-avatar-viewport--fallback,
+#commonPeopleModal .note-share-avatar-default {
+    display:inline-flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    overflow:hidden!important;
+    width:34px!important;
+    height:34px!important;
+    flex:0 0 34px!important;
+    border:1px solid rgba(255,255,255,.78)!important;
+    border-radius:50%!important;
+    background:linear-gradient(135deg,#55d5ce 0%,#4288ef 52%,#5a55ee 100%)!important;
+    color:#fff!important;
+    box-shadow:0 3px 10px rgba(76,111,198,.14)!important;
+}
+#commonPeopleModal .common-people-modal-avatar-letter {
+    display:block!important;
+    width:auto!important;
+    height:auto!important;
+    margin:0!important;
+    padding:0!important;
+    position:static!important;
+    background:none!important;
+    color:#fff!important;
+    font-family:Arial,"Noto Sans KR",sans-serif!important;
+    font-size:11px!important;
+    font-weight:800!important;
+    line-height:1!important;
+    letter-spacing:0!important;
+    transform:none!important;
+    text-shadow:0 1px 2px rgba(31,55,112,.16)!important;
+}
+#commonPeopleModal .common-people-modal-selected-chip .common-profile-avatar-viewport--default,
+#commonPeopleModal .common-people-modal-selected-chip .common-profile-avatar-viewport--fallback,
+#commonPeopleModal .note-share-chip .note-share-avatar-default {
+    width:22px!important;
+    height:22px!important;
+    flex:0 0 22px!important;
+    box-shadow:none!important;
+}
+#commonPeopleModal .common-people-modal-selected-chip .common-people-modal-avatar-letter,
+#commonPeopleModal .note-share-chip .common-people-modal-avatar-letter {
+    font-size:8px!important;
+}
+
+
+/* === 2026-09-07 Common People Modal list density polish === */
+/*
+ * Common policy:
+ * - empty/loading state keeps a comfortable minimum canvas
+ * - populated list shrinks to its content for short lists
+ * - long lists stop growing and scroll
+ */
+.moyo-share-modal .note-write-share-list.common-people-modal-list--has-items,
+.moyo-share-modal .moyo-share-list.common-people-modal-list--has-items {
+    min-height: 0 !important;
+    height: auto !important;
+    max-height: min(260px, calc(100vh - 390px)) !important;
+}
+
+.moyo-share-modal .note-write-share-list.common-people-modal-list--empty,
+.moyo-share-modal .moyo-share-list.common-people-modal-list--empty {
+    min-height: 116px !important;
+}
+
+@media (max-width: 640px) {
+    .moyo-share-modal .note-write-share-list.common-people-modal-list--has-items,
+    .moyo-share-modal .moyo-share-list.common-people-modal-list--has-items {
+        max-height: min(230px, calc(100vh - 330px)) !important;
+    }
+
+    .moyo-share-modal .note-write-share-list.common-people-modal-list--empty,
+    .moyo-share-modal .moyo-share-list.common-people-modal-list--empty {
+        min-height: 104px !important;
+    }
+}
+
+
+/* =========================================================
+   Workspace member directory
+   - 전체보기는 사람 찾기에 집중: 이름 + 직책·담당 + 시스템 역할
+   - 이메일/연락처 등 개인정보는 프로필 보기 모달에서만 노출한다.
+   ========================================================= */
+#commonPeopleModal[data-variant="workspace-members"] .common-people-modal-list-label{
+    display:inline-flex!important;
+    margin-right:6px!important;
+}
+#commonPeopleModal[data-variant="workspace-members"] .common-people-modal-count{
+    display:inline-flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    min-width:28px!important;
+    height:22px!important;
+    padding:0 8px!important;
+    border:1px solid #d9e5f6!important;
+    border-radius:999px!important;
+    background:#f5f9ff!important;
+    color:#4f78c8!important;
+    font-size:11px!important;
+    font-weight:900!important;
+    vertical-align:top!important;
+}
+#commonPeopleModal[data-variant="workspace-members"] .common-people-modal-row.note-write-share-card{
+    min-height:58px!important;
+    cursor:pointer!important;
+}
+#commonPeopleModal[data-variant="workspace-members"] .common-people-modal-profile.note-write-share-profile{
+    pointer-events:none!important;
+}
+#commonPeopleModal[data-variant="workspace-members"] .common-people-modal-info small{
+    margin-top:2px!important;
+    color:#62738c!important;
+    font-size:12px!important;
+    font-weight:700!important;
+}
+#commonPeopleModal[data-variant="workspace-members"] .common-people-modal-role{
+    min-width:0!important;
+    height:26px!important;
+    padding:0 9px!important;
+    border-radius:999px!important;
+    font-size:11px!important;
+}
+#commonPeopleModal[data-variant="workspace-members"] .common-people-modal-role.is-owner{
+    border-color:#dce8f8!important;
+    background:#f2f6fb!important;
+    color:#60728a!important;
+}
+#commonPeopleModal[data-variant="workspace-members"] .common-people-modal-role.is-admin{
+    border-color:#d9e8e7!important;
+    background:#f1f8f7!important;
+    color:#4d7f7a!important;
+}
+
+
+/* Project member add modal: compact count line + MOYO brand focus */
+#commonPeopleModal[data-variant="project-member-add"] .common-people-modal-count {
+    display: block !important;
+    margin: 0 0 8px !important;
+    color: #334155 !important;
+    font-size: 12px !important;
+    font-weight: 800 !important;
+    line-height: 1.4 !important;
+}
+
+#commonPeopleModal[data-variant="project-member-add"] .note-write-share-input:focus {
+    border: 1px solid transparent !important;
+    background:
+        linear-gradient(#fff, #fff) padding-box,
+        linear-gradient(90deg, #35d7bf 0%, #4b88ff 52%, #7c4dff 100%) border-box !important;
+    box-shadow: 0 0 0 3px rgba(75, 136, 255, .08) !important;
+}
+
+/* 2026-09-18 NOTE member-permission modal MOYO visual policy */
+.moyo-share-modal[data-share-mode="permission"] .note-write-share-modal-head,
+.moyo-share-modal[data-share-mode="permission"] .moyo-share-head{
+    position:relative!important;
+    border-bottom:0!important;
+}
+
+.moyo-share-modal[data-share-mode="permission"] .note-write-share-modal-head::after,
+.moyo-share-modal[data-share-mode="permission"] .moyo-share-head::after{
+    content:""!important;
+    position:absolute!important;
+    left:0!important;
+    right:0!important;
+    bottom:0!important;
+    height:2px!important;
+    background:linear-gradient(135deg,#55d5ce 0%,#4288ef 52%,#6b5cf6 100%)!important;
+    pointer-events:none!important;
+}
+
+/* Permission member cards are neutral; selection uses MOYO blue, not project purple. */
+.moyo-share-modal[data-share-mode="permission"] .note-write-share-card,
+.moyo-share-modal[data-share-mode="permission"] .moyo-share-card{
+    border:1px solid #dbe5f1!important;
+    background:#fff!important;
+    box-shadow:none!important;
+}
+
+.moyo-share-modal[data-share-mode="permission"] .note-write-share-card:hover,
+.moyo-share-modal[data-share-mode="permission"] .moyo-share-card:hover{
+    border-color:#b9cdff!important;
+    background:#f8fbff!important;
+    box-shadow:none!important;
+}
+
+.moyo-share-modal[data-share-mode="permission"] .note-write-share-card.is-selected,
+.moyo-share-modal[data-share-mode="permission"] .moyo-share-card.is-selected{
+    border-color:#6f95ff!important;
+    background:#f4f8ff!important;
+    box-shadow:none!important;
+}
+
+/* Human profile policy: round photo; fallback has no colored/gradient tile. */
+.moyo-share-modal[data-share-mode="permission"] .note-share-type-user .note-write-share-avatar,
+.moyo-share-modal[data-share-mode="permission"] .note-share-type-user .note-share-avatar,
+.moyo-share-modal[data-share-mode="permission"] .note-share-type-user .moyo-share-avatar{
+    border:1px solid #e2e8f0!important;
+    border-radius:999px!important;
+    background:#fff!important;
+    color:#4f7cff!important;
+    box-shadow:none!important;
+}
+
+.moyo-share-modal[data-share-mode="permission"] .note-share-type-user .note-write-share-avatar.is-fallback,
+.moyo-share-modal[data-share-mode="permission"] .note-share-type-user .note-share-avatar.is-fallback,
+.moyo-share-modal[data-share-mode="permission"] .note-share-type-user .note-share-avatar-default,
+.moyo-share-modal[data-share-mode="permission"] .note-share-type-user .common-profile-avatar-viewport--fallback{
+    background:transparent!important;
+    border-color:#e2e8f0!important;
+    color:#4f7cff!important;
+    text-shadow:none!important;
+    box-shadow:none!important;
+}
+
+.moyo-share-modal[data-share-mode="permission"] .note-share-type-user .note-write-share-avatar.is-fallback b,
+.moyo-share-modal[data-share-mode="permission"] .note-share-type-user .common-people-modal-avatar-letter,
+.moyo-share-modal[data-share-mode="permission"] .note-share-type-user .signup-avatar-preview{
+    color:#4f7cff!important;
+    text-shadow:none!important;
+}
+
+/* 2026-09-18 NOTE permission modal: restore official MOYO default-avatar policy.
+   Do not invent a permission-modal-specific fallback avatar. Reuse the same
+   mint -> blue -> violet initial avatar used by CommonPeopleModal elsewhere. */
+.moyo-share-modal[data-share-mode="permission"] .note-share-type-user .note-write-share-avatar.is-fallback,
+.moyo-share-modal[data-share-mode="permission"] .note-share-type-user .note-share-avatar.is-fallback,
+.moyo-share-modal[data-share-mode="permission"] .note-share-type-user .note-share-avatar-default,
+.moyo-share-modal[data-share-mode="permission"] .note-share-type-user .common-profile-avatar-viewport--default,
+.moyo-share-modal[data-share-mode="permission"] .note-share-type-user .common-profile-avatar-viewport--fallback{
+    border:1px solid rgba(255,255,255,.78)!important;
+    border-radius:50%!important;
+    background:var(--moyo-avatar-gradient,linear-gradient(135deg,#55D5CE 0%,#4288EF 52%,#5A55EE 100%))!important;
+    background-image:var(--moyo-avatar-gradient,linear-gradient(135deg,#55D5CE 0%,#4288EF 52%,#5A55EE 100%))!important;
+    color:#fff!important;
+    box-shadow:0 3px 10px rgba(76,111,198,.14)!important;
+}
+
+.moyo-share-modal[data-share-mode="permission"] .note-share-type-user .note-write-share-avatar.is-fallback b,
+.moyo-share-modal[data-share-mode="permission"] .note-share-type-user .common-people-modal-avatar-letter,
+.moyo-share-modal[data-share-mode="permission"] .note-share-type-user .signup-avatar-preview{
+    color:#fff!important;
+    text-shadow:0 1px 2px rgba(31,55,112,.16)!important;
+}
+
+/* Uploaded profile images remain round and are not given the fallback gradient. */
+.moyo-share-modal[data-share-mode="permission"] .note-share-type-user .common-profile-avatar-viewport.has-image,
+.moyo-share-modal[data-share-mode="permission"] .note-share-type-user .common-profile-avatar-viewport--image,
+.moyo-share-modal[data-share-mode="permission"] .note-share-type-user .common-profile-avatar-viewport--crop{
+    border-radius:50%!important;
+    background-color:#fff!important;
+    box-shadow:none!important;
+}

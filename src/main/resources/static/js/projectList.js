@@ -142,42 +142,78 @@
         };
 
         const applyFilter = () => {
-            let visibleCount = 0;
             let selectedTotal = 0;
+            const matchedBySection = new Map(
+                sections.map((section) => [section, getMatchedCards(section)])
+            );
+            const allMatchedTotal = [...matchedBySection.values()]
+                .reduce((sum, matched) => sum + matched.length, 0);
+            const selectedSection = sections.find(
+                (section) => section.dataset.sectionStatus === selectedStatus
+            );
+            const selectedMatchedTotal = selectedStatus === 'ALL'
+                ? allMatchedTotal
+                : (matchedBySection.get(selectedSection) || []).length;
+            const showGlobalEmpty = selectedMatchedTotal === 0;
 
             sections.forEach((section) => {
                 const sectionStatus = section.dataset.sectionStatus;
-                const matched = getMatchedCards(section);
-                const selectedSection = selectedStatus === 'ALL' || selectedStatus === sectionStatus;
-                section.hidden = !selectedSection;
+                const matched = matchedBySection.get(section) || [];
+                const isSelectedSection = selectedStatus === 'ALL' || selectedStatus === sectionStatus;
+                const showSection = !showGlobalEmpty && isSelectedSection;
 
-                [...section.querySelectorAll('.project-list-item')].forEach((card) => { card.hidden = true; });
+                section.hidden = !showSection;
 
-                if (!selectedSection) return;
+                const sectionCards = [...section.querySelectorAll('.project-list-item')];
+                sectionCards.forEach((card) => { card.hidden = true; });
 
-                let visibleCards = matched;
+                const sectionEmpty = section.querySelector('.project-section-empty');
+                if (sectionEmpty) sectionEmpty.hidden = true;
+
+                if (!showSection) return;
+
+                let visibleCards;
                 if (selectedStatus === 'ALL') {
                     visibleCards = matched.slice(0, PREVIEW_LIMIT);
                     ensureSectionAction(section, matched.length);
+                    if (sectionEmpty) sectionEmpty.hidden = matched.length !== 0;
                 } else {
                     selectedTotal = matched.length;
                     const totalPages = Math.max(1, Math.ceil(selectedTotal / PAGE_SIZE));
                     if (currentPage > totalPages) currentPage = totalPages;
-                    const start = (currentPage - 1) * PAGE_SIZE;
-                    visibleCards = matched.slice(start, start + PAGE_SIZE);
+                    const pageStart = (currentPage - 1) * PAGE_SIZE;
+                    visibleCards = matched.slice(pageStart, pageStart + PAGE_SIZE);
                     ensureSectionAction(section, matched.length);
                 }
 
                 visibleCards.forEach((card) => { card.hidden = false; });
-                visibleCount += visibleCards.length;
-
-                const sectionEmpty = section.querySelector('.project-section-empty');
-                if (sectionEmpty) sectionEmpty.hidden = matched.length !== 0;
             });
 
-            tabs.forEach((tab) => tab.classList.toggle('is-active', tab.dataset.status === selectedStatus));
-            if (empty) empty.hidden = selectedStatus === 'ALL' ? visibleCount !== 0 : selectedTotal !== 0;
-            renderPagination(selectedStatus === 'ALL' ? 0 : selectedTotal);
+            tabs.forEach((tab) => {
+                tab.classList.toggle('is-active', tab.dataset.status === selectedStatus);
+            });
+
+            if (empty) {
+                const title = empty.querySelector('strong');
+                const description = empty.querySelector('p');
+                const hasActiveFilter = Boolean(normalize(searchInput?.value))
+                    || (typeSelect?.value || 'ALL') !== 'ALL';
+                const allEmptyMessage = cards.length === 0 && !hasActiveFilter
+                    ? ['아직 등록된 프로젝트가 없습니다.', '새 프로젝트를 만들어 일정을 시작해보세요.']
+                    : ['조건에 맞는 프로젝트가 없습니다.', '검색어나 유형 필터를 변경해보세요.'];
+                const messages = {
+                    ALL: allEmptyMessage,
+                    IN_PROGRESS: ['진행 중인 프로젝트가 없습니다.', '다른 상태를 선택하거나 검색 조건을 변경해보세요.'],
+                    SCHEDULED: ['예정된 프로젝트가 없습니다.', '다른 상태를 선택하거나 검색 조건을 변경해보세요.'],
+                    COMPLETED: ['완료된 프로젝트가 없습니다.', '다른 상태를 선택하거나 검색 조건을 변경해보세요.']
+                };
+                const message = messages[selectedStatus] || allEmptyMessage;
+                if (title) title.textContent = message[0];
+                if (description) description.textContent = message[1];
+                empty.hidden = !showGlobalEmpty;
+            }
+
+            renderPagination(showGlobalEmpty || selectedStatus === 'ALL' ? 0 : selectedTotal);
         };
 
         tabs.forEach((tab) => tab.addEventListener('click', () => {
@@ -186,7 +222,26 @@
             applyFilter();
         }));
 
-        searchInput?.addEventListener('input', () => { currentPage = 1; applyFilter(); });
+        if (searchInput && searchInput.dataset.moyoSearchBound !== 'true') {
+            searchInput.dataset.moyoSearchBound = 'true';
+            let searchTimer = null;
+            let composing = false;
+            const runSearch = () => {
+                window.clearTimeout(searchTimer);
+                searchTimer = window.setTimeout(() => {
+                    currentPage = 1;
+                    applyFilter();
+                }, 160);
+            };
+            searchInput.addEventListener('compositionstart', () => { composing = true; });
+            searchInput.addEventListener('compositionend', () => {
+                composing = false;
+                runSearch();
+            });
+            searchInput.addEventListener('input', () => {
+                if (!composing) runSearch();
+            });
+        }
         typeSelect?.addEventListener('change', () => { currentPage = 1; applyFilter(); });
         sortSelect?.addEventListener('change', () => { currentPage = 1; sortCards(); applyFilter(); });
 

@@ -3,6 +3,7 @@ package com.springboot.project.dao;
 import com.springboot.project.dto.noteDTO;
 import com.springboot.project.dto.noteFileDTO;
 import com.springboot.project.dto.noteReplyDTO;
+import com.springboot.project.dto.noteVersionDTO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -39,7 +40,22 @@ public interface InoteDAO {
 
     int insertNote(noteDTO note);
 
+    noteVersionDTO selectNoteSnapshot(@Param("noteId") Long noteId);
+
+    List<noteVersionDTO> selectNoteVersions(@Param("noteId") Long noteId);
+
+    noteVersionDTO selectNoteVersion(@Param("noteId") Long noteId, @Param("noteVersionId") Long noteVersionId);
+
+    int insertNoteVersion(noteVersionDTO version);
+
+    int restoreNoteVersion(@Param("noteId") Long noteId,
+                           @Param("noteTitle") String noteTitle,
+                           @Param("noteContent") String noteContent,
+                           @Param("userId") Long userId);
+
     int updateNote(noteDTO note);
+
+    int updateNoteAutosave(noteDTO note);
 
     int deleteNote(@Param("noteId") Long noteId);
 
@@ -62,6 +78,8 @@ public interface InoteDAO {
     int deleteNoteFilesByNoteId(@Param("noteId") Long noteId);
 
     int countMoyoPublicNote(@Param("noteId") Long noteId);
+
+    int updateMoyoPublic(@Param("noteId") Long noteId, @Param("userId") Long userId, @Param("moyoPublicYn") String moyoPublicYn);
 
     int incrementNoteViewCount(@Param("noteId") Long noteId);
 

@@ -101,6 +101,52 @@ public class contentShareController {
         return result;
     }
 
+
+    @GetMapping("/access-mode")
+    public Map<String, Object> accessMode(@RequestParam("contentType") String contentType,
+                                          @RequestParam("contentId") Long contentId,
+                                          HttpSession session) {
+        usersDto user = getLoginUser(session);
+        if (user == null) return fail("로그인이 필요합니다.");
+        try {
+            boolean restricted = contentShareService.isRestrictedAccess(contentType, contentId, user.getUserId());
+            return Map.of("success", true, "restricted", restricted, "mode", restricted ? "RESTRICTED" : "SCOPE");
+        } catch (RuntimeException e) {
+            return fail(e.getMessage());
+        }
+    }
+
+    @PostMapping("/access-mode")
+    public Map<String, Object> updateAccessMode(@RequestParam("contentType") String contentType,
+                                                @RequestParam("contentId") Long contentId,
+                                                @RequestParam("mode") String mode,
+                                                HttpSession session) {
+        usersDto user = getLoginUser(session);
+        if (user == null) return fail("로그인이 필요합니다.");
+        try {
+            boolean restricted = "RESTRICTED".equalsIgnoreCase(String.valueOf(mode));
+            contentShareService.updateRestrictedAccess(contentType, contentId, restricted, user.getUserId());
+            return Map.of("success", true, "restricted", restricted, "mode", restricted ? "RESTRICTED" : "SCOPE");
+        } catch (RuntimeException e) {
+            return fail(e.getMessage());
+        }
+    }
+
+    @GetMapping("/friend-owners")
+    public Map<String, Object> friendOwners(@RequestParam("contentType") String contentType,
+                                            HttpSession session) {
+        usersDto user = getLoginUser(session);
+        if (user == null) return fail("로그인이 필요합니다.");
+        try {
+            Map<String, Object> result = new HashMap<>();
+            result.put("success", true);
+            result.put("items", contentShareService.getFriendShareOwners(contentType, user.getUserId()));
+            return result;
+        } catch (RuntimeException e) {
+            return fail(e.getMessage());
+        }
+    }
+
     @GetMapping("/requests")
     public Map<String, Object> requests(HttpSession session) {
         usersDto user = getLoginUser(session);

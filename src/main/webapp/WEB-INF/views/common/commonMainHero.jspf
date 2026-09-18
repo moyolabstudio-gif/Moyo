@@ -1,0 +1,201 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
+<%--
+  MOYO 공통 메인 히어로
+  - WORKSPACE / GROUP_PROJECT / PERSONAL_PROJECT 모두 동일한 DOM 구조를 사용한다.
+  - 차이는 연결되는 데이터, avatar 내용, 메뉴 항목뿐이다.
+--%>
+
+<c:set var="heroIsWorkspace" value="${mainShellMode eq 'WORKSPACE'}" />
+<c:set var="heroIsProject" value="${not heroIsWorkspace}" />
+
+<c:choose>
+    <c:when test="${heroIsWorkspace}">
+        <c:set var="heroTitle" value="${workspace.wsName}" />
+        <c:set var="heroDescription" value="${workspace.wsDescription}" />
+        <c:set var="heroLinks" value="${workspaceLinks}" />
+        <c:set var="heroDeletePending" value="${workspace.status eq 'DELETE_PENDING'}" />
+        <c:set var="heroDeleteDeadline" value="${workspace.deleteDeadlineDate}" />
+        <c:choose>
+            <c:when test="${workspace.wsType eq 'ORGANIZATION'}"><c:set var="heroTypeLabel" value="회사 · 조직" /></c:when>
+            <c:when test="${workspace.wsType eq 'TEAM'}"><c:set var="heroTypeLabel" value="팀 · 협업" /></c:when>
+            <c:when test="${workspace.wsType eq 'STUDY'}"><c:set var="heroTypeLabel" value="스터디 · 연구" /></c:when>
+            <c:when test="${workspace.wsType eq 'CLUB'}"><c:set var="heroTypeLabel" value="동아리 · 취미" /></c:when>
+            <c:when test="${workspace.wsType eq 'LIFE'}"><c:set var="heroTypeLabel" value="가족 · 생활" /></c:when>
+            <c:when test="${workspace.wsType eq 'ETC'}"><c:set var="heroTypeLabel" value="기타" /></c:when>
+            <c:otherwise><c:set var="heroTypeLabel" value="모임 · 커뮤니티" /></c:otherwise>
+        </c:choose>
+        <c:set var="heroWorkspaceJoinStatusLabel" value="" />
+        <c:set var="heroWorkspaceJoinStatusClass" value="" />
+        <c:if test="${workspace.joinType eq 'OPEN'}">
+            <c:set var="heroWorkspaceJoinStatusLabel" value="자유 참여" />
+            <c:set var="heroWorkspaceJoinStatusClass" value="is-open" />
+        </c:if>
+        <c:if test="${workspace.joinType eq 'INVITE'}">
+            <c:set var="heroWorkspaceJoinStatusLabel" value="초대 전용" />
+            <c:set var="heroWorkspaceJoinStatusClass" value="is-invite" />
+        </c:if>
+    </c:when>
+    <c:otherwise>
+        <c:set var="heroTitle" value="${projectDetail.projName}" />
+        <c:set var="heroDescription" value="${projectDetail.projDesc}" />
+        <c:set var="heroLinks" value="${projectLinks}" />
+        <c:set var="heroDeletePending" value="${projectDetail.status eq 'DELETE_PENDING'}" />
+        <c:set var="heroDeleteDeadline" value="${projectDetail.deleteDeadlineDate}" />
+        <c:set var="heroTypeLabel" value="${isPersonalProject ? '개인 프로젝트' : '그룹 프로젝트'}" />
+        <c:set var="projectMemberCount" value="${fn:length(projectMemberList)}" />
+        <c:set var="projectRoleLabel" value="그룹 멤버" />
+        <c:choose>
+            <c:when test="${isPersonalProject}"><c:set var="projectRoleLabel" value="소유자" /></c:when>
+            <c:when test="${currentProjectRole eq 'LEADER' or currentProjectRole eq 'OWNER' or currentProjectRole eq 'PM'}"><c:set var="projectRoleLabel" value="팀장" /></c:when>
+            <c:when test="${currentProjectRole eq 'ADMIN'}"><c:set var="projectRoleLabel" value="관리자" /></c:when>
+            <c:when test="${currentProjectRole eq 'MEMBER'}"><c:set var="projectRoleLabel" value="멤버" /></c:when>
+        </c:choose>
+
+        <c:set var="projectCategoryKey" value="ETC" />
+        <c:set var="projectCategoryLabel" value="기타" />
+        <c:set var="projectCategoryIcon" value="fa-shapes" />
+        <c:choose>
+            <c:when test="${projectDetail.projCategory eq 'WORK' or projectDetail.projCategory eq '업무'}">
+                <c:set var="projectCategoryKey" value="WORK"/><c:set var="projectCategoryLabel" value="업무"/><c:set var="projectCategoryIcon" value="fa-clipboard-check"/>
+            </c:when>
+            <c:when test="${projectDetail.projCategory eq 'TRAVEL' or projectDetail.projCategory eq '여행'}">
+                <c:set var="projectCategoryKey" value="TRAVEL"/><c:set var="projectCategoryLabel" value="여행"/><c:set var="projectCategoryIcon" value="fa-plane"/>
+            </c:when>
+            <c:when test="${projectDetail.projCategory eq 'EVENT' or projectDetail.projCategory eq 'MEETING' or projectDetail.projCategory eq '모임·행사' or projectDetail.projCategory eq '모임 · 행사'}">
+                <c:set var="projectCategoryKey" value="EVENT"/><c:set var="projectCategoryLabel" value="모임·행사"/><c:set var="projectCategoryIcon" value="fa-calendar-days"/>
+            </c:when>
+            <c:when test="${projectDetail.projCategory eq 'STUDY' or projectDetail.projCategory eq '학습·연구' or projectDetail.projCategory eq '학습 · 연구'}">
+                <c:set var="projectCategoryKey" value="STUDY"/><c:set var="projectCategoryLabel" value="학습·연구"/><c:set var="projectCategoryIcon" value="fa-book-open"/>
+            </c:when>
+            <c:when test="${projectDetail.projCategory eq 'LIFE' or projectDetail.projCategory eq '생활·가정' or projectDetail.projCategory eq '생활 · 가정'}">
+                <c:set var="projectCategoryKey" value="LIFE"/><c:set var="projectCategoryLabel" value="생활·가정"/><c:set var="projectCategoryIcon" value="fa-house"/>
+            </c:when>
+            <c:when test="${projectDetail.projCategory eq 'HOBBY' or projectDetail.projCategory eq '취미·창작' or projectDetail.projCategory eq '취미 · 창작'}">
+                <c:set var="projectCategoryKey" value="HOBBY"/><c:set var="projectCategoryLabel" value="취미·창작"/><c:set var="projectCategoryIcon" value="fa-palette"/>
+            </c:when>
+        </c:choose>
+    </c:otherwise>
+</c:choose>
+
+<div class="moyo-main-shell__hero moyo-main-hero">
+    <div class="moyo-main-hero__avatar${heroIsWorkspace ? (empty workspace.wsImagePath ? ' is-default' : ' has-image') : ''}">
+        <c:choose>
+            <c:when test="${heroIsWorkspace}">
+                <div class="moyo-main-hero__avatar-visual moyo-main-hero__avatar-visual--workspace${empty workspace.wsImagePath ? ' is-default' : ' has-image'}">
+                    <c:if test="${not empty workspace.wsImagePath}">
+                        <img src="<c:out value='${workspace.wsImagePath}'/>"
+                             alt="<c:out value='${workspace.wsName}'/> 그룹 이미지"
+                             onerror="this.hidden=true; this.parentElement.classList.add('is-default'); this.nextElementSibling.hidden=false;">
+                    </c:if>
+                    <span class="moyo-main-hero__avatar-fallback" aria-hidden="true" ${not empty workspace.wsImagePath ? 'hidden' : ''}>
+                        <c:choose>
+                            <c:when test="${not empty workspace.wsName}"><c:out value="${fn:toUpperCase(fn:substring(fn:trim(workspace.wsName), 0, 1))}"/></c:when>
+                            <c:otherwise>G</c:otherwise>
+                        </c:choose>
+                    </span>
+                </div>
+            </c:when>
+            <c:otherwise>
+                <div class="moyo-main-hero__avatar-visual moyo-main-hero__avatar-visual--project moyo-main-hero__avatar-visual--${fn:toLowerCase(projectCategoryKey)}"
+                     role="img" aria-label="${projectCategoryLabel} 프로젝트">
+                    <span class="moyo-main-hero__avatar-icon"><i class="fa-solid ${projectCategoryIcon}" aria-hidden="true"></i></span>
+                </div>
+            </c:otherwise>
+        </c:choose>
+    </div>
+
+    <div class="moyo-main-hero__info">
+        <div class="moyo-main-hero__eyebrow" aria-label="기본 정보">
+            <span class="moyo-main-hero__type"><c:out value="${heroTypeLabel}"/></span>
+            <span class="moyo-main-hero__divider" aria-hidden="true">·</span>
+            <c:choose>
+                <c:when test="${heroIsWorkspace}">
+                    <span class="moyo-main-hero__meta-text">멤버 <c:out value="${memberCount}"/></span>
+                    <c:if test="${not empty heroWorkspaceJoinStatusLabel}">
+                        <span class="moyo-main-hero__divider" aria-hidden="true">·</span>
+                        <span class="moyo-main-hero__status ${heroWorkspaceJoinStatusClass}"><c:out value="${heroWorkspaceJoinStatusLabel}"/></span>
+                    </c:if>
+                </c:when>
+                <c:otherwise>
+                    <c:if test="${not isPersonalProject}">
+                        <span class="moyo-main-hero__meta-text">멤버 <c:out value="${projectMemberCount}"/></span>
+                        <span class="moyo-main-hero__divider" aria-hidden="true">·</span>
+                    </c:if>
+                    <span class="moyo-main-hero__meta-text moyo-main-hero__meta-text--strong"><c:out value="${projectRoleLabel}"/></span>
+                </c:otherwise>
+            </c:choose>
+        </div>
+
+        <h1 class="moyo-main-hero__title" title="<c:out value='${heroTitle}'/>"><c:out value="${heroTitle}"/></h1>
+
+        <c:if test="${not empty fn:trim(heroDescription)}">
+            <p class="moyo-main-hero__description"><c:out value="${heroDescription}"/></p>
+        </c:if>
+
+        <c:if test="${not empty heroLinks}">
+            <div class="moyo-main-hero__content-line">
+                <div class="moyo-main-hero__links" aria-label="외부 링크">
+                    <c:forEach var="link" items="${heroLinks}">
+                        <a href="<c:out value='${link.LINK_URL}'/>" target="_blank" rel="noopener noreferrer"
+                           class="moyo-main-hero__link" title="<c:out value='${link.LINK_NAME}'/>">
+                            <span class="moyo-main-hero__link-icon" aria-hidden="true">🔗</span>
+                            <span class="moyo-main-hero__link-label"><c:out value="${link.LINK_NAME}"/></span>
+                            <span class="moyo-main-hero__link-arrow" aria-hidden="true">↗</span>
+                        </a>
+                    </c:forEach>
+                </div>
+            </div>
+        </c:if>
+    </div>
+
+    <div class="moyo-main-hero__side">
+        <div class="moyo-main-hero__actions">
+            <c:choose>
+                <c:when test="${heroIsWorkspace}">
+                    <c:if test="${isWorkspaceMember}">
+                        <div class="workspace-group-menu-wrap">
+                            <button type="button" class="moyo-main-hero__menu-trigger" id="workspaceGroupMenuTrigger"
+                                    aria-label="그룹 메뉴" aria-haspopup="true" aria-expanded="false">⋯</button>
+                            <div class="workspace-group-menu" id="workspaceGroupMenu" hidden>
+                                <c:if test="${isWorkspaceAdmin}">
+                                    <a class="workspace-group-menu-item" href="${pageContext.request.contextPath}/workspace/settings?wsId=${workspace.wsId}">그룹 설정</a>
+                                    <a class="workspace-group-menu-item" href="${pageContext.request.contextPath}/workspace/settings?wsId=${workspace.wsId}&amp;tab=members">멤버 관리</a>
+                                </c:if>
+                                <button type="button" class="workspace-group-menu-item" onclick="openMyWorkspaceProfileFromMenu()">내 그룹 프로필</button>
+                                <c:if test="${currentUserIsOwner}">
+                                    <button type="button" class="workspace-group-menu-item" onclick="goToOwnerTransfer()">그룹장 권한 위임</button>
+                                </c:if>
+                                <button type="button" class="workspace-group-menu-item is-danger" onclick="leaveWorkspace()">그룹 탈퇴</button>
+                            </div>
+                        </div>
+                    </c:if>
+                </c:when>
+                <c:otherwise>
+                    <div class="project-main-more">
+                        <button type="button" id="projectMainMoreButton" class="moyo-main-hero__menu-trigger"
+                                aria-label="프로젝트 메뉴 열기" aria-expanded="false" aria-controls="projectMainMoreMenu"
+                                onclick="toggleProjectMainMoreMenu(event)">⋯</button>
+                        <div id="projectMainMoreMenu" class="project-main-more-menu" role="menu" hidden>
+                            <c:if test="${canManageProject}">
+                                <button type="button" class="project-main-more-item" role="menuitem" onclick="goProjectSettings('basic')">프로젝트 설정</button>
+                                <c:if test="${showProjectMembers}">
+                                    <button type="button" class="project-main-more-item" role="menuitem" onclick="goProjectSettings('members')">멤버 관리</button>
+                                </c:if>
+                            </c:if>
+                            <button type="button" class="project-main-more-item" role="menuitem" onclick="goProjectList()">프로젝트 목록</button>
+                        </div>
+                    </div>
+                </c:otherwise>
+            </c:choose>
+        </div>
+
+        <c:if test="${heroDeletePending}">
+            <div class="moyo-main-hero__pending" role="status">
+                <span class="moyo-main-hero__pending-badge">삭제 예정</span>
+                <strong><c:out value="${heroDeleteDeadline}"/></strong>
+            </div>
+        </c:if>
+    </div>
+</div>

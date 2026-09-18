@@ -1,5 +1,5 @@
 <%@ page pageEncoding="UTF-8" %>
-<%-- 공통 사진 게시물 상세 모달: 사진첩/프로필에서 같은 구조로 사용 --%>
+<%-- 공통 사진 게시물 상세 모달: 사진 탐색기/프로필에서 같은 구조로 사용 --%>
 <div id="photoRuntimeLightbox" class="photo-runtime-lightbox photo-runtime-lightbox--common" aria-hidden="true">
     <button type="button" class="photo-runtime-close" data-photo-common-close aria-label="닫기">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
@@ -17,13 +17,13 @@
         </section>
         <aside class="photo-runtime-side">
             <header class="photo-runtime-author">
-                <div class="photo-runtime-author-main">
+                <a id="photoRuntimeAuthorLink" class="photo-runtime-author-main photo-runtime-profile-link" href="#" aria-label="작성자 프로필 보기">
                     <span id="photoRuntimeAvatar" class="photo-runtime-avatar"></span>
                     <span class="photo-runtime-author-text">
                         <strong id="photoRuntimeCreator"></strong>
                         <small id="photoRuntimeMeta"></small>
                     </span>
-                </div>
+                </a>
                 <div class="photo-runtime-menu-wrap" data-photo-common-manage hidden>
                     <button type="button" class="photo-runtime-menu-button" data-photo-common-menu-toggle aria-label="사진 관리 메뉴" aria-expanded="false">
                         <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
@@ -36,7 +36,7 @@
                             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/><circle cx="12" cy="12" r="3"/></svg><span>MOYO 공개</span>
                         </button>
                         <button type="button" data-photo-common-action="move">
-                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h6l2 2h10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/><path d="M3 7V5a2 2 0 0 1 2-2h4l2 2h4"/></svg><span>앨범 이동</span>
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h6l2 2h10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/><path d="M3 7V5a2 2 0 0 1 2-2h4l2 2h4"/></svg><span>위치 변경</span>
                         </button>
                         <button type="button" class="danger" data-photo-common-action="delete">
                             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/></svg><span>휴지통으로 이동</span>

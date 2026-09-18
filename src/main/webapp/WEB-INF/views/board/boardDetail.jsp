@@ -489,7 +489,7 @@
     <jsp:include page="/WEB-INF/views/common/header.jsp" />
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/boardUi.css?v=board-1st-v4-after-sidebar">
 
-    <div class="detail-container ${post.boardType eq 'FILE' ? 'board-file-detail-page' : ''}">
+    <div class="detail-container ">
         <c:choose>
             <c:when test="${not empty projId}">
                 <a href="/project/board/list?projId=${projId}&type=${post.boardType}&wsId=${post.wsId}" class="board-top-link">← 목록으로 돌아가기</a>
@@ -502,7 +502,7 @@
             <div class="detail-kicker">
                 <c:if test="${post.isPinned eq 'Y'}"><span class="board-badge fixed">고정</span></c:if>
                 <c:if test="${post.boardType eq 'NOTICE'}"><span class="board-badge notice">공지</span></c:if>
-                <c:if test="${post.boardType eq 'FILE'}"><span class="board-badge file">자료</span></c:if>
+                <c:if test="${false}"><span class="board-badge file">자료</span></c:if>
                 <c:if test="${post.hasFile}"><span class="board-badge file">첨부 ${post.fileCount}</span></c:if>
             </div>
 
@@ -516,25 +516,27 @@
             </c:if>
 
             <div class="detail-title-row">
-                <h1 class="detail-title">${post.title}</h1>
+                <h1 class="detail-title"><c:out value="${post.title}" /></h1>
 
-                <c:if test="${user.USER_ID == post.userId}">
+                <c:if test="${user.USER_ID == post.userId or canManageBoard}">
                     <div class="post-actions post-actions-top">
-                        <c:choose>
-                            <c:when test="${not empty projId}">
-                                <a href="/group/board/modifyForm?postId=${post.postId}&wsId=${post.wsId}&projId=${projId}" class="board-detail-action edit">수정</a>
-                            </c:when>
-                            <c:otherwise>
-                                <a href="/group/board/modifyForm?postId=${post.postId}&wsId=${post.wsId}" class="board-detail-action edit">수정</a>
-                            </c:otherwise>
-                        </c:choose>
+                        <c:if test="${user.USER_ID == post.userId}">
+                            <c:choose>
+                                <c:when test="${not empty projId}">
+                                    <a href="/group/board/modifyForm?postId=${post.postId}&wsId=${post.wsId}&projId=${projId}" class="board-detail-action edit">수정</a>
+                                </c:when>
+                                <c:otherwise>
+                                    <a href="/group/board/modifyForm?postId=${post.postId}&wsId=${post.wsId}" class="board-detail-action edit">수정</a>
+                                </c:otherwise>
+                            </c:choose>
+                        </c:if>
                         <a href="javascript:void(0);" onclick="confirmDelete('${post.postId}', '${post.wsId}', '${post.boardType}')" class="board-detail-action delete">삭제</a>
                     </div>
                 </c:if>
             </div>
 
             <div class="info-row detail-meta-grid">
-                <span>작성자 <strong>${post.writerName}</strong></span>
+                <span>작성자 <strong><c:out value="${post.writerName}" /></strong></span>
                 <span>작성일 <strong>${post.regDt}</strong></span>
                 <span>조회 <strong>${post.viewCount}</strong></span>
                 <span>댓글 <strong>${post.replyCount}</strong></span>
@@ -543,9 +545,9 @@
                 </button>
             </div>
 
-            <div class="content-body board-detail-content ${post.boardType eq 'FILE' ? 'board-file-description' : ''}">
-                <c:if test="${post.boardType eq 'FILE'}"><div class="section-mini-title">자료 설명</div></c:if>
-                ${post.content}
+            <div class="content-body board-detail-content ">
+                <c:if test="${false}"><div class="section-mini-title">자료 설명</div></c:if>
+                <c:out value="${post.content}" escapeXml="false" />
             </div>
 
             <div class="board-reaction-bar board-reaction-bar-bottom board-detail-action-line">
@@ -556,7 +558,7 @@
 
             <c:if test="${not empty fileList}">
                 <div class="file-section">
-                    <label><c:choose><c:when test="${post.boardType eq 'FILE'}">📎 자료 파일</c:when><c:otherwise>📎 첨부파일</c:otherwise></c:choose></label>
+                    <label><c:choose><c:when test="${false}">📎 자료 파일</c:when><c:otherwise>📎 첨부파일</c:otherwise></c:choose></label>
                     <ul>
                         <c:forEach var="file" items="${fileList}">
                             <li>
@@ -773,7 +775,7 @@
             form.className = "nested-reply-form";
             form.id = "nestedReplyForm-" + parentReplyId;
             form.innerHTML =
-                "<div class='nested-reply-guide'>" + author + "님에게 답글 작성</div>" +
+                "<div class='nested-reply-guide'>" + escapeHtml(author) + "님에게 답글 작성</div>" +
                 "<textarea id='nestedReplyInput-" + parentReplyId + "' placeholder='답글을 입력하세요.'></textarea>" +
                 "<div class='nested-reply-actions'>" +
                     "<button type='button' class='reply-action-btn muted' onclick='closeInlineReplyForm()'>취소</button>" +
@@ -837,16 +839,15 @@
 		function confirmDelete(postId, wsId, boardType) {
 		    if (confirm("정말로 이 게시글을 삭제하시겠습니까?\n삭제된 데이터는 복구할 수 없습니다.")) {
 		        const projId = "${projId}";
-
-		        let url = "/group/board/delete?postId=" + postId
-		                + "&wsId=" + wsId
-		                + "&boardType=" + boardType;
-
+		        const params = {
+		            postId: postId,
+		            wsId: wsId,
+		            boardType: boardType
+		        };
 		        if (projId && projId !== "") {
-		            url += "&projId=" + projId;
+		            params.projId = projId;
 		        }
-
-		        location.href = url;
+		        window.moyoPostNavigate("/group/board/delete", params);
 		    }
 		}
 
@@ -953,6 +954,15 @@
             li.appendChild(body);
             li.appendChild(actions);
             return li;
+        }
+
+        function escapeHtml(value) {
+            return String(value || '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
         }
 
         function escapeJs(value) {

@@ -6,7 +6,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MOYO 프로필 설정</title>
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/signup.css?v=20260706-auth-ui63">
+    <link id="moyo-fontawesome-css" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" referrerpolicy="no-referrer">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/signup.css?v=20260906-brand-feature-icons">
+    <script src="${pageContext.request.contextPath}/js/moyoCsrf.js?v=csrf-v1"></script>
 </head>
 <body class="signup-body">
 <main class="signup-shell">
@@ -14,10 +16,33 @@
 <div class="signup-brand-copy">
             <span class="signup-eyebrow">MOYO에 모여</span>
             <h1>나를 보여주는<br>프로필을 만들어요</h1>
-            <p>친구, 그룹, 프로젝트에서<br>함께 사용할 정보예요.</p>
+            <p>MOYO에서 사용할 기본 프로필이에요.<br>그룹에서는 전용 프로필을 따로 사용할 수 있어요.</p>
         </div>
-        <div class="signup-feature-row" aria-hidden="true">
-            <span>친구</span><span>그룹</span><span>프로젝트</span><span>일정</span><span>기록</span><span>사진</span>
+        <div class="signup-feature-row signup-feature-row--structured" aria-hidden="true">
+            <div class="signup-feature-spaces">
+                <span>친구</span>
+                <span>그룹</span>
+                <span>프로젝트</span>
+            </div>
+            <div class="signup-feature-records">
+                    <div class="signup-feature-contents">
+                <span class="signup-feature-content">
+                    <i class="fa-regular fa-calendar-days"></i>
+                    <small>일정</small>
+                </span>
+                <span class="signup-feature-content">
+                    <i class="fa-regular fa-note-sticky"></i>
+                    <small>노트</small>
+                </span>
+                <span class="signup-feature-content">
+                    <i class="fa-regular fa-images"></i>
+                    <small>사진</small>
+                </span>
+                <span class="signup-feature-content">
+                    <i class="fa-regular fa-folder-open"></i>
+                    <small>파일</small>
+                </span>
+            </div>
         </div>
     </section>
 
@@ -38,7 +63,10 @@
         </div>
 
         <c:if test="${param.error eq 'required' || param.error eq 'name'}">
-            <div class="signup-alert is-error">사용할 이름을 입력해주세요.</div>
+            <div class="signup-alert is-error">이름은 30자 이내로 입력해주세요.</div>
+        </c:if>
+        <c:if test="${param.error eq 'birth'}">
+            <div class="signup-alert is-error">생일 정보를 확인해주세요. 오늘 이후 날짜는 사용할 수 없습니다.</div>
         </c:if>
         <c:if test="${param.error eq 'image'}">
             <div class="signup-alert is-error">프로필 이미지를 처리하지 못했습니다. 다시 선택해주세요.</div>
@@ -53,14 +81,14 @@
                 <label for="userName">사용할 이름</label>
                 <input id="userName" type="text" name="userName" maxlength="30"
                        autocomplete="nickname" placeholder="이름을 입력해주세요" required autofocus>
-                <p class="signup-field-hint">MOYO 기본 이름이에요. 그룹/프로젝트 닉네임은 따로 설정할 수 있어요.</p>
+                <p class="signup-field-hint">MOYO 기본 이름이에요. 그룹에서는 그룹 전용 이름을 따로 설정할 수 있어요.</p>
             </div>
 
             <div class="signup-field signup-birth-field">
                 <div class="signup-birth-label-row">
                     <label for="birthDateDisplay" class="signup-birth-label">
                         <span>생일</span>
-                        <span class="signup-optional-label">선택</span>
+                        <span class="signup-optional-label">선택사항</span>
                     </label>
                     <div class="signup-birth-type-toggle" role="group" aria-label="생일 양력 음력 선택">
                         <button type="button" class="is-active" data-birth-type="SOLAR">양력</button>
@@ -101,7 +129,7 @@
                         </div>
                     </div>
                 </div>
-                <p class="signup-field-hint">캘린더 표시와 생일 알림에 사용돼요. 비공개는 마이페이지에서 설정할 수 있어요.</p>
+                <p class="signup-field-hint">생일은 친구에게 표시되며, 마이페이지에서 언제든 비공개로 변경할 수 있어요.</p>
             </div>
 
             <div class="signup-profile-editor signup-profile-editor-bottom">
@@ -111,9 +139,9 @@
                 </div>
 
                 <div class="signup-profile-actions">
-                    <label for="profileFile" class="signup-secondary-button signup-image-button is-active">사진 선택</label>
+                    <label for="profileFile" class="signup-secondary-button signup-image-button">사진 선택</label>
                     <input id="profileFile" type="file" accept="image/png,image/jpeg,image/webp" hidden>
-                    <button id="removeProfile" type="button" class="signup-secondary-button signup-avatar-button">기본 아바타</button>
+                    <button id="removeProfile" type="button" class="signup-secondary-button signup-avatar-button is-active" aria-pressed="true">기본 아바타</button>
                 </div>
 
 

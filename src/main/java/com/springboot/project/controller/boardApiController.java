@@ -12,6 +12,7 @@ import java.util.Set;
 import jakarta.servlet.http.HttpSession;
 import com.springboot.project.dto.usersDto;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -28,6 +29,9 @@ import org.springframework.web.multipart.MultipartFile;
 import com.springboot.project.dto.postDTO;
 import com.springboot.project.dao.IworkspaceDAO;
 import com.springboot.project.service.IboardService;
+import com.springboot.project.service.IcontentFileService;
+import com.springboot.project.service.BoardAuthorizationService;
+import com.springboot.project.service.UploadSecurityService;
 
 @RestController
 @RequestMapping("/api/workspace")
@@ -38,6 +42,19 @@ public class boardApiController {
 
     @Autowired
     private IworkspaceDAO workspaceDAO;
+
+    @Autowired
+    private IcontentFileService contentFileService;
+
+    @Autowired
+    private BoardAuthorizationService boardAuthorizationService;
+    
+    @Autowired
+    private UploadSecurityService uploadSecurityService;
+
+
+    @Value("${moyo.upload.board-editor-dir:C:/uploads/editor/}")
+    private String boardEditorUploadDir;
 
     /**
      * 📢 대시보드 진입 시 공지사항 및 자유게시판 최신글 3개를 비동기로 반환하는 API
@@ -55,12 +72,12 @@ public class boardApiController {
         // 윤재 님이 기존에 가지고 계시던 서비스 메서드 호출
         List<postDTO> notices = iboardService.getDashboardLatest(wsId, "NOTICE");
         List<postDTO> freeBoards = iboardService.getDashboardLatest(wsId, "FREE");
-        List<postDTO> fileBoards = iboardService.getDashboardLatest(wsId, "FILE");
+        Long userId = ((usersDto) session.getAttribute("user")).getUserId();
         
-        // JS 프론트엔드가 요구하는 key 값(notices, freeBoards) 그대로 조립
+        // 자료실 위젯은 BOARD_POSTS(FILE)가 아니라 공통 자료실 CONTENT_FILES의 최신 파일을 사용한다.
         response.put("notices", notices);
         response.put("freeBoards", freeBoards);
-        response.put("fileBoards", fileBoards); // 👈 이 부분을 꼭 추가하세요!
+        response.put("files", contentFileService.getDashboardLatestFiles("GROUP", wsId, null, 3, userId));
         
         return ResponseEntity.ok(response);
     }
@@ -70,11 +87,24 @@ public class boardApiController {
      */
     @PostMapping("/{wsId}/board/reply")
     public ResponseEntity<Map<String, Object>> registerReply(
-            @PathVariable("wsId") Long wsId,  // 💡 여기 괄호 안에 이름을 명시해야 합니다!
-            @RequestBody Map<String, Object> replyData) {
-        
-        System.out.println("DEBUG - 받은 데이터: " + replyData);
-        
+            @PathVariable("wsId") Long wsId,
+            @RequestBody Map<String, Object> replyData,
+            HttpSession session) {
+
+        usersDto loginUser = (usersDto) session.getAttribute("user");
+        if (loginUser == null) {
+            return ResponseEntity.status(401).body(Map.of("status", "LOGIN_REQUIRED"));
+        }
+        Long postId = toLongValue(replyData.get("postId"));
+        if (!boardAuthorizationService.canViewPost(postId, loginUser.getUserId())) {
+            return ResponseEntity.status(403).body(Map.of("status", "FORBIDDEN"));
+        }
+        postDTO targetPost = boardAuthorizationService.getPost(postId);
+        if (targetPost == null || targetPost.getWsId() == null || !targetPost.getWsId().equals(wsId)) {
+            return ResponseEntity.status(403).body(Map.of("status", "FORBIDDEN"));
+        }
+        replyData.put("userId", loginUser.getUserId());
+
         try {
             boolean isSuccess = iboardService.registerReply(replyData);
             
@@ -86,6 +116,8 @@ public class boardApiController {
             }
             return ResponseEntity.ok(response);
             
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("status", "INVALID_INPUT", "message", e.getMessage()));
         } catch (Exception e) {
             System.err.println("에러 발생 원인: " + e.getMessage());
             e.printStackTrace(); 
@@ -98,27 +130,47 @@ public class boardApiController {
     }
  // 1. 댓글 수정 API
     @PutMapping("/{wsId}/board/reply/modify")
-    public ResponseEntity<?> modifyReply(@RequestBody Map<String, Object> replyData) {
-        // 내부적으로 쿼리: UPDATE BOARD_REPLIES SET CONTENT = #{content} WHERE REPLY_ID = #{replyId} 호출
-        boolean success = iboardService.modifyReply(replyData); 
-        return ResponseEntity.ok(Map.of("status", success ? "SUCCESS" : "FAIL"));
+    public ResponseEntity<?> modifyReply(@PathVariable("wsId") Long wsId,
+                                         @RequestBody Map<String, Object> replyData,
+                                         HttpSession session) {
+        usersDto loginUser = (usersDto) session.getAttribute("user");
+        if (loginUser == null) return ResponseEntity.status(401).body(Map.of("status", "LOGIN_REQUIRED"));
+        Long replyId = toLongValue(replyData.get("replyId"));
+        if (!boardAuthorizationService.canEditReply(replyId, loginUser.getUserId())) {
+            return ResponseEntity.status(403).body(Map.of("status", "FORBIDDEN"));
+        }
+        try {
+            boolean success = iboardService.modifyReply(replyData);
+            return ResponseEntity.ok(Map.of("status", success ? "SUCCESS" : "FAIL"));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("status", "INVALID_INPUT", "message", e.getMessage()));
+        }
     }
 
     // 2. 댓글 삭제 API
     @DeleteMapping("/{wsId}/board/reply/{replyId}")
-    public ResponseEntity<?> removeReply(@PathVariable("replyId") int replyId) {
-        // 내부적으로 쿼리: DELETE FROM BOARD_REPLIES WHERE REPLY_ID = #{replyId} 호출
+    public ResponseEntity<?> removeReply(@PathVariable("wsId") Long wsId,
+                                         @PathVariable("replyId") int replyId,
+                                         HttpSession session) {
+        usersDto loginUser = (usersDto) session.getAttribute("user");
+        if (loginUser == null) return ResponseEntity.status(401).body(Map.of("status", "LOGIN_REQUIRED"));
+        if (!boardAuthorizationService.canDeleteReply((long) replyId, loginUser.getUserId())) {
+            return ResponseEntity.status(403).body(Map.of("status", "FORBIDDEN"));
+        }
         boolean success = iboardService.removeReply(replyId);
         return ResponseEntity.ok(Map.of("status", success ? "SUCCESS" : "FAIL"));
     }
     @GetMapping("/{wsId}/board/{postId}/replies")
     public ResponseEntity<List<Map<String, Object>>> getReplies(
-            @PathVariable("postId") int postId) { // int 타입으로 변경
-        
-        // 인터페이스에 있는 getReplyList를 호출합니다.
-        List<Map<String, Object>> replies = iboardService.getReplyList(postId);
-        
-        return ResponseEntity.ok(replies);
+            @PathVariable("wsId") Long wsId,
+            @PathVariable("postId") int postId,
+            HttpSession session) {
+        usersDto loginUser = (usersDto) session.getAttribute("user");
+        if (loginUser == null) return ResponseEntity.status(401).build();
+        if (!boardAuthorizationService.canViewPost((long) postId, loginUser.getUserId())) {
+            return ResponseEntity.status(403).build();
+        }
+        return ResponseEntity.ok(iboardService.getReplyList(postId));
     }
     @PostMapping("/board/image-upload")
     public ResponseEntity<Map<String, Object>> uploadEditorImage(
@@ -141,24 +193,18 @@ public class boardApiController {
         }
 
         final long maxSize = 5L * 1024L * 1024L;
-        if (uploadFile.getSize() > maxSize) {
+        final String extension;
+        try {
+            uploadSecurityService.validateImage(uploadFile, maxSize, true);
+            extension = "." + uploadSecurityService.safeExtension(uploadFile.getOriginalFilename());
+        } catch (IllegalArgumentException e) {
             response.put("uploaded", false);
-            response.put("error", Map.of("message", "이미지는 5MB 이하만 업로드할 수 있습니다."));
-            return ResponseEntity.badRequest().body(response);
-        }
-
-        String originalFileName = uploadFile.getOriginalFilename();
-        String extension = getSafeImageExtension(originalFileName);
-        String contentType = uploadFile.getContentType();
-
-        if (extension == null || contentType == null || !contentType.toLowerCase(Locale.ROOT).startsWith("image/")) {
-            response.put("uploaded", false);
-            response.put("error", Map.of("message", "jpg, jpeg, png, gif, webp 이미지만 업로드할 수 있습니다."));
+            response.put("error", Map.of("message", e.getMessage()));
             return ResponseEntity.badRequest().body(response);
         }
 
         try {
-            String uploadPath = "C:/MoyoLab.Studio/upload/editor/";
+            String uploadPath = boardEditorUploadDir;
             File folder = new File(uploadPath);
             if (!folder.exists() && !folder.mkdirs()) {
                 throw new IOException("업로드 폴더를 생성할 수 없습니다.");
@@ -210,6 +256,10 @@ public class boardApiController {
         String reason = String.valueOf(reportData.getOrDefault("reason", "ETC"));
         String detail = String.valueOf(reportData.getOrDefault("detail", ""));
 
+        if (!boardAuthorizationService.canReportContent(wsId, contentType, contentId, loginUser.getUserId())) {
+            return ResponseEntity.status(403).body(Map.of("status", "FORBIDDEN", "message", "신고 대상에 접근할 권한이 없습니다."));
+        }
+
         Map<String, Object> result = iboardService.reportContent(contentType, contentId, loginUser.getUserId(), reason, detail);
         String status = String.valueOf(result.get("status"));
 
@@ -222,21 +272,6 @@ public class boardApiController {
         return ResponseEntity.ok(result);
     }
 
-    @GetMapping("/{wsId}/calendar-events")
-    public ResponseEntity<List<Map<String, Object>>> getCalendarEvents(
-            @PathVariable("wsId") Long wsId,
-            HttpSession session) {
-        ResponseEntity<List<Map<String, Object>>> denied = authorizeWorkspaceMemberList(wsId, session);
-        if (denied != null) return denied;
-
-        try {
-            List<Map<String, Object>> list = iboardService.selectWorkspaceCalendar(wsId);
-            return ResponseEntity.ok(list != null ? list : new ArrayList<>());
-        } catch (Exception e) {
-            e.printStackTrace(); // 🚨 이 로그를 서버 콘솔에서 확인하세요!
-            return ResponseEntity.status(500).build();
-        }
-    }
     @PostMapping("/{wsId}/board/write")
     public ResponseEntity<?> writePost(
             @PathVariable("wsId") Long wsId,
@@ -245,6 +280,12 @@ public class boardApiController {
             HttpSession session) {
 
         usersDto loginUser = (usersDto) session.getAttribute("user");
+
+        if (post != null && "FILE".equalsIgnoreCase(post.getBoardType())) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "status", "LEGACY_FILE_BOARD_DISABLED",
+                    "message", "자료실은 공통 파일 시스템을 사용합니다."));
+        }
 
         if (loginUser == null) {
             Map<String, Object> response = new HashMap<>();
@@ -255,8 +296,16 @@ public class boardApiController {
 
         post.setWsId(wsId);
         post.setUserId(loginUser.getUserId());
+        if (!boardAuthorizationService.canAccessBoard(wsId, post.getProjId(), loginUser.getUserId())) {
+            return ResponseEntity.status(403).body(Map.of("status", "FORBIDDEN", "message", "게시판에 접근할 권한이 없습니다."));
+        }
 
-        boolean canManage = iboardService.canManageBoardPin(wsId, post.getProjId(), loginUser.getUserId());
+        boolean canManage = boardAuthorizationService.canManageBoard(wsId, post.getProjId(), loginUser.getUserId());
+        if ("NOTICE".equalsIgnoreCase(post.getBoardType()) && !canManage) {
+            return ResponseEntity.status(403).body(Map.of(
+                    "status", "FORBIDDEN",
+                    "message", "공지사항은 그룹장 또는 관리자만 작성할 수 있습니다."));
+        }
         if (!canManage || !"Y".equalsIgnoreCase(post.getIsPinned())) {
             post.setIsPinned("N");
             post.setPinStartDt(null);
@@ -278,7 +327,7 @@ public class boardApiController {
 
                 Map<String, Object> fileMap = new HashMap<>();
                 fileMap.put("fileName", savedName);
-                fileMap.put("originalName", file.getOriginalFilename());
+                fileMap.put("originalName", uploadSecurityService.safeOriginalName(file.getOriginalFilename()));
                 fileMap.put("fileSize", file.getSize());
                 fileList.add(fileMap);
             }
@@ -290,20 +339,33 @@ public class boardApiController {
     }
    
 
-    @DeleteMapping("/{wsId}/board/file/{fileId}") // 👈 중괄호 위치 확인!
+    @DeleteMapping("/{wsId}/board/file/{fileId}")
     public ResponseEntity<String> deleteFile(
             @PathVariable("wsId") Long wsId,
-            @PathVariable("fileId") int fileId) {
-        
-        System.out.println("🔥 컨트롤러 도달! fileId: " + fileId); // 👈 로그 추가
+            @PathVariable("fileId") int fileId,
+            HttpSession session) {
+        usersDto loginUser = (usersDto) session.getAttribute("user");
+        if (loginUser == null) return ResponseEntity.status(401).body("LOGIN_REQUIRED");
+        if (!boardAuthorizationService.canDeleteAttachment(String.valueOf(fileId), loginUser.getUserId())) {
+            return ResponseEntity.status(403).body("FORBIDDEN");
+        }
         boolean isDeleted = iboardService.deleteFile(fileId);
         return ResponseEntity.ok(isDeleted ? "SUCCESS" : "FAIL");
     }
     @GetMapping("/api/board-list")
     public ResponseEntity<List<postDTO>> getBoardList(
-            @RequestParam("projId") Long projId, 
-            @RequestParam("boardType") String boardType) {
-        
+            @RequestParam("projId") Long projId,
+            @RequestParam("boardType") String boardType,
+            HttpSession session) {
+        if ("FILE".equalsIgnoreCase(boardType)) {
+            return ResponseEntity.badRequest().body(new ArrayList<>());
+        }
+        usersDto loginUser = (usersDto) session.getAttribute("user");
+        if (loginUser == null) return ResponseEntity.status(401).build();
+        if (!boardAuthorizationService.canAccessBoard(null, projId, loginUser.getUserId())) {
+            return ResponseEntity.status(403).build();
+        }
+
         // 워크스페이스 방식과 별개로 프로젝트 ID(projId) 기준 서비스 호출
         List<postDTO> list = iboardService.getListByProject(projId, boardType);
         return ResponseEntity.ok(list != null ? list : new ArrayList<>());
@@ -314,14 +376,21 @@ public class boardApiController {
      * 호출 주소: /api/workspace/project/{projId}/dashboard-widgets
      */
     @GetMapping("/project/{projId}/dashboard-widgets")
-    public ResponseEntity<Map<String, List<postDTO>>> getProjectDashboardWidgets(@PathVariable("projId") Long projId) {
-        Map<String, List<postDTO>> response = new HashMap<>();
-        
-        // 각각의 최신글 3개씩 조회
+    public ResponseEntity<Map<String, Object>> getProjectDashboardWidgets(
+            @PathVariable("projId") Long projId,
+            HttpSession session) {
+        usersDto loginUser = (usersDto) session.getAttribute("user");
+        if (loginUser == null) {
+            return ResponseEntity.status(401).body(Map.of("message", "LOGIN_REQUIRED"));
+        }
+        if (!boardAuthorizationService.canAccessBoard(null, projId, loginUser.getUserId())) {
+            return ResponseEntity.status(403).body(Map.of("message", "FORBIDDEN"));
+        }
+
+        Map<String, Object> response = new HashMap<>();
         response.put("notice", iboardService.getListByProject(projId, "NOTICE"));
         response.put("free", iboardService.getListByProject(projId, "FREE"));
-        response.put("file", iboardService.getListByProject(projId, "FILE"));
-        
+        response.put("files", contentFileService.getDashboardLatestFiles("PROJECT", null, projId, 3, loginUser.getUserId()));
         return ResponseEntity.ok(response);
     }
 
@@ -339,7 +408,7 @@ public class boardApiController {
         if (report == null || userId == null) return false;
         Long wsId = toLongValue(report.get("WS_ID"));
         Long projId = toLongValue(report.get("PROJ_ID"));
-        return iboardService.canManageBoardPin(wsId, projId, userId);
+        return boardAuthorizationService.canManageBoard(wsId, projId, userId);
     }
 
     @PutMapping("/{wsId}/board/reports/{reportId}/status")

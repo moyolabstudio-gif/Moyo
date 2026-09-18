@@ -1,0 +1,244 @@
+/* =====================================================================
+   MOYO common widget base
+   - Shared card/body/state behavior only.
+   - Feature sizing and visuals belong to each area stylesheet.
+   ===================================================================== */
+.moyo-widget-card {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.moyo-widget-card > .moyo-widget-body {
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: 0;
+}
+
+.moyo-widget-body:has(> .moyo-widget-state),
+.moyo-widget-body:has(> .workspace-content-empty) {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.moyo-widget-state,
+.workspace-content-empty {
+    box-sizing: border-box;
+    width: 100%;
+    margin: 0;
+    text-align: center;
+}
+
+
+.moyo-main-shell {
+    --moyo-widget-card-radius: 18px;
+    --moyo-widget-card-border: #e7edf4;
+    --moyo-widget-card-shadow: 0 4px 14px rgba(15, 23, 42, .035);
+}
+
+/* Common widget surface shared by workspace/project dashboard widgets. */
+.moyo-main-shell :is(
+    .workspace-widget-card,
+    .ws-card,
+    .workspace-board-card,
+    .workspace-project-shortcut-section,
+    .mini-calendar,
+    .workspace-side-card,
+    .workspace-member-panel,
+    .project-owner-panel
+) {
+    box-sizing: border-box;
+    border: 1px solid var(--moyo-widget-card-border);
+    border-radius: var(--moyo-widget-card-radius);
+    background: #fff;
+    box-shadow: var(--moyo-widget-card-shadow);
+}
+
+
+/* =====================================================================
+   Canonical widget contract v2
+   - Same semantic widget = same geometry in workspace/project.
+   - Scope CSS may change data/content, not the shared frame rhythm.
+   ===================================================================== */
+.moyo-main-shell {
+    --moyo-widget-head-height: 42px;
+    --moyo-widget-title-color: #111827;
+    --moyo-widget-title-size: 16px;
+    --moyo-widget-title-weight: 900;
+    --moyo-widget-more-color: #64748b;
+    --moyo-widget-more-hover: #3f83ea;
+    --moyo-widget-divider: #e8edf4;
+    --moyo-widget-state-color: #94a3b8;
+}
+
+.moyo-main-shell .moyo-widget-card {
+    box-sizing: border-box;
+    min-width: 0;
+    border: 1px solid var(--moyo-widget-card-border);
+    border-radius: var(--moyo-widget-card-radius);
+    background: #fff;
+    box-shadow: var(--moyo-widget-card-shadow);
+    overflow: hidden;
+}
+
+.moyo-main-shell .moyo-widget-head {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    box-sizing: border-box;
+}
+
+.moyo-main-shell .moyo-widget-title {
+    min-width: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    color: var(--moyo-widget-title-color);
+    font-size: var(--moyo-widget-title-size);
+    font-weight: var(--moyo-widget-title-weight);
+    line-height: 1.25;
+    letter-spacing: -.025em;
+}
+
+.moyo-main-shell .moyo-widget-title__text {
+    min-width: 0;
+}
+
+.moyo-main-shell .moyo-widget-title__icon {
+    flex: 0 0 18px;
+    width: 18px;
+    height: 18px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    line-height: 1;
+}
+
+.moyo-main-shell .moyo-widget-count {
+    flex: 0 0 auto;
+    white-space: nowrap;
+}
+
+.moyo-main-shell .moyo-widget-more {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+    padding: 4px 0;
+    border: 0;
+    background: transparent;
+    color: var(--moyo-widget-more-color);
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.moyo-main-shell .moyo-widget-more:hover {
+    color: var(--moyo-widget-more-hover);
+    text-decoration: none;
+}
+
+.moyo-main-shell .moyo-widget-state {
+    width: 100%;
+    min-width: 0;
+    margin: 0;
+    color: var(--moyo-widget-state-color);
+    text-align: center;
+}
+
+
+/* =====================================================================
+   Scope-only widget surface contract
+   - Exclusive features are NOT the same component.
+   - Only the outer MOYO card surface is shared.
+   - Internal headers, controls, boards, timelines and state UX stay scoped.
+   ===================================================================== */
+.moyo-main-shell .moyo-scope-widget {
+    box-sizing: border-box;
+    min-width: 0;
+    border: 1px solid var(--moyo-widget-card-border);
+    border-radius: var(--moyo-widget-card-radius);
+    background: #fff;
+    box-shadow: var(--moyo-widget-card-shadow);
+}
+
+/* =====================================================================
+   Common widget states v3
+   ===================================================================== */
+.moyo-main-shell .moyo-widget-state,
+.moyo-main-shell .workspace-content-empty,
+.moyo-main-shell .moyo-member-widget__state {
+    box-sizing: border-box;
+    min-height: 82px;
+    padding: 14px 16px;
+    border: 1px dashed var(--moyo-state-border, #dce5ef);
+    border-radius: 12px;
+    background: var(--moyo-state-surface, #fbfcfe);
+    color: var(--moyo-state-text, #7f8da1);
+    font-size: 12px;
+    line-height: 1.5;
+    text-align: center;
+}
+
+.moyo-main-shell .moyo-widget-state.is-loading,
+.moyo-main-shell .workspace-content-empty--loading {
+    position: relative;
+    overflow: hidden;
+    border-style: solid;
+    color: transparent !important;
+    user-select: none;
+}
+
+.moyo-main-shell .moyo-widget-state.is-loading::after,
+.moyo-main-shell .workspace-content-empty--loading::after {
+    content: "";
+    width: min(72%, 190px);
+    height: 10px;
+    border-radius: 999px;
+    background: linear-gradient(90deg,
+        var(--moyo-state-skeleton-base, #edf2f7) 25%,
+        var(--moyo-state-skeleton-shine, #f8fafc) 42%,
+        var(--moyo-state-skeleton-base, #edf2f7) 62%);
+    background-size: 220% 100%;
+    animation: moyo-state-shimmer 1.25s ease-in-out infinite;
+}
+
+.moyo-main-shell .moyo-widget-state.is-error {
+    border-style: solid;
+    border-color: var(--moyo-state-danger-border, #f1d0d5);
+    background: var(--moyo-state-danger-bg, #fff7f8);
+    color: var(--moyo-state-danger-text, #ad5561);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .moyo-main-shell .moyo-widget-state.is-loading::after,
+    .moyo-main-shell .workspace-content-empty--loading::after { animation: none; }
+}
+
+/* =====================================================================
+   Widget header action final contract
+   - All "더보기" links must render identically, including visited links.
+   ===================================================================== */
+.moyo-main-shell .moyo-widget-head .moyo-widget-more,
+.moyo-main-shell .moyo-widget-head .moyo-widget-more:link,
+.moyo-main-shell .moyo-widget-head .moyo-widget-more:visited {
+    opacity: 1 !important;
+    color: #68778b !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    line-height: 1 !important;
+    text-decoration: none !important;
+}
+
+.moyo-main-shell .moyo-widget-head .moyo-widget-more:hover,
+.moyo-main-shell .moyo-widget-head .moyo-widget-more:focus-visible {
+    color: #327bd0 !important;
+    text-decoration: none !important;
+}
