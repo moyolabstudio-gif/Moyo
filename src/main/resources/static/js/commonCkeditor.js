@@ -295,7 +295,7 @@
             placeholder: options.placeholder || '내용을 입력하세요.',
             toolbar: {
                 items: toolbarItems.slice(),
-                shouldNotGroupWhenFull: profile !== 'NOTE'
+                shouldNotGroupWhenFull: profile === 'RECORD' || profile === 'NOTE'
             },
             fontColor: { columns: 6, colors: MOYO_EDITOR_COLORS, documentColors: 0, colorPicker: false },
             fontBackgroundColor: { columns: 6, colors: MOYO_EDITOR_COLORS, documentColors: 0, colorPicker: false },
@@ -433,7 +433,28 @@
             });
         }
 
+        function normalizeToolbar() {
+            const toolbar = root.querySelector('.ck.ck-toolbar');
+            const items = toolbar && toolbar.querySelector('.ck-toolbar__items');
+            if (toolbar) {
+                toolbar.style.setProperty('display', 'flex', 'important');
+                toolbar.style.setProperty('align-items', 'center', 'important');
+                toolbar.style.setProperty('flex-wrap', 'nowrap', 'important');
+                toolbar.style.setProperty('overflow', 'hidden', 'important');
+                toolbar.style.setProperty('min-height', '42px', 'important');
+            }
+            if (items) {
+                items.style.setProperty('display', 'flex', 'important');
+                items.style.setProperty('align-items', 'center', 'important');
+                items.style.setProperty('flex-wrap', 'nowrap', 'important');
+                items.style.setProperty('min-width', 'max-content', 'important');
+                items.style.setProperty('width', 'max-content', 'important');
+                items.style.setProperty('overflow', 'visible', 'important');
+            }
+        }
+
         function refresh() {
+            normalizeToolbar();
             hidePoweredBy();
         }
 
@@ -446,6 +467,97 @@
         observer.observe(document.body, { childList: true, subtree: true });
         editor.once('destroy', function () {
             observer.disconnect();
+        });
+    }
+
+
+    // NOTE / RECORD: 툴바는 한 줄로 유지하되 폭을 넘는 항목은 오른쪽부터 '항목 단위'로 숨긴다.
+    // CKEditor 기본 더보기 그룹은 사용하지 않는다. 버튼이 반쯤 잘리거나 떠 보이는 현상 방지.
+    function bindToolbarItemFit(editor) {
+        if (!editor || !editor.ui || !editor.ui.view) return;
+        const root = editor.ui.view.element;
+        if (!root) return;
+
+        const toolbar = root.querySelector('.ck.ck-toolbar');
+        const items = toolbar && toolbar.querySelector('.ck-toolbar__items');
+        if (!toolbar || !items) return;
+
+        let rafId = 0;
+
+        function setVisible(node, visible) {
+            if (!node) return;
+            if (visible) {
+                node.style.removeProperty('display');
+                node.removeAttribute('data-moyo-toolbar-hidden');
+            } else {
+                node.style.setProperty('display', 'none', 'important');
+                node.setAttribute('data-moyo-toolbar-hidden', 'true');
+            }
+        }
+
+        function isSeparator(node) {
+            return !!(node && node.classList && node.classList.contains('ck-toolbar__separator'));
+        }
+
+        function fitNow() {
+            rafId = 0;
+            const children = Array.from(items.children);
+            if (!children.length) return;
+
+            toolbar.style.setProperty('display', 'flex', 'important');
+            toolbar.style.setProperty('align-items', 'center', 'important');
+            toolbar.style.setProperty('flex-wrap', 'nowrap', 'important');
+            toolbar.style.setProperty('overflow', 'hidden', 'important');
+            toolbar.style.setProperty('max-width', '100%', 'important');
+
+            items.style.setProperty('display', 'flex', 'important');
+            items.style.setProperty('align-items', 'center', 'important');
+            items.style.setProperty('flex-wrap', 'nowrap', 'important');
+            items.style.setProperty('flex', '0 0 auto', 'important');
+            items.style.setProperty('min-width', 'max-content', 'important');
+            items.style.setProperty('width', 'max-content', 'important');
+            items.style.setProperty('max-width', 'none', 'important');
+            items.style.setProperty('overflow', 'visible', 'important');
+
+            // 먼저 전부 복구한 뒤 현재 폭 기준으로 다시 계산한다.
+            children.forEach(function (node) { setVisible(node, true); });
+
+            const available = toolbar.clientWidth;
+            if (!available) return;
+
+            for (let i = children.length - 1; i >= 0 && items.scrollWidth > available; i--) {
+                setVisible(children[i], false);
+                // 끝에 구분선만 남으면 함께 숨긴다.
+                let lastVisible = null;
+                for (let j = i - 1; j >= 0; j--) {
+                    if (!children[j].hasAttribute('data-moyo-toolbar-hidden')) {
+                        lastVisible = children[j];
+                        break;
+                    }
+                }
+                if (isSeparator(lastVisible)) setVisible(lastVisible, false);
+            }
+        }
+
+        function scheduleFit() {
+            if (rafId) cancelAnimationFrame(rafId);
+            rafId = requestAnimationFrame(fitNow);
+        }
+
+        scheduleFit();
+        setTimeout(scheduleFit, 80);
+        setTimeout(scheduleFit, 250);
+
+        const resizeObserver = typeof ResizeObserver === 'function'
+            ? new ResizeObserver(scheduleFit)
+            : null;
+        if (resizeObserver) resizeObserver.observe(toolbar);
+        else window.addEventListener('resize', scheduleFit);
+
+        editor.once('destroy', function () {
+            if (rafId) cancelAnimationFrame(rafId);
+            if (resizeObserver) resizeObserver.disconnect();
+            else window.removeEventListener('resize', scheduleFit);
         });
     }
 
@@ -476,6 +588,9 @@
             };
             if (profile === 'NOTE') {
                 stabilizeNoteEditorUi(editor);
+            }
+            if (profile === 'NOTE' || profile === 'RECORD') {
+                bindToolbarItemFit(editor);
             }
             if (String(options.profile || '').toUpperCase() === 'BOARD') {
                 Object.defineProperty(editor, '_boardUploadCount', {
