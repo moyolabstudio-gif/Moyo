@@ -23,7 +23,7 @@
         <a href="${pageContext.request.contextPath}/common/noticeList"><i class="fa-regular fa-rectangle-list"></i><span>공지사항 관리</span></a>
         <span class="is-disabled"><i class="fa-solid fa-triangle-exclamation"></i><span>신고·제재 관리</span><span class="admin-shell-badge">준비중</span></span>
         <span class="is-disabled"><i class="fa-solid fa-sliders"></i><span>서비스 운영</span><span class="admin-shell-badge">준비중</span></span>
-        <span class="is-disabled"><i class="fa-solid fa-chart-line"></i><span>로그·통계</span><span class="admin-shell-badge">준비중</span></span>
+        <a href="${pageContext.request.contextPath}/admin/logs"><i class="fa-solid fa-chart-line"></i><span>로그·통계</span></a>
         <div class="admin-shell-exit"><a href="${pageContext.request.contextPath}/"><i class="fa-solid fa-arrow-left"></i><span>MOYO로 돌아가기</span></a></div>
     </nav>
 </aside>

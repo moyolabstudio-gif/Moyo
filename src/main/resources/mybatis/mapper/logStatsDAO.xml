@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.springboot.project.dao.IlogStatsDAO">
+
+    <!--
+        모든 쿼리는 다음 두 가지를 공통으로 적용한다.
+        1) ACCESS_TYPE = 'PAGE' : 정적 리소스/내부 API 호출이 아니라 사용자가 실제로 이동한 화면만 집계
+        2) 관리자(USER_ROLE = 'ADMIN') 접속 제외 : 일반 사용자 이용 패턴만 보기 위함
+    -->
+
+    <select id="getActiveUserCount" resultType="long">
+        SELECT COUNT(DISTINCT H.USER_ID)
+          FROM HTTP_ACCESS_LOG H
+          LEFT JOIN USERS U ON U.USER_ID = H.USER_ID
+         WHERE H.CREATED_AT BETWEEN #{from} AND #{to}
+           AND H.ACCESS_TYPE = 'PAGE'
+           AND (U.USER_ROLE IS NULL OR U.USER_ROLE != 'ADMIN')
+    </select>
+
+    <!-- URI를 메뉴명으로 묶어서 이용 현황 랭킹 -->
+    <select id="getMenuRanking" resultType="com.springboot.project.dto.logMenuStatDTO">
+        SELECT label,
+               COUNT(*) AS count,
+               COUNT(DISTINCT userId) AS uniqueUsers
+          FROM (
+                SELECT H.USER_ID AS userId,
+                       CASE
+                           WHEN H.REQUEST_URI = '/' OR H.REQUEST_URI LIKE '/home%' THEN '홈'
+                           WHEN H.REQUEST_URI LIKE '/project%' THEN '프로젝트'
+                           WHEN H.REQUEST_URI LIKE '/workspace%' THEN '그룹'
+                           WHEN H.REQUEST_URI LIKE '/calendar%' THEN '캘린더'
+                           WHEN H.REQUEST_URI LIKE '/note%' THEN '노트'
+                           WHEN H.REQUEST_URI LIKE '/photo%' THEN '사진첩'
+                           WHEN H.REQUEST_URI LIKE '/board%' THEN '게시판'
+                           WHEN H.REQUEST_URI LIKE '/friend%' THEN '친구'
+                           WHEN H.REQUEST_URI LIKE '/poll%' THEN '투표'
+                           WHEN H.REQUEST_URI LIKE '/chat%' THEN '채팅'
+                           WHEN H.REQUEST_URI LIKE '/common/notice%' THEN '공지사항'
+                           WHEN H.REQUEST_URI LIKE '/common/inquiry%' THEN '문의'
+                           WHEN H.REQUEST_URI LIKE '/users/myPage%' OR H.REQUEST_URI LIKE '/mypage%' THEN '마이페이지'
+                           WHEN H.REQUEST_URI LIKE '/users%' THEN '계정(로그인·가입)'
+                           ELSE '기타'
+                       END AS label
+                  FROM HTTP_ACCESS_LOG H
+                  LEFT JOIN USERS U ON U.USER_ID = H.USER_ID
+                 WHERE H.CREATED_AT BETWEEN #{from} AND #{to}
+                   AND H.ACCESS_TYPE = 'PAGE'
+                   AND (U.USER_ROLE IS NULL OR U.USER_ROLE != 'ADMIN')
+               )
+         GROUP BY label
+         ORDER BY count DESC
+         FETCH FIRST #{limit} ROWS ONLY
+    </select>
+
+    <!-- 일별 순사용자수 / 페이지뷰 추이 -->
+    <select id="getDailyActiveUsers" resultType="com.springboot.project.dto.logDailyStatDTO">
+        SELECT TO_CHAR(H.CREATED_AT, 'YYYY-MM-DD') AS logDate,
+               COUNT(DISTINCT H.USER_ID) AS activeUsers,
+               COUNT(*) AS pageViews
+          FROM HTTP_ACCESS_LOG H
+          LEFT JOIN USERS U ON U.USER_ID = H.USER_ID
+         WHERE H.CREATED_AT BETWEEN #{from} AND #{to}
+           AND H.ACCESS_TYPE = 'PAGE'
+           AND (U.USER_ROLE IS NULL OR U.USER_ROLE != 'ADMIN')
+         GROUP BY TO_CHAR(H.CREATED_AT, 'YYYY-MM-DD')
+         ORDER BY TO_CHAR(H.CREATED_AT, 'YYYY-MM-DD')
+    </select>
+
+    <!-- 시간대(0~23시)별 순사용자수 / 페이지뷰 (기간 내 전체 합산) -->
+    <select id="getHourlyActiveUsers" resultType="com.springboot.project.dto.logHourlyActiveDTO">
+        SELECT TO_NUMBER(TO_CHAR(H.CREATED_AT, 'HH24')) AS hour,
+               COUNT(DISTINCT H.USER_ID) AS activeUsers,
+               COUNT(*) AS pageViews
+          FROM HTTP_ACCESS_LOG H
+          LEFT JOIN USERS U ON U.USER_ID = H.USER_ID
+         WHERE H.CREATED_AT BETWEEN #{from} AND #{to}
+           AND H.ACCESS_TYPE = 'PAGE'
+           AND (U.USER_ROLE IS NULL OR U.USER_ROLE != 'ADMIN')
+         GROUP BY TO_CHAR(H.CREATED_AT, 'HH24')
+         ORDER BY TO_CHAR(H.CREATED_AT, 'HH24')
+    </select>
+
+    <!-- 요일(ISO, 1=월~7=일) x 시간대 접속 밀도 -->
+    <select id="getHeatmap" resultType="com.springboot.project.dto.logHeatmapCellDTO">
+        SELECT TO_NUMBER(TO_CHAR(H.CREATED_AT, 'ID')) AS weekday,
+               TO_NUMBER(TO_CHAR(H.CREATED_AT, 'HH24')) AS hour,
+               COUNT(*) AS count
+          FROM HTTP_ACCESS_LOG H
+          LEFT JOIN USERS U ON U.USER_ID = H.USER_ID
+         WHERE H.CREATED_AT BETWEEN #{from} AND #{to}
+           AND H.ACCESS_TYPE = 'PAGE'
+           AND (U.USER_ROLE IS NULL OR U.USER_ROLE != 'ADMIN')
+         GROUP BY TO_CHAR(H.CREATED_AT, 'ID'), TO_CHAR(H.CREATED_AT, 'HH24')
+         ORDER BY 1, 2
+    </select>
+
+    <!-- 접속 기기(PC/모바일) 분포 -->
+    <select id="getDeviceStats" resultType="com.springboot.project.dto.logGroupStatDTO">
+        SELECT CASE
+                   WHEN H.USER_AGENT IS NULL THEN '알 수 없음'
+                   WHEN REGEXP_LIKE(H.USER_AGENT, 'Mobi|Android|iPhone|iPad', 'i') THEN '모바일'
+                   ELSE 'PC'
+               END AS label,
+               COUNT(*) AS count
+          FROM HTTP_ACCESS_LOG H
+          LEFT JOIN USERS U ON U.USER_ID = H.USER_ID
+         WHERE H.CREATED_AT BETWEEN #{from} AND #{to}
+           AND H.ACCESS_TYPE = 'PAGE'
+           AND (U.USER_ROLE IS NULL OR U.USER_ROLE != 'ADMIN')
+         GROUP BY CASE
+                   WHEN H.USER_AGENT IS NULL THEN '알 수 없음'
+                   WHEN REGEXP_LIKE(H.USER_AGENT, 'Mobi|Android|iPhone|iPad', 'i') THEN '모바일'
+                   ELSE 'PC'
+               END
+         ORDER BY count DESC
+    </select>
+
+</mapper>
