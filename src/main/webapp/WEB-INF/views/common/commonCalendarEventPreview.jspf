@@ -11,7 +11,7 @@
                     <i class="fa-regular fa-trash-can" aria-hidden="true"></i>
                 </button>
                 <button type="button" class="moyo-event-view-head-btn moyo-event-view-share" id="calendarViewShareBtn" aria-label="공유" title="공유" hidden>
-                    <i class="fa-regular fa-paper-plane" aria-hidden="true"></i>
+                    <i class="fa-solid fa-share-nodes" aria-hidden="true"></i>
                 </button>
                 <button type="button" class="moyo-event-view-head-btn moyo-event-view-close" id="calendarViewClose" aria-label="닫기" title="닫기">
                     <i class="fa-solid fa-xmark" aria-hidden="true"></i>

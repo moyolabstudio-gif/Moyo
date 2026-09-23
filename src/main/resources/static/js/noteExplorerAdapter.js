@@ -152,11 +152,8 @@
             likeToggleAttr: 'data-note-like-toggle',
             likeCountAttr: 'data-note-like-count',
             commentCountAttr: 'data-note-comment-count',
-            showSharedState: model.shared,
-            showShare: model.moyoPublic,
-            shareAction: 'friend-send',
-            shareTitle: '친구에게 보내기',
-            shareAriaLabel: '친구에게 보내기',
+            showSharedState: model.ownedByMe && String(root.dataset.personalRoot || '').toLowerCase() === 'true',
+            showShare: false,
             showCollect: model.moyoPublic && !model.ownedByMe,
             showMoyoMark: true,
             moyoMarkClass: 'profile-note-moyo-mark explorer-note-moyo-mark',
@@ -200,15 +197,14 @@
     function renderNoteListActions(model) {
         const shareTitle = model.shared ? '공유 중' : '공유 안 됨';
         const moyoTitle = 'MOYO 공개';
-        const sendMarkup = model.moyoPublic
-            ? `<button type="button" class="explorer-note-list-action is-send profile-note-feed-action is-icon-only" data-explorer-friend-send data-content-id="${model.id}" title="친구에게 보내기" aria-label="친구에게 보내기"><i class="fa-regular fa-paper-plane" aria-hidden="true"></i></button>`
-            : '';
+        const sendMarkup = '';
         const collectMarkup = model.moyoPublic && !model.ownedByMe
             ? `<button type="button" class="explorer-note-list-action is-collect profile-note-feed-action is-icon-only" data-profile-note-card-collect data-profile-note-collect data-note-id="${model.id}" title="담기" aria-label="담기" aria-pressed="false"><i class="fa-regular fa-bookmark" aria-hidden="true"></i></button>`
             : '';
 
-        const shareMarkup = model.shared
-            ? `<button type="button" class="explorer-note-list-action is-share-state is-active" data-explorer-share-open style="cursor: pointer;" data-content-id="${model.id}" title="친구 공유" aria-label="친구 공유"><i class="fa-solid fa-share-nodes" aria-hidden="true"></i></button>`
+        const canPermissionShare = model.ownedByMe && String(root.dataset.personalRoot || '').toLowerCase() === 'true';
+        const shareMarkup = canPermissionShare
+            ? `<button type="button" class="explorer-note-list-action is-share-state${model.shared ? ' is-active' : ''}" data-explorer-share-open style="cursor: pointer;" data-content-id="${model.id}" title="공유" aria-label="공유"><i class="fa-solid fa-share-nodes" aria-hidden="true"></i></button>`
             : '';
 
         return `<span class="explorer-note-list-actions${model.moyoPublic ? ' is-moyo-public' : ''}" aria-label="노트 공유 및 공개 상태">

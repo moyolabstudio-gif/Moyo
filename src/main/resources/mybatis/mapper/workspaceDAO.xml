@@ -537,6 +537,47 @@
            AND OWNER_ID = #{ownerId}
            AND NVL(STATUS, 'ACTIVE') = 'ACTIVE'
     </update>
+    <!-- 그룹 삭제예정과 함께 ACTIVE 하위 프로젝트도 같은 기한으로 삭제예정 처리 -->
+    <update id="cascadeWorkspaceProjectDeletion">
+        UPDATE PROJECTS p
+           SET p.STATUS = 'DELETE_PENDING',
+               p.DELETE_REQUESTED_AT = (
+                   SELECT w.DELETE_REQUESTED_AT FROM WORKSPACES w
+                    WHERE w.WS_ID = #{wsId, jdbcType=NUMERIC}
+                      AND w.OWNER_ID = #{ownerId, jdbcType=NUMERIC}
+               ),
+               p.DELETE_DEADLINE_AT = (
+                   SELECT w.DELETE_DEADLINE_AT FROM WORKSPACES w
+                    WHERE w.WS_ID = #{wsId, jdbcType=NUMERIC}
+                      AND w.OWNER_ID = #{ownerId, jdbcType=NUMERIC}
+               )
+         WHERE p.WS_ID = #{wsId, jdbcType=NUMERIC}
+           AND NVL(p.STATUS, 'ACTIVE') = 'ACTIVE'
+    </update>
+
+    <!--
+      그룹 삭제 취소 시 '그룹 삭제 요청과 같은 기한'으로 묶였던 프로젝트만 복구한다.
+      프로젝트 자체적으로 이미 삭제예정이었던 항목은 건드리지 않는다.
+    -->
+    <update id="cancelWorkspaceProjectDeletionCascade">
+        UPDATE PROJECTS p
+           SET p.STATUS = 'ACTIVE',
+               p.DELETE_REQUESTED_AT = NULL,
+               p.DELETE_DEADLINE_AT = NULL
+         WHERE p.WS_ID = #{wsId, jdbcType=NUMERIC}
+           AND p.STATUS = 'DELETE_PENDING'
+           AND p.DELETE_REQUESTED_AT = (
+               SELECT w.DELETE_REQUESTED_AT FROM WORKSPACES w
+                WHERE w.WS_ID = #{wsId, jdbcType=NUMERIC}
+                  AND w.OWNER_ID = #{ownerId, jdbcType=NUMERIC}
+           )
+           AND p.DELETE_DEADLINE_AT = (
+               SELECT w.DELETE_DEADLINE_AT FROM WORKSPACES w
+                WHERE w.WS_ID = #{wsId, jdbcType=NUMERIC}
+                  AND w.OWNER_ID = #{ownerId, jdbcType=NUMERIC}
+           )
+    </update>
+
 
     <update id="cancelWorkspaceDeletion">
         UPDATE WORKSPACES
@@ -1303,8 +1344,8 @@
                      WHERE n.WS_ID = #{wsId, jdbcType=NUMERIC}
                        AND n.PROJ_ID IS NULL
                 ))
-            OR (cr.CONTENT_TYPE = 'PHOTO' AND cr.CONTENT_ID IN (
-                    SELECT pp.PHOTO_ID FROM PHOTO_POSTS pp
+            OR (cr.CONTENT_TYPE IN ('PHOTO', 'PHOTO_POST') AND cr.CONTENT_ID IN (
+                    SELECT pp.POST_ID FROM PHOTO_POSTS pp
                      WHERE pp.SCOPE_TYPE = 'GROUP'
                        AND pp.SCOPE_ID = #{wsId, jdbcType=NUMERIC}
                 ))
@@ -1324,19 +1365,44 @@
                        AND p.PROJ_ID IS NULL
                 ))
     </delete>
-
-    <delete id="deleteWorkspaceContentRecordFileItems">
-        DELETE FROM CONTENT_RECORD_ITEMS i
-         WHERE i.RECORD_TYPE = 'FILE'
-           AND i.CONTENT_ID IN (
-               SELECT f.CONTENT_FILE_ID
-                 FROM CONTENT_FILES f
-                WHERE f.SCOPE_TYPE = 'GROUP'
-                  AND f.WS_ID = #{wsId, jdbcType=NUMERIC}
-           )
+    <!-- 그룹 기록 대상 하위 FK 정리: LINK/LOCATION -> ITEM -> TARGET -->
+    <delete id="deleteWorkspaceContentRecordLinks">
+        DELETE FROM CONTENT_RECORD_LINKS l
+         WHERE l.RECORD_ITEM_ID IN (
+               SELECT i.RECORD_ITEM_ID
+                 FROM CONTENT_RECORD_ITEMS i
+                 JOIN CONTENT_RECORD_TARGETS t
+                   ON t.RECORD_TARGET_ID = i.RECORD_TARGET_ID
+                WHERE t.WS_ID = #{wsId, jdbcType=NUMERIC}
+         )
     </delete>
 
-    <delete id="deleteWorkspaceEvents">
+    <delete id="deleteWorkspaceContentRecordLocations">
+        DELETE FROM CONTENT_RECORD_LOCATIONS l
+         WHERE l.RECORD_ITEM_ID IN (
+               SELECT i.RECORD_ITEM_ID
+                 FROM CONTENT_RECORD_ITEMS i
+                 JOIN CONTENT_RECORD_TARGETS t
+                   ON t.RECORD_TARGET_ID = i.RECORD_TARGET_ID
+                WHERE t.WS_ID = #{wsId, jdbcType=NUMERIC}
+         )
+    </delete>
+
+    <delete id="deleteWorkspaceContentRecordItems">
+        DELETE FROM CONTENT_RECORD_ITEMS i
+         WHERE i.RECORD_TARGET_ID IN (
+               SELECT t.RECORD_TARGET_ID
+                 FROM CONTENT_RECORD_TARGETS t
+                WHERE t.WS_ID = #{wsId, jdbcType=NUMERIC}
+         )
+    </delete>
+
+    <delete id="deleteWorkspaceContentRecordTargets">
+        DELETE FROM CONTENT_RECORD_TARGETS
+         WHERE WS_ID = #{wsId, jdbcType=NUMERIC}
+    </delete>
+
+<delete id="deleteWorkspaceEvents">
         DELETE FROM EVENTS
          WHERE WS_ID = #{wsId, jdbcType=NUMERIC}
            AND PROJ_ID IS NULL
@@ -1403,6 +1469,11 @@
            AND STATUS = 'DELETE_PENDING'
            AND DELETE_DEADLINE_AT IS NOT NULL
            AND DELETE_DEADLINE_AT &lt;= SYSDATE
+    </delete>
+
+    <delete id="deleteWorkspaceRowImmediate">
+        DELETE FROM WORKSPACES
+         WHERE WS_ID = #{wsId, jdbcType=NUMERIC}
     </delete>
 
     <delete id="deleteWorkspaceTargetShares">

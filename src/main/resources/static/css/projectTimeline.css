@@ -4836,3 +4836,197 @@ button.gantt-plan-readonly__avatar:focus-visible{
     border-color: transparent !important;
     box-shadow: none !important;
 }
+
+
+/* ===== 2026-09-18 mobile: keep project period + D-day on one line ===== */
+@media (max-width: 720px) {
+    .moyo-main-shell--project .project-plan-guide__meta {
+        display: flex;
+        width: 100%;
+        flex-wrap: nowrap !important;
+        align-items: stretch;
+        gap: 8px;
+    }
+
+    .moyo-main-shell--project .project-plan-guide__period {
+        width: auto !important;
+        min-width: 0;
+        flex: 1 1 auto;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .moyo-main-shell--project .project-plan-guide__deadline {
+        flex: 0 0 auto;
+        min-width: 72px;
+    }
+}
+
+@media (max-width: 360px) {
+    .moyo-main-shell--project .project-plan-guide__meta {
+        flex-wrap: wrap !important;
+    }
+
+    .moyo-main-shell--project .project-plan-guide__period {
+        flex: 1 1 100%;
+    }
+}
+
+/* 2026-09-19 기간별 계획: 기간 길이 + 공휴일 상태 표시 */
+.gantt-bar .gantt-bar-duration {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    margin: 0;
+    padding: 0 4px;
+    max-width: calc(100% - 24px);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex: 0 0 auto;
+    font-size: 11px;
+    font-weight: 800;
+    line-height: 1;
+    color: rgba(255, 255, 255, 0.96);
+    white-space: nowrap;
+    text-align: center;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.14);
+    pointer-events: none;
+    z-index: 2;
+}
+
+/* 캘린더와 동일하게 공휴일은 이름 없이 날짜 자체만 빨강으로 표시한다. */
+.gantt-date-cell.holiday-gantt-header,
+.gantt-date-cell.holiday-gantt-header .tick-main,
+.gantt-date-cell.holiday-gantt-header .tick-range {
+    color: #f04444 !important;
+}
+
+.gantt-date-cell.holiday-gantt-header {
+    background: rgba(240, 68, 68, 0.045) !important;
+    border-radius: 8px !important;
+}
+
+.gantt-cell.holiday-gantt-cell {
+    background: rgba(240, 68, 68, 0.04) !important;
+}
+
+/* 오늘이 공휴일이어도 오늘 셀 강조는 유지하고 글자만 휴일 색을 남긴다. */
+.gantt-date-cell.today-gantt-header.holiday-gantt-header,
+.gantt-date-cell.today-gantt-header.holiday-gantt-header .tick-main,
+.gantt-date-cell.today-gantt-header.holiday-gantt-header .tick-range {
+    color: #f04444 !important;
+}
+
+.gantt-cell.today-gantt-cell.holiday-gantt-cell {
+    background: linear-gradient(135deg, rgba(238, 246, 255, 0.96), rgba(240, 68, 68, 0.065)) !important;
+}
+
+@media (max-width: 760px) {
+    .gantt-bar .gantt-bar-duration {
+        font-size: 10px;
+        padding: 0 3px;
+        max-width: calc(100% - 20px);
+    }
+}
+
+
+/* 2026-09-21 weekly plan current-time indicator */
+#projectWeeklyPlanPreview .time-schedule-current-time-label {
+    position: absolute;
+    left: 6px;
+    top: -18px;
+    z-index: 16;
+    display: inline-flex;
+    align-items: center;
+    height: 17px;
+    padding: 0 5px;
+    border-radius: 999px;
+    background: #ef4444;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 800;
+    line-height: 1;
+    white-space: nowrap;
+    box-shadow: 0 2px 6px rgba(15, 23, 42, .12);
+    pointer-events: none;
+}
+
+
+/* 2026-09-21 project plan meta hierarchy: D-Day primary, period secondary */
+.moyo-main-shell--project .project-plan-guide__meta {
+    align-items: center !important;
+    gap: 12px !important;
+}
+
+.moyo-main-shell--project .project-plan-guide__deadline {
+    order: 1;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    font-size: 17px !important;
+    line-height: 1 !important;
+    font-weight: 950 !important;
+    letter-spacing: .01em !important;
+    white-space: nowrap;
+}
+
+.moyo-main-shell--project .project-plan-guide__deadline:not(.is-none),
+.moyo-main-shell--project .project-plan-guide__deadline.is-upcoming,
+.moyo-main-shell--project .project-plan-guide__deadline.is-urgent,
+.moyo-main-shell--project .project-plan-guide__deadline.is-today {
+    color: #4a90e2 !important;
+    background: linear-gradient(90deg, #35cdb4 0%, #4a90e2 50%, #7a5cff 100%) !important;
+    -webkit-background-clip: text !important;
+    background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+}
+
+.moyo-main-shell--project .project-plan-guide__deadline.is-overdue {
+    color: #d24b4b !important;
+    -webkit-text-fill-color: currentColor !important;
+}
+
+.moyo-main-shell--project .project-plan-guide__period {
+    order: 2;
+    min-height: 34px !important;
+    padding: 0 11px !important;
+    gap: 7px !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 10px !important;
+    background: rgba(248, 250, 252, .86) !important;
+    color: #58687a !important;
+    font-size: 12px !important;
+    font-weight: 750 !important;
+    box-shadow: none !important;
+}
+
+.moyo-main-shell--project .project-plan-guide__period > i {
+    color: #6b9ee8 !important;
+    font-size: 12px !important;
+}
+
+
+/* 2026-09-21 project plan meta order: period -> D-Day */
+.moyo-main-shell--project .project-plan-guide__meta {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+}
+
+.moyo-main-shell--project .project-plan-guide__period {
+    order: 1 !important;
+}
+
+.moyo-main-shell--project .project-plan-guide__deadline {
+    order: 2 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    align-self: center !important;
+    min-height: 34px !important;
+    line-height: 1 !important;
+}

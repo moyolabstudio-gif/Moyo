@@ -50,6 +50,9 @@ public class contentRecordServiceImpl implements IcontentRecordService {
             throw new IllegalArgumentException("원본 대상 정보가 필요합니다.");
         }
         String targetType = normalizeTargetType(request.getTargetType());
+        if (Set.of("PERIOD_PLAN", "TIME_PLAN", "WEEKLY_PLAN").contains(targetType)) {
+            contentRecordDAO.enableProjectPlanRecord(targetType, request.getTargetId());
+        }
         contentRecordTargetDTO existing = contentRecordDAO.selectByTarget(targetType, request.getTargetId());
         if (existing != null) {
             getViewableTarget(existing.getRecordTargetId(), userId);
@@ -170,6 +173,12 @@ public class contentRecordServiceImpl implements IcontentRecordService {
     @Transactional
     public Long ensureNoteFolder(Long recordTargetId, Long userId) {
         contentRecordTargetDTO target = getEditableTarget(recordTargetId, userId);
+        if (target.getNoteFolderId() != null) {
+            // 자동 폴더는 최초 저장 위치일 뿐이다. 탐색기에서 사용자가 옮기거나 이름을 바꾼 뒤에는
+            // 기록 저장이 해당 폴더를 원래 위치/이름으로 되돌리지 않는다.
+            return target.getNoteFolderId();
+        }
+
         Long parentFolderId = contentRecordDAO.selectRecordNoteTypeFolderId(recordTargetId);
         if (parentFolderId == null) {
             Long candidate = contentRecordDAO.selectNextNoteFolderId();
@@ -178,11 +187,6 @@ public class contentRecordServiceImpl implements IcontentRecordService {
             }
             parentFolderId = contentRecordDAO.selectRecordNoteTypeFolderId(recordTargetId);
             if (parentFolderId == null) parentFolderId = candidate;
-        }
-
-        if (target.getNoteFolderId() != null) {
-            contentRecordDAO.updateRecordNoteFolderStructure(recordTargetId, parentFolderId);
-            return target.getNoteFolderId();
         }
 
         Long folderId = contentRecordDAO.selectNextNoteFolderId();
@@ -203,16 +207,17 @@ public class contentRecordServiceImpl implements IcontentRecordService {
     @Transactional
     public Long ensurePhotoAlbum(Long recordTargetId, String albumName, Long userId) {
         contentRecordTargetDTO target = getEditableTarget(recordTargetId, userId);
+        if (target.getPhotoAlbumId() != null) {
+            // 기록 연결은 앨범 위치와 독립적이다. 사용자가 탐색기에서 앨범을 이동/수정해도
+            // 이후 기록 저장이 앨범을 자동 경로로 되돌리지 않는다.
+            return target.getPhotoAlbumId();
+        }
+
         RecordFolderNames names = resolveRecordFolderNames(target, albumName);
         PhotoScope scope = resolvePhotoScope(target);
         Long parentAlbumId = findPhotoAlbum(scope, null, names.typeName());
         if (parentAlbumId == null) {
             parentAlbumId = photoAlbumService.createAlbum(scope.type(), scope.id(), null, names.typeName(), "기록 유형", userId);
-        }
-        if (target.getPhotoAlbumId() != null) {
-            photoAlbumService.updateAlbum(target.getPhotoAlbumId(), names.targetName(), "CONTENT_RECORD_TARGET:" + recordTargetId);
-            photoAlbumService.moveAlbum(target.getPhotoAlbumId(), parentAlbumId);
-            return target.getPhotoAlbumId();
         }
         Long createdAlbumId = photoAlbumService.createAlbum(
                 scope.type(), scope.id(), parentAlbumId, names.targetName(),
@@ -230,19 +235,35 @@ public class contentRecordServiceImpl implements IcontentRecordService {
     @Transactional
     public Long ensureFileFolder(Long recordTargetId, Long userId) {
         contentRecordTargetDTO target = getEditableTarget(recordTargetId, userId);
-        RecordFolderNames names = resolveRecordFolderNames(target, null);
         FileFolderScope scope = resolveFileFolderScope(target, userId);
 
+        // 파일은 개별 항목이 탐색기에서 다른 폴더로 이동될 수 있으므로, 현재 파일의 FOLDER_ID를
+        // 기록의 기본 저장 폴더로 역추적하지 않는다. 기본 저장 폴더 ID를 대상에 별도로 고정한다.
+        Long pinnedFolderId = target.getFileFolderId();
+        if (pinnedFolderId != null && contentFileFolderDAO.selectById(pinnedFolderId) != null) {
+            return pinnedFolderId;
+        }
+
+        RecordFolderNames names = resolveRecordFolderNames(target, null);
         Long parentFolderId = findFileFolder(scope, null, names.typeName());
         if (parentFolderId == null) parentFolderId = createFileFolder(scope, null, names.typeName(), userId);
 
-        Long existingFolderId = contentRecordItemDAO.selectRecordFileFolderId(recordTargetId);
-        if (existingFolderId != null) {
-            contentFileFolderDAO.updateName(existingFolderId, names.targetName(), userId);
-            contentFileFolderDAO.move(existingFolderId, parentFolderId, userId);
-            return existingFolderId;
+        // 기존 데이터 마이그레이션: 예전 자동 폴더가 아직 원래 경로/이름에 남아 있을 때만 재사용한다.
+        Long legacyFolderId = contentRecordItemDAO.selectRecordFileFolderId(recordTargetId);
+        if (legacyFolderId != null) {
+            contentFileFolderDTO legacy = contentFileFolderDAO.selectById(legacyFolderId);
+            if (legacy != null
+                    && java.util.Objects.equals(parentFolderId, legacy.getParentFolderId())
+                    && names.targetName().equals(legacy.getFolderName())) {
+                contentRecordDAO.updateFileFolderId(recordTargetId, legacyFolderId, userId);
+                return legacyFolderId;
+            }
         }
-        return createFileFolder(scope, parentFolderId, names.targetName(), userId);
+
+        Long folderId = findFileFolder(scope, parentFolderId, names.targetName());
+        if (folderId == null) folderId = createFileFolder(scope, parentFolderId, names.targetName(), userId);
+        contentRecordDAO.updateFileFolderId(recordTargetId, folderId, userId);
+        return folderId;
     }
 
     @Override
@@ -302,15 +323,57 @@ public class contentRecordServiceImpl implements IcontentRecordService {
     private void normalizeActivatedStorage(contentRecordTargetDTO target, Long userId) {
         if (target == null || target.getRecordTargetId() == null) return;
         Long recordTargetId = target.getRecordTargetId();
+
+        // DRAFT -> ACTIVE 확정 시에만 임시 자동 경로를 실제 원본 유형/제목으로 1회 정규화한다.
+        // 그 이후 탐색기에서 사용자가 이동/이름 변경한 위치는 존중한다.
         if (target.getNoteFolderId() != null) {
-            ensureNoteFolder(recordTargetId, userId);
+            Long parentFolderId = contentRecordDAO.selectRecordNoteTypeFolderId(recordTargetId);
+            if (parentFolderId == null) {
+                Long candidate = contentRecordDAO.selectNextNoteFolderId();
+                if (candidate == null || contentRecordDAO.insertRecordNoteTypeFolder(candidate, recordTargetId, userId) <= 0) {
+                    throw new IllegalStateException("기록 유형 노트 폴더를 생성할 수 없습니다.");
+                }
+                parentFolderId = contentRecordDAO.selectRecordNoteTypeFolderId(recordTargetId);
+                if (parentFolderId == null) parentFolderId = candidate;
+            }
+            contentRecordDAO.updateRecordNoteFolderStructure(recordTargetId, parentFolderId);
         }
+
         if (target.getPhotoAlbumId() != null) {
-            ensurePhotoAlbum(recordTargetId, null, userId);
+            RecordFolderNames names = resolveRecordFolderNames(target, null);
+            PhotoScope scope = resolvePhotoScope(target);
+            Long parentAlbumId = findPhotoAlbum(scope, null, names.typeName());
+            if (parentAlbumId == null) {
+                parentAlbumId = photoAlbumService.createAlbum(scope.type(), scope.id(), null, names.typeName(), "기록 유형", userId);
+            }
+            photoAlbumService.updateAlbum(target.getPhotoAlbumId(), names.targetName(), "CONTENT_RECORD_TARGET:" + recordTargetId);
+            photoAlbumService.moveAlbum(target.getPhotoAlbumId(), parentAlbumId);
         }
-        if (contentRecordItemDAO.selectRecordFileFolderId(recordTargetId) != null) {
-            ensureFileFolder(recordTargetId, userId);
+
+        if (target.getFileFolderId() != null || contentRecordItemDAO.selectRecordFileFolderId(recordTargetId) != null) {
+            normalizeFileFolderOnActivation(target, userId);
         }
+    }
+
+    private void normalizeFileFolderOnActivation(contentRecordTargetDTO target, Long userId) {
+        Long recordTargetId = target.getRecordTargetId();
+        RecordFolderNames names = resolveRecordFolderNames(target, null);
+        FileFolderScope scope = resolveFileFolderScope(target, userId);
+        Long parentFolderId = findFileFolder(scope, null, names.typeName());
+        if (parentFolderId == null) parentFolderId = createFileFolder(scope, null, names.typeName(), userId);
+
+        Long folderId = target.getFileFolderId();
+        if (folderId == null) folderId = contentRecordItemDAO.selectRecordFileFolderId(recordTargetId);
+        if (folderId != null && contentFileFolderDAO.selectById(folderId) != null) {
+            contentFileFolderDAO.updateName(folderId, names.targetName(), userId);
+            contentFileFolderDAO.move(folderId, parentFolderId, userId);
+            contentRecordDAO.updateFileFolderId(recordTargetId, folderId, userId);
+            return;
+        }
+
+        Long created = findFileFolder(scope, parentFolderId, names.targetName());
+        if (created == null) created = createFileFolder(scope, parentFolderId, names.targetName(), userId);
+        contentRecordDAO.updateFileFolderId(recordTargetId, created, userId);
     }
 
     private contentRecordPermissionDTO resolvePermission(contentRecordTargetDTO target, Long userId) {

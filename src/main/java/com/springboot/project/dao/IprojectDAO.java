@@ -22,7 +22,7 @@ public interface IprojectDAO {
     List<projectRequestDTO> selectSidebarActiveProjectsByWsId(Long wsId);
     List<projectRequestDTO> selectSidebarActiveProjectsForUser(@Param("userId") Long userId);
     List<projectRequestDTO> selectSidebarPersonalActiveProjects(@Param("userId") Long userId);
-    List<Map<String, Object>> selectProjectListByWorkspaceId(@Param("wsId") Long wsId);
+    List<Map<String, Object>> selectProjectListByWorkspaceId(@Param("wsId") Long wsId, @Param("viewerUserId") Long viewerUserId);
     List<Map<String, Object>> selectPersonalProjects(@Param("userId") Long userId);
     projectRequestDTO selectProjectById(Long projId);
     // 2. 프로젝트 멤버 할당
@@ -56,6 +56,8 @@ public interface IprojectDAO {
 
     // 💡 [핵심 추가] 캘린더 로직을 건드리지 않고 프로젝트 생성 시 이벤트를 직접 등록
     int insertProjectEvent(projectRequestDTO dto);
+    int countProjectEvent(@Param("projId") Long projId);
+    int deleteProjectEvent(@Param("projId") Long projId);
     Map<String, Object> getProjectTaskSummary(@Param("projId") Long projId);
     List<Map<String, Object>> getProjectTasks(@Param("projId") Long projId);
     List<Map<String, Object>> getProjectMemberTasks(@Param("projId") Long projId, @Param("userId") Long userId);
@@ -64,6 +66,20 @@ public interface IprojectDAO {
     List<Map<String, Object>> getProjectMemberRecentPhotos(@Param("projId") Long projId, @Param("userId") Long userId, @Param("viewerUserId") Long viewerUserId);
     List<Map<String, Object>> getProjectMemberRecentFiles(@Param("projId") Long projId, @Param("userId") Long userId, @Param("viewerUserId") Long viewerUserId);
     List<Map<String, Object>> getProjectMemberRecentActivities(@Param("projId") Long projId, @Param("userId") Long userId, @Param("viewerUserId") Long viewerUserId);
+
+    void ensureProjectActivityHistory();
+    int insertProjectActivityHistory(
+            @Param("projId") Long projId,
+            @Param("actorUserId") Long actorUserId,
+            @Param("targetType") String targetType,
+            @Param("targetId") Long targetId,
+            @Param("actionType") String actionType,
+            @Param("title") String title,
+            @Param("detail") String detail);
+    List<Map<String, Object>> selectProjectActivityHistory(
+            @Param("projId") Long projId,
+            @Param("targetType") String targetType,
+            @Param("limit") int limit);
     List<Map<String, Object>> getProjectTaskAssignees(@Param("projId") Long projId);
     List<Map<String, Object>> getTaskAssignees(@Param("taskId") Long taskId);
     int insertTask(Map<String, Object> paramMap);
@@ -93,6 +109,20 @@ public interface IprojectDAO {
     List<Long> selectExpiredProjectDeletionIds();
     int deleteProjectTargetShares(@Param("projId") Long projId);
     int deleteProjectContentReactions(@Param("projId") Long projId);
+
+    // 기록/탐색기/업무/계획 등 PROJECTS를 직접 참조하는 자식 데이터 정리
+    int deleteProjectRecordLinksForFinalDelete(@Param("projId") Long projId);
+    int deleteProjectRecordLocationsForFinalDelete(@Param("projId") Long projId);
+    int deleteProjectRecordItemsForFinalDelete(@Param("projId") Long projId);
+    int deleteProjectRecordTargetsForFinalDelete(@Param("projId") Long projId);
+    int deleteProjectPlanSharesForFinalDelete(@Param("projId") Long projId);
+    int deleteProjectTaskAssigneesForFinalDelete(@Param("projId") Long projId);
+    int deleteProjectTasksForFinalDelete(@Param("projId") Long projId);
+    int deleteProjectPlanCalendarPrefsForFinalDelete(@Param("projId") Long projId);
+    int deleteProjectPlanFeaturesForFinalDelete(@Param("projId") Long projId);
+    int deleteProjectContentFileRecentAccessForFinalDelete(@Param("projId") Long projId);
+    int deleteProjectContentFilesForFinalDelete(@Param("projId") Long projId);
+    int deleteProjectContentFileFoldersForFinalDelete(@Param("projId") Long projId);
     int deleteProjectNativeNotes(@Param("projId") Long projId);
     int deleteProjectNoteFolders(@Param("projId") Long projId);
     int deleteProjectPhotoPosts(@Param("projId") Long projId);

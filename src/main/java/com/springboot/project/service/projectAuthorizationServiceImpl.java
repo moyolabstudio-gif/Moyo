@@ -1,5 +1,7 @@
 package com.springboot.project.service;
 
+import static com.springboot.project.service.ProjectPolicy.ACCESS_WORKSPACE_READ;
+
 import java.util.List;
 import java.util.Map;
 
@@ -47,13 +49,33 @@ public class projectAuthorizationServiceImpl implements IprojectAuthorizationSer
 
         if (!"GROUP".equals(scope) || project.getWsId() == null) return null;
         if (requestedWsId != null && !project.getWsId().equals(requestedWsId)) return null;
+        if (!isWorkspaceMember(project.getWsId(), userId)) return null;
 
-        return isWorkspaceMember(project.getWsId(), userId) ? project : null;
+        if (isProjectMemberOrLeader(project, userId)) return project;
+        return ACCESS_WORKSPACE_READ.equalsIgnoreCase(project.getAccessScope()) ? project : null;
     }
 
     @Override
     public boolean canAccessProject(Long projId, Long requestedWsId, Long userId) {
         return getAccessibleProject(projId, requestedWsId, userId) != null;
+    }
+
+    @Override
+    public boolean isProjectReadOnly(Long projId, Long userId) {
+        projectRequestDTO project = getAccessibleProject(projId, null, userId);
+        if (project == null) return false;
+        if (!"GROUP".equalsIgnoreCase(project.getProjScope())) return false;
+        return ACCESS_WORKSPACE_READ.equalsIgnoreCase(project.getAccessScope())
+                && !isProjectMemberOrLeader(project, userId);
+    }
+
+    @Override
+    public boolean canModifyProjectContent(Long projId, Long userId) {
+        if (projId == null || userId == null) return false;
+        projectRequestDTO project = getAccessibleProject(projId, null, userId);
+        return project != null
+                && !isDeletePending(project)
+                && !isProjectReadOnly(projId, userId);
     }
 
     @Override
@@ -92,7 +114,7 @@ public class projectAuthorizationServiceImpl implements IprojectAuthorizationSer
         // 프로젝트 자체에 접근할 수 없는 사용자는 PROJ_MEMBERS에 과거 권한이
         // 남아 있어도 관리 권한을 사용할 수 없다.
         projectRequestDTO project = getAccessibleProject(projId, null, userId);
-        if (project == null) return false;
+        if (project == null || isDeletePending(project)) return false;
         if (userId.equals(project.getLeaderId())) return true;
 
         List<Map<String, Object>> members = projectService.getProjectMembers(projId);
@@ -123,7 +145,8 @@ public class projectAuthorizationServiceImpl implements IprojectAuthorizationSer
         if (wsId == null || userId == null || !isWorkspaceMember(wsId, userId)) return false;
 
         workspaceDTO workspace = workspaceService.getWorkspaceDetail(wsId);
-        if (workspace != null && userId.equals(workspace.getOwnerId())) return true;
+        if (workspace == null || !"ACTIVE".equalsIgnoreCase(workspace.getStatus())) return false;
+        if (userId.equals(workspace.getOwnerId())) return true;
 
         return workspaceDAO.isWorkspaceAdmin(wsId, userId) > 0;
     }
@@ -147,7 +170,8 @@ public class projectAuthorizationServiceImpl implements IprojectAuthorizationSer
 
     @Override
     public boolean canManageAssignedItem(Long projId, Long assignedUserId, Long userId) {
-        if (userId == null) return false;
+        if (projId == null || userId == null) return false;
+        if (!canModifyProjectContent(projId, userId)) return false;
         return isProjectAdmin(projId, userId)
                 || (assignedUserId != null && assignedUserId.equals(userId));
     }

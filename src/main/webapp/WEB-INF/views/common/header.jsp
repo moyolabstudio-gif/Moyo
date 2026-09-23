@@ -120,8 +120,36 @@
         color:#2563eb;
     }
     .moyo-header .moyo-main-nav > .user-status {
-        display:flex; align-items:center; gap:14px; padding-left:18px; border-left:1px solid #e7ecf2;
+        display:flex; align-items:center; gap:8px; padding-left:16px; border-left:1px solid #e7ecf2;
     }
+    .moyo-header-action {
+        position:relative;
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        width:38px;
+        height:38px;
+        padding:0;
+        border:0;
+        border-radius:50%;
+        background:transparent;
+        color:#667085;
+        font-size:15px;
+        line-height:1;
+        cursor:pointer;
+        transition:background .18s ease, color .18s ease;
+    }
+    .moyo-header-action:hover,
+    .moyo-header-action:focus-visible {
+        background:#f4f8ff;
+        color:#2878d0;
+        outline:none;
+    }
+    .moyo-header-action.is-open {
+        background:#eef6ff;
+        color:#2878d0;
+    }
+    .moyo-header-action-wrap { position:relative; display:inline-flex; align-items:center; }
     .user-link {
         display:flex; align-items:center; gap:9px; min-width:0;
         min-height:38px; padding:0 8px 0 4px; border-radius:999px;
@@ -261,6 +289,105 @@
         transform:translateY(-1px);
         box-shadow:0 12px 24px rgba(67,104,222,.26);
     }
+    .moyo-friend-dropdown {
+        display:none;
+        position:absolute;
+        top:46px;
+        right:-8px;
+        width:310px;
+        max-width:calc(100vw - 24px);
+        overflow:hidden;
+        border:1px solid #e7edf6;
+        border-radius:14px;
+        background:#fff;
+        box-shadow:0 18px 42px rgba(15,23,42,.15);
+        z-index:2200;
+        color:#273142;
+    }
+    .moyo-friend-dropdown.is-open { display:block; }
+    .moyo-friend-dropdown::before {
+        content:"";
+        position:absolute;
+        top:-7px;
+        right:20px;
+        width:14px;
+        height:14px;
+        background:#fff;
+        border-left:1px solid #e7edf6;
+        border-top:1px solid #e7edf6;
+        transform:rotate(45deg);
+    }
+    .moyo-friend-head {
+        position:relative;
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+        gap:12px;
+        padding:14px 15px 11px;
+        border-bottom:1px solid #edf2f7;
+        background:#fff;
+    }
+    .moyo-friend-title { font-size:14px; font-weight:900; color:#263247; }
+    .moyo-friend-count { color:#8a96a8; font-size:11px; font-weight:800; }
+    .moyo-friend-list {
+        max-height:330px;
+        overflow-y:auto;
+        padding:7px;
+        margin:0;
+        list-style:none;
+        box-sizing:border-box;
+    }
+    .moyo-friend-list::-webkit-scrollbar { width:8px; }
+    .moyo-friend-list::-webkit-scrollbar-thumb { background:#dbe5f1; border-radius:999px; }
+    .moyo-friend-item a {
+        display:flex;
+        align-items:center;
+        gap:10px;
+        min-height:52px;
+        padding:7px 9px;
+        border-radius:10px;
+        color:#273142;
+        text-decoration:none;
+        box-sizing:border-box;
+    }
+    .moyo-friend-item a:hover { background:#f7fbff; }
+    .moyo-friend-avatar {
+        position:relative;
+        width:34px;
+        height:34px;
+        flex:0 0 34px;
+        display:grid;
+        place-items:center;
+        overflow:hidden;
+        border:0;
+        border-radius:50%;
+        background:var(--moyo-avatar-gradient, linear-gradient(135deg, #55D5CE 0%, #4288EF 52%, #5A55EE 100%));
+        box-shadow:0 3px 8px rgba(66,136,239,.18);
+        color:#fff;
+        font-size:13px;
+        font-weight:900;
+        box-sizing:border-box;
+    }
+    .moyo-friend-avatar.has-image { background:transparent !important; box-shadow:none; }
+    .moyo-friend-avatar img { width:100%; height:100%; object-fit:contain; object-position:center; border-radius:50%; display:block; background:transparent; }
+    .moyo-friend-main { min-width:0; flex:1; display:flex; flex-direction:column; justify-content:center; gap:2px; }
+    .moyo-friend-name { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:12px; line-height:1.25; font-weight:900; color:#263247; }
+    .moyo-friend-email { display:block; margin:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:10px; line-height:1.25; font-weight:600; color:#98a2b3; }
+    .moyo-friend-empty,
+    .moyo-friend-loading { padding:28px 16px; text-align:center; color:#98a2b3; font-size:12px; font-weight:700; }
+    .moyo-friend-foot { padding:7px; border-top:1px solid #eef3f8; background:#fff; }
+    .moyo-friend-foot a {
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        height:34px;
+        border-radius:10px;
+        color:#397be8;
+        text-decoration:none;
+        font-size:12px;
+        font-weight:900;
+    }
+    .moyo-friend-foot a:hover { background:#eef6ff; color:#286bcb; }
     #alarmBadge {
         display:none; position:absolute; top:5px; right:3px; min-width:14px; height:14px;
         padding:0 4px; border-radius:999px; background:#FF4D4F; color:#fff;
@@ -521,7 +648,7 @@
         .moyo-header .moyo-main-nav > .nav-menu { gap:4px; }
         .moyo-header > .moyo-header-inner > .moyo-main-nav { gap:12px; }
         .moyo-nav-link { padding:0 9px; }
-        .moyo-header .moyo-main-nav > .user-status { gap:10px; padding-left:14px; }
+        .moyo-header .moyo-main-nav > .user-status { gap:6px; padding-left:14px; }
     }
     @media(max-width:980px) {
         .moyo-header-location { display:none; }
@@ -535,7 +662,8 @@
         .moyo-logo-img { height:40px; max-width:98px; }
         .moyo-nav-link .moyo-nav-label { display:none; }
         .user-name, .logout-link { display:none; }
-        .moyo-header .moyo-main-nav > .user-status { padding-left:12px; gap:10px; }
+        .moyo-header .moyo-main-nav > .user-status { padding-left:10px; gap:4px; }
+        .moyo-header-action { width:36px; height:36px; }
         .moyo-header.moyo-header-guest .moyo-header-inner { width:calc(100% - 28px); }
         .moyo-header.moyo-header-guest .guest-menu { gap:6px; }
         .moyo-header.moyo-header-guest .guest-menu a {
@@ -676,39 +804,14 @@
             <c:choose>
                 <c:when test="${not empty sessionScope.user}">
                     <div class="nav-menu">
-                        <c:set var="headerWsId" value="${wsId}" />
-                        <c:if test="${empty headerWsId and not empty workspace.wsId}"><c:set var="headerWsId" value="${workspace.wsId}" /></c:if>
-                        <c:if test="${empty headerWsId and not empty projectDetail.wsId}"><c:set var="headerWsId" value="${projectDetail.wsId}" /></c:if>
-                        <c:if test="${empty headerWsId and not empty param.wsId}"><c:set var="headerWsId" value="${param.wsId}" /></c:if>
-
-                        <c:set var="headerProjId" value="${projId}" />
-                        <c:if test="${empty headerProjId and not empty projectDetail.projId}"><c:set var="headerProjId" value="${projectDetail.projId}" /></c:if>
-                        <c:if test="${empty headerProjId and not empty param.projId}"><c:set var="headerProjId" value="${param.projId}" /></c:if>
-
+                        <%--
+                            공통 헤더의 주요 탭은 현재 그룹/프로젝트 문맥을 따라가지 않는다.
+                            어디에서 눌러도 사용자의 개인 영역으로 진입한다.
+                        --%>
                         <c:set var="headerCalendarHref" value="${pageContext.request.contextPath}/calendar?scope=PRIVATE&amp;calendarContext=PERSONAL" />
                         <c:set var="headerNoteHref" value="${pageContext.request.contextPath}/note/list?scope=PRIVATE" />
                         <c:set var="headerPhotoHref" value="${pageContext.request.contextPath}/photo-album?scopeType=PERSONAL&amp;scopeId=${sessionScope.user.userId}" />
                         <c:set var="headerFilesHref" value="${pageContext.request.contextPath}/files" />
-
-                        <c:choose>
-                            <c:when test="${not empty headerProjId}">
-                                <c:set var="headerProjectScope" value="PERSONAL" />
-                                <c:if test="${not empty headerWsId}"><c:set var="headerProjectScope" value="GROUP" /></c:if>
-                                <c:if test="${not empty param.projectScope}"><c:set var="headerProjectScope" value="${param.projectScope}" /></c:if>
-                                <c:set var="headerNoteHref" value="${pageContext.request.contextPath}/note/list?scope=PROJ&amp;projId=${headerProjId}" />
-                                <c:set var="headerPhotoHref" value="${pageContext.request.contextPath}/photo-album?scopeType=PROJECT&amp;scopeId=${headerProjId}" />
-                                <c:set var="headerFilesHref" value="${pageContext.request.contextPath}/project/files?projId=${headerProjId}" />
-                                <c:if test="${not empty headerWsId}">
-                                    <c:set var="headerNoteHref" value="${headerNoteHref}&amp;wsId=${headerWsId}" />
-                                    <c:set var="headerFilesHref" value="${headerFilesHref}&amp;wsId=${headerWsId}" />
-                                </c:if>
-                            </c:when>
-                            <c:when test="${not empty headerWsId}">
-                                <c:set var="headerNoteHref" value="${pageContext.request.contextPath}/note/list?scope=WS&amp;wsId=${headerWsId}" />
-                                <c:set var="headerPhotoHref" value="${pageContext.request.contextPath}/photo-album?scopeType=WORKSPACE&amp;scopeId=${headerWsId}" />
-                                <c:set var="headerFilesHref" value="${pageContext.request.contextPath}/group/files?wsId=${headerWsId}" />
-                            </c:when>
-                        </c:choose>
 
                         <a href="${headerCalendarHref}" class="moyo-nav-link" data-nav-key="calendar">
                             <span class="moyo-nav-icon"><i class="fa-regular fa-calendar-days" aria-hidden="true"></i></span>
@@ -726,12 +829,33 @@
                             <span class="moyo-nav-icon"><i class="fa-regular fa-folder-open" aria-hidden="true"></i></span>
                             <span class="moyo-nav-label">자료실</span>
                         </a>
-                        <div class="moyo-nav-link" id="alarmContainer" data-nav-key="alarm" style="cursor:pointer;"
-                             data-account-name="<c:out value='${sessionScope.user.userName}'/>"
-                             data-account-email="<c:out value='${sessionScope.user.EMAIL}'/>">
-                            <span class="moyo-nav-icon"><i class="fa-regular fa-bell" aria-hidden="true"></i></span>
-                            <span class="moyo-nav-label">알림</span>
-                            <span id="alarmBadge">0</span>
+                    </div>
+                    <div class="user-status">
+                        <div class="moyo-header-action-wrap" id="friendHeaderWrap">
+                            <button type="button" class="moyo-header-action" id="friendHeaderButton" aria-label="친구 목록 열기" aria-expanded="false">
+                                <i class="fa-solid fa-user-group" aria-hidden="true"></i>
+                            </button>
+                            <div id="friendHeaderDropdown" class="moyo-friend-dropdown" aria-hidden="true">
+                                <div class="moyo-friend-head">
+                                    <span class="moyo-friend-title">친구</span>
+                                    <span id="friendHeaderCount" class="moyo-friend-count"></span>
+                                </div>
+                                <ul id="friendHeaderList" class="moyo-friend-list">
+                                    <li class="moyo-friend-loading">친구 목록을 불러오는 중입니다.</li>
+                                </ul>
+                                <div class="moyo-friend-foot">
+                                    <a href="${pageContext.request.contextPath}/friends">친구 관리</a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="moyo-header-action-wrap">
+                            <button type="button" class="moyo-header-action" id="alarmContainer" data-nav-key="alarm" aria-label="알림 열기" aria-expanded="false"
+                                    data-account-name="<c:out value='${sessionScope.user.userName}'/>"
+                                    data-account-email="<c:out value='${sessionScope.user.EMAIL}'/>">
+                                <i class="fa-regular fa-bell" aria-hidden="true"></i>
+                                <span id="alarmBadge">0</span>
+                            </button>
 
                             <div id="alarmDropdown" class="moyo-alarm-dropdown">
                                 <div class="moyo-alarm-head">
@@ -752,9 +876,6 @@
                                 </div>
                             </div>
                         </div>
-
-                    </div>
-                    <div class="user-status">
                         <c:set var="headerProfileImage" value="${sessionScope.user.profileImagePath}" />
                         <c:if test="${empty headerProfileImage}"><c:set var="headerProfileImage" value="${sessionScope.user.PROFILE_IMAGE_PATH}" /></c:if>
                         <c:set var="headerUserName" value="${empty sessionScope.user.userName ? '사용자' : sessionScope.user.userName}" />
@@ -816,10 +937,177 @@
 </c:if>
 
 <script>
-document.addEventListener('click', function(event) {
-    const menu = document.querySelector('.moyo-account-menu[open]');
-    if (menu && !menu.contains(event.target)) menu.removeAttribute('open');
-});
+(function() {
+    const accountMenu = document.querySelector('.moyo-account-menu');
+    if (!accountMenu) return;
+
+    accountMenu.addEventListener('toggle', function() {
+        if (!accountMenu.open) return;
+
+        const friendDropdown = document.getElementById('friendHeaderDropdown');
+        const friendButton = document.getElementById('friendHeaderButton');
+        if (friendDropdown) {
+            friendDropdown.classList.remove('is-open');
+            friendDropdown.setAttribute('aria-hidden', 'true');
+        }
+        if (friendButton) {
+            friendButton.classList.remove('is-open');
+            friendButton.setAttribute('aria-expanded', 'false');
+        }
+
+        const alarmDropdown = document.getElementById('alarmDropdown');
+        const alarmButton = document.getElementById('alarmContainer');
+        if (alarmDropdown) alarmDropdown.style.display = 'none';
+        if (alarmButton) {
+            alarmButton.classList.remove('is-open');
+            alarmButton.setAttribute('aria-expanded', 'false');
+        }
+    });
+
+    document.addEventListener('click', function(event) {
+        if (accountMenu.open && !accountMenu.contains(event.target)) {
+            accountMenu.removeAttribute('open');
+        }
+    });
+})();
+</script>
+
+<script>
+(function() {
+    const isLogin = '${not empty sessionScope.user}' === 'true';
+    if (!isLogin) return;
+
+    const contextPath = '${pageContext.request.contextPath}';
+    const wrap = document.getElementById('friendHeaderWrap');
+    const button = document.getElementById('friendHeaderButton');
+    const dropdown = document.getElementById('friendHeaderDropdown');
+    const list = document.getElementById('friendHeaderList');
+    const count = document.getElementById('friendHeaderCount');
+    if (!wrap || !button || !dropdown || !list) return;
+
+    let loaded = false;
+
+    function escapeHtml(value) {
+        return String(value == null ? '' : value)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+
+    function friendName(friend) {
+        return friend.userName || friend.friendName || friend.displayName || friend.email || '친구';
+    }
+
+    function friendEmail(friend) {
+        return friend.email || friend.friendEmail || friend.contactEmail || '';
+    }
+
+    function friendImage(friend) {
+        return friend.profileImagePath || friend.friendProfileImagePath || friend.profileImage || friend.imagePath || '';
+    }
+
+    function friendUserId(friend) {
+        return friend.userId || friend.friendUserId || friend.targetUserId || '';
+    }
+
+    function imageUrl(path) {
+        const value = String(path || '').trim();
+        if (!value) return '';
+        if (/^https?:\/\//i.test(value)) return value;
+        return contextPath + (value.charAt(0) === '/' ? value : '/' + value);
+    }
+
+    function closeFriendDropdown() {
+        dropdown.classList.remove('is-open');
+        dropdown.setAttribute('aria-hidden', 'true');
+        button.classList.remove('is-open');
+        button.setAttribute('aria-expanded', 'false');
+    }
+
+    function renderFriends(friends) {
+        const items = Array.isArray(friends) ? friends : [];
+        if (count) count.textContent = items.length ? items.length + '명' : '0명';
+        if (!items.length) {
+            list.innerHTML = '<li class="moyo-friend-empty">아직 친구가 없습니다.</li>';
+            return;
+        }
+        list.innerHTML = items.map(function(friend) {
+            const name = friendName(friend);
+            const email = friendEmail(friend);
+            const userId = friendUserId(friend);
+            const image = imageUrl(friendImage(friend));
+            const initial = String(name || '친구').substring(0, 1).toUpperCase();
+            const avatar = image
+                ? '<span class="moyo-friend-avatar has-image"><img src="' + escapeHtml(image) + '" alt="" data-fallback-initial="' + escapeHtml(initial) + '"></span>'
+                : '<span class="moyo-friend-avatar">' + escapeHtml(initial) + '</span>';
+            const href = userId ? contextPath + '/users/profile?userId=' + encodeURIComponent(userId) : contextPath + '/friends';
+            return '<li class="moyo-friend-item"><a href="' + escapeHtml(href) + '">' +
+                avatar +
+                '<span class="moyo-friend-main"><span class="moyo-friend-name">' + escapeHtml(name) + '</span>' +
+                (email ? '<span class="moyo-friend-email">' + escapeHtml(email) + '</span>' : '') +
+                '</span></a></li>';
+        }).join('');
+        list.querySelectorAll('.moyo-friend-avatar img').forEach(function(img) {
+            img.addEventListener('error', function() {
+                const avatar = img.parentElement;
+                if (!avatar) return;
+                avatar.classList.remove('has-image');
+                avatar.textContent = img.getAttribute('data-fallback-initial') || '친';
+            }, { once:true });
+        });
+    }
+
+    function loadFriends() {
+        if (loaded) return;
+        list.innerHTML = '<li class="moyo-friend-loading">친구 목록을 불러오는 중입니다.</li>';
+        fetch(contextPath + '/friends/api/list', { credentials: 'same-origin' })
+            .then(function(response) {
+                if (!response.ok) throw new Error('HTTP ' + response.status);
+                return response.json();
+            })
+            .then(function(data) {
+                loaded = true;
+                renderFriends(data && data.friends ? data.friends : []);
+            })
+            .catch(function() {
+                list.innerHTML = '<li class="moyo-friend-empty">친구 목록을 불러오지 못했습니다.</li>';
+            });
+    }
+
+    button.addEventListener('click', function(event) {
+        event.preventDefault();
+        event.stopPropagation();
+        const willOpen = !dropdown.classList.contains('is-open');
+        document.querySelectorAll('.moyo-friend-dropdown.is-open').forEach(function(item) {
+            if (item !== dropdown) item.classList.remove('is-open');
+        });
+        const accountMenu = document.querySelector('.moyo-account-menu[open]');
+        if (accountMenu) accountMenu.removeAttribute('open');
+
+        const alarmDropdown = document.getElementById('alarmDropdown');
+        if (alarmDropdown) alarmDropdown.style.display = 'none';
+        const alarmButton = document.getElementById('alarmContainer');
+        if (alarmButton) {
+            alarmButton.classList.remove('is-open');
+            alarmButton.setAttribute('aria-expanded', 'false');
+        }
+        if (willOpen) {
+            dropdown.classList.add('is-open');
+            dropdown.setAttribute('aria-hidden', 'false');
+            button.classList.add('is-open');
+            button.setAttribute('aria-expanded', 'true');
+            loadFriends();
+        } else {
+            closeFriendDropdown();
+        }
+    });
+
+    document.addEventListener('click', function(event) {
+        if (!wrap.contains(event.target)) closeFriendDropdown();
+    });
+})();
 </script>
 
 <script>
@@ -1449,16 +1737,32 @@ document.addEventListener('click', function(event) {
     function showDropdown() {
         const dropdown = qs('#alarmDropdown');
         const container = qs('#alarmContainer');
+        const accountMenu = document.querySelector('.moyo-account-menu[open]');
+        if (accountMenu) accountMenu.removeAttribute('open');
+        const friendDropdown = qs('#friendHeaderDropdown');
+        const friendButton = qs('#friendHeaderButton');
+        if (friendDropdown) {
+            friendDropdown.classList.remove('is-open');
+            friendDropdown.setAttribute('aria-hidden', 'true');
+        }
+        if (friendButton) {
+            friendButton.classList.remove('is-open');
+            friendButton.setAttribute('aria-expanded', 'false');
+        }
         if (dropdown) dropdown.style.display = 'block';
-        if (container) container.classList.add('is-active');
+        if (container) {
+            container.classList.add('is-open');
+            container.setAttribute('aria-expanded', 'true');
+        }
     }
 
     function hideDropdown() {
         const dropdown = qs('#alarmDropdown');
         const container = qs('#alarmContainer');
         if (dropdown) dropdown.style.display = 'none';
-        if (container && window.location.pathname.indexOf('/requests') !== 0 && window.location.pathname.indexOf('/notifications') !== 0 && window.location.pathname.indexOf('/alarms') !== 0) {
-            container.classList.remove('is-active');
+        if (container) {
+            container.classList.remove('is-open');
+            container.setAttribute('aria-expanded', 'false');
         }
     }
 
@@ -1540,7 +1844,7 @@ document.addEventListener('click', function(event) {
         });
 
         document.addEventListener('click', function(e) {
-            if (!e.target.closest('#alarmContainer')) hideDropdown();
+            if (!e.target.closest('#alarmContainer') && !e.target.closest('#alarmDropdown')) hideDropdown();
         });
 
         document.addEventListener('keydown', function(e) {

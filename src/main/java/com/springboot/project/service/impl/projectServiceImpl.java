@@ -21,6 +21,7 @@ import com.springboot.project.dto.projectTimePlanDTO;
 import com.springboot.project.dto.projectWeeklyPlanDTO;
 import com.springboot.project.service.IprojectService;
 import com.springboot.project.service.IcontentRecordService;
+import com.springboot.project.service.ProjectPolicy;
 
 @Service
 public class projectServiceImpl implements IprojectService {
@@ -38,6 +39,49 @@ public class projectServiceImpl implements IprojectService {
             return null;
         }
         return normalizeProjectPosition(dto.getMemberPositions().get(String.valueOf(userId)));
+    }
+
+    private Object projectMemberValue(Map<String, Object> member, String key) {
+        if (member == null || key == null) return null;
+        if (member.containsKey(key)) return member.get(key);
+        for (Map.Entry<String, Object> entry : member.entrySet()) {
+            if (entry.getKey() != null && key.equalsIgnoreCase(entry.getKey())) return entry.getValue();
+        }
+        return null;
+    }
+
+    private Long projectMemberUserId(Map<String, Object> member) {
+        Object value = projectMemberValue(member, "USER_ID");
+        if (value == null) return null;
+        if (value instanceof Number number) return number.longValue();
+        try { return Long.valueOf(String.valueOf(value)); }
+        catch (Exception e) { return null; }
+    }
+
+    private String projectMemberRole(Map<String, Object> member) {
+        Object value = projectMemberValue(member, "PROJ_ROLE");
+        return value == null ? "MEMBER" : String.valueOf(value).trim().toUpperCase();
+    }
+
+    private Map<String, Object> findProjectMember(List<Map<String, Object>> members, Long userId) {
+        if (members == null || userId == null) return null;
+        for (Map<String, Object> member : members) {
+            if (userId.equals(projectMemberUserId(member))) return member;
+        }
+        return null;
+    }
+
+    private boolean canManageProjectMembers(projectRequestDTO project, List<Map<String, Object>> members, Long requesterId) {
+        if (project == null || requesterId == null) return false;
+        if (requesterId.equals(project.getLeaderId())) return true;
+        Map<String, Object> requester = findProjectMember(members, requesterId);
+        return requester != null && "ADMIN".equals(projectMemberRole(requester));
+    }
+
+    private boolean projectMemberChangesAvailable(projectRequestDTO project) {
+        if (project == null || !"GROUP".equalsIgnoreCase(project.getProjScope())) return false;
+        return project.getDeleteRequestedAt() == null
+                && !"DELETE_PENDING".equalsIgnoreCase(project.getStatus());
     }
 
     private String normalizeTaskTime(String time, String slot, String fallback) {
@@ -101,13 +145,14 @@ public class projectServiceImpl implements IprojectService {
         if (category == null || category.isBlank()) {
             category = dto.getProjType();
         }
-        if (category == null || category.isBlank()) {
-            category = "ETC";
-        }
-        category = category.trim().toUpperCase();
+        category = ProjectPolicy.normalizeType(category);
 
-        // 그룹과 동일하게 '기타'는 ETC 자체로 분류하며 별도 유형명을 받지 않는다.
+        // 생성/설정 모두 동일한 canonical type/icon 정책을 사용한다.
         dto.setProjCategoryDetail(null);
+        dto.setProjCategory(category);
+        dto.setProjType(category);
+        dto.setProjIcon(ProjectPolicy.normalizeIcon(dto.getProjIcon(), category));
+        dto.setAccessScope(ProjectPolicy.normalizeAccessScope(dto.getAccessScope(), scope));
 
         if ("PERSONAL".equals(scope)) {
             // 개인 프로젝트는 그룹에 소속되지 않으므로 WS_ID가 없어야 합니다.
@@ -127,8 +172,6 @@ public class projectServiceImpl implements IprojectService {
         }
 
         dto.setProjScope(scope);
-        dto.setProjCategory(category);
-        dto.setProjType(category); // 기존 PROJ_TYPE 사용 코드와의 호환
 
         projectDao.insertProject(dto);
 
@@ -152,7 +195,18 @@ public class projectServiceImpl implements IprojectService {
             }
         }
 
-        projectDao.insertProjectEvent(dto);
+        boolean periodEnabled = "Y".equalsIgnoreCase(dto.getPeriodEnabledYn())
+                && dto.getStartDate() != null && !dto.getStartDate().isBlank()
+                && dto.getEndDate() != null && !dto.getEndDate().isBlank();
+
+        dto.setPeriodEnabledYn(periodEnabled ? "Y" : "N");
+        if (periodEnabled) {
+            projectDao.insertProjectEvent(dto);
+        } else {
+            dto.setStartDate(null);
+            dto.setEndDate(null);
+        }
+
         replaceProjectLinks(dto.getProjId(), dto.getLinks());
     }
 
@@ -249,6 +303,115 @@ public class projectServiceImpl implements IprojectService {
         return projectDao.deleteProjectMember(projId, userId) > 0;
     }
 
+    @Override
+    @Transactional
+    public String updateProjectMembers(Long projId, Long requesterId, List<Map<String, Object>> changes) {
+        if (projId == null || requesterId == null || changes == null || changes.isEmpty()) {
+            return "invalid_request";
+        }
+        if (changes.size() > 100) return "too_many_changes";
+
+        projectRequestDTO project = projectDao.selectProjectById(projId);
+        if (project == null) return "project_not_found";
+        if (!projectMemberChangesAvailable(project)) return "project_unavailable";
+
+        List<Map<String, Object>> members = projectDao.getProjectMembers(projId);
+        if (!canManageProjectMembers(project, members, requesterId)) return "forbidden";
+
+        List<Map<String, Object>> normalized = new ArrayList<>();
+        Set<Long> seen = new LinkedHashSet<>();
+
+        for (Map<String, Object> change : changes) {
+            if (change == null || change.get("userId") == null) return "invalid_request";
+
+            Long targetUserId;
+            try { targetUserId = Long.valueOf(String.valueOf(change.get("userId"))); }
+            catch (Exception e) { return "invalid_request"; }
+
+            if (!seen.add(targetUserId)) return "duplicate_member";
+            Map<String, Object> target = findProjectMember(members, targetUserId);
+            if (target == null) return "member_not_found";
+
+            boolean hasRole = change.containsKey("role");
+            String role = !hasRole || change.get("role") == null
+                    ? null
+                    : String.valueOf(change.get("role")).trim().toUpperCase();
+            if (hasRole) {
+                if (!"ADMIN".equals(role) && !"MEMBER".equals(role)) return "invalid_role";
+                if (project.getLeaderId() != null && project.getLeaderId().equals(targetUserId)) {
+                    return "leader_role_locked";
+                }
+                if (requesterId.equals(targetUserId)) return "self_role_locked";
+            }
+
+            boolean hasPosition = change.containsKey("position");
+            String position = !hasPosition || change.get("position") == null
+                    ? null
+                    : normalizeProjectPosition(String.valueOf(change.get("position")));
+
+            Map<String, Object> item = new HashMap<>();
+            item.put("userId", targetUserId);
+            item.put("hasRole", hasRole);
+            item.put("role", role);
+            item.put("hasPosition", hasPosition);
+            item.put("position", position);
+            normalized.add(item);
+        }
+
+        for (Map<String, Object> item : normalized) {
+            Long targetUserId = (Long) item.get("userId");
+            if (Boolean.TRUE.equals(item.get("hasRole"))
+                    && projectDao.updateProjectMemberRole(projId, targetUserId, (String) item.get("role")) < 1) {
+                throw new IllegalStateException("PROJECT_MEMBER_ROLE_UPDATE_FAILED");
+            }
+            if (Boolean.TRUE.equals(item.get("hasPosition"))
+                    && projectDao.updateProjectMemberPosition(projId, targetUserId, (String) item.get("position")) < 1) {
+                throw new IllegalStateException("PROJECT_MEMBER_POSITION_UPDATE_FAILED");
+            }
+        }
+        return "success";
+    }
+
+    @Override
+    @Transactional
+    public String removeProjectMembers(Long projId, Long requesterId, List<Long> userIds) {
+        if (projId == null || requesterId == null || userIds == null || userIds.isEmpty()) {
+            return "invalid_request";
+        }
+        if (userIds.size() > 100) return "too_many_members";
+
+        projectRequestDTO project = projectDao.selectProjectById(projId);
+        if (project == null) return "project_not_found";
+        if (!projectMemberChangesAvailable(project)) return "project_unavailable";
+
+        List<Map<String, Object>> members = projectDao.getProjectMembers(projId);
+        if (!canManageProjectMembers(project, members, requesterId)) return "forbidden";
+
+        boolean requesterIsLeader = project.getLeaderId() != null && project.getLeaderId().equals(requesterId);
+        Set<Long> uniqueIds = new LinkedHashSet<>();
+
+        for (Long targetUserId : userIds) {
+            if (targetUserId == null || !uniqueIds.add(targetUserId)) return "invalid_request";
+            if (requesterId.equals(targetUserId)) return "self_remove_locked";
+            if (project.getLeaderId() != null && project.getLeaderId().equals(targetUserId)) {
+                return "leader_protected";
+            }
+
+            Map<String, Object> target = findProjectMember(members, targetUserId);
+            if (target == null) return "member_not_found";
+            if (!requesterIsLeader && "ADMIN".equals(projectMemberRole(target))) return "forbidden";
+        }
+
+        for (Long targetUserId : uniqueIds) {
+            projectDao.reassignMemberTasksToLeader(projId, targetUserId, project.getLeaderId());
+            if (projectDao.deleteProjectMember(projId, targetUserId) < 1) {
+                throw new IllegalStateException("PROJECT_MEMBER_REMOVE_FAILED");
+            }
+        }
+        return "success";
+    }
+
+
 
 // 5. [기존 유지] 워크스페이스별 프로젝트 목록
     @Override
@@ -257,8 +420,8 @@ public class projectServiceImpl implements IprojectService {
     }
 
     @Override
-    public List<Map<String, Object>> getProjectListByWorkspaceId(Long wsId) {
-        return projectDao.selectProjectListByWorkspaceId(wsId);
+    public List<Map<String, Object>> getProjectListByWorkspaceId(Long wsId, Long viewerUserId) {
+        return projectDao.selectProjectListByWorkspaceId(wsId, viewerUserId);
     }
 
     @Override
@@ -401,7 +564,7 @@ public class projectServiceImpl implements IprojectService {
     }
     @Override
     @Transactional
-    public boolean addTask(Long projId, List<Long> assigneeIds, Long createdBy, String title, String startDate, String endDate, String status, String startTime, String endTime, String startTimeSlot, String endTimeSlot, Integer sortOrder, String recordEnabledYn, String recordVisibility) {
+    public Long addTask(Long projId, List<Long> assigneeIds, Long createdBy, String title, String startDate, String endDate, String status, String startTime, String endTime, String startTimeSlot, String endTimeSlot, Integer sortOrder, String recordEnabledYn, String recordVisibility) {
         List<Long> normalizedAssigneeIds = normalizeAssigneeIds(assigneeIds);
         Long primaryAssigneeId = normalizedAssigneeIds.isEmpty() ? null : normalizedAssigneeIds.get(0);
 
@@ -429,14 +592,17 @@ public class projectServiceImpl implements IprojectService {
         paramMap.put("recordEnabledYn", "Y".equalsIgnoreCase(String.valueOf(recordEnabledYn)) ? "Y" : "N");
         paramMap.put("recordVisibility", Set.of("ASSIGNEE", "ASSIGNEE_MANAGER").contains(String.valueOf(recordVisibility).trim().toUpperCase()) ? "ASSIGNEE" : "PROJECT");
         if (projectDao.insertTask(paramMap) <= 0) {
-            return false;
+            return null;
         }
 
         Long taskId = (Long) paramMap.get("taskId");
+        if (taskId == null) {
+            return null;
+        }
         if (!normalizedAssigneeIds.isEmpty()) {
             projectDao.insertTaskAssignees(taskId, normalizedAssigneeIds, createdBy);
         }
-        return true;
+        return taskId;
     }
     private List<Long> normalizeAssigneeIds(List<Long> assigneeIds) {
         if (assigneeIds == null || assigneeIds.isEmpty()) {
@@ -606,12 +772,34 @@ public class projectServiceImpl implements IprojectService {
     @Override
     @Transactional
     public boolean updateProject(projectRequestDTO dto) {
+        String normalizedType = ProjectPolicy.normalizeType(
+                dto.getProjType() == null || dto.getProjType().isBlank()
+                        ? dto.getProjCategory()
+                        : dto.getProjType());
+        dto.setProjType(normalizedType);
+        dto.setProjCategory(normalizedType);
+        dto.setProjIcon(ProjectPolicy.normalizeIcon(dto.getProjIcon(), normalizedType));
+        dto.setAccessScope(ProjectPolicy.normalizeAccessScope(dto.getAccessScope(), dto.getProjScope()));
+
+        boolean periodEnabled = "Y".equalsIgnoreCase(dto.getPeriodEnabledYn())
+                && dto.getStartDate() != null && !dto.getStartDate().isBlank()
+                && dto.getEndDate() != null && !dto.getEndDate().isBlank();
+        dto.setPeriodEnabledYn(periodEnabled ? "Y" : "N");
+        if (!periodEnabled) {
+            dto.setStartDate(null);
+            dto.setEndDate(null);
+        }
 
         int result1 = projectDao.updateProject(dto);
 
-        int result2 = 0;
-        if (dto.getStartDate() != null && dto.getEndDate() != null) {
-            result2 = projectDao.updateProjectEvent(dto);
+        if (periodEnabled) {
+            if (projectDao.countProjectEvent(dto.getProjId()) > 0) {
+                projectDao.updateProjectEvent(dto);
+            } else {
+                projectDao.insertProjectEvent(dto);
+            }
+        } else {
+            projectDao.deleteProjectEvent(dto.getProjId());
         }
 
         replaceProjectLinks(dto.getProjId(), dto.getLinks());
@@ -720,20 +908,44 @@ public class projectServiceImpl implements IprojectService {
 
     private void normalizePlanRecordSetting(projectPeriodPlanDTO dto) {
         if (dto == null) return;
-        dto.setRecordEnabledYn("Y".equalsIgnoreCase(dto.getRecordEnabledYn()) ? "Y" : "N");
-        dto.setRecordVisibility("MANAGER".equalsIgnoreCase(dto.getRecordVisibility()) ? "MANAGER" : "PROJECT");
+        if (dto.getRecordEnabledYn() != null && !dto.getRecordEnabledYn().isBlank()) {
+            dto.setRecordEnabledYn("Y".equalsIgnoreCase(dto.getRecordEnabledYn()) ? "Y" : "N");
+        } else {
+            dto.setRecordEnabledYn(null);
+        }
+        if (dto.getRecordVisibility() != null && !dto.getRecordVisibility().isBlank()) {
+            dto.setRecordVisibility("MANAGER".equalsIgnoreCase(dto.getRecordVisibility()) ? "MANAGER" : "PROJECT");
+        } else {
+            dto.setRecordVisibility(null);
+        }
     }
 
     private void normalizePlanRecordSetting(projectTimePlanDTO dto) {
         if (dto == null) return;
-        dto.setRecordEnabledYn("Y".equalsIgnoreCase(dto.getRecordEnabledYn()) ? "Y" : "N");
-        dto.setRecordVisibility("MANAGER".equalsIgnoreCase(dto.getRecordVisibility()) ? "MANAGER" : "PROJECT");
+        if (dto.getRecordEnabledYn() != null && !dto.getRecordEnabledYn().isBlank()) {
+            dto.setRecordEnabledYn("Y".equalsIgnoreCase(dto.getRecordEnabledYn()) ? "Y" : "N");
+        } else {
+            dto.setRecordEnabledYn(null);
+        }
+        if (dto.getRecordVisibility() != null && !dto.getRecordVisibility().isBlank()) {
+            dto.setRecordVisibility("MANAGER".equalsIgnoreCase(dto.getRecordVisibility()) ? "MANAGER" : "PROJECT");
+        } else {
+            dto.setRecordVisibility(null);
+        }
     }
 
     private void normalizePlanRecordSetting(projectWeeklyPlanDTO dto) {
         if (dto == null) return;
-        dto.setRecordEnabledYn("Y".equalsIgnoreCase(dto.getRecordEnabledYn()) ? "Y" : "N");
-        dto.setRecordVisibility("MANAGER".equalsIgnoreCase(dto.getRecordVisibility()) ? "MANAGER" : "PROJECT");
+        if (dto.getRecordEnabledYn() != null && !dto.getRecordEnabledYn().isBlank()) {
+            dto.setRecordEnabledYn("Y".equalsIgnoreCase(dto.getRecordEnabledYn()) ? "Y" : "N");
+        } else {
+            dto.setRecordEnabledYn(null);
+        }
+        if (dto.getRecordVisibility() != null && !dto.getRecordVisibility().isBlank()) {
+            dto.setRecordVisibility("MANAGER".equalsIgnoreCase(dto.getRecordVisibility()) ? "MANAGER" : "PROJECT");
+        } else {
+            dto.setRecordVisibility(null);
+        }
     }
 
     @Override
@@ -992,6 +1204,12 @@ public class projectServiceImpl implements IprojectService {
             if (projectDao.countProjectMemberForPlanPermission(projId, userId) <= 0) continue;
             projectDao.insertProjectPlanEditor(projId, normalizedType, planId, userId, grantedBy);
         }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public projectPlanFeatureDTO getProjectPlanFeature(Long projId) {
+        return projectDao.selectProjectPlanFeature(projId);
     }
 
     @Override

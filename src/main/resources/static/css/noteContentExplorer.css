@@ -274,7 +274,7 @@
     .file-explorer[data-content-type="NOTE"] .file-browser-grid:not(.is-list) .file-item[data-kind="folder"]:focus-within {
         border-color: #d5e1f0;
         box-shadow: 0 18px 38px rgba(15, 23, 42, .09);
-        transform: translateY(-3px);
+        transform: translateY(-4px);
     }
 
     .file-explorer[data-content-type="NOTE"] .file-browser-grid:not(.is-list) .file-item[data-kind="folder"].is-selected {
@@ -813,7 +813,7 @@
 /* 2026-08-10 NOTE grid: MOYO 공개 PNG의 내부 투명 여백 때문에 아래로 처져 보이는 시각적 오프셋만 보정 */
 .file-explorer[data-content-type="NOTE"] .file-browser-grid:not(.is-list) .explorer-note-moyo-mark img,
 .file-explorer[data-content-type="NOTE"] .file-browser-grid:not(.is-list) .profile-note-moyo-mark img {
-    transform: translateY(-1px);
+    transform: translateY(-5px);
 }
 
 /* 2026-08-10 NOTE list only: PHOTO/FILE 리스트와 동일한 상단 시작선 사용 */
@@ -1301,4 +1301,50 @@
 }
 .file-explorer[data-content-type="NOTE"] .file-browser-grid.is-list .file-item--note {
     border-radius: var(--moyo-radius-md, 12px) !important;
+}
+
+/* 2026-09-19 NOTE explorer grid footer alignment
+   - reaction/share/send actions use one visual spacing rule
+   - MOYO public mark sits on the same visual center line as the footer actions */
+.file-explorer[data-content-type="NOTE"] .file-browser-grid:not(.is-list) .profile-note-feed-actions {
+    gap: 8px;
+}
+
+.file-explorer[data-content-type="NOTE"] .file-browser-grid:not(.is-list) .profile-note-feed-actions > .profile-note-feed-action.is-icon-only,
+.file-explorer[data-content-type="NOTE"] .file-browser-grid:not(.is-list) .profile-note-feed-actions > button.profile-note-feed-action.is-icon-only {
+    width: 18px;
+    min-width: 18px;
+    height: 22px;
+    min-height: 22px;
+    flex: 0 0 18px;
+    margin: 0;
+    padding: 0;
+}
+
+.file-explorer[data-content-type="NOTE"] .file-browser-grid:not(.is-list) .profile-note-feed-actions > .profile-note-feed-action.is-icon-only i,
+.file-explorer[data-content-type="NOTE"] .file-browser-grid:not(.is-list) .profile-note-feed-actions > .profile-note-feed-action.is-icon-only svg {
+    width: 13px;
+    min-width: 13px;
+    margin: 0;
+}
+
+.file-explorer[data-content-type="NOTE"] .file-browser-grid:not(.is-list) .explorer-note-moyo-mark,
+.file-explorer[data-content-type="NOTE"] .file-browser-grid:not(.is-list) .profile-note-moyo-mark.explorer-note-moyo-mark {
+    top: auto;
+    right: 20px;
+    bottom: 22px;
+    width: 20px;
+    height: 20px;
+}
+
+.file-explorer[data-content-type="NOTE"] .file-browser-grid:not(.is-list) .explorer-note-moyo-mark img,
+.file-explorer[data-content-type="NOTE"] .file-browser-grid:not(.is-list) .profile-note-moyo-mark.explorer-note-moyo-mark img {
+    width: 20px;
+    height: 20px;
+    transform: translateY(-3px);
+}
+
+.file-explorer[data-content-type="NOTE"] .file-browser-grid:not(.is-list) .explorer-note-hover .profile-note-hover-main {
+    padding-right: 28px;
+    box-sizing: border-box;
 }

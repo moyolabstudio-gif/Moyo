@@ -200,21 +200,21 @@
 
         .workspace-image-summary {
             display:grid;
-            grid-template-columns:96px minmax(0,1fr);
-            gap:14px;
+            grid-template-columns:64px minmax(0,1fr);
+            gap:10px;
             align-items:center;
             width:100%;
-            padding:12px 14px;
+            padding:9px 10px;
             border:1px solid #e3eaf2;
-            border-radius:16px;
+            border-radius:14px;
             background:#fbfdff;
         }
         .workspace-image-preview {
-            width:96px;
-            height:96px;
+            width:64px;
+            height:64px;
             overflow:hidden;
             border:1px solid #dbe6f1;
-            border-radius:18px;
+            border-radius:14px;
             background:linear-gradient(135deg,#eef6ff,#f4fffc);
             display:flex;
             align-items:center;
@@ -235,8 +235,16 @@
             flex:0 0 auto;
         }
         .workspace-image-preview span { width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:#4a90e2; font-size:32px; font-weight:900; }
-        .workspace-image-copy strong { display:block; margin-bottom:7px; font-size:13px; color:#334155; }
-        .workspace-image-copy p { margin:9px 0 0; color:#8491a3; font-size:11px; line-height:1.45; }
+        .workspace-image-copy { min-width:0; }
+        .workspace-image-copy strong { display:block; margin-bottom:5px; font-size:12px; color:#334155; }
+        .workspace-image-copy p { margin:5px 0 0; color:#94a3b8; font-size:10px; line-height:1.35; }
+        .workspace-image-summary .profile-account-actions { gap:6px; }
+        .workspace-image-summary .profile-account-button {
+            min-height:32px;
+            padding:0 10px;
+            border-radius:9px;
+            font-size:11px;
+        }
         .workspace-image-modal-viewport {
             position:relative;
             width:250px;
@@ -356,25 +364,196 @@
             .form-group.full { grid-column:auto; }
         }
     
+/* STEP2 profile mode: account summary / custom editor */
+.profile-choice {
+    gap:10px;
+    margin-bottom:14px;
+}
+.profile-choice .profile-mode-card {
+    position:relative;
+    display:grid;
+    grid-template-columns:38px minmax(0,1fr);
+    gap:11px;
+    align-items:center;
+    min-height:76px;
+    padding:13px 14px;
+    border:1px solid #e1e7ef;
+    border-radius:14px;
+    background:#fff;
+    cursor:pointer;
+    transition:border-color .18s ease, box-shadow .18s ease, background .18s ease, transform .18s ease;
+}
+.profile-choice .profile-mode-card:hover {
+    border-color:#c8d5e6;
+    background:#fbfdff;
+}
+.profile-choice .profile-mode-card:has(input:checked) {
+    border-color:transparent;
+    background:
+        linear-gradient(#fff,#fff) padding-box,
+        linear-gradient(135deg,#39cdb5 0%,#4a90e2 54%,#6b5cf6 100%) border-box;
+    box-shadow:0 7px 18px rgba(68,116,183,.09);
+}
+.profile-choice .profile-mode-card input {
+    position:absolute;
+    opacity:0;
+    pointer-events:none;
+}
+.profile-mode-icon {
+    width:38px;
+    height:38px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    border-radius:11px;
+    background:#f4f7fb;
+    color:#738197;
+    font-size:15px;
+}
+.profile-mode-card:has(input:checked) .profile-mode-icon {
+    color:#3f78c7;
+    background:linear-gradient(135deg,rgba(57,205,181,.12),rgba(74,144,226,.11) 55%,rgba(107,92,246,.10));
+}
+.profile-mode-copy { min-width:0; }
+.profile-mode-copy strong {
+    display:block;
+    margin:0 0 3px;
+    color:#24364f;
+    font-size:13px;
+    line-height:1.35;
+}
+.profile-mode-copy small {
+    display:block;
+    color:#7f8b9b;
+    font-size:11px;
+    line-height:1.45;
+}
+.profile-account-summary {
+    display:grid;
+    grid-template-columns:46px minmax(0,1fr) auto;
+    align-items:center;
+    gap:12px;
+    margin:0 0 10px;
+    padding:12px 14px;
+    border:1px solid #e5eaf1;
+    border-radius:14px;
+    background:#fafcff;
+}
+.profile-account-summary[hidden],
+.profile-custom-fields[hidden] { display:none !important; }
+.profile-account-summary-avatar {
+    position:relative;
+    width:46px;
+    height:46px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    overflow:hidden;
+    flex:0 0 46px;
+    border:1px solid #e5ebf2;
+    border-radius:50%;
+    color:#fff;
+    background:var(--moyo-avatar-gradient, linear-gradient(135deg, #55D5CE 0%, #4288EF 52%, #5A55EE 100%));
+    font-size:17px;
+    font-weight:900;
+    box-shadow:0 4px 10px rgba(66,136,239,.18);
+}
+.profile-account-summary-avatar img {
+    position:absolute;
+    inset:0;
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    border-radius:inherit;
+    background:transparent;
+}
+.profile-account-summary-avatar.has-image {
+    background:transparent;
+}
+.profile-account-summary-avatar-fallback {
+    display:flex;
+    width:100%;
+    height:100%;
+    align-items:center;
+    justify-content:center;
+    border-radius:inherit;
+    color:#fff;
+    background:var(--moyo-avatar-gradient, linear-gradient(135deg, #55D5CE 0%, #4288EF 52%, #5A55EE 100%));
+    font-weight:900;
+}
+.profile-account-summary-avatar-fallback[hidden] { display:none !important; }
+.profile-account-summary-copy { min-width:0; }
+.profile-account-summary-label {
+    display:block;
+    margin-bottom:2px;
+    color:#9aa5b4;
+    font-size:10px;
+    font-weight:700;
+}
+.profile-account-summary-copy strong,
+.profile-account-summary-copy > span:last-child {
+    display:block;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+}
+.profile-account-summary-copy strong {
+    color:#25364d;
+    font-size:13px;
+}
+.profile-account-summary-copy > span:last-child {
+    margin-top:2px;
+    color:#798698;
+    font-size:11px;
+}
+.profile-account-summary-state {
+    display:inline-flex;
+    align-items:center;
+    gap:5px;
+    padding:6px 8px;
+    border-radius:999px;
+    background:#f0f8f6;
+    color:#3d8f80;
+    font-size:10px;
+    font-weight:800;
+    white-space:nowrap;
+}
+.profile-custom-fields {
+    margin-top:2px;
+    padding-top:2px;
+}
+.profile-custom-fields .profile-account-editor {
+    margin:0 0 14px;
+}
+.profile-custom-form {
+    padding-top:2px;
+}
+@media(max-width:640px) {
+    .profile-account-summary { grid-template-columns:42px minmax(0,1fr); }
+    .profile-account-summary-avatar { width:42px; height:42px; }
+    .profile-account-summary-state { grid-column:2; width:max-content; margin-top:-5px; }
+}
+
 .profile-account-editor {
     display:grid;
-    grid-template-columns:112px minmax(0,1fr);
+    grid-template-columns:64px minmax(0,1fr);
     align-items:center;
-    gap:18px;
-    margin:18px 0;
-    padding:16px;
+    gap:14px;
+    margin:12px 0 16px;
+    padding:12px 14px;
     border:1px solid #e3eaf2;
-    border-radius:16px;
+    border-radius:14px;
     background:#fbfdff;
 }
 .profile-account-preview {
     position:relative;
-    width:112px;
-    height:112px;
+    width:64px;
+    height:64px;
     overflow:hidden;
     border-radius:50%;
-    border:1px solid #dbe6f1;
+    border:0;
     background:transparent;
+    box-shadow:0 4px 12px rgba(66,136,239,.16);
 }
 .profile-account-preview img {
     width:100%; height:100%; object-fit:cover; display:block;
@@ -382,23 +561,290 @@
 }
 .profile-account-fallback {
     width:100%; height:100%; display:flex; align-items:center; justify-content:center;
-    color:#fff; font-size:34px; font-weight:900;
-    background:linear-gradient(135deg,#4A90E2,#39CDB5);
+    color:#fff; font-size:21px; font-weight:900;
+    background:var(--moyo-avatar-gradient, linear-gradient(135deg, #55D5CE 0%, #4288EF 52%, #5A55EE 100%));
 }
 .profile-account-preview img[hidden],
 .profile-account-fallback[hidden] { display:none !important; }
-.profile-account-copy strong { display:block; margin-bottom:7px; font-size:13px; color:#334155; }
-.profile-account-actions { display:flex; align-items:center; flex-wrap:wrap; gap:8px; }
+.profile-account-copy { min-width:0; }
+.profile-account-copy strong { display:block; margin-bottom:6px; font-size:12px; color:#334155; }
+.profile-account-actions { display:flex; align-items:center; flex-wrap:wrap; gap:6px; }
 .profile-account-button {
-    display:inline-flex; align-items:center; justify-content:center; min-height:34px; padding:0 12px;
+    display:inline-flex; align-items:center; justify-content:center; min-height:32px; padding:0 10px;
     border:1px solid #dbe4ee; border-radius:9px; background:#fff;
-    color:#475569; font-size:12px; font-weight:700; cursor:pointer;
+    color:#475569; font-size:11px; font-weight:800; cursor:pointer;
 }
 .profile-account-button:hover { border-color:#9ec5f3; color:#2563eb; background:#f8fbff; }
 .profile-account-button.is-primary { color:#2563eb; border-color:#bfd9f6; background:#f6faff; }
-.profile-account-hint { margin:9px 0 0; color:#8491a3; font-size:11px; line-height:1.45; }
+.profile-account-hint { margin:6px 0 0; color:#8491a3; font-size:10px; line-height:1.4; }
 .profile-account-editor.is-disabled { opacity:.52; }
 .profile-account-editor.is-disabled .profile-account-actions { pointer-events:none; }
+.profile-phone-field { margin-bottom:0 !important; }
+.profile-phone-visibility { margin-top:-6px; }
+.profile-phone-visibility .check-row { min-height:30px; margin:0; }
+@media(max-width:640px) {
+    .profile-account-editor { grid-template-columns:56px minmax(0,1fr); gap:12px; padding:11px 12px; }
+    .profile-account-preview { width:56px; height:56px; }
+    .profile-account-fallback { font-size:19px; }
+}
+
+
+.profile-contact-block {
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+}
+.profile-contact-control {
+    display:grid;
+    grid-template-columns:minmax(0,1fr) auto;
+    gap:8px;
+    align-items:center;
+}
+.profile-contact-status {
+    display:inline-flex;
+    align-items:center;
+    gap:5px;
+    min-height:28px;
+    padding:0 9px;
+    border-radius:999px;
+    background:#f3f6fa;
+    color:#7b8798;
+    font-size:10px;
+    font-weight:800;
+    white-space:nowrap;
+}
+.profile-contact-status.is-verified {
+    background:#eefaf6;
+    color:#278a73;
+}
+.profile-contact-status.is-warning {
+    background:#fff7e8;
+    color:#b97918;
+}
+.profile-contact-verify {
+    min-height:40px;
+    padding:0 12px;
+    border:1px solid #bfd9f6;
+    border-radius:12px;
+    background:#f6faff;
+    color:#2563eb;
+    font-size:11px;
+    font-weight:800;
+    cursor:pointer;
+    white-space:nowrap;
+}
+.profile-contact-verify:hover { border-color:#8fb9ee; background:#eef6ff; }
+.profile-contact-verify[hidden] { display:none!important; }
+.profile-contact-code {
+    display:grid;
+    grid-template-columns:minmax(0,1fr) auto;
+    gap:8px;
+}
+.profile-contact-code[hidden] { display:none!important; }
+.profile-contact-note {
+    margin:0;
+    color:#8491a3;
+    font-size:10px;
+    line-height:1.45;
+}
+.profile-contact-note.is-error { color:#d14b4b; }
+.profile-birth-value {
+    display:flex;
+    align-items:center;
+    gap:8px;
+    min-height:40px;
+    padding:0 12px;
+    border:1px solid #dfe7ef;
+    border-radius:12px;
+    background:#f8fafc;
+    color:#334155;
+    font-size:12px;
+    font-weight:700;
+}
+.profile-birth-value .profile-birth-type {
+    color:#64748b;
+    font-size:11px;
+    font-weight:700;
+}
+@media(max-width:640px) {
+    .profile-contact-control,
+    .profile-contact-code { grid-template-columns:1fr; }
+    .profile-contact-verify { width:100%; }
+}
+
+
+/* STEP2 custom profile compact layout */
+.profile-identity-card {
+    display:grid;
+    grid-template-columns:230px minmax(0,1fr);
+    gap:16px;
+    align-items:end;
+    margin:0 0 12px;
+    padding:14px;
+    border:1px solid #e3eaf2;
+    border-radius:14px;
+    background:#fbfdff;
+}
+.profile-identity-card .profile-account-editor {
+    margin:0;
+    padding:0;
+    border:0;
+    border-radius:0;
+    background:transparent;
+    grid-template-columns:56px minmax(0,1fr);
+    gap:12px;
+}
+.profile-identity-card .profile-account-preview {
+    width:56px;
+    height:56px;
+}
+.profile-identity-card .profile-account-fallback { font-size:19px; }
+.profile-identity-card .profile-account-copy strong { display:none; }
+.profile-identity-card .profile-account-actions { gap:5px; }
+.profile-identity-card .profile-account-button {
+    min-height:30px;
+    padding:0 9px;
+    border-radius:8px;
+    font-size:10px;
+}
+.profile-identity-card .profile-account-hint {
+    margin:5px 0 0;
+    font-size:9px;
+}
+.profile-identity-form {
+    gap:10px;
+    padding:0;
+}
+.profile-identity-form .form-group { margin-bottom:0; }
+
+.profile-detail-list {
+    display:grid;
+    gap:0;
+    border:1px solid #e3eaf2;
+    border-radius:14px;
+    background:#fff;
+    overflow:hidden;
+}
+.profile-detail-row {
+    display:flex;
+    flex-direction:column;
+    gap:7px;
+    padding:12px 14px;
+    background:#fff;
+}
+.profile-detail-row + .profile-detail-row {
+    border-top:1px solid #edf1f5;
+}
+.profile-detail-head {
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    min-height:22px;
+}
+.profile-detail-head .moyo-create-label { margin:0; }
+.profile-contact-control {
+    grid-template-columns:minmax(0,1fr) auto auto;
+    gap:7px;
+}
+.profile-contact-status {
+    min-height:32px;
+    padding:0 9px;
+    align-self:center;
+}
+.profile-contact-verify {
+    min-height:38px;
+    border-radius:10px;
+}
+.profile-contact-note {
+    min-height:0;
+    margin-top:-1px;
+    font-size:9px;
+}
+.profile-birth-value {
+    min-height:38px;
+    padding:0 11px;
+    border-radius:10px;
+}
+.profile-birth-source {
+    margin-left:auto;
+    color:#9aa5b4;
+    font-size:9px;
+    font-weight:700;
+    white-space:nowrap;
+}
+.profile-phone-field { margin-bottom:0 !important; }
+
+.profile-visibility-toggle {
+    display:inline-flex;
+    align-items:center;
+    gap:7px;
+    color:#7c899a;
+    font-size:10px;
+    font-weight:800;
+    cursor:pointer;
+    user-select:none;
+}
+.profile-visibility-toggle input {
+    position:absolute;
+    opacity:0;
+    pointer-events:none;
+}
+.profile-visibility-switch {
+    position:relative;
+    width:30px;
+    height:17px;
+    flex:0 0 30px;
+    border-radius:999px;
+    background:#d9e1ea;
+    transition:background .18s ease, opacity .18s ease;
+}
+.profile-visibility-switch::after {
+    content:"";
+    position:absolute;
+    top:2px;
+    left:2px;
+    width:13px;
+    height:13px;
+    border-radius:50%;
+    background:#fff;
+    box-shadow:0 1px 3px rgba(15,23,42,.18);
+    transition:transform .18s ease;
+}
+.profile-visibility-toggle input:checked + .profile-visibility-switch {
+    background:linear-gradient(135deg,#39cdb5 0%,#4a90e2 55%,#6b5cf6 100%);
+}
+.profile-visibility-toggle input:checked + .profile-visibility-switch::after {
+    transform:translateX(13px);
+}
+.profile-visibility-toggle input:disabled + .profile-visibility-switch {
+    opacity:.48;
+}
+.profile-visibility-toggle:has(input:disabled) {
+    cursor:not-allowed;
+    opacity:.7;
+}
+
+@media (min-width:641px) and (max-height:820px) {
+    .profile-choice { margin-bottom:10px; }
+    .profile-choice .profile-mode-card { min-height:66px; padding:10px 12px; }
+    .profile-identity-card { padding:11px 12px; margin-bottom:10px; }
+    .profile-detail-row { padding:10px 12px; gap:6px; }
+    .profile-contact-note { line-height:1.3; }
+}
+@media(max-width:760px) {
+    .profile-identity-card { grid-template-columns:1fr; align-items:stretch; }
+}
+@media(max-width:640px) {
+    .profile-identity-card { padding:12px; gap:12px; }
+    .profile-identity-form { grid-template-columns:1fr; }
+    .profile-detail-row { padding:11px 12px; }
+    .profile-contact-control { grid-template-columns:minmax(0,1fr) auto; }
+    .profile-contact-status { grid-column:2; grid-row:1; }
+    .profile-contact-verify { grid-column:1 / -1; width:100%; }
+    .profile-birth-value { flex-wrap:wrap; padding-top:8px; padding-bottom:8px; }
+    .profile-birth-source { width:100%; margin-left:0; }
+}
 
 .signup-profile-modal[hidden] { display: none !important; }
 .signup-profile-modal {
@@ -618,7 +1064,13 @@ body:has(.create-wrap) { background: var(--moyo-color-page, #F7F9FC); }
     padding: 12px 14px;
     border: var(--moyo-border-strong, 1px solid #D8E1EA);
     border-radius: var(--moyo-radius-md, 12px);
-    resize: vertical;
+    resize: none !important;
+    overflow-y: auto;
+}
+.create-wrap textarea::-webkit-resizer {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
 }
 .create-wrap input:focus, .create-wrap textarea:focus, .create-wrap select:focus {
     border-color: var(--moyo-primary, #4A90E2);
@@ -652,91 +1104,229 @@ body:has(.create-wrap) { background: var(--moyo-color-page, #F7F9FC); }
     transform: none;
 }
 .create-actions { margin-top: 26px; padding-top: 22px; border-top: var(--moyo-border, 1px solid #E5EBF1); }
+.moyo-create-header { margin-bottom: 18px; }
+.moyo-create-title h2 { margin-top: 4px; }
+.moyo-create-panel { min-width: 0; }
+
 @media (max-width: 720px) {
     .create-wrap { width: calc(100% - 28px); margin: 18px auto 32px; }
     .create-card { padding: 24px 20px; border-radius: var(--moyo-radius-lg, 18px); }
     .create-card h2 { font-size: 25px; }
 }
+
+/* STEP2 profile detail finish */
+#profileCustomFields { margin-top:16px; }
+.profile-choice { margin-bottom:16px; }
+.profile-identity-card {
+    grid-template-columns:240px minmax(0,1fr);
+    gap:18px;
+    align-items:center;
+    margin-bottom:14px;
+    padding:14px 16px;
+}
+.profile-identity-card .profile-account-editor {
+    align-items:center;
+}
+.profile-identity-card .profile-account-copy {
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+}
+.profile-identity-card .profile-account-actions {
+    align-items:center;
+    gap:6px;
+}
+.profile-identity-card .profile-account-button {
+    min-height:32px;
+    height:32px;
+    padding:0 10px;
+    border-radius:9px;
+    line-height:1;
+}
+.profile-identity-card .profile-account-hint {
+    margin-top:6px;
+    line-height:1.35;
+}
+.profile-identity-form {
+    grid-template-columns:1fr 1fr;
+    align-items:end;
+}
+.profile-identity-form .moyo-create-control { height:40px; min-height:40px; }
+.profile-detail-row { padding:13px 14px; gap:8px; }
+.profile-detail-head { min-height:24px; align-items:center; }
+.profile-detail-head .moyo-create-label { line-height:24px; }
+.profile-visibility-toggle {
+    min-height:24px;
+    line-height:24px;
+    gap:6px;
+}
+.profile-contact-control { align-items:center; }
+.profile-contact-status,
+.profile-birth-source {
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-height:28px;
+    height:28px;
+    padding:0 9px;
+    border-radius:999px;
+    background:#f1f5f9;
+    color:#7b8798;
+    font-size:9px;
+    font-weight:800;
+    line-height:1;
+    white-space:nowrap;
+}
+.profile-contact-status.is-verified {
+    background:#ecf9f5;
+    color:#229b7e;
+}
+.profile-contact-status.is-warning {
+    background:#fff7e8;
+    color:#c4811f;
+}
+.profile-birth-source { margin-left:auto; }
+.profile-birth-value { align-items:center; gap:8px; }
+.profile-contact-verify {
+    min-height:36px;
+    height:36px;
+    padding:0 12px;
+    border-radius:10px;
+}
+.profile-contact-note { margin-top:0; color:#8b97a8; }
+.create-actions { margin-top:22px; padding-top:18px; }
+@media(max-width:760px) {
+    #profileCustomFields { margin-top:12px; }
+    .profile-choice { margin-bottom:12px; }
+    .profile-identity-card { grid-template-columns:1fr; gap:12px; }
+}
+@media(max-width:640px) {
+    .profile-identity-form { grid-template-columns:1fr; }
+    .profile-detail-head { align-items:center; }
+    .profile-contact-status, .profile-birth-source { min-height:26px; height:26px; }
+}
+
 </style>
+<link rel="stylesheet" href="${pageContext.request.contextPath}/css/moyoCreate.css?v=20260923-create-link-1">
 
 </head>
 <body>
 <jsp:include page="/WEB-INF/views/common/header.jsp" />
 
-<div class="create-wrap"
+<div class="create-wrap moyo-create-page"
      data-account-name="<c:out value='${accountDisplayName}'/>"
-     data-account-email="<c:out value='${accountEmail}'/>">
-    <div class="create-card">
-        <section id="workspaceStep" class="create-panel">
-            <span class="create-step-label">1 / 2</span>
-            <h2>새 그룹 만들기</h2>
-            <p class="create-desc">그룹 정보를 입력한 다음, 이 그룹에서 사용할 프로필을 선택합니다.</p>
+     data-account-email="<c:out value='${accountEmail}'/>"
+     data-account-birth="<c:out value='${accountBirthDate}'/>"
+     data-account-birth-type="<c:out value='${accountBirthCalendarType}'/>">
+    <div class="create-card moyo-create-card">
+        <div class="moyo-create-header">
+            <div class="moyo-create-title">
+                <span class="create-step-label moyo-create-step" id="workspaceCreateStepLabel">1 / 2</span>
+                <h2 id="workspaceCreateTitle">새 그룹 만들기</h2>
+                <p class="create-desc" id="workspaceCreateSubTitle">그룹 정보를 입력한 다음, 이 그룹에서 사용할 프로필을 선택합니다.</p>
+            </div>
+            <div class="moyo-create-title-actions">
+                <button type="button" class="moyo-create-back-button" onclick="history.back()">돌아가기</button>
+            </div>
+        </div>
 
-            <div class="form-group">
-                <label for="wsName">그룹 이름 *</label>
-                <input type="text" id="wsName" maxlength="60" placeholder="그룹 이름을 입력하세요">
-            </div>
-            <div class="form-group">
-                <label for="wsDesc">그룹 소개</label>
-                <textarea id="wsDesc" rows="3" maxlength="300" placeholder="그룹을 소개해주세요"></textarea>
-            </div>
-            <div class="form-group">
-                <label for="wsType">그룹 유형 *</label>
-                <select id="wsType" class="form-control">
-                    <option value="ORGANIZATION">회사 · 조직</option>
-                    <option value="TEAM">팀 · 프로젝트</option>
-                    <option value="STUDY">스터디 · 연구</option>
-                    <option value="COMMUNITY" selected>모임 · 커뮤니티</option>
-                    <option value="CLUB">동아리 · 취미</option>
-                    <option value="LIFE">가족 · 생활</option>
-                    <option value="ETC">기타</option>
-                </select>
-            </div>
+        <section id="workspaceStep" class="create-panel moyo-create-panel is-active" data-step="1">
 
-            <div class="form-group">
-                <span class="field-title">가입 방식 *</span>
-                <div class="join-type-options" role="radiogroup" aria-label="그룹 가입 방식">
-                    <label class="join-type-option">
-                        <input type="radio" name="joinType" value="OPEN" checked>
-                        <span class="join-type-card">
-                            <span class="join-type-badge">자유 가입</span>
-                            <strong>누구나 바로 참여</strong>
-                            <small>공개된 그룹을 확인한 사용자가 승인 없이 바로 참여할 수 있어요.</small>
-                        </span>
-                    </label>
-                    <label class="join-type-option">
-                        <input type="radio" name="joinType" value="APPROVAL">
-                        <span class="join-type-card">
-                            <span class="join-type-badge">승인제</span>
-                            <strong>승인 후 참여</strong>
-                            <small>사용자의 참여 요청을 그룹장 또는 그룹 관리자가 승인해야 참여해요.</small>
-                        </span>
-                    </label>
-                    <label class="join-type-option">
-                        <input type="radio" name="joinType" value="INVITE_ONLY">
-                        <span class="join-type-card">
-                            <span class="join-type-badge">초대 전용</span>
-                            <strong>초대받은 사용자만 참여</strong>
-                            <small>그룹장이나 그룹 관리자의 초대로만 참여해요.</small>
-                        </span>
-                    </label>
+            <div class="form-group moyo-create-field moyo-create-type-field">
+                <div class="moyo-create-label-row">
+                    <span class="moyo-create-label">그룹 유형 <span class="moyo-create-required">*</span></span>
+                    <span class="moyo-create-help">가장 가까운 유형을 선택하세요.</span>
                 </div>
-            </div>
-
-            <div class="form-group">
-                <span class="field-title">외부 링크</span>
-                <div id="workspaceLinkList" class="workspace-link-list">
-                    <div class="workspace-link-row">
-                        <input type="text" class="workspace-link-name" maxlength="50" placeholder="링크 이름">
-                        <input type="text" class="workspace-link-url" maxlength="500" placeholder="https://...">
-                        <button type="button" class="workspace-link-remove" onclick="removeWorkspaceLink(this)" aria-label="링크 삭제">×</button>
+                <input type="hidden" id="wsType" value="COMMUNITY">
+                <div class="moyo-create-type-picker" data-workspace-type-picker role="radiogroup" aria-label="그룹 유형">
+                    <div class="moyo-create-type-grid moyo-create-type-grid--workspace">
+                        <button type="button" class="moyo-create-type-option" data-workspace-type="ORGANIZATION" aria-pressed="false">
+                            <span class="moyo-create-type-option__icon"><i class="fa-solid fa-building" aria-hidden="true"></i></span>
+                            <span class="moyo-create-type-option__name">회사 · 조직</span>
+                        </button>
+                        <button type="button" class="moyo-create-type-option" data-workspace-type="TEAM" aria-pressed="false">
+                            <span class="moyo-create-type-option__icon"><i class="fa-solid fa-people-group" aria-hidden="true"></i></span>
+                            <span class="moyo-create-type-option__name">팀 · 프로젝트</span>
+                        </button>
+                        <button type="button" class="moyo-create-type-option" data-workspace-type="STUDY" aria-pressed="false">
+                            <span class="moyo-create-type-option__icon"><i class="fa-solid fa-book-open" aria-hidden="true"></i></span>
+                            <span class="moyo-create-type-option__name">스터디 · 연구</span>
+                        </button>
+                        <button type="button" class="moyo-create-type-option" data-workspace-type="COMMUNITY" aria-pressed="true">
+                            <span class="moyo-create-type-option__icon"><i class="fa-solid fa-comments" aria-hidden="true"></i></span>
+                            <span class="moyo-create-type-option__name">모임 · 커뮤니티</span>
+                        </button>
+                        <button type="button" class="moyo-create-type-option" data-workspace-type="CLUB" aria-pressed="false">
+                            <span class="moyo-create-type-option__icon"><i class="fa-solid fa-palette" aria-hidden="true"></i></span>
+                            <span class="moyo-create-type-option__name">동아리 · 취미</span>
+                        </button>
+                        <button type="button" class="moyo-create-type-option" data-workspace-type="LIFE" aria-pressed="false">
+                            <span class="moyo-create-type-option__icon"><i class="fa-solid fa-house" aria-hidden="true"></i></span>
+                            <span class="moyo-create-type-option__name">가족 · 생활</span>
+                        </button>
+                        <button type="button" class="moyo-create-type-option" data-workspace-type="ETC" aria-pressed="false">
+                            <span class="moyo-create-type-option__icon"><i class="fa-solid fa-ellipsis" aria-hidden="true"></i></span>
+                            <span class="moyo-create-type-option__name">기타</span>
+                        </button>
                     </div>
                 </div>
-                <button type="button" class="workspace-link-add" onclick="addWorkspaceLink()">+ 링크 추가</button>
-                <p class="workspace-link-help">홈페이지, Git, Notion 등 원하는 이름과 주소를 자유롭게 등록할 수 있습니다.</p>
             </div>
-            <div class="form-group">
-                <span class="field-title">대표 이미지</span>
+
+            <div class="form-group moyo-create-field">
+                <div class="moyo-create-label-row">
+                    <label class="moyo-create-label" for="wsName">그룹 이름 <span class="moyo-create-required">*</span></label>
+                    <span class="moyo-create-count"><span id="workspaceNameCount">0</span> / 60</span>
+                </div>
+                <input class="moyo-create-control" type="text" id="wsName" maxlength="60" placeholder="그룹 이름을 입력하세요">
+            </div>
+            <div class="form-group moyo-create-field">
+                <div class="moyo-create-label-row">
+                    <label class="moyo-create-label" for="wsDesc">그룹 소개</label>
+                    <span class="moyo-create-help">그룹의 목적이나 분위기를 간단히 적어주세요.</span>
+                </div>
+                <div class="moyo-create-textarea-wrap">
+                    <textarea class="moyo-create-control" id="wsDesc" rows="3" maxlength="300" placeholder="그룹을 소개해주세요" style="resize: none !important;"></textarea>
+                    <span class="moyo-create-count"><span id="workspaceDescCount">0</span> / 300</span>
+                </div>
+            </div>
+            <div class="form-group moyo-create-field">
+                <span class="field-title moyo-create-label">가입 방식 <span class="moyo-create-required">*</span></span>
+                <div class="moyo-create-choice-grid moyo-create-choice-grid--3" role="radiogroup" aria-label="그룹 가입 방식">
+                    <label class="moyo-create-choice-option">
+                        <input class="moyo-create-choice-input" type="radio" name="joinType" value="OPEN" checked>
+                        <span class="moyo-create-choice">
+                            <span class="moyo-create-choice__icon"><i class="fa-solid fa-door-open" aria-hidden="true"></i></span>
+                            <span class="moyo-create-choice__copy">
+                                <strong>자유 가입</strong>
+                                <span>승인 없이 바로 참여할 수 있어요.</span>
+                            </span>
+                        </span>
+                    </label>
+                    <label class="moyo-create-choice-option">
+                        <input class="moyo-create-choice-input" type="radio" name="joinType" value="APPROVAL">
+                        <span class="moyo-create-choice">
+                            <span class="moyo-create-choice__icon"><i class="fa-solid fa-user-check" aria-hidden="true"></i></span>
+                            <span class="moyo-create-choice__copy">
+                                <strong>승인 후 가입</strong>
+                                <span>그룹장 또는 관리자의 승인 후 참여해요.</span>
+                            </span>
+                        </span>
+                    </label>
+                    <label class="moyo-create-choice-option">
+                        <input class="moyo-create-choice-input" type="radio" name="joinType" value="INVITE_ONLY">
+                        <span class="moyo-create-choice">
+                            <span class="moyo-create-choice__icon"><i class="fa-solid fa-envelope" aria-hidden="true"></i></span>
+                            <span class="moyo-create-choice__copy">
+                                <strong>초대 전용</strong>
+                                <span>초대받은 사용자만 참여할 수 있어요.</span>
+                            </span>
+                        </span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="form-group moyo-create-field">
+                <span class="field-title moyo-create-label">대표 이미지</span>
                 <div class="workspace-image-summary">
                     <div class="workspace-image-preview" aria-label="그룹 대표 이미지 미리보기">
                         <img id="workspacePreviewImage" hidden alt="그룹 대표 이미지">
@@ -744,90 +1334,165 @@ body:has(.create-wrap) { background: var(--moyo-color-page, #F7F9FC); }
                         <span id="workspaceImagePlaceholder" hidden></span>
                     </div>
                     <div class="workspace-image-copy">
-                        <strong>그룹 대표 이미지</strong>
                         <div class="profile-account-actions">
-                            <label id="workspaceImageSelectLabel" for="wsImage" class="profile-account-button is-primary">이미지 선택</label>
+                            <label id="workspaceImageSelectLabel" for="wsImage" class="profile-account-button is-primary">이미지 변경</label>
                             <input type="file" id="wsImage" accept="image/png,image/jpeg,image/webp" hidden>
                             <button type="button" id="workspaceImageAdjustButton" class="profile-account-button" hidden>이미지 조정</button>
                             <button type="button" id="workspaceImageDefaultButton" class="profile-account-button">기본 이미지</button>
                         </div>
-                        <p>이미지를 선택한 뒤 둥근 사각형 영역 안에서 위치와 크기를 조정할 수 있어요.</p>
+                        <p>선택한 이미지는 조정 화면에서 위치와 크기를 맞출 수 있어요.</p>
                     </div>
                 </div>
             </div>
-            <div class="create-actions">
+            <div class="form-group moyo-create-field moyo-create-link-field">
+                <div class="moyo-create-link-head">
+                    <div class="moyo-create-link-title">
+                        <span class="field-title moyo-create-label">외부 링크</span>
+                        <span class="moyo-create-link-count" id="workspaceLinkCount">0 / 5</span>
+                    </div>
+                    <button type="button" id="workspaceLinkAdd" class="moyo-create-link-add" onclick="addWorkspaceLink()">
+                        <i class="fa-solid fa-plus" aria-hidden="true"></i><span>링크 추가</span>
+                    </button>
+                </div>
+                <div id="workspaceLinkList" class="workspace-link-list moyo-create-link-list"></div>
+                <div id="workspaceLinkEmpty" class="moyo-create-link-empty">
+                    <i class="fa-solid fa-link" aria-hidden="true"></i>
+                    <span>등록된 링크가 없습니다.</span>
+                </div>
+                <p class="workspace-link-help moyo-create-help">홈페이지, Git, Notion 등 필요한 링크를 최대 5개까지 등록할 수 있어요.</p>
+                <p id="workspaceLinkError" class="moyo-create-error moyo-create-link-error" hidden></p>
+            </div>
+            <div class="create-actions moyo-create-actions">
                 <button type="button" id="btnNext" class="create-btn primary">다음</button>
             </div>
         </section>
 
-        <section id="profileStep" class="create-panel" hidden>
-            <span class="create-step-label">2 / 2</span>
-            <h2>그룹에서 사용할 프로필</h2>
-            <p class="create-desc">계정 프로필을 그대로 사용하거나, 이 그룹에서 사용할 별도 프로필을 만들 수 있어요.</p>
+        <section id="profileStep" class="create-panel moyo-create-panel" data-step="2" hidden>
 
-            <div class="profile-choice">
-                <label>
+            <div class="profile-choice" role="radiogroup" aria-label="그룹 프로필 사용 방식">
+                <label class="profile-mode-card">
                     <input type="radio" name="profileMode" value="Y" checked>
-                    <span>
-                        <strong>계정 프로필 그대로 사용</strong>
-                        <small>계정의 표시 이름과 프로필 이미지를 그대로 사용합니다.</small>
+                    <span class="profile-mode-icon" aria-hidden="true"><i class="fa-regular fa-user"></i></span>
+                    <span class="profile-mode-copy">
+                        <strong>계정 프로필 사용</strong>
+                        <small>현재 계정의 이름과 프로필을 그대로 사용해요.</small>
                     </span>
                 </label>
-                <label>
+                <label class="profile-mode-card">
                     <input type="radio" name="profileMode" value="N">
-                    <span>
-                        <strong>그룹 전용 프로필 사용</strong>
-                        <small>이 그룹에서 사용할 이름과 프로필 이미지를 따로 설정합니다.</small>
+                    <span class="profile-mode-icon" aria-hidden="true"><i class="fa-solid fa-user-pen"></i></span>
+                    <span class="profile-mode-copy">
+                        <strong>그룹 전용 프로필</strong>
+                        <small>이 그룹에서만 사용할 프로필을 따로 만들어요.</small>
                     </span>
                 </label>
             </div>
 
-            <div id="profileAccountEditor" class="profile-account-editor">
-                <div class="profile-account-preview" aria-label="그룹 프로필 이미지 미리보기">
-                    <img id="groupProfilePreviewImage" hidden alt="그룹 프로필 이미지">
-                    <span id="groupProfileFallback" class="profile-account-fallback"></span>
+            <div id="profileAccountSummary" class="profile-account-summary" aria-live="polite">
+                <div id="profileAccountSummaryAvatar" class="profile-account-summary-avatar ${not empty sessionScope.user.profileImagePath ? 'has-image' : 'is-default'}" aria-hidden="true">
+                    <c:if test="${not empty sessionScope.user.profileImagePath}">
+                        <img id="profileAccountSummaryAvatarImage" src="<c:out value='${sessionScope.user.profileImagePath}'/>" alt="" onerror="this.hidden=true; this.parentElement.classList.remove('has-image'); this.parentElement.classList.add('is-default'); this.nextElementSibling.hidden=false;">
+                    </c:if>
+                    <span id="profileAccountSummaryAvatarFallback" class="profile-account-summary-avatar-fallback" ${not empty sessionScope.user.profileImagePath ? 'hidden' : ''}></span>
                 </div>
-                <div class="profile-account-copy">
-                    <strong>프로필 이미지</strong>
-                    <div class="profile-account-actions">
-                        <label id="groupProfileSelectLabel" for="createProfileImageInput" class="profile-account-button is-primary">사진 선택</label>
-                        <input type="file" id="createProfileImageInput" accept="image/png,image/jpeg,image/webp" hidden>
-                        <button type="button" id="groupProfileAdjustButton" class="profile-account-button" hidden>사진 조정</button>
-                        <button type="button" id="groupProfileDefaultButton" class="profile-account-button">기본 아바타</button>
+                <div class="profile-account-summary-copy">
+                    <span class="profile-account-summary-label">현재 계정 프로필</span>
+                    <strong id="profileAccountSummaryName"><c:out value='${accountDisplayName}'/></strong>
+                    <span id="profileAccountSummaryEmail"><c:out value='${accountEmail}'/></span>
+                </div>
+                <span class="profile-account-summary-state"><i class="fa-solid fa-check" aria-hidden="true"></i> 그대로 사용</span>
+            </div>
+
+            <div id="profileCustomFields" class="profile-custom-fields" hidden>
+                <div class="profile-identity-card">
+                    <div id="profileAccountEditor" class="profile-account-editor">
+                        <div class="profile-account-preview" aria-label="그룹 프로필 이미지 미리보기">
+                            <img id="groupProfilePreviewImage" hidden alt="그룹 프로필 이미지">
+                            <span id="groupProfileFallback" class="profile-account-fallback"></span>
+                        </div>
+                        <div class="profile-account-copy">
+                            <div class="profile-account-actions">
+                                <label id="groupProfileSelectLabel" for="createProfileImageInput" class="profile-account-button is-primary">사진 선택</label>
+                                <input type="file" id="createProfileImageInput" accept="image/png,image/jpeg,image/webp" hidden>
+                                <button type="button" id="groupProfileAdjustButton" class="profile-account-button" hidden>사진 조정</button>
+                                <button type="button" id="groupProfileDefaultButton" class="profile-account-button">기본 아바타</button>
+                            </div>
+                            <p class="profile-account-hint">그룹에서 사용할 프로필 사진을 설정해요.</p>
+                        </div>
                     </div>
-                    <p class="profile-account-hint">계정 프로필과 같은 방식으로 사진을 선택한 뒤 원형 안에서 위치와 크기를 조정할 수 있어요.</p>
+
+                    <div class="form-grid profile-identity-form">
+                        <div class="form-group moyo-create-field">
+                            <label class="moyo-create-label" for="profileDisplayName">표시 이름 <span class="moyo-create-required">*</span></label>
+                            <input class="moyo-create-control" type="text" id="profileDisplayName" maxlength="50"
+                                   value="<c:out value='${accountDisplayName}'/>">
+                        </div>
+                        <div class="form-group moyo-create-field">
+                            <label class="moyo-create-label" for="profilePositionName">직책 · 담당</label>
+                            <input class="moyo-create-control" type="text" id="profilePositionName" maxlength="50" placeholder="예: 개발, 운영, 기록, 발표 등">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="profile-detail-list" aria-label="그룹 프로필 연락 정보">
+                    <div class="profile-detail-row profile-contact-block">
+                        <div class="profile-detail-head">
+                            <label class="moyo-create-label" for="profileContactEmail">이메일</label>
+                            <label class="profile-visibility-toggle" for="profileShowEmail">
+                                <span>공개</span>
+                                <input type="checkbox" id="profileShowEmail" checked>
+                                <span class="profile-visibility-switch" aria-hidden="true"></span>
+                            </label>
+                        </div>
+                        <div class="profile-contact-control">
+                            <input class="moyo-create-control" type="email" id="profileContactEmail" maxlength="100"
+                                   value="<c:out value='${accountEmail}'/>" autocomplete="email">
+                            <span id="profileEmailStatus" class="profile-contact-status is-verified"><i class="fa-solid fa-check" aria-hidden="true"></i> 인증됨</span>
+                            <button type="button" id="profileEmailVerifyButton" class="profile-contact-verify" hidden>인증하기</button>
+                        </div>
+                        <div id="profileEmailCodeRow" class="profile-contact-code" hidden>
+                            <input class="moyo-create-control" type="text" id="profileEmailCode" inputmode="numeric" maxlength="6" placeholder="인증번호 6자리">
+                            <button type="button" id="profileEmailCodeVerifyButton" class="profile-contact-verify">확인</button>
+                        </div>
+                        <p id="profileEmailMessage" class="profile-contact-note">계정 이메일은 추가 인증 없이 사용할 수 있어요.</p>
+                    </div>
+
+                    <div class="profile-detail-row">
+                        <div class="profile-detail-head">
+                            <span class="moyo-create-label">생일</span>
+                            <label class="profile-visibility-toggle" for="profileShowBirth">
+                                <span>공개</span>
+                                <input type="checkbox" id="profileShowBirth" checked>
+                                <span class="profile-visibility-switch" aria-hidden="true"></span>
+                            </label>
+                        </div>
+                        <div class="profile-birth-value">
+                            <span id="profileBirthValue">등록된 생일 없음</span>
+                            <span id="profileBirthType" class="profile-birth-type"></span>
+                            <span class="profile-birth-source">계정 프로필 기준</span>
+                        </div>
+                    </div>
+
+                    <div class="profile-detail-row profile-phone-field profile-contact-block">
+                        <div class="profile-detail-head">
+                            <label class="moyo-create-label" for="profilePhoneNumber">연락처</label>
+                            <label class="profile-visibility-toggle" for="profileShowPhone">
+                                <span>공개</span>
+                                <input type="checkbox" id="profileShowPhone" checked disabled>
+                                <span class="profile-visibility-switch" aria-hidden="true"></span>
+                            </label>
+                        </div>
+                        <div class="profile-contact-control">
+                            <input class="moyo-create-control" type="tel" id="profilePhoneNumber" maxlength="30" placeholder="예: 010-0000-0000">
+                            <span id="profilePhoneStatus" class="profile-contact-status">미입력</span>
+                            <button type="button" id="profilePhoneVerifyButton" class="profile-contact-verify">인증하기</button>
+                        </div>
+                        <p id="profilePhoneMessage" class="profile-contact-note">다른 연락처는 SMS 인증 후 그룹 프로필에 반영됩니다.</p>
+                    </div>
                 </div>
             </div>
 
-            <div class="form-grid">
-                <div class="form-group">
-                    <label for="profileDisplayName">표시 이름 *</label>
-                    <input type="text" id="profileDisplayName" maxlength="50"
-                           value="<c:out value='${accountDisplayName}'/>">
-                </div>
-                <div class="form-group">
-                    <label for="profilePositionName">직책 · 담당</label>
-                    <input type="text" id="profilePositionName" maxlength="50" placeholder="예: 개발, 운영, 기록, 발표 등">
-                </div>
-                <div class="form-group full">
-                    <label for="profileContactEmail">이메일 *</label>
-                    <input type="text" id="profileContactEmail" maxlength="100"
-                           value="<c:out value='${accountEmail}'/>">
-                    <small class="form-help">그룹 내 연락에 사용되며 그룹 멤버에게 표시됩니다.</small>
-                </div>
-                <div class="form-group full">
-                    <label for="profilePhoneNumber">연락처 <small>(선택)</small></label>
-                    <input type="tel" id="profilePhoneNumber" maxlength="30" placeholder="예: 010-0000-0000">
-                </div>
-                <div class="form-group full">
-                    <label class="check-row">
-                        <input type="checkbox" id="profileShowPhone" checked>
-                        그룹 멤버에게 연락처 공개
-                    </label>
-                </div>
-            </div>
-
-            <div class="create-actions">
+            <div class="create-actions moyo-create-actions">
                 <button type="button" id="btnBack" class="create-btn">이전</button>
                 <button type="button" id="btnCreate" class="create-btn primary">그룹 생성</button>
             </div>
@@ -1166,7 +1831,7 @@ function createWorkspaceImageEditor() {
         if (sourceUrl.startsWith('blob:')) URL.revokeObjectURL(sourceUrl); sourceUrl = '';
         if (committedPreviewUrl) URL.revokeObjectURL(committedPreviewUrl); committedPreviewUrl = '';
         previewImage.hidden = true; previewImage.removeAttribute('src');
-        adjustButton.hidden = true; selectLabel.textContent = '이미지 선택';
+        adjustButton.hidden = true; selectLabel.textContent = '이미지 변경';
         syncWorkspaceFallback();
     }
     async function createBlob(){
@@ -1207,7 +1872,7 @@ function createWorkspaceImageEditor() {
         const blob = await createBlob(); if(!blob)return; committedBlob=blob;
         if(committedPreviewUrl) URL.revokeObjectURL(committedPreviewUrl); committedPreviewUrl=URL.createObjectURL(blob);
         previewImage.src=committedPreviewUrl; previewImage.hidden=false; placeholder.hidden=true; if(defaultMascot) defaultMascot.hidden=true;
-        adjustButton.hidden=false; selectLabel.textContent='이미지 다시 선택'; close();
+        adjustButton.hidden=false; selectLabel.textContent='이미지 변경'; close();
     });
     return { getBlob(){ return Promise.resolve(committedBlob); } };
 }
@@ -1404,56 +2069,367 @@ function createAccountStyleProfileEditor() {
     };
 }
 
+const WORKSPACE_LINK_MAX = 5;
+
+function normalizeCreateLinkUrl(value) {
+    const raw = String(value || '').trim();
+    if (!raw) return '';
+    if (/^https?:\/\//i.test(raw)) return raw;
+    return 'https://' + raw;
+}
+
+function updateWorkspaceLinkUi() {
+    const list = document.getElementById('workspaceLinkList');
+    if (!list) return;
+    const count = list.querySelectorAll('.workspace-link-row').length;
+    const countEl = document.getElementById('workspaceLinkCount');
+    const emptyEl = document.getElementById('workspaceLinkEmpty');
+    const addButton = document.getElementById('workspaceLinkAdd');
+    if (countEl) countEl.textContent = count + ' / ' + WORKSPACE_LINK_MAX;
+    if (emptyEl) emptyEl.hidden = count > 0;
+    if (addButton) {
+        addButton.disabled = count >= WORKSPACE_LINK_MAX;
+        addButton.setAttribute('aria-disabled', count >= WORKSPACE_LINK_MAX ? 'true' : 'false');
+    }
+}
+
+function clearWorkspaceLinkError() {
+    const error = document.getElementById('workspaceLinkError');
+    if (!error) return;
+    error.hidden = true;
+    error.textContent = '';
+}
+
 function addWorkspaceLink(name, url) {
     const list = document.getElementById('workspaceLinkList');
+    if (!list) return;
+    const count = list.querySelectorAll('.workspace-link-row').length;
+    if (count >= WORKSPACE_LINK_MAX) return;
+
     const row = document.createElement('div');
-    row.className = 'workspace-link-row';
+    row.className = 'workspace-link-row moyo-create-link-row';
     row.innerHTML =
-        '<input type="text" class="workspace-link-name" maxlength="50" placeholder="링크 이름">' +
-        '<input type="text" class="workspace-link-url" maxlength="500" placeholder="https://...">' +
-        '<button type="button" class="workspace-link-remove" onclick="removeWorkspaceLink(this)" aria-label="링크 삭제">×</button>';
+        '<input type="text" class="workspace-link-name moyo-create-control moyo-create-link-name" maxlength="50" placeholder="링크 이름" aria-label="링크 이름">' +
+        '<input type="url" class="workspace-link-url moyo-create-control moyo-create-link-url" maxlength="500" placeholder="https://..." aria-label="링크 주소">' +
+        '<button type="button" class="workspace-link-remove moyo-create-link-remove" onclick="removeWorkspaceLink(this)" aria-label="링크 삭제"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>';
     row.querySelector('.workspace-link-name').value = name || '';
-    row.querySelector('.workspace-link-url').value = url || '';
+    row.querySelector('.workspace-link-url').value = normalizeCreateLinkUrl(url || '');
+    row.querySelector('.workspace-link-url').addEventListener('blur', function() {
+        this.value = normalizeCreateLinkUrl(this.value);
+        clearWorkspaceLinkError();
+    });
     list.appendChild(row);
+    updateWorkspaceLinkUi();
+    clearWorkspaceLinkError();
+    if (!name && !url) row.querySelector('.workspace-link-name').focus();
 }
 
 function removeWorkspaceLink(button) {
-    const list = document.getElementById('workspaceLinkList');
-    const rows = list.querySelectorAll('.workspace-link-row');
-    if (rows.length === 1) {
-        rows[0].querySelectorAll('input').forEach(function(input) { input.value = ''; });
-        return;
+    const row = button.closest('.workspace-link-row');
+    if (row) row.remove();
+    updateWorkspaceLinkUi();
+    clearWorkspaceLinkError();
+}
+
+function validateWorkspaceLinks() {
+    const rows = document.querySelectorAll('#workspaceLinkList .workspace-link-row');
+    const error = document.getElementById('workspaceLinkError');
+    for (const row of rows) {
+        const urlInput = row.querySelector('.workspace-link-url');
+        const nameInput = row.querySelector('.workspace-link-name');
+        const name = nameInput.value.trim();
+        const normalized = normalizeCreateLinkUrl(urlInput.value);
+        urlInput.value = normalized;
+        if (!name && !normalized) continue;
+        try {
+            const parsed = new URL(normalized);
+            if (!/^https?:$/.test(parsed.protocol)) throw new Error('invalid');
+        } catch (e) {
+            if (error) {
+                error.textContent = '링크 주소를 확인해주세요.';
+                error.hidden = false;
+            }
+            urlInput.focus();
+            return false;
+        }
     }
-    button.closest('.workspace-link-row').remove();
+    clearWorkspaceLinkError();
+    return true;
 }
 
 (function() {
+    updateWorkspaceLinkUi();
     const workspaceStep = document.getElementById('workspaceStep');
     const profileStep = document.getElementById('profileStep');
+    const createStepLabel = document.getElementById('workspaceCreateStepLabel');
+    const createTitle = document.getElementById('workspaceCreateTitle');
+    const createSubTitle = document.getElementById('workspaceCreateSubTitle');
     const createWrap = document.querySelector('.create-wrap');
     const accountName = createWrap.dataset.accountName || '';
     const accountEmail = createWrap.dataset.accountEmail || '';
+    const accountBirthDate = createWrap.dataset.accountBirth || '';
+    const accountBirthType = (createWrap.dataset.accountBirthType || 'SOLAR').toUpperCase();
     const workspaceImageEditor = createWorkspaceImageEditor();
     const cropper = createAccountStyleProfileEditor();
 
-    // 계정 기본 프로필 이미지가 없으면 이름 첫 글자 아바타를 사용한다.
+    // MOYO 사람 기본 아바타 정책: 실제 사진 우선, 없으면 원형 MOYO 그라데이션 + 이름 첫 글자.
     document.getElementById('groupProfileFallback').textContent =
-        accountName ? accountName.substring(0, 1) : '?';
+        accountName ? Array.from(accountName)[0] : '?';
     document.getElementById('profileDisplayName').value = accountName;
     document.getElementById('profileContactEmail').value = accountEmail;
 
 
+    const emailInput = document.getElementById('profileContactEmail');
+    const emailStatus = document.getElementById('profileEmailStatus');
+    const emailVerifyButton = document.getElementById('profileEmailVerifyButton');
+    const emailCodeRow = document.getElementById('profileEmailCodeRow');
+    const emailCodeInput = document.getElementById('profileEmailCode');
+    const emailCodeVerifyButton = document.getElementById('profileEmailCodeVerifyButton');
+    const emailMessage = document.getElementById('profileEmailMessage');
+    const showEmailInput = document.getElementById('profileShowEmail');
+    const phoneInput = document.getElementById('profilePhoneNumber');
+    const phoneStatus = document.getElementById('profilePhoneStatus');
+    const phoneVerifyButton = document.getElementById('profilePhoneVerifyButton');
+    const phoneMessage = document.getElementById('profilePhoneMessage');
+    const showPhoneInput = document.getElementById('profileShowPhone');
+    const birthValue = document.getElementById('profileBirthValue');
+    const birthType = document.getElementById('profileBirthType');
+    const showBirthInput = document.getElementById('profileShowBirth');
+
+    let verifiedProfileEmail = accountEmail.trim().toLowerCase();
+    let verifiedPhoneNumber = '';
+
+    function normalizeEmail(value) {
+        return String(value || '').trim().toLowerCase();
+    }
+
+    function normalizePhone(value) {
+        return String(value || '').replace(/\D/g, '');
+    }
+
+    function setEmailState() {
+        const email = normalizeEmail(emailInput?.value);
+        const account = normalizeEmail(accountEmail);
+        const verified = !!email && (email === account || email === verifiedProfileEmail);
+
+        if (!emailStatus || !emailVerifyButton || !emailMessage) return verified;
+        emailStatus.classList.toggle('is-verified', verified);
+        emailStatus.classList.toggle('is-warning', !!email && !verified);
+
+        if (!email) {
+            emailStatus.className = 'profile-contact-status';
+            emailStatus.textContent = '미입력';
+            emailVerifyButton.hidden = true;
+            emailCodeRow.hidden = true;
+            emailMessage.textContent = '이메일을 입력하면 그룹 멤버와 공유할 수 있어요.';
+            if (showEmailInput) showEmailInput.disabled = true;
+            return false;
+        }
+
+        if (verified) {
+            emailStatus.innerHTML = '<i class="fa-solid fa-check" aria-hidden="true"></i> 인증됨';
+            emailVerifyButton.hidden = true;
+            emailCodeRow.hidden = true;
+            emailMessage.textContent = email === account
+                ? '계정 이메일은 추가 인증 없이 사용할 수 있어요.'
+                : '인증된 이메일입니다.';
+            if (showEmailInput) showEmailInput.disabled = false;
+            return true;
+        }
+
+        emailStatus.textContent = '인증 필요';
+        emailVerifyButton.hidden = false;
+        emailCodeRow.hidden = true;
+        emailMessage.textContent = '계정과 다른 이메일은 인증 후 그룹 프로필에 반영됩니다.';
+        if (showEmailInput) showEmailInput.disabled = true;
+        return false;
+    }
+
+    function renderBirth() {
+        if (!birthValue || !birthType) return;
+        const raw = String(accountBirthDate || '').trim();
+        if (!raw) {
+            birthValue.textContent = '등록된 생일 없음';
+            birthType.textContent = '';
+            if (showBirthInput) {
+                showBirthInput.checked = false;
+                showBirthInput.disabled = true;
+            }
+            return;
+        }
+        const matched = raw.match(/^(?:\d{4}[-./])?(\d{1,2})[-./](\d{1,2})/);
+        birthValue.textContent = matched
+            ? String(Number(matched[1])).padStart(2, '0') + '.' + String(Number(matched[2])).padStart(2, '0')
+            : raw;
+        birthType.textContent = accountBirthType === 'LUNAR' ? '음력' : '양력';
+    }
+
+    function setPhoneState() {
+        const phone = normalizePhone(phoneInput?.value);
+        const verified = !!phone && phone === verifiedPhoneNumber;
+        if (!phoneStatus || !phoneMessage || !phoneVerifyButton) return verified;
+
+        if (!phone) {
+            phoneStatus.className = 'profile-contact-status';
+            phoneStatus.textContent = '미입력';
+            phoneMessage.textContent = '연락처는 선택 사항이에요.';
+            if (showPhoneInput) {
+                showPhoneInput.checked = false;
+                showPhoneInput.disabled = true;
+            }
+            return false;
+        }
+        if (verified) {
+            phoneStatus.className = 'profile-contact-status is-verified';
+            phoneStatus.innerHTML = '<i class="fa-solid fa-check" aria-hidden="true"></i> 인증됨';
+            phoneMessage.textContent = '인증된 연락처입니다.';
+            if (showPhoneInput) showPhoneInput.disabled = false;
+            return true;
+        }
+        phoneStatus.className = 'profile-contact-status is-warning';
+        phoneStatus.textContent = '인증 필요';
+        phoneMessage.textContent = 'SMS 인증 전에는 연락처가 그룹 프로필에 저장되거나 공개되지 않아요.';
+        if (showPhoneInput) {
+            showPhoneInput.checked = false;
+            showPhoneInput.disabled = true;
+        }
+        return false;
+    }
+
+    emailInput?.addEventListener('input', function() {
+        const email = normalizeEmail(this.value);
+        if (email !== normalizeEmail(verifiedProfileEmail)) {
+            emailCodeInput.value = '';
+        }
+        setEmailState();
+    });
+
+    emailVerifyButton?.addEventListener('click', function() {
+        const email = normalizeEmail(emailInput.value);
+        if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            emailMessage.textContent = '올바른 이메일 형식을 입력해주세요.';
+            emailMessage.classList.add('is-error');
+            emailInput.focus();
+            return;
+        }
+        emailMessage.classList.remove('is-error');
+        emailVerifyButton.disabled = true;
+        fetch('/users/email-verification/send', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'},
+            body: new URLSearchParams({email})
+        }).then(async function(res) {
+            const data = await res.json().catch(function(){ return {}; });
+            if (!res.ok || !data.success) throw new Error(data.message || '인증번호 발송에 실패했습니다.');
+            emailCodeRow.hidden = false;
+            emailMessage.textContent = data.message || '인증번호를 발송했습니다.';
+            emailCodeInput.focus();
+        }).catch(function(error) {
+            emailMessage.textContent = error.message || '인증번호 발송에 실패했습니다.';
+            emailMessage.classList.add('is-error');
+        }).finally(function() {
+            emailVerifyButton.disabled = false;
+        });
+    });
+
+    emailCodeVerifyButton?.addEventListener('click', function() {
+        const email = normalizeEmail(emailInput.value);
+        const code = String(emailCodeInput.value || '').trim();
+        if (!/^\d{6}$/.test(code)) {
+            emailMessage.textContent = '인증번호 6자리를 입력해주세요.';
+            emailMessage.classList.add('is-error');
+            emailCodeInput.focus();
+            return;
+        }
+        emailCodeVerifyButton.disabled = true;
+        fetch('/users/email-verification/verify', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'},
+            body: new URLSearchParams({email, code})
+        }).then(async function(res) {
+            const data = await res.json().catch(function(){ return {}; });
+            if (!res.ok || !data.success) throw new Error(data.message || '이메일 인증에 실패했습니다.');
+            verifiedProfileEmail = email;
+            emailMessage.classList.remove('is-error');
+            setEmailState();
+        }).catch(function(error) {
+            emailMessage.textContent = error.message || '이메일 인증에 실패했습니다.';
+            emailMessage.classList.add('is-error');
+        }).finally(function() {
+            emailCodeVerifyButton.disabled = false;
+        });
+    });
+
+    phoneInput?.addEventListener('input', setPhoneState);
+    phoneVerifyButton?.addEventListener('click', function() {
+        const phone = normalizePhone(phoneInput.value);
+        if (!/^01\d{8,9}$/.test(phone)) {
+            phoneMessage.textContent = '휴대폰 번호 형식을 확인해주세요.';
+            phoneMessage.classList.add('is-error');
+            phoneInput.focus();
+            return;
+        }
+        phoneMessage.classList.remove('is-error');
+        phoneMessage.textContent = '현재 프로젝트에는 SMS 발송 서비스가 연결되어 있지 않아 인증을 진행할 수 없습니다.';
+    });
+
+    renderBirth();
+    setEmailState();
+    setPhoneState();
+
+    function bindCreateCounter(inputId, countId) {
+        const input = document.getElementById(inputId);
+        const count = document.getElementById(countId);
+        if (!input || !count) return;
+        const sync = function() { count.textContent = String(input.value.length); };
+        input.addEventListener('input', sync);
+        sync();
+    }
+    bindCreateCounter('wsName', 'workspaceNameCount');
+    bindCreateCounter('wsDesc', 'workspaceDescCount');
+
+    const workspaceTypeInput = document.getElementById('wsType');
+    const workspaceTypeOptions = Array.from(document.querySelectorAll('[data-workspace-type]'));
+
+    function selectWorkspaceType(type) {
+        if (!workspaceTypeInput || !type) return;
+        workspaceTypeInput.value = type;
+        workspaceTypeOptions.forEach(function(option) {
+            const selected = option.dataset.workspaceType === type;
+            option.classList.toggle('is-selected', selected);
+            option.setAttribute('aria-pressed', selected ? 'true' : 'false');
+        });
+    }
+
+    workspaceTypeOptions.forEach(function(option) {
+        option.addEventListener('click', function() {
+            selectWorkspaceType(option.dataset.workspaceType);
+        });
+    });
+    selectWorkspaceType(workspaceTypeInput ? workspaceTypeInput.value : 'COMMUNITY');
+
+
     function syncProfileMode() {
         const useAccount = $('input[name="profileMode"]:checked').val() === 'Y';
-        const avatarText = accountName ? accountName.substring(0, 1) : '?';
+        const avatarText = accountName ? Array.from(accountName)[0].toUpperCase() : '?';
+        const accountSummary = document.getElementById('profileAccountSummary');
+        const customFields = document.getElementById('profileCustomFields');
+        const summaryAvatarFallback = document.getElementById('profileAccountSummaryAvatarFallback');
 
-        $('#profileDisplayName').prop('readonly', useAccount);
+        if (accountSummary) accountSummary.hidden = !useAccount;
+        if (customFields) customFields.hidden = useAccount;
+        if (summaryAvatarFallback) summaryAvatarFallback.textContent = avatarText;
+
         cropper.setMode(useAccount ? 'account' : 'custom', avatarText);
 
         if (useAccount) {
             $('#profileDisplayName').val(accountName);
-        } else if (!$('#profileDisplayName').val().trim()) {
-            $('#profileDisplayName').val(accountName);
+            $('#profileContactEmail').val(accountEmail);
+            verifiedProfileEmail = normalizeEmail(accountEmail);
+            setEmailState();
+        } else {
+            if (!$('#profileDisplayName').val().trim()) $('#profileDisplayName').val(accountName);
+            if (!$('#profileContactEmail').val().trim()) $('#profileContactEmail').val(accountEmail);
         }
     }
 
@@ -1464,36 +2440,47 @@ function removeWorkspaceLink(button) {
     });
     syncProfileMode();
 
+    function setCreateStep(step) {
+        const isProfileStep = step === 2;
+        workspaceStep.hidden = isProfileStep;
+        profileStep.hidden = !isProfileStep;
+        workspaceStep.classList.toggle('is-active', !isProfileStep);
+        profileStep.classList.toggle('is-active', isProfileStep);
+        createStepLabel.textContent = isProfileStep ? '2 / 2' : '1 / 2';
+        createTitle.textContent = isProfileStep ? '그룹에서 사용할 프로필' : '새 그룹 만들기';
+        createSubTitle.textContent = isProfileStep
+            ? '계정 프로필을 그대로 사용하거나, 이 그룹에서 사용할 별도 프로필을 만들 수 있어요.'
+            : '그룹 정보를 입력한 다음, 이 그룹에서 사용할 프로필을 선택합니다.';
+    }
+
     $('#btnNext').on('click', function() {
         if (!$('#wsName').val().trim()) {
             alert('그룹 이름을 입력해주세요.');
             $('#wsName').focus();
             return;
         }
-        workspaceStep.hidden = true;
-        profileStep.hidden = false;
+        if (!validateWorkspaceLinks()) return;
+        setCreateStep(2);
     });
 
     $('#btnBack').on('click', function() {
-        profileStep.hidden = true;
-        workspaceStep.hidden = false;
+        setCreateStep(1);
     });
 
     $('#btnCreate').on('click', async function() {
         const useAccount = $('input[name="profileMode"]:checked').val();
         const displayName = $('#profileDisplayName').val().trim();
         const contactEmail = $('#profileContactEmail').val().trim();
+        const emailVerified = useAccount === 'Y' || setEmailState();
+        const phoneVerified = useAccount === 'Y' ? false : setPhoneState();
 
-        if (!contactEmail) {
-            alert('그룹 이메일을 입력해주세요.');
-            $('#profileContactEmail').focus();
-            return;
-        }
         if (useAccount === 'N' && !displayName) {
             alert('그룹 표시 이름을 입력해주세요.');
             $('#profileDisplayName').focus();
             return;
         }
+
+        if (!validateWorkspaceLinks()) return;
 
         const formData = new FormData();
         formData.append('wsName', $('#wsName').val().trim());
@@ -1509,10 +2496,12 @@ function removeWorkspaceLink(button) {
         });
         formData.append('useAccountProfile', useAccount);
         formData.append('displayName', displayName);
-        formData.append('contactEmail', contactEmail);
+        formData.append('contactEmail', emailVerified ? contactEmail : '');
         formData.append('positionName', $('#profilePositionName').val().trim());
-        formData.append('phoneNumber', $('#profilePhoneNumber').val().trim());
-        formData.append('showPhone', $('#profileShowPhone').is(':checked') ? 'Y' : 'N');
+        formData.append('phoneNumber', phoneVerified ? $('#profilePhoneNumber').val().trim() : '');
+        formData.append('showEmail', emailVerified && $('#profileShowEmail').is(':checked') ? 'Y' : 'N');
+        formData.append('showPhone', phoneVerified && $('#profileShowPhone').is(':checked') ? 'Y' : 'N');
+        formData.append('showBirth', $('#profileShowBirth').is(':checked') ? 'Y' : 'N');
 
         const workspaceBlob = await workspaceImageEditor.getBlob();
         if (workspaceBlob) {
@@ -1521,7 +2510,7 @@ function removeWorkspaceLink(button) {
 
         if (useAccount === 'N') {
             const blob = await cropper.getBlob();
-            if (blob) formData.append('profileImage', blob, 'workspace_profile.jpg');
+            if (blob) formData.append('profileImage', blob, 'workspace_profile.png');
         }
 
         const button = this;
@@ -1541,8 +2530,9 @@ function removeWorkspaceLink(button) {
                 }
                 alert(res.message || '그룹 생성에 실패했습니다.');
             },
-            error: function() {
-                alert('그룹 생성 중 서버 오류가 발생했습니다.');
+            error: function(xhr) {
+                const message = xhr.responseJSON?.message || '그룹 생성 중 서버 오류가 발생했습니다.';
+                alert(message);
             },
             complete: function() {
                 button.disabled = false;

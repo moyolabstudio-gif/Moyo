@@ -14,6 +14,8 @@ public class projectRequestDTO {
     private String projScope;
     private String projCategory;
     private String projCategoryDetail;
+    private String projIcon;             // semantic icon key (e.g. plane, code, book-open)
+    private String accessScope;          // OWNER_ONLY / PARTICIPANTS / WORKSPACE_READ
     private Long wsId;
     private Long leaderId;      
     private List<Long> memberIds;
@@ -22,6 +24,10 @@ public class projectRequestDTO {
     private Map<String, String> memberPositions;
     private String startDate; 
     private String endDate;
+    private String periodEnabledYn;      // Y when both start/end dates exist
+    private Integer taskTotal;
+    private Integer taskDone;
+    private Integer progressPercent;      // null when there are no tasks
     private String status;                       // ACTIVE / DELETE_PENDING
     private LocalDateTime deleteRequestedAt;    // 삭제 신청 시각
     private LocalDateTime deleteDeadlineAt;     // 최종 삭제 예정 시각

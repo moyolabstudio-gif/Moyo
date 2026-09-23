@@ -17,8 +17,11 @@
 
         <div class="project-plan-guide__controls">
             <span id="projectPlanMeta" class="project-plan-guide__meta" aria-live="polite" hidden>
-                <span id="projectPlanPeriod" class="project-plan-guide__period"></span>
-                <span id="projectPlanDeadline" class="project-plan-guide__deadline"></span>
+                <span id="projectPlanPeriod" class="project-plan-guide__period">
+                    <i class="fa-regular fa-calendar-days" aria-hidden="true"></i>
+                    <span class="project-plan-guide__period-text"></span>
+                </span>
+                <span id="projectPlanDeadline" class="project-plan-guide__deadline" aria-label="D-Day"></span>
             </span>
 
             <div class="project-plan-guide__create-actions" hidden>

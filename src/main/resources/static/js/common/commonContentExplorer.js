@@ -43,7 +43,8 @@
         navigationHistory: [],
         draggingSelection: false,
         suppressBlankClick: false,
-        activeScope: { ...baseScope }
+        activeScope: { ...baseScope },
+        collapsedFolders: new Set()
     };
 
     const $ = selector => root.querySelector(selector);
@@ -77,6 +78,80 @@
     const currentUserId = toNumber(root.dataset.currentUserId);
     const contentType = String(root.dataset.contentType || 'FILE').toUpperCase();
     const friendShareSection = $('#fileFriendShareSection');
+    const explorerShell = root.querySelector('.file-explorer__shell');
+    const treePanel = root.querySelector('.file-tree-panel');
+    const treeResizer = root.querySelector('[data-tree-resizer]');
+    const TREE_WIDTH_KEY = 'moyo.contentExplorer.treeWidth';
+    const TREE_MIN_WIDTH = 180;
+    const TREE_MAX_WIDTH = 360;
+
+    function clampTreeWidth(value) {
+        const shellWidth = explorerShell?.clientWidth || window.innerWidth;
+        const responsiveMax = Math.max(TREE_MIN_WIDTH, Math.min(TREE_MAX_WIDTH, shellWidth - 520));
+        return Math.max(TREE_MIN_WIDTH, Math.min(Number(value) || 230, responsiveMax));
+    }
+
+    function applyTreeWidth(value, persist = false) {
+        if (!explorerShell || window.matchMedia('(max-width: 900px)').matches) return;
+        const width = clampTreeWidth(value);
+        root.style.setProperty('--file-tree-width', width + 'px');
+        if (persist) {
+            try { localStorage.setItem(TREE_WIDTH_KEY, String(Math.round(width))); } catch (_) {}
+        }
+    }
+
+    function initTreeResizer() {
+        if (!treeResizer || !treePanel || !explorerShell) return;
+        let saved = null;
+        try { saved = Number(localStorage.getItem(TREE_WIDTH_KEY)); } catch (_) {}
+        applyTreeWidth(Number.isFinite(saved) && saved ? saved : 230);
+
+        let startX = 0;
+        let startWidth = 0;
+        const finish = () => {
+            if (!root.classList.contains('is-tree-resizing')) return;
+            root.classList.remove('is-tree-resizing');
+            document.body.style.removeProperty('user-select');
+            document.body.style.removeProperty('cursor');
+            const width = parseFloat(getComputedStyle(root).getPropertyValue('--file-tree-width'));
+            if (Number.isFinite(width)) applyTreeWidth(width, true);
+        };
+
+        treeResizer.addEventListener('pointerdown', event => {
+            if (event.button !== 0 || window.matchMedia('(max-width: 900px)').matches) return;
+            event.preventDefault();
+            startX = event.clientX;
+            startWidth = treePanel.getBoundingClientRect().width;
+            root.classList.add('is-tree-resizing');
+            document.body.style.userSelect = 'none';
+            document.body.style.cursor = 'col-resize';
+            treeResizer.setPointerCapture?.(event.pointerId);
+        });
+        treeResizer.addEventListener('pointermove', event => {
+            if (!root.classList.contains('is-tree-resizing')) return;
+            applyTreeWidth(startWidth + (event.clientX - startX));
+        });
+        treeResizer.addEventListener('pointerup', finish);
+        treeResizer.addEventListener('pointercancel', finish);
+        treeResizer.addEventListener('keydown', event => {
+            if (window.matchMedia('(max-width: 900px)').matches) return;
+            if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+            event.preventDefault();
+            const current = treePanel.getBoundingClientRect().width;
+            applyTreeWidth(current + (event.key === 'ArrowRight' ? 16 : -16), true);
+        });
+        window.addEventListener('resize', () => {
+            if (window.matchMedia('(max-width: 900px)').matches) {
+                root.style.removeProperty('--file-tree-width');
+                return;
+            }
+            let width = treePanel.getBoundingClientRect().width;
+            if (!width) { try { width = Number(localStorage.getItem(TREE_WIDTH_KEY)) || 230; } catch (_) { width = 230; } }
+            applyTreeWidth(width);
+        });
+    }
+
+    initTreeResizer();
 
     function rawValue(item, ...keys) {
         const raw = item?.raw || item || {};
@@ -395,22 +470,26 @@
         );
         const draw = (parentId, depth = 0) => children(parentId).map(folder => {
             const active = !state.trashMode && !state.recentMode && !state.friendShareMode && !state.collectionMode && state.folderId === folder.folderId;
+            const childRows = children(folder.folderId);
+            const hasChildren = childRows.length > 0;
+            const collapsed = hasChildren && state.collapsedFolders.has(Number(folder.folderId));
             return `
-            <div class="file-tree-node">
+            <div class="file-tree-node${collapsed ? ' is-collapsed' : ''}" data-tree-node="${folder.folderId}">
                 <div class="file-tree-row-wrap ${active ? 'is-active' : ''}">
+                    ${hasChildren ? `<button class="file-tree-row__toggle" type="button" data-tree-toggle="${folder.folderId}" aria-expanded="${collapsed ? 'false' : 'true'}" aria-label="${escapeHtml(folder.folderName)} 하위 폴더 ${collapsed ? '펼치기' : '접기'}"><i class="fa-solid fa-chevron-down" aria-hidden="true"></i></button>` : '<span class="file-tree-row__toggle-spacer" aria-hidden="true"></span>'}
                     <button class="file-tree-row ${active ? 'is-active' : ''}"
                             type="button"
                             data-tree-id="${folder.folderId}"
                             style="--tree-depth:${depth}">
                         <span class="file-tree-row__icon" aria-hidden="true">▰</span>
-                        <span class="file-tree-row__name">${escapeHtml(folder.folderName)}</span>
+                        <span class="file-tree-row__name" data-folder-full-name="${escapeHtml(folder.folderName)}">${escapeHtml(folder.folderName)}</span>
                     </button>
                     <button class="file-tree-row__more"
                             type="button"
                             data-tree-more="${folder.folderId}"
                             aria-label="${escapeHtml(folder.folderName)} 폴더 메뉴">⋯</button>
                 </div>
-                ${draw(folder.folderId, depth + 1)}
+                ${hasChildren ? `<div class="file-tree-node__children" data-tree-children-for="${folder.folderId}" ${collapsed ? 'hidden' : ''}>${draw(folder.folderId, depth + 1)}</div>` : ''}
             </div>`;
         }).join('');
         if (isBaseScope()) {
@@ -1643,6 +1722,11 @@
 
         if (typeof explorerAdapter.renameSelected === 'function') {
             await explorerAdapter.renameSelected({ api, selected, name });
+            if (selected.kind !== 'folder') {
+                document.dispatchEvent(new CustomEvent('moyo:content-metadata-updated', {
+                    detail: { contentType, contentId: Number(selected.id) || selected.id, reason: 'rename', source: 'explorer' }
+                }));
+            }
             await load();
             return;
         }
@@ -1657,6 +1741,9 @@
                 method: 'PATCH',
                 body: JSON.stringify({ name })
             });
+            document.dispatchEvent(new CustomEvent('moyo:content-metadata-updated', {
+                detail: { contentType: 'FILE', contentId: Number(selected.id) || selected.id, reason: 'rename', source: 'explorer' }
+            }));
         }
         await load();
     }
@@ -1708,6 +1795,21 @@
         await api(endpoint('uploadItems', '/api/files/batch'), { method: 'POST', body: formData });
         await loadItems();
     }
+
+    // Show the full folder name only when the tree label is actually truncated.
+    root.addEventListener('mouseover', event => {
+        const name = event.target.closest('.file-tree-row__name[data-folder-full-name]');
+        if (!name || !root.contains(name)) return;
+        const truncated = name.scrollWidth > name.clientWidth + 1;
+        if (truncated) name.setAttribute('title', name.dataset.folderFullName || name.textContent.trim());
+        else name.removeAttribute('title');
+    });
+
+    root.addEventListener('mouseout', event => {
+        const name = event.target.closest('.file-tree-row__name[data-folder-full-name]');
+        if (!name || !root.contains(name)) return;
+        name.removeAttribute('title');
+    });
 
     root.addEventListener('click', async event => {
         const friendSend = event.target.closest('[data-explorer-friend-send]');
@@ -1858,6 +1960,17 @@
 
         const projectRow = event.target.closest('[data-project-id]');
         if (projectRow) return openProject(projectRow);
+
+        const treeToggle = event.target.closest('[data-tree-toggle]');
+        if (treeToggle) {
+            event.preventDefault();
+            event.stopPropagation();
+            const folderId = Number(treeToggle.dataset.treeToggle);
+            if (state.collapsedFolders.has(folderId)) state.collapsedFolders.delete(folderId);
+            else state.collapsedFolders.add(folderId);
+            renderTree();
+            return;
+        }
 
         const treeMore = event.target.closest('[data-tree-more]');
         if (treeMore) {
@@ -2197,6 +2310,18 @@
             return;
         }
         runBatchAction(action).catch(error => alert(error.message));
+    });
+
+    let contentMetadataRefreshTimer = null;
+    document.addEventListener('moyo:content-metadata-updated', event => {
+        const detail = event.detail || {};
+        const changedType = String(detail.contentType || '').toUpperCase();
+        if (!changedType || changedType !== contentType) return;
+        if (detail.source === 'explorer') return;
+        clearTimeout(contentMetadataRefreshTimer);
+        contentMetadataRefreshTimer = setTimeout(() => {
+            loadItems().catch(error => console.warn('연결 콘텐츠 변경 후 탐색기 갱신 실패', error));
+        }, 180);
     });
 
     document.addEventListener('moyo:note-deleted', event => {

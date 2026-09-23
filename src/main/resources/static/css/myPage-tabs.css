@@ -1041,3 +1041,130 @@
         border-radius: 13px;
     }
 }
+
+
+/* 2026-09-19: profile email / birthday compact meta icons */
+.profile-meta-line {
+    column-gap: 14px;
+    row-gap: 8px;
+}
+
+.profile-meta-line .profile-meta-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+}
+
+.profile-meta-line .profile-meta-item + .profile-meta-item::before {
+    content: none;
+}
+
+.profile-meta-icon {
+    width: 14px;
+    flex: 0 0 14px;
+    color: #7f90a7;
+    font-size: 12px;
+    text-align: center;
+}
+
+.profile-meta-birth {
+    gap: 5px !important;
+}
+
+.profile-birth-type-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 15px;
+    height: 15px;
+    margin-left: 1px;
+    border-radius: 50%;
+    font-size: 11px;
+}
+
+.profile-birth-type-icon.is-solar {
+    color: #d79a2b;
+}
+
+.profile-birth-type-icon.is-lunar {
+    color: #7687a7;
+}
+
+.profile-meta-birth.is-private .profile-birth-type-icon {
+    color: #9ca8b8;
+    font-size: 10px;
+}
+
+/* 2026-09-19: profile meta vertical alignment + owner gear responsive position */
+.profile-meta-line .profile-meta-item {
+    min-height: 18px;
+    line-height: 18px;
+}
+
+.profile-meta-line .profile-meta-icon,
+.profile-meta-line .profile-birth-type-icon {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    align-self: center;
+    line-height: 1 !important;
+    vertical-align: middle;
+}
+
+.profile-meta-line .profile-meta-icon {
+    width: 16px;
+    height: 16px;
+    flex: 0 0 16px;
+    font-size: 12px;
+}
+
+.profile-meta-line .profile-birth-type-icon {
+    width: 16px;
+    height: 16px;
+    flex: 0 0 16px;
+    margin-left: 1px;
+}
+
+.profile-meta-line .profile-meta-icon::before,
+.profile-meta-line .profile-birth-type-icon::before {
+    display: block;
+    line-height: 1;
+}
+
+@media (max-width: 900px) {
+    .profile-shell.is-personal-profile .profile-masthead {
+        position: relative;
+    }
+
+    /* 설정 버튼은 화면 우측이 아니라 중앙 프로필 이미지 기준으로 배치한다. */
+    .profile-shell.is-personal-profile .profile-actions {
+        position: absolute;
+        top: 20px;
+        left: calc(50% + 92px);
+        right: auto;
+        z-index: 12;
+        width: auto;
+        margin: 0;
+        justify-content: flex-start;
+    }
+
+    .profile-shell.is-personal-profile .profile-name-row {
+        gap: 0;
+    }
+}
+
+@media (max-width: 560px) {
+    .profile-shell.is-personal-profile .profile-actions {
+        /* avatar 118px: 반지름 59px + 바깥 여백 약 18px */
+        top: 14px;
+        left: calc(50% + 77px);
+        right: auto;
+        width: auto;
+    }
+
+    .profile-shell.is-personal-profile .profile-gear-action {
+        width: 36px;
+        height: 36px;
+    }
+}

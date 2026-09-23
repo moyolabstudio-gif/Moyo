@@ -28,6 +28,8 @@ public interface IworkspaceDAO {
     int deleteWorkspaceAllMembers(long wsId);
     int deleteWorkspace(long wsId);
     int requestWorkspaceDeletion(@Param("wsId") Long wsId, @Param("ownerId") Long ownerId);
+    int cascadeWorkspaceProjectDeletion(@Param("wsId") Long wsId, @Param("ownerId") Long ownerId);
+    int cancelWorkspaceProjectDeletionCascade(@Param("wsId") Long wsId, @Param("ownerId") Long ownerId);
     int cancelWorkspaceDeletion(@Param("wsId") Long wsId, @Param("ownerId") Long ownerId);
     List<Long> selectExpiredWorkspaceDeletionIds();
     List<Long> selectWorkspaceProjectIdsForFinalDelete(@Param("wsId") Long wsId);
@@ -41,7 +43,10 @@ public interface IworkspaceDAO {
     int deleteWorkspaceEvents(@Param("wsId") Long wsId);
     int deleteWorkspaceContentReactions(@Param("wsId") Long wsId);
     int deleteWorkspaceContentFileRecentAccess(@Param("wsId") Long wsId);
-    int deleteWorkspaceContentRecordFileItems(@Param("wsId") Long wsId);
+    int deleteWorkspaceContentRecordLinks(@Param("wsId") Long wsId);
+    int deleteWorkspaceContentRecordLocations(@Param("wsId") Long wsId);
+    int deleteWorkspaceContentRecordItems(@Param("wsId") Long wsId);
+    int deleteWorkspaceContentRecordTargets(@Param("wsId") Long wsId);
     int deleteWorkspaceContentFiles(@Param("wsId") Long wsId);
     int deleteWorkspaceContentFileFolders(@Param("wsId") Long wsId);
     int deleteWorkspaceJoinRequests(@Param("wsId") Long wsId);
@@ -50,6 +55,7 @@ public interface IworkspaceDAO {
     int deleteWorkspaceLinksForFinalDelete(@Param("wsId") Long wsId);
     int deleteWorkspaceMembersForFinalDelete(@Param("wsId") Long wsId);
     int deleteWorkspaceRow(@Param("wsId") Long wsId);
+    int deleteWorkspaceRowImmediate(@Param("wsId") Long wsId);
     List<Map<String, Object>> selectWorkspaceMembers(Long wsId);
     int ensureWorkspaceMemberActivityHistory();
     int insertWorkspaceMemberLeaveActivity(@Param("wsId") Long wsId, @Param("userId") Long userId);

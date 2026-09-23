@@ -150,68 +150,6 @@
 </div>
 
 
-<%-- 비행기 아이콘 전용: MOYO 공개 노트를 친구에게 보내기 --%>
-<button type="button" id="profileNoteSendOpenHidden" data-share-content-id="" hidden>보내기</button>
-<span id="profileNoteSendCount" hidden>0</span>
-<div id="profileNoteSendHiddenFields" hidden></div>
-<div id="profileNoteSendInitialSource" hidden></div>
-
-<div id="profileNoteSendModal"
-     class="note-write-share-modal moyo-share-modal"
-     data-current-user-id="${sessionScope.user.userId}"
-     hidden>
-    <div class="note-write-share-backdrop" data-note-share-close></div>
-    <section class="note-write-share-panel"
-             role="dialog"
-             aria-modal="true"
-             aria-labelledby="profileNoteSendModalTitle">
-        <div class="note-write-share-modal-head">
-            <div>
-                <h3 id="profileNoteSendModalTitle">친구에게 보내기</h3>
-                <p>이 노트를 보낼 친구를 선택하세요.</p>
-            </div>
-            <button type="button"
-                    class="note-write-share-close"
-                    data-note-share-close
-                    aria-label="닫기">×</button>
-        </div>
-
-        <div class="note-write-share-toolbar">
-            <input type="text"
-                   id="profileNoteSendKeyword"
-                   class="note-write-share-input"
-                   placeholder="친구 이름 또는 이메일 검색">
-        </div>
-
-        <div class="note-write-share-body note-write-share-body-simple">
-            <div>
-                <div class="note-write-share-subtitle">받는 대상</div>
-                <div id="profileNoteSendCandidates" class="note-write-share-list"></div>
-            </div>
-            <div>
-                <div class="note-write-share-subtitle">
-                    선택 대상
-                    <span id="profileNoteSendModalCount"
-                          class="note-share-modal-count"
-                          hidden>0</span>
-                </div>
-                <div id="profileNoteSendSelected" class="note-write-share-selected"></div>
-            </div>
-        </div>
-
-        <div class="note-write-share-modal-actions">
-            <div>
-                <button type="button"
-                        class="note-soft-btn"
-                        data-note-share-close>취소</button>
-                <button type="button"
-                        id="profileNoteSendApply"
-                        class="note-gradient-btn">보내기</button>
-            </div>
-        </div>
-    </section>
-</div>
-
 <div id="profileNoteCollectModal" class="profile-note-collect-modal" hidden>
     <div class="profile-note-collect-backdrop" data-profile-note-collect-close></div>
     <section class="profile-note-collect-panel"

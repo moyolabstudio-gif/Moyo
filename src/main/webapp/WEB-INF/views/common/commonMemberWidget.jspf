@@ -36,6 +36,7 @@
                     <span aria-hidden="true">👥</span>
                     <strong id="commonProjectMemberTitle">프로젝트 멤버</strong>
                     <span id="projectMemberCount" class="moyo-member-widget__count moyo-widget-count project-member-count">0</span>
+                    <button type="button" id="projectMemberActivityBadge" class="moyo-collab-activity-badge" hidden onclick="MoyoCommunityWidgets.focusActivity('MEMBER')" title="최근 멤버 변경 보기"></button>
                 </div>
                 <div class="moyo-member-widget__actions project-member-head-actions">
                     <button type="button" class="moyo-member-widget__all-button"

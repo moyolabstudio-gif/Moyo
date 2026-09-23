@@ -1071,15 +1071,19 @@
             if (submit) submit.disabled = true;
 
             $.ajax({
-                url: WORKSPACE_CONTEXT_PATH + '/workspace/api/delete',
+                url: WORKSPACE_CONTEXT_PATH + '/workspace/api/delete-policy',
                 type: 'POST',
                 data: { wsId: "${workspace.wsId}", workspaceName: typedName },
                 success: function(res) {
-                    if (res === 'success' || res === 'already_pending') {
+                    if (res === 'deleted') {
+                        closeWorkspaceDeleteRequestModal();
+                        alert("그룹장 한 명만 남아 있어 그룹을 바로 삭제했습니다.");
+                        location.href = WORKSPACE_CONTEXT_PATH + '/workspace/list';
+                    } else if (res === 'pending' || res === 'already_pending') {
                         closeWorkspaceDeleteRequestModal();
                         alert(res === 'already_pending'
                             ? "이미 삭제 신청된 그룹입니다."
-                            : "그룹 삭제가 신청되었습니다. 30일 안에는 취소할 수 있습니다.");
+                            : "다른 멤버가 있어 삭제 예정 상태로 전환했습니다. 30일 안에는 취소할 수 있습니다.");
                         location.reload();
                     } else if (res === 'name_mismatch') {
                         alert("그룹 이름이 일치하지 않습니다.");
@@ -1448,7 +1452,7 @@
                             </p>
                         </c:when>
                         <c:otherwise>
-                            <p>삭제를 신청하면 30일 동안 취소할 수 있으며, 기간이 지나면 최종 삭제됩니다.</p>
+                            <p>그룹장 혼자 남아 있으면 바로 삭제됩니다. 다른 멤버가 있으면 30일 삭제 예정 상태로 전환됩니다.</p>
                         </c:otherwise>
                     </c:choose>
                 </div>
@@ -1457,7 +1461,7 @@
                         <button type="button" class="btn-delete-cancel" onclick="cancelWorkspaceDeletion()">삭제 신청 취소</button>
                     </c:when>
                     <c:otherwise>
-                        <button type="button" class="btn-delete" onclick="openWorkspaceDeleteRequestModal()">그룹 삭제 신청</button>
+                        <button type="button" class="btn-delete" onclick="openWorkspaceDeleteRequestModal()">그룹 삭제</button>
                     </c:otherwise>
                 </c:choose>
             </section>
@@ -1696,14 +1700,14 @@
         <div class="workspace-delete-request-backdrop" onclick="closeWorkspaceDeleteRequestModal()"></div>
         <section class="workspace-delete-request-dialog" role="dialog" aria-modal="true" aria-labelledby="workspaceDeleteRequestTitle">
             <button type="button" class="workspace-delete-request-close" aria-label="닫기" onclick="closeWorkspaceDeleteRequestModal()">×</button>
-            <span class="workspace-delete-request-eyebrow">그룹 삭제 신청</span>
-            <h2 id="workspaceDeleteRequestTitle"><c:out value="${workspace.wsName}"/> 그룹을 삭제 신청할까요?</h2>
+            <span class="workspace-delete-request-eyebrow">그룹 삭제</span>
+            <h2 id="workspaceDeleteRequestTitle"><c:out value="${workspace.wsName}"/> 그룹을 삭제할까요?</h2>
             <p class="workspace-delete-request-description">
-                신청 즉시 삭제되지 않습니다. 30일 동안 취소할 수 있고,
-                예정일이 지나면 그룹과 소속 프로젝트가 최종 삭제됩니다.
+                그룹장 외 멤버가 없으면 즉시 삭제됩니다.
+                다른 멤버가 있으면 30일 동안 취소 가능한 삭제 예정 상태로 전환됩니다.
             </p>
             <div class="workspace-delete-request-notice">
-                <strong>삭제 유예기간</strong><span>신청일로부터 30일</span>
+                <strong>삭제 정책</strong><span>멤버 유무에 따라 즉시 삭제 또는 30일 유예</span>
             </div>
             <label class="workspace-delete-confirm-field">
                 <span>확인을 위해 그룹 이름을 입력하세요.</span>
@@ -1711,7 +1715,7 @@
             </label>
             <div class="workspace-delete-request-actions">
                 <button type="button" class="workspace-delete-request-secondary" onclick="closeWorkspaceDeleteRequestModal()">닫기</button>
-                <button type="button" id="workspaceDeleteRequestSubmit" class="workspace-delete-request-primary" onclick="requestWorkspaceDeletion()">삭제 신청</button>
+                <button type="button" id="workspaceDeleteRequestSubmit" class="workspace-delete-request-primary" onclick="requestWorkspaceDeletion()">삭제 확인</button>
             </div>
         </section>
     </div>

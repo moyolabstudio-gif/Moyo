@@ -15,6 +15,7 @@
         <result property="projId" column="PROJ_ID"/>
         <result property="noteFolderId" column="NOTE_FOLDER_ID"/>
         <result property="photoAlbumId" column="PHOTO_ALBUM_ID"/>
+        <result property="fileFolderId" column="FILE_FOLDER_ID"/>
         <result property="createdBy" column="CREATED_BY"/>
         <result property="createdAt" column="CREATED_AT"/>
         <result property="updatedAt" column="UPDATED_AT"/>
@@ -23,7 +24,7 @@
 
     <sql id="targetColumns">
         RECORD_TARGET_ID, DRAFT_KEY, TARGET_STATUS, TARGET_TYPE, TARGET_ID,
-        SCOPE_TYPE, OWNER_USER_ID, WS_ID, PROJ_ID, NOTE_FOLDER_ID, PHOTO_ALBUM_ID,
+        SCOPE_TYPE, OWNER_USER_ID, WS_ID, PROJ_ID, NOTE_FOLDER_ID, PHOTO_ALBUM_ID, FILE_FOLDER_ID,
         CREATED_BY, CREATED_AT, UPDATED_BY, UPDATED_AT, EXPIRES_AT
     </sql>
 
@@ -244,6 +245,29 @@
            AND <include refid="eventManagerCondition"/>
     </select>
 
+    <update id="enableProjectPlanRecord">
+        <choose>
+            <when test="targetType == 'PERIOD_PLAN'">
+                UPDATE PROJECT_PERIOD_PLANS
+                   SET RECORD_ENABLED_YN = 'Y'
+                 WHERE PERIOD_PLAN_ID = #{targetId, jdbcType=NUMERIC}
+            </when>
+            <when test="targetType == 'TIME_PLAN'">
+                UPDATE PROJECT_TIME_PLANS
+                   SET RECORD_ENABLED_YN = 'Y'
+                 WHERE TIME_PLAN_ID = #{targetId, jdbcType=NUMERIC}
+            </when>
+            <when test="targetType == 'WEEKLY_PLAN'">
+                UPDATE PROJECT_WEEKLY_PLANS
+                   SET RECORD_ENABLED_YN = 'Y'
+                 WHERE WEEKLY_PLAN_ID = #{targetId, jdbcType=NUMERIC}
+            </when>
+            <otherwise>
+                UPDATE PROJECT_TASKS SET RECORD_ENABLED_YN = RECORD_ENABLED_YN WHERE 1 = 0
+            </otherwise>
+        </choose>
+    </update>
+
     <sql id="projectManagerCondition">
         (p.LEADER_ID = #{userId}
          OR UPPER(NVL(pm.PROJ_ROLE, 'MEMBER')) IN ('ADMIN','LEADER','OWNER','PM'))
@@ -347,11 +371,24 @@
                 WHERE x.WEEKLY_PLAN_ID=#{targetId} AND NVL(x.RECORD_ENABLED_YN, 'N') = 'Y' AND <include refid="projectManagerCondition"/>
             </when>
             <otherwise>
-                SELECT COUNT(1) FROM PROJECT_TASKS x JOIN PROJECTS p ON p.PROJ_ID=x.PROJ_ID
-                LEFT JOIN PROJ_MEMBERS pm ON pm.PROJ_ID=p.PROJ_ID AND pm.USER_ID=#{userId}
-                WHERE x.TASK_ID=#{targetId}
-                  AND NVL(x.RECORD_ENABLED_YN, 'N') = 'Y'
-                  AND <include refid="projectManagerCondition"/>
+                SELECT COUNT(1)
+                  FROM PROJECT_TASKS x
+                  JOIN PROJECTS p ON p.PROJ_ID=x.PROJ_ID
+                  LEFT JOIN PROJ_MEMBERS pm ON pm.PROJ_ID=p.PROJ_ID AND pm.USER_ID=#{userId}
+                 WHERE x.TASK_ID=#{targetId}
+                   AND NVL(x.RECORD_ENABLED_YN, 'N') = 'Y'
+                   AND (
+                        <include refid="projectManagerCondition"/>
+                        OR (
+                            NVL(UPPER(p.PROJ_SCOPE), CASE WHEN p.WS_ID IS NULL THEN 'PERSONAL' ELSE 'GROUP' END) = 'GROUP'
+                            AND EXISTS (
+                                SELECT 1
+                                  FROM PROJECT_TASK_ASSIGNEES pta
+                                 WHERE pta.TASK_ID=x.TASK_ID
+                                   AND pta.USER_ID=#{userId}
+                            )
+                        )
+                   )
             </otherwise>
         </choose>
     </select>
@@ -378,6 +415,15 @@
                UPDATED_AT = SYSDATE
          WHERE RECORD_TARGET_ID = #{recordTargetId, jdbcType=NUMERIC}
            AND PHOTO_ALBUM_ID IS NULL
+    </update>
+
+
+    <update id="updateFileFolderId">
+        UPDATE CONTENT_RECORD_TARGETS
+           SET FILE_FOLDER_ID = #{fileFolderId, jdbcType=NUMERIC},
+               UPDATED_BY = #{userId, jdbcType=NUMERIC},
+               UPDATED_AT = SYSDATE
+         WHERE RECORD_TARGET_ID = #{recordTargetId, jdbcType=NUMERIC}
     </update>
 
     <delete id="deleteExpiredAbandonedDrafts">

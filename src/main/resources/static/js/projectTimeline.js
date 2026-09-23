@@ -381,10 +381,11 @@ function updateProjectPlanGuide() {
     const config = window.PROJECT_MAIN_CONFIG || {};
     const meta = document.getElementById('projectPlanMeta');
     const period = document.getElementById('projectPlanPeriod');
+    const periodText = period && period.querySelector('.project-plan-guide__period-text');
     const deadline = document.getElementById('projectPlanDeadline');
     const start = parseProjectPlanDate(config.projectStartDate);
     const end = parseProjectPlanDate(config.projectEndDate);
-    if (period) period.textContent = start && end ? formatProjectPlanDate(config.projectStartDate) + ' - ' + formatProjectPlanDate(config.projectEndDate) : '기간 미설정';
+    if (periodText) periodText.textContent = start && end ? formatProjectPlanDate(config.projectStartDate) + ' - ' + formatProjectPlanDate(config.projectEndDate) : '기간 미설정';
     if (deadline) {
         deadline.classList.remove('is-upcoming', 'is-urgent', 'is-today', 'is-overdue', 'is-none');
         if (!end) {

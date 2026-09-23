@@ -2,16 +2,16 @@
 <div class="project-task-modal-overlay" id="projectTaskModal" aria-hidden="true">
     <div class="project-task-modal" role="dialog" aria-modal="true" aria-labelledby="projectTaskModalTitle">
         <div class="project-task-modal-head">
-            <div><h3 id="projectTaskModalTitle">업무 추가</h3></div>
+            <div><h3 id="projectTaskModalTitle">할 일 추가</h3></div>
             <div class="project-task-modal-head-actions">
-                <button type="button" class="project-task-edit-btn" id="projectTaskEditBtn" onclick="enterProjectTaskEditMode()" hidden aria-label="업무 수정" title="수정"><i class="fa-regular fa-pen-to-square"></i></button>
-                <button type="button" class="project-task-delete-btn" id="projectTaskDeleteBtn" onclick="deleteProjectTask()" hidden aria-label="업무 삭제" title="삭제"><i class="fa-regular fa-trash-can"></i></button>
+                <button type="button" class="project-task-edit-btn" id="projectTaskEditBtn" onclick="enterProjectTaskEditMode()" hidden aria-label="할 일 수정" title="수정"><i class="fa-regular fa-pen-to-square"></i></button>
+                <button type="button" class="project-task-delete-btn" id="projectTaskDeleteBtn" onclick="deleteProjectTask()" hidden aria-label="할 일 삭제" title="삭제"><i class="fa-regular fa-trash-can"></i></button>
                 <button type="button" class="project-task-close-btn" onclick="closeProjectTaskModal()" aria-label="닫기">&times;</button>
             </div>
         </div>
         <section id="projectTaskDetailView" class="project-task-detail" hidden>
             <div class="project-task-detail__item project-task-detail__item--title">
-                <span class="project-task-detail__label">업무명</span>
+                <span class="project-task-detail__label">할 일</span>
                 <div class="project-task-detail__title-row">
                     <strong id="projectTaskDetailTitle" class="project-task-detail__title">-</strong>
                     <span id="projectTaskDetailStatus" class="project-task-detail__status">-</span>
@@ -45,7 +45,7 @@
         </section>
         <form id="projectTaskForm" class="project-task-form" onsubmit="submitProjectTask(event)">
             <input type="hidden" id="projectTaskId">
-            <label class="project-task-field project-task-field-wide"><span>업무명</span><input type="text" id="projectTaskTitle" maxlength="200" required placeholder="업무 내용을 명확하게 입력하세요"></label>
+            <label class="project-task-field project-task-field-wide"><span>할 일</span><input type="text" id="projectTaskTitle" maxlength="200" required placeholder="할 일을 입력하세요"></label>
             <div class="project-task-field project-task-field-wide project-task-assignee-field">
                 <span>담당자</span>
                 <button type="button" class="project-task-assignee-summary" id="projectTaskAssigneeSummary" onclick="openProjectTaskAssigneeSelector()" aria-label="담당자 선택"></button>
@@ -86,8 +86,8 @@
             <div class="project-task-field project-task-field-wide project-task-status-field">
                 <span>상태</span>
                 <input type="hidden" id="projectTaskStatus" value="TODO">
-                <div class="project-task-status-segment" role="radiogroup" aria-label="업무 상태">
-                    <button type="button" class="project-task-status-option is-selected" data-task-status="TODO" role="radio" aria-checked="true"><i class="fa-solid fa-clipboard-list" aria-hidden="true"></i><span>할 일</span></button>
+                <div class="project-task-status-segment" role="radiogroup" aria-label="할 일 상태">
+                    <button type="button" class="project-task-status-option is-selected" data-task-status="TODO" role="radio" aria-checked="true"><i class="fa-solid fa-clipboard-list" aria-hidden="true"></i><span>예정</span></button>
                     <button type="button" class="project-task-status-option" data-task-status="IN_PROGRESS" role="radio" aria-checked="false"><i class="fa-regular fa-circle-play" aria-hidden="true"></i><span>진행 중</span></button>
                     <button type="button" class="project-task-status-option" data-task-status="DONE" role="radio" aria-checked="false"><i class="fa-regular fa-circle-check" aria-hidden="true"></i><span>완료</span></button>
                 </div>

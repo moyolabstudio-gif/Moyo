@@ -4452,3 +4452,289 @@ body.moyo-app-sidebar-enabled .workspace-community-container .workspace-member-h
         z-index: 1;
     }
 }
+
+
+/* collaboration activity indicators */
+.moyo-collab-activity-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 24px;
+    padding: 3px 9px;
+    border: 1px solid rgba(45, 199, 184, .28);
+    border-radius: 999px;
+    background: rgba(45, 199, 184, .10);
+    color: #218b81;
+    font: inherit;
+    font-size: 11px;
+    font-weight: 800;
+    line-height: 1;
+    cursor: pointer;
+}
+.moyo-collab-activity-badge[hidden] { display: none !important; }
+.moyo-collab-activity-badge:hover { background: rgba(45, 199, 184, .17); }
+.workspace-recent-activity-item.is-collab-focus {
+    outline: 2px solid rgba(45, 199, 184, .48);
+    outline-offset: -2px;
+    background: rgba(45, 199, 184, .07) !important;
+}
+
+
+/* =====================================================================
+   2026-09-21 Group main project widget data enhancement
+   - 리스트와 동일한 유형/접근상태/진행률 데이터 표현
+   - 세부 UI/UX는 후속 디테일 패스에서 조정
+   ===================================================================== */
+.workspace-community-container .workspace-project-quick-type {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.workspace-community-container .workspace-project-quick-type > i {
+    width: 13px;
+    text-align: center;
+    color: #7358e8;
+}
+
+.workspace-community-container .workspace-project-quick-access {
+    display: inline-flex;
+    align-items: center;
+    min-height: 20px;
+    padding: 0 7px;
+    border: 1px solid #dfe6ef;
+    border-radius: 999px;
+    color: #64748b;
+    background: #f8fafc;
+    font-size: 10px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.workspace-community-container .workspace-project-quick-access.is-MANAGE {
+    color: #6252c7;
+    border-color: #e0dcfb;
+    background: #f5f3ff;
+}
+
+.workspace-community-container .workspace-project-quick-access.is-PARTICIPANT {
+    color: #2878c9;
+    border-color: #d7e7f8;
+    background: #f2f8ff;
+}
+
+.workspace-community-container .workspace-project-quick-access.is-LOCKED {
+    color: #7b8494;
+    border-color: #e5e7eb;
+    background: #f3f4f6;
+}
+
+.workspace-community-container .workspace-project-quick-progress {
+    margin-top: 10px;
+}
+
+.workspace-community-container .workspace-project-quick-progress-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    color: #7b8799;
+    font-size: 10px;
+}
+
+.workspace-community-container .workspace-project-quick-progress-head strong {
+    color: #5d55c9;
+    font-size: 10px;
+    font-weight: 800;
+}
+
+.workspace-community-container .workspace-project-quick-progress-head strong.is-empty {
+    color: #9aa4b4;
+    font-weight: 600;
+}
+
+.workspace-community-container .workspace-project-quick-progress-track {
+    width: 100%;
+    height: 5px;
+    margin-top: 5px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: #edf1f6;
+}
+
+.workspace-community-container .workspace-project-quick-progress-track > span {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: var(--moyo-primary-gradient, linear-gradient(135deg, #39CDB5 0%, #4A90E2 54%, #7358E8 100%));
+}
+
+.workspace-community-container .workspace-project-quick-card.is-locked {
+    cursor: not-allowed;
+    background: #fbfcfe;
+}
+
+.workspace-community-container .workspace-project-quick-card.is-locked:hover {
+    transform: none;
+    box-shadow: none;
+}
+
+.workspace-community-container .workspace-project-quick-card.is-locked .workspace-project-quick-enter {
+    color: #8a94a6;
+}
+
+
+/* =====================================================================
+   프로젝트 바로가기 D-day
+   - 기간은 절대 날짜, D-day는 종료일까지 남은 상대 시간으로 한 행에서 읽힌다.
+   - 버튼처럼 보이지 않도록 pill 배경 없이 브랜드 텍스트만 사용한다.
+   ===================================================================== */
+.workspace-community-container .workspace-project-quick-period dd {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+}
+
+.workspace-community-container .workspace-project-quick-period-date {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.workspace-community-container .workspace-project-quick-dday {
+    flex: 0 0 auto;
+    padding-left: 10px;
+    border-left: 1px solid #dbe5f0;
+    background-image: linear-gradient(135deg, #39CDB5 0%, #4A90E2 54%, #7358E8 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+    font-size: 12px;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: 0;
+}
+
+@media (max-width: 420px) {
+    .workspace-community-container .workspace-project-quick-period dd {
+        gap: 7px;
+    }
+
+    .workspace-community-container .workspace-project-quick-dday {
+        padding-left: 7px;
+    }
+}
+
+
+/* =====================================================================
+   2026-09-22 프로젝트 바로가기 카드 진입 아이콘
+   - 카드 상단 상태/유형/권한 칩과 같은 행의 우측 끝에 배치
+   - 카드 전체 클릭을 유지하고 아이콘은 진입 힌트만 제공
+   - D-Day는 MOYO 민트→블루→보라 그라데이션 텍스트 유지
+   ===================================================================== */
+.workspace-community-container .workspace-project-quick-card {
+    cursor: pointer;
+}
+
+.workspace-community-container .workspace-project-quick-badges {
+    padding-right: 0 !important;
+}
+
+.workspace-community-container .workspace-project-quick-open-icon {
+    position: static !important;
+    margin-left: auto;
+    flex: 0 0 24px;
+    width: 24px;
+    height: 21px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    border-radius: 7px;
+    background: transparent;
+    color: #7d8da3;
+    font-size: 11px;
+    line-height: 1;
+    pointer-events: none;
+    transition: color .16s ease, background-color .16s ease, transform .16s ease;
+}
+
+.workspace-community-container .workspace-project-quick-card:hover
+.workspace-project-quick-open-icon {
+    color: #357fcf;
+    background: rgba(74, 144, 226, .08);
+    transform: translateX(2px);
+}
+
+.workspace-community-container .workspace-project-quick-open-icon.is-locked {
+    color: #9aa4b4;
+}
+
+.workspace-community-container .workspace-project-quick-card.is-locked
+.workspace-project-quick-open-icon {
+    background: transparent;
+    transform: none;
+}
+
+@media (max-width: 560px) {
+    .workspace-community-container .workspace-project-quick-open-icon {
+        flex-basis: 22px;
+        width: 22px;
+        height: 21px;
+    }
+}
+
+/* Project quick card - compact leader profile */
+.workspace-community-container .workspace-project-quick-leader {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    min-width: 0;
+}
+
+.workspace-community-container .workspace-project-quick-leader-avatar {
+    position: relative;
+    width: 19px;
+    height: 19px;
+    flex: 0 0 19px;
+    display: inline-grid;
+    place-items: center;
+    overflow: hidden;
+    border: 1px solid #dbe7f5;
+    border-radius: 50%;
+    background: transparent;
+    color: #5f6f85;
+    font-size: 9px;
+    font-weight: 800;
+    line-height: 1;
+}
+
+.workspace-community-container .workspace-project-quick-leader-avatar > img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: inherit;
+    background: transparent;
+}
+
+.workspace-community-container .workspace-project-quick-leader-avatar.has-image .workspace-project-quick-leader-initial {
+    display: none;
+}
+
+.workspace-community-container .workspace-project-quick-leader-avatar.is-default .workspace-project-quick-leader-initial {
+    display: grid;
+    place-items: center;
+}
+
+.workspace-community-container .workspace-project-quick-leader-name {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+

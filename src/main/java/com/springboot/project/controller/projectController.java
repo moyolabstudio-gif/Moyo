@@ -7,9 +7,13 @@ import java.util.Map;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.Locale;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeParseException;
+
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpStatus;
@@ -40,6 +44,9 @@ import com.springboot.project.service.IprojectService;
 import com.springboot.project.service.IprojectAuthorizationService;
 import com.springboot.project.service.IworkspaceService;
 import com.springboot.project.service.InoteService;
+import com.springboot.project.service.CollaborationActivityService;
+import com.springboot.project.service.ProjectPolicy;
+import com.springboot.project.service.ProjectTypeCatalog;
 
 import jakarta.servlet.http.HttpSession;
 
@@ -52,17 +59,23 @@ public class projectController {
     private final IworkspaceService workspaceService;
     private final IworkspaceDAO workspaceDAO;
     private final InoteService noteService;
+    private final CollaborationActivityService collaborationActivityService;
+    private final ObjectMapper objectMapper;
 
     public projectController(IprojectService projectService,
                              IprojectAuthorizationService projectAuthorizationService,
                              IworkspaceService workspaceService,
                              IworkspaceDAO workspaceDAO,
-                             InoteService noteService) {
+                             InoteService noteService,
+                             CollaborationActivityService collaborationActivityService,
+                             ObjectMapper objectMapper) {
         this.projectService = projectService;
         this.projectAuthorizationService = projectAuthorizationService;
         this.workspaceService = workspaceService;
         this.workspaceDAO = workspaceDAO;
         this.noteService = noteService;
+        this.collaborationActivityService = collaborationActivityService;
+        this.objectMapper = objectMapper;
     }
 
     @GetMapping("/create")
@@ -125,6 +138,7 @@ public class projectController {
         model.addAttribute("isWorkspaceOwner", isWorkspaceOwner);
         model.addAttribute("isWorkspaceAdmin", isWorkspaceAdmin);
         model.addAttribute("canCreateGroupProject", canCreateGroupProject);
+        addProjectFormCatalog(model);
         return "project/projectCreate";
     }
 
@@ -160,7 +174,9 @@ public class projectController {
         session.setAttribute("currentWsId", wsId);
         model.addAttribute("wsId", wsId);
         model.addAttribute("workspace", workspaceService.getWorkspaceDetail(wsId));
-        model.addAttribute("projects", projectService.getProjectListByWorkspaceId(wsId));
+        model.addAttribute("projects", projectService.getProjectListByWorkspaceId(wsId, loginUser.getUserId()));
+        model.addAttribute("canCreateGroupProject",
+                projectAuthorizationService.canCreateGroupProject(wsId, loginUser.getUserId()));
         model.addAttribute("listMode", "GROUP");
         model.addAttribute("personalMode", false);
         return "project/projectList";
@@ -279,8 +295,11 @@ public class projectController {
         model.addAttribute("projectLinks", projectService.getProjectLinks(projId));
         model.addAttribute("projId", projId);
         model.addAttribute("wsId", wsId);
+        boolean projectReadOnly =
+                projectAuthorizationService.isDeletePending(projectDetail)
+                || projectAuthorizationService.isProjectReadOnly(projId, loginUser.getUserId());
         boolean canManageProject =
-                projectAuthorizationService.canManageProject(projId, loginUser.getUserId());
+                !projectReadOnly && projectAuthorizationService.canManageProject(projId, loginUser.getUserId());
 
         boolean isProjectLeader = projectDetail.getLeaderId() != null
                 && projectDetail.getLeaderId().equals(loginUser.getUserId());
@@ -305,16 +324,21 @@ public class projectController {
         }
 
         model.addAttribute("projectMemberList", projectMemberList);
+        if (projectReadOnly) {
+            currentProjectRole = "READ_ONLY";
+        }
+
         model.addAttribute("taskSummary", taskSummary);
         model.addAttribute("canManageProject", canManageProject);
+        model.addAttribute("projectReadOnly", projectReadOnly);
         model.addAttribute("currentProjectRole", currentProjectRole);
 
-        // 프로젝트 계획 기능 생성 상태는 데이터 건수가 아니라 서버 설정으로 판단한다.
-        projectPlanFeatureDTO planFeature = projectService.getOrCreateProjectPlanFeature(projId);
+        // 메인 조회는 읽기 동작이다. 설정 row가 없더라도 여기서 DB를 생성하지 않는다.
+        projectPlanFeatureDTO planFeature = projectService.getProjectPlanFeature(projId);
         model.addAttribute("projectPlanFeature", planFeature);
-        model.addAttribute("hasGanttPlan", "Y".equals(planFeature.getPeriodEnabledYn()));
-        model.addAttribute("hasTimePlan", "Y".equals(planFeature.getTimeEnabledYn()));
-        model.addAttribute("hasWeeklyPlan", "Y".equals(planFeature.getWeeklyEnabledYn()));
+        model.addAttribute("hasGanttPlan", planFeature != null && "Y".equals(planFeature.getPeriodEnabledYn()));
+        model.addAttribute("hasTimePlan", planFeature != null && "Y".equals(planFeature.getTimeEnabledYn()));
+        model.addAttribute("hasWeeklyPlan", planFeature != null && "Y".equals(planFeature.getWeeklyEnabledYn()));
 
         List<com.springboot.project.dto.noteDTO> mainNoteSummaries = noteService.getNoteListPage(
                 "PROJ", wsId, projId, loginUser.getUserId(), null, false, null, null, 0, 3);
@@ -376,6 +400,19 @@ public class projectController {
 
         boolean groupProject =
                 "GROUP".equalsIgnoreCase(projectDetail.getProjScope());
+
+        String normalizedProjectType = ProjectPolicy.normalizeType(
+                projectDetail.getProjCategory() == null || projectDetail.getProjCategory().isBlank()
+                        ? projectDetail.getProjType()
+                        : projectDetail.getProjCategory());
+        projectDetail.setProjType(normalizedProjectType);
+        projectDetail.setProjCategory(normalizedProjectType);
+        projectDetail.setProjIcon(ProjectPolicy.normalizeIcon(projectDetail.getProjIcon(), normalizedProjectType));
+        projectDetail.setAccessScope(ProjectPolicy.normalizeAccessScope(projectDetail.getAccessScope(), projectDetail.getProjScope()));
+        projectDetail.setPeriodEnabledYn(
+                projectDetail.getStartDate() != null && !projectDetail.getStartDate().isBlank()
+                        && projectDetail.getEndDate() != null && !projectDetail.getEndDate().isBlank()
+                        ? "Y" : "N");
         String currentProjectRole = isProjectLeader
                 ? "LEADER"
                 : (groupProject ? "GROUP_MEMBER" : "OWNER");
@@ -421,6 +458,7 @@ public class projectController {
         model.addAttribute("currentProjectRole", currentProjectRole);
         model.addAttribute("groupProject", groupProject);
         model.addAttribute("currentUserId", loginUser.getUserId());
+        addProjectFormCatalog(model);
 
         return "project/projectSettings";
     }
@@ -438,7 +476,8 @@ public class projectController {
         projectRequestDTO project = loginUser == null ? null
                 : projectAuthorizationService.getAccessibleProject(projId, wsId, loginUser.getUserId());
         if (project == null || !projectAuthorizationService.canManageProject(projId, loginUser.getUserId())
-                || !"GROUP".equalsIgnoreCase(project.getProjScope())) {
+                || !"GROUP".equalsIgnoreCase(project.getProjScope())
+                || projectAuthorizationService.isDeletePending(project)) {
             return List.of();
         }
         return projectService.getAssignableMembers(project.getWsId(), projId);
@@ -465,6 +504,9 @@ public class projectController {
         }
         if (!"GROUP".equalsIgnoreCase(project.getProjScope())) {
             return "GROUP_PROJECT_ONLY";
+        }
+        if (projectAuthorizationService.isDeletePending(project)) {
+            return "PROJECT_UNAVAILABLE";
         }
         if (userIds == null || userIds.isEmpty()) {
             return "INVALID_MEMBER";
@@ -502,6 +544,12 @@ public class projectController {
         if (project == null) {
             return "PROJECT_NOT_FOUND";
         }
+        if (!"GROUP".equalsIgnoreCase(project.getProjScope())) {
+            return "GROUP_PROJECT_ONLY";
+        }
+        if (projectAuthorizationService.isDeletePending(project)) {
+            return "PROJECT_UNAVAILABLE";
+        }
 
         // 팀장 권한 위임은 현재 팀장만 가능하다.
         if (!projectAuthorizationService.isProjectLeader(projId, loginUser.getUserId())) {
@@ -536,6 +584,12 @@ public class projectController {
                 "LEADER"
         );
 
+        if (result) {
+            collaborationActivityService.record(
+                    "PROJECT", project.getWsId(), projId, loginUser.getUserId(),
+                    "MEMBER_LEADER_TRANSFER", "MEMBER", String.valueOf(newLeaderId),
+                    project.getProjName(), "프로젝트 팀장을 위임했어요.", "/project/api/transfer-leader");
+        }
         return result ? "SUCCESS" : "FAIL";
     }
 
@@ -551,17 +605,17 @@ public class projectController {
             return "LOGIN_FAIL";
         }
 
-        if (!projectAuthorizationService.canManageProject(projId, loginUser.getUserId())) {
-            return "NO_PERMISSION";
-        }
-
-        projectRequestDTO project = projectService.getProjectById(projId);
-        if (project != null && project.getLeaderId() != null && project.getLeaderId().equals(userId)) {
-            return "CANNOT_REMOVE_LEADER";
-        }
-
-        boolean result = projectService.removeProjectMember(projId, userId);
-        return result ? "SUCCESS" : "FAIL";
+        String result = projectService.removeProjectMembers(
+                projId, loginUser.getUserId(), List.of(userId));
+        return switch (result) {
+            case "success" -> "SUCCESS";
+            case "leader_protected" -> "CANNOT_REMOVE_LEADER";
+            case "self_remove_locked" -> "SELF_REMOVE_LOCKED";
+            case "forbidden" -> "NO_PERMISSION";
+            case "project_unavailable" -> "PROJECT_UNAVAILABLE";
+            case "member_not_found" -> "MEMBER_NOT_FOUND";
+            default -> "FAIL";
+        };
     }
 @GetMapping("/api/tasks")
     @ResponseBody
@@ -572,7 +626,78 @@ public class projectController {
         }
         return projectService.getProjectTasks(projId);
     }
+@GetMapping("/api/task-indicators")
+    @ResponseBody
+    public List<Map<String, Object>> getTaskIndicators(@RequestParam("projId") Long projId, HttpSession session) {
+        usersDto loginUser = (usersDto) session.getAttribute("user");
+        if (loginUser == null || projectAuthorizationService.getAccessibleProject(projId, null, loginUser.getUserId()) == null) {
+            return List.of();
+        }
+        return collaborationActivityService.taskIndicators(projId, loginUser.getUserId());
+    }
     
+    @PostMapping("/api/task-read")
+    @ResponseBody
+    public Map<String, Object> markTaskRead(@RequestParam("taskId") Long taskId, HttpSession session) {
+        usersDto loginUser = (usersDto) session.getAttribute("user");
+        if (loginUser == null || taskId == null) return Map.of("success", false);
+        Map<String, Object> task = projectService.getTaskDetail(taskId);
+        Long projId = task == null ? null : toLong(getMapValueIgnoreCase(task, "PROJ_ID"));
+        if (projId == null || projectAuthorizationService.getAccessibleProject(projId, null, loginUser.getUserId()) == null) {
+            return Map.of("success", false);
+        }
+        collaborationActivityService.markTaskRead(projId, taskId, loginUser.getUserId());
+        return Map.of("success", true);
+    }
+
+    @GetMapping("/api/task-record-unread-items")
+    @ResponseBody
+    public List<Long> getTaskRecordUnreadItems(@RequestParam("taskId") Long taskId,
+                                                @RequestParam("recordType") String recordType,
+                                                HttpSession session) {
+        usersDto loginUser = (usersDto) session.getAttribute("user");
+        if (loginUser == null || taskId == null) return List.of();
+        Map<String, Object> task = projectService.getTaskDetail(taskId);
+        Long projId = task == null ? null : toLong(getMapValueIgnoreCase(task, "PROJ_ID"));
+        if (projId == null || projectAuthorizationService.getAccessibleProject(projId, null, loginUser.getUserId()) == null) {
+            return List.of();
+        }
+        return collaborationActivityService.unreadTaskRecordItemIds(projId, taskId, loginUser.getUserId(), recordType);
+    }
+
+    @PostMapping("/api/task-record-read")
+    @ResponseBody
+    public Map<String, Object> markTaskRecordRead(@RequestParam("taskId") Long taskId,
+                                                   @RequestParam("recordType") String recordType,
+                                                   HttpSession session) {
+        usersDto loginUser = (usersDto) session.getAttribute("user");
+        if (loginUser == null || taskId == null) return Map.of("success", false);
+        Map<String, Object> task = projectService.getTaskDetail(taskId);
+        Long projId = task == null ? null : toLong(getMapValueIgnoreCase(task, "PROJ_ID"));
+        if (projId == null || projectAuthorizationService.getAccessibleProject(projId, null, loginUser.getUserId()) == null) {
+            return Map.of("success", false);
+        }
+        collaborationActivityService.markTaskRecordRead(projId, taskId, loginUser.getUserId(), recordType);
+        return Map.of("success", true);
+    }
+
+    @PostMapping("/api/task-record-item-read")
+    @ResponseBody
+    public Map<String, Object> markTaskRecordItemRead(@RequestParam("taskId") Long taskId,
+                                                       @RequestParam("recordItemId") Long recordItemId,
+                                                       HttpSession session) {
+        usersDto loginUser = (usersDto) session.getAttribute("user");
+        if (loginUser == null || taskId == null || recordItemId == null) return Map.of("success", false);
+        Map<String, Object> task = projectService.getTaskDetail(taskId);
+        Long projId = task == null ? null : toLong(getMapValueIgnoreCase(task, "PROJ_ID"));
+        if (projId == null || projectAuthorizationService.getAccessibleProject(projId, null, loginUser.getUserId()) == null) {
+            return Map.of("success", false);
+        }
+        boolean success = collaborationActivityService.markTaskRecordItemRead(
+                projId, taskId, loginUser.getUserId(), recordItemId);
+        return Map.of("success", success);
+    }
+
     @PostMapping("/api/add-task")
     @ResponseBody
     public String addTask(
@@ -600,12 +725,11 @@ public class projectController {
         }
 
         projectRequestDTO project = projectAuthorizationService.getAccessibleProject(projId, null, loginUser.getUserId());
-        if (project == null) {
+        if (project == null || !projectAuthorizationService.canModifyProjectContent(projId, loginUser.getUserId())) {
             return "NO_PERMISSION";
         }
-        if (!projectAuthorizationService.canManageProject(projId, loginUser.getUserId())) {
-            return "NO_PERMISSION";
-        }
+        // 프로젝트 참여 멤버만 업무를 생성할 수 있다. READ_ONLY 사용자는 조회만 가능하다.
+        // 전체 업무 수정/삭제 권한은 기존 관리자 권한 정책을 그대로 유지한다.
         String taskValidation = validateTaskInput(project, title, startDate, endDate, status, useTime, startTime, endTime);
         if (taskValidation != null) {
             return taskValidation;
@@ -626,7 +750,7 @@ public class projectController {
             endTime = null;
         }
 
-        boolean result = projectService.addTask(
+        Long taskId = projectService.addTask(
             projId,
             normalizedAssigneeIds,
             loginUser.getUserId(),
@@ -643,7 +767,20 @@ public class projectController {
             recordVisibility
         );
 
-        return result ? "SUCCESS" : "FAIL";
+        if (taskId == null) {
+            return "FAIL";
+        }
+
+        recordTaskActivity(
+                project,
+                loginUser.getUserId(),
+                "TASK_CREATE",
+                taskId,
+                title.trim(),
+                "새 업무를 등록했어요.",
+                "/project/api/add-task"
+        );
+        return "SUCCESS";
     }
     @PostMapping("/api/add-schedule")
     @ResponseBody
@@ -848,6 +985,9 @@ public class projectController {
         Long projId = toLong(getMapValueIgnoreCase(task, "PROJ_ID"));
         Long currentTaskUserId = toLong(getMapValueIgnoreCase(task, "USER_ID"));
 
+        if (!projectAuthorizationService.canModifyProjectContent(projId, loginUser.getUserId())) {
+            return "NO_PERMISSION";
+        }
         boolean isAdmin = projectAuthorizationService.canManageProject(projId, loginUser.getUserId());
 
         if (!isAdmin) {
@@ -881,6 +1021,21 @@ public class projectController {
             endTime = null;
         }
 
+        boolean assigneeChanged = !taskAssigneeIds(task).equals(new LinkedHashSet<>(normalizedAssigneeIds));
+        boolean statusChanged = !sameText(getMapValueIgnoreCase(task, "STATUS"), status);
+        boolean contentChanged = taskContentChanged(
+                task,
+                title,
+                startDate,
+                endDate,
+                taskUseTime ? "Y" : "N",
+                startTime,
+                endTime,
+                sortOrder,
+                recordEnabledYn,
+                recordVisibility
+        );
+
         boolean result = projectService.updateTask(
                 taskId,
                 title.trim(),
@@ -898,7 +1053,45 @@ public class projectController {
                 recordVisibility
         );
 
-        return result ? "SUCCESS" : "FAIL";
+        if (!result) {
+            return "FAIL";
+        }
+
+        if (assigneeChanged || statusChanged || contentChanged) {
+            String activityType;
+            String detail;
+
+            if (assigneeChanged && !statusChanged && !contentChanged) {
+                activityType = "TASK_ASSIGNEE";
+                detail = "업무 담당자를 변경했어요.";
+            } else if (statusChanged && !assigneeChanged && !contentChanged) {
+                activityType = "TASK_STATUS";
+                detail = "업무 상태를 " + taskStatusLabel(status) + "으로 변경했어요.";
+            } else {
+                activityType = "TASK_UPDATE";
+                if (assigneeChanged && statusChanged) {
+                    detail = "업무 내용, 담당자와 상태를 수정했어요.";
+                } else if (assigneeChanged) {
+                    detail = "업무 내용과 담당자를 수정했어요.";
+                } else if (statusChanged) {
+                    detail = "업무 내용과 상태를 수정했어요.";
+                } else {
+                    detail = "업무 내용을 수정했어요.";
+                }
+            }
+
+            recordTaskActivity(
+                    taskProject,
+                    loginUser.getUserId(),
+                    activityType,
+                    taskId,
+                    title.trim(),
+                    detail,
+                    "/project/api/update-task"
+            );
+        }
+
+        return "SUCCESS";
     }
 
 
@@ -918,11 +1111,27 @@ public class projectController {
 
         Long projId = toLong(getMapValueIgnoreCase(task, "PROJ_ID"));
         projectRequestDTO project = projId == null ? null : projectAuthorizationService.getAccessibleProject(projId, null, loginUser.getUserId());
-        if (project == null || !projectAuthorizationService.canManageProject(projId, loginUser.getUserId())) {
+        if (project == null
+                || !projectAuthorizationService.canModifyProjectContent(projId, loginUser.getUserId())
+                || !projectAuthorizationService.canManageProject(projId, loginUser.getUserId())) {
             return "NO_PERMISSION";
         }
+        String taskTitle = textValue(getMapValueIgnoreCase(task, "TITLE"));
         boolean isDeleted = projectService.deleteTask(taskId);
-        return isDeleted ? "SUCCESS" : "FAIL";
+        if (!isDeleted) {
+            return "FAIL";
+        }
+
+        recordTaskActivity(
+                project,
+                loginUser.getUserId(),
+                "TASK_DELETE",
+                taskId,
+                taskTitle,
+                "업무를 삭제했어요.",
+                "/project/api/delete-task"
+        );
+        return "SUCCESS";
     }
     @PostMapping("/api/update-task-status")
     @ResponseBody
@@ -938,7 +1147,7 @@ public class projectController {
         Map<String, Object> task = projectService.getTaskDetail(taskId);
         Long projId = task == null ? null : toLong(getMapValueIgnoreCase(task, "PROJ_ID"));
         projectRequestDTO project = projId == null ? null : projectAuthorizationService.getAccessibleProject(projId, null, loginUser.getUserId());
-        if (project == null) {
+        if (project == null || !projectAuthorizationService.canModifyProjectContent(projId, loginUser.getUserId())) {
             return "NO_PERMISSION";
         }
         if (!projectAuthorizationService.canManageProject(projId, loginUser.getUserId())
@@ -949,10 +1158,143 @@ public class projectController {
             return "INVALID_STATUS";
         }
 
-        boolean result = projectService.updateTaskStatus(taskId, status.toUpperCase());
+        String normalizedStatus = status.trim().toUpperCase();
+        String previousStatus = textValue(getMapValueIgnoreCase(task, "STATUS")).toUpperCase();
+        boolean result = projectService.updateTaskStatus(taskId, normalizedStatus);
 
-        return result ? "SUCCESS" : "FAIL";
+        if (!result) {
+            return "FAIL";
+        }
+
+        if (!previousStatus.equals(normalizedStatus)) {
+            recordTaskActivity(
+                    project,
+                    loginUser.getUserId(),
+                    "TASK_STATUS",
+                    taskId,
+                    textValue(getMapValueIgnoreCase(task, "TITLE")),
+                    "업무 상태를 " + taskStatusLabel(normalizedStatus) + "으로 변경했어요.",
+                    "/project/api/update-task-status"
+            );
+        }
+
+        return "SUCCESS";
     }
+    private void recordProjectPlanActivity(projectRequestDTO project,
+                                           Long actorUserId,
+                                           String activityType,
+                                           String targetType,
+                                           Long targetId,
+                                           String title,
+                                           String detail) {
+        if (project == null || actorUserId == null || targetId == null) return;
+        collaborationActivityService.record(
+                "PROJECT",
+                project.getWsId(),
+                project.getProjId(),
+                actorUserId,
+                activityType,
+                targetType,
+                String.valueOf(targetId),
+                title,
+                detail,
+                "/project/api/" + targetType.toLowerCase(Locale.ROOT).replace('_', '-')
+        );
+    }
+
+    private void recordTaskActivity(projectRequestDTO project,
+                                    Long actorUserId,
+                                    String activityType,
+                                    Long taskId,
+                                    String title,
+                                    String detail,
+                                    String requestUri) {
+        if (project == null || actorUserId == null || taskId == null) {
+            return;
+        }
+        collaborationActivityService.record(
+                "PROJECT",
+                project.getWsId(),
+                project.getProjId(),
+                actorUserId,
+                activityType,
+                "TASK",
+                String.valueOf(taskId),
+                title,
+                detail,
+                requestUri
+        );
+    }
+
+    private LinkedHashSet<Long> taskAssigneeIds(Map<String, Object> task) {
+        LinkedHashSet<Long> ids = new LinkedHashSet<>();
+        if (task == null) return ids;
+
+        Object assigneesValue = task.get("assignees");
+        if (assigneesValue instanceof List<?> assignees) {
+            for (Object value : assignees) {
+                if (!(value instanceof Map<?, ?> assignee)) continue;
+                Long userId = toLong(assignee.get("userId"));
+                if (userId != null) ids.add(userId);
+            }
+        }
+
+        if (ids.isEmpty()) {
+            Long legacyUserId = toLong(getMapValueIgnoreCase(task, "USER_ID"));
+            if (legacyUserId != null) ids.add(legacyUserId);
+        }
+        return ids;
+    }
+
+    private boolean taskContentChanged(Map<String, Object> task,
+                                       String title,
+                                       String startDate,
+                                       String endDate,
+                                       String useTime,
+                                       String startTime,
+                                       String endTime,
+                                       Integer sortOrder,
+                                       String recordEnabledYn,
+                                       String recordVisibility) {
+        if (!sameText(getMapValueIgnoreCase(task, "TITLE"), title)) return true;
+        if (!sameText(getMapValueIgnoreCase(task, "START_DATE"), startDate)) return true;
+        if (!sameText(getMapValueIgnoreCase(task, "END_DATE"), endDate)) return true;
+        if (!sameText(getMapValueIgnoreCase(task, "USE_TIME"), useTime)) return true;
+
+        if ("Y".equalsIgnoreCase(textValue(useTime))) {
+            if (!sameText(getMapValueIgnoreCase(task, "START_TIME"), startTime)) return true;
+            if (!sameText(getMapValueIgnoreCase(task, "END_TIME"), endTime)) return true;
+        }
+
+        if (!sameText(getMapValueIgnoreCase(task, "RECORD_ENABLED_YN"), recordEnabledYn)) return true;
+        if (!sameText(getMapValueIgnoreCase(task, "RECORD_VISIBILITY"), recordVisibility)) return true;
+
+        if (sortOrder != null) {
+            Long oldSortOrder = toLong(getMapValueIgnoreCase(task, "SORT_ORDER"));
+            if (oldSortOrder == null || oldSortOrder.longValue() != sortOrder.longValue()) return true;
+        }
+        return false;
+    }
+
+    private boolean sameText(Object left, Object right) {
+        return textValue(left).equalsIgnoreCase(textValue(right));
+    }
+
+    private String textValue(Object value) {
+        return value == null ? "" : String.valueOf(value).trim();
+    }
+
+    private String taskStatusLabel(String status) {
+        String normalized = textValue(status).toUpperCase();
+        return switch (normalized) {
+            case "TODO" -> "할 일";
+            case "IN_PROGRESS" -> "진행 중";
+            case "DONE" -> "완료";
+            case "DELAYED" -> "지연";
+            default -> normalized.isBlank() ? "변경된 상태" : normalized;
+        };
+    }
+
     private List<Long> normalizeTaskAssigneeIds(List<Long> assigneeIds, Long legacyAssignedUserId) {
         LinkedHashSet<Long> uniqueIds = new LinkedHashSet<>();
         if (assigneeIds != null) {
@@ -1267,9 +1609,13 @@ public class projectController {
         usersDto loginUser = (usersDto) session.getAttribute("user");
         if (loginUser == null) return "LOGIN_REQUIRED";
 
-        if (projectAuthorizationService.getAccessibleProject(
-                projId, null, loginUser.getUserId()) == null) {
+        projectRequestDTO accessibleProject = projectAuthorizationService.getAccessibleProject(
+                projId, null, loginUser.getUserId());
+        if (accessibleProject == null) {
             return "NO_PERMISSION";
+        }
+        if (projectAuthorizationService.isDeletePending(accessibleProject)) {
+            return "PROJECT_UNAVAILABLE";
         }
 
         // 프로필 모달 저장 API도 본인 프로젝트 직책 수정만 허용한다.
@@ -1300,6 +1646,49 @@ public class projectController {
     }
     
     
+    @PostMapping("/api/update-members")
+    @ResponseBody
+    public String updateProjectMembers(
+            @RequestParam("projId") Long projId,
+            @RequestParam("changes") String changesJson,
+            HttpSession session) {
+
+        usersDto loginUser = (usersDto) session.getAttribute("user");
+        if (loginUser == null) return "login_required";
+        if (projId == null || changesJson == null || changesJson.isBlank()) return "invalid_request";
+
+        try {
+            List<Map<String, Object>> changes = objectMapper.readValue(
+                    changesJson, new TypeReference<List<Map<String, Object>>>() {});
+            return projectService.updateProjectMembers(projId, loginUser.getUserId(), changes);
+        } catch (Exception e) {
+            return "invalid_request";
+        }
+    }
+
+    @PostMapping("/api/remove-members")
+    @ResponseBody
+    public String removeProjectMembers(
+            @RequestParam("projId") Long projId,
+            @RequestParam("userIds") String userIdsText,
+            HttpSession session) {
+
+        usersDto loginUser = (usersDto) session.getAttribute("user");
+        if (loginUser == null) return "login_required";
+        if (projId == null || userIdsText == null || userIdsText.isBlank()) return "invalid_request";
+
+        try {
+            List<Long> userIds = new ArrayList<>();
+            for (String token : userIdsText.split(",")) {
+                String value = token == null ? "" : token.trim();
+                if (!value.isEmpty()) userIds.add(Long.valueOf(value));
+            }
+            return projectService.removeProjectMembers(projId, loginUser.getUserId(), userIds);
+        } catch (Exception e) {
+            return "invalid_request";
+        }
+    }
+
     @PostMapping("/api/update-member-setting")
     @ResponseBody
     public String updateProjectMemberSetting(
@@ -1344,8 +1733,19 @@ public class projectController {
             safePosition = safePosition.substring(0, 100);
         }
 
-        boolean result = projectService.updateProjectMemberSetting(projId, userId, safePosition, safeRole);
-        return result ? "SUCCESS" : "FAIL";
+        if ("LEADER".equals(safeRole)) {
+            if (projectAuthorizationService.isDeletePending(project)) return "PROJECT_UNAVAILABLE";
+            boolean result = projectService.updateProjectMemberSetting(projId, userId, safePosition, safeRole);
+            return result ? "SUCCESS" : "FAIL";
+        }
+
+        Map<String, Object> change = new HashMap<>();
+        change.put("userId", userId);
+        change.put("role", safeRole);
+        change.put("position", safePosition);
+        String result = projectService.updateProjectMembers(
+                projId, loginUser.getUserId(), List.of(change));
+        return "success".equals(result) ? "SUCCESS" : result.toUpperCase();
     }
 
 
@@ -1386,7 +1786,15 @@ public class projectController {
         if (projectAuthorizationService.getAccessibleProject(projId, null, loginUser.getUserId()) == null) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("status", "FORBIDDEN"));
         }
-        return ResponseEntity.ok(Map.of("status", "OK", "feature", projectService.getOrCreateProjectPlanFeature(projId)));
+        projectPlanFeatureDTO feature = projectService.getProjectPlanFeature(projId);
+        if (feature == null) {
+            feature = new projectPlanFeatureDTO();
+            feature.setProjId(projId);
+            feature.setPeriodEnabledYn("N");
+            feature.setTimeEnabledYn("N");
+            feature.setWeeklyEnabledYn("N");
+        }
+        return ResponseEntity.ok(Map.of("status", "OK", "feature", feature));
     }
 
     @PutMapping("/api/plan-features")
@@ -1521,6 +1929,8 @@ public class projectController {
                 phase.getEditorUserIds(), loginUser.getUserId());
         created.setEditorUserIds(projectService.getProjectPlanEditorUserIds(
                 created.getProjId(), "PERIOD_PLAN", created.getPeriodPlanId()));
+        recordProjectPlanActivity(project, loginUser.getUserId(), "PERIOD_PLAN_CREATE",
+                "PERIOD_PLAN", created.getPeriodPlanId(), created.getTitle(), "기간별 계획을 등록했어요.");
         return phaseSuccess(HttpStatus.CREATED, "SUCCESS", "기간별 계획이 등록되었습니다.", created);
     }
 
@@ -1536,13 +1946,24 @@ public class projectController {
         if (current == null) return phaseError(HttpStatus.NOT_FOUND, "PHASE_NOT_FOUND", "기간별 계획을 찾을 수 없습니다.", null);
         projectRequestDTO project = projectAuthorizationService.getAccessibleProject(current.getProjId(), null, loginUser.getUserId());
         boolean canManagePlan = project != null && projectAuthorizationService.canManageProject(current.getProjId(), loginUser.getUserId());
-        boolean delegatedEditor = project != null && projectService.isProjectPlanEditor(
-                current.getProjId(), "PERIOD_PLAN", periodPlanId, loginUser.getUserId());
+        boolean delegatedEditor = project != null
+                && projectAuthorizationService.canModifyProjectContent(current.getProjId(), loginUser.getUserId())
+                && projectService.isProjectPlanEditor(
+                        current.getProjId(), "PERIOD_PLAN", periodPlanId, loginUser.getUserId());
         if (project == null || (!canManagePlan && !delegatedEditor)) {
             return phaseError(HttpStatus.FORBIDDEN, "NO_PERMISSION", "기간별 계획 수정 권한이 없습니다.", null);
         }
         request.setPeriodPlanId(periodPlanId);
         request.setProjId(current.getProjId());
+        if (request.getRecordEnabledYn() == null || request.getRecordEnabledYn().isBlank()) {
+            request.setRecordEnabledYn(current.getRecordEnabledYn());
+        }
+        if (request.getRecordVisibility() == null || request.getRecordVisibility().isBlank()) {
+            request.setRecordVisibility(current.getRecordVisibility());
+        }
+        if (request.getEditorUserIds() == null) {
+            request.setEditorUserIds(current.getEditorUserIds());
+        }
         String validation = validatePeriodPlanInput(project, request);
         if (validation != null) return phaseValidationError(validation);
         request.setTitle(request.getTitle().trim());
@@ -1555,7 +1976,10 @@ public class projectController {
                     current.getProjId(), "PERIOD_PLAN", periodPlanId,
                     request.getEditorUserIds(), loginUser.getUserId());
         }
-        return phaseSuccess(HttpStatus.OK, "SUCCESS", "기간별 계획이 수정되었습니다.", projectService.getProjectPeriodPlan(periodPlanId));
+        projectPeriodPlanDTO updatedPhase = projectService.getProjectPeriodPlan(periodPlanId);
+        recordProjectPlanActivity(project, loginUser.getUserId(), "PERIOD_PLAN_UPDATE",
+                "PERIOD_PLAN", periodPlanId, updatedPhase == null ? request.getTitle() : updatedPhase.getTitle(), "기간별 계획을 수정했어요.");
+        return phaseSuccess(HttpStatus.OK, "SUCCESS", "기간별 계획이 수정되었습니다.", updatedPhase);
     }
 
     @DeleteMapping("/api/period-plans/{periodPlanId}")
@@ -1573,6 +1997,8 @@ public class projectController {
         }
         boolean deleted = projectService.deleteProjectPeriodPlan(periodPlanId, current.getProjId());
         if (!deleted) return phaseError(HttpStatus.CONFLICT, "DELETE_FAILED", "기간별 계획을 삭제하지 못했습니다.", null);
+        recordProjectPlanActivity(project, loginUser.getUserId(), "PERIOD_PLAN_DELETE",
+                "PERIOD_PLAN", periodPlanId, current.getTitle(), "기간별 계획을 삭제했어요.");
         return phaseSuccess(HttpStatus.OK, "SUCCESS", "기간별 계획이 삭제되었습니다.", null);
     }
 
@@ -1663,6 +2089,8 @@ public class projectController {
                 plan.getEditorUserIds(), loginUser.getUserId());
         created.setEditorUserIds(projectService.getProjectPlanEditorUserIds(
                 created.getProjId(), "TIME_PLAN", created.getTimePlanId()));
+        recordProjectPlanActivity(project, loginUser.getUserId(), "TIME_PLAN_CREATE",
+                "TIME_PLAN", created.getTimePlanId(), created.getTitle(), "시간별 계획을 등록했어요.");
         return phaseSuccess(HttpStatus.CREATED, "SUCCESS", "시간별 계획이 등록되었습니다.", created);
     }
 
@@ -1678,13 +2106,24 @@ public class projectController {
         if (current == null) return phaseError(HttpStatus.NOT_FOUND, "TIME_PLAN_NOT_FOUND", "시간별 계획을 찾을 수 없습니다.", null);
         projectRequestDTO project = projectAuthorizationService.getAccessibleProject(current.getProjId(), null, loginUser.getUserId());
         boolean canManagePlan = project != null && projectAuthorizationService.canManageProject(current.getProjId(), loginUser.getUserId());
-        boolean delegatedEditor = project != null && projectService.isProjectPlanEditor(
-                current.getProjId(), "TIME_PLAN", timePlanId, loginUser.getUserId());
+        boolean delegatedEditor = project != null
+                && projectAuthorizationService.canModifyProjectContent(current.getProjId(), loginUser.getUserId())
+                && projectService.isProjectPlanEditor(
+                        current.getProjId(), "TIME_PLAN", timePlanId, loginUser.getUserId());
         if (project == null || (!canManagePlan && !delegatedEditor)) {
             return phaseError(HttpStatus.FORBIDDEN, "NO_PERMISSION", "시간별 계획 수정 권한이 없습니다.", null);
         }
         request.setTimePlanId(timePlanId);
         request.setProjId(current.getProjId());
+        if (request.getRecordEnabledYn() == null || request.getRecordEnabledYn().isBlank()) {
+            request.setRecordEnabledYn(current.getRecordEnabledYn());
+        }
+        if (request.getRecordVisibility() == null || request.getRecordVisibility().isBlank()) {
+            request.setRecordVisibility(current.getRecordVisibility());
+        }
+        if (request.getEditorUserIds() == null) {
+            request.setEditorUserIds(current.getEditorUserIds());
+        }
         if (request.getSortOrder() == null) {
             request.setSortOrder(current.getSortOrder());
         }
@@ -1700,8 +2139,11 @@ public class projectController {
                     current.getProjId(), "TIME_PLAN", timePlanId,
                     request.getEditorUserIds(), loginUser.getUserId());
         }
+        projectTimePlanDTO updatedTimePlan = projectService.getProjectTimePlan(timePlanId);
+        recordProjectPlanActivity(project, loginUser.getUserId(), "TIME_PLAN_UPDATE",
+                "TIME_PLAN", timePlanId, updatedTimePlan == null ? request.getTitle() : updatedTimePlan.getTitle(), "시간별 계획을 수정했어요.");
         return phaseSuccess(HttpStatus.OK, "SUCCESS", "시간별 계획이 수정되었습니다.",
-                projectService.getProjectTimePlan(timePlanId));
+                updatedTimePlan);
     }
 
     @DeleteMapping("/api/time-plans/{timePlanId}")
@@ -1720,6 +2162,8 @@ public class projectController {
         if (!projectService.deleteProjectTimePlan(timePlanId, current.getProjId())) {
             return phaseError(HttpStatus.CONFLICT, "DELETE_FAILED", "시간별 계획을 삭제하지 못했습니다.", null);
         }
+        recordProjectPlanActivity(project, loginUser.getUserId(), "TIME_PLAN_DELETE",
+                "TIME_PLAN", timePlanId, current.getTitle(), "시간별 계획을 삭제했어요.");
         return phaseSuccess(HttpStatus.OK, "SUCCESS", "시간별 계획이 삭제되었습니다.", null);
     }
 
@@ -1819,6 +2263,8 @@ public class projectController {
                 plan.getEditorUserIds(), loginUser.getUserId());
         created.setEditorUserIds(projectService.getProjectPlanEditorUserIds(
                 created.getProjId(), "WEEKLY_PLAN", created.getWeeklyPlanId()));
+        recordProjectPlanActivity(project, loginUser.getUserId(), "WEEKLY_PLAN_CREATE",
+                "WEEKLY_PLAN", created.getWeeklyPlanId(), created.getTitle(), "주간 계획을 등록했어요.");
         return phaseSuccess(HttpStatus.CREATED, "SUCCESS", "주간 계획이 등록되었습니다.", created);
     }
 
@@ -1834,13 +2280,24 @@ public class projectController {
         if (current == null) return phaseError(HttpStatus.NOT_FOUND, "WEEKLY_PLAN_NOT_FOUND", "주간 계획을 찾을 수 없습니다.", null);
         projectRequestDTO project = projectAuthorizationService.getAccessibleProject(current.getProjId(), null, loginUser.getUserId());
         boolean canManagePlan = project != null && projectAuthorizationService.canManageProject(current.getProjId(), loginUser.getUserId());
-        boolean delegatedEditor = project != null && projectService.isProjectPlanEditor(
-                current.getProjId(), "WEEKLY_PLAN", weeklyPlanId, loginUser.getUserId());
+        boolean delegatedEditor = project != null
+                && projectAuthorizationService.canModifyProjectContent(current.getProjId(), loginUser.getUserId())
+                && projectService.isProjectPlanEditor(
+                        current.getProjId(), "WEEKLY_PLAN", weeklyPlanId, loginUser.getUserId());
         if (project == null || (!canManagePlan && !delegatedEditor)) {
             return phaseError(HttpStatus.FORBIDDEN, "NO_PERMISSION", "주간 계획 수정 권한이 없습니다.", null);
         }
         request.setWeeklyPlanId(weeklyPlanId);
         request.setProjId(current.getProjId());
+        if (request.getRecordEnabledYn() == null || request.getRecordEnabledYn().isBlank()) {
+            request.setRecordEnabledYn(current.getRecordEnabledYn());
+        }
+        if (request.getRecordVisibility() == null || request.getRecordVisibility().isBlank()) {
+            request.setRecordVisibility(current.getRecordVisibility());
+        }
+        if (request.getEditorUserIds() == null) {
+            request.setEditorUserIds(current.getEditorUserIds());
+        }
         String validation = validateWeeklyPlanInput(project, request);
         if (validation != null) return weeklyPlanValidationError(validation);
         normalizeWeeklyPlan(request, project);
@@ -1852,8 +2309,11 @@ public class projectController {
                     current.getProjId(), "WEEKLY_PLAN", weeklyPlanId,
                     request.getEditorUserIds(), loginUser.getUserId());
         }
+        projectWeeklyPlanDTO updatedWeeklyPlan = projectService.getProjectWeeklyPlan(weeklyPlanId);
+        recordProjectPlanActivity(project, loginUser.getUserId(), "WEEKLY_PLAN_UPDATE",
+                "WEEKLY_PLAN", weeklyPlanId, updatedWeeklyPlan == null ? request.getTitle() : updatedWeeklyPlan.getTitle(), "주간 계획을 수정했어요.");
         return phaseSuccess(HttpStatus.OK, "SUCCESS", "주간 계획이 수정되었습니다.",
-                projectService.getProjectWeeklyPlan(weeklyPlanId));
+                updatedWeeklyPlan);
     }
 
     @DeleteMapping("/api/weekly-plans/{weeklyPlanId}")
@@ -1872,6 +2332,8 @@ public class projectController {
         if (!projectService.deleteProjectWeeklyPlan(weeklyPlanId, current.getProjId())) {
             return phaseError(HttpStatus.CONFLICT, "DELETE_FAILED", "주간 계획을 삭제하지 못했습니다.", null);
         }
+        recordProjectPlanActivity(project, loginUser.getUserId(), "WEEKLY_PLAN_DELETE",
+                "WEEKLY_PLAN", weeklyPlanId, current.getTitle(), "주간 계획을 삭제했어요.");
         return phaseSuccess(HttpStatus.OK, "SUCCESS", "주간 계획이 삭제되었습니다.", null);
     }
 
@@ -1970,10 +2432,14 @@ public class projectController {
             return phaseError(HttpStatus.BAD_REQUEST, "INVALID_DATE_RANGE", "종료일은 시작일보다 빠를 수 없습니다.", "endDate");
         }
 
+        boolean hasProjectPeriod = project.getStartDate() != null && !project.getStartDate().isBlank()
+                && project.getEndDate() != null && !project.getEndDate().isBlank();
+
         Set<String> includes;
         if (include == null || include.isBlank()) {
             projectPlanCalendarPrefDTO pref = projectService.getProjectPlanCalendarPref(loginUser.getUserId(), projId);
             includes = new LinkedHashSet<>(Set.of("TASK", "SCHEDULE"));
+            if (hasProjectPeriod) includes.add("PROJECT_PERIOD");
             if ("Y".equalsIgnoreCase(pref.getShowPeriodYn())) includes.add("PHASE");
             if ("Y".equalsIgnoreCase(pref.getShowTimeYn())) includes.add("TIME_PLAN");
             if ("Y".equalsIgnoreCase(pref.getShowWeeklyYn())) includes.add("WEEKLY_PLAN");
@@ -1993,7 +2459,8 @@ public class projectController {
         List<projectPeriodPlanDTO> phases = projectService.getProjectPeriodPlans(projId, startDate, endDate);
 
         // 기본 프로젝트 기간은 간트 대체 데이터가 전혀 없을 때만 달력 항목으로 노출한다.
-        if ("DEFAULT".equals(projectRangeMode)
+        if (hasProjectPeriod
+                && "DEFAULT".equals(projectRangeMode)
                 && includes.contains("PROJECT_PERIOD")
                 && overlapsCalendarRange(project.getStartDate(), project.getEndDate(), rangeStart, rangeEnd)) {
             Map<String, Object> item = new LinkedHashMap<>();
@@ -2006,6 +2473,8 @@ public class projectController {
             item.put("allDay", true);
             item.put("color", "#7A5CFF");
             item.put("status", project.getStatus());
+            item.put("projectType", ProjectPolicy.normalizeType(project.getProjType()));
+            item.put("projectIcon", ProjectPolicy.normalizeIcon(project.getProjIcon(), project.getProjType()));
             items.add(item);
         }
 
@@ -2140,11 +2609,15 @@ public class projectController {
         data.put("endDate", endDate);
         data.put("projectRangeMode", projectRangeMode);
         data.put("ganttReplacementActive", ganttReplacementActive);
-        data.put("rangeSource", ganttReplacementActive ? "PROJECT_PERIOD_PLAN" : "PROJECT_PERIOD");
-        data.put("projectPeriodVisible", !ganttReplacementActive);
-        data.put("projectPeriod", Map.of(
-                "startDate", project.getStartDate(),
-                "endDate", project.getEndDate()));
+        data.put("rangeSource", ganttReplacementActive ? "PROJECT_PERIOD_PLAN" : (hasProjectPeriod ? "PROJECT_PERIOD" : "NONE"));
+        data.put("projectPeriodVisible", hasProjectPeriod && !ganttReplacementActive);
+        Map<String, Object> projectPeriod = new LinkedHashMap<>();
+        projectPeriod.put("enabled", hasProjectPeriod);
+        projectPeriod.put("startDate", project.getStartDate());
+        projectPeriod.put("endDate", project.getEndDate());
+        data.put("projectPeriod", projectPeriod);
+        data.put("projectType", ProjectPolicy.normalizeType(project.getProjType()));
+        data.put("projectIcon", ProjectPolicy.normalizeIcon(project.getProjIcon(), project.getProjType()));
         data.put("phaseCount", allPhases.size());
         data.put("includes", includes);
         data.put("itemCount", items.size());
@@ -2585,5 +3058,39 @@ private Long toLong(Object value) {
             return fallback;
         }
     }
+
+    private void addProjectFormCatalog(Model model) {
+        Map<String, Map<String, Object>> typeGroupMap = new LinkedHashMap<>();
+        for (ProjectTypeCatalog.TypeDefinition type : ProjectTypeCatalog.types()) {
+            Map<String, Object> group = typeGroupMap.computeIfAbsent(type.groupCode(), key -> {
+                Map<String, Object> value = new LinkedHashMap<>();
+                value.put("code", type.groupCode());
+                value.put("label", type.groupLabel());
+                value.put("types", new ArrayList<Map<String, Object>>());
+                return value;
+            });
+            @SuppressWarnings("unchecked")
+            List<Map<String, Object>> types = (List<Map<String, Object>>) group.get("types");
+            Map<String, Object> option = new LinkedHashMap<>();
+            option.put("code", type.code());
+            option.put("label", type.label());
+            option.put("description", type.description());
+            option.put("defaultIcon", type.defaultIcon());
+            option.put("recommendedIcons", String.join(",", type.recommendedIcons()));
+            types.add(option);
+        }
+
+        List<Map<String, Object>> projectIconOptions = new ArrayList<>();
+        for (ProjectTypeCatalog.IconDefinition icon : ProjectTypeCatalog.icons()) {
+            Map<String, Object> option = new LinkedHashMap<>();
+            option.put("key", icon.key());
+            option.put("label", icon.label());
+            projectIconOptions.add(option);
+        }
+
+        model.addAttribute("projectTypeGroups", new ArrayList<>(typeGroupMap.values()));
+        model.addAttribute("projectIconOptions", projectIconOptions);
+    }
+
 
 }

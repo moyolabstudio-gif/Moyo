@@ -1,0 +1,1028 @@
+/* ========================================================================
+   MOYO Create Shell
+   그룹 / 프로젝트 생성 화면 공통 레이아웃 규칙
+   ======================================================================== */
+
+.moyo-create-page,
+.moyo-create-page *,
+.moyo-create-shell,
+.moyo-create-shell * {
+    box-sizing: border-box;
+}
+
+/* 페이지 배경은 브랜드를 아주 옅게만 사용한다. */
+body:has(.moyo-create-page),
+body:has(.moyo-create-shell) {
+    background: #f7f9fc;
+}
+
+.moyo-create-page,
+.project-create-page:has(.moyo-create-shell) {
+    position: relative;
+}
+
+.moyo-create-page::before,
+.project-create-page:has(.moyo-create-shell)::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background:
+        radial-gradient(circle at 12% 10%, rgba(85, 214, 194, .08), transparent 30%),
+        radial-gradient(circle at 50% 4%, rgba(74, 144, 226, .065), transparent 34%),
+        radial-gradient(circle at 88% 10%, rgba(117, 103, 244, .06), transparent 30%);
+}
+
+/* 공통 컨테이너 */
+.moyo-create-page,
+.moyo-create-shell {
+    width: min(760px, calc(100% - 40px)) !important;
+    margin: 28px auto 48px !important;
+}
+
+.project-create-page {
+    min-height: calc(100vh - 138px) !important;
+    padding: 0 !important;
+    display: block !important;
+    background: transparent !important;
+}
+
+.project-create-page .moyo-create-shell {
+    min-height: 0;
+}
+
+/* 공통 메인 카드 */
+.moyo-create-card {
+    width: 100% !important;
+    padding: 28px 30px 24px !important;
+    overflow: visible !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 22px !important;
+    background: #fff !important;
+    box-shadow: 0 16px 44px rgba(15, 23, 42, .055) !important;
+}
+
+/* 상단 헤더 */
+.moyo-create-header {
+    display: flex !important;
+    align-items: flex-start !important;
+    justify-content: space-between !important;
+    gap: 20px !important;
+    margin: 0 0 22px !important;
+}
+
+.moyo-create-header > .moyo-create-title,
+.moyo-create-header > div:first-child {
+    min-width: 0;
+    flex: 1 1 auto;
+}
+
+.moyo-create-step {
+    display: inline-flex;
+    align-items: center;
+    min-height: 20px;
+    margin: 0 0 5px !important;
+    color: #4a90e2 !important;
+    font-size: 11px !important;
+    font-weight: 900 !important;
+    line-height: 1 !important;
+    letter-spacing: .02em !important;
+}
+
+.moyo-create-title h1,
+.moyo-create-title h2,
+.moyo-create-header h1,
+.moyo-create-header h2 {
+    margin: 0 !important;
+    color: #142033 !important;
+    font-size: 25px !important;
+    font-weight: 900 !important;
+    line-height: 1.22 !important;
+    letter-spacing: -.045em !important;
+}
+
+.moyo-create-title .create-desc,
+.moyo-create-header p {
+    margin: 6px 0 0 !important;
+    color: #7b8798 !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    line-height: 1.5 !important;
+}
+
+.moyo-create-title-actions,
+.project-create-title-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    flex: 0 0 auto;
+}
+
+.moyo-create-back-button,
+#btnCancelTop.moyo-create-back-button {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-width: 76px !important;
+    height: 36px !important;
+    min-height: 36px !important;
+    padding: 0 13px !important;
+    border: 1px solid #dbe3ec !important;
+    border-radius: 10px !important;
+    background: #fff !important;
+    color: #526173 !important;
+    box-shadow: none !important;
+    font-size: 11px !important;
+    font-weight: 800 !important;
+    cursor: pointer;
+    transition: border-color .15s ease, background .15s ease, color .15s ease;
+}
+
+.moyo-create-back-button:hover,
+#btnCancelTop.moyo-create-back-button:hover {
+    border-color: #b9cce0 !important;
+    background: #f8fbff !important;
+    color: #2f76c4 !important;
+}
+
+/* STEP 본문 */
+.moyo-create-panel {
+    min-width: 0;
+}
+
+.moyo-create-panel[hidden] {
+    display: none !important;
+}
+
+/* 하단 액션 영역 */
+.moyo-create-actions {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    gap: 8px !important;
+    margin-top: 20px !important;
+    padding-top: 16px !important;
+    border-top: 1px solid #edf1f5 !important;
+}
+
+.moyo-create-actions button {
+    min-width: 78px !important;
+    min-height: 38px !important;
+    height: 38px !important;
+    padding: 0 16px !important;
+    border-radius: 10px !important;
+    font-size: 12px !important;
+    font-weight: 800 !important;
+}
+
+.moyo-create-actions .primary,
+.moyo-create-actions .create-btn.primary,
+.moyo-create-actions .btn.primary {
+    border: 0 !important;
+    color: #fff !important;
+    background: linear-gradient(135deg, #55d6c2 0%, #4a90e2 54%, #7567f4 100%) !important;
+    box-shadow: 0 7px 16px rgba(74, 144, 226, .20) !important;
+}
+
+.moyo-create-actions .primary:hover,
+.moyo-create-actions .create-btn.primary:hover,
+.moyo-create-actions .btn.primary:hover {
+    background: linear-gradient(135deg, #49cbb8 0%, #4186d7 54%, #6a5be9 100%) !important;
+    box-shadow: 0 9px 20px rgba(74, 144, 226, .24) !important;
+    transform: translateY(-1px);
+}
+
+/* 태블릿 */
+@media (max-width: 780px) {
+    .moyo-create-page,
+    .moyo-create-shell {
+        width: calc(100% - 28px) !important;
+        margin: 18px auto 34px !important;
+    }
+
+    .moyo-create-card {
+        padding: 24px 22px 20px !important;
+        border-radius: 18px !important;
+    }
+}
+
+/* 모바일 */
+@media (max-width: 560px) {
+    .moyo-create-page,
+    .moyo-create-shell {
+        width: calc(100% - 20px) !important;
+        margin: 12px auto 26px !important;
+    }
+
+    .moyo-create-card {
+        padding: 20px 16px 16px !important;
+        border-radius: 16px !important;
+    }
+
+    .moyo-create-header {
+        gap: 12px !important;
+        margin-bottom: 18px !important;
+    }
+
+    .moyo-create-title h1,
+    .moyo-create-title h2,
+    .moyo-create-header h1,
+    .moyo-create-header h2 {
+        font-size: 22px !important;
+    }
+
+    .moyo-create-title .create-desc,
+    .moyo-create-header p {
+        font-size: 11px !important;
+    }
+
+    .moyo-create-back-button,
+    #btnCancelTop.moyo-create-back-button {
+        min-width: 64px !important;
+        height: 34px !important;
+        min-height: 34px !important;
+        padding: 0 10px !important;
+    }
+
+    .moyo-create-actions {
+        margin-top: 16px !important;
+        padding-top: 14px !important;
+    }
+
+    .moyo-create-actions button {
+        min-height: 38px !important;
+        height: 38px !important;
+        flex: 1 1 0;
+    }
+}
+
+
+/* ========================================================================
+   MOYO Create Form Controls
+   그룹 / 프로젝트 생성 입력 UI 공통 규칙
+   ======================================================================== */
+.moyo-create-field,
+.moyo-create-field-group {
+    min-width: 0;
+    margin: 0 0 16px !important;
+}
+
+.moyo-create-label-row {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 12px !important;
+    margin: 0 0 7px !important;
+}
+
+.moyo-create-label,
+.moyo-create-field > label,
+.moyo-create-field > .field-title,
+.moyo-create-field .moyo-project-form__label,
+.moyo-create-field .field-label {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    margin: 0 !important;
+    color: #334155 !important;
+    font-size: 12px !important;
+    font-weight: 850 !important;
+    line-height: 1.35 !important;
+    letter-spacing: -.01em !important;
+}
+
+.moyo-create-required,
+.moyo-create-field .moyo-project-form__required {
+    color: #4a90e2 !important;
+    font-size: 11px !important;
+    font-weight: 900 !important;
+}
+
+.moyo-create-help,
+.moyo-create-field .moyo-project-form__help,
+.moyo-create-field .form-help,
+.moyo-create-field .workspace-link-help,
+.moyo-create-field .project-link-field-head small {
+    color: #8a97a8 !important;
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    line-height: 1.45 !important;
+}
+
+.moyo-create-field .form-help,
+.moyo-create-field .workspace-link-help {
+    display: block;
+    margin: 6px 0 0 !important;
+}
+
+.moyo-create-count,
+.moyo-create-field .project-name-count,
+.moyo-create-field .moyo-project-description-count {
+    flex: 0 0 auto;
+    color: #94a3b8 !important;
+    font-size: 10px !important;
+    font-weight: 750 !important;
+    line-height: 1 !important;
+    font-variant-numeric: tabular-nums;
+}
+
+.moyo-create-control,
+.moyo-create-field input[type="text"],
+.moyo-create-field input[type="tel"],
+.moyo-create-field input[type="search"],
+.moyo-create-field input[type="email"],
+.moyo-create-field input[type="url"],
+.moyo-create-field select,
+.moyo-create-field textarea,
+.moyo-create-field .moyo-project-form__control {
+    width: 100% !important;
+    min-width: 0 !important;
+    border: 1px solid #dce4ed !important;
+    border-radius: 11px !important;
+    background: #fff !important;
+    color: #1f2937 !important;
+    box-shadow: none !important;
+    outline: none !important;
+    font-family: inherit !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    line-height: 1.45 !important;
+    transition: border-color .16s ease, box-shadow .16s ease, background .16s ease !important;
+}
+
+.moyo-create-control:not(textarea),
+.moyo-create-field input[type="text"],
+.moyo-create-field input[type="tel"],
+.moyo-create-field input[type="search"],
+.moyo-create-field input[type="email"],
+.moyo-create-field input[type="url"],
+.moyo-create-field select,
+.moyo-create-field input.moyo-project-form__control {
+    height: 40px !important;
+    min-height: 40px !important;
+    padding: 0 12px !important;
+}
+
+.moyo-create-field textarea,
+textarea.moyo-create-control,
+.moyo-create-field textarea.moyo-project-form__control {
+    min-height: 86px !important;
+    height: 86px !important;
+    max-height: 150px !important;
+    padding: 10px 12px 24px !important;
+    resize: vertical !important;
+}
+
+.moyo-create-control::placeholder,
+.moyo-create-field input::placeholder,
+.moyo-create-field textarea::placeholder {
+    color: #a3afbf !important;
+    font-weight: 500 !important;
+    opacity: 1 !important;
+}
+
+.moyo-create-control:hover:not(:disabled):not([readonly]),
+.moyo-create-field input:hover:not(:disabled):not([readonly]),
+.moyo-create-field textarea:hover:not(:disabled):not([readonly]),
+.moyo-create-field select:hover:not(:disabled) {
+    border-color: #c5d3e2 !important;
+}
+
+.moyo-create-control:focus,
+.moyo-create-control:focus-visible,
+.moyo-create-field input:focus,
+.moyo-create-field input:focus-visible,
+.moyo-create-field textarea:focus,
+.moyo-create-field textarea:focus-visible,
+.moyo-create-field select:focus,
+.moyo-create-field select:focus-visible {
+    border-color: #6fa8e8 !important;
+    box-shadow: 0 0 0 3px rgba(74, 144, 226, .10) !important;
+}
+
+.moyo-create-control[readonly],
+.moyo-create-field input[readonly],
+.moyo-create-field textarea[readonly] {
+    background: #f8fafc !important;
+    color: #526173 !important;
+    cursor: default !important;
+}
+
+.moyo-create-control:disabled,
+.moyo-create-field input:disabled,
+.moyo-create-field textarea:disabled,
+.moyo-create-field select:disabled {
+    border-color: #e7ecf2 !important;
+    background: #f4f6f8 !important;
+    color: #9aa5b4 !important;
+    cursor: not-allowed !important;
+    opacity: 1 !important;
+}
+
+.moyo-create-field.is-error .moyo-create-control,
+.moyo-create-field.is-error input,
+.moyo-create-field.is-error textarea,
+.moyo-create-field.is-error select,
+.moyo-create-field [aria-invalid="true"] {
+    border-color: #e68a91 !important;
+    box-shadow: 0 0 0 3px rgba(214, 74, 84, .08) !important;
+}
+
+.moyo-create-error,
+.moyo-create-field .moyo-project-form__error {
+    margin: 6px 0 0 !important;
+    color: #d64a54 !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    line-height: 1.4 !important;
+}
+
+/* textarea 우하단 카운터는 동일한 위치 규칙을 사용한다. */
+.moyo-create-textarea-wrap,
+.moyo-create-field .moyo-project-description-wrap {
+    position: relative !important;
+}
+
+.moyo-create-textarea-wrap .moyo-create-count,
+.moyo-create-field .moyo-project-description-count {
+    position: absolute !important;
+    right: 10px !important;
+    bottom: 8px !important;
+    padding-left: 8px;
+    background: linear-gradient(90deg, rgba(255,255,255,0), #fff 35%);
+}
+
+/* select도 input과 같은 높이를 유지하되 화살표는 중립색으로 통일한다. */
+.moyo-create-field select,
+.moyo-create-field select.form-control {
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    padding-right: 36px !important;
+    cursor: pointer !important;
+    background-image:
+        linear-gradient(45deg, transparent 50%, #8fa0b4 50%),
+        linear-gradient(135deg, #8fa0b4 50%, transparent 50%) !important;
+    background-position:
+        calc(100% - 18px) 50%,
+        calc(100% - 13px) 50% !important;
+    background-size: 5px 5px, 5px 5px !important;
+    background-repeat: no-repeat !important;
+}
+
+/* 멤버 검색은 툴바 안에서 사용되므로 필드 하단 여백을 만들지 않는다. */
+.member-tools .member-search.moyo-create-field {
+    margin-bottom: 0 !important;
+}
+
+@media (max-width: 560px) {
+    .moyo-create-field,
+    .moyo-create-field-group {
+        margin-bottom: 14px !important;
+    }
+
+    .moyo-create-label-row {
+        align-items: flex-start !important;
+        gap: 8px !important;
+    }
+
+    .moyo-create-help,
+    .moyo-create-field .moyo-project-form__help {
+        font-size: 10px !important;
+        text-align: right;
+    }
+}
+
+/* =========================================================
+   MOYO Create / Type selector
+   그룹 · 프로젝트 유형 선택은 같은 카드 문법을 사용한다.
+   ========================================================= */
+.moyo-create-type-field {
+    margin-bottom: 18px !important;
+}
+
+.moyo-create-type-picker {
+    width: 100%;
+    margin-top: 8px;
+}
+
+.moyo-create-type-grid {
+    display: grid !important;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 8px !important;
+    width: 100%;
+}
+
+.moyo-create-type-option,
+.moyo-create-type-grid .moyo-project-type-option {
+    position: relative;
+    display: flex !important;
+    min-width: 0;
+    min-height: 82px !important;
+    padding: 10px 6px 9px !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 7px !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 14px !important;
+    background: #fff !important;
+    color: #66758a !important;
+    box-shadow: none !important;
+    cursor: pointer;
+    transition: border-color .16s ease, background .16s ease, box-shadow .16s ease, transform .16s ease;
+}
+
+.moyo-create-type-option:hover,
+.moyo-create-type-grid .moyo-project-type-option:hover {
+    border-color: #cbd7e5 !important;
+    background: #fbfdff !important;
+    color: #34465a !important;
+    transform: translateY(-1px);
+}
+
+.moyo-create-type-option:focus-visible,
+.moyo-create-type-grid .moyo-project-type-option:focus-visible {
+    outline: 2px solid rgba(74, 144, 226, .55) !important;
+    outline-offset: 2px !important;
+}
+
+.moyo-create-type-option.is-selected,
+.moyo-create-type-option[aria-pressed="true"],
+.moyo-create-type-grid .moyo-project-type-option.is-selected,
+.moyo-create-type-grid .moyo-project-type-option[aria-pressed="true"] {
+    border-color: transparent !important;
+    background:
+        linear-gradient(#fff, #fff) padding-box,
+        linear-gradient(135deg, #63d8c6 0%, #4a90e2 52%, #8b6bd9 100%) border-box !important;
+    color: #253449 !important;
+    box-shadow: 0 7px 18px rgba(74, 144, 226, .08) !important;
+}
+
+.moyo-create-type-option__icon,
+.moyo-create-type-grid .moyo-project-type-option__icon {
+    display: inline-flex !important;
+    width: 31px !important;
+    height: 31px !important;
+    flex: 0 0 31px;
+    align-items: center !important;
+    justify-content: center !important;
+    border: 0 !important;
+    border-radius: 10px !important;
+    background: #f3f6f9 !important;
+    color: #728197 !important;
+    font-size: 14px !important;
+    line-height: 1 !important;
+    transition: background .16s ease, color .16s ease;
+}
+
+.moyo-create-type-option.is-selected .moyo-create-type-option__icon,
+.moyo-create-type-option[aria-pressed="true"] .moyo-create-type-option__icon,
+.moyo-create-type-grid .moyo-project-type-option.is-selected .moyo-project-type-option__icon,
+.moyo-create-type-grid .moyo-project-type-option[aria-pressed="true"] .moyo-project-type-option__icon {
+    background: linear-gradient(135deg, rgba(99,216,198,.14), rgba(74,144,226,.12) 52%, rgba(139,107,217,.12)) !important;
+    color: #4b78b8 !important;
+}
+
+.moyo-create-type-option__name,
+.moyo-create-type-grid .moyo-project-type-option__name {
+    display: block !important;
+    width: 100%;
+    min-width: 0;
+    overflow: hidden;
+    color: inherit !important;
+    font-size: 11px !important;
+    font-weight: 750 !important;
+    line-height: 1.25 !important;
+    text-align: center !important;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* 프로젝트는 유형 개수가 많으므로 같은 카드 크기로 자연스럽게 여러 행을 만든다. */
+.moyo-create-type-grid--project {
+    grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
+}
+
+@media (max-width: 720px) {
+    .moyo-create-type-grid,
+    .moyo-create-type-grid--project {
+        grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .moyo-create-type-grid,
+    .moyo-create-type-grid--project {
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        gap: 7px !important;
+    }
+
+    .moyo-create-type-option,
+    .moyo-create-type-grid .moyo-project-type-option {
+        min-height: 74px !important;
+        padding: 8px 5px !important;
+    }
+
+    .moyo-create-type-option__name,
+    .moyo-create-type-grid .moyo-project-type-option__name {
+        font-size: 10px !important;
+    }
+}
+
+
+/* =========================================================
+   MOYO Create / Choice cards
+   가입 방식 · 프로젝트 공개 범위처럼 "하나를 고르는 설정"은
+   같은 카드 문법을 사용한다.
+   ========================================================= */
+.moyo-create-choice-grid {
+    display: grid !important;
+    gap: 9px !important;
+    width: 100%;
+    margin-top: 8px;
+}
+
+.moyo-create-choice-grid--2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+}
+
+.moyo-create-choice-grid--3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+}
+
+.moyo-create-choice-option {
+    position: relative;
+    display: block;
+    min-width: 0;
+    cursor: pointer;
+}
+
+.moyo-create-choice-input {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    margin: -1px !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    clip: rect(0 0 0 0) !important;
+    clip-path: inset(50%) !important;
+    border: 0 !important;
+    white-space: nowrap !important;
+}
+
+.moyo-create-choice,
+.moyo-project-choice.moyo-create-choice {
+    position: relative;
+    display: flex !important;
+    width: 100% !important;
+    min-width: 0;
+    min-height: 88px !important;
+    padding: 14px !important;
+    align-items: flex-start !important;
+    gap: 11px !important;
+    border: 1px solid #e1e8f0 !important;
+    border-radius: 14px !important;
+    background: #fff !important;
+    color: #314156 !important;
+    box-shadow: none !important;
+    text-align: left !important;
+    cursor: pointer;
+    transition: border-color .16s ease, background .16s ease, box-shadow .16s ease, transform .16s ease;
+}
+
+.moyo-create-choice-option:hover .moyo-create-choice,
+.moyo-create-choice:hover,
+.moyo-project-choice.moyo-create-choice:hover {
+    border-color: #cbd7e5 !important;
+    background: #fbfdff !important;
+    transform: translateY(-1px);
+}
+
+.moyo-create-choice__icon,
+.moyo-project-choice__icon.moyo-create-choice__icon {
+    display: inline-flex !important;
+    width: 34px !important;
+    height: 34px !important;
+    flex: 0 0 34px !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border: 0 !important;
+    border-radius: 10px !important;
+    background: #f3f6f9 !important;
+    color: #738297 !important;
+    font-size: 14px !important;
+    line-height: 1 !important;
+}
+
+.moyo-create-choice__copy,
+.moyo-project-choice__copy.moyo-create-choice__copy {
+    display: flex !important;
+    min-width: 0;
+    flex: 1 1 auto;
+    flex-direction: column !important;
+    gap: 4px !important;
+}
+
+.moyo-create-choice__copy strong,
+.moyo-project-choice__copy.moyo-create-choice__copy strong {
+    display: block !important;
+    margin: 0 !important;
+    color: #26364b !important;
+    font-size: 13px !important;
+    font-weight: 800 !important;
+    line-height: 1.35 !important;
+}
+
+.moyo-create-choice__copy > span,
+.moyo-project-choice__copy.moyo-create-choice__copy > span {
+    display: block !important;
+    color: #7b8797 !important;
+    font-size: 11px !important;
+    font-weight: 500 !important;
+    line-height: 1.45 !important;
+    word-break: keep-all;
+}
+
+/* radio 또는 button 모두 같은 선택 상태 */
+.moyo-create-choice-input:checked + .moyo-create-choice,
+.moyo-create-choice[aria-pressed="true"],
+.moyo-project-choice.moyo-create-choice[aria-pressed="true"] {
+    border-color: transparent !important;
+    background:
+        linear-gradient(#fff, #fff) padding-box,
+        linear-gradient(135deg, #63d8c6 0%, #4a90e2 52%, #8b6bd9 100%) border-box !important;
+    box-shadow: 0 7px 18px rgba(74, 144, 226, .08) !important;
+}
+
+.moyo-create-choice-input:checked + .moyo-create-choice .moyo-create-choice__icon,
+.moyo-create-choice[aria-pressed="true"] .moyo-create-choice__icon,
+.moyo-project-choice.moyo-create-choice[aria-pressed="true"] .moyo-create-choice__icon {
+    background: linear-gradient(135deg, rgba(99,216,198,.14), rgba(74,144,226,.12) 52%, rgba(139,107,217,.12)) !important;
+    color: #4b78b8 !important;
+}
+
+.moyo-create-choice-input:focus-visible + .moyo-create-choice,
+.moyo-create-choice:focus-visible,
+.moyo-project-choice.moyo-create-choice:focus-visible {
+    outline: 2px solid rgba(74, 144, 226, .55) !important;
+    outline-offset: 2px !important;
+}
+
+@media (max-width: 720px) {
+    .moyo-create-choice-grid--3 {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+@media (max-width: 560px) {
+    .moyo-create-choice-grid--2,
+    .moyo-create-choice-grid--3 {
+        grid-template-columns: 1fr !important;
+    }
+
+    .moyo-create-choice,
+    .moyo-project-choice.moyo-create-choice {
+        min-height: 76px !important;
+        padding: 12px !important;
+    }
+}
+
+
+/* 2026-09-23: shared create external links */
+.moyo-create-link-field {
+    min-width: 0;
+}
+
+.moyo-create-link-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    margin-bottom: 9px;
+}
+
+.moyo-create-link-title {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+}
+
+.moyo-create-link-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 38px;
+    height: 20px;
+    padding: 0 7px;
+    border: 1px solid #e6ebf1;
+    border-radius: 999px;
+    background: #f8fafc;
+    color: #8a97a8;
+    font-size: 10px;
+    font-weight: 800;
+    line-height: 1;
+}
+
+.moyo-create-link-add,
+.moyo-create-field .workspace-link-add,
+.moyo-create-field .project-link-add-btn {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 5px !important;
+    min-height: 32px !important;
+    margin: 0 !important;
+    padding: 0 10px !important;
+    border: 1px solid #dfe6ee !important;
+    border-radius: 9px !important;
+    background: #fff !important;
+    color: #536275 !important;
+    font-size: 11px !important;
+    font-weight: 800 !important;
+    line-height: 1 !important;
+    cursor: pointer !important;
+    transition: border-color .16s ease, box-shadow .16s ease, color .16s ease, transform .16s ease !important;
+}
+
+.moyo-create-link-add:hover:not(:disabled) {
+    border-color: #b8c8d9 !important;
+    color: #2f6fb8 !important;
+    box-shadow: 0 5px 14px rgba(50, 88, 126, .08) !important;
+    transform: translateY(-1px);
+}
+
+.moyo-create-link-add:focus-visible,
+.moyo-create-link-remove:focus-visible {
+    outline: 3px solid rgba(71, 143, 214, .16) !important;
+    outline-offset: 2px;
+}
+
+.moyo-create-link-add:disabled {
+    opacity: .45 !important;
+    cursor: default !important;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+.moyo-create-link-list,
+.moyo-create-field .workspace-link-list,
+.moyo-create-field .project-link-list {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 7px !important;
+}
+
+.moyo-create-link-row,
+.moyo-create-field .workspace-link-row,
+.moyo-create-field .project-link-row {
+    display: grid !important;
+    grid-template-columns: minmax(120px, .72fr) minmax(0, 1.7fr) 36px !important;
+    gap: 7px !important;
+    align-items: center !important;
+    min-width: 0;
+}
+
+.moyo-create-link-row .moyo-create-control {
+    min-width: 0 !important;
+}
+
+.moyo-create-link-remove,
+.moyo-create-field .workspace-link-remove,
+.moyo-create-field .project-link-remove-btn {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 36px !important;
+    height: 36px !important;
+    padding: 0 !important;
+    border: 1px solid #e4e9ef !important;
+    border-radius: 9px !important;
+    background: #fff !important;
+    color: #a0aaba !important;
+    cursor: pointer !important;
+    transition: border-color .16s ease, background .16s ease, color .16s ease !important;
+}
+
+.moyo-create-link-remove:hover {
+    border-color: #f0c9cc !important;
+    background: #fff8f8 !important;
+    color: #d35c63 !important;
+}
+
+.moyo-create-link-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    min-height: 42px;
+    border: 1px dashed #dce4ec;
+    border-radius: 10px;
+    background: #fbfcfd;
+    color: #9aa6b5;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.moyo-create-link-empty[hidden] {
+    display: none !important;
+}
+
+.moyo-create-link-empty i {
+    font-size: 10px;
+    opacity: .78;
+}
+
+.moyo-create-link-error {
+    margin: 6px 0 0 !important;
+}
+
+@media (max-width: 640px) {
+    .moyo-create-link-head {
+        align-items: flex-start;
+    }
+
+    .moyo-create-link-row,
+    .moyo-create-field .workspace-link-row,
+    .moyo-create-field .project-link-row {
+        grid-template-columns: minmax(0, 1fr) 36px !important;
+    }
+
+    .moyo-create-link-row .moyo-create-link-name {
+        grid-column: 1 / -1;
+    }
+
+    .moyo-create-link-row .moyo-create-link-url {
+        grid-column: 1;
+    }
+
+    .moyo-create-link-row .moyo-create-link-remove {
+        grid-column: 2;
+    }
+}
+
+/* ========================================================================
+   2026-09-23 · Project create STEP 1 structure simplification
+   - 그룹 컨텍스트는 프로필 + 그룹명만 유지
+   - 유형 → 이름 → 설명 → 기간 → 공개범위 → 외부링크 순으로 시선 흐름 통일
+   ======================================================================== */
+.project-create-group-mini {
+    gap: 7px !important;
+    max-width: 190px !important;
+    padding: 4px 8px 4px 5px !important;
+    border-color: #e3eaf2 !important;
+    border-radius: 10px !important;
+    background: #f9fbfd !important;
+}
+
+.project-create-group-mini__avatar {
+    flex-basis: 28px !important;
+    width: 28px !important;
+    height: 28px !important;
+    border-radius: 8px !important;
+}
+
+.project-create-group-mini__copy {
+    display: block !important;
+    min-width: 0 !important;
+}
+
+.project-create-group-mini__copy strong {
+    display: block !important;
+    max-width: 138px !important;
+    overflow: hidden !important;
+    color: #304257 !important;
+    font-size: 11px !important;
+    font-weight: 800 !important;
+    line-height: 1.2 !important;
+    white-space: nowrap !important;
+    text-overflow: ellipsis !important;
+}
+
+.project-create-group-mini__copy small {
+    display: none !important;
+}
+
+.project-create-card .basic-card {
+    padding-top: 0 !important;
+}
+
+.project-create-card .basic-card .create-form-grid {
+    gap: 14px !important;
+}
+
+.project-create-card .project-create-type-field {
+    margin-top: 0 !important;
+}
+
+@media (max-width: 760px) {
+    .project-create-group-mini {
+        max-width: min(58vw, 180px) !important;
+    }
+
+    .project-create-group-mini__copy strong {
+        max-width: 118px !important;
+    }
+}

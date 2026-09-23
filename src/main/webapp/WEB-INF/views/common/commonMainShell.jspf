@@ -158,7 +158,7 @@
                                         <span>완료</span><strong>${completedCount}</strong>
                                     </a>
                                 </div>
-                                <c:if test="${isWorkspaceAdmin}">
+                                <c:if test="${isWorkspaceAdmin and workspace.status eq 'ACTIVE'}">
                                     <a class="workspace-project-create-btn workspace-project-quick-create"
                                        href="${pageContext.request.contextPath}/project/create?wsId=${workspace.wsId}">+ 프로젝트 생성</a>
                                 </c:if>
@@ -172,7 +172,7 @@
                                     <div class="workspace-project-empty-copy">
                                         <strong>아직 프로젝트가 없습니다.</strong>
                                         <span>첫 프로젝트를 만들면 업무와 일정을 프로젝트 단위로 관리할 수 있습니다.</span>
-                                        <c:if test="${isWorkspaceAdmin}">
+                                        <c:if test="${isWorkspaceAdmin and workspace.status eq 'ACTIVE'}">
                                             <a class="workspace-feature-empty-action workspace-project-empty-link"
                                                href="${pageContext.request.contextPath}/project/create?wsId=${workspace.wsId}">첫 프로젝트 생성</a>
                                         </c:if>
@@ -192,22 +192,42 @@
                                     <c:forEach var="project" items="${projectOverview}">
                                         <c:if test="${project.PROJECT_STATUS ne 'SCHEDULED'
                                                     and project.PROJECT_STATUS ne 'COMPLETED'}">
-                                            <a class="workspace-project-quick-card"
-                                               href="${pageContext.request.contextPath}/project/main?projId=${project.PROJ_ID}&amp;wsId=${workspace.wsId}">
+                                            <a class="workspace-project-quick-card${project.ACCESS_STATE eq 'LOCKED' ? ' is-locked' : ''}${project.ACCESS_STATE eq 'READ_ONLY' ? ' is-read-only' : ''}"
+                                               <c:choose>
+                                                   <c:when test="${project.ACCESS_STATE eq 'LOCKED'}">aria-disabled="true" tabindex="0"</c:when>
+                                                   <c:otherwise>href="${pageContext.request.contextPath}/project/main?projId=${project.PROJ_ID}&amp;wsId=${workspace.wsId}"</c:otherwise>
+                                               </c:choose>>
                                                 <span class="workspace-project-quick-accent" aria-hidden="true"></span>
 
                                                 <div class="workspace-project-quick-card-main">
                                                 <div class="workspace-project-quick-badges">
                                                     <span class="workspace-project-quick-status">진행 중</span>
                                                     <span class="workspace-project-quick-type">
+                                                        <i class="fa-solid fa-${empty project.PROJ_ICON ? 'shapes' : project.PROJ_ICON}" aria-hidden="true"></i>
                                                         <c:choose>
                                                             <c:when test="${project.PROJ_TYPE eq 'WORK' or project.PROJ_TYPE eq '업무'}">업무</c:when>
+                                                            <c:when test="${project.PROJ_TYPE eq 'DEVELOPMENT' or project.PROJ_TYPE eq '개발'}">개발</c:when>
+                                                            <c:when test="${project.PROJ_TYPE eq 'PLANNING' or project.PROJ_TYPE eq '기획'}">기획</c:when>
+                                                            <c:when test="${project.PROJ_TYPE eq 'DESIGN' or project.PROJ_TYPE eq '디자인'}">디자인</c:when>
+                                                            <c:when test="${project.PROJ_TYPE eq 'STUDY' or project.PROJ_TYPE eq '스터디' or project.PROJ_TYPE eq '공부'}">스터디</c:when>
+                                                            <c:when test="${project.PROJ_TYPE eq 'EXAM' or project.PROJ_TYPE eq '시험'}">시험</c:when>
                                                             <c:when test="${project.PROJ_TYPE eq 'TRAVEL' or project.PROJ_TYPE eq '여행'}">여행</c:when>
-                                                            <c:when test="${project.PROJ_TYPE eq 'MEETING' or project.PROJ_TYPE eq '모임·행사' or project.PROJ_TYPE eq '모임 · 행사'}">모임</c:when>
-                                                            <c:when test="${project.PROJ_TYPE eq 'STUDY' or project.PROJ_TYPE eq '학습·연구' or project.PROJ_TYPE eq '학습 · 연구'}">학습</c:when>
-                                                            <c:when test="${project.PROJ_TYPE eq 'LIFE' or project.PROJ_TYPE eq '생활·가정' or project.PROJ_TYPE eq '생활 · 가정'}">생활</c:when>
-                                                            <c:when test="${project.PROJ_TYPE eq 'HOBBY' or project.PROJ_TYPE eq '취미·창작' or project.PROJ_TYPE eq '취미 · 창작'}">취미</c:when>
-                                                            <c:otherwise>${empty project.PROJ_TYPE ? '기타' : project.PROJ_TYPE}</c:otherwise>
+                                                            <c:when test="${project.PROJ_TYPE eq 'MEETING' or project.PROJ_TYPE eq '회의'}">회의</c:when>
+                                                            <c:when test="${project.PROJ_TYPE eq 'GATHERING' or project.PROJ_TYPE eq '모임'}">모임</c:when>
+                                                            <c:when test="${project.PROJ_TYPE eq 'EVENT' or project.PROJ_TYPE eq '행사'}">행사</c:when>
+                                                            <c:when test="${project.PROJ_TYPE eq 'EXERCISE' or project.PROJ_TYPE eq '운동'}">운동</c:when>
+                                                            <c:when test="${project.PROJ_TYPE eq 'HOBBY' or project.PROJ_TYPE eq '취미'}">취미</c:when>
+                                                            <c:when test="${project.PROJ_TYPE eq 'LIFE' or project.PROJ_TYPE eq '생활'}">생활</c:when>
+                                                            <c:when test="${project.PROJ_TYPE eq 'RECORD' or project.PROJ_TYPE eq '기록'}">기록</c:when>
+                                                            <c:otherwise>기타</c:otherwise>
+                                                        </c:choose>
+                                                    </span>
+                                                    <span class="workspace-project-quick-access is-${project.ACCESS_STATE}">
+                                                        <c:choose>
+                                                            <c:when test="${project.ACCESS_STATE eq 'MANAGE'}">관리</c:when>
+                                                            <c:when test="${project.ACCESS_STATE eq 'PARTICIPANT'}">참여 중</c:when>
+                                                            <c:when test="${project.ACCESS_STATE eq 'READ_ONLY'}">읽기 전용</c:when>
+                                                            <c:otherwise>참여자 전용</c:otherwise>
                                                         </c:choose>
                                                     </span>
 
@@ -219,6 +239,17 @@
                                                             </span>
                                                         </span>
                                                     </c:if>
+
+                                                    <span class="workspace-project-quick-open-icon${project.ACCESS_STATE eq 'LOCKED' ? ' is-locked' : ''}" aria-hidden="true">
+                                                        <c:choose>
+                                                            <c:when test="${project.ACCESS_STATE eq 'LOCKED'}">
+                                                                <i class="fa-solid fa-lock"></i>
+                                                            </c:when>
+                                                            <c:otherwise>
+                                                                <i class="fa-solid fa-arrow-right"></i>
+                                                            </c:otherwise>
+                                                        </c:choose>
+                                                    </span>
                                                 </div>
 
                                                 <h4>
@@ -241,19 +272,38 @@
                                                         <dt>기간</dt>
                                                         <dd>
                                                             <c:choose>
-                                                                <c:when test="${not empty project.START_DATE}">${project.START_DATE}</c:when>
-                                                                <c:otherwise>미설정</c:otherwise>
-                                                            </c:choose>
-                                                            <span>~</span>
-                                                            <c:choose>
-                                                                <c:when test="${not empty project.END_DATE}">${project.END_DATE}</c:when>
-                                                                <c:otherwise>미정</c:otherwise>
+                                                                <c:when test="${project.PERIOD_ENABLED_YN eq 'Y'}">
+                                                                    <span class="workspace-project-quick-period-date">${project.START_DATE} <span>~</span> ${project.END_DATE}</span>
+                                                                    <c:if test="${not empty project.DDAY and project.DDAY ge 0}">
+                                                                        <span class="workspace-project-quick-dday" aria-label="${project.DDAY eq 0 ? '프로젝트 종료일입니다' : '프로젝트 종료까지 '.concat(project.DDAY).concat('일')}">
+                                                                            <c:choose>
+                                                                                <c:when test="${project.DDAY eq 0}">D-Day</c:when>
+                                                                                <c:otherwise>D-${project.DDAY}</c:otherwise>
+                                                                            </c:choose>
+                                                                        </span>
+                                                                    </c:if>
+                                                                </c:when>
+                                                                <c:otherwise>기간 없음</c:otherwise>
                                                             </c:choose>
                                                         </dd>
                                                     </div>
                                                     <div>
                                                         <dt>팀장</dt>
-                                                        <dd>${empty project.LEADER_NAME ? '-' : project.LEADER_NAME}</dd>
+                                                        <dd class="workspace-project-quick-leader">
+                                                            <c:choose>
+                                                                <c:when test="${not empty project.LEADER_NAME}">
+                                                                    <span class="workspace-project-quick-leader-avatar${not empty project.LEADER_PROFILE_IMAGE_PATH ? ' has-image' : ' is-default'}" aria-hidden="true">
+                                                                        <c:if test="${not empty project.LEADER_PROFILE_IMAGE_PATH}">
+                                                                            <img src="<c:out value='${project.LEADER_PROFILE_IMAGE_PATH}'/>" alt=""
+                                                                                 onerror="this.parentElement.classList.remove('has-image'); this.parentElement.classList.add('is-default'); this.remove();">
+                                                                        </c:if>
+                                                                        <span class="workspace-project-quick-leader-initial"><c:out value="${fn:substring(project.LEADER_NAME,0,1)}"/></span>
+                                                                    </span>
+                                                                    <span class="workspace-project-quick-leader-name"><c:out value="${project.LEADER_NAME}"/></span>
+                                                                </c:when>
+                                                                <c:otherwise>-</c:otherwise>
+                                                            </c:choose>
+                                                        </dd>
                                                     </div>
                                                     <div>
                                                         <dt>인원</dt>
@@ -267,7 +317,24 @@
                                                     </div>
                                                 </dl>
 
-                                                <span class="workspace-project-quick-enter">프로젝트 열기 <b aria-hidden="true">→</b></span>
+                                                <div class="workspace-project-quick-progress">
+                                                    <div class="workspace-project-quick-progress-head">
+                                                        <span>진행률</span>
+                                                        <c:choose>
+                                                            <c:when test="${project.TASK_TOTAL gt 0}">
+                                                                <strong>${project.PROGRESS_PERCENT}%</strong>
+                                                            </c:when>
+                                                            <c:otherwise>
+                                                                <strong class="is-empty">업무 없음</strong>
+                                                            </c:otherwise>
+                                                        </c:choose>
+                                                    </div>
+                                                    <c:if test="${project.TASK_TOTAL gt 0}">
+                                                        <div class="workspace-project-quick-progress-track" aria-hidden="true">
+                                                            <span style="width:${project.PROGRESS_PERCENT}%"></span>
+                                                        </div>
+                                                    </c:if>
+                                                </div>
                                                 </div>
                                             </a>
                                         </c:if>

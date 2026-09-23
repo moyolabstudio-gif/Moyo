@@ -2,6 +2,7 @@ package com.springboot.project.service.impl;
 
 import com.springboot.project.dao.InoteDAO;
 import com.springboot.project.dao.IprojectDAO;
+import com.springboot.project.dao.IcontentRecordItemDAO;
 import com.springboot.project.dto.noteDTO;
 import com.springboot.project.dto.projectRequestDTO;
 import com.springboot.project.dto.noteFileDTO;
@@ -45,6 +46,9 @@ public class noteServiceImpl implements InoteService {
 
     @Autowired
     private ContentInputSecurityService contentInputSecurityService;
+
+    @Autowired
+    private IcontentRecordItemDAO contentRecordItemDAO;
 
     @Override
     public List<noteDTO> getNoteList(String scopeType, Long wsId, Long projId, Long userId, String keyword) {
@@ -231,14 +235,20 @@ public class noteServiceImpl implements InoteService {
     }
 
     @Override
+    @Transactional
     public boolean moveNoteToTrash(Long noteId, Long userId) {
-        return inoteDAO.moveNoteToTrash(noteId, userId) > 0;
+        int updated = inoteDAO.moveNoteToTrash(noteId, userId);
+        if (updated > 0) contentRecordItemDAO.updateItemsDeletedByContent("NOTE", noteId, "Y");
+        return updated > 0;
     }
 
     @Override
+    @Transactional
     public boolean restoreNoteFromTrash(Long noteId, Long userId) {
         purgeExpiredTrashNotes();
-        return inoteDAO.restoreNoteFromTrash(noteId, userId) > 0;
+        int updated = inoteDAO.restoreNoteFromTrash(noteId, userId);
+        if (updated > 0) contentRecordItemDAO.updateItemsDeletedByContent("NOTE", noteId, "N");
+        return updated > 0;
     }
 
     @Override
@@ -288,7 +298,9 @@ public class noteServiceImpl implements InoteService {
         inoteDAO.deleteNoteReplyReactionsByNoteId(noteId);
         inoteDAO.deleteNoteRepliesByNoteId(noteId);
         inoteDAO.deleteNoteFilesByNoteId(noteId);
-        return inoteDAO.deleteNote(noteId) > 0;
+        int deleted = inoteDAO.deleteNote(noteId);
+        if (deleted > 0) contentRecordItemDAO.deleteItemsByContent("NOTE", noteId);
+        return deleted > 0;
     }
 
     @Override

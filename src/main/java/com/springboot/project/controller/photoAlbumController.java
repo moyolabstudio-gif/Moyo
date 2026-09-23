@@ -606,7 +606,18 @@ public class photoAlbumController {
         }
 
         boolean success = photoAlbumService.movePostAlbum(postId, albumId);
-        return ResponseEntity.ok(Map.of("status", success ? "SUCCESS" : "FAIL"));
+        int recordLinkedCount = 0;
+        if (success) {
+            recordLinkedCount = contentRecordItemDAO.countActiveItemsByContent("PHOTO", postId);
+            if (recordLinkedCount > 0) {
+                // 앨범 위치와 기록 연결은 별개다. 이동해도 기록 항목 연결은 유지한다.
+                contentRecordItemDAO.touchActiveItemsByContent("PHOTO", postId);
+            }
+        }
+        return ResponseEntity.ok(Map.of(
+                "status", success ? "SUCCESS" : "FAIL",
+                "recordLinkedCount", recordLinkedCount,
+                "recordLinkPreserved", success));
     }
 
     @PutMapping("/api/photo-posts/{postId}/visibility")

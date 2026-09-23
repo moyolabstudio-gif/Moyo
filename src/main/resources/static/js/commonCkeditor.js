@@ -440,7 +440,6 @@
                 toolbar.style.setProperty('display', 'flex', 'important');
                 toolbar.style.setProperty('align-items', 'center', 'important');
                 toolbar.style.setProperty('flex-wrap', 'nowrap', 'important');
-                toolbar.style.setProperty('overflow', 'hidden', 'important');
                 toolbar.style.setProperty('min-height', '42px', 'important');
             }
             if (items) {
@@ -473,6 +472,9 @@
 
     // NOTE / RECORD: 툴바는 한 줄로 유지하되 폭을 넘는 항목은 오른쪽부터 '항목 단위'로 숨긴다.
     // CKEditor 기본 더보기 그룹은 사용하지 않는다. 버튼이 반쯤 잘리거나 떠 보이는 현상 방지.
+    // NOTE / RECORD: 일반 노트와 기록 노트 모두 동일한 방식으로 처리한다.
+    // 툴바 자체는 자르지 않고, 실제 가용 폭을 넘는 "상위 툴 항목"만 오른쪽부터 숨긴다.
+    // dropdown panel / balloon은 CKEditor 기본 floating 동작을 그대로 사용한다.
     function bindToolbarItemFit(editor) {
         if (!editor || !editor.ui || !editor.ui.view) return;
         const root = editor.ui.view.element;
@@ -484,19 +486,44 @@
 
         let rafId = 0;
 
-        function setVisible(node, visible) {
-            if (!node) return;
-            if (visible) {
-                node.style.removeProperty('display');
-                node.removeAttribute('data-moyo-toolbar-hidden');
-            } else {
-                node.style.setProperty('display', 'none', 'important');
-                node.setAttribute('data-moyo-toolbar-hidden', 'true');
-            }
-        }
-
         function isSeparator(node) {
             return !!(node && node.classList && node.classList.contains('ck-toolbar__separator'));
+        }
+
+        function show(node) {
+            if (!node) return;
+            node.style.removeProperty('display');
+            node.removeAttribute('data-moyo-toolbar-hidden');
+        }
+
+        function hide(node) {
+            if (!node) return;
+            node.style.display = 'none';
+            node.setAttribute('data-moyo-toolbar-hidden', 'true');
+        }
+
+        function outerWidth(node) {
+            if (!node || node.hasAttribute('data-moyo-toolbar-hidden')) return 0;
+            const rect = node.getBoundingClientRect();
+            const style = getComputedStyle(node);
+            const ml = parseFloat(style.marginLeft) || 0;
+            const mr = parseFloat(style.marginRight) || 0;
+            return rect.width + ml + mr;
+        }
+
+        function cleanupTrailingSeparators(children) {
+            let lastVisible = -1;
+            for (let i = children.length - 1; i >= 0; i--) {
+                if (!children[i].hasAttribute('data-moyo-toolbar-hidden')) {
+                    lastVisible = i;
+                    break;
+                }
+            }
+            while (lastVisible >= 0 && isSeparator(children[lastVisible])) {
+                hide(children[lastVisible]);
+                lastVisible--;
+                while (lastVisible >= 0 && children[lastVisible].hasAttribute('data-moyo-toolbar-hidden')) lastVisible--;
+            }
         }
 
         function fitNow() {
@@ -504,39 +531,27 @@
             const children = Array.from(items.children);
             if (!children.length) return;
 
-            toolbar.style.setProperty('display', 'flex', 'important');
-            toolbar.style.setProperty('align-items', 'center', 'important');
-            toolbar.style.setProperty('flex-wrap', 'nowrap', 'important');
-            toolbar.style.setProperty('overflow', 'hidden', 'important');
-            toolbar.style.setProperty('max-width', '100%', 'important');
+            // 이전 계산 결과를 먼저 복원한다.
+            children.forEach(show);
 
-            items.style.setProperty('display', 'flex', 'important');
-            items.style.setProperty('align-items', 'center', 'important');
-            items.style.setProperty('flex-wrap', 'nowrap', 'important');
-            items.style.setProperty('flex', '0 0 auto', 'important');
-            items.style.setProperty('min-width', 'max-content', 'important');
-            items.style.setProperty('width', 'max-content', 'important');
-            items.style.setProperty('max-width', 'none', 'important');
-            items.style.setProperty('overflow', 'visible', 'important');
-
-            // 먼저 전부 복구한 뒤 현재 폭 기준으로 다시 계산한다.
-            children.forEach(function (node) { setVisible(node, true); });
-
-            const available = toolbar.clientWidth;
+            const toolbarStyle = getComputedStyle(toolbar);
+            const paddingLeft = parseFloat(toolbarStyle.paddingLeft) || 0;
+            const paddingRight = parseFloat(toolbarStyle.paddingRight) || 0;
+            const available = Math.max(0, toolbar.clientWidth - paddingLeft - paddingRight - 2);
             if (!available) return;
 
-            for (let i = children.length - 1; i >= 0 && items.scrollWidth > available; i--) {
-                setVisible(children[i], false);
-                // 끝에 구분선만 남으면 함께 숨긴다.
-                let lastVisible = null;
-                for (let j = i - 1; j >= 0; j--) {
-                    if (!children[j].hasAttribute('data-moyo-toolbar-hidden')) {
-                        lastVisible = children[j];
-                        break;
-                    }
-                }
-                if (isSeparator(lastVisible)) setVisible(lastVisible, false);
+            let used = children.reduce((sum, node) => sum + outerWidth(node), 0);
+
+            for (let i = children.length - 1; i >= 0 && used > available; i--) {
+                const node = children[i];
+                if (node.hasAttribute('data-moyo-toolbar-hidden')) continue;
+                used -= outerWidth(node);
+                hide(node);
+                cleanupTrailingSeparators(children);
+                used = children.reduce((sum, child) => sum + outerWidth(child), 0);
             }
+
+            cleanupTrailingSeparators(children);
         }
 
         function scheduleFit() {

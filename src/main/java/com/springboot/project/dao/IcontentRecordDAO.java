@@ -29,6 +29,7 @@ public interface IcontentRecordDAO {
     int countEventViewPermission(@Param("eventId") Long eventId, @Param("userId") Long userId);
     int countEventEditPermission(@Param("eventId") Long eventId, @Param("userId") Long userId);
     int countEventDeletePermission(@Param("eventId") Long eventId, @Param("userId") Long userId);
+    int enableProjectPlanRecord(@Param("targetType") String targetType, @Param("targetId") Long targetId);
     int countProjectTargetViewPermission(@Param("targetType") String targetType, @Param("targetId") Long targetId, @Param("userId") Long userId);
     int countProjectTargetEditPermission(@Param("targetType") String targetType, @Param("targetId") Long targetId, @Param("userId") Long userId);
     int countProjectTargetDeletePermission(@Param("targetType") String targetType, @Param("targetId") Long targetId, @Param("userId") Long userId);
@@ -59,6 +60,10 @@ public interface IcontentRecordDAO {
     int updatePhotoAlbumIdIfEmpty(
             @Param("recordTargetId") Long recordTargetId,
             @Param("photoAlbumId") Long photoAlbumId,
+            @Param("userId") Long userId);
+    int updateFileFolderId(
+            @Param("recordTargetId") Long recordTargetId,
+            @Param("fileFolderId") Long fileFolderId,
             @Param("userId") Long userId);
     int deleteExpiredAbandonedDrafts();
 }

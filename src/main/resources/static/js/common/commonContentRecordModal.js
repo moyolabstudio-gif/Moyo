@@ -49,7 +49,9 @@
             onCreatePhoto: null,
             onUploadFile: null,
             onSearchLocation: null,
-            onChanged: null
+            onChanged: null,
+            onTypeViewed: null,
+            onItemViewed: null
         }, options || {});
 
         const root = document.getElementById(config.modalId);
@@ -112,23 +114,50 @@
             noteSaveTimer: null,
             noteDirty: false,
             noteSaving: false,
+            noteSavePromise: null,
+            notePublishRequested: false,
+            noteEditRevision: 0,
+            noteLastFailedRevision: -1,
             noteComposing: false,
             noteLastSavedContent: '',
+            noteBaseTitle: '',
+            noteBaseContent: '',
+            noteConflict: false,
+            noteConflictNotified: false,
             noteRestoreSyncing: false,
             noteMenuOpen: false,
             openSequence: 0,
             openPromise: null,
             openingKey: '',
-            locationInitialPreviewApplied: false,
-            locationPreviewAfterSaveId: null,
             actionMenuButton: null,
             actionMenuPanel: null,
             noteDragRecordItemId: null,
             noteDropRecordItemId: null,
             noteDropAfter: false,
             noteOrderSaving: false,
-            noteDragSuppressClick: false
+            noteDragSuppressClick: false,
+            unreadItemIds: new Set(),
+            unreadTypes: new Set(),
+            noteToolbarResizeObserver: null,
+            externalRefreshTimer: null
         };
+
+        function dispatchContentMetadataUpdated(contentType, contentId, reason, extra) {
+            const detail = Object.assign({
+                contentType: String(contentType || '').toUpperCase(),
+                contentId: contentId == null ? null : (Number(contentId) || contentId),
+                reason: reason || 'update',
+                source: 'record'
+            }, extra || {});
+            document.dispatchEvent(new CustomEvent('moyo:content-metadata-updated', { detail: detail }));
+        }
+
+        function unreadItemDot(item) {
+            const id = String(pick(item, 'recordItemId', 'RECORD_ITEM_ID') || '');
+            return id && state.unreadItemIds.has(id)
+                ? '<span class="moyo-record-unread-dot" title="미확인 업데이트" aria-label="미확인 업데이트"></span>'
+                : '';
+        }
 
         function ensureNoteTabsLayout() {
             if (!el.noteTabs || el.noteTabs.closest('.moyo-record-note-tabs-shell')) return;
@@ -275,7 +304,13 @@
                 const text = await response.text();
                 let body = null;
                 try { body = text ? JSON.parse(text) : null; } catch (e) { body = null; }
-                if (!response.ok) throw new Error((body && body.message) || '요청을 처리하지 못했습니다.');
+                if (!response.ok) {
+                    const error = new Error((body && body.message) || '요청을 처리하지 못했습니다.');
+                    error.status = response.status;
+                    error.code = body && body.code;
+                    error.body = body;
+                    throw error;
+                }
                 return body;
             });
         }
@@ -432,11 +467,19 @@
             state.noteEditorToken += 1;
             window.clearTimeout(state.noteSaveTimer);
             state.noteSaveTimer = null;
+            if (state.noteToolbarResizeObserver) {
+                state.noteToolbarResizeObserver.disconnect();
+                state.noteToolbarResizeObserver = null;
+            }
             const editor = state.noteEditorInstance;
             state.noteEditorInstance = null;
             state.noteDirty = false;
             state.noteComposing = false;
             state.noteLastSavedContent = '';
+            state.noteBaseTitle = '';
+            state.noteBaseContent = '';
+            state.noteConflict = false;
+            state.noteConflictNotified = false;
             if (editor && typeof editor.destroy === 'function') {
                 try { await editor.destroy(); } catch (error) { console.warn('기록 노트 에디터 해제 실패:', error); }
             }
@@ -460,6 +503,28 @@
             state.noteMenuOpen = true;
         }
 
+        function applyNoteTabAutoWidths() {
+            if (!el.noteTabs) return;
+            const tabs = el.noteTabs.querySelectorAll('.moyo-record-note-tab');
+            tabs.forEach(function (tab) {
+                const label = tab.querySelector('.moyo-record-note-tab__label') || tab.querySelector('.moyo-record-note-tab__select span');
+                if (!label) return;
+                const text = (label.childNodes[0] && label.childNodes[0].nodeType === Node.TEXT_NODE
+                    ? label.childNodes[0].nodeValue
+                    : label.textContent || '').trim();
+                const style = window.getComputedStyle(label);
+                const canvas = applyNoteTabAutoWidths._canvas || (applyNoteTabAutoWidths._canvas = document.createElement('canvas'));
+                const context = canvas.getContext('2d');
+                if (!context) return;
+                context.font = [style.fontStyle, style.fontWeight, style.fontSize, style.fontFamily].filter(Boolean).join(' ');
+                const textWidth = Math.ceil(context.measureText(text || '노트').width);
+                const hasMenu = !!tab.querySelector('.moyo-record-note-tab__menu');
+                const hasUnread = !!tab.querySelector('.moyo-record-update-dot');
+                const width = Math.max(96, Math.min(220, textWidth + 24 + (hasMenu ? 36 : 0) + (hasUnread ? 12 : 0)));
+                tab.style.setProperty('--moyo-note-tab-width', width + 'px');
+            });
+        }
+
         function renderNoteTabsOnly() {
             const notes = byType('NOTE');
             closeNoteTabMenu();
@@ -467,8 +532,8 @@
                 const active = !state.newNoteMode && index === state.activeNoteIndex;
                 const recordItemId = pick(item, 'recordItemId', 'RECORD_ITEM_ID');
                 const draggable = canEdit() && recordItemId ? ' data-note-draggable="true" data-note-record-item-id="' + esc(recordItemId) + '"' : '';
-                return '<div class="moyo-record-note-tab ' + (active ? 'is-active' : '') + '" data-note-index="' + index + '"' + draggable + '>' +
-                    '<button type="button" class="moyo-record-note-tab__select" data-note-select title="' + (canEdit() && recordItemId ? '드래그하여 순서 변경' : '') + '"><span>' + esc(noteTabName(item, index)) + '</span></button>' +
+                return '<div class="moyo-record-note-tab ' + (active ? 'is-active' : '') + '" data-note-index="' + index + '" data-record-item-id="' + esc(recordItemId) + '"' + draggable + '>' +
+                    '<button type="button" class="moyo-record-note-tab__select" data-note-select title="' + (canEdit() && recordItemId ? '드래그하여 순서 변경' : '') + '"><span class="moyo-record-note-tab__label">' + esc(noteTabName(item, index)) + unreadItemDot(item) + '</span></button>' +
                     (active && (canEdit() || canDelete()) ? '<button type="button" class="moyo-record-note-tab__menu" data-note-menu-trigger aria-label="노트 메뉴" title="노트 메뉴"><span aria-hidden="true">⋮</span></button>' : '') +
                     '</div>';
             }).join('');
@@ -479,6 +544,7 @@
                     '</div>';
             }
             el.noteTabs.innerHTML = html;
+            applyNoteTabAutoWidths();
             if (el.noteAddButton) el.noteAddButton.hidden = !canEdit();
             revealActiveNoteTab();
             if (state.newNoteMode) {
@@ -580,7 +646,9 @@
                     const raw = window.localStorage.getItem(key);
                     if (!raw) continue;
                     const draft = JSON.parse(raw);
-                    if (draft && htmlText(draft.content)) drafts.push(draft);
+                    const hasContent = !!(draft && htmlText(draft.content));
+                    const hasTitle = !!(draft && String(draft.title || '').trim() && draft.manualTitle);
+                    if (draft && (hasContent || hasTitle)) drafts.push(draft);
                 }
             } catch (error) {
                 console.warn('기록 노트 임시 저장 목록 읽기 실패:', error);
@@ -593,13 +661,26 @@
             const id = await ensureTarget();
             for (const draft of drafts) {
                 const recordItemId = draft.recordItemId;
-                const result = await api(recordItemId
-                    ? '/api/content-records/' + id + '/notes/' + recordItemId
-                    : '/api/content-records/' + id + '/notes', {
-                    method: recordItemId ? 'PUT' : 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ title: draft.title, content: draft.content })
-                });
+                if (recordItemId && draft.conflict) continue;
+                let result;
+                try {
+                    result = await api(recordItemId
+                        ? '/api/content-records/' + id + '/notes/' + recordItemId
+                        : '/api/content-records/' + id + '/notes', {
+                        method: recordItemId ? 'PUT' : 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(recordItemId
+                            ? { title: draft.title, content: draft.content, baseTitle: draft.baseTitle, baseContent: draft.baseContent }
+                            : { title: draft.title, content: draft.content })
+                    });
+                } catch (error) {
+                    if (recordItemId && error && error.status === 409) {
+                        draft.conflict = true;
+                        writeNoteDraft(draft);
+                        error.recordItemId = recordItemId;
+                    }
+                    throw error;
+                }
                 removeNoteDraft(recordItemId, draft.noteMode);
                 if (recordItemId) {
                     const item = byType('NOTE').find(function (candidate) {
@@ -612,6 +693,10 @@
                         item.updDt = pick(result, 'updDt', 'UPD_DT') || item.updDt;
                         item.updatedBy = pick(result, 'updatedBy', 'UPDATED_BY') || item.updatedBy;
                         item.updatedByName = pick(result, 'updatedByName', 'UPDATED_BY_NAME') || item.updatedByName;
+                        dispatchContentMetadataUpdated('NOTE', pick(item, 'contentId', 'CONTENT_ID'), 'autosave', {
+                            title: item.title,
+                            previewContent: draft.content
+                        });
                     }
                 } else {
                     const createdItem = result || {};
@@ -630,17 +715,22 @@
                         refreshNoteAudit(createdItem);
                         renderNoteTabsOnly();
                         updateCounts();
+                        dispatchContentMetadataUpdated('NOTE', pick(createdItem, 'contentId', 'CONTENT_ID'), 'create', {
+                            title: pick(createdItem, 'title', 'TITLE') || draft.title,
+                            previewContent: draft.content
+                        });
                     }
                 }
             }
             if (typeof config.onChanged === 'function') config.onChanged({ recordTargetId: state.recordTargetId, draftKey: state.draftKey, type: 'NOTE' });
             return true;
         }
-        async function saveActiveNote(options) {
+        async function performActiveNoteSave(options) {
             const opts = Object.assign({ silent: false, publish: false }, options || {});
             const form = el.noteEditor.querySelector('[data-dynamic-note-form]');
             const editor = state.noteEditorInstance;
-            if (!form || state.noteSaving || !canEdit()) return false;
+            if (!form || !canEdit()) return false;
+
             const content = editor ? editor.getData() : String((form.elements.content && form.elements.content.value) || '');
             const noteMode = form.getAttribute('data-note-mode') || 'create';
             const recordItemId = form.getAttribute('data-record-item-id') || null;
@@ -650,6 +740,7 @@
             const title = noteMode === 'create'
                 ? (String(state.newNoteTitle || '').trim() || noteAutoTitle(content))
                 : (currentTitle || noteAutoTitle(content));
+            const saveRevision = state.noteEditRevision;
 
             const hasContent = !!htmlText(content);
             const hasMeaningfulTitle = noteMode === 'create'
@@ -657,18 +748,18 @@
                 : !!String(title || '').trim();
             if (!hasContent && !hasMeaningfulTitle) {
                 removeNoteDraft(recordItemId, noteMode);
-                state.noteDirty = false;
+                if (state.noteEditRevision === saveRevision) state.noteDirty = false;
                 state.noteLastSavedContent = '';
                 setNoteStatus('', 'idle');
                 return false;
             }
             if (!opts.publish && content === state.noteLastSavedContent && !state.noteDirty) {
-                setNoteStatus('저장됨', 'saved');
+                setNoteStatus(state.noteConflict ? '충돌 · 임시 저장됨' : '저장됨', state.noteConflict ? 'error' : 'saved');
                 return true;
             }
 
             state.noteSaving = true;
-            state.noteDirty = false;
+            if (state.noteEditRevision === saveRevision) state.noteDirty = false;
             setNoteStatus(opts.publish ? '반영 중' : '저장 중', 'saving');
             try {
                 await ensureTarget();
@@ -678,6 +769,9 @@
                     title: title,
                     manualTitle: noteMode === 'create' ? !!state.newNoteManualTitle : true,
                     content: content,
+                    baseTitle: noteMode === 'update' ? state.noteBaseTitle : null,
+                    baseContent: noteMode === 'update' ? state.noteBaseContent : null,
+                    conflict: noteMode === 'update' ? !!state.noteConflict : false,
                     savedAt: Date.now()
                 };
                 if (!writeNoteDraft(draft)) throw new Error('임시 저장에 실패했습니다.');
@@ -687,18 +781,113 @@
                     currentNote.noteTitle = title;
                     currentNote.previewContent = content;
                 }
-                if (opts.publish) await publishNoteDrafts();
-                setNoteStatus('저장됨', 'saved');
+                if (opts.publish && !state.noteConflict) {
+                    await publishNoteDrafts();
+                    state.noteBaseTitle = title;
+                    state.noteBaseContent = content;
+                    state.noteConflict = false;
+                    state.noteConflictNotified = false;
+                }
+                state.noteLastFailedRevision = -1;
+                if (state.noteEditRevision !== saveRevision) {
+                    state.noteDirty = true;
+                    setNoteStatus('저장 대기', 'waiting');
+                } else {
+                    setNoteStatus(state.noteConflict ? '충돌 · 임시 저장됨' : '저장됨', state.noteConflict ? 'error' : 'saved');
+                }
                 return true;
             } catch (error) {
+                if (error && error.status === 409 && noteMode === 'update') {
+                    state.noteConflict = true;
+                    if (state.noteEditRevision === saveRevision) state.noteDirty = false;
+                    const conflictDraft = readNoteDraft(recordItemId, noteMode) || {
+                        recordItemId: Number(recordItemId),
+                        noteMode: noteMode,
+                        title: title,
+                        manualTitle: true,
+                        content: content,
+                        baseTitle: state.noteBaseTitle,
+                        baseContent: state.noteBaseContent,
+                        savedAt: Date.now()
+                    };
+                    conflictDraft.conflict = true;
+                    conflictDraft.savedAt = Date.now();
+                    writeNoteDraft(conflictDraft);
+                    setNoteStatus('충돌 · 임시 저장됨', 'error');
+                    if (!state.noteConflictNotified) {
+                        state.noteConflictNotified = true;
+                        const latest = error.body && error.body.latest;
+                        const who = latest ? String(pick(latest, 'updatedByName', 'UPDATED_BY_NAME') || '').trim() : '';
+                        const when = latest ? formatAuditDate(pick(latest, 'updDt', 'UPD_DT')) : '';
+                        alert('다른 사용자가 이 노트를 먼저 수정했습니다.' +
+                            (who || when ? '\n최신 수정: ' + (who || '다른 사용자') + (when ? ' · ' + when : '') : '') +
+                            '\n현재 작성 내용은 이 브라우저에 임시 저장되었고 서버 내용은 덮어쓰지 않았습니다.');
+                    }
+                    return true;
+                }
                 state.noteDirty = true;
-                setNoteStatus('저장 실패', 'error');
+                state.noteLastFailedRevision = saveRevision;
+                setNoteStatus('저장 실패 · 임시 저장됨', 'error');
                 if (!opts.silent) alert(error.message);
                 return false;
             } finally {
                 state.noteSaving = false;
-                if (state.noteDirty && !state.noteComposing) scheduleNoteSave();
             }
+        }
+
+        async function saveActiveNote(options) {
+            let opts = Object.assign({ silent: false, publish: false }, options || {});
+            if (!canEdit()) return false;
+
+            window.clearTimeout(state.noteSaveTimer);
+            state.noteSaveTimer = null;
+            if (opts.publish) state.notePublishRequested = true;
+
+            while (true) {
+                if (state.noteConflict) return true;
+
+                if (state.noteSavePromise) {
+                    const pending = state.noteSavePromise;
+                    await pending;
+                    if (state.noteSavePromise === pending) state.noteSavePromise = null;
+                    continue;
+                }
+
+                const publishNow = !!(opts.publish || state.notePublishRequested);
+                const needsSave = state.noteDirty || publishNow;
+                if (!needsSave) return true;
+
+                state.notePublishRequested = false;
+                const savePromise = performActiveNoteSave({ silent: opts.silent, publish: publishNow });
+                state.noteSavePromise = savePromise;
+                let result = false;
+                try {
+                    result = await savePromise;
+                } finally {
+                    if (state.noteSavePromise === savePromise) state.noteSavePromise = null;
+                }
+
+                if (state.noteConflict) return result;
+                // 같은 편집 버전에서 실패한 저장은 자동으로 무한 재시도하지 않는다.
+                // 다음 입력이나 명시적 flush(탭 이동/닫기) 때 다시 시도한다.
+                if (!result && state.noteLastFailedRevision === state.noteEditRevision) return false;
+
+                if (!state.noteDirty && !state.notePublishRequested) return result;
+                opts = { silent: true, publish: !!state.notePublishRequested };
+            }
+        }
+
+        async function flushActiveNoteSave() {
+            window.clearTimeout(state.noteSaveTimer);
+            state.noteSaveTimer = null;
+            if (!canEdit()) return true;
+
+            if (state.noteSavePromise) await state.noteSavePromise;
+            if (state.noteConflict) return true;
+            if (state.noteDirty || state.notePublishRequested) {
+                return saveActiveNote({ silent: true, publish: true });
+            }
+            return true;
         }
 
         async function commitActiveNoteBeforeNavigation() {
@@ -711,7 +900,12 @@
             const noteMode = form.getAttribute('data-note-mode') || 'create';
             const recordItemId = form.getAttribute('data-record-item-id') || null;
 
-            if (!htmlText(content)) {
+            const hasContent = !!htmlText(content);
+            const hasManualTitle = noteMode === 'create'
+                && state.newNoteManualTitle
+                && !!String(state.newNoteTitle || '').trim();
+
+            if (!hasContent && !hasManualTitle) {
                 removeNoteDraft(recordItemId, noteMode);
                 state.noteDirty = false;
                 state.noteLastSavedContent = '';
@@ -719,7 +913,7 @@
                 return true;
             }
 
-            const saved = await saveActiveNote({ silent: true, publish: true });
+            const saved = await flushActiveNoteSave();
             if (!saved) return false;
 
             if (state.recordTargetId) {
@@ -732,10 +926,11 @@
 
         async function renameActiveNote() {
             if (!canEdit() || state.newNoteMode) return;
-            if (state.noteDirty) {
-                const saved = await saveActiveNote({ silent: true });
-                if (!saved && state.noteDirty) return;
+            if (state.noteSavePromise || state.noteDirty || state.notePublishRequested) {
+                const saved = await flushActiveNoteSave();
+                if (!saved && !state.noteConflict) return;
             }
+            if (state.noteConflict) return;
             const notes = byType('NOTE');
             const item = notes[state.activeNoteIndex];
             const recordItemId = pick(item, 'recordItemId', 'RECORD_ITEM_ID');
@@ -768,14 +963,13 @@
                     const editor = state.noteEditorInstance;
                     const form = el.noteEditor.querySelector('[data-dynamic-note-form]');
                     const content = editor ? editor.getData() : String((form && form.elements.content && form.elements.content.value) || itemPreview(item) || '');
-                    if (!htmlText(content)) throw new Error('노트 내용을 입력하세요.');
 
                     setNoteStatus('저장 중', 'saving');
                     const targetId = await ensureTarget();
                     const result = await api('/api/content-records/' + targetId + '/notes/' + recordItemId, {
                         method: 'PUT',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ title: nextTitle, content: content })
+                        body: JSON.stringify({ title: nextTitle, content: content, baseTitle: state.noteBaseTitle, baseContent: state.noteBaseContent })
                     });
 
                     item.title = pick(result, 'title', 'TITLE') || nextTitle;
@@ -786,6 +980,14 @@
                     item.updatedByName = pick(result, 'updatedByName', 'UPDATED_BY_NAME') || item.updatedByName;
                     removeNoteDraft(recordItemId, 'update');
                     state.noteLastSavedContent = content;
+                    dispatchContentMetadataUpdated('NOTE', pick(item, 'contentId', 'CONTENT_ID'), 'rename', {
+                        title: item.title,
+                        previewContent: item.previewContent
+                    });
+                    state.noteBaseTitle = item.title;
+                    state.noteBaseContent = item.previewContent;
+                    state.noteConflict = false;
+                    state.noteConflictNotified = false;
                     state.noteDirty = false;
                     renderNoteTabsOnly();
                     setNoteStatus('저장됨', 'saved');
@@ -793,8 +995,25 @@
                         config.onChanged({ recordTargetId: state.recordTargetId, draftKey: state.draftKey, type: 'NOTE' });
                     }
                 } catch (error) {
-                    setNoteStatus('저장 실패', 'error');
-                    alert(error.message);
+                    if (error && error.status === 409) {
+                        state.noteConflict = true;
+                        writeNoteDraft({
+                            recordItemId: Number(recordItemId),
+                            noteMode: 'update',
+                            title: nextTitle,
+                            manualTitle: true,
+                            content: content,
+                            baseTitle: state.noteBaseTitle,
+                            baseContent: state.noteBaseContent,
+                            conflict: true,
+                            savedAt: Date.now()
+                        });
+                        setNoteStatus('충돌 · 임시 저장됨', 'error');
+                        alert(error.message || '다른 사용자가 이 노트를 먼저 수정했습니다. 현재 작성 내용은 임시 저장되었습니다.');
+                    } else {
+                        setNoteStatus('저장 실패', 'error');
+                        alert(error.message);
+                    }
                     renderNoteTabsOnly();
                 }
             }
@@ -838,9 +1057,12 @@
 
         function scheduleNoteSave() {
             window.clearTimeout(state.noteSaveTimer);
-            if (!state.noteDirty || state.noteComposing || state.noteSaving) return;
+            state.noteSaveTimer = null;
+            if (!state.noteDirty || state.noteComposing || state.noteConflict) return;
             state.noteSaveTimer = window.setTimeout(function () {
-                saveActiveNote({ silent: true });
+                state.noteSaveTimer = null;
+                // 서버 저장은 항상 직렬화한다. 저장 중 다시 수정되면 현재 요청 완료 후 최신 상태만 한 번 더 반영한다.
+                saveActiveNote({ silent: true, publish: true });
             }, 900);
         }
         async function mountNoteEditor(source, initialData, editable) {
@@ -869,8 +1091,9 @@
                         state.noteComposing = false;
                         if (!state.noteDirty) return;
                         const currentContent = editor.getData();
-                        if (state.newNoteMode && htmlText(currentContent)) saveActiveNote({ silent: true, publish: true });
-                        else scheduleNoteSave();
+                        if (htmlText(currentContent) || state.newNoteManualTitle || !state.newNoteMode) {
+                            scheduleNoteSave();
+                        }
                     });
                 }
                 if (editable) {
@@ -891,7 +1114,9 @@
                             setNoteStatus('저장됨', 'saved');
                             return;
                         }
+                        state.noteEditRevision += 1;
                         state.noteDirty = true;
+                        state.noteLastFailedRevision = -1;
                         if (state.newNoteMode && !state.newNoteManualTitle) {
                             const nextAutoTitle = noteAutoTitle(currentContent);
                             if (nextAutoTitle !== state.newNoteTitle) {
@@ -901,8 +1126,7 @@
                         }
                         setNoteStatus('저장 대기', 'waiting');
                         if (!state.noteComposing) {
-                            if (state.newNoteMode && htmlText(currentContent)) saveActiveNote({ silent: true, publish: true });
-                            else scheduleNoteSave();
+                            scheduleNoteSave();
                         }
                     });
                 }
@@ -912,10 +1136,11 @@
                 if (token !== state.noteEditorToken || !source.isConnected) return;
                 source.hidden = false;
                 source.addEventListener('input', function () {
+                    state.noteEditRevision += 1;
                     state.noteDirty = true;
+                    state.noteLastFailedRevision = -1;
                     setNoteStatus('저장 대기', 'waiting');
-                    if (state.newNoteMode && String(source.value || '').trim()) saveActiveNote({ silent: true, publish: true });
-                    else scheduleNoteSave();
+                    scheduleNoteSave();
                 });
                 setNoteStatus('기본 입력기로 전환됨', 'error');
             }
@@ -962,7 +1187,95 @@
             el.counts.forEach(function (node) {
                 node.textContent = String(counts[node.getAttribute('data-record-count')] || 0);
             });
+
+            // 타입 탭의 미확인 점은 숫자 배지에 귀속시킨다.
+            // 탭 우측 끝에 독립 배치하면 다음 탭 사이에 떠 보이므로,
+            // 각 타입의 count badge 우측 상단을 공통 anchor로 사용한다.
+            el.tabs.forEach(function (tab) {
+                const type = String(tab.getAttribute('data-record-tab') || '').toUpperCase();
+                const countBadge = tab.querySelector('[data-record-count]');
+                const oldDot = tab.querySelector('.moyo-record-tab-unread-dot');
+                const hasUnread = state.unreadTypes.has(type);
+                if (hasUnread && !oldDot) {
+                    const anchor = countBadge || tab;
+                    anchor.insertAdjacentHTML('beforeend',
+                        '<span class="moyo-record-tab-unread-dot" title="미확인 업데이트" aria-label="미확인 업데이트"></span>');
+                } else if (!hasUnread && oldDot) {
+                    oldDot.remove();
+                }
+            });
         }
+        function clearUnreadType(type) {
+            const normalized = ensureActiveType(type);
+            state.unreadTypes.delete(normalized);
+            state.unreadItemIds = new Set(Array.from(state.unreadItemIds).filter(function (id) {
+                const item = state.items.find(function (row) {
+                    return String(pick(row, 'recordItemId', 'RECORD_ITEM_ID') || '') === String(id);
+                });
+                return !item || normalizeType(item) !== normalized;
+            }));
+            updateCounts();
+            render();
+        }
+
+        function unreadTypeForItemId(recordItemId) {
+            const id = String(recordItemId || '');
+            const item = state.items.find(function (row) {
+                return String(pick(row, 'recordItemId', 'RECORD_ITEM_ID') || '') === id;
+            });
+            return item ? normalizeType(item) : '';
+        }
+
+        function clearUnreadItem(recordItemId) {
+            const id = String(recordItemId || '');
+            if (!id || !state.unreadItemIds.has(id)) return;
+            const type = unreadTypeForItemId(id);
+            state.unreadItemIds.delete(id);
+
+            if (type) {
+                const hasUnreadOfType = Array.from(state.unreadItemIds).some(function (otherId) {
+                    return unreadTypeForItemId(otherId) === type;
+                });
+                if (!hasUnreadOfType) state.unreadTypes.delete(type);
+            }
+
+            root.querySelectorAll(
+                '[data-record-item-id="' + id + '"] .moyo-record-unread-dot,' +
+                '[data-record-photo-item="' + id + '"] > .moyo-record-unread-dot,' +
+                '[data-link-item="' + id + '"] .moyo-record-unread-dot,' +
+                '[data-record-location-entry="' + id + '"] .moyo-record-unread-dot'
+            ).forEach(function (dot) { dot.remove(); });
+            updateCounts();
+        }
+
+        async function markUnreadItemViewed(recordItemId) {
+            const id = String(recordItemId || '');
+            if (!id || !state.unreadItemIds.has(id)) return true;
+            if (typeof config.onItemViewed === 'function') {
+                try {
+                    const viewed = await config.onItemViewed(id, unreadTypeForItemId(id));
+                    if (viewed === false) return false;
+                } catch (error) {
+                    console.error('[기록] 항목 읽음 처리 실패:', error);
+                    return false;
+                }
+            }
+            clearUnreadItem(id);
+            return true;
+        }
+
+        function selectRecordItemCard(node, type, recordItemId) {
+            if (!node) return;
+            root.querySelectorAll('.moyo-record-file-item.is-selected, .moyo-record-link-item.is-selected, .moyo-record-location-card.is-selected').forEach(function (item) {
+                item.classList.remove('is-selected');
+                item.setAttribute('aria-selected', 'false');
+            });
+            node.classList.add('is-selected');
+            node.setAttribute('aria-selected', 'true');
+            const id = String(recordItemId || '');
+            if (id) void markUnreadItemViewed(id);
+        }
+
         function updatePermission() {
             const editable = canEdit();
             root.classList.toggle('is-read-only', !editable);
@@ -980,6 +1293,9 @@
         }
         async function renderNotes() {
             await destroyNoteEditor();
+            state.noteEditRevision = 0;
+            state.noteLastFailedRevision = -1;
+            state.notePublishRequested = false;
             const notes = byType('NOTE');
             if (state.activeNoteIndex >= notes.length) state.activeNoteIndex = Math.max(0, notes.length - 1);
 
@@ -1010,13 +1326,20 @@
             const item = notes[state.activeNoteIndex];
             const recordItemId = pick(item, 'recordItemId', 'RECORD_ITEM_ID');
             const localDraft = readNoteDraft(recordItemId, 'update');
-            const content = localDraft ? localDraft.content : pick(item, 'previewContent', 'PREVIEW_CONTENT', 'memo', 'MEMO');
+            const serverTitle = String(itemTitle(item, 'NOTE') || '').trim();
+            const serverContent = String(pick(item, 'previewContent', 'PREVIEW_CONTENT', 'memo', 'MEMO') || '');
+            state.noteBaseTitle = localDraft && Object.prototype.hasOwnProperty.call(localDraft, 'baseTitle') ? String(localDraft.baseTitle || '') : serverTitle;
+            state.noteBaseContent = localDraft && Object.prototype.hasOwnProperty.call(localDraft, 'baseContent') ? String(localDraft.baseContent || '') : serverContent;
+            state.noteConflict = !!(localDraft && localDraft.conflict);
+            state.noteConflictNotified = false;
+            const content = localDraft ? localDraft.content : serverContent;
             if (localDraft && localDraft.title) { item.title = localDraft.title; item.noteTitle = localDraft.title; }
             el.noteEditor.innerHTML = '<form class="moyo-record-note-form" data-dynamic-note-form data-note-mode="update" data-record-item-id="' + esc(recordItemId) + '">' +
                 '<textarea class="moyo-record-note-source" name="content" data-note-editor-source></textarea>' +
                 noteAuditHtml(item, canEdit()) +
                 '</form>';
             await mountNoteEditor(el.noteEditor.querySelector('[data-note-editor-source]'), content || '', canEdit());
+            if (state.noteConflict) setNoteStatus('충돌 · 임시 저장됨', 'error');
         }
         function canDeletePhoto() {
             return String(pick(state.permission, 'canDeleteYn', 'CAN_DELETE_YN') || '').toUpperCase() === 'Y' || canEdit();
@@ -1048,7 +1371,7 @@
                 const recordItemId = pick(item, 'recordItemId', 'RECORD_ITEM_ID');
                 const postId = pick(item, 'contentId', 'CONTENT_ID');
                 const photoCount = Number(pick(item, 'photoCount', 'PHOTO_COUNT') || 0);
-                return '<article class="moyo-record-photo-item" data-record-photo-item="' + esc(recordItemId) + '">' +
+                return '<article class="moyo-record-photo-item" data-record-photo-item="' + esc(recordItemId) + '">' + unreadItemDot(item) +
                     '<button type="button" class="moyo-record-photo-item__open" data-record-photo-open="' + esc(postId) + '" aria-label="사진 크게 보기">' +
                     (src ? '<img src="' + esc(src) + '" alt="">' : '<span class="moyo-record-photo-item__placeholder"><i class="fa-regular fa-image"></i></span>') +
                     '</button>' +
@@ -1127,8 +1450,8 @@
                 const meta = [pick(item, 'fileExtension', 'FILE_EXTENSION'), size ? formatFileSize(size) : '', creator ? creator + ' 업로드' : '', createdText].filter(Boolean).join(' · ');
                 const canRename = Number(pick(item, 'fileCanRename', 'FILE_CAN_RENAME') || 0) === 1;
                 const visual = fileVisualInfo(item);
-                return '<article class="moyo-record-file-item"><span class="moyo-record-file-item__icon is-' + visual.type + '" aria-hidden="true"><i class="' + visual.icon + '"></i></span><div class="moyo-record-file-item__copy"><strong title="' + esc(fileName) + '">' +
-                    esc(fileName) + '</strong><small>' + esc(meta || createdText) +
+                return '<article class="moyo-record-file-item" data-record-item-id="' + esc(recordItemId) + '" data-record-file-select tabindex="0" role="button" aria-selected="false" aria-label="' + esc(fileName) + ' 선택"><span class="moyo-record-file-item__icon is-' + visual.type + '" aria-hidden="true"><i class="' + visual.icon + '"></i></span><div class="moyo-record-file-item__copy"><div class="moyo-record-item-title-row"><strong class="moyo-record-file-item__title" title="' + esc(fileName) + '">' +
+                    esc(fileName) + '</strong>' + unreadItemDot(item) + '</div><small>' + esc(meta || createdText) +
                     '</small></div><div class="moyo-record-file-item__actions"><a href="' + esc((config.contextPath || '') + downloadUrl) + '" aria-label="파일 다운로드" title="다운로드"><i class="fa-solid fa-download"></i></a>' +
                     ((canRename || canDelete()) ? '<div class="moyo-record-file-menu"><button type="button" class="moyo-record-file-menu__toggle" data-record-action-menu-toggle="FILE" aria-label="파일 메뉴" title="더보기" aria-expanded="false"><i class="fa-solid fa-ellipsis-vertical"></i></button><div class="moyo-record-file-menu__panel" data-record-action-menu-panel hidden>' +
                         (canRename ? '<button type="button" data-record-file-rename="' + esc(contentId) + '" data-record-file-name="' + esc(fileName) + '"><i class="fa-regular fa-pen-to-square"></i><span>이름 변경</span></button>' : '') +
@@ -1166,6 +1489,7 @@
                     body: JSON.stringify({ name: name })
                 });
                 await load();
+                dispatchContentMetadataUpdated('FILE', contentId, 'rename', { originalName: name });
                 if (typeof config.onChanged === 'function') config.onChanged({ recordTargetId: state.recordTargetId, draftKey: state.draftKey, type: 'FILE' });
             } catch (error) {
                 alert(error.message || '파일 이름을 변경하지 못했습니다.');
@@ -1288,19 +1612,22 @@
                 const faviconUrl = linkFaviconUrl(url);
                 const editingId = el.linkForm && el.linkForm.elements.recordItemId ? String(el.linkForm.elements.recordItemId.value || '') : '';
                 const editingClass = editingId && editingId === String(recordItemId) ? ' is-editing' : '';
-                return '<article class="moyo-record-link-item' + editingClass + '" data-link-item="' + esc(recordItemId) + '">' +
-                    '<a class="moyo-record-link-item__open" href="' + esc(url) + '" target="_blank" rel="noopener noreferrer" aria-label="' + esc(primaryText) + ' 새 창에서 열기">' +
+                return '<article class="moyo-record-link-item' + editingClass + '" data-link-item="' + esc(recordItemId) + '" aria-selected="false">' + unreadItemDot(item) +
+                    '<button type="button" class="moyo-record-link-item__select" data-record-link-select aria-label="' + esc(primaryText) + ' 선택">' +
                         '<span class="moyo-record-link-item__icon">' +
                             (faviconUrl ? '<img alt="" hidden data-record-link-favicon-url="' + esc(faviconUrl) + '">' : '') +
                             '<i class="fa-solid fa-link" data-record-link-favicon-fallback></i>' +
                         '</span>' +
                         '<div class="moyo-record-link-item__content' + (title ? '' : ' is-url-only') + '">' +
-                            (title ? '<strong>' + esc(title) + '</strong><span class="moyo-record-link-item__host">' + esc(linkHost(url)) + '</span>' : '<span class="moyo-record-link-item__url">' + esc(url) + '</span>') +
+                            '<div class="moyo-record-item-title-row">' +
+                                (title ? '<strong class="moyo-record-link-item__title">' + esc(title) + '</strong>' : '<span class="moyo-record-link-item__url">' + esc(url) + '</span>') + unreadItemDot(item) +
+                            '</div>' +
+                            (title ? '<span class="moyo-record-link-item__host">' + esc(linkHost(url)) + '</span>' : '') +
                             (description ? '<p>' + esc(description) + '</p>' : '') +
                             (meta ? '<small>' + esc(meta) + '</small>' : '') +
                         '</div>' +
-                        '<i class="fa-solid fa-arrow-up-right-from-square moyo-record-link-item__external"></i>' +
-                    '</a>' +
+                    '</button>' +
+                    '<a class="moyo-record-link-item__external-open" href="' + esc(url) + '" target="_blank" rel="noopener noreferrer" aria-label="' + esc(primaryText) + ' 새 창에서 열기" title="새 창에서 열기"><i class="fa-solid fa-arrow-up-right-from-square"></i></a>' +
                     ((editable || deletable) ? '<div class="moyo-record-link-item__menu">' +
                         '<button type="button" class="moyo-record-link-item__menu-toggle" data-record-action-menu-toggle="LINK" aria-label="링크 메뉴" title="메뉴" aria-expanded="false"><i class="fa-solid fa-ellipsis"></i></button>' +
                         '<div class="moyo-record-link-item__menu-panel" data-record-action-menu-panel hidden>' +
@@ -1318,7 +1645,7 @@
         }
         function locationMapPreviewUrl(query) {
             const value = String(query || '').trim();
-            return value ? 'https://maps.google.com/maps?q=' + encodeURIComponent(value) + '&output=embed' : '';
+            return value ? 'https://www.google.com/maps?q=' + encodeURIComponent(value) + '&output=embed' : '';
         }
         function locationMapExternalUrl(query) {
             const value = String(query || '').trim();
@@ -1379,28 +1706,58 @@
             updateLocationAddButton();
         }
         function loadRecordPostcode(callback) {
-            if (window.daum && window.daum.Postcode) {
+            if ((window.kakao && window.kakao.Postcode) || (window.daum && window.daum.Postcode)) {
                 callback();
                 return;
             }
-            const existing = document.getElementById('moyoRecordPostcodeScript');
+
+            const scriptId = 'moyoRecordPostcodeScript';
+            const scriptUrl = 'https://t1.kakaocdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js';
+            let existing = document.getElementById(scriptId);
+
             if (existing) {
-                existing.addEventListener('load', callback, { once: true });
-                return;
+                if (existing.dataset.loadState === 'error') {
+                    existing.remove();
+                    existing = null;
+                } else {
+                    existing.addEventListener('load', function () {
+                        if ((window.kakao && window.kakao.Postcode) || (window.daum && window.daum.Postcode)) callback();
+                    }, { once: true });
+                    return;
+                }
             }
+
             const script = document.createElement('script');
-            script.id = 'moyoRecordPostcodeScript';
-            script.src = '//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js';
-            script.onload = callback;
+            script.id = scriptId;
+            script.src = scriptUrl;
+            script.async = true;
+            script.dataset.loadState = 'loading';
+            script.onload = function () {
+                script.dataset.loadState = 'loaded';
+                if ((window.kakao && window.kakao.Postcode) || (window.daum && window.daum.Postcode)) {
+                    callback();
+                    return;
+                }
+                script.dataset.loadState = 'error';
+                script.remove();
+                alert('주소 검색을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.');
+            };
             script.onerror = function () {
-                alert('주소 검색을 불러오지 못했습니다. 장소는 직접 입력할 수 있습니다.');
+                script.dataset.loadState = 'error';
+                script.remove();
+                alert('주소 검색을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.');
             };
             document.head.appendChild(script);
         }
         function openLocationSearch() {
             if (!el.locationForm) return;
             loadRecordPostcode(function () {
-                new window.daum.Postcode({
+                const PostcodeCtor = (window.kakao && window.kakao.Postcode) || (window.daum && window.daum.Postcode);
+                if (!PostcodeCtor) {
+                    alert('주소 검색 모듈을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.');
+                    return;
+                }
+                new PostcodeCtor({
                     oncomplete: function (data) {
                         const address = String(data.roadAddress || data.jibunAddress || '').trim();
                         if (!address) return;
@@ -1444,18 +1801,17 @@
                 const mapQuery = address || text;
                 const hasMap = Boolean(address);
                 return '<div class="moyo-record-location-entry' + (primary ? ' is-primary' : '') + '" data-record-location-entry="' + esc(recordItemId) + '">' +
-                    '<article class="moyo-record-location-card' + (hasMap ? ' is-clickable' : '') + '"' +
-                        (primary && hasMap ? ' data-record-location-primary-card' : '') +
-                        (hasMap ? ' data-record-location-card-toggle tabindex="0" role="button" aria-expanded="false" aria-label="장소 지도 미리보기 열기"' : '') + '>' +
+                    '<article class="moyo-record-location-card" data-record-location-select tabindex="0" role="button" aria-selected="false" aria-label="' + esc(text) + ' 선택"' +
+                        (primary && hasMap ? ' data-record-location-primary-card' : '') + '>' +
                         '<span><i class="fa-solid fa-location-dot"></i></span>' +
                         '<div class="moyo-record-location-card__content"><div class="moyo-record-location-card__title">' +
-                            (primary ? '<em>대표</em>' : '') + '<strong>' + esc(text) + '</strong></div>' +
+                            (primary ? '<em>대표</em>' : '') + '<div class="moyo-record-item-title-row"><strong class="moyo-record-location-card__title-text">' + esc(text) + '</strong>' + unreadItemDot(item) + '</div></div>' +
                             (address && address !== text ? '<p>' + esc(address) + '</p>' : '') +
                             (detail ? '<small class="moyo-record-location-card__detail">' + esc(detail) + '</small>' : '') +
                             (description ? '<small class="moyo-record-location-card__description">' + esc(description) + '</small>' : '') +
                         '</div>' +
                         '<div class="moyo-record-location-card__actions">' +
-                            (hasMap ? '<i class="fa-solid fa-chevron-down moyo-record-location-card__toggle-icon" aria-hidden="true"></i>' : '') +
+                            ((!editable && hasMap) ? '<button type="button" class="moyo-record-location-card__preview-toggle" data-record-location-preview-toggle aria-label="지도 미리보기" title="지도 미리보기" aria-expanded="false"><i class="fa-solid fa-chevron-down moyo-record-location-card__toggle-icon" aria-hidden="true"></i></button>' : '') +
                             ((editable || deletable) ? '<div class="moyo-record-location-card__menu">' +
                                 '<button type="button" class="moyo-record-location-card__menu-toggle" data-record-action-menu-toggle="LOCATION" data-record-location-menu-toggle="' + esc(recordItemId) + '" aria-label="장소 메뉴" title="메뉴" aria-expanded="false"><i class="fa-solid fa-ellipsis"></i></button>' +
                                 '<div class="moyo-record-location-card__menu-panel" data-record-location-menu-panel="' + esc(recordItemId) + '" data-record-action-menu-panel hidden>' +
@@ -1465,7 +1821,7 @@
                                 '</div></div>' : '') +
                         '</div>' +
                     '</article>' +
-                    (hasMap ? '<div class="moyo-record-location-card-preview" data-record-location-card-preview hidden>' +
+                    ((!editable && hasMap) ? '<div class="moyo-record-location-card-preview" data-record-location-card-preview hidden>' +
                         '<div class="moyo-record-location-card-preview__head"><div><strong>지도 미리보기</strong><span>' + esc(address) + '</span></div>' +
                         '<button type="button" data-record-location-current-map="' + esc(mapQuery) + '"><i class="fa-solid fa-arrow-up-right-from-square"></i><span>지도보기</span></button></div>' +
                         '<iframe title="저장된 장소 지도 미리보기" loading="lazy" referrerpolicy="no-referrer-when-downgrade" data-record-location-card-map-src="' + esc(locationMapPreviewUrl(mapQuery)) + '"></iframe>' +
@@ -1473,29 +1829,9 @@
                 '</div>';
             }).join('');
             updateLocationAddButton();
-            if (state.locationPreviewAfterSaveId) {
-                const previewRecordItemId = String(state.locationPreviewAfterSaveId);
-                state.locationPreviewAfterSaveId = null;
-                window.requestAnimationFrame(function () {
-                    const entry = el.locationCurrent && el.locationCurrent.querySelector('[data-record-location-entry="' + previewRecordItemId.replace(/"/g, '\"') + '"]');
-                    const card = entry && entry.querySelector('[data-record-location-card-toggle]');
-                    if (!card) return;
-                    toggleSavedLocationPreview(card);
-                    card.scrollIntoView({ block: 'nearest', behavior: 'auto' });
-                });
-                return;
-            }
-            if (!state.locationInitialPreviewApplied) {
-                state.locationInitialPreviewApplied = true;
-                window.requestAnimationFrame(function () {
-                    const primaryCard = el.locationCurrent && el.locationCurrent.querySelector('[data-record-location-primary-card]');
-                    if (primaryCard) toggleSavedLocationPreview(primaryCard);
-                });
-            }
         }
         function editLocation(recordItemId) {
             if (!el.locationForm || !canEdit()) return;
-            closeSavedLocationPreviews();
             const item = byType('LOCATION').find(function (entry) {
                 return String(pick(entry, 'recordItemId', 'RECORD_ITEM_ID')) === String(recordItemId);
             });
@@ -1601,10 +1937,12 @@
             }
             if (typeof handler === 'function') {
                 await handler({ recordTargetId: id, draftKey: state.draftKey, form: form, formData: formData });
+                dispatchContentMetadataUpdated(type, null, 'create');
                 return;
             }
             if (type === 'FILE') {
                 await api('/api/content-records/' + encodeURIComponent(id) + '/files', { method: 'POST', body: formData });
+                dispatchContentMetadataUpdated('FILE', null, 'create');
                 return;
             }
             throw new Error(TYPE_LABEL[type] + ' 저장 기능이 아직 연결되지 않았습니다.');
@@ -1693,7 +2031,6 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
             });
-            state.locationPreviewAfterSaveId = recordItemId || null;
         }
         async function handleSubmit(form, type) {
             const submit = form.querySelector('[type="submit"]');
@@ -1734,8 +2071,17 @@
                 state.newNoteTitle = '새 노트';
                 state.newNoteManualTitle = false;
                 state.items = [];
+                state.unreadItemIds = new Set((Array.isArray(next.unreadItemIds) ? next.unreadItemIds : []).map(String));
+                state.unreadTypes = new Set((Array.isArray(next.unreadTypes) ? next.unreadTypes : []).map(function (type) {
+                    return String(type || '').toUpperCase();
+                }));
                 state.permission = null;
-                state.locationInitialPreviewApplied = false;
+                window.clearTimeout(state.noteSaveTimer);
+                state.noteSaveTimer = null;
+                state.noteSavePromise = null;
+                state.notePublishRequested = false;
+                state.noteEditRevision = 0;
+                state.noteLastFailedRevision = -1;
                 state.opened = true;
                 resetLinkForm();
                 resetLocationForm();
@@ -1750,6 +2096,11 @@
 
                 try {
                     await load();
+                    if (state.activeType === 'NOTE') {
+                        const visibleNote = byType('NOTE')[state.activeNoteIndex];
+                        const visibleRecordItemId = visibleNote ? pick(visibleNote, 'recordItemId', 'RECORD_ITEM_ID') : null;
+                        if (visibleRecordItemId != null) await markUnreadItemViewed(visibleRecordItemId);
+                    }
                 } catch (error) {
                     if (sequence === state.openSequence) alert(error.message);
                 } finally {
@@ -1772,13 +2123,18 @@
             state.openPromise = null;
             state.openingKey = '';
             setBusy(false);
-            if (state.noteDirty) await saveActiveNote({ silent: true });
             if (canEdit()) {
                 try {
-                    setNoteStatus('반영 중', 'saving');
-                    await publishNoteDrafts();
+                    const flushed = await flushActiveNoteSave();
+                    if (!flushed && !state.noteConflict) {
+                        setNoteStatus('저장 실패 · 임시 저장됨', 'error');
+                    }
+                    if (!state.noteConflict) {
+                        setNoteStatus('반영 중', 'saving');
+                        await publishNoteDrafts();
+                    }
                 } catch (error) {
-                    setNoteStatus('저장 실패', 'error');
+                    setNoteStatus('저장 실패 · 임시 저장됨', 'error');
                     alert(error.message);
                     return;
                 }
@@ -1791,6 +2147,91 @@
             document.body.classList.remove('moyo-record-modal-open');
         }
 
+        root.addEventListener('click', function (event) {
+            let itemId = null;
+
+            const photoOpen = event.target.closest('[data-record-photo-open]');
+            if (photoOpen) {
+                const row = photoOpen.closest('[data-record-photo-item]');
+                itemId = row && row.getAttribute('data-record-photo-item');
+            }
+
+            if (!itemId) {
+                const fileAction = event.target.closest('.moyo-record-file-item__actions a');
+                if (fileAction) {
+                    const row = fileAction.closest('[data-record-item-id]');
+                    itemId = row && row.getAttribute('data-record-item-id');
+                }
+            }
+
+            if (!itemId) {
+                const linkOpen = event.target.closest('.moyo-record-link-item__external-open');
+                if (linkOpen) {
+                    const row = linkOpen.closest('[data-link-item]');
+                    itemId = row && row.getAttribute('data-link-item');
+                }
+            }
+
+            if (!itemId) {
+                const locationOpen = event.target.closest('[data-record-location-current-map]');
+                if (locationOpen) {
+                    const row = locationOpen.closest('[data-record-location-entry]');
+                    itemId = row && row.getAttribute('data-record-location-entry');
+                }
+            }
+
+            if (itemId) void markUnreadItemViewed(itemId);
+        }, true);
+
+        root.addEventListener('click', function (event) {
+            const fileCard = event.target.closest('[data-record-file-select]');
+            if (fileCard && !event.target.closest('.moyo-record-file-item__actions')) {
+                selectRecordItemCard(fileCard, 'FILE', fileCard.getAttribute('data-record-item-id'));
+                return;
+            }
+            const linkSelect = event.target.closest('[data-record-link-select]');
+            if (linkSelect) {
+                const row = linkSelect.closest('[data-link-item]');
+                const recordItemId = row && row.getAttribute('data-link-item');
+                selectRecordItemCard(row, 'LINK', recordItemId);
+                if (recordItemId && canEdit()) editLink(recordItemId);
+                return;
+            }
+            const locationCard = event.target.closest('[data-record-location-select]');
+            if (locationCard && !event.target.closest('.moyo-record-location-card__actions')) {
+                const row = locationCard.closest('[data-record-location-entry]');
+                const recordItemId = row && row.getAttribute('data-record-location-entry');
+                selectRecordItemCard(locationCard, 'LOCATION', recordItemId);
+                if (recordItemId && canEdit()) {
+                    editLocation(recordItemId);
+                } else if (recordItemId) {
+                    toggleSavedLocationPreview(locationCard);
+                }
+            }
+        });
+
+        root.addEventListener('keydown', function (event) {
+            if (event.key !== 'Enter' && event.key !== ' ') return;
+            const fileCard = event.target.closest('[data-record-file-select]');
+            if (fileCard && event.target === fileCard) {
+                event.preventDefault();
+                selectRecordItemCard(fileCard, 'FILE', fileCard.getAttribute('data-record-item-id'));
+                return;
+            }
+            const locationCard = event.target.closest('[data-record-location-select]');
+            if (locationCard && event.target === locationCard) {
+                event.preventDefault();
+                const row = locationCard.closest('[data-record-location-entry]');
+                const recordItemId = row && row.getAttribute('data-record-location-entry');
+                selectRecordItemCard(locationCard, 'LOCATION', recordItemId);
+                if (recordItemId && canEdit()) {
+                    editLocation(recordItemId);
+                } else if (recordItemId) {
+                    toggleSavedLocationPreview(locationCard);
+                }
+            }
+        });
+
         root.querySelectorAll('[data-record-modal-close]').forEach(function (button) { button.addEventListener('click', close); });
         root.querySelector('.moyo-record-modal__tabs').addEventListener('click', async function (event) {
             const tab = event.target.closest('[data-record-tab]');
@@ -1801,6 +2242,8 @@
                 if (!committed) return;
             }
             activateType(nextType);
+            // 상위 타입 탭을 눌렀다는 이유만으로 하위 항목을 전부 읽음 처리하지 않는다.
+            // 실제 항목을 열거나 선택했을 때만 해당 항목의 점을 제거한다.
         });
         (function bindVisualNoteReorder() {
             let sourceTab = null;
@@ -2059,6 +2502,7 @@
             });
             state.activeNoteIndex = refreshedIndex >= 0 ? refreshedIndex : Math.min(nextIndex, Math.max(0, refreshedNotes.length - 1));
             await renderNotes();
+            if (targetRecordItemId != null) await markUnreadItemViewed(targetRecordItemId);
         });
         function renameNewDraftTitle() {
             if (!canEdit() || !state.newNoteMode) return;
@@ -2086,7 +2530,9 @@
                 if (commit && nextTitle) {
                     state.newNoteTitle = nextTitle;
                     state.newNoteManualTitle = true;
+                    state.noteEditRevision += 1;
                     state.noteDirty = true;
+                    state.noteLastFailedRevision = -1;
                     saveActiveNote({ silent: true, publish: true });
                 }
                 renderNoteTabsOnly();
@@ -2451,46 +2897,39 @@
         if (el.locationCancel) el.locationCancel.addEventListener('click', function () {
             resetLocationForm();
         });
-        function closeSavedLocationPreviews() {
+        function closeSavedLocationPreviews(exceptPreview) {
             if (!el.locationCurrent) return;
             el.locationCurrent.querySelectorAll('[data-record-location-card-preview]:not([hidden])').forEach(function (preview) {
+                if (exceptPreview && preview === exceptPreview) return;
                 preview.hidden = true;
                 const entry = preview.closest('.moyo-record-location-entry');
-                const card = entry && entry.querySelector('[data-record-location-card-toggle]');
+                const card = entry && entry.querySelector('[data-record-location-select]');
                 if (card) {
                     card.classList.remove('is-expanded');
                     card.setAttribute('aria-expanded', 'false');
+                    const toggle = card.querySelector('[data-record-location-preview-toggle]');
+                    if (toggle) toggle.setAttribute('aria-expanded', 'false');
                 }
             });
         }
         function toggleSavedLocationPreview(card) {
-            if (!card) return;
+            if (!card || canEdit()) return;
             const entry = card.closest('.moyo-record-location-entry');
-            const preview = entry ? entry.querySelector('[data-record-location-card-preview]') : null;
+            const preview = entry && entry.querySelector('[data-record-location-card-preview]');
             if (!preview) return;
             const opening = preview.hidden;
-
-            if (opening && el.locationCurrent) {
-                el.locationCurrent.querySelectorAll('[data-record-location-card-preview]:not([hidden])').forEach(function (openedPreview) {
-                    if (openedPreview === preview) return;
-                    openedPreview.hidden = true;
-                    const openedEntry = openedPreview.closest('.moyo-record-location-entry');
-                    const openedCard = openedEntry && openedEntry.querySelector('[data-record-location-card-toggle]');
-                    if (openedCard) {
-                        openedCard.classList.remove('is-expanded');
-                        openedCard.setAttribute('aria-expanded', 'false');
-                    }
-                });
-            }
-
+            if (opening) closeSavedLocationPreviews(preview);
             preview.hidden = !opening;
             card.classList.toggle('is-expanded', opening);
             card.setAttribute('aria-expanded', opening ? 'true' : 'false');
+            const toggle = card.querySelector('[data-record-location-preview-toggle]');
+            if (toggle) toggle.setAttribute('aria-expanded', opening ? 'true' : 'false');
             if (opening) {
                 const iframe = preview.querySelector('[data-record-location-card-map-src]');
                 if (iframe && !iframe.getAttribute('src')) iframe.setAttribute('src', iframe.dataset.recordLocationCardMapSrc || '');
             }
         }
+
         function closeActionPortalMenu() {
             const panel = state.actionMenuPanel;
             const button = state.actionMenuButton;
@@ -2570,14 +3009,21 @@
 
         if (el.locationCurrent) el.locationCurrent.addEventListener('click', function (event) {
             if (event.target.closest('[data-record-action-menu-toggle]')) return;
+            const previewToggle = event.target.closest('[data-record-location-preview-toggle]');
+            if (previewToggle) {
+                event.preventDefault();
+                event.stopPropagation();
+                const entry = previewToggle.closest('[data-record-location-entry]');
+                const card = entry && entry.querySelector('[data-record-location-select]');
+                if (card) toggleSavedLocationPreview(card);
+                return;
+            }
             const mapButton = event.target.closest('[data-record-location-current-map]');
             if (mapButton) {
                 const url = locationMapExternalUrl(mapButton.dataset.recordLocationCurrentMap);
                 if (url) window.open(url, '_blank', 'noopener,noreferrer');
                 return;
             }
-            const card = event.target.closest('[data-record-location-card-toggle]');
-            if (card) toggleSavedLocationPreview(card);
         });
 
         /* 포털 메뉴 바깥 클릭은 버블 단계까지 기다리지 않고 캡처 단계에서 닫는다.
@@ -2676,13 +3122,24 @@
             if (state.actionMenuPanel) positionActionPortalMenu();
         });
 
-        if (el.locationCurrent) el.locationCurrent.addEventListener('keydown', function (event) {
-            if (event.key !== 'Enter' && event.key !== ' ') return;
-            const card = event.target.closest('[data-record-location-card-toggle]');
-            if (!card || event.target.closest('.moyo-record-location-card__menu')) return;
-            event.preventDefault();
-            toggleSavedLocationPreview(card);
+        document.addEventListener('moyo:content-metadata-updated', function (event) {
+            const detail = event.detail || {};
+            if (detail.source === 'record' || !state.opened || !state.recordTargetId) return;
+            const changedType = String(detail.contentType || '').toUpperCase();
+            const changedId = String(detail.contentId == null ? '' : detail.contentId);
+            if (!changedType) return;
+            const linked = state.items.some(function (entry) {
+                if (String(pick(entry, 'recordType', 'RECORD_TYPE') || '').toUpperCase() !== changedType) return false;
+                return !changedId || String(pick(entry, 'contentId', 'CONTENT_ID') || '') === changedId;
+            });
+            if (!linked) return;
+            if (changedType === 'NOTE' && (state.noteDirty || state.noteSaving || state.noteConflict)) return;
+            window.clearTimeout(state.externalRefreshTimer);
+            state.externalRefreshTimer = window.setTimeout(function () {
+                load().catch(function (error) { console.warn('탐색기 변경 후 기록 새로고침 실패:', error); });
+            }, 120);
         });
+
         document.addEventListener('moyo:photo-post-updated', function (event) {
             const detail = event.detail || {};
             const postId = String(detail.postId || '');
@@ -2724,7 +3181,14 @@
         });
         document.addEventListener('keydown', function (event) { if (event.key === 'Escape' && state.opened) close(); });
 
-        const instance = { open: open, close: close, reload: load, getState: function () { return Object.assign({}, state); } };
+        const instance = {
+            open: open,
+            close: close,
+            reload: load,
+            clearUnreadType: clearUnreadType,
+            clearUnreadItem: clearUnreadItem,
+            getState: function () { return Object.assign({}, state); }
+        };
         root.__moyoRecordInstance = instance;
         return instance;
     }

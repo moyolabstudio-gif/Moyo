@@ -11,6 +11,7 @@ function getProjectCommunityConfig(projId) {
         wsId: config.wsId || '',
         projId: projId || getProjectMainProjId(),
         canManageNotice: config.canManageProject === true,
+        readOnly: config.projectReadOnly === true,
         limits: { board: 3, schedule: 4, poll: 2, activity: 4 },
         retryBoards: 'loadAllWidgets.bind(null, getProjectMainProjId())',
         retryToday: 'loadProjectTodaySchedule.bind(null, getProjectMainProjId())',

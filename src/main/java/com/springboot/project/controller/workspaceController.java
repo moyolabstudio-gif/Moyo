@@ -28,6 +28,7 @@ import com.springboot.project.dto.workspaceUpdateResult;
 import com.springboot.project.service.IprojectService;
 import com.springboot.project.service.IworkspaceService;
 import com.springboot.project.service.WorkspaceAuthorizationService;
+import com.springboot.project.service.EmailVerificationService;
 import com.springboot.project.service.InoteService;
 import com.springboot.project.service.IcontentShareService;
 import com.springboot.project.service.fileUploadService;
@@ -68,6 +69,8 @@ public class workspaceController {
     @Autowired
     private WorkspaceAuthorizationService workspaceAuthorizationService;
     @Autowired
+    private EmailVerificationService emailVerificationService;
+    @Autowired
     private ObjectMapper objectMapper;
    
     @PostMapping("/api/create")
@@ -86,6 +89,7 @@ public class workspaceController {
             @RequestParam(value = "positionName", required = false) String positionName,
             @RequestParam(value = "phoneNumber", required = false) String phoneNumber,
             @RequestParam(value = "profileImage", required = false) MultipartFile profileImage,
+            @RequestParam(value = "showEmail", defaultValue = "Y") String showEmail,
             @RequestParam(value = "showPhone", defaultValue = "Y") String showPhone,
             @RequestParam(value = "showBirth", defaultValue = "Y") String showBirth,
             HttpSession session) {
@@ -136,6 +140,24 @@ public class workspaceController {
             displayName = user.getUSER_NAME();
             contactEmail = user.getEMAIL();
             profileImage = null;
+        } else {
+            String normalizedContactEmail = contactEmail == null
+                    ? ""
+                    : contactEmail.trim().toLowerCase();
+            String normalizedAccountEmail = user.getEMAIL() == null
+                    ? ""
+                    : user.getEMAIL().trim().toLowerCase();
+
+            // 계정 이메일과 다른 주소는 실제 인증된 경우에만 그룹 프로필에 반영한다.
+            // 미인증 주소는 그룹 생성 자체를 막지 않고 저장/공개 대상에서 제외한다.
+            if (normalizedContactEmail.isEmpty()) {
+                contactEmail = null;
+                showEmail = "N";
+            } else if (!normalizedContactEmail.equals(normalizedAccountEmail)
+                    && !emailVerificationService.isVerified(normalizedContactEmail, session)) {
+                contactEmail = null;
+                showEmail = "N";
+            }
         }
 
         Map<String, Object> profile = new HashMap<>();
@@ -148,6 +170,7 @@ public class workspaceController {
                 && profileImage != null && !profileImage.isEmpty()) {
             profile.put("profileImagePath", fileUploadService.upload(profileImage));
         }
+        profile.put("showEmail", showEmail);
         profile.put("showPhone", showPhone);
         profile.put("showBirth", showBirth);
 
@@ -180,6 +203,10 @@ public class workspaceController {
                 user.getUSER_NAME() == null ? "" : user.getUSER_NAME());
         model.addAttribute("accountEmail",
                 user.getEMAIL() == null ? "" : user.getEMAIL());
+        model.addAttribute("accountBirthDate",
+                user.getBirthDate() == null ? "" : user.getBirthDate());
+        model.addAttribute("accountBirthCalendarType",
+                user.getBirthCalendarType() == null ? "SOLAR" : user.getBirthCalendarType());
 
         return "workspace/workspaceCreate";
     }
@@ -216,7 +243,7 @@ public class workspaceController {
         
         List<projectRequestDTO> projectList = projectService.getProjectsByWsId(wsId);
         model.addAttribute("projectList", projectList);
-        model.addAttribute("projectOverview", projectService.getProjectListByWorkspaceId(wsId));
+        model.addAttribute("projectOverview", projectService.getProjectListByWorkspaceId(wsId, loginUser.getUserId()));
 
         List<Map<String, Object>> memberList = workspaceService.getWorkspaceMembers(wsId);
         model.addAttribute("memberList", memberList);
@@ -484,7 +511,11 @@ public class workspaceController {
         }
 
         int result = workspaceDAO.requestWorkspaceDeletion(wsId, loginUser.getUserId());
-        return result > 0 ? "success" : "fail";
+        if (result > 0) {
+            workspaceDAO.cascadeWorkspaceProjectDeletion(wsId, loginUser.getUserId());
+            return "success";
+        }
+        return "fail";
     }
 
     @PostMapping("/api/delete/cancel")
@@ -502,6 +533,8 @@ public class workspaceController {
                 || !workspace.getOwnerId().equals(loginUser.getUserId())) {
             return "owner_only";
         }
+
+        workspaceDAO.cancelWorkspaceProjectDeletionCascade(wsId, loginUser.getUserId());
 
         int result = workspaceDAO.cancelWorkspaceDeletion(wsId, loginUser.getUserId());
         return result > 0 ? "success" : "fail";

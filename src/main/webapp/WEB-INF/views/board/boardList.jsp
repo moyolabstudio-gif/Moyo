@@ -57,9 +57,11 @@
                 <c:if test="${boardType ne 'NOTICE' or canManageBoard}">
                     <c:choose>
                         <c:when test="${not empty projId}">
+                            <c:if test="${not projectReadOnly}">
                             <a href="/group/board/write?wsId=${wsId}&projId=${projId}&type=${boardType}" class="board-write-btn">
                                 <c:choose><c:when test="${false}">+ 자료 등록</c:when><c:otherwise>+ 글쓰기</c:otherwise></c:choose>
                             </a>
+                            </c:if>
                         </c:when>
                         <c:otherwise>
                             <a href="/group/board/write?wsId=${wsId}&type=${boardType}" class="board-write-btn">
@@ -265,6 +267,7 @@
                                                         <a class="board-empty-action ghost" href="/workspace/main?wsId=${wsId}">그룹 홈으로</a>
                                                     </c:when>
                                                     <c:when test="${not empty projId}">
+                                                        <c:if test="${not projectReadOnly}">
                                                         <a class="board-empty-action" href="/group/board/write?wsId=${wsId}&projId=${projId}&type=${boardType}">
                                                             <c:choose>
                                                                 <c:when test="${boardType eq 'NOTICE'}">공지 작성하기</c:when>
@@ -272,6 +275,7 @@
                                                                 <c:otherwise>첫 글 작성하기</c:otherwise>
                                                             </c:choose>
                                                         </a>
+                                                        </c:if>
                                                     </c:when>
                                                     <c:otherwise>
                                                         <a class="board-empty-action" href="/group/board/write?wsId=${wsId}&type=${boardType}">

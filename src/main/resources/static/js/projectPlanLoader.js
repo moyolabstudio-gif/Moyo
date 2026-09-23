@@ -6,7 +6,7 @@
     const SCRIPT_PATHS = [
         '/js/projectPlanCommon.js?v=plan-detail-state-v3',
         '/js/projectScheduleGrid.js?v=schedule-grid-common-v2',
-        '/js/projectPeriodPlan.js?v=plan-today-focus-v3',
+        '/js/projectPeriodPlan.js?v=plan-today-focus-v4',
         '/js/projectPlanModal.js?v=time-plan-picker-bound-color-v1',
         '/js/projectTimeSchedule.js?v=plan-detail-author-v1',
         '/js/projectWeeklyPlan.js?v=plan-detail-author-v1',

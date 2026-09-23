@@ -953,7 +953,9 @@ body.poll-modal-open{overflow:hidden}
         <p id="pageDescription">의사결정을 투표로 정리합니다.</p>
     </div>
     <div class="poll-hero-actions">
+<c:if test="${not projectReadOnly}">
 <button type="button" class="poll-open-create-btn" onclick="openPollCreateModal()">+ 투표 만들기</button>
+</c:if>
     </div>
 </section>
 
@@ -1055,6 +1057,7 @@ const rawScope=String(params.get('scope')||'WORKSPACE').toUpperCase();
 const scope=rawScope==='PROJECT'?'PROJECT':'WORKSPACE';
 const wsId=params.get('wsId');
 const projId=params.get('projId');
+const projectReadOnly=${projectReadOnly eq true ? 'true' : 'false'};
 const requestedPollId=params.get('pollId');
 let allPolls=[];
 let pendingVoteOptionId=null;
@@ -1811,8 +1814,8 @@ function renderMainEmptyState(){
     target.className='poll-empty-state';
     target.innerHTML='<div class="poll-empty-icon">🗳️</div>'+ 
         '<p class="poll-empty-title">아직 선택된 투표가 없습니다.</p>'+ 
-        '<p class="poll-empty-description">오른쪽 목록에서 투표를 선택하거나 새 투표를 만들어 구성원의 의견을 모아보세요.</p>'+ 
-        '<button type="button" class="poll-empty-action" onclick="openPollCreateModal()">+ 새 투표 만들기</button>';
+        '<p class="poll-empty-description">'+(projectReadOnly?'읽기 전용 프로젝트에서는 투표 결과만 확인할 수 있습니다.':'오른쪽 목록에서 투표를 선택하거나 새 투표를 만들어 구성원의 의견을 모아보세요.')+'</p>'+ 
+        (projectReadOnly?'':'<button type="button" class="poll-empty-action" onclick="openPollCreateModal()">+ 새 투표 만들기</button>');
 }
 
 function renderListEmptyState(type){
@@ -1821,7 +1824,7 @@ function renderListEmptyState(type){
         '<div class="poll-empty-icon">'+(active?'📊':'🗂️')+'</div>'+
         '<p class="poll-empty-title">'+(active?'진행 중인 투표가 없습니다.':'아직 종료된 투표가 없습니다.')+'</p>'+
         '<p class="poll-empty-description">'+(active?'의견을 모아야 할 주제가 생기면 새 투표를 시작해보세요.':'완료된 투표 결과가 이곳에 차곡차곡 쌓입니다.')+'</p>'+
-        (active?'<button type="button" class="poll-empty-action" onclick="openPollCreateModal()">+ 새 투표 만들기</button>':'')+
+        (active&&!projectReadOnly?'<button type="button" class="poll-empty-action" onclick="openPollCreateModal()">+ 새 투표 만들기</button>':'')+
     '</div>';
 }
 
@@ -1910,7 +1913,7 @@ function renderPollDetail(data){
     html+='<em class="poll-status '+(isClosed?'closed':'active')+'">'+(isClosed?'종료':'진행 중')+'</em>'; if(Number(data.extendCount||0)>0) html+='<em class="poll-status extended">연장 '+data.extendCount+'회</em>';
     html+='</div>';
 
-    if(data.canManage||data.canExtend){
+    if(!projectReadOnly&&(data.canManage||data.canExtend)){
         html+='<div class="poll-detail-title-actions">';
         if(data.canManage){ html+='<button type="button" class="poll-manage-btn" onclick="startPollEdit('+data.pollId+')">수정</button>'; }
         if(data.canExtend){ html+='<button type="button" class="poll-manage-btn extend" onclick="openPollExtendModal('+data.pollId+',\''+String(data.endDt||'').replace(/'/g,'')+'\')">연장</button>'; }
@@ -1947,7 +1950,7 @@ function renderPollDetail(data){
         const count=Number(opt.COUNT||opt.count||0);
         const selected=String(myOptionId||'')===String(id||'');
         const winner=isClosed&&showResults&&maxCount>0&&count===maxCount;
-        const disabled=isClosed;
+        const disabled=isClosed||projectReadOnly;
         const displayText=isVideoPoll?('영상 '+(index+1)):(isImagePoll&&image?getImageOptionLabel(rawText,index):(rawText||((isAudioPoll?'음악 ':'후보 ')+(index+1))));
         const percentage=total>0?Math.round((count/total)*100):0;
         const clickHandler=isImagePoll&&!disabled?'choosePollOption('+id+',this)':'votePoll('+data.pollId+','+id+')';
@@ -1997,6 +2000,7 @@ function getImageOptionLabel(text,index){
 let voteInFlight=false;
 
 async function choosePollOption(optionId,button){
+    if(projectReadOnly)return;
     if(voteInFlight)return;
 
     pendingVoteOptionId=optionId;
@@ -2010,6 +2014,7 @@ async function choosePollOption(optionId,button){
 }
 
 async function votePoll(pollId,optionId){
+    if(projectReadOnly)return;
     if(voteInFlight)return;
     voteInFlight=true;
     try{

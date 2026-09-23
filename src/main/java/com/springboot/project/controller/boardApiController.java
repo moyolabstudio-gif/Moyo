@@ -68,17 +68,33 @@ public class boardApiController {
         if (denied != null) return denied;
 
         Map<String, Object> response = new HashMap<>();
-        
-        // 윤재 님이 기존에 가지고 계시던 서비스 메서드 호출
-        List<postDTO> notices = iboardService.getDashboardLatest(wsId, "NOTICE");
-        List<postDTO> freeBoards = iboardService.getDashboardLatest(wsId, "FREE");
         Long userId = ((usersDto) session.getAttribute("user")).getUserId();
-        
-        // 자료실 위젯은 BOARD_POSTS(FILE)가 아니라 공통 자료실 CONTENT_FILES의 최신 파일을 사용한다.
-        response.put("notices", notices);
-        response.put("freeBoards", freeBoards);
-        response.put("files", contentFileService.getDashboardLatestFiles("GROUP", wsId, null, 3, userId));
-        
+
+        // 한 게시판/자료실 조회 오류가 대시보드 전체를 500으로 만들지 않도록 각각 격리한다.
+        try {
+            List<postDTO> notices = iboardService.getDashboardLatest(wsId, "NOTICE");
+            response.put("notices", notices == null ? List.of() : notices);
+        } catch (Exception e) {
+            System.err.println("[그룹 메인] 공지 위젯 조회 실패 wsId=" + wsId + " : " + e.getMessage());
+            response.put("notices", List.of());
+        }
+
+        try {
+            List<postDTO> freeBoards = iboardService.getDashboardLatest(wsId, "FREE");
+            response.put("freeBoards", freeBoards == null ? List.of() : freeBoards);
+        } catch (Exception e) {
+            System.err.println("[그룹 메인] 자유피드 위젯 조회 실패 wsId=" + wsId + " : " + e.getMessage());
+            response.put("freeBoards", List.of());
+        }
+
+        try {
+            var files = contentFileService.getDashboardLatestFiles("GROUP", wsId, null, 3, userId);
+            response.put("files", files == null ? List.of() : files);
+        } catch (Exception e) {
+            System.err.println("[그룹 메인] 자료실 위젯 조회 실패 wsId=" + wsId + " : " + e.getMessage());
+            response.put("files", List.of());
+        }
+
         return ResponseEntity.ok(response);
     }
 
@@ -388,9 +404,33 @@ public class boardApiController {
         }
 
         Map<String, Object> response = new HashMap<>();
-        response.put("notice", iboardService.getListByProject(projId, "NOTICE"));
-        response.put("free", iboardService.getListByProject(projId, "FREE"));
-        response.put("files", contentFileService.getDashboardLatestFiles("PROJECT", null, projId, 3, loginUser.getUserId()));
+
+        // 한 위젯의 조회 실패가 공지/자유피드/자료실 전체를 500으로 만들지 않게 각각 격리한다.
+        try {
+            List<postDTO> notices = iboardService.getListByProject(projId, "NOTICE");
+            response.put("notice", notices == null ? List.of() : notices);
+        } catch (Exception e) {
+            System.err.println("[프로젝트 메인] 공지 위젯 조회 실패 projId=" + projId + " : " + e.getMessage());
+            response.put("notice", List.of());
+        }
+
+        try {
+            List<postDTO> freeBoards = iboardService.getListByProject(projId, "FREE");
+            response.put("free", freeBoards == null ? List.of() : freeBoards);
+        } catch (Exception e) {
+            System.err.println("[프로젝트 메인] 자유피드 위젯 조회 실패 projId=" + projId + " : " + e.getMessage());
+            response.put("free", List.of());
+        }
+
+        try {
+            var files = contentFileService.getDashboardLatestFiles(
+                    "PROJECT", null, projId, 3, loginUser.getUserId());
+            response.put("files", files == null ? List.of() : files);
+        } catch (Exception e) {
+            System.err.println("[프로젝트 메인] 자료실 위젯 조회 실패 projId=" + projId + " : " + e.getMessage());
+            response.put("files", List.of());
+        }
+
         return ResponseEntity.ok(response);
     }
 

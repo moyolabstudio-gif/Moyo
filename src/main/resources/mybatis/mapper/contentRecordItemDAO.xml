@@ -48,6 +48,12 @@
     UPDATE NOTES n SET n.NOTE_TITLE=NVL(NULLIF(TRIM(#{title}),''),SUBSTR(REGEXP_REPLACE(#{content},'[[:space:]]+',' '),1,30)),
                        n.MEMO=#{content,jdbcType=CLOB},n.UPD_DT=SYSDATE,n.UPDATED_BY=#{userId}
      WHERE n.NOTE_ID=(SELECT i.CONTENT_ID FROM CONTENT_RECORD_ITEMS i WHERE i.RECORD_ITEM_ID=#{recordItemId} AND i.RECORD_TARGET_ID=#{recordTargetId} AND i.RECORD_TYPE='NOTE' AND i.DELETED_YN='N')
+       AND NVL(n.NOTE_TITLE, CHR(0)) = NVL(#{baseTitle,jdbcType=VARCHAR}, CHR(0))
+       AND (
+            (n.MEMO IS NULL AND #{baseContent,jdbcType=CLOB} IS NULL)
+            OR (n.MEMO IS NOT NULL AND #{baseContent,jdbcType=CLOB} IS NOT NULL
+                AND DBMS_LOB.COMPARE(n.MEMO, #{baseContent,jdbcType=CLOB}) = 0)
+       )
   </update>
   <update id="updateItemTitle">
     UPDATE CONTENT_RECORD_ITEMS
@@ -155,7 +161,13 @@
      WHERE i.RECORD_TARGET_ID=#{recordTargetId} AND i.RECORD_ITEM_ID=#{recordItemId} AND i.RECORD_TYPE='LOCATION' AND i.DELETED_YN='N' AND NVL(p.PRIMARY_YN,'N')='Y'
   </select>
   <sql id="selectItemColumns">
-    i.RECORD_ITEM_ID,i.RECORD_TARGET_ID,i.RECORD_TYPE,i.CONTENT_ID,NVL(n.NOTE_TITLE,i.TITLE) AS TITLE,i.SORT_ORDER,
+    i.RECORD_ITEM_ID,i.RECORD_TARGET_ID,i.RECORD_TYPE,i.CONTENT_ID,
+    CASE
+      WHEN i.RECORD_TYPE='NOTE' THEN NVL(n.NOTE_TITLE,i.TITLE)
+      WHEN i.RECORD_TYPE='FILE' THEN NVL(f.ORIGINAL_NAME,i.TITLE)
+      WHEN i.RECORD_TYPE='PHOTO' THEN NVL(NULLIF(TRIM(pp.DESCRIPTION),''),i.TITLE)
+      ELSE i.TITLE
+    END AS TITLE,i.SORT_ORDER,
     i.CREATED_BY,i.CREATED_AT,i.UPDATED_AT,i.DELETED_YN,
     n.USER_ID AS NOTE_USER_ID,nu.USER_NAME,n.REG_DT,n.UPDATED_BY,uu.USER_NAME AS UPDATED_BY_NAME,n.UPD_DT,
     n.MEMO AS PREVIEW_CONTENT,
@@ -215,6 +227,50 @@
      WHERE i.RECORD_TARGET_ID=#{recordTargetId} AND i.RECORD_ITEM_ID=#{recordItemId} AND i.DELETED_YN='N'
   </select>
   <select id="countByType" resultType="int">SELECT COUNT(*) FROM CONTENT_RECORD_ITEMS WHERE RECORD_TARGET_ID=#{recordTargetId} AND RECORD_TYPE=#{recordType} AND DELETED_YN='N'</select>
+  <select id="countActiveItemsByContent" resultType="int">
+    SELECT COUNT(*)
+      FROM CONTENT_RECORD_ITEMS i
+      JOIN CONTENT_RECORD_TARGETS t ON t.RECORD_TARGET_ID=i.RECORD_TARGET_ID
+     WHERE i.RECORD_TYPE=#{recordType}
+       AND i.CONTENT_ID=#{contentId}
+       AND NVL(i.DELETED_YN,'N')='N'
+       AND NVL(t.TARGET_STATUS,'ACTIVE')='ACTIVE'
+  </select>
+  <update id="touchActiveItemsByContent">
+    UPDATE CONTENT_RECORD_ITEMS i
+       SET i.UPDATED_AT=SYSDATE
+     WHERE i.RECORD_TYPE=#{recordType}
+       AND i.CONTENT_ID=#{contentId}
+       AND NVL(i.DELETED_YN,'N')='N'
+       AND EXISTS (
+           SELECT 1 FROM CONTENT_RECORD_TARGETS t
+            WHERE t.RECORD_TARGET_ID=i.RECORD_TARGET_ID
+              AND NVL(t.TARGET_STATUS,'ACTIVE')='ACTIVE'
+       )
+  </update>
+  <!-- 탐색기 휴지통: 연결 행은 보존하고 노출 상태만 원본과 맞춘다. -->
+  <update id="updateItemsDeletedByContent">
+    UPDATE CONTENT_RECORD_ITEMS
+       SET DELETED_YN=#{deletedYn}, UPDATED_AT=SYSTIMESTAMP
+     WHERE RECORD_TYPE=#{recordType}
+       AND CONTENT_ID=#{contentId}
+  </update>
+  <delete id="deleteItemsByContent">
+    DELETE FROM CONTENT_RECORD_ITEMS
+     WHERE RECORD_TYPE=#{recordType}
+       AND CONTENT_ID=#{contentId}
+  </delete>
+  <delete id="deleteExpiredPhotoRecordItems">
+    DELETE FROM CONTENT_RECORD_ITEMS i
+     WHERE i.RECORD_TYPE='PHOTO'
+       AND EXISTS (
+         SELECT 1 FROM PHOTO_POSTS pp
+          WHERE pp.POST_ID=i.CONTENT_ID
+            AND NVL(pp.DELETED_YN,'N')='Y'
+            AND pp.DELETED_AT IS NOT NULL
+            AND pp.DELETED_AT + 30 &lt;= SYSDATE
+       )
+  </delete>
   <update id="softDelete">UPDATE CONTENT_RECORD_ITEMS SET DELETED_YN='Y',UPDATED_AT=SYSDATE WHERE RECORD_ITEM_ID=#{recordItemId} AND CREATED_BY=#{userId} AND DELETED_YN='N'</update>
   <update id="softDeletePhotoItem">UPDATE CONTENT_RECORD_ITEMS SET DELETED_YN='Y',UPDATED_AT=SYSDATE WHERE RECORD_TARGET_ID=#{recordTargetId} AND RECORD_ITEM_ID=#{recordItemId} AND RECORD_TYPE='PHOTO' AND DELETED_YN='N'</update>
   <update id="softDeleteByTargetAndType">UPDATE CONTENT_RECORD_ITEMS SET DELETED_YN='Y',UPDATED_AT=SYSDATE WHERE RECORD_TARGET_ID=#{recordTargetId} AND RECORD_TYPE=#{recordType} AND DELETED_YN='N'</update>
@@ -230,16 +286,25 @@
 
 
   <select id="selectRecordFileFolderId" resultType="long">
+    <!--
+      기록 파일을 모두 삭제한 뒤 다시 업로드해도 기존 기록 폴더를 재사용한다.
+      기존에는 활성 FILE 항목만 조회해서 마지막 파일 삭제 후 폴더 연결을 잃었고,
+      같은 이름의 폴더를 다시 INSERT 하면서 UX_CFF_ACTIVE_NAME 충돌이 발생했다.
+      삭제된 과거 FILE 항목도 폴더 식별 용도로만 조회하되,
+      활성 항목이 있으면 활성 폴더를 최우선으로 사용한다.
+    -->
     SELECT FOLDER_ID FROM (
       SELECT f.FOLDER_ID
         FROM CONTENT_RECORD_ITEMS i
         JOIN CONTENT_FILES f ON f.CONTENT_FILE_ID=i.CONTENT_ID
        WHERE i.RECORD_TARGET_ID=#{recordTargetId}
          AND i.RECORD_TYPE='FILE'
-         AND i.DELETED_YN='N'
-         AND f.DELETED_YN='N'
          AND f.FOLDER_ID IS NOT NULL
-       ORDER BY i.RECORD_ITEM_ID
+       ORDER BY CASE
+                  WHEN i.DELETED_YN='N' AND f.DELETED_YN='N' THEN 0
+                  ELSE 1
+                END,
+                i.RECORD_ITEM_ID DESC
     ) WHERE ROWNUM=1
   </select>
 

@@ -581,7 +581,7 @@
 
         if (el.togetherSummary) {
             el.togetherSummary.textContent = hasPeople
-                ? (people.length === 1 ? people[0].name : `${people[0].name} 외 ${people.length - 1}명`)
+                ? `선택한 ${policy.peopleLabel} ${people.length}명`
                 : `함께 찍은 ${policy.peopleLabel}를 선택하세요`;
         }
 
@@ -590,7 +590,7 @@
             el.togetherViewAll.setAttribute('aria-expanded', state.togetherExpanded ? 'true' : 'false');
             el.togetherViewAll.innerHTML = state.togetherExpanded
                 ? '접기 <span aria-hidden="true">⌃</span>'
-                : '전체 보기 <span aria-hidden="true">⌄</span>';
+                : '펼치기 <span aria-hidden="true">⌄</span>';
         }
 
         if (el.togetherAction) {

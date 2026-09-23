@@ -17,6 +17,7 @@
     </c:choose>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/moyoUi.css?v=primary-gradient-135-v1-20260910">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/projectSettings.css?v=project-settings-group-parity-20260909">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/commonProjectForm.css?v=project-form-common-v1-20260921">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common/commonSettings.css?v=member-trigger-fix-v1-20260910">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/commonMemberActivityProfile.css?v=step25-regression-restore-20260911">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common/commonProjectTaskStatus.css?v=project-task-status-settings-fix-v1-20260910">
@@ -88,6 +89,7 @@
                 <div class="settings-card settings-main-panel">
                     <form id="projectSettingsForm"
                           class="moyo-settings-form"
+                          data-project-form-common
                           data-readonly="${readOnlyProjectSettings}"
                           aria-readonly="${readOnlyProjectSettings}"
                           onsubmit="return false;">
@@ -98,77 +100,154 @@
                             </div>
 
                             <div class="settings-form-grid">
-                                <div class="form-group">
-                                    <label for="settingProjName">프로젝트 이름</label>
+                                <div class="moyo-project-form__group form-group full" data-project-field="name">
+                                    <div class="moyo-project-form__label-row">
+                                        <label class="moyo-project-form__label" for="settingProjName">프로젝트 이름 <span class="moyo-project-form__required">*</span></label>
+                                        <span class="moyo-project-form__help">80자 이내로 입력하세요.</span>
+                                    </div>
                                     <input type="text"
                                            id="settingProjName"
-                                           class="form-control"
+                                           class="form-control moyo-project-form__control"
                                            maxlength="80"
+                                           data-project-name
                                            value="<c:out value='${projectDetail.projName}'/>"
-                                           placeholder="프로젝트 이름"
-                                           <c:if test="${!canManageProject}">disabled</c:if>>
+                                           placeholder="프로젝트 이름">
+                                    <p class="moyo-project-form__error" data-project-form-error="name" hidden></p>
                                 </div>
 
-                                <div class="form-group">
-                                    <label for="settingProjCategory">프로젝트 유형</label>
-                                    <select id="settingProjCategory"
-                                            class="form-control"
-                                            required
-                                            <c:if test="${!canManageProject}">disabled</c:if>>
-                                        <option value="WORK" ${projectDetail.projCategory eq 'WORK' ? 'selected' : ''}>업무</option>
-                                        <option value="TRAVEL" ${projectDetail.projCategory eq 'TRAVEL' ? 'selected' : ''}>여행</option>
-                                        <option value="EVENT" ${projectDetail.projCategory eq 'EVENT' ? 'selected' : ''}>모임·행사</option>
-                                        <option value="STUDY" ${projectDetail.projCategory eq 'STUDY' ? 'selected' : ''}>학습·연구</option>
-                                        <option value="LIFE" ${projectDetail.projCategory eq 'LIFE' ? 'selected' : ''}>생활·가정</option>
-                                        <option value="HOBBY" ${projectDetail.projCategory eq 'HOBBY' ? 'selected' : ''}>취미·창작</option>
-                                        <option value="ETC" ${empty projectDetail.projCategory or projectDetail.projCategory eq 'ETC' ? 'selected' : ''}>기타</option>
-                                    </select>
+                                <div class="moyo-project-form__group form-group full" data-project-field="type">
+                                    <div class="moyo-project-form__label-row">
+                                        <span class="moyo-project-form__label">프로젝트 유형 <span class="moyo-project-form__required">*</span></span>
+                                        <span class="moyo-project-form__help">생성 화면과 같은 유형 체계를 사용합니다.</span>
+                                    </div>
+                                    <input type="hidden" id="settingProjType" data-project-type-input value="<c:out value='${projectDetail.projType}'/>">
+                                    <div class="moyo-project-type-picker" data-project-type-picker>
+                                        <c:forEach items="${projectTypeGroups}" var="group">
+                                            <div class="moyo-project-type-group">
+                                                <span class="moyo-project-type-group__title"><c:out value="${group.label}" /></span>
+                                                <div class="moyo-project-type-grid">
+                                                    <c:forEach items="${group.types}" var="type">
+                                                        <button type="button" class="moyo-project-type-option"
+                                                                data-project-type="${type.code}"
+                                                                data-project-default-icon="${type.defaultIcon}"
+                                                                data-project-recommended-icons="${type.recommendedIcons}"
+                                                                aria-pressed="false">
+                                                            <span class="moyo-project-type-option__icon"><i class="fa-solid fa-${type.defaultIcon}" aria-hidden="true"></i></span>
+                                                            <span class="moyo-project-type-option__copy">
+                                                                <span class="moyo-project-type-option__name"><c:out value="${type.label}" /></span>
+                                                                <span class="moyo-project-type-option__description"><c:out value="${type.description}" /></span>
+                                                            </span>
+                                                        </button>
+                                                    </c:forEach>
+                                                </div>
+                                            </div>
+                                        </c:forEach>
+                                    </div>
+                                    <p class="moyo-project-form__error" data-project-form-error="type" hidden></p>
                                 </div>
 
-                                <div class="form-group">
-                                    <label for="settingStartDate">시작일</label>
-                                    <input type="text"
-                                           id="settingStartDate"
-                                           class="form-control project-date-input"
-                                           value="${projectDetail.startDate}"
-                                           inputmode="numeric"
-                                           autocomplete="off"
-                                           placeholder="YYYY-MM-DD"
-                                           data-project-date-picker
-                                           readonly
-                                           aria-describedby="settingProjectPeriodHelp"
-                                           <c:if test="${!canManageProject}">disabled</c:if>>
+                                <div class="moyo-project-form__group form-group full" data-project-field="icon">
+                                    <div class="moyo-project-form__label-row">
+                                        <span class="moyo-project-form__label">프로젝트 아이콘</span>
+                                        <span class="moyo-project-form__help">프로젝트 카드와 달력에서 함께 사용됩니다.</span>
+                                    </div>
+                                    <input type="hidden" id="settingProjIcon" data-project-icon-input value="<c:out value='${projectDetail.projIcon}'/>">
+                                    <div class="moyo-project-icon-picker" data-project-icon-picker>
+                                        <div class="moyo-project-icon-summary">
+                                            <span class="moyo-project-icon-current" data-project-icon-current></span>
+                                            <span class="moyo-project-icon-summary__copy">
+                                                <strong data-project-icon-current-label>선택한 아이콘</strong>
+                                                <span>유형에 맞는 아이콘을 선택할 수 있습니다.</span>
+                                            </span>
+                                            <button type="button" class="moyo-project-icon-toggle" data-project-icon-toggle aria-expanded="false" data-open-label="아이콘 변경" data-close-label="닫기">아이콘 변경</button>
+                                        </div>
+                                        <div class="moyo-project-icon-options" data-project-icon-options hidden>
+                                            <c:forEach items="${projectIconOptions}" var="icon">
+                                                <button type="button" class="moyo-project-icon-option" data-project-icon="${icon.key}" data-project-icon-label="${icon.label}" aria-pressed="false" title="${icon.label}">
+                                                    <span class="moyo-project-icon-option__icon"><i class="fa-solid fa-${icon.key}" aria-hidden="true"></i></span>
+                                                </button>
+                                            </c:forEach>
+                                        </div>
+                                    </div>
+                                    <p class="moyo-project-form__error" data-project-form-error="icon" hidden></p>
                                 </div>
 
-                                <div class="form-group">
-                                    <label for="settingEndDate">마감일</label>
-                                    <input type="text"
-                                           id="settingEndDate"
-                                           class="form-control project-date-input"
-                                           value="${projectDetail.endDate}"
-                                           inputmode="numeric"
-                                           autocomplete="off"
-                                           placeholder="YYYY-MM-DD"
-                                           data-project-date-picker
-                                           readonly
-                                           aria-describedby="settingProjectPeriodHelp"
-                                           <c:if test="${!canManageProject}">disabled</c:if>>
+                                <div class="moyo-project-form__group form-group full" data-project-field="description">
+                                    <div class="moyo-project-form__label-row">
+                                        <label class="moyo-project-form__label" for="settingProjDesc">프로젝트 설명</label>
+                                        <span class="moyo-project-form__help">목표나 준비할 내용을 간단히 적어두세요.</span>
+                                    </div>
+                                    <div class="moyo-project-description-wrap">
+                                        <textarea id="settingProjDesc"
+                                                  class="form-control moyo-project-form__control"
+                                                  maxlength="1000"
+                                                  rows="3"
+                                                  data-project-description
+                                                  placeholder="프로젝트 설명을 입력하세요."><c:out value="${projectDetail.projDesc}"/></textarea>
+                                        <span class="moyo-project-description-count" data-project-description-count>0 / 1000</span>
+                                    </div>
                                 </div>
 
-                                <div class="form-group full">
-                                    <p id="settingProjectPeriodHelp" class="field-help">
-                                        시작일과 마감일은 선택 입력이며, 마감일은 시작일보다 빠를 수 없습니다.
-                                    </p>
+                                <div class="moyo-project-form__group form-group full" data-project-field="period">
+                                    <div class="moyo-project-form__label-row">
+                                        <span class="moyo-project-form__label">프로젝트 기간</span>
+                                        <span class="moyo-project-form__help">기간이 없는 프로젝트는 언제든 다시 지정할 수 있습니다.</span>
+                                    </div>
+                                    <input type="hidden" id="settingPeriodEnabledYn" data-project-period-enabled-input value="<c:out value='${projectDetail.periodEnabledYn}'/>">
+                                    <div class="moyo-project-period-picker" data-project-period-picker>
+                                        <div class="moyo-project-choice-grid">
+                                            <button type="button" class="moyo-project-choice" data-project-period-mode="N" aria-pressed="false">
+                                                <span class="moyo-project-choice__icon"><i class="fa-regular fa-calendar-xmark" aria-hidden="true"></i></span>
+                                                <span class="moyo-project-choice__copy"><strong>기간 없음</strong><span>종료 시점을 정하지 않고 진행합니다.</span></span>
+                                            </button>
+                                            <button type="button" class="moyo-project-choice" data-project-period-mode="Y" aria-pressed="false">
+                                                <span class="moyo-project-choice__icon"><i class="fa-regular fa-calendar-check" aria-hidden="true"></i></span>
+                                                <span class="moyo-project-choice__copy"><strong>기간 지정</strong><span>시작일과 종료일을 캘린더에 표시합니다.</span></span>
+                                            </button>
+                                        </div>
+                                        <div class="moyo-project-period-fields" data-project-period-fields hidden>
+                                            <div class="moyo-project-period-field">
+                                                <label for="settingStartDate">시작일</label>
+                                                <input type="text" id="settingStartDate" class="form-control moyo-project-form__control project-date-input" value="${projectDetail.startDate}" inputmode="numeric" autocomplete="off" placeholder="YYYY-MM-DD" data-project-period-start data-project-date-picker readonly>
+                                            </div>
+                                            <span class="moyo-project-period-separator">→</span>
+                                            <div class="moyo-project-period-field">
+                                                <label for="settingEndDate">종료일</label>
+                                                <input type="text" id="settingEndDate" class="form-control moyo-project-form__control project-date-input" value="${projectDetail.endDate}" inputmode="numeric" autocomplete="off" placeholder="YYYY-MM-DD" data-project-period-end data-project-date-picker readonly>
+                                            </div>
+                                        </div>
+                                        <div class="moyo-project-period-summary" data-project-period-summary></div>
+                                    </div>
+                                    <p class="moyo-project-form__error" data-project-form-error="period" hidden></p>
                                 </div>
 
-                                <div class="form-group full">
-                                    <label for="settingProjDesc">프로젝트 설명</label>
-                                    <textarea id="settingProjDesc"
-                                              class="form-control"
-                                              maxlength="1000"
-                                              placeholder="프로젝트 설명을 입력하세요."
-                                              <c:if test="${!canManageProject}">disabled</c:if>><c:out value="${projectDetail.projDesc}"/></textarea>
-                                </div>
+                                <c:choose>
+                                    <c:when test="${groupProject}">
+                                        <div class="moyo-project-form__group form-group full" data-project-field="access">
+                                            <div class="moyo-project-form__label-row">
+                                                <span class="moyo-project-form__label">프로젝트 공개 범위</span>
+                                                <span class="moyo-project-form__help">참여하지 않은 그룹 멤버의 진입 가능 여부를 정합니다.</span>
+                                            </div>
+                                            <input type="hidden" id="settingAccessScope" data-project-access-input value="<c:out value='${projectDetail.accessScope}'/>">
+                                            <div class="moyo-project-access-picker" data-project-access-picker>
+                                                <div class="moyo-project-choice-grid">
+                                                    <button type="button" class="moyo-project-choice" data-project-access-scope="PARTICIPANTS" aria-pressed="false">
+                                                        <span class="moyo-project-choice__icon"><i class="fa-solid fa-lock" aria-hidden="true"></i></span>
+                                                        <span class="moyo-project-choice__copy"><strong>참여자만</strong><span>팀장·관리자·참여 멤버만 프로젝트에 들어올 수 있습니다.</span></span>
+                                                    </button>
+                                                    <button type="button" class="moyo-project-choice" data-project-access-scope="WORKSPACE_READ" aria-pressed="false">
+                                                        <span class="moyo-project-choice__icon"><i class="fa-solid fa-eye" aria-hidden="true"></i></span>
+                                                        <span class="moyo-project-choice__copy"><strong>그룹 멤버 전체 읽기</strong><span>비참여 멤버도 읽기 전용으로 프로젝트를 볼 수 있습니다.</span></span>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <p class="moyo-project-form__error" data-project-form-error="access" hidden></p>
+                                        </div>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <input type="hidden" id="settingAccessScope" data-project-access-input value="OWNER_ONLY">
+                                    </c:otherwise>
+                                </c:choose>
                             </div>
                         </section>
 
@@ -245,7 +324,7 @@
                                     </p>
                                 </c:when>
                                 <c:otherwise>
-                                    <p>삭제를 신청하면 30일 동안 신청을 취소할 수 있으며, 기간이 지나면 최종 삭제됩니다.</p>
+                                    <p>팀장 혼자 참여 중이면 바로 삭제됩니다. 다른 참여자가 있으면 30일 삭제 예정 상태로 전환됩니다.</p>
                                 </c:otherwise>
                             </c:choose>
                         </div>
@@ -356,6 +435,7 @@
                                         data-user-id="${member.USER_ID}"
                                         data-member-name="<c:out value='${member.USER_NAME}'/>"
                                         data-is-leader="${member.USER_ID eq projectDetail.leaderId}"
+                                        data-is-current-user="${member.USER_ID eq sessionScope.user.userId}"
                                         data-role="${member.USER_ID eq projectDetail.leaderId ? 'LEADER' : member.PROJ_ROLE}"
                                         data-position="<c:out value='${member.PROJ_POSITION}'/>"
                                         data-search="${fn:toLowerCase(member.USER_NAME)} ${fn:toLowerCase(member.EMAIL)} ${fn:toLowerCase(member.PROJ_ROLE)} ${fn:toLowerCase(member.PROJ_POSITION)}">
@@ -365,7 +445,11 @@
                                                    class="project-member-select"
                                                    value="${member.USER_ID}"
                                                    aria-label="<c:out value='${member.USER_NAME}'/> 선택"
-                                                   <c:if test="${member.USER_ID eq projectDetail.leaderId}">disabled title="팀장은 내보낼 수 없습니다."</c:if>
+                                                   <c:choose>
+                                                       <c:when test="${member.USER_ID eq projectDetail.leaderId}">disabled title="팀장은 내보낼 수 없습니다."</c:when>
+                                                       <c:when test="${member.USER_ID eq sessionScope.user.userId}">disabled title="본인은 내보낼 수 없습니다."</c:when>
+                                                       <c:when test="${not isProjectLeader and member.PROJ_ROLE eq 'ADMIN'}">disabled title="관리자는 다른 관리자를 내보낼 수 없습니다."</c:when>
+                                                   </c:choose>
                                                    onchange="syncProjectMemberSelection()">
                                         </td>
 
@@ -475,7 +559,7 @@
                                 프로젝트 멤버의 권한과 담당 역할을 관리합니다. 팀장 위임은 권한 수정에서 새 팀장을 선택해 진행합니다.
                             </c:when>
                             <c:when test="${canManageProject}">
-                                프로젝트 멤버의 권한과 담당 역할을 관리합니다.
+                                프로젝트 멤버의 권한과 담당 역할을 관리합니다. 본인의 권한은 직접 변경할 수 없습니다.
                             </c:when>
                             <c:otherwise>
                                 멤버 정보는 조회만 가능하며 변경할 수 없습니다.
@@ -500,18 +584,18 @@
                     aria-label="닫기"
                     onclick="closeProjectDeleteRequestModal()">×</button>
 
-            <span class="project-delete-request-eyebrow">프로젝트 삭제 신청</span>
+            <span class="project-delete-request-eyebrow">프로젝트 삭제</span>
             <h2 id="projectDeleteRequestTitle">
-                <c:out value="${projectDetail.projName}"/>을 삭제 신청할까요?
+                <c:out value="${projectDetail.projName}"/>을 삭제할까요?
             </h2>
             <p class="project-delete-request-description">
-                신청 즉시 삭제되지 않습니다. 30일 동안 취소할 수 있고,
-                삭제 예정일이 지나면 프로젝트와 종속 데이터가 최종 정리됩니다.
+                팀장 외 참여자가 없으면 즉시 삭제됩니다.
+                다른 참여자가 있으면 30일 동안 취소 가능한 삭제 예정 상태로 전환됩니다.
             </p>
 
             <div class="project-delete-request-notice">
-                <strong>예상 삭제일</strong>
-                <span id="projectDeleteExpectedDate">신청일로부터 30일 후</span>
+                <strong>삭제 정책</strong>
+                <span id="projectDeleteExpectedDate">참여자 유무에 따라 즉시 삭제 또는 30일 유예</span>
             </div>
 
             <label class="project-delete-confirm-field">
@@ -556,6 +640,7 @@
             deleteDeadlineDate: '<c:out value="${projectDetail.deleteDeadlineDate}"/>'
         };
     </script>
-    <script src="${pageContext.request.contextPath}/js/projectSettings.js?v=20260910-category-regression-fix-1"></script>
+    <script src="${pageContext.request.contextPath}/js/commonProjectForm.js?v=project-form-common-v1-20260921"></script>
+    <script src="${pageContext.request.contextPath}/js/projectSettings.js?v=20260921-common-project-form-recovery-1"></script>
 </body>
 </html>

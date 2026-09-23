@@ -39,6 +39,7 @@ import com.springboot.project.dto.contentFileFolderDTO;
 import com.springboot.project.dao.IcontentFileExplorerDAO;
 import com.springboot.project.dao.IcontentFileFolderDAO;
 import com.springboot.project.dao.IcontentRecordDAO;
+import com.springboot.project.dao.IcontentRecordItemDAO;
 import com.springboot.project.dto.usersDto;
 import com.springboot.project.service.IcontentFileService;
 import com.springboot.project.service.contentFileFolderService;
@@ -53,6 +54,7 @@ public class contentFileController {
     private final IcontentFileExplorerDAO contentFileExplorerDAO;
     private final IcontentFileFolderDAO contentFileFolderDAO;
     private final IcontentRecordDAO contentRecordDAO;
+    private final IcontentRecordItemDAO contentRecordItemDAO;
     private final contentFileFolderService contentFileFolderService;
 
     public contentFileController(
@@ -60,11 +62,13 @@ public class contentFileController {
             IcontentFileExplorerDAO contentFileExplorerDAO,
             IcontentFileFolderDAO contentFileFolderDAO,
             IcontentRecordDAO contentRecordDAO,
+            IcontentRecordItemDAO contentRecordItemDAO,
             contentFileFolderService contentFileFolderService) {
         this.contentFileService = contentFileService;
         this.contentFileExplorerDAO = contentFileExplorerDAO;
         this.contentFileFolderDAO = contentFileFolderDAO;
         this.contentRecordDAO = contentRecordDAO;
+        this.contentRecordItemDAO = contentRecordItemDAO;
         this.contentFileFolderService = contentFileFolderService;
     }
 
@@ -230,7 +234,15 @@ public class contentFileController {
         FileScope scope = resolveScope(file.getScopeType(), file.getWsId(), file.getProjId(), userId);
         validateFolder(folderId, scope);
         contentFileExplorerDAO.updateFolder(contentFileId, folderId, userId);
-        return ResponseEntity.ok(Map.of("moved", true));
+        int recordLinkedCount = contentRecordItemDAO.countActiveItemsByContent("FILE", contentFileId);
+        if (recordLinkedCount > 0) {
+            // 폴더 위치만 변경한다. 기록 항목의 RECORD_TARGET_ID/CONTENT_ID 연결은 유지한다.
+            contentRecordItemDAO.touchActiveItemsByContent("FILE", contentFileId);
+        }
+        return ResponseEntity.ok(Map.of(
+                "moved", true,
+                "recordLinkedCount", recordLinkedCount,
+                "recordLinkPreserved", true));
     }
 
     @PatchMapping("/move")
@@ -255,6 +267,9 @@ public class contentFileController {
                 throw new SecurityException("다른 자료실의 파일은 이동할 수 없습니다.");
             }
             contentFileExplorerDAO.updateFolder(contentFileId, targetFolderId, userId);
+            if (contentRecordItemDAO.countActiveItemsByContent("FILE", contentFileId) > 0) {
+                contentRecordItemDAO.touchActiveItemsByContent("FILE", contentFileId);
+            }
         }
         for (Long folderId : folderIds) {
             contentFileFolderDTO folder = contentFileFolderDAO.selectById(folderId);

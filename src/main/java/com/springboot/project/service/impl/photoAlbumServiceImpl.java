@@ -387,7 +387,7 @@ public class photoAlbumServiceImpl implements IphotoAlbumService {
         }
         int updated = photoAlbumDAO.movePostToTrash(postId, userId);
         if (updated > 0) {
-            contentRecordItemDAO.updatePhotoItemsDeletedByPostId(postId, "Y");
+            contentRecordItemDAO.updateItemsDeletedByContent("PHOTO", postId, "Y");
             photoAlbumDAO.updatePhotoAlbumByPost(postId, null);
             if (albumId != null) refreshAlbumCover(albumId);
         }
@@ -404,7 +404,7 @@ public class photoAlbumServiceImpl implements IphotoAlbumService {
         Long restoreAlbumId = numberToLong(mapValue(before, "originalAlbumId", "ORIGINAL_ALBUM_ID"));
         int updated = photoAlbumDAO.restorePostFromTrash(postId, userId);
         if (updated > 0) {
-            contentRecordItemDAO.updatePhotoItemsDeletedByPostId(postId, "N");
+            contentRecordItemDAO.updateItemsDeletedByContent("PHOTO", postId, "N");
             Map<String, Object> restored = photoAlbumDAO.selectPost(postId, userId);
             Long albumId = numberToLong(mapValue(restored, "albumId", "ALBUM_ID"));
             photoAlbumDAO.updatePhotoAlbumByPost(postId, albumId);
@@ -431,6 +431,7 @@ public class photoAlbumServiceImpl implements IphotoAlbumService {
     @Override
     @Transactional
     public int purgeExpiredTrashPosts() {
+        contentRecordItemDAO.deleteExpiredPhotoRecordItems();
         return photoAlbumDAO.deleteExpiredTrashPosts();
     }
 
@@ -583,6 +584,7 @@ public class photoAlbumServiceImpl implements IphotoAlbumService {
         photoAlbumDAO.deleteCollectedPostLink(postId);
         int deleted = photoAlbumDAO.deletePost(postId);
         if (deleted > 0) {
+            contentRecordItemDAO.deleteItemsByContent("PHOTO", postId);
             if (collectedSourcePostId != null && postOwnerId != null) {
                 photoAlbumDAO.deletePostCollect(collectedSourcePostId, postOwnerId);
             }

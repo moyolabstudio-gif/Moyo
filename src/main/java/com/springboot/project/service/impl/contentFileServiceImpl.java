@@ -62,9 +62,9 @@ public class contentFileServiceImpl implements IcontentFileService {
         long currentBytes=Optional.ofNullable(itemDAO.sumActiveFileSize(targetId)).orElse(0L);
         if(currentBytes+batchBytes>MAX_RECORD_FILE_BYTES) throw new IllegalArgumentException("이 기록에는 파일을 최대 100MB까지 첨부할 수 있습니다.");
         FileScope scope=scopeFromTarget(target,userId);
-        Long recordFolderId=itemDAO.selectRecordFileFolderId(targetId);
-        if(recordFolderId==null) recordFolderId=recordService.ensureFileFolder(targetId,userId);
-        itemDAO.moveRecordFilesToFolder(targetId,recordFolderId,userId);
+        // 자동 폴더는 새 파일의 기본 저장 위치일 뿐이다. 탐색기에서 이미 옮긴 기록 파일은
+        // 다시 자동 폴더로 끌어오지 않는다.
+        Long recordFolderId=recordService.ensureFileFolder(targetId,userId);
         List<contentRecordItemDTO> result=new ArrayList<>();
         for(int index=0;index<selected.size();index++) {
             MultipartFile multipart=selected.get(index);

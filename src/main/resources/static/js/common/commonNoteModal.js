@@ -1280,8 +1280,14 @@
   deletingCurrent=false;
   if(deleteBtn)deleteBtn.disabled=false;
  }
- if(pdfBtn)pdfBtn.addEventListener('click',downloadPdf);
- if(printBtn)printBtn.addEventListener('click',printNote);
+ if(pdfBtn)pdfBtn.addEventListener('click',()=>{
+  if(!global.confirm('현재 노트를 PDF로 저장할까요?'))return;
+  downloadPdf();
+ });
+ if(printBtn)printBtn.addEventListener('click',()=>{
+  if(!global.confirm('현재 노트를 인쇄할까요?'))return;
+  printNote();
+ });
  if(infoToggle)infoToggle.addEventListener('click',()=>setInfoOpen(infoPanel?.hidden!==false));
  if(infoClose)infoClose.addEventListener('click',()=>setInfoOpen(false));
  if(infoTitle){

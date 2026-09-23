@@ -8,7 +8,7 @@
     <title>MOYO - 사진 ${formMode eq 'edit' ? '수정' : '등록'}</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/moyoUi.css">
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/photoPostForm.css?v=88-cleanup-final">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/photoPostForm.css?v=20260919-photo-form-v11">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/commonPeopleModal.css?v=20260810-inline-share-state-popover-2">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/commonFolderModal.css?v=common-folder-modal-final-v15">
 </head>
@@ -173,15 +173,17 @@
                     </span>
                     <select id="photoFormVisibility"></select>
                     <label class="photo-moyo-public-check" id="photoFormMoyoBox">
-                        <input type="checkbox" id="photoFormMoyoPublic">
-                        <img class="photo-moyo-public-mascot"
-                             src="${pageContext.request.contextPath}/brand/moyo_mark.png?v=moyo-mark-v34"
-                             alt=""
-                             aria-hidden="true">
-                        <span class="photo-feed-public-copy">
-                            <strong><span class="photo-feed-public-text">MOYO 공개</span></strong>
-                            <small>체크하면 친구들의 MOYO 피드에도 함께 표시됩니다.</small>
+                        <span class="photo-moyo-public-line">
+                            <input type="checkbox" id="photoFormMoyoPublic">
+                            <img class="photo-moyo-public-mascot"
+                                 src="${pageContext.request.contextPath}/brand/moyo_mark.png?v=moyo-mark-v34"
+                                 alt=""
+                                 aria-hidden="true">
+                            <span class="photo-feed-public-copy">
+                                <strong><span class="photo-feed-public-text">MOYO 공개</span></strong>
+                            </span>
                         </span>
+                        <small class="photo-moyo-public-desc">친구들의 MOYO 피드에도 함께 표시됩니다.</small>
                     </label>
                     <small id="photoFormVisibilityGuide">개인 사진의 MOYO 공개 여부를 설정합니다.</small>
                 </div>
@@ -235,6 +237,6 @@
 <script src="${pageContext.request.contextPath}/js/friendPeopleAdapter.js?v=20260807-photo-together-people"></script>
 <script src="${pageContext.request.contextPath}/js/commonPeopleModal.js?v=20260810-share-status-tdz-fix"></script>
 <script src="${pageContext.request.contextPath}/js/commonFolderModal.js?v=common-folder-modal-v13"></script>
-<script src="${pageContext.request.contextPath}/js/photoPostForm.js?v=88-cleanup-final"></script>
+<script src="${pageContext.request.contextPath}/js/photoPostForm.js?v=20260919-photo-form-v11"></script>
 </body>
 </html>

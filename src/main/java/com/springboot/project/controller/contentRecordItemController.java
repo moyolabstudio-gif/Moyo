@@ -20,6 +20,7 @@ import com.springboot.project.dto.contentRecordTargetRequest;
 import com.springboot.project.service.IcontentRecordItemService;
 import com.springboot.project.service.IcontentFileService;
 import com.springboot.project.service.IcontentRecordService;
+import com.springboot.project.service.CollaborationActivityService;
 
 import jakarta.servlet.http.HttpSession;
 
@@ -29,11 +30,14 @@ public class contentRecordItemController {
     private final IcontentRecordItemService service;
     private final IcontentRecordService recordService;
     private final IcontentFileService fileService;
+    private final CollaborationActivityService collaborationActivityService;
 
-    public contentRecordItemController(IcontentRecordItemService service, IcontentRecordService recordService, IcontentFileService fileService) {
+    public contentRecordItemController(IcontentRecordItemService service, IcontentRecordService recordService,
+            IcontentFileService fileService, CollaborationActivityService collaborationActivityService) {
         this.service = service;
         this.recordService = recordService;
         this.fileService = fileService;
+        this.collaborationActivityService = collaborationActivityService;
     }
 
     @GetMapping("/target")
@@ -73,12 +77,17 @@ public class contentRecordItemController {
 
     @PostMapping("/{recordTargetId}/contents")
     public ResponseEntity<?> content(@PathVariable("recordTargetId") Long recordTargetId, @RequestBody Map<String, Object> body, HttpSession session) {
-        return ResponseEntity.ok(service.connectContent(
+        Long actorUserId = userId(session);
+        String recordType = String.valueOf(body.get("recordType"));
+        contentRecordItemDTO connected = service.connectContent(
                 recordTargetId,
-                String.valueOf(body.get("recordType")),
+                recordType,
                 Long.valueOf(String.valueOf(body.get("contentId"))),
                 body.get("title") == null ? null : String.valueOf(body.get("title")),
-                userId(session)));
+                actorUserId);
+        String label = "PHOTO".equalsIgnoreCase(recordType) ? "기록 사진을" : "기록 콘텐츠를";
+        logRecordChange(recordTargetId, actorUserId, "RECORD_" + recordType.toUpperCase() + "_CREATE", label, "추가했어요.", "/api/content-records/contents");
+        return ResponseEntity.ok(connected);
     }
 
     @PostMapping("/{recordTargetId}/notes")
@@ -86,7 +95,10 @@ public class contentRecordItemController {
         contentRecordItemDTO item=new contentRecordItemDTO();
         item.setTitle(body.get("title")==null?null:String.valueOf(body.get("title")));
         item.setPreviewContent(body.get("content")==null?null:String.valueOf(body.get("content")));
-        return ResponseEntity.ok(service.createNote(recordTargetId,item,userId(session)));
+        Long actorUserId = userId(session);
+        contentRecordItemDTO created = service.createNote(recordTargetId,item,actorUserId);
+        logRecordChange(recordTargetId, actorUserId, "RECORD_NOTE_CREATE", "기록 노트를", "추가했어요.", "/api/content-records/notes");
+        return ResponseEntity.ok(created);
     }
 
     @PutMapping("/{recordTargetId}/notes/{recordItemId}")
@@ -94,19 +106,40 @@ public class contentRecordItemController {
         contentRecordItemDTO item=new contentRecordItemDTO();
         item.setTitle(body.get("title")==null?null:String.valueOf(body.get("title")));
         item.setPreviewContent(body.get("content")==null?null:String.valueOf(body.get("content")));
-        return ResponseEntity.ok(service.updateNote(recordTargetId,recordItemId,item,userId(session)));
+        item.setBaseTitle(body.containsKey("baseTitle")?(body.get("baseTitle")==null?null:String.valueOf(body.get("baseTitle"))):null);
+        item.setBaseContent(body.containsKey("baseContent")?(body.get("baseContent")==null?null:String.valueOf(body.get("baseContent"))):null);
+        Long actorUserId = userId(session);
+        contentRecordItemDTO updated = service.updateNote(recordTargetId,recordItemId,item,actorUserId);
+        if(updated==null){
+            contentRecordItemDTO latest=service.getItems(recordTargetId,actorUserId).stream()
+                    .filter(row->recordItemId.equals(row.getRecordItemId()))
+                    .findFirst().orElse(null);
+            Map<String,Object> conflict=new java.util.LinkedHashMap<>();
+            conflict.put("success",false);
+            conflict.put("status",409);
+            conflict.put("code","NOTE_EDIT_CONFLICT");
+            conflict.put("message","다른 사용자가 이 노트를 먼저 수정했습니다. 현재 작성 내용은 임시 저장되었습니다.");
+            conflict.put("latest",latest);
+            return ResponseEntity.status(org.springframework.http.HttpStatus.CONFLICT).body(conflict);
+        }
+        logRecordChange(recordTargetId, actorUserId, "RECORD_NOTE_UPDATE", "기록 노트를", "수정했어요.", "/api/content-records/notes");
+        return ResponseEntity.ok(updated);
     }
 
 
     @DeleteMapping("/{recordTargetId}/photos/{recordItemId}")
     public ResponseEntity<?> deletePhoto(@PathVariable("recordTargetId") Long recordTargetId,@PathVariable("recordItemId") Long recordItemId,HttpSession session){
-        service.deletePhoto(recordTargetId,recordItemId,userId(session));
+        Long actorUserId = userId(session);
+        service.deletePhoto(recordTargetId,recordItemId,actorUserId);
+        logRecordChange(recordTargetId, actorUserId, "RECORD_PHOTO_DELETE", "기록 사진을", "삭제했어요.", "/api/content-records/photos");
         return ResponseEntity.ok(Map.of("deleted",true,"recordItemId",recordItemId));
     }
 
     @DeleteMapping("/{recordTargetId}/notes/{recordItemId}")
     public ResponseEntity<?> deleteNote(@PathVariable("recordTargetId") Long recordTargetId,@PathVariable("recordItemId") Long recordItemId,HttpSession session){
-        service.deleteNote(recordTargetId,recordItemId,userId(session));
+        Long actorUserId = userId(session);
+        service.deleteNote(recordTargetId,recordItemId,actorUserId);
+        logRecordChange(recordTargetId, actorUserId, "RECORD_NOTE_DELETE", "기록 노트를", "삭제했어요.", "/api/content-records/notes");
         return ResponseEntity.ok(Map.of("deleted",true,"recordItemId",recordItemId));
     }
 
@@ -115,7 +148,9 @@ public class contentRecordItemController {
         Object raw=body.get("recordItemIds");
         if(!(raw instanceof List<?> values)) throw new IllegalArgumentException("노트 순서 정보가 필요합니다.");
         List<Long> ids=values.stream().map(value->Long.valueOf(String.valueOf(value))).toList();
-        service.reorderNotes(recordTargetId,ids,userId(session));
+        Long actorUserId = userId(session);
+        service.reorderNotes(recordTargetId,ids,actorUserId);
+        logRecordChange(recordTargetId, actorUserId, "RECORD_NOTE_REORDER", "기록 노트 순서를", "변경했어요.", "/api/content-records/notes/order");
         return ResponseEntity.ok(Map.of("updated",true,"recordItemIds",ids));
     }
 
@@ -126,7 +161,10 @@ public class contentRecordItemController {
             @RequestParam("files") List<MultipartFile> files,
             @RequestParam(value="originalNames", required=false) List<String> originalNames,
             HttpSession session) {
-        return ResponseEntity.ok(fileService.uploadToRecord(recordTargetId, files, originalNames, userId(session)));
+        Long actorUserId = userId(session);
+        List<contentRecordItemDTO> uploaded = fileService.uploadToRecord(recordTargetId, files, originalNames, actorUserId);
+        logRecordChange(recordTargetId, actorUserId, "RECORD_FILE_CREATE", "기록 파일을", "추가했어요.", "/api/content-records/files");
+        return ResponseEntity.ok(uploaded);
     }
 
     @PostMapping("/{recordTargetId}/files/{contentFileId}")
@@ -134,7 +172,10 @@ public class contentRecordItemController {
             @PathVariable("recordTargetId") Long recordTargetId,
             @PathVariable("contentFileId") Long contentFileId,
             HttpSession session) {
-        return ResponseEntity.ok(fileService.connectExisting(recordTargetId, contentFileId, userId(session)));
+        Long actorUserId = userId(session);
+        contentRecordItemDTO connected = fileService.connectExisting(recordTargetId, contentFileId, actorUserId);
+        logRecordChange(recordTargetId, actorUserId, "RECORD_FILE_CREATE", "기록 파일을", "연결했어요.", "/api/content-records/files");
+        return ResponseEntity.ok(connected);
     }
 
     @DeleteMapping("/{recordTargetId}/files/{recordItemId}")
@@ -142,13 +183,18 @@ public class contentRecordItemController {
             @PathVariable("recordTargetId") Long recordTargetId,
             @PathVariable("recordItemId") Long recordItemId,
             HttpSession session) {
-        fileService.removeFromRecord(recordTargetId, recordItemId, userId(session));
+        Long actorUserId = userId(session);
+        fileService.removeFromRecord(recordTargetId, recordItemId, actorUserId);
+        logRecordChange(recordTargetId, actorUserId, "RECORD_FILE_DELETE", "기록 파일을", "삭제했어요.", "/api/content-records/files");
         return ResponseEntity.ok(Map.of("deleted", true, "recordItemId", recordItemId));
     }
 
     @PostMapping("/{recordTargetId}/links")
     public ResponseEntity<?> link(@PathVariable("recordTargetId") Long recordTargetId, @RequestBody contentRecordItemDTO body, HttpSession session) {
-        return ResponseEntity.ok(service.createLink(recordTargetId, body, userId(session)));
+        Long actorUserId = userId(session);
+        contentRecordItemDTO created = service.createLink(recordTargetId, body, actorUserId);
+        logRecordChange(recordTargetId, actorUserId, "RECORD_LINK_CREATE", "기록 링크를", "추가했어요.", "/api/content-records/links");
+        return ResponseEntity.ok(created);
     }
 
     @PutMapping("/{recordTargetId}/links/{recordItemId}")
@@ -157,7 +203,10 @@ public class contentRecordItemController {
             @PathVariable("recordItemId") Long recordItemId,
             @RequestBody contentRecordItemDTO body,
             HttpSession session) {
-        return ResponseEntity.ok(service.updateLink(recordTargetId, recordItemId, body, userId(session)));
+        Long actorUserId = userId(session);
+        contentRecordItemDTO updated = service.updateLink(recordTargetId, recordItemId, body, actorUserId);
+        logRecordChange(recordTargetId, actorUserId, "RECORD_LINK_UPDATE", "기록 링크를", "수정했어요.", "/api/content-records/links");
+        return ResponseEntity.ok(updated);
     }
 
     @DeleteMapping("/{recordTargetId}/links/{recordItemId}")
@@ -165,32 +214,51 @@ public class contentRecordItemController {
             @PathVariable("recordTargetId") Long recordTargetId,
             @PathVariable("recordItemId") Long recordItemId,
             HttpSession session) {
-        service.deleteLink(recordTargetId, recordItemId, userId(session));
+        Long actorUserId = userId(session);
+        service.deleteLink(recordTargetId, recordItemId, actorUserId);
+        logRecordChange(recordTargetId, actorUserId, "RECORD_LINK_DELETE", "기록 링크를", "삭제했어요.", "/api/content-records/links");
         return ResponseEntity.ok(Map.of("deleted", true, "recordItemId", recordItemId));
     }
 
     @PostMapping("/{recordTargetId}/locations")
     public ResponseEntity<?> location(@PathVariable("recordTargetId") Long recordTargetId, @RequestBody contentRecordItemDTO body, HttpSession session) {
-        return ResponseEntity.ok(service.createLocation(recordTargetId, body, userId(session)));
+        Long actorUserId = userId(session);
+        contentRecordItemDTO created = service.createLocation(recordTargetId, body, actorUserId);
+        logRecordChange(recordTargetId, actorUserId, "RECORD_LOCATION_CREATE", "기록 장소를", "추가했어요.", "/api/content-records/locations");
+        return ResponseEntity.ok(created);
     }
 
     @PutMapping("/{recordTargetId}/locations/{recordItemId}")
     public ResponseEntity<?> updateLocation(@PathVariable("recordTargetId") Long recordTargetId,
             @PathVariable("recordItemId") Long recordItemId, @RequestBody contentRecordItemDTO body, HttpSession session) {
-        return ResponseEntity.ok(service.updateLocation(recordTargetId, recordItemId, body, userId(session)));
+        Long actorUserId = userId(session);
+        contentRecordItemDTO updated = service.updateLocation(recordTargetId, recordItemId, body, actorUserId);
+        logRecordChange(recordTargetId, actorUserId, "RECORD_LOCATION_UPDATE", "기록 장소를", "수정했어요.", "/api/content-records/locations");
+        return ResponseEntity.ok(updated);
     }
 
     @DeleteMapping("/{recordTargetId}/locations/{recordItemId}")
     public ResponseEntity<?> deleteLocation(@PathVariable("recordTargetId") Long recordTargetId,
             @PathVariable("recordItemId") Long recordItemId, HttpSession session) {
-        service.deleteLocation(recordTargetId, recordItemId, userId(session));
+        Long actorUserId = userId(session);
+        service.deleteLocation(recordTargetId, recordItemId, actorUserId);
+        logRecordChange(recordTargetId, actorUserId, "RECORD_LOCATION_DELETE", "기록 장소를", "삭제했어요.", "/api/content-records/locations");
         return ResponseEntity.ok(Map.of("deleted", true, "recordItemId", recordItemId));
     }
 
     @PutMapping("/{recordTargetId}/locations/{recordItemId}/primary")
     public ResponseEntity<?> setPrimaryLocation(@PathVariable("recordTargetId") Long recordTargetId,
             @PathVariable("recordItemId") Long recordItemId, HttpSession session) {
-        return ResponseEntity.ok(service.setPrimaryLocation(recordTargetId, recordItemId, userId(session)));
+        Long actorUserId = userId(session);
+        contentRecordItemDTO updated = service.setPrimaryLocation(recordTargetId, recordItemId, actorUserId);
+        logRecordChange(recordTargetId, actorUserId, "RECORD_LOCATION_PRIMARY", "대표 장소를", "변경했어요.", "/api/content-records/locations/primary");
+        return ResponseEntity.ok(updated);
+    }
+
+    private void logRecordChange(Long recordTargetId, Long actorUserId, String activityType,
+            String recordLabel, String actionLabel, String requestUri) {
+        collaborationActivityService.recordContentRecordChange(
+                recordTargetId, actorUserId, activityType, recordLabel, actionLabel, requestUri);
     }
 
     private Long userId(HttpSession session) {

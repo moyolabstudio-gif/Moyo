@@ -1,34 +1,99 @@
 (function () {
     'use strict';
 
+    const PROJECT_LINK_MAX = 5;
+
+    function normalizeProjectLinkUrl(value) {
+        const raw = String(value || '').trim();
+        if (!raw) return '';
+        if (/^https?:\/\//i.test(raw)) return raw;
+        return 'https://' + raw;
+    }
+
+    function clearProjectLinkError() {
+        const error = document.getElementById('projectCreateLinkError');
+        if (!error) return;
+        error.hidden = true;
+        error.textContent = '';
+    }
+
+    function updateProjectLinkUi() {
+        const list = document.getElementById('projectCreateLinkList');
+        if (!list) return;
+        const count = list.querySelectorAll('.project-link-row').length;
+        const countEl = document.getElementById('projectCreateLinkCount');
+        const emptyEl = document.getElementById('projectCreateLinkEmpty');
+        const addButton = document.getElementById('projectCreateLinkAdd');
+        if (countEl) countEl.textContent = count + ' / ' + PROJECT_LINK_MAX;
+        if (emptyEl) emptyEl.hidden = count > 0;
+        if (addButton) {
+            addButton.disabled = count >= PROJECT_LINK_MAX;
+            addButton.setAttribute('aria-disabled', count >= PROJECT_LINK_MAX ? 'true' : 'false');
+        }
+    }
+
     window.addProjectCreateLink = function(name, url) {
         const list = document.getElementById('projectCreateLinkList');
         if (!list) return;
+        const count = list.querySelectorAll('.project-link-row').length;
+        if (count >= PROJECT_LINK_MAX) return;
 
         const row = document.createElement('div');
-        row.className = 'project-link-row';
+        row.className = 'project-link-row moyo-create-link-row';
         row.innerHTML =
-            '<input type="text" class="project-link-name" maxlength="50" placeholder="링크 이름">' +
-            '<input type="text" class="project-link-url" maxlength="500" placeholder="https://...">' +
-            '<button type="button" class="project-link-remove-btn" onclick="removeProjectCreateLink(this)" aria-label="링크 삭제">×</button>';
+            '<input type="text" class="project-link-name moyo-create-control moyo-create-link-name" maxlength="50" placeholder="링크 이름" aria-label="링크 이름">' +
+            '<input type="url" class="project-link-url moyo-create-control moyo-create-link-url" maxlength="500" placeholder="https://..." aria-label="링크 주소">' +
+            '<button type="button" class="project-link-remove-btn moyo-create-link-remove" onclick="removeProjectCreateLink(this)" aria-label="링크 삭제"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>';
         row.querySelector('.project-link-name').value = name || '';
-        row.querySelector('.project-link-url').value = url || '';
+        row.querySelector('.project-link-url').value = normalizeProjectLinkUrl(url || '');
+        row.querySelector('.project-link-url').addEventListener('blur', function() {
+            this.value = normalizeProjectLinkUrl(this.value);
+            clearProjectLinkError();
+        });
         list.appendChild(row);
+        updateProjectLinkUi();
+        clearProjectLinkError();
+        if (!name && !url) row.querySelector('.project-link-name').focus();
     };
 
     window.removeProjectCreateLink = function(button) {
-        const list = document.getElementById('projectCreateLinkList');
-        if (!list) return;
-        const rows = list.querySelectorAll('.project-link-row');
-        if (rows.length <= 1) {
-            rows[0].querySelectorAll('input').forEach(function(input) { input.value = ''; });
-            return;
-        }
-        button.closest('.project-link-row').remove();
+        const row = button.closest('.project-link-row');
+        if (row) row.remove();
+        updateProjectLinkUi();
+        clearProjectLinkError();
     };
+
+    function validateProjectLinks() {
+        const rows = document.querySelectorAll('#projectCreateLinkList .project-link-row');
+        const error = document.getElementById('projectCreateLinkError');
+        for (const row of rows) {
+            const urlInput = row.querySelector('.project-link-url');
+            const nameInput = row.querySelector('.project-link-name');
+            const name = nameInput.value.trim();
+            const normalized = normalizeProjectLinkUrl(urlInput.value);
+            urlInput.value = normalized;
+            if (!name && !normalized) continue;
+            try {
+                const parsed = new URL(normalized);
+                if (!/^https?:$/.test(parsed.protocol)) throw new Error('invalid');
+            } catch (e) {
+                if (error) {
+                    error.textContent = '링크 주소를 확인해주세요.';
+                    error.hidden = false;
+                }
+                urlInput.focus();
+                return false;
+            }
+        }
+        clearProjectLinkError();
+        return true;
+    }
+
 
     const page = document.querySelector('.project-create-page');
     if (!page) return;
+
+    updateProjectLinkUi();
 
     const contextPath = page.dataset.contextPath || '';
     const initialWsId = String(page.dataset.wsId || '').trim();
@@ -38,6 +103,7 @@
     const canCreateGroupProject = String(page.dataset.canCreateGroupProject || '') === 'true';
     const currentUserId = String(page.dataset.currentUserId || '');
     const currentUserName = String(page.dataset.currentUserName || '').trim();
+    const currentUserProfileImage = resolveProfileImageUrl(page.dataset.currentUserProfileImage || '');
 
     const stepLabel = document.getElementById('createStepLabel');
     const createTitle = document.getElementById('createTitle');
@@ -52,8 +118,9 @@
     const nextButton = document.getElementById('btnNextStep');
     const prevButton = document.getElementById('btnPrevStep');
     const submitButton = document.getElementById('btnSubmit');
-    const cancelButton = document.getElementById('btnCancel');
     const topCancelButton = document.getElementById('btnCancelTop');
+    const commonProjectForm = document.querySelector('[data-project-form-common]');
+    const projectNameCount = document.getElementById('projectNameCount');
 
     let currentStep = 1;
     let loadedWorkspaceId = '';
@@ -111,20 +178,16 @@
         const endInput = document.getElementById('endDate');
         startInput.value = formatDate(today);
         endInput.value = formatDate(end);
-        startInput.min = formatDate(today);
-        endInput.min = formatDate(today);
+        startInput.removeAttribute('min');
+        endInput.min = startInput.value;
     }
 
     function syncEndDate() {
-        const start = document.getElementById('startDate').value;
+        const startInput = document.getElementById('startDate');
         const endInput = document.getElementById('endDate');
-        if (!start) return;
-        endInput.min = start;
-        if (!endInput.value || endInput.value < start) {
-            const startDate = new Date(start + 'T00:00:00');
-            startDate.setDate(startDate.getDate() + 7);
-            endInput.value = formatDate(startDate);
-        }
+        const start = startInput ? startInput.value : '';
+        if (!endInput) return;
+        endInput.min = start || '';
     }
 
     function parseProjectDate(value) {
@@ -187,10 +250,15 @@
             const current = new Date(start.getFullYear(), start.getMonth(), start.getDate() + i);
             const value = formatDate(current);
             const classes = ['project-date-picker-day'];
+            const minDate = parseProjectDate(activeProjectDateInput && activeProjectDateInput.min);
+            const disabled = Boolean(minDate && value < minDate.value);
             if (current.getMonth() !== view.month - 1) classes.push('is-muted');
             if (value === todayValue) classes.push('is-today');
             if (selected && value === selected.value) classes.push('is-selected');
-            days.push('<button type="button" class="' + classes.join(' ') + '" data-project-date-value="' + value + '">' + current.getDate() + '</button>');
+            if (disabled) classes.push('is-disabled');
+            days.push('<button type="button" class="' + classes.join(' ') + '"'
+                + (disabled ? ' disabled aria-disabled="true"' : ' data-project-date-value="' + value + '"')
+                + '>' + current.getDate() + '</button>');
         }
         menu.innerHTML = ''
             + '<div class="project-date-picker-head">'
@@ -264,11 +332,10 @@
         createSubTitle.textContent = isStep2
             ? '함께 진행할 멤버를 선택하고 프로젝트 권한과 역할을 지정합니다.'
             : (personal
-                ? '프로젝트 정보를 입력하면 나만 사용하는 프로젝트가 생성됩니다.'
-                : '프로젝트 정보를 입력한 다음 참여 멤버를 설정합니다.');
+                ? '함께 진행할 프로젝트를 만들어보세요.'
+                : '함께 진행할 프로젝트를 만들어보세요.');
 
         setVisible(prevButton, isStep2);
-        setVisible(cancelButton, !isStep2);
         setVisible(nextButton, !personal && !isStep2);
         setVisible(submitButton, personal || isStep2);
     }
@@ -290,13 +357,192 @@
         return String(value || '').toLowerCase().replace(/\s+/g, ' ').trim();
     }
 
+    const ROLE_LABELS = { MEMBER: '멤버', ADMIN: '관리자', LEADER: '팀장' };
+
+    function syncMemberRoleControl(select) {
+        if (!select) return;
+        const wrap = select.closest('[data-role-select]');
+        if (!wrap) return;
+        const trigger = wrap.querySelector('.member-role-trigger');
+        const value = String(select.value || 'MEMBER').toUpperCase();
+        if (trigger) {
+            const text = trigger.querySelector('.member-role-trigger__text');
+            if (text) text.textContent = ROLE_LABELS[value] || '멤버';
+            trigger.disabled = !!select.disabled;
+        }
+        wrap.querySelectorAll('.member-role-option').forEach(function(option) {
+            const selected = option.dataset.roleValue === value;
+            option.classList.toggle('is-selected', selected);
+            option.setAttribute('aria-selected', String(selected));
+        });
+    }
+
+    function syncAllMemberRoleControls() {
+        document.querySelectorAll('.member-role').forEach(syncMemberRoleControl);
+    }
+
+    let activeRoleWrap = null;
+    let activeRolePortal = null;
+
+    function removeRolePortal() {
+        if (activeRolePortal && activeRolePortal.parentNode) {
+            activeRolePortal.parentNode.removeChild(activeRolePortal);
+        }
+        activeRolePortal = null;
+    }
+
+    function closeMemberRoleMenus(exceptWrap) {
+        document.querySelectorAll('[data-role-select].is-open').forEach(function(wrap) {
+            if (exceptWrap && wrap === exceptWrap) return;
+            wrap.classList.remove('is-open', 'opens-up');
+            const trigger = wrap.querySelector('.member-role-trigger');
+            if (trigger) trigger.setAttribute('aria-expanded', 'false');
+        });
+        if (!exceptWrap || activeRoleWrap !== exceptWrap) {
+            removeRolePortal();
+            activeRoleWrap = null;
+        }
+    }
+
+    function positionRolePortal() {
+        if (!activeRoleWrap || !activeRolePortal) return;
+        const trigger = activeRoleWrap.querySelector('.member-role-trigger');
+        if (!trigger || !document.body.contains(trigger)) {
+            closeMemberRoleMenus();
+            return;
+        }
+        const rect = trigger.getBoundingClientRect();
+        const gap = 6;
+        const menuHeight = activeRolePortal.offsetHeight || 126;
+        const spaceBelow = window.innerHeight - rect.bottom;
+        const openUp = spaceBelow < menuHeight + gap + 8 && rect.top > menuHeight + gap + 8;
+        activeRoleWrap.classList.toggle('opens-up', openUp);
+        activeRolePortal.classList.toggle('opens-up', openUp);
+        activeRolePortal.style.left = Math.round(rect.left) + 'px';
+        activeRolePortal.style.width = Math.round(rect.width) + 'px';
+        activeRolePortal.style.top = Math.round(openUp ? rect.top - menuHeight - gap : rect.bottom + gap) + 'px';
+    }
+
+    function buildRolePortal(wrap) {
+        const select = wrap.querySelector('.member-role');
+        if (!select) return null;
+        const current = String(select.value || 'MEMBER').toUpperCase();
+        const portal = document.createElement('div');
+        portal.className = 'member-role-portal';
+        portal.setAttribute('role', 'listbox');
+
+        // Portal lives under <body>, so do not rely on #stepMembers-scoped CSS.
+        // Apply the essential box/position styles inline to avoid stale stylesheet cache
+        // or overflow/ancestor selector issues breaking the dropdown.
+        Object.assign(portal.style, {
+            position: 'fixed',
+            zIndex: '10020',
+            boxSizing: 'border-box',
+            padding: '5px',
+            border: '1px solid #dce5f0',
+            borderRadius: '12px',
+            background: '#fff',
+            boxShadow: '0 12px 28px rgba(31, 51, 82, .16)',
+            overflow: 'hidden'
+        });
+
+        portal.innerHTML = ['MEMBER', 'ADMIN', 'LEADER'].map(function(value) {
+            const selected = value === current;
+            return '<button type="button" class="member-role-option' + (selected ? ' is-selected' : '') + '" data-role-value="' + value + '" role="option" aria-selected="' + String(selected) + '"><span>' + ROLE_LABELS[value] + '</span><i class="fa-solid fa-check" aria-hidden="true"></i></button>';
+        }).join('');
+
+        portal.querySelectorAll('.member-role-option').forEach(function(option) {
+            const selected = option.classList.contains('is-selected');
+            Object.assign(option.style, {
+                width: '100%',
+                minHeight: '36px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: '10px',
+                padding: '0 10px',
+                border: '0',
+                borderRadius: '8px',
+                background: selected ? 'linear-gradient(135deg, rgba(47,203,189,.10), rgba(78,137,245,.10), rgba(119,87,255,.10))' : 'transparent',
+                color: selected ? '#2f5fb8' : '#26364d',
+                fontFamily: 'inherit',
+                fontSize: '11.5px',
+                fontWeight: '750',
+                textAlign: 'left',
+                cursor: 'pointer'
+            });
+            const check = option.querySelector('i');
+            if (check) {
+                Object.assign(check.style, {
+                    opacity: selected ? '1' : '0',
+                    color: '#4f78dd',
+                    fontSize: '10px'
+                });
+            }
+            option.addEventListener('mouseenter', function() {
+                if (!option.classList.contains('is-selected')) option.style.background = '#f1f6ff';
+            });
+            option.addEventListener('mouseleave', function() {
+                if (!option.classList.contains('is-selected')) option.style.background = 'transparent';
+            });
+            option.addEventListener('focus', function() {
+                if (!option.classList.contains('is-selected')) option.style.background = '#f1f6ff';
+            });
+            option.addEventListener('blur', function() {
+                if (!option.classList.contains('is-selected')) option.style.background = 'transparent';
+            });
+        });
+
+        portal.__roleWrap = wrap;
+        document.body.appendChild(portal);
+        return portal;
+    }
+
+    function openMemberRoleMenu(wrap) {
+        if (!wrap) return;
+        const select = wrap.querySelector('.member-role');
+        const trigger = wrap.querySelector('.member-role-trigger');
+        if (!select || !trigger || select.disabled || trigger.disabled) return;
+        const alreadyOpen = wrap.classList.contains('is-open') && activeRoleWrap === wrap;
+        closeMemberRoleMenus();
+        if (alreadyOpen) return;
+
+        wrap.classList.add('is-open');
+        trigger.setAttribute('aria-expanded', 'true');
+        syncMemberRoleControl(select);
+        activeRoleWrap = wrap;
+        activeRolePortal = buildRolePortal(wrap);
+        positionRolePortal();
+    }
+
+    function selectMemberRole(wrap, value, focusTrigger) {
+        if (!wrap) return;
+        const select = wrap.querySelector('.member-role');
+        if (!select) return;
+        const nextValue = String(value || 'MEMBER').toUpperCase();
+        if (!ROLE_LABELS[nextValue]) return;
+        select.value = nextValue;
+        select.dispatchEvent(new Event('change', { bubbles: true }));
+        syncMemberRoleControl(select);
+        closeMemberRoleMenus();
+        if (focusTrigger) {
+            const trigger = wrap.querySelector('.member-role-trigger');
+            if (trigger) trigger.focus();
+        }
+    }
+
     function updateMemberSelectionUI() {
         const rows = Array.from(document.querySelectorAll('.member-row'));
         const selectedCount = rows.filter(function(row) {
             const checkbox = row.querySelector('.member-check');
             return checkbox && checkbox.checked;
         }).length;
-        if (memberSelectedCount) memberSelectedCount.textContent = '참여 멤버 ' + selectedCount + '명';
+        if (memberSelectedCount) {
+            const countText = memberSelectedCount.querySelector('span');
+            if (countText) countText.textContent = '참여 멤버 ' + selectedCount + '명';
+            else memberSelectedCount.textContent = '참여 멤버 ' + selectedCount + '명';
+        }
+        syncAllMemberRoleControls();
         applyMemberFilters();
     }
 
@@ -344,12 +590,13 @@
             ]);
             const userName = String(rawName || (isCurrent ? currentUserName : '') || emailName(email) || '이름 없음');
             const initial = userName && userName !== '이름 없음' ? userName.substring(0, 1) : '멤';
-            const profileImagePath = resolveProfileImageUrl(firstValue(member, [
+            const memberProfileImagePath = resolveProfileImageUrl(firstValue(member, [
                 'PROFILE_IMAGE_PATH', 'profileImagePath', 'profile_image_path',
                 'MEMBER_PROFILE_IMAGE_PATH', 'memberProfileImagePath',
                 'CROPPED_IMAGE_PATH', 'croppedImagePath',
                 'PROFILE_IMAGE_URL', 'profileImageUrl', 'imagePath'
             ]));
+            const profileImagePath = memberProfileImagePath || (isCurrent ? currentUserProfileImage : '');
             const avatarImage = profileImagePath
                 ? '<img src="' + escapeHtml(profileImagePath) + '" alt="" loading="lazy" onerror="this.closest(\'.member-avatar\').classList.remove(\'has-image\'); this.remove();">'
                 : '';
@@ -361,16 +608,26 @@
 
             return '<div class="member-row' + (isCurrent ? '' : ' is-disabled') + '" data-user-id="' + escapeHtml(userId) + '" data-search-text="' + escapeHtml(searchText) + '">'
                 + '<div class="member-main">'
-                + '<input class="member-check" type="checkbox" ' + (isCurrent ? 'checked' : '') + ' aria-label="멤버 선택">'
+                + '<input class="member-check" type="checkbox" ' + (isCurrent ? 'checked' : '') + ' aria-label="' + escapeHtml(userName) + ' 참여 선택">'
                 + '<div class="' + avatarClass + '"><span>' + escapeHtml(initial) + '</span>' + avatarImage + '</div>'
-                + '<div class="member-info"><span class="member-name">' + escapeHtml(userName) + (isCurrent ? ' (나)' : '') + '</span>'
+                + '<div class="member-info"><span class="member-name">' + escapeHtml(userName) + (isCurrent ? ' <em>나</em>' : '') + '</span>'
                 + '<span class="member-email">' + escapeHtml(email) + '</span></div></div>'
-                + '<input class="member-position" type="text" maxlength="100" placeholder="예: 일정 관리, 자료 정리" value="' + escapeHtml(defaultPosition) + '" ' + (isCurrent ? '' : 'disabled') + '>'
+                + '<label class="member-control member-control--position"><span class="member-control__label">담당</span>'
+                + '<input class="member-position" type="text" maxlength="100" placeholder="예: 일정 관리" value="' + escapeHtml(defaultPosition) + '" ' + (isCurrent ? '' : 'disabled') + '></label>'
+                + '<div class="member-control member-control--role"><span class="member-control__label">권한</span>'
+                + '<div class="member-role-select" data-role-select>'
                 + '<select class="member-role" aria-label="프로젝트 권한" ' + (isCurrent ? '' : 'disabled') + '>'
                 + '<option value="MEMBER">멤버</option>'
                 + '<option value="ADMIN">관리자</option>'
                 + '<option value="LEADER" ' + (isCurrent ? 'selected' : '') + '>팀장</option>'
-                + '</select></div>';
+                + '</select>'
+                + '<button type="button" class="member-role-trigger" aria-haspopup="listbox" aria-expanded="false" ' + (isCurrent ? '' : 'disabled') + '>'
+                + '<span class="member-role-trigger__text">' + (isCurrent ? '팀장' : '멤버') + '</span><i class="fa-solid fa-chevron-down" aria-hidden="true"></i></button>'
+                + '<div class="member-role-menu" role="listbox" hidden>'
+                + '<button type="button" class="member-role-option" data-role-value="MEMBER" role="option"><span>멤버</span><i class="fa-solid fa-check" aria-hidden="true"></i></button>'
+                + '<button type="button" class="member-role-option" data-role-value="ADMIN" role="option"><span>관리자</span><i class="fa-solid fa-check" aria-hidden="true"></i></button>'
+                + '<button type="button" class="member-role-option" data-role-value="LEADER" role="option"><span>팀장</span><i class="fa-solid fa-check" aria-hidden="true"></i></button>'
+                + '</div></div></div></div>';
         }).join('');
         updateMemberSelectionUI();
     }
@@ -397,40 +654,66 @@
 
     function collectMemberSettings() {
         const selected = [];
+        const seen = new Set();
         document.querySelectorAll('.member-row').forEach(function (row) {
             const checkbox = row.querySelector('.member-check');
-            const role = row.querySelector('.member-role');
-            if (checkbox && checkbox.checked) {
-                const position = row.querySelector('.member-position');
-                selected.push({
-                    userId: row.dataset.userId,
-                    role: role ? role.value : 'MEMBER',
-                    position: position ? position.value.trim() : ''
-                });
-            }
+            if (!checkbox || !checkbox.checked) return;
+
+            const userId = String(row.dataset.userId || '').trim();
+            if (!/^\d+$/.test(userId) || Number(userId) <= 0 || seen.has(userId)) return;
+            seen.add(userId);
+
+            const roleSelect = row.querySelector('.member-role');
+            const position = row.querySelector('.member-position');
+            const rawRole = roleSelect ? String(roleSelect.value || '').toUpperCase() : 'MEMBER';
+            const role = ['MEMBER', 'ADMIN', 'LEADER'].includes(rawRole) ? rawRole : 'MEMBER';
+
+            selected.push({
+                userId: userId,
+                role: role,
+                position: position ? position.value.trim().slice(0, 100) : ''
+            });
         });
         return selected;
     }
 
-    function validateBasic() {
-        const projName = document.getElementById('projName').value.trim();
-        const projCategory = document.getElementById('projCategory').value;
-        const startDate = document.getElementById('startDate').value;
-        const endDate = document.getElementById('endDate').value;
+    function validateMemberSettings(selected) {
+        if (!Array.isArray(selected) || selected.length === 0) {
+            alert('참여 멤버를 한 명 이상 선택해주세요.');
+            return false;
+        }
 
-        if (!projName) { alert('프로젝트명을 입력해주세요.'); document.getElementById('projName').focus(); return false; }
-        if (!startDate || !endDate) { alert('프로젝트 기간을 입력해주세요.'); return false; }
-        if (startDate > endDate) { alert('종료일은 시작일보다 빠를 수 없습니다.'); return false; }
+        const leaders = selected.filter(function (item) { return item.role === 'LEADER'; });
+        if (leaders.length !== 1) {
+            alert('팀장은 반드시 1명만 지정해야 합니다.');
+            return false;
+        }
+
         return true;
     }
 
+    function validateBasic() {
+        if (!commonProjectForm || !window.MoyoProjectForm) {
+            alert('프로젝트 입력 화면을 불러오지 못했습니다. 새로고침 후 다시 시도해주세요.');
+            return false;
+        }
+
+        const result = window.MoyoProjectForm.validate(commonProjectForm);
+        if (result.valid) return validateProjectLinks();
+
+        const firstError = result.errors && result.errors.length ? result.errors[0] : null;
+        if (firstError) {
+            const group = commonProjectForm.querySelector('[data-project-field="' + firstError.key + '"]');
+            if (group) group.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            const focusTarget = group && group.querySelector('input:not([type="hidden"]), textarea, button');
+            if (focusTarget) window.setTimeout(function() { focusTarget.focus(); }, 180);
+        }
+        return false;
+    }
+
     function buildPayload() {
-        const projName = document.getElementById('projName').value.trim();
+        const formValue = window.MoyoProjectForm.getValue(commonProjectForm);
         const projScope = getScope();
-        const projCategory = document.getElementById('projCategory').value;
-        const startDate = document.getElementById('startDate').value;
-        const endDate = document.getElementById('endDate').value;
-        const projDesc = document.getElementById('projDesc').value.trim();
 
         let leaderId = currentUserId;
         let memberIds = currentUserId ? [currentUserId] : [];
@@ -442,9 +725,9 @@
 
         if (projScope === 'GROUP') {
             const selected = collectMemberSettings();
+            if (!validateMemberSettings(selected)) return null;
+
             const leaders = selected.filter(function (item) { return item.role === 'LEADER'; });
-            if (selected.length === 0) { alert('참여 멤버를 한 명 이상 선택해주세요.'); return null; }
-            if (leaders.length !== 1) { alert('팀장은 반드시 1명만 지정해야 합니다.'); return null; }
             leaderId = leaders[0].userId;
             memberIds = selected.map(function (item) { return item.userId; });
             adminIds = selected.filter(function (item) { return item.role === 'ADMIN'; })
@@ -456,19 +739,22 @@
         }
 
         return {
-            projName: projName,
-            projDesc: projDesc,
+            projName: formValue.projName,
+            projDesc: formValue.projDesc,
             projScope: projScope,
-            projCategory: projCategory,
+            projType: formValue.projType,
+            projCategory: formValue.projType,
             projCategoryDetail: null,
-            projType: projCategory,
+            projIcon: formValue.projIcon,
+            accessScope: projScope === 'GROUP' ? formValue.accessScope : 'OWNER_ONLY',
+            periodEnabledYn: formValue.periodEnabledYn,
             leaderId: Number(leaderId),
             wsId: projScope === 'GROUP' ? Number(getSelectedWorkspaceId()) : null,
             memberIds: memberIds.map(Number),
             adminIds: adminIds.map(Number),
             memberPositions: memberPositions,
-            startDate: startDate,
-            endDate: endDate,
+            startDate: formValue.periodEnabledYn === 'Y' ? formValue.startDate : null,
+            endDate: formValue.periodEnabledYn === 'Y' ? formValue.endDate : null,
             links: collectProjectLinks()
         };
     }
@@ -519,6 +805,7 @@
             if (position) position.disabled = !event.target.checked;
             row.classList.toggle('is-disabled', !event.target.checked);
             if (!event.target.checked && role.value === 'LEADER') role.value = 'MEMBER';
+            syncMemberRoleControl(role);
             updateMemberSelectionUI();
         }
 
@@ -544,9 +831,13 @@
             row.classList.remove('is-disabled');
             if (event.target.value === 'LEADER') {
                 document.querySelectorAll('.member-role').forEach(function (select) {
-                    if (select !== event.target && select.value === 'LEADER') select.value = 'MEMBER';
+                    if (select !== event.target && select.value === 'LEADER') {
+                        select.value = 'MEMBER';
+                        syncMemberRoleControl(select);
+                    }
                 });
             }
+            syncMemberRoleControl(event.target);
             updateMemberSelectionUI();
         }
     });
@@ -598,6 +889,78 @@
         });
     }
 
+    document.addEventListener('click', function(event) {
+        const trigger = event.target.closest('.member-role-trigger');
+        if (trigger) {
+            event.preventDefault();
+            event.stopPropagation();
+            openMemberRoleMenu(trigger.closest('[data-role-select]'));
+            return;
+        }
+        const option = event.target.closest('.member-role-option');
+        if (option) {
+            event.preventDefault();
+            event.stopPropagation();
+            const wrap = option.closest('[data-role-select]') || (option.closest('.member-role-portal') && option.closest('.member-role-portal').__roleWrap) || activeRoleWrap;
+            selectMemberRole(wrap, option.dataset.roleValue, true);
+            return;
+        }
+        if (!event.target.closest('[data-role-select]') && !event.target.closest('.member-role-portal')) closeMemberRoleMenus();
+    });
+
+    document.addEventListener('keydown', function(event) {
+        const trigger = event.target.closest('.member-role-trigger');
+        if (trigger) {
+            const wrap = trigger.closest('[data-role-select]');
+            const select = wrap && wrap.querySelector('.member-role');
+            if (!select) return;
+            const values = ['MEMBER', 'ADMIN', 'LEADER'];
+            const index = Math.max(0, values.indexOf(String(select.value || 'MEMBER').toUpperCase()));
+            if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+                event.preventDefault();
+                if (!wrap.classList.contains('is-open')) openMemberRoleMenu(wrap);
+                const delta = event.key === 'ArrowDown' ? 1 : -1;
+                const next = values[(index + delta + values.length) % values.length];
+                const option = activeRolePortal && activeRolePortal.querySelector('.member-role-option[data-role-value="' + next + '"]');
+                if (option) option.focus();
+            } else if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                openMemberRoleMenu(wrap);
+            } else if (event.key === 'Escape') {
+                event.preventDefault();
+                closeMemberRoleMenus();
+            }
+            return;
+        }
+        const option = event.target.closest('.member-role-option');
+        if (option) {
+            const portal = option.closest('.member-role-portal');
+            const wrap = option.closest('[data-role-select]') || (portal && portal.__roleWrap) || activeRoleWrap;
+            const options = Array.from((portal || wrap).querySelectorAll('.member-role-option'));
+            const index = options.indexOf(option);
+            if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+                event.preventDefault();
+                const delta = event.key === 'ArrowDown' ? 1 : -1;
+                options[(index + delta + options.length) % options.length].focus();
+            } else if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                selectMemberRole(wrap, option.dataset.roleValue, true);
+            } else if (event.key === 'Escape') {
+                event.preventDefault();
+                closeMemberRoleMenus();
+                const t = wrap && wrap.querySelector('.member-role-trigger');
+                if (t) t.focus();
+            }
+        }
+    });
+
+    window.addEventListener('resize', function() {
+        if (activeRolePortal) positionRolePortal();
+    });
+    window.addEventListener('scroll', function() {
+        if (activeRolePortal) positionRolePortal();
+    }, true);
+
     document.querySelectorAll('[data-project-date-picker]').forEach(function(input) {
         input.addEventListener('click', function(event) {
             event.stopPropagation();
@@ -614,8 +977,64 @@
     window.addEventListener('resize', closeProjectDatePicker);
     window.addEventListener('scroll', closeProjectDatePicker, true);
 
-    document.getElementById('startDate').addEventListener('change', syncEndDate);
-    cancelButton.addEventListener('click', goBack);
+    const startDateInput = document.getElementById('startDate');
+    if (startDateInput) startDateInput.addEventListener('change', syncEndDate);
+
+    if (commonProjectForm && window.MoyoProjectForm) {
+        window.MoyoProjectForm.initialize(commonProjectForm);
+
+        const typeToggle = commonProjectForm.querySelector('[data-project-type-toggle]');
+        const typePanel = commonProjectForm.querySelector('[data-project-type-panel]');
+        const typeSummaryLabel = commonProjectForm.querySelector('[data-project-type-summary-label]');
+        const typeSummaryIcon = commonProjectForm.querySelector('[data-project-type-summary-icon]');
+
+        const closeTypePanel = function() {
+            if (!typePanel || !typeToggle) return;
+            typePanel.hidden = true;
+            typeToggle.setAttribute('aria-expanded', 'false');
+        };
+
+        const syncTypeSummary = function(button) {
+            if (!button) return;
+            const label = button.dataset.projectTypeLabel || (button.querySelector('.moyo-project-type-option__name') || {}).textContent || '';
+            const icon = button.dataset.projectDefaultIcon || 'briefcase';
+            if (typeSummaryLabel) typeSummaryLabel.textContent = String(label).trim();
+            if (typeSummaryIcon) typeSummaryIcon.innerHTML = '<i class="fa-solid fa-' + icon + '" aria-hidden="true"></i>';
+        };
+
+        if (typeToggle && typePanel) {
+            typeToggle.addEventListener('click', function(event) {
+                event.stopPropagation();
+                const nextOpen = typePanel.hidden;
+                typePanel.hidden = !nextOpen;
+                typeToggle.setAttribute('aria-expanded', String(nextOpen));
+            });
+            typePanel.addEventListener('click', function(event) { event.stopPropagation(); });
+            document.addEventListener('click', closeTypePanel);
+            document.addEventListener('keydown', function(event) {
+                if (event.key === 'Escape') closeTypePanel();
+            });
+        }
+
+        commonProjectForm.querySelectorAll('[data-project-type]').forEach(function(button) {
+            button.addEventListener('click', function() {
+                syncTypeSummary(button);
+                closeTypePanel();
+            });
+        });
+
+        const initialTypeButton = commonProjectForm.querySelector('[data-project-type][aria-pressed="true"]')
+            || commonProjectForm.querySelector('[data-project-type="WORK"]')
+            || commonProjectForm.querySelector('[data-project-type]');
+        syncTypeSummary(initialTypeButton);
+        const nameInput = commonProjectForm.querySelector('[data-project-name]');
+        const syncNameCount = function() {
+            if (projectNameCount && nameInput) projectNameCount.textContent = String(nameInput.value.length);
+        };
+        if (nameInput) nameInput.addEventListener('input', syncNameCount);
+        syncNameCount();
+    }
+
     if (topCancelButton) topCancelButton.addEventListener('click', goBack);
 
     nextButton.addEventListener('click', function () {
@@ -628,6 +1047,7 @@
     submitButton.addEventListener('click', submitProject);
 
     setDefaultDates();
+    syncEndDate();
     setStep(1);
     if (groupEntry && canCreateGroupProject) loadMembers();
 })();

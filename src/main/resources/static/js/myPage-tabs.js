@@ -104,10 +104,8 @@
                 showMoyoMark: true,
                 moyoMarkClass: 'profile-note-moyo-mark',
                 moyoMarkSrc: (document.querySelector('.profile-shell')?.dataset.contextPath || '') + '/brand/moyo_mark.png',
-                showSharedState: true,
-                showShare: true,
-                shareAction: 'friend-send',
-                shareTitle: '친구에게 보내기',
+                showSharedState: owned,
+                showShare: false,
                 showCollect: !owned
             });
 
@@ -205,7 +203,7 @@
 
     document.addEventListener('DOMContentLoaded', () => {
         renderProfileNoteCards(document);
-        // 최근 활동/친구에게 보내기 링크는 프로필 진입 후 현재 공통 상세 UI를 바로 연다.
+        // 최근 활동 링크는 프로필 진입 후 현재 공통 상세 UI를 바로 연다.
         window.setTimeout(openRequestedProfileContent, 0);
     });
 

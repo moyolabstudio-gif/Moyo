@@ -1,18 +1,22 @@
-/** MOYO 프로젝트 메인 업무 관리 */
+/** MOYO 프로젝트 메인 할 일 관리 */
 let currentProjectTaskFilter = 'ALL';
 let currentProjectTaskAssignee = 'ALL';
-let projectTaskWorkspaceOpen = false;
 let projectTaskCache = [];
+let projectTaskIndicators = new Map();
 let projectTaskMembers = [];
 let selectedProjectTaskAssignees = [];
 let projectTaskDraggingAllowed = false;
 let currentProjectTaskModalTask = null;
+let currentProjectTaskRecords = [];
 let currentProjectTaskModalMode = 'CREATE';
 let currentProjectTaskStatusOnlyEdit = false;
 let projectTaskQueryOpenHandled = false;
 let projectTaskSuppressCardClickUntil = 0;
 
 function taskConfig() { return window.PROJECT_MAIN_CONFIG || {}; }
+function isProjectTaskReadOnly() {
+    return taskConfig().projectReadOnly === true || taskConfig().projectReadOnly === 'true';
+}
 function getTaskApiUrl(path) {
     const base = taskConfig().contextPath || '';
     return base + (String(path || '').startsWith('/') ? path : '/' + path);
@@ -20,13 +24,34 @@ function getTaskApiUrl(path) {
 function getProjectTaskProjectId() {
     return taskConfig().projectId || taskConfig().paramProjId || new URLSearchParams(location.search).get('projId');
 }
+
+function refreshProjectCollaborationActivity() {
+    const widgets = window.MoyoCommunityWidgets;
+    const projId = getProjectTaskProjectId();
+    if (!widgets || typeof widgets.loadCollaborationActivities !== 'function' || !projId) return Promise.resolve([]);
+    return widgets.loadCollaborationActivities({
+        scope: 'PROJECT',
+        projId: projId,
+        wsId: taskConfig().wsId || taskConfig().paramWsId || '',
+        contextPath: taskConfig().contextPath || ''
+    }).catch(() => []);
+}
+
 function canManageProjectTasks() {
+    if (isProjectTaskReadOnly()) return false;
     return taskConfig().canManageTasks === true || taskConfig().canManageTasks === 'true';
+}
+function canCreateProjectTasks() {
+    if (isProjectTaskReadOnly()) return false;
+    return canManageProjectTasks()
+        || taskConfig().canCreateTasks === true
+        || taskConfig().canCreateTasks === 'true';
 }
 function currentProjectTaskUserId() {
     return String(taskConfig().loginUserId || '');
 }
 function canChangeProjectTaskStatus(task) {
+    if (isProjectTaskReadOnly()) return false;
     if (canManageProjectTasks()) return true;
     const loginUserId = currentProjectTaskUserId();
     return !!loginUserId && taskAssignees(task).some(person => String(person.id) === loginUserId);
@@ -72,7 +97,7 @@ function taskTimeOnly(value, fallback) {
     return match ? String(match[1]).padStart(2,'0') + ':' + match[2] : (fallback || '');
 }
 function taskInitial(name) { return Array.from(String(name || '?').trim()).slice(0, 1).join('') || '?'; }
-function taskStatusLabel(status) { return ({TODO:'할 일', IN_PROGRESS:'진행 중', DONE:'완료'})[status] || status; }
+function taskStatusLabel(status) { return ({TODO:'예정', IN_PROGRESS:'진행 중', DONE:'완료'})[status] || status; }
 function setProjectTaskStatus(status) {
     const value = ['TODO','IN_PROGRESS','DONE'].includes(String(status || '').toUpperCase()) ? String(status).toUpperCase() : 'TODO';
     const input = document.getElementById('projectTaskStatus');
@@ -131,16 +156,20 @@ function isTaskDelayed(task) {
     return status !== 'DONE' && deadline && deadline.getTime() < Date.now();
 }
 function taskDueLabel(task) {
+    const status = String(taskValue(task,'STATUS','status') || '').toUpperCase();
+    if (status === 'DONE') return '';
+
     const deadline = taskDeadline(task);
-    if (!deadline) return '기간 미정';
+    if (!deadline) return '';
+
     const today = new Date(); today.setHours(0,0,0,0);
     const day = new Date(deadline); day.setHours(0,0,0,0);
     const diff = Math.round((day - today) / 86400000);
-    if (isTaskDelayed(task)) return Math.abs(diff) + '일 지연';
-    if (String(taskValue(task,'STATUS','status')).toUpperCase() === 'DONE') return '완료';
+
+    if (isTaskDelayed(task)) return diff < 0 ? Math.abs(diff) + '일 지연' : '마감 지남';
     if (diff === 0) return '오늘 마감';
     if (diff > 0 && diff <= 7) return 'D-' + diff;
-    return taskDateWithWeekday(taskValue(task,'END_DATE','endDate','END_AT','endAt'), false);
+    return '';
 }
 function taskDueClass(task) {
     const status = String(taskValue(task,'STATUS','status') || '').toUpperCase();
@@ -229,7 +258,7 @@ function taskPeriodDetail(task) {
             const days = Math.max(1, Math.round((endDay - startDay) / 86400000) + 1);
             sub = useTime ? days + '일 일정' : days + '일 · 종일';
         } else {
-            sub = useTime ? '시간 지정 업무' : '종일 업무';
+            sub = useTime ? '시간 지정 할 일' : '종일 할 일';
         }
     }
 
@@ -290,6 +319,51 @@ function openProjectTaskFromQueryIfNeeded() {
     }, 0);
 }
 
+async function loadProjectTaskIndicators() {
+    const projId = getProjectTaskProjectId();
+    projectTaskIndicators = new Map();
+    if (!projId) return projectTaskIndicators;
+    try {
+        const response = await fetch(
+            getTaskApiUrl('/project/api/task-indicators?projId=' + encodeURIComponent(projId)),
+            {credentials:'include', cache:'no-store'}
+        );
+        if (!response.ok) throw new Error('TASK_INDICATOR_LOAD_FAILED');
+        const rows = await response.json();
+        (Array.isArray(rows) ? rows : []).forEach(function(row) {
+            const taskId = String(taskValue(row, 'taskId', 'TASK_ID') || '').trim();
+            if (!taskId) return;
+            projectTaskIndicators.set(taskId, {
+                unreadTaskCount: Number(taskValue(row, 'unreadTaskCount', 'UNREAD_TASK_COUNT') || 0),
+                unreadNoteCount: Number(taskValue(row, 'unreadNoteCount', 'UNREAD_NOTE_COUNT') || 0),
+                unreadPhotoCount: Number(taskValue(row, 'unreadPhotoCount', 'UNREAD_PHOTO_COUNT') || 0),
+                unreadFileCount: Number(taskValue(row, 'unreadFileCount', 'UNREAD_FILE_COUNT') || 0),
+                unreadLinkCount: Number(taskValue(row, 'unreadLinkCount', 'UNREAD_LINK_COUNT') || 0),
+                unreadLocationCount: Number(taskValue(row, 'unreadLocationCount', 'UNREAD_LOCATION_COUNT') || 0)
+            });
+        });
+    } catch (error) {
+        console.error('[프로젝트 작업] 미확인 업데이트 조회 실패:', error);
+    }
+    return projectTaskIndicators;
+}
+
+
+function projectTaskCardUpdateBadgeHtml(taskId) {
+    const indicator = projectTaskIndicators.get(String(taskId)) || {};
+    const unreadCount =
+        Number(indicator.unreadTaskCount || 0) +
+        Number(indicator.unreadNoteCount || 0) +
+        Number(indicator.unreadPhotoCount || 0) +
+        Number(indicator.unreadFileCount || 0) +
+        Number(indicator.unreadLinkCount || 0) +
+        Number(indicator.unreadLocationCount || 0);
+
+    if (unreadCount <= 0) return '';
+    return '<span class="project-task-card-update-dot" title="미확인 업데이트 있음" aria-label="미확인 업데이트 있음"></span>';
+}
+
+
 async function loadKanbanBoard() {
     const projId = getProjectTaskProjectId();
     if (!projId) return [];
@@ -299,6 +373,7 @@ async function loadKanbanBoard() {
         const raw = await response.json();
         projectTaskCache = typeof normalizeProjectTasks === 'function' ? normalizeProjectTasks(raw) : (Array.isArray(raw) ? raw : []);
         if (!projectTaskMembers.length) await loadProjectTaskMembers();
+        await loadProjectTaskIndicators();
         renderProjectTaskWorkspace();
         if (typeof drawCalendar === 'function') drawCalendar(projectTaskCache);
         openProjectTaskFromQueryIfNeeded();
@@ -325,12 +400,12 @@ function renderProjectTaskWorkspace() {
         const status = String(taskValue(task,'STATUS','status') || 'TODO').toUpperCase();
         if (lists[status]) lists[status].insertAdjacentHTML('beforeend', buildProjectTaskCard(task));
     });
-    const emptyLabels = {TODO:'등록된 업무가 없습니다.', IN_PROGRESS:'진행 중인 업무가 없습니다.', DONE:'완료된 업무가 없습니다.'};
+    const emptyLabels = {TODO:'등록된 할 일이 없습니다.', IN_PROGRESS:'진행 중인 할 일이 없습니다.', DONE:'완료된 할 일이 없습니다.'};
     const hasActiveFilter = currentProjectTaskFilter !== 'ALL' || currentProjectTaskAssignee !== 'ALL' || String(document.getElementById('projectTaskSearch')?.value || '').trim();
     const hasDraggableTask = visible.some(canChangeProjectTaskStatus);
     Object.entries(lists).forEach(([status,list]) => {
         if (!list.children.length) {
-            const label = hasActiveFilter ? '조건에 맞는 업무가 없습니다.' : emptyLabels[status];
+            const label = hasActiveFilter ? '조건에 맞는 할 일이 없습니다.' : emptyLabels[status];
             const guide = hasActiveFilter
                 ? ''
                 : (hasDraggableTask
@@ -344,7 +419,7 @@ function renderProjectTaskWorkspace() {
     renderProjectTaskPersonFilter();
 }
 function renderProjectTaskError() {
-    ['todo-list','inprogress-list','done-list'].forEach(id => { const el=document.getElementById(id); if(el) el.innerHTML='<div class="project-task-empty is-error">업무를 불러오지 못했습니다.</div>'; });
+    ['todo-list','inprogress-list','done-list'].forEach(id => { const el=document.getElementById(id); if(el) el.innerHTML='<div class="project-task-empty is-error">할 일을 불러오지 못했습니다.</div>'; });
     updateTaskCountDisplays(0, 0, 0, 0);
     const holder = document.getElementById('projectTaskPersonFilter');
     if (holder) holder.innerHTML = '';
@@ -369,6 +444,13 @@ function taskAssigneeSummary(people) {
     if (people.length === 1) return people[0].name;
     return people[0].name + ' 외 ' + (people.length - 1) + '명';
 }
+function taskCreatorName(task) {
+    return String(taskValue(task, 'CREATOR_NAME', 'creatorName', 'WRITER_NAME', 'writerName') || '').trim();
+}
+function taskCreatorId(task) {
+    const value = taskValue(task, 'CREATED_BY', 'createdBy', 'CREATOR_ID', 'creatorId', 'WRITER_ID', 'writerId');
+    return value == null ? '' : String(value);
+}
 function buildProjectTaskCard(task) {
     const taskId = taskValue(task,'TASK_ID','taskId','EVENT_ID','eventId');
     const title = String(taskValue(task,'TITLE','title') || '제목 없음');
@@ -378,14 +460,26 @@ function buildProjectTaskCard(task) {
     const canDrag = canChangeProjectTaskStatus(task);
     const draggable = canDrag ? 'true' : 'false';
     const dragClass = canDrag ? ' is-draggable' : '';
-    const dragHandle = canDrag
-        ? '<span class="project-task-drag-handle" data-tooltip="끌어서 상태 변경" title="끌어서 상태 변경" aria-label="끌어서 상태 변경"><i class="fa-solid fa-grip-vertical" aria-hidden="true"></i></span>'
+    const updateBadge = projectTaskCardUpdateBadgeHtml(taskId);
+    const dragHandle = (canDrag || updateBadge)
+        ? '<span class="project-task-card-top-action' + (updateBadge ? ' has-update' : '') + (canDrag ? '' : ' is-indicator-only') + '">'
+            + (canDrag ? '<span class="project-task-drag-handle" data-tooltip="끌어서 상태 변경" title="끌어서 상태 변경" aria-label="끌어서 상태 변경"><i class="fa-solid fa-grip-vertical" aria-hidden="true"></i></span>' : '')
+            + updateBadge
+        + '</span>'
         : '';
     const assigneeMeta = people.length === 1 ? taskRoleLabel(people[0].role) : (people.length ? people.length + '명 담당' : '미지정');
+    const creatorName = taskCreatorName(task);
+    const creatorMeta = creatorName
+        ? '<span class="project-task-card-creator" title="작성자 ' + safeTaskHtml(creatorName) + '"><span>작성</span><b>' + safeTaskHtml(creatorName) + '</b></span>'
+        : '';
+    const dueLabel = taskDueLabel(task);
+    const dueMeta = dueLabel
+        ? '<em class="' + taskDueClass(task) + '"' + (delayed ? ' title="마감일이 지났습니다."' : '') + '>' + safeTaskHtml(dueLabel) + '</em>'
+        : '';
     return '<button type="button" class="project-task-card ' + (delayed ? 'is-delayed ' : '') + 'status-' + status.toLowerCase() + dragClass + '" id="task-' + safeTaskHtml(taskId) + '" data-task-id="' + safeTaskHtml(taskId) + '" data-task-status="' + safeTaskHtml(status) + '" draggable="' + draggable + '" ondragstart="drag(event)" ondragend="endProjectTaskDrag(event)" onclick="handleProjectTaskCardClick(\'' + safeTaskHtml(taskId) + '\')">' +
         '<span class="project-task-card-top"><strong>' + safeTaskHtml(title) + '</strong>' + dragHandle + '</span>' +
-        '<span class="project-task-card-period"><i class="fa-regular fa-calendar"></i>' + safeTaskHtml(taskPeriodLabel(task)) + '</span>' +
-        '<span class="project-task-card-bottom"><span class="project-task-person">' + taskAssigneeStackHtml(people, 3, 'small') + '<span><b>' + safeTaskHtml(taskAssigneeSummary(people)) + '</b><small>' + safeTaskHtml(assigneeMeta) + '</small></span></span><em class="' + taskDueClass(task) + '">' + safeTaskHtml(taskDueLabel(task)) + '</em></span>' +
+        '<span class="project-task-card-period"><span class="project-task-card-period-main"><i class="fa-regular fa-calendar"></i><span>' + safeTaskHtml(taskPeriodLabel(task)) + '</span></span>' + dueMeta + '</span>' +
+        '<span class="project-task-card-bottom"><span class="project-task-person">' + taskAssigneeStackHtml(people, 3, 'small') + '<span><b>' + safeTaskHtml(taskAssigneeSummary(people)) + '</b><small>' + safeTaskHtml(assigneeMeta) + '</small></span></span>' + creatorMeta + '</span>' +
         '</button>';
 }
 function renderProjectTaskPersonFilter() {
@@ -445,7 +539,7 @@ function updateTaskCountDisplays(todo, progress, done, delayed) {
     Object.entries(values).forEach(([id,value]) => { const el=document.getElementById(id); if(el) el.textContent=value; });
 
     // 개인 프로젝트는 프로젝트 멤버 위젯 대신 소유자 카드를 사용한다.
-    // 진행 보드와 같은 업무 요약 값을 소유자 카드에도 동기화한다.
+    // 진행 보드와 같은 할 일 요약 값을 소유자 카드에도 동기화한다.
     if (taskConfig().isPersonalProject) {
         const ownerValues = {
             projectOwnerTotalCount: todo + progress + done,
@@ -471,12 +565,6 @@ function resetProjectTaskFilters() {
     const search=document.getElementById('projectTaskSearch'); if(search) search.value='';
     document.querySelectorAll('[data-task-filter]').forEach(btn => { const active=btn.dataset.taskFilter==='ALL'; btn.classList.toggle('is-active', active); btn.setAttribute('aria-pressed', String(active)); });
     renderProjectTaskWorkspace();
-}
-function toggleProjectTaskWorkspace(force) {
-    projectTaskWorkspaceOpen = typeof force === 'boolean' ? force : !projectTaskWorkspaceOpen;
-    const section=document.getElementById('projectTaskSection'); const button=document.getElementById('projectTaskViewToggle');
-    section?.classList.toggle('is-workspace', projectTaskWorkspaceOpen);
-    if(button) button.innerHTML = projectTaskWorkspaceOpen ? '<i class="fa-solid fa-compress"></i><span>요약 보기</span>' : '<i class="fa-solid fa-expand"></i><span>전체 보기</span>';
 }
 function handleProjectTaskCardClick(taskId) {
     if (Date.now() < projectTaskSuppressCardClickUntil) return;
@@ -522,18 +610,19 @@ function drop(event) {
     if(status && String(status).toUpperCase() !== previousStatus) updateTaskStatus(taskId,status);
 }
 async function updateTaskStatus(taskId,status) {
-    const params=new URLSearchParams({taskId:String(taskId),status:String(status)});
+    const params=new URLSearchParams({taskId:String(taskId),status:String(status),projId:String(getProjectTaskProjectId()||'')});
     try {
         const response=await fetch(getTaskApiUrl('/project/api/update-task-status'),{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:params.toString(),credentials:'include'});
         const result=await response.text();
         if(!response.ok || result!=='SUCCESS') throw new Error(result || 'UPDATE_FAILED');
+        await refreshProjectCollaborationActivity();
     } catch(error) {
-        alert('업무 상태를 변경하지 못했습니다.');
+        alert('할 일 상태를 변경하지 못했습니다.');
     }
     await refreshProjectTaskAndMemberView();
 }
 function refreshProjectTaskAndMemberView() {
-    // 캘린더에서 공통 업무 모달을 연 경우 프로젝트 메인 화면용
+    // 캘린더에서 공통 할 일 모달을 연 경우 프로젝트 메인 화면용
     // 칸반/멤버/미니달력 갱신은 하지 않는다. Calendar V2 bridge가
     // 모달 닫힘을 감지해 현재 캘린더 컨텍스트만 다시 조회한다.
     if (String(taskConfig().hostContext || '').toUpperCase() === 'CALENDAR_V2') {
@@ -752,7 +841,7 @@ async function openProjectTaskModal(task, options) {
     const form=document.getElementById('projectTaskForm');
     const mode = options?.mode || (task ? 'DETAIL' : 'CREATE');
 
-    if (!task && !canManageProjectTasks()) return;
+    if (!task && !canCreateProjectTasks()) return;
     if(!projectTaskMembers.length) await loadProjectTaskMembers();
 
     currentProjectTaskModalTask = task || null;
@@ -777,8 +866,8 @@ async function openProjectTaskModal(task, options) {
 
     document.getElementById('projectTaskId').value=task ? taskValue(task,'TASK_ID','taskId') : '';
     document.getElementById('projectTaskModalTitle').textContent = task
-        ? (mode === 'DETAIL' ? '업무 상세' : '업무 수정')
-        : '업무 추가';
+        ? (mode === 'DETAIL' ? '할 일 상세' : '할 일 수정')
+        : '할 일 추가';
 
     renderProjectTaskAssigneeSummary();
 
@@ -831,6 +920,53 @@ function enterProjectTaskEditMode() {
     openProjectTaskModal(currentProjectTaskModalTask, {mode:'EDIT'});
 }
 
+
+
+
+
+
+
+async function markProjectTaskRead(taskId) {
+    if (!taskId) return;
+    try {
+        const response = await fetch(
+            getTaskApiUrl('/project/api/task-read?taskId=' + encodeURIComponent(taskId)),
+            {method:'POST', credentials:'include'}
+        );
+        if (!response.ok) return;
+
+        const indicator = projectTaskIndicators.get(String(taskId));
+        if (indicator) {
+            indicator.unreadTaskCount = 0;
+            projectTaskIndicators.set(String(taskId), indicator);
+            renderProjectTaskWorkspace();
+            renderProjectTaskCommonRecordSummary(currentProjectTaskRecords || []);
+        }
+    } catch (error) {
+        console.error('[프로젝트 작업] 업무 읽음 처리 실패:', error);
+    }
+}
+
+function clearProjectTaskRecordUnread(taskId, recordType) {
+    const indicator = projectTaskIndicators.get(String(taskId));
+    if (!indicator) return;
+
+    const keys = {
+        NOTE:'unreadNoteCount',
+        PHOTO:'unreadPhotoCount',
+        FILE:'unreadFileCount',
+        LINK:'unreadLinkCount',
+        LOCATION:'unreadLocationCount'
+    };
+    const key = keys[String(recordType || '').toUpperCase()];
+    if (!key) return;
+
+    indicator[key] = 0;
+    projectTaskIndicators.set(String(taskId), indicator);
+    renderProjectTaskCommonRecordSummary(currentProjectTaskRecords || []);
+    renderProjectTaskWorkspace();
+}
+
 async function openProjectTaskDetail(taskId) {
     const cached = projectTaskCache.find(task => String(taskValue(task,'TASK_ID','taskId','EVENT_ID','eventId')) === String(taskId));
     try {
@@ -845,12 +981,14 @@ async function openProjectTaskDetail(taskId) {
         const index = projectTaskCache.findIndex(item => String(taskValue(item,'TASK_ID','taskId','EVENT_ID','eventId')) === String(taskId));
         if (index >= 0) projectTaskCache[index] = task;
         openProjectTaskModal(task, {mode:'DETAIL'});
+        markProjectTaskRead(taskId);
     } catch (error) {
         if (cached) {
             openProjectTaskModal(cached, {mode:'DETAIL'});
+            markProjectTaskRead(taskId);
             return;
         }
-        alert('업무 정보를 불러오지 못했습니다.');
+        alert('할 일 정보를 불러오지 못했습니다.');
     }
 }
 
@@ -878,7 +1016,7 @@ function openProjectTaskAssigneeSelector() {
     }
     window.ProjectMemberPeopleAdapter.openMultiple({
         title: '담당자 선택',
-        description: '업무를 함께 담당할 프로젝트 멤버를 모두 선택하세요.',
+        description: '할 일을 함께 담당할 프로젝트 멤버를 모두 선택하세요.',
         selectedIds: selectedProjectTaskAssignees.map(person => person.id),
         confirmText: '선택 완료',
         onSelect: function (members) {
@@ -1189,7 +1327,7 @@ function validateProjectTaskDateRange(start, end) {
     const bounds = getProjectTaskDateBounds();
     if (!start || !end) return '시작일과 종료일을 선택하세요.';
     if (start > end) return '종료일은 시작일보다 빠를 수 없습니다.';
-    if (bounds.max && end > bounds.max) return '업무 종료일은 프로젝트 종료일(' + bounds.max + ') 이후로 지정할 수 없습니다.';
+    if (bounds.max && end > bounds.max) return '할 일 종료일은 프로젝트 종료일(' + bounds.max + ') 이후로 지정할 수 없습니다.';
     return '';
 }
 
@@ -1222,7 +1360,7 @@ async function submitProjectTask(event) {
     const timeValidationMessage = validateProjectTaskTimeRange(start, end);
     if (timeValidationMessage) return alert(timeValidationMessage);
     const params=new URLSearchParams({title:document.getElementById('projectTaskTitle').value.trim(),status:document.getElementById('projectTaskStatus').value,useTime:useTime?'Y':'N'});
-    if(taskId) params.set('taskId',taskId); else params.set('projId',getProjectTaskProjectId());
+    if(taskId) { params.set('taskId',taskId); params.set('projId',getProjectTaskProjectId()); } else params.set('projId',getProjectTaskProjectId());
     if(start) params.set('startDate',start); if(end) params.set('endDate',end);
     params.set('recordEnabledYn','Y');
     params.set('recordVisibility',document.getElementById('projectTaskRecordVisibility')?.value||'PROJECT');
@@ -1262,6 +1400,7 @@ async function submitProjectTask(event) {
 
         closeProjectTaskModal();
         await refreshProjectTaskAndMemberView();
+        await refreshProjectCollaborationActivity();
         document.dispatchEvent(new CustomEvent('moyo:content-record-availability-changed', {
             detail: {
                 taskId: taskId ? Number(taskId) : null,
@@ -1270,16 +1409,16 @@ async function submitProjectTask(event) {
                 visibility: savedRecordVisibility
             }
         }));
-    } catch(error) { alert('업무를 저장하지 못했습니다. ('+error.message+')'); }
+    } catch(error) { alert('할 일을 저장하지 못했습니다. ('+error.message+')'); }
     finally { button.disabled=false; }
 }
 async function deleteProjectTask() {
-    const taskId=document.getElementById('projectTaskId').value; if(!taskId||!confirm('이 업무를 삭제하시겠습니까?')) return;
+    const taskId=document.getElementById('projectTaskId').value; if(!taskId||!confirm('이 할 일을 삭제하시겠습니까?')) return;
     try {
-        const response=await fetch(getTaskApiUrl('/project/api/delete-task'),{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({taskId}).toString(),credentials:'include'});
+        const response=await fetch(getTaskApiUrl('/project/api/delete-task'),{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({taskId,projId:String(getProjectTaskProjectId()||'')}).toString(),credentials:'include'});
         const result=await response.text(); if(!response.ok||result!=='SUCCESS') throw new Error(result||'DELETE_FAILED');
-        closeProjectTaskModal(); await refreshProjectTaskAndMemberView();
-    } catch(error) { alert('업무를 삭제하지 못했습니다.'); }
+        closeProjectTaskModal(); await refreshProjectTaskAndMemberView(); await refreshProjectCollaborationActivity();
+    } catch(error) { alert('할 일을 삭제하지 못했습니다.'); }
 }
 
 
@@ -1320,7 +1459,7 @@ function projectTaskCommonRecordContextPath() {
 async function ensureProjectTaskRecordTarget(task) {
     const taskId = taskValue(task, 'TASK_ID', 'taskId');
     const projId = taskValue(task, 'PROJ_ID', 'projId') || getProjectTaskProjectId();
-    if (!taskId || !projId) throw new Error('업무 기록 대상을 확인할 수 없습니다.');
+    if (!taskId || !projId) throw new Error('할 일 기록 대상을 확인할 수 없습니다.');
     const response = await fetch(getTaskApiUrl('/api/content-records/target'), {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
@@ -1333,7 +1472,7 @@ async function ensureProjectTaskRecordTarget(task) {
         })
     });
     const body = await response.json().catch(() => null);
-    if (!response.ok) throw new Error(body?.message || '업무 기록 대상을 준비하지 못했습니다.');
+    if (!response.ok) throw new Error(body?.message || '할 일 기록 대상을 준비하지 못했습니다.');
     currentProjectTaskRecordTarget = body;
     return body;
 }
@@ -1351,14 +1490,32 @@ function renderProjectTaskCommonRecordSummary(items) {
         const type = commonTaskRecordType(item);
         if (Object.prototype.hasOwnProperty.call(counts, type)) counts[type]++;
     });
+
+    const taskId = taskValue(currentProjectTaskModalTask, 'TASK_ID', 'taskId');
+    const indicator = projectTaskIndicators.get(String(taskId || '')) || {};
+    const unreadByType = {
+        NOTE: Number(indicator.unreadNoteCount || 0) > 0,
+        PHOTO: Number(indicator.unreadPhotoCount || 0) > 0,
+        FILE: Number(indicator.unreadFileCount || 0) > 0,
+        LINK: Number(indicator.unreadLinkCount || 0) > 0,
+        LOCATION: Number(indicator.unreadLocationCount || 0) > 0
+    };
+
     wrap.innerHTML = [
         ['NOTE','fa-regular fa-note-sticky','노트',counts.NOTE],
         ['PHOTO','fa-regular fa-image','사진',counts.PHOTO],
         ['FILE','fa-solid fa-paperclip','파일',counts.FILE],
         ['LINK','fa-solid fa-link','링크',counts.LINK],
         ['LOCATION','fa-solid fa-location-dot','장소',counts.LOCATION]
-    ].map(v => '<button type="button" class="project-task-record-summary__shortcut" data-record-type="'+v[0]+'" title="'+v[2]+' 바로 열기" aria-label="'+v[2]+' '+v[3]+'개, 바로 열기"><i class="'+v[1]+'" aria-hidden="true"></i><b>'+v[3]+'</b></button>').join('');
+    ].map(v => {
+        const dot = unreadByType[v[0]]
+            ? '<span class="project-task-record-type-dot" aria-hidden="true"></span>'
+            : '';
+        return '<button type="button" class="project-task-record-summary__shortcut" data-record-type="'+v[0]+'" title="'+v[2]+' 바로 열기" aria-label="'+v[2]+' '+v[3]+'개, 바로 열기">' +
+            '<span class="project-task-record-summary__icon"><i class="'+v[1]+'" aria-hidden="true"></i>'+dot+'</span><b>'+v[3]+'</b></button>';
+    }).join('');
 }
+
 
 async function loadProjectTaskRecords(task) {
     const section = document.getElementById('projectTaskRecords');
@@ -1401,24 +1558,88 @@ function prepareProjectTaskRecordSection(task) {
 async function openProjectTaskRecordViewer(recordType) {
     if (!currentProjectTaskModalTask || !isProjectTaskRecordEnabled(currentProjectTaskModalTask)) return;
     const activeType = String(recordType || 'NOTE').toUpperCase();
+    const taskId = taskValue(currentProjectTaskModalTask, 'TASK_ID', 'taskId');
+
     try {
         const target = await ensureProjectTaskRecordTarget(currentProjectTaskModalTask);
         const id = taskValue(target, 'RECORD_TARGET_ID', 'recordTargetId');
         if (!projectTaskCommonRecordModal) throw new Error('공통 기록 모달을 불러오지 못했습니다.');
-        projectTaskCommonRecordModal.open({
-            recordTargetId: Number(id),
-            targetLabel: String(taskValue(currentProjectTaskModalTask, 'TITLE', 'title') || '업무'),
-            activeType: activeType
+
+        const indicator = projectTaskIndicators.get(String(taskId)) || {};
+        const unreadTypeCounts = {
+            NOTE: Number(indicator.unreadNoteCount || 0),
+            PHOTO: Number(indicator.unreadPhotoCount || 0),
+            FILE: Number(indicator.unreadFileCount || 0),
+            LINK: Number(indicator.unreadLinkCount || 0),
+            LOCATION: Number(indicator.unreadLocationCount || 0)
+        };
+        const unreadTypes = Object.keys(unreadTypeCounts).filter(function (type) {
+            return unreadTypeCounts[type] > 0;
         });
+
+        let unreadItemIds = [];
+        try {
+            const fetchTypes = Array.from(new Set(unreadTypes.concat([activeType])));
+            const unreadLists = await Promise.all(fetchTypes.map(async function (type) {
+                const unreadResponse = await fetch(
+                    getTaskApiUrl('/project/api/task-record-unread-items?taskId=' + encodeURIComponent(taskId) +
+                        '&recordType=' + encodeURIComponent(type)),
+                    {credentials:'include', cache:'no-store'}
+                );
+                if (!unreadResponse.ok) return [];
+                const rows = await unreadResponse.json();
+                return Array.isArray(rows) ? rows : [];
+            }));
+            unreadItemIds = Array.from(new Set(unreadLists.flat().map(String)));
+        } catch (error) {
+            console.error('[프로젝트 작업] 미확인 기록 항목 조회 실패:', error);
+        }
+
+        await projectTaskCommonRecordModal.open({
+            recordTargetId: Number(id),
+            targetLabel: String(taskValue(currentProjectTaskModalTask, 'TITLE', 'title') || '할 일'),
+            activeType: activeType,
+            unreadItemIds: unreadItemIds,
+            unreadTypes: unreadTypes
+        });
+
+        try {
+            const readResponse = await fetch(
+                getTaskApiUrl('/project/api/task-record-read?taskId=' + encodeURIComponent(taskId) +
+                    '&recordType=' + encodeURIComponent(activeType)),
+                {method:'POST', credentials:'include'}
+            );
+            if (readResponse.ok) {
+                clearProjectTaskRecordUnread(taskId, activeType);
+                projectTaskCommonRecordModal.clearUnreadType?.(activeType);
+            }
+        } catch (error) {
+            console.error('[프로젝트 작업] 기록 읽음 처리 실패:', error);
+        }
     } catch (error) {
         alert(error.message || '기록을 열지 못했습니다.');
     }
 }
 
+
 function initProjectTaskCommonRecordModal() {
     if (!window.CommonContentRecordModal?.create || projectTaskCommonRecordModal) return;
     projectTaskCommonRecordModal = window.CommonContentRecordModal.create({
         contextPath: projectTaskCommonRecordContextPath(),
+        onTypeViewed: async function (recordType) {
+            if (!currentProjectTaskModalTask) return false;
+            const taskId = taskValue(currentProjectTaskModalTask, 'TASK_ID', 'taskId');
+            if (!taskId) return false;
+            const type = String(recordType || '').toUpperCase();
+            const response = await fetch(
+                getTaskApiUrl('/project/api/task-record-read?taskId=' + encodeURIComponent(taskId) +
+                    '&recordType=' + encodeURIComponent(type)),
+                {method:'POST', credentials:'include'}
+            );
+            if (!response.ok) return false;
+            clearProjectTaskRecordUnread(taskId, type);
+            return true;
+        },
         onChanged: async function (change) {
             if (currentProjectTaskModalTask) await loadProjectTaskRecords(currentProjectTaskModalTask);
 
@@ -1433,9 +1654,9 @@ function initProjectTaskCommonRecordModal() {
             throw new Error('공통 노트 작성 화면 연결은 다음 전환 단계에서 적용됩니다.');
         },
         onCreatePhoto: async function ({ recordTargetId, formData }) {
-            if (!currentProjectTaskModalTask) throw new Error('업무 정보를 확인할 수 없습니다.');
+            if (!currentProjectTaskModalTask) throw new Error('할 일 정보를 확인할 수 없습니다.');
 
-            const taskTitle = String(taskValue(currentProjectTaskModalTask, 'TITLE', 'title') || '업무').trim();
+            const taskTitle = String(taskValue(currentProjectTaskModalTask, 'TITLE', 'title') || '할 일').trim();
             const projId = Number(taskValue(currentProjectTaskModalTask, 'PROJ_ID', 'projId') || getProjectTaskProjectId());
             if (!recordTargetId || !projId) throw new Error('사진을 저장할 기록 대상을 확인할 수 없습니다.');
 
@@ -1452,7 +1673,7 @@ function initProjectTaskCommonRecordModal() {
             const album = await requestJson('/api/content-records/' + encodeURIComponent(recordTargetId) + '/photo-album', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ albumName: '[업무 보드] ' + taskTitle })
+                body: JSON.stringify({ albumName: '[할 일 보드] ' + taskTitle })
             });
             const albumId = Number(album?.albumId || album?.ALBUM_ID);
             if (!albumId) throw new Error('기록 사진 앨범을 준비하지 못했습니다.');
@@ -1461,7 +1682,7 @@ function initProjectTaskCommonRecordModal() {
             upload.append('scopeType', 'PROJECT');
             upload.append('scopeId', String(projId));
             upload.append('albumId', String(albumId));
-            upload.append('title', '[업무 보드] ' + taskTitle);
+            upload.append('title', '[할 일 보드] ' + taskTitle);
             upload.append('description', '');
             upload.append('visibilityType', 'PROJECT');
             files.forEach(file => upload.append('files', file));
@@ -1476,7 +1697,7 @@ function initProjectTaskCommonRecordModal() {
                 body: JSON.stringify({
                     recordType: 'PHOTO',
                     contentId: postId,
-                    title: '[업무 보드] ' + taskTitle
+                    title: '[할 일 보드] ' + taskTitle
                 })
             });
         }
@@ -1492,6 +1713,14 @@ document.addEventListener('DOMContentLoaded', function(){
         openProjectTaskRecordViewer(shortcut.dataset.recordType);
     });
     document.querySelectorAll('[data-record-visibility]').forEach(button=>button.addEventListener('click',()=>setProjectTaskRecordVisibility(button.dataset.recordVisibility)));
+    document.querySelectorAll('.project-task-status-option[data-task-status]').forEach(function(button) {
+        if (button.dataset.taskStatusBound === 'true') return;
+        button.dataset.taskStatusBound = 'true';
+        button.addEventListener('click', function() {
+            if (button.disabled) return;
+            setProjectTaskStatus(button.dataset.taskStatus);
+        });
+    });
 
     const startDateInput = document.getElementById('projectTaskStartDate');
     if (startDateInput && startDateInput.dataset.taskDateBoundsBound !== 'true') {
@@ -1535,3 +1764,103 @@ document.addEventListener('DOMContentLoaded', function(){
 });
 
 window.openProjectTaskDetail = openProjectTaskDetail;
+
+
+/* =====================================================================
+   2026-09-18 진행 보드 mobile drag edge scroll v3
+   ===================================================================== */
+(function bindProjectTaskBoardEdgeAutoScrollV3() {
+    if (window.__moyoProjectTaskBoardEdgeScrollV3) return;
+    window.__moyoProjectTaskBoardEdgeScrollV3 = true;
+
+    let rafId = 0;
+    let direction = 0;
+
+    function stop() {
+        direction = 0;
+        if (rafId) {
+            cancelAnimationFrame(rafId);
+            rafId = 0;
+        }
+    }
+
+    function tick() {
+        const board = document.getElementById('projectTaskBoard');
+        if (!board || !direction) {
+            stop();
+            return;
+        }
+        board.scrollLeft += direction * 9;
+        rafId = requestAnimationFrame(tick);
+    }
+
+    document.addEventListener('dragover', function (event) {
+        const board = document.getElementById('projectTaskBoard');
+        if (!board || window.innerWidth > 760) {
+            stop();
+            return;
+        }
+
+        const rect = board.getBoundingClientRect();
+        const edge = Math.min(60, Math.max(40, rect.width * 0.15));
+        const next = event.clientX < rect.left + edge ? -1
+                   : event.clientX > rect.right - edge ? 1
+                   : 0;
+
+        if (next === direction) return;
+        stop();
+        direction = next;
+        if (direction) rafId = requestAnimationFrame(tick);
+    });
+
+    document.addEventListener('drop', stop);
+    document.addEventListener('dragend', stop);
+})();
+
+
+function applyProjectTaskRecordUpdateDots(root) {
+    const scope = root || document;
+    const rows = scope.querySelectorAll(
+        '[data-record-item], .project-task-record-item, .content-record-item, .record-item'
+    );
+
+    rows.forEach(function(row) {
+        const updated =
+            row.classList.contains('is-updated') ||
+            String(row.getAttribute('data-updated') || '').toUpperCase() === 'Y' ||
+            Number(row.getAttribute('data-update-count') || 0) > 0;
+
+        let dot = row.querySelector('.project-task-record-update-dot');
+        if (updated && !dot) {
+            dot = document.createElement('span');
+            dot.className = 'project-task-record-update-dot';
+            dot.title = '업데이트됨';
+            dot.setAttribute('aria-label', '업데이트됨');
+
+            const label =
+                row.querySelector('.record-title, .content-record-title, strong, b, .title') ||
+                row.firstElementChild ||
+                row;
+            label.appendChild(dot);
+        } else if (!updated && dot) {
+            dot.remove();
+        }
+    });
+}
+
+document.addEventListener('moyo:record-modal-opened', function(event) {
+    const root = event && event.detail && event.detail.root ? event.detail.root : document;
+    applyProjectTaskRecordUpdateDots(root);
+});
+
+const projectTaskRecordDotObserver = new MutationObserver(function(mutations) {
+    for (const mutation of mutations) {
+        for (const node of mutation.addedNodes || []) {
+            if (node && node.nodeType === 1) {
+                applyProjectTaskRecordUpdateDots(node);
+            }
+        }
+    }
+});
+projectTaskRecordDotObserver.observe(document.documentElement, {childList:true, subtree:true});
+

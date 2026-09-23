@@ -35,6 +35,19 @@ function addDateDays(dateText, amount) {
         const TIME_SCHEDULE_SNAP_MINUTES = 15;
         const TIME_SCHEDULE_SLOTS_PER_HOUR = 60 / TIME_SCHEDULE_SNAP_MINUTES;
 
+        function formatPlanDurationText(startMinute, endMinute) {
+            let duration = Number(endMinute) - Number(startMinute);
+            if (!Number.isFinite(duration)) return '';
+            if (duration <= 0) duration += 24 * 60;
+            if (duration <= 0) return '';
+
+            const hours = Math.floor(duration / 60);
+            const minutes = duration % 60;
+            if (hours > 0 && minutes > 0) return hours + '시간 ' + minutes + '분';
+            if (hours > 0) return hours + '시간';
+            return minutes + '분';
+        }
+
         function formatTimeScheduleMinutes(totalMinutes) {
             const normalized = Math.max(0, Math.min(24 * 60, totalMinutes));
             const hour = Math.floor(normalized / 60);
@@ -646,7 +659,12 @@ function addDateDays(dateText, amount) {
                     startTime: minutesToTime(current.startMinute),
                     endTime: normalizedEndMinute === 0 && endDayOffset === 0 ? '24:00' : minutesToTime(normalizedEndMinute),
                     color: plan.COLOR || plan.color || '#4A90E2',
-                    sortOrder: plan.SORT_ORDER || plan.sortOrder || 1
+                    sortOrder: plan.SORT_ORDER || plan.sortOrder || 1,
+                    recordEnabledYn: plan.RECORD_ENABLED_YN || plan.recordEnabledYn || null,
+                    recordVisibility: plan.RECORD_VISIBILITY || plan.recordVisibility || null,
+                    editorUserIds: Array.isArray(plan.editorUserIds || plan.EDITOR_USER_IDS)
+                        ? (plan.editorUserIds || plan.EDITOR_USER_IDS).map(Number)
+                        : null
                 };
                 if (isWeeklyScheduleGridMode()) {
                     if (typeof window.updateWeeklyPlanFromTimeGrid !== 'function') throw new Error('주간 계획 저장 함수를 찾을 수 없습니다.');
@@ -1157,18 +1175,22 @@ function addDateDays(dateText, amount) {
                 html += '</div></div>';
             }
 
+            const now = new Date();
+            const weeklyGridMode = isWeeklyScheduleGridMode();
             const commonGridColumns = days.map(function(day) {
+                const isCurrentDay = weeklyGridMode
+                    ? Number(day.day) === now.getDay()
+                    : day.date === formatProjectDate(now);
                 return {
                     key: day.date,
                     label: day.label,
                     active: day.active,
-                    today: day.date === formatProjectDate(new Date()),
+                    today: isCurrentDay,
                     weekend: day.weekend,
                     sunday: day.day === 0,
                     saturday: day.day === 6
                 };
             });
-            const now = new Date();
             html += ProjectScheduleGrid.buildHeader({
                 mode: 'DATE',
                 columns: commonGridColumns,
@@ -1282,11 +1304,12 @@ function addDateDays(dateText, amount) {
                         : ((continuesFromPreviousDay ? ' is-continued-from-previous' : '')
                             + (continuesToNextDay ? ' is-continued-to-next' : ''));
 
-                    let timeDisplayText = displayStart + ' ~ ' + displayEnd;
+                    const durationText = formatPlanDurationText(startTimeMinutes, endTimeMinutes);
+                    let timeDisplayText = displayStart + ' ~ ' + displayEnd + (durationText ? ' · ' + durationText : '');
                     let segmentTitleText = itemTitle;
                     if (weeklyOvernightPlan) {
                         // 두 요일 조각 모두 하나의 계획임을 동일한 전체 시간으로 표시한다.
-                        timeDisplayText = startTime + ' ~ ' + endTime + ' (+1일)';
+                        timeDisplayText = startTime + ' ~ ' + endTime + ' (+1일)' + (durationText ? ' · ' + durationText : '');
                     } else if (showContinuity) {
                         if (isFirstDay) {
                             timeDisplayText = startTime + ' → ' + compactEndDate + ' ' + endTime;
@@ -1359,9 +1382,24 @@ function addDateDays(dateText, amount) {
                 }
 
                 const now = new Date();
-                const todayVisible = days.some(function(day) { return day.date === formatProjectDate(now) && day.active; });
-                const focusHour = todayVisible ? Math.max(startHour, now.getHours() - 2) : Math.max(startHour, 7);
-                scroller.scrollTop = Math.max(0, focusHour - startHour) * TIME_SCHEDULE_SLOTS_PER_HOUR * 14;
+                const weeklyGridMode = isWeeklyScheduleGridMode();
+                const todayVisible = weeklyGridMode
+                    ? days.some(function(day) { return Number(day.day) === now.getDay() && day.active; })
+                    : days.some(function(day) { return day.date === formatProjectDate(now) && day.active; });
+
+                if (todayVisible) {
+                    const currentMinute = now.getHours() * 60 + now.getMinutes();
+                    const visibleMinute = Math.max(displayStartMinute, Math.min(24 * 60, currentMinute));
+                    const referenceSlot = scroller.querySelector('.time-schedule-slot[data-minute]');
+                    const rowHeight = referenceSlot ? referenceSlot.getBoundingClientRect().height : 14;
+                    const minuteOffsetPx = ((visibleMinute - displayStartMinute) / TIME_SCHEDULE_SNAP_MINUTES) * rowHeight;
+                    const centeredTop = minuteOffsetPx - (scroller.clientHeight / 2);
+                    const maxScroll = Math.max(0, scroller.scrollHeight - scroller.clientHeight);
+                    scroller.scrollTop = Math.max(0, Math.min(maxScroll, centeredTop));
+                } else {
+                    const fallbackHour = Math.max(startHour, 7);
+                    scroller.scrollTop = Math.max(0, fallbackHour - startHour) * TIME_SCHEDULE_SLOTS_PER_HOUR * 14;
+                }
             }, 0);
         }
 

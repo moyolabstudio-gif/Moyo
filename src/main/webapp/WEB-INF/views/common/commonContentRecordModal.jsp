@@ -48,7 +48,7 @@
                     <div class="moyo-record-section__empty" data-record-empty="PHOTO" hidden><i class="fa-regular fa-image"></i><strong>사진이 없습니다.</strong><span>위 영역에서 이 기록과 관련된 사진을 추가하세요.</span></div>
                 </div>
                 <div class="moyo-record-content-footer">
-                    <span><i class="fa-solid fa-circle-info" aria-hidden="true"></i> 사진당 최대 10MB · 한 번에 최대 10장 선택 · 기록당 총 100MB · JPG, PNG, GIF, WEBP, HEIC/HEIF 형식을 업로드할 수 있습니다. HEIC/HEIF는 JPG로 자동 변환됩니다.</span>
+                    <span><i class="fa-solid fa-circle-info" aria-hidden="true"></i> 사진당 최대 10MB · 한 번에 최대 10장 선택 · 기록당 총 100MB</span>
                 </div>
             </section>
 
@@ -70,7 +70,7 @@
                     </div>
                 </div>
                 <div class="moyo-record-content-footer">
-                    <span><i class="fa-solid fa-circle-info" aria-hidden="true"></i> 파일당 최대 20MB · 한 번에 최대 10개 선택 · 기록당 총 100MB · 실행·배포 파일은 업로드할 수 없습니다.</span>
+                    <span><i class="fa-solid fa-circle-info" aria-hidden="true"></i> 파일당 최대 20MB · 한 번에 최대 10개 선택 · 기록당 총 100MB</span>
                 </div>
             </section>
 

@@ -18,6 +18,48 @@ public class WorkspaceFinalDeletionService {
     private final ProjectFinalDeletionService projectFinalDeletionService;
 
     /**
+     * 그룹장 혼자만 남아 있는 그룹을 즉시 삭제한다.
+     * 소속 프로젝트도 동일 트랜잭션에서 함께 정리한다.
+     */
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void deleteWorkspaceImmediately(Long wsId) {
+        List<Long> projectIds =
+                workspaceDAO.selectWorkspaceProjectIdsForFinalDelete(wsId);
+        for (Long projId : projectIds) {
+            projectFinalDeletionService
+                    .deleteProjectForWorkspaceFinalDeletion(projId);
+        }
+
+        workspaceDAO.deleteWorkspaceTargetShares(wsId);
+        workspaceDAO.deleteWorkspaceContentReactions(wsId);
+        workspaceDAO.deleteWorkspaceContentFileRecentAccess(wsId);
+        workspaceDAO.deleteWorkspaceContentRecordLinks(wsId);
+        workspaceDAO.deleteWorkspaceContentRecordLocations(wsId);
+        workspaceDAO.deleteWorkspaceContentRecordItems(wsId);
+        workspaceDAO.deleteWorkspaceContentRecordTargets(wsId);
+        workspaceDAO.deleteWorkspaceContentFiles(wsId);
+        workspaceDAO.deleteWorkspaceContentFileFolders(wsId);
+        workspaceDAO.deleteWorkspaceNativeNotes(wsId);
+        workspaceDAO.deleteWorkspaceNoteFolders(wsId);
+        workspaceDAO.deleteWorkspacePhotoPosts(wsId);
+        workspaceDAO.deleteWorkspacePhotoAlbums(wsId);
+        workspaceDAO.deleteWorkspaceBoardPosts(wsId);
+        workspaceDAO.deleteWorkspacePolls(wsId);
+        workspaceDAO.deleteWorkspaceEvents(wsId);
+        workspaceDAO.deleteWorkspaceJoinRequests(wsId);
+        workspaceDAO.deleteWorkspaceInvitations(wsId);
+        workspaceDAO.deleteWorkspaceMemberProfiles(wsId);
+        workspaceDAO.deleteWorkspaceLinksForFinalDelete(wsId);
+        workspaceDAO.deleteWorkspaceMembersForFinalDelete(wsId);
+
+        int deleted = workspaceDAO.deleteWorkspaceRowImmediate(wsId);
+        if (deleted != 1) {
+            throw new IllegalStateException(
+                    "그룹 즉시 삭제에 실패했습니다. wsId=" + wsId);
+        }
+    }
+
+    /**
      * 그룹 하나를 독립 트랜잭션으로 최종 삭제한다.
      * 어느 단계라도 실패하면 그룹과 소속 프로젝트 정리가 모두 롤백된다.
      */
@@ -39,7 +81,10 @@ public class WorkspaceFinalDeletionService {
 
         // 공통 FILE 탐색기 자료. 파일 참조/최근 접근을 먼저 끊고 실제 파일·폴더를 지운다.
         workspaceDAO.deleteWorkspaceContentFileRecentAccess(wsId);
-        workspaceDAO.deleteWorkspaceContentRecordFileItems(wsId);
+        workspaceDAO.deleteWorkspaceContentRecordLinks(wsId);
+        workspaceDAO.deleteWorkspaceContentRecordLocations(wsId);
+        workspaceDAO.deleteWorkspaceContentRecordItems(wsId);
+        workspaceDAO.deleteWorkspaceContentRecordTargets(wsId);
         workspaceDAO.deleteWorkspaceContentFiles(wsId);
         workspaceDAO.deleteWorkspaceContentFileFolders(wsId);
 

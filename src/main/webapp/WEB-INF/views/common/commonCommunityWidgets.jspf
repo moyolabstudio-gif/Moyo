@@ -9,8 +9,8 @@
     </c:when>
     <c:otherwise>
         <c:set var="communityPollMoreUrl" value="${pageContext.request.contextPath}/poll/list?scope=PROJECT&amp;${projectRouteQuery}" />
-        <c:set var="communityNoticeMoreUrl" value="${pageContext.request.contextPath}/group/board/list?${projectRouteQuery}&amp;type=NOTICE" />
-        <c:set var="communityFreeMoreUrl" value="${pageContext.request.contextPath}/group/board/list?${projectRouteQuery}&amp;type=FREE" />
+        <c:set var="communityNoticeMoreUrl" value="${pageContext.request.contextPath}/project/board/list?${projectRouteQuery}&amp;type=NOTICE" />
+        <c:set var="communityFreeMoreUrl" value="${pageContext.request.contextPath}/project/board/list?${projectRouteQuery}&amp;type=FREE" />
         <c:set var="communityFileMoreUrl" value="${pageContext.request.contextPath}/project/files?${projectRouteQuery}" />
     </c:otherwise>
 </c:choose>

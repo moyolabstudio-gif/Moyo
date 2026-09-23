@@ -707,3 +707,760 @@
 .moyo-content-photo-like-button.is-liked:hover {
     color: #ff4f72 !important;
 }
+
+
+/* =====================================================================
+   2026-09-18 Shared note responsive-only list v19
+   - 데스크톱/기존 카드 UI는 절대 변경하지 않음
+   - 760px 이하에서만 공유 노트를 컴팩트 리스트로 전환
+   - 사진첩/기타 콘텐츠는 기존 규칙 유지
+   ===================================================================== */
+@media (max-width: 760px) {
+    .moyo-content-note-grid {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) !important;
+        gap: 8px !important;
+    }
+
+    .moyo-content-note-grid > * {
+        grid-column: auto !important;
+        width: 100% !important;
+        max-width: none !important;
+        height: 86px !important;
+        min-height: 86px !important;
+        max-height: 86px !important;
+        margin: 0 !important;
+        overflow: hidden !important;
+        border-radius: 12px !important;
+    }
+
+    .moyo-content-note-grid > * > .workspace-note-paper-button,
+    .moyo-content-note-grid > * > .project-note-paper-button,
+    .moyo-content-note-grid .workspace-note-paper,
+    .moyo-content-note-grid .project-note-paper {
+        position: relative !important;
+        display: block !important;
+        width: 100% !important;
+        height: 86px !important;
+        min-height: 86px !important;
+        max-height: 86px !important;
+        aspect-ratio: auto !important;
+    }
+
+    .moyo-content-note-grid .workspace-note-paper-inner,
+    .moyo-content-note-grid .project-note-paper-inner,
+    .moyo-content-note-grid .moyo-content-note-inner {
+        height: 100% !important;
+        min-height: 0 !important;
+        max-height: 100% !important;
+        padding: 10px 132px 9px 13px !important;
+        overflow: hidden !important;
+        box-sizing: border-box !important;
+    }
+
+    .moyo-content-note-grid .workspace-note-paper-title,
+    .moyo-content-note-grid .project-note-paper-title,
+    .moyo-content-note-grid .moyo-content-note-title {
+        display: block !important;
+        margin: 0 0 6px !important;
+        overflow: hidden !important;
+        font-size: 13px !important;
+        line-height: 1.35 !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+        -webkit-line-clamp: unset !important;
+    }
+
+    /* 제목 아래 구분선 1개만 */
+    .moyo-content-note-grid .workspace-note-paper-line,
+    .moyo-content-note-grid .project-note-paper-line,
+    .moyo-content-note-grid .moyo-content-note-rule {
+        display: block !important;
+        width: 100% !important;
+        height: 1px !important;
+        margin: 0 0 6px !important;
+        border: 0 !important;
+        background: #e8eef6 !important;
+    }
+
+    /* 카드 장식용 하단 선 제거 */
+    .moyo-content-note-grid .workspace-note-paper-lines,
+    .moyo-content-note-grid .project-note-paper-lines,
+    .moyo-content-note-grid .moyo-content-note-lines {
+        display: none !important;
+    }
+
+    .moyo-content-note-grid .workspace-note-paper-body,
+    .moyo-content-note-grid .project-note-paper-body,
+    .moyo-content-note-grid .moyo-content-note-body {
+        display: block !important;
+        min-height: 0 !important;
+        max-height: none !important;
+        margin: 0 !important;
+        overflow: hidden !important;
+        font-size: 11px !important;
+        line-height: 1.3 !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+        -webkit-line-clamp: unset !important;
+    }
+
+    /* 기존 hover 레이어를 모바일에서만 우측 메타 표시로 재배치 */
+    .moyo-content-note-grid .workspace-note-paper-hover,
+    .moyo-content-note-grid .project-note-paper-hover {
+        position: absolute !important;
+        inset: 10px 11px auto auto !important;
+        width: 108px !important;
+        min-height: 0 !important;
+        padding: 0 !important;
+        border: 0 !important;
+        border-radius: 0 !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        opacity: 1 !important;
+        transform: none !important;
+        pointer-events: auto !important;
+    }
+
+    .moyo-content-note-grid .workspace-note-hover-main,
+    .moyo-content-note-grid .profile-note-hover-main {
+        display: grid !important;
+        justify-items: end !important;
+        gap: 5px !important;
+        width: 100% !important;
+    }
+
+    .moyo-content-note-grid .workspace-note-hover-meta,
+    .moyo-content-note-grid .profile-note-hover-meta {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: flex-end !important;
+        gap: 4px !important;
+        width: 100% !important;
+    }
+
+    .moyo-content-note-grid .workspace-note-hover-meta strong,
+    .moyo-content-note-grid .profile-note-hover-meta strong {
+        display: block !important;
+        max-width: 54px !important;
+        overflow: hidden !important;
+        font-size: 9.5px !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+    }
+
+    .moyo-content-note-grid .workspace-note-hover-dot,
+    .moyo-content-note-grid .profile-note-hover-dot {
+        display: inline !important;
+        font-size: 8px !important;
+    }
+
+    .moyo-content-note-grid .workspace-note-hover-date,
+    .moyo-content-note-grid .profile-note-hover-date {
+        font-size: 9px !important;
+    }
+
+    .moyo-content-note-grid .workspace-note-hover-actions,
+    .moyo-content-note-grid .profile-note-feed-actions {
+        display: flex !important;
+        justify-content: flex-end !important;
+        gap: 8px !important;
+        width: 100% !important;
+        font-size: 9px !important;
+    }
+}
+
+@media (max-width: 520px) {
+    .moyo-content-note-grid > *,
+    .moyo-content-note-grid > * > .workspace-note-paper-button,
+    .moyo-content-note-grid > * > .project-note-paper-button,
+    .moyo-content-note-grid .workspace-note-paper,
+    .moyo-content-note-grid .project-note-paper {
+        height: 80px !important;
+        min-height: 80px !important;
+        max-height: 80px !important;
+    }
+
+    .moyo-content-note-grid .workspace-note-paper-inner,
+    .moyo-content-note-grid .project-note-paper-inner,
+    .moyo-content-note-grid .moyo-content-note-inner {
+        padding-right: 104px !important;
+    }
+
+    .moyo-content-note-grid .workspace-note-paper-hover,
+    .moyo-content-note-grid .project-note-paper-hover {
+        width: 82px !important;
+    }
+
+    .moyo-content-note-grid .workspace-note-hover-meta strong,
+    .moyo-content-note-grid .profile-note-hover-meta strong {
+        max-width: 38px !important;
+    }
+}
+
+
+/* =====================================================================
+   2026-09-18 Shared note responsive list meta polish v20-fixed
+   - 반드시 v19 리스트형 위에 누적
+   - 데스크톱/기본 카드 UI는 변경하지 않음
+   ===================================================================== */
+@media (max-width: 760px) {
+    .moyo-content-note-grid .workspace-note-paper-inner,
+    .moyo-content-note-grid .project-note-paper-inner,
+    .moyo-content-note-grid .moyo-content-note-inner {
+        padding-right: 154px !important;
+    }
+
+    .moyo-content-note-grid .workspace-note-paper-hover,
+    .moyo-content-note-grid .project-note-paper-hover {
+        width: 132px !important;
+        inset: 10px 11px auto auto !important;
+    }
+
+    .moyo-content-note-grid .workspace-note-hover-main,
+    .moyo-content-note-grid .profile-note-hover-main {
+        display: grid !important;
+        grid-template-rows: auto auto !important;
+        justify-items: end !important;
+        align-content: start !important;
+        gap: 5px !important;
+        width: 100% !important;
+    }
+
+    .moyo-content-note-grid .workspace-note-hover-meta,
+    .moyo-content-note-grid .profile-note-hover-meta {
+        width: 100% !important;
+        justify-content: flex-end !important;
+        gap: 4px !important;
+        min-width: 0 !important;
+    }
+
+    .moyo-content-note-grid .workspace-note-hover-meta strong,
+    .moyo-content-note-grid .profile-note-hover-meta strong {
+        display: block !important;
+        max-width: 72px !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+    }
+
+    .moyo-content-note-grid .workspace-note-hover-date,
+    .moyo-content-note-grid .profile-note-hover-date {
+        flex: 0 0 auto !important;
+        white-space: nowrap !important;
+    }
+
+    .moyo-content-note-grid .workspace-note-hover-actions,
+    .moyo-content-note-grid .profile-note-feed-actions {
+        width: 100% !important;
+        justify-content: flex-end !important;
+        gap: 8px !important;
+        white-space: nowrap !important;
+    }
+}
+
+@media (max-width: 520px) {
+    .moyo-content-note-grid .workspace-note-paper-inner,
+    .moyo-content-note-grid .project-note-paper-inner,
+    .moyo-content-note-grid .moyo-content-note-inner {
+        padding-right: 124px !important;
+    }
+
+    .moyo-content-note-grid .workspace-note-paper-hover,
+    .moyo-content-note-grid .project-note-paper-hover {
+        width: 102px !important;
+    }
+
+    .moyo-content-note-grid .workspace-note-hover-meta strong,
+    .moyo-content-note-grid .profile-note-hover-meta strong {
+        max-width: 46px !important;
+    }
+}
+
+
+/* =====================================================================
+   2026-09-19 Shared note mobile card spacing v21
+   - 모바일 리스트형 유지
+   - 카드 3개 노출 구조는 유지하면서 각 카드 높이를 확보
+   - 제목 / 구성정보 / 본문 / 우측 작성자·반응 정보가 서로 눌리지 않게 정리
+   ===================================================================== */
+@media (max-width: 760px) {
+    .moyo-content-note-grid {
+        gap: 8px !important;
+    }
+
+    .moyo-content-note-grid > *,
+    .moyo-content-note-grid > * > .workspace-note-paper-button,
+    .moyo-content-note-grid > * > .project-note-paper-button,
+    .moyo-content-note-grid .workspace-note-paper,
+    .moyo-content-note-grid .project-note-paper {
+        height: 94px !important;
+        min-height: 94px !important;
+        max-height: 94px !important;
+    }
+
+    .moyo-content-note-grid .workspace-note-paper-inner,
+    .moyo-content-note-grid .project-note-paper-inner,
+    .moyo-content-note-grid .moyo-content-note-inner {
+        padding: 10px 154px 10px 13px !important;
+    }
+
+    .moyo-content-note-grid .workspace-note-paper-title,
+    .moyo-content-note-grid .project-note-paper-title,
+    .moyo-content-note-grid .moyo-content-note-title {
+        margin: 0 0 4px !important;
+        font-size: 13px !important;
+        line-height: 18px !important;
+    }
+
+    .moyo-content-note-grid .workspace-note-content-meta,
+    .moyo-content-note-grid .project-note-content-meta,
+    .moyo-content-note-grid .profile-note-content-meta {
+        min-height: 14px !important;
+        height: 14px !important;
+        margin: 0 0 4px !important;
+        line-height: 14px !important;
+    }
+
+    .moyo-content-note-grid .workspace-note-paper-line,
+    .moyo-content-note-grid .project-note-paper-line,
+    .moyo-content-note-grid .moyo-content-note-rule {
+        width: 100% !important;
+        height: 1px !important;
+        margin: 0 0 5px !important;
+    }
+
+    .moyo-content-note-grid .workspace-note-paper-body,
+    .moyo-content-note-grid .project-note-paper-body,
+    .moyo-content-note-grid .moyo-content-note-body {
+        min-height: 0 !important;
+        margin: 0 !important;
+        font-size: 11px !important;
+        line-height: 16px !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+    }
+
+    .moyo-content-note-grid .workspace-note-paper-hover,
+    .moyo-content-note-grid .project-note-paper-hover {
+        inset: 10px 11px auto auto !important;
+        width: 132px !important;
+    }
+
+    .moyo-content-note-grid .workspace-note-hover-main,
+    .moyo-content-note-grid .profile-note-hover-main {
+        gap: 8px !important;
+    }
+}
+
+@media (max-width: 520px) {
+    .moyo-content-note-grid > *,
+    .moyo-content-note-grid > * > .workspace-note-paper-button,
+    .moyo-content-note-grid > * > .project-note-paper-button,
+    .moyo-content-note-grid .workspace-note-paper,
+    .moyo-content-note-grid .project-note-paper {
+        height: 92px !important;
+        min-height: 92px !important;
+        max-height: 92px !important;
+    }
+
+    .moyo-content-note-grid .workspace-note-paper-inner,
+    .moyo-content-note-grid .project-note-paper-inner,
+    .moyo-content-note-grid .moyo-content-note-inner {
+        padding: 9px 124px 9px 12px !important;
+    }
+
+    .moyo-content-note-grid .workspace-note-paper-hover,
+    .moyo-content-note-grid .project-note-paper-hover {
+        inset: 9px 10px auto auto !important;
+        width: 102px !important;
+    }
+
+    .moyo-content-note-grid .workspace-note-hover-main,
+    .moyo-content-note-grid .profile-note-hover-main {
+        gap: 7px !important;
+    }
+}
+
+/* =====================================================================
+   2026-09-19 Shared note mobile empty-meta collapse v22
+   - 이미지/표/링크/동영상 구성정보가 없는 노트는 빈 meta 행 자체를 제거
+   - 카드 높이와 3장 노출 구조는 유지
+   - 제목 -> 구분선 -> 본문 흐름이 자연스럽게 이어지도록 공백 제거
+   ===================================================================== */
+@media (max-width: 760px) {
+    .moyo-content-note-grid .workspace-note-content-meta.is-empty,
+    .moyo-content-note-grid .project-note-content-meta.is-empty,
+    .moyo-content-note-grid .profile-note-content-meta.is-empty,
+    .moyo-content-note-grid .moyo-content-note-meta.is-empty {
+        display: none !important;
+        min-height: 0 !important;
+        height: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    .moyo-content-note-grid .workspace-note-content-meta.is-empty + .workspace-note-paper-line,
+    .moyo-content-note-grid .project-note-content-meta.is-empty + .project-note-paper-line,
+    .moyo-content-note-grid .profile-note-content-meta.is-empty + .profile-note-paper-line,
+    .moyo-content-note-grid .moyo-content-note-meta.is-empty + .moyo-content-note-rule {
+        margin-top: 1px !important;
+    }
+}
+
+/* =====================================================================
+   2026-09-19 Shared note mobile fixed rows v23
+   - 모바일 공유 노트의 내부 기준선을 메타 유무와 무관하게 통일
+   - 1행: 제목 / 작성자·날짜
+   - 2행: 본문 미리보기
+   - 3행: 좌측 구성 메타 / 우측 조회·좋아요·댓글
+   - 메타는 문서 흐름에서 분리해 제목/본문 위치를 밀지 않음
+   ===================================================================== */
+@media (max-width: 760px) {
+    .moyo-content-note-grid .workspace-note-paper-inner,
+    .moyo-content-note-grid .project-note-paper-inner,
+    .moyo-content-note-grid .moyo-content-note-inner {
+        position: relative !important;
+        padding: 10px 154px 28px 13px !important;
+    }
+
+    /* 제목은 항상 같은 첫 행 */
+    .moyo-content-note-grid .workspace-note-paper-title,
+    .moyo-content-note-grid .project-note-paper-title,
+    .moyo-content-note-grid .moyo-content-note-title {
+        margin: 0 0 4px !important;
+    }
+
+    /* 구성 메타는 하단 보조정보 행으로 고정한다. */
+    .moyo-content-note-grid .workspace-note-content-meta,
+    .moyo-content-note-grid .project-note-content-meta,
+    .moyo-content-note-grid .profile-note-content-meta,
+    .moyo-content-note-grid .moyo-content-note-meta,
+    .moyo-content-note-grid .workspace-note-content-meta.is-empty,
+    .moyo-content-note-grid .project-note-content-meta.is-empty,
+    .moyo-content-note-grid .profile-note-content-meta.is-empty,
+    .moyo-content-note-grid .moyo-content-note-meta.is-empty {
+        position: absolute !important;
+        left: 13px !important;
+        right: 154px !important;
+        bottom: 9px !important;
+        display: flex !important;
+        align-items: center !important;
+        flex-wrap: nowrap !important;
+        gap: 6px !important;
+        width: auto !important;
+        min-height: 13px !important;
+        height: 13px !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        overflow: hidden !important;
+        line-height: 13px !important;
+        white-space: nowrap !important;
+    }
+
+    /* 메타가 absolute라 구분선/본문 흐름은 항상 동일해진다. */
+    .moyo-content-note-grid .workspace-note-content-meta + .workspace-note-paper-line,
+    .moyo-content-note-grid .project-note-content-meta + .project-note-paper-line,
+    .moyo-content-note-grid .profile-note-content-meta + .profile-note-paper-line,
+    .moyo-content-note-grid .moyo-content-note-meta + .moyo-content-note-rule,
+    .moyo-content-note-grid .workspace-note-content-meta.is-empty + .workspace-note-paper-line,
+    .moyo-content-note-grid .project-note-content-meta.is-empty + .project-note-paper-line,
+    .moyo-content-note-grid .profile-note-content-meta.is-empty + .profile-note-paper-line,
+    .moyo-content-note-grid .moyo-content-note-meta.is-empty + .moyo-content-note-rule {
+        margin-top: 0 !important;
+    }
+
+    .moyo-content-note-grid .workspace-note-paper-line,
+    .moyo-content-note-grid .project-note-paper-line,
+    .moyo-content-note-grid .moyo-content-note-rule {
+        margin: 0 0 5px !important;
+    }
+
+    .moyo-content-note-grid .workspace-note-paper-body,
+    .moyo-content-note-grid .project-note-paper-body,
+    .moyo-content-note-grid .moyo-content-note-body {
+        margin: 0 !important;
+        line-height: 16px !important;
+    }
+
+    /* 우측 정보 레이어를 카드 전체 기준으로 분리 배치 */
+    .moyo-content-note-grid .workspace-note-paper-hover,
+    .moyo-content-note-grid .project-note-paper-hover {
+        inset: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        pointer-events: none !important;
+    }
+
+    .moyo-content-note-grid .workspace-note-hover-main,
+    .moyo-content-note-grid .profile-note-hover-main {
+        position: relative !important;
+        display: block !important;
+        width: 100% !important;
+        height: 100% !important;
+    }
+
+    /* 작성자·날짜는 첫 행 우측 */
+    .moyo-content-note-grid .workspace-note-hover-meta,
+    .moyo-content-note-grid .profile-note-hover-meta {
+        position: absolute !important;
+        top: 10px !important;
+        right: 11px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: flex-end !important;
+        width: 132px !important;
+        min-width: 0 !important;
+        margin: 0 !important;
+        pointer-events: none !important;
+    }
+
+    /* 반응 정보는 3행 우측 */
+    .moyo-content-note-grid .workspace-note-hover-actions,
+    .moyo-content-note-grid .profile-note-feed-actions {
+        position: absolute !important;
+        right: 11px !important;
+        bottom: 9px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: flex-end !important;
+        gap: 8px !important;
+        width: 132px !important;
+        margin: 0 !important;
+        pointer-events: auto !important;
+        white-space: nowrap !important;
+    }
+}
+
+@media (max-width: 520px) {
+    .moyo-content-note-grid .workspace-note-paper-inner,
+    .moyo-content-note-grid .project-note-paper-inner,
+    .moyo-content-note-grid .moyo-content-note-inner {
+        padding: 9px 124px 27px 12px !important;
+    }
+
+    .moyo-content-note-grid .workspace-note-content-meta,
+    .moyo-content-note-grid .project-note-content-meta,
+    .moyo-content-note-grid .profile-note-content-meta,
+    .moyo-content-note-grid .moyo-content-note-meta,
+    .moyo-content-note-grid .workspace-note-content-meta.is-empty,
+    .moyo-content-note-grid .project-note-content-meta.is-empty,
+    .moyo-content-note-grid .profile-note-content-meta.is-empty,
+    .moyo-content-note-grid .moyo-content-note-meta.is-empty {
+        left: 12px !important;
+        right: 124px !important;
+        bottom: 8px !important;
+    }
+
+    .moyo-content-note-grid .workspace-note-hover-meta,
+    .moyo-content-note-grid .profile-note-hover-meta {
+        top: 9px !important;
+        right: 10px !important;
+        width: 102px !important;
+    }
+
+    .moyo-content-note-grid .workspace-note-hover-actions,
+    .moyo-content-note-grid .profile-note-feed-actions {
+        right: 10px !important;
+        bottom: 8px !important;
+        width: 102px !important;
+        gap: 7px !important;
+    }
+}
+
+/* =====================================================================
+   2026-09-19 Shared note mobile right balance v25
+   - v24의 과도한 space-between/우측 폭 확장 제거
+   - 작성자/날짜와 반응 통계를 각각 한 덩어리로 우측 정렬
+   - 제목/본문 가용 폭을 유지하면서 우측 여백만 소폭 보정
+   ===================================================================== */
+@media (max-width: 760px) {
+    .moyo-content-note-grid .workspace-note-paper-inner,
+    .moyo-content-note-grid .project-note-paper-inner,
+    .moyo-content-note-grid .moyo-content-note-inner {
+        padding-right: 140px !important;
+    }
+
+    .moyo-content-note-grid .workspace-note-hover-meta,
+    .moyo-content-note-grid .profile-note-hover-meta {
+        right: 14px !important;
+        width: 118px !important;
+        justify-content: flex-end !important;
+        gap: 6px !important;
+    }
+
+    .moyo-content-note-grid .workspace-note-hover-actions,
+    .moyo-content-note-grid .profile-note-feed-actions {
+        right: 14px !important;
+        width: 118px !important;
+        justify-content: flex-end !important;
+        gap: 6px !important;
+    }
+}
+
+@media (max-width: 520px) {
+    .moyo-content-note-grid .workspace-note-paper-inner,
+    .moyo-content-note-grid .project-note-paper-inner,
+    .moyo-content-note-grid .moyo-content-note-inner {
+        padding: 9px 116px 27px 12px !important;
+    }
+
+    .moyo-content-note-grid .workspace-note-content-meta,
+    .moyo-content-note-grid .project-note-content-meta,
+    .moyo-content-note-grid .profile-note-content-meta,
+    .moyo-content-note-grid .moyo-content-note-meta,
+    .moyo-content-note-grid .workspace-note-content-meta.is-empty,
+    .moyo-content-note-grid .project-note-content-meta.is-empty,
+    .moyo-content-note-grid .profile-note-content-meta.is-empty,
+    .moyo-content-note-grid .moyo-content-note-meta.is-empty {
+        right: 116px !important;
+    }
+
+    .moyo-content-note-grid .workspace-note-hover-meta,
+    .moyo-content-note-grid .profile-note-hover-meta {
+        right: 12px !important;
+        width: 98px !important;
+        justify-content: flex-end !important;
+        gap: 5px !important;
+    }
+
+    .moyo-content-note-grid .workspace-note-hover-actions,
+    .moyo-content-note-grid .profile-note-feed-actions {
+        right: 12px !important;
+        width: 98px !important;
+        justify-content: flex-end !important;
+        gap: 6px !important;
+    }
+}
+
+/* =====================================================================
+   2026-09-19 Shared note desktop alignment v26
+   - hover translateY(-4px)가 preview wrapper에 잘리던 상단 border 복구
+   - 큰 카드의 제목/메타/본문 슬롯을 고정해 콘텐츠 유무와 무관하게 기준선 통일
+   - 모바일 리스트(v23~v25)는 변경하지 않음
+   ===================================================================== */
+@media (min-width: 761px) {
+    /* paper 자체가 hover 시 위로 4px 이동하므로 바로 바깥 preview wrapper는 잘라내지 않는다. */
+    .moyo-content-note-grid > * {
+        overflow: visible !important;
+    }
+
+    /* 공통 paper는 여전히 자신의 내부 내용/hover layer를 정상적으로 clipping한다. */
+    .moyo-content-note-grid .workspace-note-paper,
+    .moyo-content-note-grid .project-note-paper {
+        overflow: hidden !important;
+    }
+
+    /* 제목은 1줄이어도 2줄 슬롯을 유지한다. */
+    .moyo-content-note-grid .workspace-note-paper-title,
+    .moyo-content-note-grid .project-note-paper-title,
+    .moyo-content-note-grid .moyo-content-note-title {
+        flex: 0 0 2.7em !important;
+        min-height: 2.7em !important;
+        height: 2.7em !important;
+        max-height: 2.7em !important;
+        margin: 0 !important;
+    }
+
+    /* 메타가 없어도 동일한 1행 높이를 확보해서 아래 line/body가 올라오지 않게 한다. */
+    .moyo-content-note-grid .workspace-note-content-meta,
+    .moyo-content-note-grid .project-note-content-meta,
+    .moyo-content-note-grid .profile-note-content-meta,
+    .moyo-content-note-grid .moyo-content-note-meta {
+        flex: 0 0 12px !important;
+        min-height: 12px !important;
+        height: 12px !important;
+        max-height: 12px !important;
+        margin: 5px 0 0 !important;
+        overflow: hidden !important;
+    }
+
+    .moyo-content-note-grid .workspace-note-content-meta.is-empty,
+    .moyo-content-note-grid .project-note-content-meta.is-empty,
+    .moyo-content-note-grid .profile-note-content-meta.is-empty,
+    .moyo-content-note-grid .moyo-content-note-meta.is-empty {
+        display: flex !important;
+        visibility: hidden !important;
+    }
+
+    /* 첫 구분선의 Y축을 모든 카드에서 동일하게 고정한다. */
+    .moyo-content-note-grid .workspace-note-content-meta + .workspace-note-paper-line,
+    .moyo-content-note-grid .project-note-content-meta + .project-note-paper-line,
+    .moyo-content-note-grid .profile-note-content-meta + .profile-note-paper-line,
+    .moyo-content-note-grid .moyo-content-note-meta + .moyo-content-note-rule,
+    .moyo-content-note-grid .workspace-note-paper-line,
+    .moyo-content-note-grid .project-note-paper-line,
+    .moyo-content-note-grid .moyo-content-note-rule {
+        flex: 0 0 1px !important;
+        height: 1px !important;
+        margin: 7px 0 9px !important;
+    }
+
+    /* 본문도 같은 높이 슬롯을 사용해 하단 장식선 시작점까지 통일한다. */
+    .moyo-content-note-grid .workspace-note-paper-body,
+    .moyo-content-note-grid .project-note-paper-body,
+    .moyo-content-note-grid .moyo-content-note-body {
+        flex: 0 0 3.1em !important;
+        min-height: 3.1em !important;
+        height: 3.1em !important;
+        max-height: 3.1em !important;
+        margin: 0 !important;
+    }
+
+    .moyo-content-note-grid .workspace-note-paper-lines,
+    .moyo-content-note-grid .project-note-paper-lines,
+    .moyo-content-note-grid .moyo-content-note-lines {
+        margin-top: auto !important;
+    }
+}
+
+/* 2026-09-22: restore empty-state vertical centering for shared note/photo only.
+   Keep ready/content states top-aligned and leave widget outer geometry untouched. */
+.moyo-main-shell .moyo-content-widget__body--note.is-loading,
+.moyo-main-shell .moyo-content-widget__body--note.is-empty,
+.moyo-main-shell .moyo-content-widget__body--note.is-error,
+.moyo-main-shell .moyo-content-widget__body--photo.is-loading,
+.moyo-main-shell .moyo-content-widget__body--photo.is-empty,
+.moyo-main-shell .moyo-content-widget__body--photo.is-error {
+    display: flex !important;
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    height: auto !important;
+    align-items: center !important;
+    justify-content: center !important;
+    align-content: center !important;
+    margin-top: 0 !important;
+    overflow: hidden !important;
+}
+
+.moyo-main-shell .moyo-content-widget:has(> .moyo-content-widget__body--note.is-loading),
+.moyo-main-shell .moyo-content-widget:has(> .moyo-content-widget__body--note.is-empty),
+.moyo-main-shell .moyo-content-widget:has(> .moyo-content-widget__body--note.is-error),
+.moyo-main-shell .moyo-content-widget:has(> .moyo-content-widget__body--photo.is-loading),
+.moyo-main-shell .moyo-content-widget:has(> .moyo-content-widget__body--photo.is-empty),
+.moyo-main-shell .moyo-content-widget:has(> .moyo-content-widget__body--photo.is-error) {
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+.moyo-main-shell .moyo-content-widget__body--note.is-ready,
+.moyo-main-shell .moyo-content-widget__body--photo.is-ready {
+    flex: 0 0 auto !important;
+    align-items: start !important;
+    justify-content: start !important;
+    align-content: start !important;
+    margin-top: 14px !important;
+}
+
+.moyo-main-shell .moyo-content-widget__body--note.is-loading > .moyo-content-empty,
+.moyo-main-shell .moyo-content-widget__body--note.is-empty > .moyo-content-empty,
+.moyo-main-shell .moyo-content-widget__body--note.is-error > .moyo-content-empty,
+.moyo-main-shell .moyo-content-widget__body--photo.is-loading > .moyo-content-empty,
+.moyo-main-shell .moyo-content-widget__body--photo.is-empty > .moyo-content-empty,
+.moyo-main-shell .moyo-content-widget__body--photo.is-error > .moyo-content-empty {
+    min-height: 0 !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 0 16px !important;
+}

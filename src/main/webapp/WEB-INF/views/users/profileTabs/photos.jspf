@@ -67,9 +67,11 @@
                                         <button type="button" class="profile-photo-action" data-profile-photo-comment="${postId}" aria-label="댓글 보기">
                                             <i class="fa-solid fa-comment"></i><span data-profile-photo-comment-count><c:out value="${empty commentCount ? 0 : commentCount}" /></span>
                                         </button>
-                                        <button type="button" class="profile-photo-action" data-profile-photo-share="${postId}" aria-label="공유">
-                                            <i class="fa-regular fa-paper-plane"></i>
-                                        </button>
+                                        <c:if test="${postOwnerId eq sessionScope.user.userId}">
+                                            <button type="button" class="profile-photo-action" data-profile-photo-share="${postId}" aria-label="공유" title="공유">
+                                                <i class="fa-solid fa-share-nodes"></i>
+                                            </button>
+                                        </c:if>
                                         <c:if test="${postOwnerId ne sessionScope.user.userId}">
                                             <button type="button" class="profile-photo-action profile-photo-action--collect ${collectedByMe eq 1 ? 'is-collected' : ''}" data-profile-photo-collect="${postId}" aria-label="담기" aria-pressed="${collectedByMe eq 1 ? 'true' : 'false'}">
                                                 <i class="${collectedByMe eq 1 ? 'fa-solid' : 'fa-regular'} fa-bookmark"></i>

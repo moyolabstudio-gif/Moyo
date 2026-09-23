@@ -834,6 +834,19 @@ function closeGanttPlanCreateModal() {
         }
 
 
+        function normalizeWeeklyNoonBoundary(startTime, endTime) {
+            const start = parseGanttPlanTime(startTime, '');
+            const end = parseGanttPlanTime(endTime, '');
+            if (!start || !end) return endTime;
+            // 오전 11시대에서 종료 시간을 "오전 12시"로 고른 경우
+            // 사용자가 기대하는 정오(12:xx)로 보정한다.
+            // 23시 -> 00시는 실제 익일 종료이므로 건드리지 않는다.
+            if (start.hour === 11 && end.hour === 0) {
+                return canonicalGanttPlanTime(12, end.minute);
+            }
+            return canonicalGanttPlanTime(end.hour, end.minute);
+        }
+
         const ganttPlanTimePickerState = {
             input: null,
             menu: null,
@@ -945,7 +958,18 @@ function closeGanttPlanCreateModal() {
                     ganttPlanTimePickerState.minute = minute;
                 }
                 if (button.dataset.ganttTimeMeridiem) ganttPlanTimePickerState.meridiem = button.dataset.ganttTimeMeridiem;
-                if (button.dataset.ganttTimeHour) ganttPlanTimePickerState.hour12 = Number(button.dataset.ganttTimeHour);
+                if (button.dataset.ganttTimeHour) {
+                    ganttPlanTimePickerState.hour12 = Number(button.dataset.ganttTimeHour);
+                    if (input.id === 'ganttPlanEndTime'
+                            && ganttPlanTimePickerState.hour12 === 12
+                            && ganttPlanTimePickerState.meridiem === 'AM') {
+                        const startInput = document.getElementById('ganttPlanStartTime');
+                        const startParsed = parseGanttPlanTime(startInput && startInput.value, '');
+                        if (startParsed && startParsed.hour === 11) {
+                            ganttPlanTimePickerState.meridiem = 'PM';
+                        }
+                    }
+                }
                 if (button.dataset.ganttTimeMinute !== undefined) ganttPlanTimePickerState.minute = Number(button.dataset.ganttTimeMinute);
                 const hour = (ganttPlanTimePickerState.hour12 % 12) + (ganttPlanTimePickerState.meridiem === 'PM' ? 12 : 0);
                 setGanttPlanTimeValue(input, canonicalGanttPlanTime(hour, ganttPlanTimePickerState.minute), input.id === 'ganttPlanEndTime' ? '10:00' : '09:00');
@@ -1305,7 +1329,10 @@ function closeGanttPlanCreateModal() {
             bindWeeklyDayButtons();
             if (isWeeklyPlanMode) {
                 const initialDay = Number(modalContext.dayOfWeek || (planItem && planItem.dayOfWeek) || 1);
-                setSelectedWeeklyDays([initialDay], !!currentGanttPlanId);
+                const repeatDays = (isWeeklyPlanMode && planItem && typeof window.getWeeklyPlanRepeatDays === 'function')
+                    ? window.getWeeklyPlanRepeatDays(planItem)
+                    : [initialDay];
+                setSelectedWeeklyDays(repeatDays, false);
             } else {
                 setSelectedWeeklyDays([], false);
             }
@@ -1394,11 +1421,25 @@ function closeGanttPlanCreateModal() {
                 hydrateGanttPlanReadonlyPeople(planItem || modalContext.item || null);
                 if (readonlyPeriod) {
                     if (isWeeklyPlanMode) {
-                        const weeklyDayNames = ['일요일', '월요일', '화요일', '수요일', '목요일', '금요일', '토요일'];
-                        const weeklyDay = Number(modalContext.dayOfWeek || (planItem && planItem.dayOfWeek) || 1);
+                        const weeklyDayNames = {
+                            1: '월요일', 2: '화요일', 3: '수요일', 4: '목요일',
+                            5: '금요일', 6: '토요일', 7: '일요일'
+                        };
+                        const repeatDays = typeof window.getWeeklyPlanRepeatDays === 'function'
+                            ? window.getWeeklyPlanRepeatDays(planItem || modalContext.item || {})
+                            : [Number(modalContext.dayOfWeek || (planItem && planItem.dayOfWeek) || 1)];
+                        const weeklyDaysText = repeatDays
+                            .map(function(day) { return weeklyDayNames[Number(day)] || ''; })
+                            .filter(Boolean)
+                            .join(' · ');
                         const weeklyStartTime = String(modalContext.startTime || (planItem && planItem.startTime) || '').substring(0, 5);
                         const weeklyEndTime = String(modalContext.endTime || (planItem && planItem.endTime) || '').substring(0, 5);
-                        readonlyPeriod.textContent = (weeklyDayNames[weeklyDay] || '-') + (weeklyStartTime && weeklyEndTime ? ' · ' + weeklyStartTime + ' ~ ' + weeklyEndTime : '');
+                        const repeatLabel = repeatDays.length > 1 ? ' 반복' : '';
+                        const parts = [
+                            weeklyDaysText ? weeklyDaysText + repeatLabel : '-',
+                            weeklyStartTime && weeklyEndTime ? weeklyStartTime + ' ~ ' + weeklyEndTime : ''
+                        ].filter(Boolean);
+                        readonlyPeriod.textContent = parts.join(' · ');
                     } else if (isTimePlanMode) {
                         const readonlyStart = (planItem && planItem.startDate) || modalContext.startDate || startDate || '';
                         const readonlyEnd = (planItem && (planItem.endDate || planItem.startDate)) || modalContext.endDate || endDate || readonlyStart;
@@ -1590,7 +1631,9 @@ function closeGanttPlanCreateModal() {
                 const active = selected.has(day);
                 button.classList.toggle('is-selected', active);
                 button.setAttribute('aria-pressed', String(active));
-                button.disabled = !!lockSingle && !active;
+                // 수정 모드도 다른 요일로 변경할 수 있어야 한다.
+                // lockSingle은 다중 선택을 막는 용도로만 쓰고 버튼 자체는 잠그지 않는다.
+                button.disabled = false;
             });
             const hiddenInput = document.getElementById('ganttPlanDayOfWeek');
             if (hiddenInput) hiddenInput.value = String(Array.from(selected)[0] || '');
@@ -1603,12 +1646,6 @@ function closeGanttPlanCreateModal() {
             container.addEventListener('click', function(event) {
                 const button = event.target.closest('[data-weekly-day]');
                 if (!button || button.disabled) return;
-                const modalContext = window.__projectPlanModalContext || {};
-                const editing = Number(modalContext.weeklyPlanId || 0) > 0;
-                if (editing) {
-                    setSelectedWeeklyDays([Number(button.dataset.weeklyDay)], true);
-                    return;
-                }
                 button.classList.toggle('is-selected');
                 button.setAttribute('aria-pressed', String(button.classList.contains('is-selected')));
                 const selected = getSelectedWeeklyDays();
@@ -1641,6 +1678,15 @@ function closeGanttPlanCreateModal() {
             if (endDateInput && endDate) endDateInput.value = endDate;
             const startTime = (document.getElementById('ganttPlanStartTime')?.value || '').trim();
             let endTime = (document.getElementById('ganttPlanEndTime')?.value || '').trim();
+            if (isWeeklyPlanMode) {
+                endTime = normalizeWeeklyNoonBoundary(startTime, endTime);
+                const weeklyEndTimeInput = document.getElementById('ganttPlanEndTime');
+                if (weeklyEndTimeInput) {
+                    weeklyEndTimeInput.value = endTime;
+                    weeklyEndTimeInput.dataset.timeValue = endTime;
+                    updateGanttPlanTimeMeridiem(weeklyEndTimeInput);
+                }
+            }
             const selectedWeeklyDays = isWeeklyPlanMode ? getSelectedWeeklyDays() : [];
             const dayOfWeek = Number(selectedWeeklyDays[0] || modalContext.dayOfWeek || 0);
             const color = normalizeScheduleColor(document.getElementById('ganttPlanColor')?.value || getNextPlanColorByMode(modalContext.mode));
@@ -1739,17 +1785,66 @@ function closeGanttPlanCreateModal() {
             try {
                 const basePath = isWeeklyPlanMode ? '/project/api/weekly-plans' : (isTimePlanMode ? '/project/api/time-plans' : '/project/api/period-plans');
                 const endpoint = getProjectMainContextPath() + basePath + (isEditMode ? '/' + encodeURIComponent(currentGanttPlanId) : '');
-                if (isWeeklyPlanMode && !isEditMode && selectedWeeklyDays.length > 1) {
-                    for (const selectedDay of selectedWeeklyDays) {
-                        const response = await fetch(getProjectMainContextPath() + basePath, {
-                            method: 'POST',
-                            credentials: 'include',
-                            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-                            body: JSON.stringify(Object.assign({}, payload, { dayOfWeek: selectedDay }))
+                if (isWeeklyPlanMode) {
+                    if (isEditMode) {
+                        const sourceItem = modalContext.item || null;
+                        const groupRows = sourceItem && typeof window.getWeeklyPlanRepeatGroup === 'function'
+                            ? window.getWeeklyPlanRepeatGroup(sourceItem)
+                            : [];
+                        const rowsByDay = new Map();
+                        groupRows.forEach(function(row) {
+                            rowsByDay.set(Number(row.dayOfWeek), row);
                         });
-                        const body = await response.json().catch(function() { return {}; });
-                        if (!response.ok || body.success === false) {
-                            throw new Error(body.message || '주간 계획을 등록하지 못했습니다.');
+
+                        // 선택된 요일은 기존 행이면 수정, 없으면 신규 생성
+                        for (const selectedDay of selectedWeeklyDays) {
+                            const existing = rowsByDay.get(Number(selectedDay));
+                            const targetUrl = existing && Number(existing.weeklyPlanId) > 0
+                                ? getProjectMainContextPath() + basePath + '/' + encodeURIComponent(existing.weeklyPlanId)
+                                : getProjectMainContextPath() + basePath;
+                            const response = await fetch(targetUrl, {
+                                method: existing && Number(existing.weeklyPlanId) > 0 ? 'PUT' : 'POST',
+                                credentials: 'include',
+                                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                                body: JSON.stringify(Object.assign({}, payload, { dayOfWeek: Number(selectedDay) }))
+                            });
+                            const body = await response.json().catch(function() { return {}; });
+                            if (!response.ok || body.success === false) {
+                                throw new Error(body.message || '주간 계획 반복 요일을 저장하지 못했습니다.');
+                            }
+                        }
+
+                        // 기존 반복 묶음에서 해제한 요일은 해당 행 삭제
+                        for (const existing of groupRows) {
+                            const existingDay = Number(existing.dayOfWeek);
+                            if (selectedWeeklyDays.includes(existingDay)) continue;
+                            const existingId = Number(existing.weeklyPlanId || 0);
+                            if (!existingId) continue;
+                            const response = await fetch(
+                                getProjectMainContextPath() + basePath + '/' + encodeURIComponent(existingId),
+                                {
+                                    method: 'DELETE',
+                                    credentials: 'include',
+                                    headers: { 'Accept': 'application/json' }
+                                }
+                            );
+                            const body = await response.json().catch(function() { return {}; });
+                            if (!response.ok || body.success === false) {
+                                throw new Error(body.message || '해제한 반복 요일을 삭제하지 못했습니다.');
+                            }
+                        }
+                    } else {
+                        for (const selectedDay of selectedWeeklyDays) {
+                            const response = await fetch(getProjectMainContextPath() + basePath, {
+                                method: 'POST',
+                                credentials: 'include',
+                                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                                body: JSON.stringify(Object.assign({}, payload, { dayOfWeek: Number(selectedDay) }))
+                            });
+                            const body = await response.json().catch(function() { return {}; });
+                            if (!response.ok || body.success === false) {
+                                throw new Error(body.message || '주간 계획을 등록하지 못했습니다.');
+                            }
                         }
                     }
                 } else {

@@ -5655,3 +5655,125 @@ html, body {
         margin-left: 0 !important;
     }
 }
+
+
+/* =========================================================
+   2026-09-19 common explorer: resizable folder rail + collapsible tree
+   NOTE / PHOTO / FILE share the same interaction contract.
+   ========================================================= */
+@media (min-width: 901px) {
+    .file-explorer__shell {
+        grid-template-columns: var(--file-tree-width, 230px) minmax(0, 1fr) !important;
+    }
+
+    .file-tree-panel {
+        width: auto !important;
+        min-width: 0 !important;
+        max-width: none !important;
+        overflow: hidden !important;
+    }
+
+    .file-browser-panel {
+        min-width: 0 !important;
+    }
+
+    .file-tree-resizer {
+        position: absolute;
+        z-index: 20;
+        top: 0;
+        right: -5px;
+        width: 10px;
+        height: 100%;
+        cursor: col-resize;
+        touch-action: none;
+        outline: none;
+    }
+
+    .file-tree-resizer::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 4px;
+        width: 2px;
+        border-radius: 999px;
+        background: transparent;
+        transition: background-color .16s ease, box-shadow .16s ease;
+    }
+
+    .file-tree-resizer:hover::before,
+    .file-tree-resizer:focus-visible::before,
+    .file-explorer.is-tree-resizing .file-tree-resizer::before {
+        background: rgba(74, 130, 237, .42);
+        box-shadow: 0 0 0 3px rgba(74, 130, 237, .08);
+    }
+
+    .file-explorer.is-tree-resizing .file-browser-panel,
+    .file-explorer.is-tree-resizing .file-tree-panel {
+        pointer-events: none;
+    }
+}
+
+.file-tree-node {
+    min-width: 0;
+}
+
+.file-tree-node__children[hidden] {
+    display: none !important;
+}
+
+.file-tree-row__toggle,
+.file-tree-row__toggle-spacer {
+    flex: 0 0 22px;
+    width: 22px;
+    height: 34px;
+    margin-left: 5px;
+}
+
+.file-tree-row__toggle {
+    border: 0;
+    padding: 0;
+    border-radius: 7px;
+    background: transparent;
+    color: #8b98aa;
+    display: inline-grid;
+    place-items: center;
+    cursor: pointer;
+}
+
+.file-tree-row__toggle:hover,
+.file-tree-row__toggle:focus-visible {
+    background: #edf4ff;
+    color: #4a82ed;
+    outline: none;
+}
+
+.file-tree-row__toggle i {
+    font-size: 10px;
+    transition: transform .16s ease;
+}
+
+.file-tree-node.is-collapsed > .file-tree-row-wrap .file-tree-row__toggle i {
+    transform: rotate(-90deg);
+}
+
+.file-tree-row-wrap > .file-tree-row {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    width: auto !important;
+}
+
+.file-tree-row__name,
+.file-tree-context__text strong,
+.file-tree-context__text span {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+@media (max-width: 900px) {
+    .file-tree-resizer {
+        display: none !important;
+    }
+}

@@ -48,34 +48,59 @@
         <c:set var="projectRoleLabel" value="그룹 멤버" />
         <c:choose>
             <c:when test="${isPersonalProject}"><c:set var="projectRoleLabel" value="소유자" /></c:when>
+            <c:when test="${currentProjectRole eq 'READ_ONLY'}"><c:set var="projectRoleLabel" value="읽기 전용" /></c:when>
             <c:when test="${currentProjectRole eq 'LEADER' or currentProjectRole eq 'OWNER' or currentProjectRole eq 'PM'}"><c:set var="projectRoleLabel" value="팀장" /></c:when>
             <c:when test="${currentProjectRole eq 'ADMIN'}"><c:set var="projectRoleLabel" value="관리자" /></c:when>
             <c:when test="${currentProjectRole eq 'MEMBER'}"><c:set var="projectRoleLabel" value="멤버" /></c:when>
         </c:choose>
 
-        <c:set var="projectCategoryKey" value="ETC" />
-        <c:set var="projectCategoryLabel" value="기타" />
-        <c:set var="projectCategoryIcon" value="fa-shapes" />
+        <%-- 생성/설정과 동일한 15종 프로젝트 유형 체계. 아이콘은 DB의 PROJ_ICON을 우선 사용한다. --%>
+        <c:set var="projectTypeKey" value="${empty projectDetail.projType ? projectDetail.projCategory : projectDetail.projType}" />
+        <c:set var="projectTypeLabel" value="기타" />
         <c:choose>
-            <c:when test="${projectDetail.projCategory eq 'WORK' or projectDetail.projCategory eq '업무'}">
-                <c:set var="projectCategoryKey" value="WORK"/><c:set var="projectCategoryLabel" value="업무"/><c:set var="projectCategoryIcon" value="fa-clipboard-check"/>
-            </c:when>
-            <c:when test="${projectDetail.projCategory eq 'TRAVEL' or projectDetail.projCategory eq '여행'}">
-                <c:set var="projectCategoryKey" value="TRAVEL"/><c:set var="projectCategoryLabel" value="여행"/><c:set var="projectCategoryIcon" value="fa-plane"/>
-            </c:when>
-            <c:when test="${projectDetail.projCategory eq 'EVENT' or projectDetail.projCategory eq 'MEETING' or projectDetail.projCategory eq '모임·행사' or projectDetail.projCategory eq '모임 · 행사'}">
-                <c:set var="projectCategoryKey" value="EVENT"/><c:set var="projectCategoryLabel" value="모임·행사"/><c:set var="projectCategoryIcon" value="fa-calendar-days"/>
-            </c:when>
-            <c:when test="${projectDetail.projCategory eq 'STUDY' or projectDetail.projCategory eq '학습·연구' or projectDetail.projCategory eq '학습 · 연구'}">
-                <c:set var="projectCategoryKey" value="STUDY"/><c:set var="projectCategoryLabel" value="학습·연구"/><c:set var="projectCategoryIcon" value="fa-book-open"/>
-            </c:when>
-            <c:when test="${projectDetail.projCategory eq 'LIFE' or projectDetail.projCategory eq '생활·가정' or projectDetail.projCategory eq '생활 · 가정'}">
-                <c:set var="projectCategoryKey" value="LIFE"/><c:set var="projectCategoryLabel" value="생활·가정"/><c:set var="projectCategoryIcon" value="fa-house"/>
-            </c:when>
-            <c:when test="${projectDetail.projCategory eq 'HOBBY' or projectDetail.projCategory eq '취미·창작' or projectDetail.projCategory eq '취미 · 창작'}">
-                <c:set var="projectCategoryKey" value="HOBBY"/><c:set var="projectCategoryLabel" value="취미·창작"/><c:set var="projectCategoryIcon" value="fa-palette"/>
-            </c:when>
+            <c:when test="${projectTypeKey eq 'WORK' or projectTypeKey eq '업무'}"><c:set var="projectTypeLabel" value="업무" /></c:when>
+            <c:when test="${projectTypeKey eq 'DEVELOPMENT' or projectTypeKey eq '개발'}"><c:set var="projectTypeLabel" value="개발" /></c:when>
+            <c:when test="${projectTypeKey eq 'PLANNING' or projectTypeKey eq '기획'}"><c:set var="projectTypeLabel" value="기획" /></c:when>
+            <c:when test="${projectTypeKey eq 'DESIGN' or projectTypeKey eq '디자인'}"><c:set var="projectTypeLabel" value="디자인" /></c:when>
+            <c:when test="${projectTypeKey eq 'STUDY' or projectTypeKey eq '스터디' or projectTypeKey eq '공부' or projectTypeKey eq '학습·연구' or projectTypeKey eq '학습 · 연구'}"><c:set var="projectTypeLabel" value="스터디" /></c:when>
+            <c:when test="${projectTypeKey eq 'EXAM' or projectTypeKey eq '시험'}"><c:set var="projectTypeLabel" value="시험" /></c:when>
+            <c:when test="${projectTypeKey eq 'TRAVEL' or projectTypeKey eq '여행'}"><c:set var="projectTypeLabel" value="여행" /></c:when>
+            <c:when test="${projectTypeKey eq 'MEETING' or projectTypeKey eq '회의' or projectTypeKey eq '미팅'}"><c:set var="projectTypeLabel" value="회의" /></c:when>
+            <c:when test="${projectTypeKey eq 'GATHERING' or projectTypeKey eq '모임'}"><c:set var="projectTypeLabel" value="모임" /></c:when>
+            <c:when test="${projectTypeKey eq 'EVENT' or projectTypeKey eq '행사' or projectTypeKey eq '모임·행사' or projectTypeKey eq '모임 · 행사'}"><c:set var="projectTypeLabel" value="행사" /></c:when>
+            <c:when test="${projectTypeKey eq 'EXERCISE' or projectTypeKey eq '운동'}"><c:set var="projectTypeLabel" value="운동" /></c:when>
+            <c:when test="${projectTypeKey eq 'HOBBY' or projectTypeKey eq '취미' or projectTypeKey eq '취미·창작' or projectTypeKey eq '취미 · 창작'}"><c:set var="projectTypeLabel" value="취미" /></c:when>
+            <c:when test="${projectTypeKey eq 'LIFE' or projectTypeKey eq '생활' or projectTypeKey eq '생활·가정' or projectTypeKey eq '생활 · 가정'}"><c:set var="projectTypeLabel" value="생활" /></c:when>
+            <c:when test="${projectTypeKey eq 'RECORD' or projectTypeKey eq '기록'}"><c:set var="projectTypeLabel" value="기록" /></c:when>
         </c:choose>
+        <c:set var="projectIconKey" value="${empty projectDetail.projIcon ? 'shapes' : projectDetail.projIcon}" />
+        <c:set var="heroTypeLabel" value="${projectTypeLabel}" />
+
+        <c:set var="heroTaskTotal" value="${empty taskSummary.TOTAL ? 0 : taskSummary.TOTAL}" />
+        <c:set var="heroTaskDone" value="${empty taskSummary.DONE_CNT ? 0 : taskSummary.DONE_CNT}" />
+        <c:set var="heroProgressPercent" value="${heroTaskTotal gt 0 ? (heroTaskDone * 100 / heroTaskTotal) : 0}" />
+    </c:otherwise>
+</c:choose>
+<%-- Hero quick actions reuse the same scope-aware destinations as the header. --%>
+<c:choose>
+    <c:when test="${heroIsWorkspace}">
+        <c:set var="heroCalendarHref" value="${pageContext.request.contextPath}/calendar?scope=WS&amp;calendarContext=GROUP&amp;wsId=${workspace.wsId}" />
+        <c:set var="heroNoteHref" value="${pageContext.request.contextPath}/note/list?scope=WS&amp;wsId=${workspace.wsId}" />
+        <c:set var="heroPhotoHref" value="${pageContext.request.contextPath}/photo-album?scopeType=WORKSPACE&amp;scopeId=${workspace.wsId}" />
+        <c:set var="heroFilesHref" value="${pageContext.request.contextPath}/group/files?wsId=${workspace.wsId}" />
+    </c:when>
+    <c:otherwise>
+        <c:set var="heroCalendarHref" value="${pageContext.request.contextPath}/calendar?scope=PROJ&amp;calendarContext=PROJECT&amp;projectScope=PERSONAL&amp;projId=${projectDetail.projId}" />
+        <c:if test="${not isPersonalProject}">
+            <c:set var="heroCalendarHref" value="${pageContext.request.contextPath}/calendar?scope=PROJ&amp;calendarContext=PROJECT&amp;projectScope=GROUP&amp;wsId=${projectDetail.wsId}&amp;projId=${projectDetail.projId}" />
+        </c:if>
+        <c:set var="heroNoteHref" value="${pageContext.request.contextPath}/note/list?scope=PROJ&amp;projId=${projectDetail.projId}" />
+        <c:set var="heroFilesHref" value="${pageContext.request.contextPath}/project/files?projId=${projectDetail.projId}" />
+        <c:if test="${not empty projectDetail.wsId}">
+            <c:set var="heroNoteHref" value="${heroNoteHref}&amp;wsId=${projectDetail.wsId}" />
+            <c:set var="heroFilesHref" value="${heroFilesHref}&amp;wsId=${projectDetail.wsId}" />
+        </c:if>
+        <c:set var="heroPhotoHref" value="${pageContext.request.contextPath}/photo-album?scopeType=PROJECT&amp;scopeId=${projectDetail.projId}" />
     </c:otherwise>
 </c:choose>
 
@@ -98,9 +123,9 @@
                 </div>
             </c:when>
             <c:otherwise>
-                <div class="moyo-main-hero__avatar-visual moyo-main-hero__avatar-visual--project moyo-main-hero__avatar-visual--${fn:toLowerCase(projectCategoryKey)}"
-                     role="img" aria-label="${projectCategoryLabel} 프로젝트">
-                    <span class="moyo-main-hero__avatar-icon"><i class="fa-solid ${projectCategoryIcon}" aria-hidden="true"></i></span>
+                <div class="moyo-main-hero__avatar-visual moyo-main-hero__avatar-visual--project"
+                     role="img" aria-label="${projectTypeLabel} 프로젝트">
+                    <span class="moyo-main-hero__avatar-icon"><i class="fa-solid fa-${projectIconKey}" aria-hidden="true"></i></span>
                 </div>
             </c:otherwise>
         </c:choose>
@@ -119,6 +144,8 @@
                     </c:if>
                 </c:when>
                 <c:otherwise>
+                    <span class="moyo-main-hero__meta-text"><c:out value="${isPersonalProject ? '개인 프로젝트' : '그룹 프로젝트'}"/></span>
+                    <span class="moyo-main-hero__divider" aria-hidden="true">·</span>
                     <c:if test="${not isPersonalProject}">
                         <span class="moyo-main-hero__meta-text">멤버 <c:out value="${projectMemberCount}"/></span>
                         <span class="moyo-main-hero__divider" aria-hidden="true">·</span>
@@ -148,21 +175,54 @@
                 </div>
             </div>
         </c:if>
+
+        <c:if test="${heroIsProject and currentProjectRole eq 'READ_ONLY'}">
+            <div class="moyo-main-hero__project-summary" aria-label="프로젝트 상태">
+                <span class="moyo-main-hero__project-summary-item is-read-only">
+                    <i class="fa-regular fa-eye" aria-hidden="true"></i> 읽기 전용
+                </span>
+            </div>
+        </c:if>
     </div>
 
     <div class="moyo-main-hero__side">
-        <div class="moyo-main-hero__actions">
+        <div class="moyo-main-hero__actions" aria-label="히어로 바로가기">
+            <div class="moyo-main-hero__content-quick-wrap">
+                <button type="button" class="moyo-main-hero__quick-action moyo-main-hero__content-trigger"
+                        id="moyoHeroContentQuickTrigger" aria-label="콘텐츠 바로가기" title="콘텐츠 바로가기"
+                        aria-haspopup="true" aria-expanded="false" aria-controls="moyoHeroContentQuickMenu"
+                        onclick="toggleMoyoHeroContentQuickMenu(event)">
+                    <span class="moyo-main-hero__four-grid-icon" aria-hidden="true">
+                        <span></span><span></span><span></span><span></span>
+                    </span>
+                </button>
+                <div class="moyo-main-hero__content-quick-menu" id="moyoHeroContentQuickMenu" role="menu" aria-label="콘텐츠 바로가기" hidden>
+                    <a href="${heroCalendarHref}" class="moyo-main-hero__content-quick-item" role="menuitem" aria-label="캘린더" title="캘린더">
+                        <i class="fa-regular fa-calendar-days" aria-hidden="true"></i>
+                    </a>
+                    <a href="${heroNoteHref}" class="moyo-main-hero__content-quick-item" role="menuitem" aria-label="노트" title="노트">
+                        <i class="fa-regular fa-note-sticky" aria-hidden="true"></i>
+                    </a>
+                    <a href="${heroPhotoHref}" class="moyo-main-hero__content-quick-item" role="menuitem" aria-label="사진" title="사진">
+                        <i class="fa-regular fa-images" aria-hidden="true"></i>
+                    </a>
+                    <a href="${heroFilesHref}" class="moyo-main-hero__content-quick-item" role="menuitem" aria-label="자료실" title="자료실">
+                        <i class="fa-regular fa-folder-open" aria-hidden="true"></i>
+                    </a>
+                </div>
+            </div>
+
             <c:choose>
                 <c:when test="${heroIsWorkspace}">
-                    <c:if test="${isWorkspaceMember}">
+                    <c:if test="${isWorkspaceAdmin}">
                         <div class="workspace-group-menu-wrap">
-                            <button type="button" class="moyo-main-hero__menu-trigger" id="workspaceGroupMenuTrigger"
-                                    aria-label="그룹 메뉴" aria-haspopup="true" aria-expanded="false">⋯</button>
+                            <button type="button" class="moyo-main-hero__quick-action moyo-main-hero__menu-trigger" id="workspaceGroupMenuTrigger"
+                                    aria-label="그룹 설정 및 관리" title="설정" aria-haspopup="true" aria-expanded="false">
+                                <i class="fa-solid fa-gear" aria-hidden="true"></i>
+                            </button>
                             <div class="workspace-group-menu" id="workspaceGroupMenu" hidden>
-                                <c:if test="${isWorkspaceAdmin}">
-                                    <a class="workspace-group-menu-item" href="${pageContext.request.contextPath}/workspace/settings?wsId=${workspace.wsId}">그룹 설정</a>
-                                    <a class="workspace-group-menu-item" href="${pageContext.request.contextPath}/workspace/settings?wsId=${workspace.wsId}&amp;tab=members">멤버 관리</a>
-                                </c:if>
+                                <a class="workspace-group-menu-item" href="${pageContext.request.contextPath}/workspace/settings?wsId=${workspace.wsId}">그룹 설정</a>
+                                <a class="workspace-group-menu-item" href="${pageContext.request.contextPath}/workspace/settings?wsId=${workspace.wsId}&amp;tab=members">멤버 관리</a>
                                 <button type="button" class="workspace-group-menu-item" onclick="openMyWorkspaceProfileFromMenu()">내 그룹 프로필</button>
                                 <c:if test="${currentUserIsOwner}">
                                     <button type="button" class="workspace-group-menu-item" onclick="goToOwnerTransfer()">그룹장 권한 위임</button>
@@ -173,20 +233,22 @@
                     </c:if>
                 </c:when>
                 <c:otherwise>
-                    <div class="project-main-more">
-                        <button type="button" id="projectMainMoreButton" class="moyo-main-hero__menu-trigger"
-                                aria-label="프로젝트 메뉴 열기" aria-expanded="false" aria-controls="projectMainMoreMenu"
-                                onclick="toggleProjectMainMoreMenu(event)">⋯</button>
-                        <div id="projectMainMoreMenu" class="project-main-more-menu" role="menu" hidden>
-                            <c:if test="${canManageProject}">
+                    <c:if test="${canManageProject}">
+                        <div class="project-main-more">
+                            <button type="button" id="projectMainMoreButton" class="moyo-main-hero__quick-action moyo-main-hero__menu-trigger"
+                                    aria-label="프로젝트 설정 및 관리" title="설정" aria-expanded="false" aria-controls="projectMainMoreMenu"
+                                    onclick="toggleProjectMainMoreMenu(event)">
+                                <i class="fa-solid fa-gear" aria-hidden="true"></i>
+                            </button>
+                            <div id="projectMainMoreMenu" class="project-main-more-menu" role="menu" hidden>
                                 <button type="button" class="project-main-more-item" role="menuitem" onclick="goProjectSettings('basic')">프로젝트 설정</button>
                                 <c:if test="${showProjectMembers}">
                                     <button type="button" class="project-main-more-item" role="menuitem" onclick="goProjectSettings('members')">멤버 관리</button>
                                 </c:if>
-                            </c:if>
-                            <button type="button" class="project-main-more-item" role="menuitem" onclick="goProjectList()">프로젝트 목록</button>
+                                <button type="button" class="project-main-more-item" role="menuitem" onclick="goProjectList()">프로젝트 목록</button>
+                            </div>
                         </div>
-                    </div>
+                    </c:if>
                 </c:otherwise>
             </c:choose>
         </div>
@@ -199,3 +261,104 @@
         </c:if>
     </div>
 </div>
+
+<script>
+(function () {
+    if (window.__moyoHeroContentQuickBound) return;
+    window.__moyoHeroContentQuickBound = true;
+
+    window.toggleMoyoHeroContentQuickMenu = function (event) {
+        if (event) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+        var trigger = document.getElementById('moyoHeroContentQuickTrigger');
+        var menu = document.getElementById('moyoHeroContentQuickMenu');
+        if (!trigger || !menu) return;
+
+        var willOpen = menu.hidden;
+
+        // The content launcher and the settings/management menu are mutually exclusive.
+        // The launcher stops propagation so the legacy document click handlers cannot
+        // close an already-open settings menu for us; close it explicitly here.
+        if (willOpen) {
+            if (typeof window.closeProjectMainMoreMenu === 'function') {
+                window.closeProjectMainMoreMenu();
+            }
+            if (typeof window.setWorkspaceGroupMenuOpen === 'function') {
+                window.setWorkspaceGroupMenuOpen(false);
+            }
+        }
+
+        menu.hidden = !willOpen;
+        trigger.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+
+        if (willOpen) {
+            window.requestAnimationFrame(function () {
+                var rect = trigger.getBoundingClientRect();
+                var menuRect = menu.getBoundingClientRect();
+                var viewportPadding = 10;
+                var gap = 8;
+                var left = rect.right - menuRect.width;
+                var top = rect.bottom + gap;
+
+                if (left < viewportPadding) left = viewportPadding;
+                if (left + menuRect.width > window.innerWidth - viewportPadding) {
+                    left = window.innerWidth - menuRect.width - viewportPadding;
+                }
+                if (top + menuRect.height > window.innerHeight - viewportPadding) {
+                    top = rect.top - menuRect.height - gap;
+                }
+                if (top < viewportPadding) top = viewportPadding;
+
+                menu.style.setProperty('left', left + 'px', 'important');
+                menu.style.setProperty('top', top + 'px', 'important');
+                menu.style.setProperty('right', 'auto', 'important');
+            });
+        }
+    };
+
+    function closeMoyoHeroContentQuickMenu() {
+        var trigger = document.getElementById('moyoHeroContentQuickTrigger');
+        var menu = document.getElementById('moyoHeroContentQuickMenu');
+        if (!trigger || !menu || menu.hidden) return;
+        menu.hidden = true;
+        trigger.setAttribute('aria-expanded', 'false');
+    }
+    window.closeMoyoHeroContentQuickMenu = closeMoyoHeroContentQuickMenu;
+
+    // Capture the settings trigger before its legacy handler stops propagation.
+    // This guarantees the two hero popovers never remain open at the same time.
+    document.addEventListener('click', function (event) {
+        if (event.target.closest('#projectMainMoreButton, #workspaceGroupMenuTrigger')) {
+            closeMoyoHeroContentQuickMenu();
+        }
+    }, true);
+
+    document.addEventListener('click', function (event) {
+        var wrap = document.querySelector('.moyo-main-hero__content-quick-wrap');
+        var trigger = document.getElementById('moyoHeroContentQuickTrigger');
+        var menu = document.getElementById('moyoHeroContentQuickMenu');
+        if (!wrap || !trigger || !menu || menu.hidden) return;
+        if (!wrap.contains(event.target)) {
+            closeMoyoHeroContentQuickMenu();
+        }
+    });
+
+    window.addEventListener('resize', function () {
+        var trigger = document.getElementById('moyoHeroContentQuickTrigger');
+        var menu = document.getElementById('moyoHeroContentQuickMenu');
+        if (!trigger || !menu || menu.hidden) return;
+        closeMoyoHeroContentQuickMenu();
+    });
+
+    document.addEventListener('keydown', function (event) {
+        if (event.key !== 'Escape') return;
+        var trigger = document.getElementById('moyoHeroContentQuickTrigger');
+        var menu = document.getElementById('moyoHeroContentQuickMenu');
+        if (!trigger || !menu || menu.hidden) return;
+        closeMoyoHeroContentQuickMenu();
+        trigger.focus();
+    });
+})();
+</script>

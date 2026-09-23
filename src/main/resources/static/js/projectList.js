@@ -1,20 +1,78 @@
 (() => {
     'use strict';
 
-    const PREVIEW_LIMIT = 6;
+    const PREVIEW_LIMIT = Number.MAX_SAFE_INTEGER;
     const PAGE_SIZE = 9;
 
     const normalize = (value) => String(value ?? '').trim().toLowerCase();
+    const typeLabels = {
+        WORK: '업무',
+        DEVELOPMENT: '개발',
+        PLANNING: '기획',
+        DESIGN: '디자인',
+        STUDY: '스터디',
+        EXAM: '시험',
+        TRAVEL: '여행',
+        MEETING: '회의',
+        GATHERING: '모임',
+        EVENT: '행사',
+        EXERCISE: '운동',
+        HOBBY: '취미',
+        LIFE: '생활',
+        RECORD: '기록',
+        ETC: '기타'
+    };
+
+    const legacyTypeMap = {
+        '업무': 'WORK',
+        '개발': 'DEVELOPMENT',
+        '기획': 'PLANNING',
+        '디자인': 'DESIGN',
+        '스터디': 'STUDY',
+        '공부': 'STUDY',
+        '학습·연구': 'STUDY',
+        '학습.연구': 'STUDY',
+        '학습연구': 'STUDY',
+        '시험': 'EXAM',
+        '여행': 'TRAVEL',
+        '회의': 'MEETING',
+        '미팅': 'MEETING',
+        '모임': 'GATHERING',
+        '모임·행사': 'EVENT',
+        '모임.행사': 'EVENT',
+        '모임행사': 'EVENT',
+        '행사': 'EVENT',
+        '운동': 'EXERCISE',
+        '취미': 'HOBBY',
+        '취미·창작': 'HOBBY',
+        '취미.창작': 'HOBBY',
+        '취미창작': 'HOBBY',
+        '생활': 'LIFE',
+        '생활·가정': 'LIFE',
+        '생활.가정': 'LIFE',
+        '생활가정': 'LIFE',
+        '기록': 'RECORD'
+    };
+
     const normalizeType = (value) => {
-        const type = String(value ?? '').trim().toUpperCase().replace(/\s+/g, '');
-        const raw = String(value ?? '').trim().replace(/\s+/g, '');
-        if (type === 'WORK' || raw === '업무') return 'WORK';
-        if (type === 'TRAVEL' || raw === '여행') return 'TRAVEL';
-        if (type === 'MEETING' || type === 'EVENT' || type === 'GROUP' || raw === '모임·행사' || raw === '모임.행사' || raw === '모임행사' || raw === '행사') return 'MEETING';
-        if (type === 'STUDY' || raw === '학습·연구' || raw === '학습.연구' || raw === '학습연구') return 'STUDY';
-        if (type === 'LIFE' || raw === '생활·가정' || raw === '생활.가정' || raw === '생활가정') return 'LIFE';
-        if (type === 'HOBBY' || raw === '취미·창작' || raw === '취미.창작' || raw === '취미창작') return 'HOBBY';
-        return 'ETC';
+        const original = String(value ?? '').trim();
+        const code = original.toUpperCase().replace(/\s+/g, '');
+        if (Object.prototype.hasOwnProperty.call(typeLabels, code)) return code;
+        const raw = original.replace(/\s+/g, '');
+        return legacyTypeMap[raw] || legacyTypeMap[original] || 'ETC';
+    };
+
+    const normalizeAccessState = (value, personalMode) => {
+        if (personalMode) return 'MANAGE';
+        const state = String(value ?? '').trim().toUpperCase();
+        return ['MANAGE', 'PARTICIPANT', 'READ_ONLY', 'LOCKED'].includes(state) ? state : 'LOCKED';
+    };
+
+    const accessLabels = {
+        MANAGE: '관리',
+        PARTICIPANT: '참여 중',
+        READ_ONLY: '읽기 전용',
+        LOCKED: '참여자 전용'
     };
 
     document.addEventListener('DOMContentLoaded', () => {
@@ -37,16 +95,86 @@
         pagination.hidden = true;
         listCard?.appendChild(pagination);
 
-        const typeLabels = {
-            WORK: '업무', TRAVEL: '여행', MEETING: '모임 · 행사',
-            STUDY: '학습 · 연구', LIFE: '생활 · 가정', HOBBY: '취미 · 창작', ETC: '기타'
-        };
-
         cards.forEach((card) => {
             const normalizedType = normalizeType(card.dataset.type);
             card.dataset.typeNormalized = normalizedType;
-            const badge = card.querySelector('.project-card-type');
-            if (badge) badge.textContent = typeLabels[normalizedType] || '기타';
+
+            const typeBadge = card.querySelector('.project-card-type');
+            if (typeBadge) {
+                const iconKey = String(card.dataset.icon || 'shapes').trim().toLowerCase();
+                typeBadge.innerHTML = '<i class="fa-solid fa-' + iconKey.replace(/[^a-z0-9-]/g, '') + '" aria-hidden="true"></i>' +
+                    '<span>' + (typeLabels[normalizedType] || '기타') + '</span>';
+            }
+
+            const periodValue = card.querySelector('.project-period-value');
+            if (periodValue) {
+                const periodEnabled = String(card.dataset.periodEnabled || '').toUpperCase() === 'Y';
+                const start = String(card.dataset.start || '').trim();
+                const end = String(card.dataset.end || '').trim();
+                periodValue.textContent = periodEnabled && start && end ? `${start} ~ ${end}` : '기간 없음';
+            }
+
+            const accessState = normalizeAccessState(card.dataset.accessState, personalMode);
+            card.dataset.accessState = accessState;
+            card.classList.toggle('is-read-only', accessState === 'READ_ONLY');
+            card.classList.toggle('is-locked', accessState === 'LOCKED');
+
+            const accessBadge = card.querySelector('.project-access-badge');
+            if (accessBadge) {
+                accessBadge.textContent = accessLabels[accessState] || '';
+                accessBadge.className = 'project-access-badge is-' + accessState.toLowerCase().replace('_', '-');
+                accessBadge.hidden = false;
+            }
+
+            const link = card.querySelector('.project-list-link');
+            const enter = card.querySelector('.project-enter');
+            if (accessState === 'LOCKED' || String(card.dataset.canEnter || '').toUpperCase() === 'N') {
+                if (link) {
+                    link.removeAttribute('href');
+                    link.setAttribute('aria-disabled', 'true');
+                    link.setAttribute('tabindex', '0');
+                    link.addEventListener('click', (event) => event.preventDefault());
+                    link.addEventListener('keydown', (event) => {
+                        if (event.key === 'Enter' || event.key === ' ') event.preventDefault();
+                    });
+                }
+                if (enter) enter.textContent = '참여자만 열 수 있습니다';
+            } else if (accessState === 'READ_ONLY') {
+                if (enter) enter.textContent = '읽기 전용으로 보기 →';
+            }
+
+            const progress = card.querySelector('.project-progress');
+            const progressValue = card.querySelector('.project-progress-value');
+            const progressFill = card.querySelector('.project-progress-fill');
+            const progressEmpty = card.querySelector('.project-progress-empty');
+            const taskTotal = Number(card.dataset.taskTotal || 0);
+            const rawProgress = card.dataset.progress;
+            const progressPercent = rawProgress === '' || rawProgress == null
+                ? null
+                : Math.max(0, Math.min(100, Number(rawProgress)));
+
+            if (progress) {
+                progress.hidden = false;
+                if (taskTotal > 0 && Number.isFinite(progressPercent)) {
+                    progress.classList.remove('is-empty');
+                    if (progressValue) progressValue.textContent = `${Math.round(progressPercent)}%`;
+                    if (progressFill) progressFill.style.width = `${progressPercent}%`;
+                    if (progressEmpty) progressEmpty.hidden = true;
+                    progress.setAttribute('role', 'progressbar');
+                    progress.setAttribute('aria-valuemin', '0');
+                    progress.setAttribute('aria-valuemax', '100');
+                    progress.setAttribute('aria-valuenow', String(Math.round(progressPercent)));
+                } else {
+                    progress.classList.add('is-empty');
+                    progress.removeAttribute('role');
+                    progress.removeAttribute('aria-valuemin');
+                    progress.removeAttribute('aria-valuemax');
+                    progress.removeAttribute('aria-valuenow');
+                    if (progressValue) progressValue.textContent = '';
+                    if (progressFill) progressFill.style.width = '0%';
+                    if (progressEmpty) progressEmpty.hidden = false;
+                }
+            }
 
             const memberCell = card.querySelector('.project-member-names');
             if (memberCell) {

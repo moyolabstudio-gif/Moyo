@@ -1,5 +1,72 @@
 /** MOYO 프로젝트 기간별 계획 그리드·드래그·렌더링 */
 
+        // 기간별 계획 상단 날짜도 캘린더와 같은 공휴일 데이터를 사용한다.
+        // 공휴일명은 노출하지 않고, 쉬는 날 여부만 날짜 색상으로 표현한다.
+        let ganttHolidayDates = new Set();
+        let ganttHolidayRangeKey = '';
+        let ganttHolidayLoadingKey = '';
+
+        function hasGanttHolidayInRange(startDate, endDate) {
+            const start = parseProjectDate(startDate);
+            const end = parseProjectDate(endDate);
+            if (!start || !end || ganttHolidayDates.size === 0) return false;
+
+            for (let cursor = new Date(start.getFullYear(), start.getMonth(), start.getDate()); cursor <= end; cursor = addDays(cursor, 1)) {
+                if (ganttHolidayDates.has(formatProjectDate(cursor))) return true;
+            }
+            return false;
+        }
+
+        function ensureGanttHolidayDates(startDate, endDate, schedules) {
+            if (!startDate || !endDate) return;
+
+            const rangeKey = startDate + '|' + endDate;
+            if (ganttHolidayRangeKey === rangeKey || ganttHolidayLoadingKey === rangeKey) return;
+
+            ganttHolidayLoadingKey = rangeKey;
+            const config = window.PROJECT_MAIN_CONFIG || {};
+            const contextPath = String(config.contextPath || document.body?.dataset?.contextPath || '');
+            const params = new URLSearchParams({
+                startDate: startDate,
+                endDate: endDate,
+                types: 'HOLIDAY'
+            });
+
+            fetch(contextPath + '/api/calendar/monthly?' + params.toString(), {
+                method: 'GET',
+                headers: { 'Accept': 'application/json' }
+            })
+                .then(function(response) {
+                    if (!response.ok) throw new Error('공휴일 조회 실패');
+                    return response.json();
+                })
+                .then(function(records) {
+                    const dates = new Set();
+                    (Array.isArray(records) ? records : []).forEach(function(record) {
+                        const itemType = String(record.itemType || record.ITEM_TYPE || '').toUpperCase();
+                        if (itemType !== 'HOLIDAY') return;
+                        const date = String(
+                            record.startDt || record.START_DT ||
+                            record.startDate || record.START_DATE ||
+                            record.eventDate || record.EVENT_DATE || ''
+                        ).substring(0, 10);
+                        if (/^\d{4}-\d{2}-\d{2}$/.test(date)) dates.add(date);
+                    });
+                    ganttHolidayDates = dates;
+                    ganttHolidayRangeKey = rangeKey;
+                })
+                .catch(function(error) {
+                    console.warn('[기간별 계획] 공휴일 표시를 불러오지 못했습니다.', error);
+                    ganttHolidayDates = new Set();
+                    ganttHolidayRangeKey = rangeKey;
+                })
+                .finally(function() {
+                    ganttHolidayLoadingKey = '';
+                    // 데이터 도착 뒤 현재 보드만 다시 그려 날짜 색상을 동기화한다.
+                    renderProjectGantt(schedules || getGanttPlanSchedules());
+                });
+        }
+
         function getGanttCellStartDate(cell) {
             if (!cell) return null;
             return cell.dataset.startDate || cell.dataset.date || null;
@@ -717,6 +784,8 @@
                 return;
             }
 
+            ensureGanttHolidayDates(formatProjectDate(rangeStart), formatProjectDate(rangeEnd), schedules);
+
             const totalDays = Math.max(getDateDiffInclusive(rangeStart, rangeEnd), 1);
             let scale = getGanttScale(totalDays);
             // 간트와 주간계획표는 별도 기능이다. 이전 저장값이 HOUR여도 간트는 일 단위로 복구한다.
@@ -736,7 +805,8 @@
                 endTime: tick.endTime || '',
                 isSaturday: (scale.type === 'DAY' || scale.type === 'HOUR') && (tick.isSaturday || tick.start.getDay() === 6),
                 isSunday: (scale.type === 'DAY' || scale.type === 'HOUR') && (tick.isSunday || tick.start.getDay() === 0),
-                isWeekend: (scale.type === 'DAY' || scale.type === 'HOUR') && (tick.isWeekend || tick.start.getDay() === 0 || tick.start.getDay() === 6)
+                isWeekend: (scale.type === 'DAY' || scale.type === 'HOUR') && (tick.isWeekend || tick.start.getDay() === 0 || tick.start.getDay() === 6),
+                isHoliday: hasGanttHolidayInRange(formatProjectDate(tick.start), formatProjectDate(tick.end))
             }));
 
             if (scaleBadge) scaleBadge.innerText = scale.label;
@@ -760,8 +830,9 @@
                 currentGanttTicks.forEach(tick => {
                     const todayClass = todayString >= tick.startDate && todayString <= tick.endDate ? ' today-gantt-cell' : '';
                     const weekendClass = tick.isSunday ? ' sunday-gantt-cell' : (tick.isSaturday ? ' saturday-gantt-cell' : '');
+                    const holidayClass = tick.isHoliday ? ' holiday-gantt-cell' : '';
                     const cellColumn = currentGanttTicks.indexOf(tick) + 1;
-                    cells += '<div class="gantt-cell' + todayClass + weekendClass + '" data-start-date="' + tick.startDate + '" data-end-date="' + tick.endDate + '" data-start-time="' + (tick.startTime || '') + '" data-end-time="' + (tick.endTime || '') + '" data-row-key="' + rowKey + '" data-tick-index="' + cellColumn + '" style="grid-column:' + cellColumn + ';"></div>';
+                    cells += '<div class="gantt-cell' + todayClass + weekendClass + holidayClass + '" data-start-date="' + tick.startDate + '" data-end-date="' + tick.endDate + '" data-start-time="' + (tick.startTime || '') + '" data-end-time="' + (tick.endTime || '') + '" data-row-key="' + rowKey + '" data-tick-index="' + cellColumn + '" style="grid-column:' + cellColumn + ';"></div>';
                 });
 
                 return cells;
@@ -790,6 +861,7 @@
                 const isTodayInTick = todayString >= tick.startDate && todayString <= tick.endDate;
                 const todayClass = isTodayInTick ? ' today-gantt-header' : '';
                 const weekendClass = tick.isSunday ? ' sunday-gantt-header' : (tick.isSaturday ? ' saturday-gantt-header' : '');
+                const holidayClass = tick.isHoliday ? ' holiday-gantt-header' : '';
                 let tickLabelHtml = '<span class="tick-main">' + ticks[index].label + '</span>';
 
                 if (scale.type !== 'DAY') {
@@ -797,7 +869,7 @@
                 }
 
                 const headerColumn = index + 1;
-                headerHtml += '<div class="gantt-date-cell' + todayClass + weekendClass + '" title="' + tick.startDate + ' ~ ' + tick.endDate + '" style="grid-column:' + headerColumn + ';">' + tickLabelHtml + '</div>';
+                headerHtml += '<div class="gantt-date-cell' + todayClass + weekendClass + holidayClass + '" title="' + tick.startDate + ' ~ ' + tick.endDate + '" style="grid-column:' + headerColumn + ';">' + tickLabelHtml + '</div>';
             });
 
             headerHtml += '</div>';
@@ -822,6 +894,8 @@
 
                     if (!start || !end) return;
 
+                    const durationDays = Math.max(getDateDiffInclusive(start, end), 1);
+                    const durationText = '<span class="gantt-bar-duration" aria-label="기간 ' + durationDays + '일">' + durationDays + '일</span>';
                     const rowKey = 'schedule-' + scheduleId;
                     const timeText = useTime ? '<span class="gantt-bar-time">' + startTime + ' ~ ' + endTime + '</span>' : '';
                     const barTitle = title + ' · ' + startDate + (useTime ? ' ' + startTime : '') + ' ~ ' + endDate + (useTime ? ' ' + endTime : '');
@@ -840,6 +914,7 @@
                             'style="' + getBarGridStyle(startDate, startTime, endDate, endTime, useTime) + ' background:' + color + ';">' +
                             resizeHandles +
                             timeText +
+                            durationText +
                         '</div>';
 
                     fixedRowsHtml += '<div class="gantt-fixed-row" title="' + title + '"><span class="gantt-label-dot" style="background:' + color + ';"></span><span class="gantt-label-text">' + title + '</span></div>';
@@ -888,26 +963,51 @@
 
             const nextViewport = target.querySelector('.gantt-scroll-viewport');
             if (nextViewport) {
-                requestAnimationFrame(function() {
-                    if (previousScrollLeft !== null) {
+                if (previousScrollLeft !== null) {
+                    requestAnimationFrame(function() {
                         nextViewport.scrollLeft = previousScrollLeft;
-                        return;
-                    }
+                    });
+                } else {
+                    // 패널이 hidden 상태에서 먼저 렌더되면 clientWidth가 0이라
+                    // 오늘 위치 계산이 실패할 수 있다. 실제로 보일 때까지 잠깐 재시도한 뒤
+                    // 최초 1회만 오늘 칼럼을 가운데로 맞춘다.
+                    let focusRetryCount = 0;
+                    const focusTodayOnFirstOpen = function() {
+                        if (!document.body.contains(nextViewport)) return;
 
-                    const todayHeader = nextViewport.querySelector('.today-gantt-header');
-                    if (todayHeader) {
-                        const maxScrollLeft = Math.max(nextViewport.scrollWidth - nextViewport.clientWidth, 0);
-                        const centeredScrollLeft = todayHeader.offsetLeft
-                            - ((nextViewport.clientWidth - todayHeader.offsetWidth) / 2);
+                        const viewportWidth = nextViewport.clientWidth;
+                        const scrollWidth = nextViewport.scrollWidth;
 
-                        nextViewport.scrollLeft = Math.max(0, Math.min(centeredScrollLeft, maxScrollLeft));
-                    } else {
-                        // 오늘이 프로젝트 기간 밖이면 프로젝트 시작점부터 보여준다.
-                        nextViewport.scrollLeft = 0;
-                    }
+                        if (viewportWidth <= 0 || scrollWidth <= 0) {
+                            if (focusRetryCount++ < 20) {
+                                requestAnimationFrame(focusTodayOnFirstOpen);
+                            }
+                            return;
+                        }
 
-                    target.dataset.ganttInitialFocusApplied = 'true';
-                });
+                        const todayHeader = nextViewport.querySelector('.today-gantt-header');
+                        if (todayHeader) {
+                            const viewportRect = nextViewport.getBoundingClientRect();
+                            const todayRect = todayHeader.getBoundingClientRect();
+                            const currentScrollLeft = nextViewport.scrollLeft;
+                            const todayCenterInContent = currentScrollLeft
+                                + (todayRect.left - viewportRect.left)
+                                + (todayRect.width / 2);
+                            const centeredScrollLeft = todayCenterInContent - (viewportWidth / 2);
+                            const maxScrollLeft = Math.max(scrollWidth - viewportWidth, 0);
+
+                            // 시작/끝 구간은 브라우저 스크롤 한계에 맞춰 자연스럽게 붙는다.
+                            nextViewport.scrollLeft = Math.max(0, Math.min(centeredScrollLeft, maxScrollLeft));
+                        } else {
+                            // 오늘이 프로젝트 기간 밖이면 프로젝트 시작점부터 보여준다.
+                            nextViewport.scrollLeft = 0;
+                        }
+
+                        target.dataset.ganttInitialFocusApplied = 'true';
+                    };
+
+                    requestAnimationFrame(focusTodayOnFirstOpen);
+                }
             }
 
             if (canManageProjectPlan()) {

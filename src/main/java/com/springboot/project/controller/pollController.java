@@ -115,7 +115,7 @@ public class pollController {
             result.put("message", "POLL_NOT_FOUND");
             return result;
         }
-        if (!hasPollScopeAccess(poll, loginUser.getUserId())) {
+        if (!hasPollScopeWriteAccess(poll, loginUser.getUserId())) {
             result.put("success", false);
             result.put("message", "POLL_SCOPE_ACCESS_DENIED");
             return result;
@@ -243,7 +243,7 @@ public class pollController {
 
         Long pollId = toLong(params.get("pollId"));
         Map<String, Object> poll = pollId == null ? null : pollService.getPoll(pollId, loginUser.getUserId());
-        if (poll == null || poll.isEmpty() || !hasPollScopeAccess(poll, loginUser.getUserId())) {
+        if (poll == null || poll.isEmpty() || !hasPollScopeWriteAccess(poll, loginUser.getUserId())) {
             result.put("success", false);
             result.put("message", "POLL_SCOPE_ACCESS_DENIED");
             return result;
@@ -269,7 +269,7 @@ public class pollController {
 
         Long pollId = toLong(params.get("pollId"));
         Map<String, Object> poll = pollId == null ? null : pollService.getPoll(pollId, loginUser.getUserId());
-        if (poll == null || poll.isEmpty() || !hasPollScopeAccess(poll, loginUser.getUserId())) {
+        if (poll == null || poll.isEmpty() || !hasPollScopeWriteAccess(poll, loginUser.getUserId())) {
             result.put("success", false);
             result.put("message", "POLL_SCOPE_ACCESS_DENIED");
             return result;
@@ -304,7 +304,7 @@ public class pollController {
                     : Long.valueOf(String.valueOf(pollIdValue));
 
             Map<String, Object> poll = pollService.getPoll(pollId, loginUser.getUserId());
-            if (poll == null || poll.isEmpty() || !hasPollScopeAccess(poll, loginUser.getUserId())) {
+            if (poll == null || poll.isEmpty() || !hasPollScopeWriteAccess(poll, loginUser.getUserId())) {
                 result.put("success", false);
                 result.put("message", "POLL_SCOPE_ACCESS_DENIED");
                 return result;
@@ -338,9 +338,9 @@ public class pollController {
         String scope = mapString(params, "scope", "SCOPE");
         Long wsId = mapLong(params, "wsId", "WS_ID");
         Long projId = mapLong(params, "projId", "PROJ_ID");
-        if (!hasRequestedScopeAccess(scope, wsId, projId, loginUser.getUserId())) {
+        if (!hasRequestedScopeWriteAccess(scope, wsId, projId, loginUser.getUserId())) {
             result.put("success", false);
-            result.put("message", "POLL_SCOPE_ACCESS_DENIED");
+            result.put("message", "READ_ONLY");
             return result;
         }
 
@@ -370,6 +370,13 @@ public class pollController {
         return false;
     }
 
+    private boolean hasRequestedScopeWriteAccess(String scope, Long wsId, Long projId, Long userId) {
+        if (!hasRequestedScopeAccess(scope, wsId, projId, userId)) return false;
+        String normalizedScope = scope == null ? "" : scope.trim().toUpperCase();
+        return !"PROJECT".equals(normalizedScope)
+                || projectAuthorizationService.canModifyProjectContent(projId, userId);
+    }
+
     private boolean hasPollScopeAccess(Map<String, Object> poll, Long userId) {
         if (poll == null || poll.isEmpty() || userId == null) return false;
         String scope = mapString(poll, "scope", "SCOPE", "scopeType", "SCOPE_TYPE");
@@ -382,6 +389,18 @@ public class pollController {
             else if (wsId != null) scope = "WORKSPACE";
         }
         return hasRequestedScopeAccess(scope, wsId, projId, userId);
+    }
+
+    private boolean hasPollScopeWriteAccess(Map<String, Object> poll, Long userId) {
+        if (poll == null || poll.isEmpty() || userId == null) return false;
+        String scope = mapString(poll, "scope", "SCOPE", "scopeType", "SCOPE_TYPE");
+        Long wsId = mapLong(poll, "wsId", "WS_ID");
+        Long projId = mapLong(poll, "projId", "PROJ_ID");
+        if (scope == null || scope.isBlank()) {
+            if (projId != null) scope = "PROJECT";
+            else if (wsId != null) scope = "WORKSPACE";
+        }
+        return hasRequestedScopeWriteAccess(scope, wsId, projId, userId);
     }
 
     private Object mapValue(Map<String, Object> map, String... keys) {

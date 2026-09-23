@@ -664,16 +664,6 @@ function goProjectMain() {
         + '/project/main?' + query.toString();
 }
 
-const PROJECT_SETTING_CATEGORIES = new Set([
-    'WORK',
-    'TRAVEL',
-    'EVENT',
-    'STUDY',
-    'LIFE',
-    'HOBBY',
-    'ETC'
-]);
-
 function isValidProjectDateValue(value) {
     if (!value) return true;
     if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
@@ -760,28 +750,47 @@ function focusProjectSettingField(fieldId) {
     }
 }
 
+function getProjectSettingsCommonForm() {
+    return document.getElementById('projectSettingsForm');
+}
+
 function buildProjectSettingPayload() {
     const config = window.PROJECT_SETTINGS_CONFIG || {};
-    const category = document.getElementById('settingProjCategory')?.value || '';
+    const form = getProjectSettingsCommonForm();
+    const commonValue = form && window.MoyoProjectForm
+        ? window.MoyoProjectForm.getValue(form)
+        : {};
 
     return {
         projId: Number(config.projId),
         wsId: config.wsId ? Number(config.wsId) : null,
-        projName: normalizeProjectSettingText(
-            document.getElementById('settingProjName')?.value
-        ),
-        projCategory: category,
+        projName: normalizeProjectSettingText(commonValue.projName),
+        projCategory: commonValue.projType || null,
         projCategoryDetail: null,
-        // 기존 PROJECTS.PROJ_TYPE 저장 로직과의 호환을 유지한다.
-        projType: category,
-        startDate: document.getElementById('settingStartDate')?.value || null,
-        endDate: document.getElementById('settingEndDate')?.value || null,
-        projDesc: normalizeProjectSettingText(
-            document.getElementById('settingProjDesc')?.value
-        ),
+        projType: commonValue.projType || null,
+        projIcon: commonValue.projIcon || null,
+        accessScope: config.groupProject
+            ? (commonValue.accessScope || 'PARTICIPANTS')
+            : 'OWNER_ONLY',
+        periodEnabledYn: commonValue.periodEnabledYn === 'Y' ? 'Y' : 'N',
+        startDate: commonValue.periodEnabledYn === 'Y' ? (commonValue.startDate || null) : null,
+        endDate: commonValue.periodEnabledYn === 'Y' ? (commonValue.endDate || null) : null,
+        projDesc: normalizeProjectSettingText(commonValue.projDesc),
         // 기본 정보 저장 시 기존 링크가 삭제되지 않도록 현재 값을 함께 전달한다.
         links: collectProjectSettingLinks()
     };
+}
+
+function focusProjectCommonField(errorKey) {
+    const form = getProjectSettingsCommonForm();
+    if (!form) return;
+
+    const group = form.querySelector('[data-project-field="' + errorKey + '"]');
+    const focusable = group && group.querySelector('input:not([type="hidden"]), textarea, button:not(:disabled)');
+    if (focusable) focusable.focus();
+    if (group && typeof group.scrollIntoView === 'function') {
+        group.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    }
 }
 
 function validateProjectSettingPayload(payload) {
@@ -790,49 +799,37 @@ function validateProjectSettingPayload(payload) {
         return false;
     }
 
-    if (!payload.projName) {
-        alert('프로젝트 이름을 입력해주세요.');
-        focusProjectSettingField('settingProjName');
-        return false;
-    }
-
-    if (payload.projName.length > 80) {
-        alert('프로젝트 이름은 80자 이내로 입력해주세요.');
-        focusProjectSettingField('settingProjName');
-        return false;
-    }
-
-    if (!PROJECT_SETTING_CATEGORIES.has(payload.projCategory)) {
-        alert('프로젝트 유형을 선택해주세요.');
-        focusProjectSettingField('settingProjCategory');
-        return false;
-    }
-
-    if (!isValidProjectDateValue(payload.startDate)) {
-        alert('올바른 시작일을 입력해주세요.');
-        focusProjectSettingField('settingStartDate');
-        return false;
-    }
-
-    if (!isValidProjectDateValue(payload.endDate)) {
-        alert('올바른 마감일을 입력해주세요.');
-        focusProjectSettingField('settingEndDate');
-        return false;
+    const form = getProjectSettingsCommonForm();
+    if (form && window.MoyoProjectForm) {
+        const result = window.MoyoProjectForm.validate(form);
+        if (!result.valid) {
+            const first = result.errors[0];
+            alert(first ? first.message : '프로젝트 기본 정보를 확인해주세요.');
+            if (first) focusProjectCommonField(first.key);
+            return false;
+        }
     }
 
     if (payload.projDesc.length > 1000) {
         alert('프로젝트 설명은 1000자 이내로 입력해주세요.');
-        focusProjectSettingField('settingProjDesc');
+        focusProjectCommonField('description');
         return false;
+    }
+
+    if (payload.periodEnabledYn === 'Y') {
+        if (!isValidProjectDateValue(payload.startDate) || !isValidProjectDateValue(payload.endDate)) {
+            alert('프로젝트 기간을 확인해주세요.');
+            focusProjectCommonField('period');
+            return false;
+        }
+        if (payload.startDate > payload.endDate) {
+            alert('종료일은 시작일보다 빠를 수 없습니다.');
+            focusProjectCommonField('period');
+            return false;
+        }
     }
 
     if (!validateProjectSettingLinks(payload.links)) {
-        return false;
-    }
-
-    if (payload.startDate && payload.endDate && payload.startDate > payload.endDate) {
-        alert('마감일은 시작일보다 빠를 수 없습니다.');
-        focusProjectSettingField('settingEndDate');
         return false;
     }
 
@@ -935,7 +932,12 @@ function setProjectMemberMode(mode, resetValues) {
             if (checkbox) checkbox.checked = false;
         }
 
-        if (roleSelect) roleSelect.disabled = mode !== 'edit';
+        const isLeader = String(row.dataset.isLeader) === 'true';
+        const isCurrentUser = String(row.dataset.isCurrentUser) === 'true';
+
+        if (roleSelect) {
+            roleSelect.disabled = mode !== 'edit' || isLeader || isCurrentUser;
+        }
         if (positionInput) positionInput.disabled = mode !== 'edit';
         if (checkbox && mode !== 'remove') checkbox.checked = false;
     });
@@ -970,7 +972,7 @@ function syncProjectMemberModeNote() {
     if (projectMemberMode === 'edit') {
         note.textContent = '권한과 담당 역할을 수정한 뒤 변경사항 저장을 눌러 한 번에 반영하세요.';
     } else if (projectMemberMode === 'remove') {
-        note.textContent = '내보낼 멤버를 선택하세요. 팀장은 선택할 수 없습니다.';
+        note.textContent = '내보낼 멤버를 선택하세요. 팀장과 본인은 선택할 수 없고, 관리자는 다른 관리자를 내보낼 수 없습니다.';
     } else {
         note.textContent = '프로젝트 멤버의 권한과 담당 역할을 관리합니다.';
     }
@@ -1071,7 +1073,7 @@ function postProjectMemberSetting(values, endpoint) {
 
 async function saveProjectMemberChanges() {
     const config = window.PROJECT_SETTINGS_CONFIG || {};
-    if (!config.canManageProject) return;
+    if (!config.canManageProject || config.readOnlyProjectSettings) return;
 
     const changedRows = getProjectMemberRows().filter(function(row) {
         const roleSelect = row.querySelector('.project-member-role-edit');
@@ -1079,7 +1081,7 @@ async function saveProjectMemberChanges() {
         const nextRole = roleSelect ? roleSelect.value : row.dataset.role;
         const nextPosition = positionInput ? positionInput.value.trim() : '';
 
-        return nextRole !== (row.dataset.role || 'MEMBER')
+        return (roleSelect && !roleSelect.disabled && nextRole !== (row.dataset.role || 'MEMBER'))
             || nextPosition !== (row.dataset.position || '');
     });
 
@@ -1090,6 +1092,22 @@ async function saveProjectMemberChanges() {
 
     if (!confirm(changedRows.length + '명의 변경사항을 저장하시겠습니까?')) return;
 
+    const changes = changedRows.map(function(row) {
+        const roleSelect = row.querySelector('.project-member-role-edit');
+        const positionInput = row.querySelector('.project-member-position-edit');
+        const nextRole = roleSelect ? roleSelect.value : row.dataset.role;
+        const nextPosition = positionInput ? positionInput.value.trim() : '';
+        const item = { userId: Number(row.dataset.userId) };
+
+        if (roleSelect && !roleSelect.disabled && nextRole !== (row.dataset.role || 'MEMBER')) {
+            item.role = nextRole;
+        }
+        if (nextPosition !== (row.dataset.position || '')) {
+            item.position = nextPosition;
+        }
+        return item;
+    });
+
     const saveButton = document.getElementById('projectMemberSaveButton');
     if (saveButton) {
         saveButton.disabled = true;
@@ -1097,26 +1115,35 @@ async function saveProjectMemberChanges() {
     }
 
     try {
-        for (const row of changedRows) {
+        const result = (await postProjectMemberSetting({
+            projId: config.projId,
+            changes: JSON.stringify(changes)
+        }, '/project/api/update-members')).trim();
+
+        if (result !== 'success') {
+            const messages = {
+                forbidden: '프로젝트 멤버를 변경할 권한이 없습니다.',
+                self_role_locked: '본인의 프로젝트 권한은 직접 변경할 수 없습니다.',
+                leader_role_locked: '팀장 권한은 일반 권한 수정으로 변경할 수 없습니다.',
+                member_not_found: '현재 프로젝트에 없는 멤버가 포함되어 있습니다.',
+                project_unavailable: '삭제 예정 또는 사용할 수 없는 프로젝트에서는 멤버를 변경할 수 없습니다.',
+                invalid_role: '허용되지 않은 프로젝트 권한입니다.',
+                duplicate_member: '같은 멤버의 변경사항이 중복되었습니다.'
+            };
+            throw new Error(messages[result] || result || 'UPDATE_FAILED');
+        }
+
+        changedRows.forEach(function(row) {
             const roleSelect = row.querySelector('.project-member-role-edit');
             const positionInput = row.querySelector('.project-member-position-edit');
             const nextRole = roleSelect ? roleSelect.value : row.dataset.role;
             const nextPosition = positionInput ? positionInput.value.trim() : '';
 
-            const result = (await postProjectMemberSetting({
-                projId: config.projId,
-                userId: row.dataset.userId,
-                projRole: nextRole,
-                projPosition: nextPosition
-            }, '/project/api/update-member-setting')).trim();
-
-            if (result !== 'SUCCESS') throw new Error(result || 'UPDATE_FAILED');
-
-            row.dataset.role = nextRole;
+            if (roleSelect && !roleSelect.disabled) row.dataset.role = nextRole;
             row.dataset.position = nextPosition;
 
             const roleSummary = row.querySelector('.project-member-role-summary');
-            if (roleSummary && roleSelect) {
+            if (roleSummary && roleSelect && !roleSelect.disabled) {
                 roleSummary.textContent = nextRole === 'ADMIN' ? '관리자' : '멤버';
                 roleSummary.classList.toggle('is-admin', nextRole === 'ADMIN');
             }
@@ -1126,12 +1153,14 @@ async function saveProjectMemberChanges() {
                 positionSummary.textContent = nextPosition || '미지정';
                 positionSummary.classList.toggle('is-empty', !nextPosition);
             }
-        }
+        });
 
         exitProjectMemberMode(false);
     } catch (error) {
         console.error('프로젝트 멤버 변경사항 저장 실패:', error);
-        alert('일부 변경사항 저장에 실패했습니다. 화면을 새로고침해 상태를 확인해주세요.');
+        alert(error && error.message && !String(error.message).startsWith('HTTP_')
+            ? error.message
+            : '멤버 변경사항 저장에 실패했습니다. 화면을 새로고침해 상태를 확인해주세요.');
     } finally {
         if (saveButton) {
             saveButton.disabled = false;
@@ -1142,6 +1171,7 @@ async function saveProjectMemberChanges() {
 
 async function removeSelectedProjectMembers() {
     const config = window.PROJECT_SETTINGS_CONFIG || {};
+    if (!config.canManageProject || config.readOnlyProjectSettings) return;
 
     const selectedRows = getProjectMemberRows().filter(function(row) {
         const checkbox = row.querySelector('.project-member-select');
@@ -1161,22 +1191,31 @@ async function removeSelectedProjectMembers() {
     if (!confirm(label + '을 프로젝트에서 내보내시겠습니까?')) return;
 
     try {
-        for (const row of selectedRows) {
-            const result = (await postProjectMemberSetting({
-                projId: config.projId,
-                userId: row.dataset.userId
-            }, '/project/api/remove-member')).trim();
+        const result = (await postProjectMemberSetting({
+            projId: config.projId,
+            userIds: selectedRows.map(function(row) { return row.dataset.userId; }).join(',')
+        }, '/project/api/remove-members')).trim();
 
-            if (result !== 'SUCCESS') throw new Error(result || 'REMOVE_FAILED');
-            row.remove();
+        if (result !== 'success') {
+            const messages = {
+                forbidden: '프로젝트 멤버를 내보낼 권한이 없습니다.',
+                self_remove_locked: '본인은 멤버 관리에서 직접 내보낼 수 없습니다.',
+                leader_protected: '팀장은 내보낼 수 없습니다. 먼저 팀장을 위임해주세요.',
+                member_not_found: '현재 프로젝트에 없는 멤버가 포함되어 있습니다.',
+                project_unavailable: '삭제 예정 또는 사용할 수 없는 프로젝트에서는 멤버를 내보낼 수 없습니다.'
+            };
+            throw new Error(messages[result] || result || 'REMOVE_FAILED');
         }
 
+        selectedRows.forEach(function(row) { row.remove(); });
         updateProjectMemberTotal();
         exitProjectMemberMode(false);
         filterProjectSettingMembers();
     } catch (error) {
         console.error('프로젝트 멤버 내보내기 실패:', error);
-        alert('일부 멤버 내보내기에 실패했습니다. 화면을 새로고침해 상태를 확인해주세요.');
+        alert(error && error.message && !String(error.message).startsWith('HTTP_')
+            ? error.message
+            : '멤버 내보내기에 실패했습니다. 화면을 새로고침해 상태를 확인해주세요.');
     }
 }
 
@@ -1278,6 +1317,8 @@ function transferProjectLeader(userId, memberName) {
             alert('이미 현재 팀장입니다.');
         } else if (result === 'MEMBER_NOT_FOUND') {
             alert('프로젝트 멤버를 찾을 수 없습니다.');
+        } else if (result === 'PROJECT_UNAVAILABLE') {
+            alert('삭제 예정 또는 사용할 수 없는 프로젝트에서는 팀장을 위임할 수 없습니다.');
         } else {
             alert('팀장 권한 위임에 실패했습니다.');
         }
@@ -1345,7 +1386,7 @@ function openProjectDeleteRequestModal() {
     const dateText = document.getElementById('projectDeleteExpectedDate');
     if (!modal) return;
 
-    if (dateText) dateText.textContent = getProjectDeleteExpectedDate();
+    if (dateText) dateText.textContent = '참여자 유무에 따라 즉시 삭제 또는 30일 유예';
     if (input) input.value = '';
 
     modal.hidden = false;
@@ -1385,15 +1426,27 @@ function requestProjectDeletionFromSettings() {
         submit.setAttribute('aria-busy', 'true');
     }
 
-    fetch(config.contextPath + '/project/api/request-delete', {
+    fetch(config.contextPath + '/project/api/delete-policy', {
         method: 'POST',
         body: params
     })
     .then(function(res) { return res.text(); })
     .then(function(result) {
-        if (result === 'SUCCESS' || result === 'ALREADY_PENDING') {
+        if (result === 'DELETED') {
             closeProjectDeleteRequestModal();
-            alert('프로젝트 삭제가 신청되었습니다. 30일 안에는 취소할 수 있습니다.');
+            alert('참여자가 팀장 한 명뿐이라 프로젝트를 바로 삭제했습니다.');
+            if (config.wsId) {
+                location.href = config.contextPath + '/project/list?wsId=' + encodeURIComponent(config.wsId);
+            } else {
+                location.href = config.contextPath + '/project/manage';
+            }
+            return;
+        }
+        if (result === 'PENDING' || result === 'ALREADY_PENDING') {
+            closeProjectDeleteRequestModal();
+            alert(result === 'ALREADY_PENDING'
+                ? '이미 삭제 신청된 프로젝트입니다.'
+                : '다른 참여자가 있어 삭제 예정 상태로 전환했습니다. 30일 안에는 취소할 수 있습니다.');
             location.reload();
             return;
         }
@@ -1490,6 +1543,13 @@ document.addEventListener('DOMContentLoaded', function () {
     );
 
 
+    const commonProjectForm = getProjectSettingsCommonForm();
+    if (commonProjectForm && window.MoyoProjectForm) {
+        window.MoyoProjectForm.initialize(commonProjectForm, {
+            readOnly: Boolean((window.PROJECT_SETTINGS_CONFIG || {}).readOnlyProjectSettings)
+        });
+    }
+
     initializeProjectSettingDatePickers();
     window.requestAnimationFrame(function() {
         initializeProjectSettingsChangeTracking();
@@ -1508,6 +1568,13 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     applyProjectSettingsPermissionState();
+    if (commonProjectForm && window.MoyoProjectForm) {
+        window.MoyoProjectForm.setReadOnly(
+            commonProjectForm,
+            Boolean((window.PROJECT_SETTINGS_CONFIG || {}).readOnlyProjectSettings)
+                || !Boolean((window.PROJECT_SETTINGS_CONFIG || {}).canManageProject)
+        );
+    }
     const startDateInput = document.getElementById('settingStartDate');
     const endDateInput = document.getElementById('settingEndDate');
     [startDateInput, endDateInput].forEach(function(input) {

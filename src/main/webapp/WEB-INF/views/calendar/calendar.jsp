@@ -15,8 +15,8 @@
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/commonScopeSelector.css?v=common-scope-selector-v2">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common/commonQuickCalendarCreate.css?v=attendee-share-avatar-v40">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/moyoUi.css?v=moyo-ui-v3">
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common/commonContentRecordModal.css">
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/projectTask.css?v=task-modal-gutter-v37">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common/commonContentRecordModal.css?v=record-readonly-upload-hide-v85-20260920">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/projectTask.css?v=update-dot-layout-v13-20260920">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/projectTimeline.css?v=time-plan-picker-bound-color-v1">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/commonCalendarEventPreview.css?v=event-header-actions-unified-v1">
 
@@ -242,7 +242,7 @@
     <script src="${pageContext.request.contextPath}/js/common/commonContentRecordModal.js"></script>
     <script src="${pageContext.request.contextPath}/js/commonQuickCalendarCreate.js?v=attendee-share-avatar-v29"></script>
     <script src="${pageContext.request.contextPath}/js/projectPlanLoader.js?v=time-plan-picker-bound-color-v1"></script>
-    <script src="${pageContext.request.contextPath}/js/projectTask.js?v=terms-status-icon-v1"></script>
+    <script src="${pageContext.request.contextPath}/js/projectTask.js?v=update-dot-layout-v24-20260920"></script>
 
     <%-- Calendar V2 engine only. Legacy calendar.js/calendar.css remain intentionally excluded. --%>
     <script src="https://cdn.jsdelivr.net/npm/rrule@2.7.2/dist/es5/rrule.min.js"></script>

@@ -893,3 +893,23 @@ body.mypage-body::before {
         flex: 1 1 auto;
     }
 }
+
+
+/* Profile relation button: friend state icon */
+.profile-action.is-friend {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.profile-action.is-friend .profile-action__icon {
+    font-size: 12px;
+    line-height: 1;
+    color: currentColor;
+    flex: 0 0 auto;
+}
+
+.profile-action.is-friend::after {
+    margin-left: 1px;
+}

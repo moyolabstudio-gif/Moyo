@@ -16,7 +16,8 @@
 
         INSERT INTO PROJECTS (
             PROJ_ID, WS_ID, PROJ_NAME, PROJ_DESC, LEADER_ID,
-            PROJ_TYPE, PROJ_SCOPE, PROJ_CATEGORY, PROJ_CATEGORY_DETAIL
+            PROJ_TYPE, PROJ_SCOPE, PROJ_CATEGORY, PROJ_CATEGORY_DETAIL,
+            PROJ_ICON, ACCESS_SCOPE
         ) VALUES (
             #{projId, jdbcType=NUMERIC},
             #{wsId, jdbcType=NUMERIC},
@@ -26,7 +27,9 @@
             #{projType, jdbcType=VARCHAR},
             #{projScope, jdbcType=VARCHAR},
             #{projCategory, jdbcType=VARCHAR},
-            #{projCategoryDetail, jdbcType=VARCHAR}
+            #{projCategoryDetail, jdbcType=VARCHAR},
+            #{projIcon, jdbcType=VARCHAR},
+            #{accessScope, jdbcType=VARCHAR}
         )
     </insert>
 
@@ -47,6 +50,21 @@
             'Y'
         )
     </insert>
+
+    <select id="countProjectEvent" resultType="int">
+        SELECT COUNT(*)
+          FROM EVENTS
+         WHERE PROJ_ID = #{projId, jdbcType=NUMERIC}
+           AND ITEM_TYPE = 'PROJ'
+           AND EVENT_TYPE = 'PROJECT_PERIOD'
+    </select>
+
+    <delete id="deleteProjectEvent">
+        DELETE FROM EVENTS
+         WHERE PROJ_ID = #{projId, jdbcType=NUMERIC}
+           AND ITEM_TYPE = 'PROJ'
+           AND EVENT_TYPE = 'PROJECT_PERIOD'
+    </delete>
 
     <insert id="insertProjectMember">
         INSERT INTO PROJ_MEMBERS (PROJ_MEMBER_ID, PROJ_ID, USER_ID, PROJ_ROLE, PROJ_POSITION)
@@ -238,10 +256,27 @@
 
 <select id="selectProjectsByWsId" parameterType="long" resultType="com.springboot.project.dto.projectRequestDTO">
         SELECT
-            PROJ_ID,
-            PROJ_NAME,
-            WS_ID
-        FROM PROJECTS
+            p.PROJ_ID AS "projId",
+            p.PROJ_NAME AS "projName",
+            p.WS_ID AS "wsId",
+            p.PROJ_TYPE AS "projType",
+            p.PROJ_CATEGORY AS "projCategory",
+            NVL(p.PROJ_ICON, CASE UPPER(NVL(p.PROJ_CATEGORY, p.PROJ_TYPE))
+                WHEN 'WORK' THEN 'briefcase'
+                WHEN 'STUDY' THEN 'book-open'
+                WHEN 'TRAVEL' THEN 'plane'
+                WHEN 'EVENT' THEN 'calendar-star'
+                WHEN 'DEVELOPMENT' THEN 'code'
+                WHEN 'DESIGN' THEN 'pen-tool'
+                WHEN 'MUSIC' THEN 'music-note'
+                WHEN 'ART' THEN 'palette'
+                WHEN 'CONTENT' THEN 'video'
+                WHEN 'EXERCISE' THEN 'dumbbell'
+                WHEN 'HOBBY' THEN 'sparkles'
+                WHEN 'LIFE' THEN 'target'
+                ELSE 'shapes'
+            END) AS "projIcon"
+        FROM PROJECTS p
         WHERE WS_ID = #{wsId}
         ORDER BY PROJ_ID DESC
     </select>
@@ -252,6 +287,23 @@
             p.PROJ_ID AS "projId",
             p.PROJ_NAME AS "projName",
             p.WS_ID AS "wsId",
+            p.PROJ_TYPE AS "projType",
+            p.PROJ_CATEGORY AS "projCategory",
+            NVL(p.PROJ_ICON, CASE UPPER(NVL(p.PROJ_CATEGORY, p.PROJ_TYPE))
+                WHEN 'WORK' THEN 'briefcase'
+                WHEN 'STUDY' THEN 'book-open'
+                WHEN 'TRAVEL' THEN 'plane'
+                WHEN 'EVENT' THEN 'calendar-star'
+                WHEN 'DEVELOPMENT' THEN 'code'
+                WHEN 'DESIGN' THEN 'pen-tool'
+                WHEN 'MUSIC' THEN 'music-note'
+                WHEN 'ART' THEN 'palette'
+                WHEN 'CONTENT' THEN 'video'
+                WHEN 'EXERCISE' THEN 'dumbbell'
+                WHEN 'HOBBY' THEN 'sparkles'
+                WHEN 'LIFE' THEN 'target'
+                ELSE 'shapes'
+            END) AS "projIcon",
             TO_CHAR(pd.START_DT, 'YYYY-MM-DD') AS "startDate",
             TO_CHAR(pd.END_DT, 'YYYY-MM-DD') AS "endDate"
         FROM PROJECTS p
@@ -267,7 +319,7 @@
         ) pd ON pd.PROJ_ID = p.PROJ_ID
         WHERE p.WS_ID = #{wsId}
           AND NVL(p.STATUS, 'ACTIVE') = 'ACTIVE'
-          AND (pd.END_DT IS NULL OR TRUNC(pd.END_DT) &gt; TRUNC(SYSDATE))
+          AND (pd.END_DT IS NULL OR TRUNC(pd.END_DT) &gt;= TRUNC(SYSDATE))
         ORDER BY
             CASE
                 WHEN pd.START_DT IS NOT NULL AND TRUNC(pd.START_DT) &gt; TRUNC(SYSDATE) THEN 2
@@ -285,6 +337,23 @@
             p.PROJ_ID AS "projId",
             p.PROJ_NAME AS "projName",
             p.WS_ID AS "wsId",
+            p.PROJ_TYPE AS "projType",
+            p.PROJ_CATEGORY AS "projCategory",
+            NVL(p.PROJ_ICON, CASE UPPER(NVL(p.PROJ_CATEGORY, p.PROJ_TYPE))
+                WHEN 'WORK' THEN 'briefcase'
+                WHEN 'STUDY' THEN 'book-open'
+                WHEN 'TRAVEL' THEN 'plane'
+                WHEN 'EVENT' THEN 'calendar-star'
+                WHEN 'DEVELOPMENT' THEN 'code'
+                WHEN 'DESIGN' THEN 'pen-tool'
+                WHEN 'MUSIC' THEN 'music-note'
+                WHEN 'ART' THEN 'palette'
+                WHEN 'CONTENT' THEN 'video'
+                WHEN 'EXERCISE' THEN 'dumbbell'
+                WHEN 'HOBBY' THEN 'sparkles'
+                WHEN 'LIFE' THEN 'target'
+                ELSE 'shapes'
+            END) AS "projIcon",
             TO_CHAR(pd.START_DT, 'YYYY-MM-DD') AS "startDate",
             TO_CHAR(pd.END_DT, 'YYYY-MM-DD') AS "endDate"
         FROM PROJECTS p
@@ -322,6 +391,23 @@
             p.PROJ_ID AS "projId",
             p.PROJ_NAME AS "projName",
             p.WS_ID AS "wsId",
+            p.PROJ_TYPE AS "projType",
+            p.PROJ_CATEGORY AS "projCategory",
+            NVL(p.PROJ_ICON, CASE UPPER(NVL(p.PROJ_CATEGORY, p.PROJ_TYPE))
+                WHEN 'WORK' THEN 'briefcase'
+                WHEN 'STUDY' THEN 'book-open'
+                WHEN 'TRAVEL' THEN 'plane'
+                WHEN 'EVENT' THEN 'calendar-star'
+                WHEN 'DEVELOPMENT' THEN 'code'
+                WHEN 'DESIGN' THEN 'pen-tool'
+                WHEN 'MUSIC' THEN 'music-note'
+                WHEN 'ART' THEN 'palette'
+                WHEN 'CONTENT' THEN 'video'
+                WHEN 'EXERCISE' THEN 'dumbbell'
+                WHEN 'HOBBY' THEN 'sparkles'
+                WHEN 'LIFE' THEN 'target'
+                ELSE 'shapes'
+            END) AS "projIcon",
             NVL(UPPER(p.PROJ_SCOPE), CASE WHEN p.WS_ID IS NULL THEN 'PERSONAL' ELSE 'GROUP' END) AS "projScope",
             TO_CHAR(pd.START_DT, 'YYYY-MM-DD') AS "startDate",
             TO_CHAR(pd.END_DT, 'YYYY-MM-DD') AS "endDate"
@@ -360,7 +446,26 @@
             p.PROJ_ID DESC
     </select>
 
-    <select id="selectProjectListByWorkspaceId" parameterType="long" resultType="map">
+    <select id="selectProjectListByWorkspaceId" resultType="map">
+        WITH period_data AS (
+            SELECT PROJ_ID, MIN(START_DT) AS START_DT, MAX(END_DT) AS END_DT
+              FROM EVENTS
+             WHERE ITEM_TYPE = 'PROJ'
+               AND EVENT_TYPE = 'PROJECT_PERIOD'
+             GROUP BY PROJ_ID
+        ),
+        task_stats AS (
+            SELECT PROJ_ID,
+                   COUNT(*) AS TASK_TOTAL,
+                   SUM(CASE WHEN STATUS = 'DONE' THEN 1 ELSE 0 END) AS TASK_DONE
+              FROM PROJECT_TASKS
+             GROUP BY PROJ_ID
+        ),
+        member_stats AS (
+            SELECT PROJ_ID, COUNT(*) AS MEMBER_COUNT
+              FROM PROJ_MEMBERS
+             GROUP BY PROJ_ID
+        )
         SELECT
             p.PROJ_ID AS "PROJ_ID",
             p.WS_ID AS "WS_ID",
@@ -368,22 +473,139 @@
             p.PROJ_DESC AS "PROJ_DESC",
             p.PROJ_TYPE AS "PROJ_TYPE",
             p.PROJ_CATEGORY AS "PROJ_CATEGORY",
-            NVL(p.STATUS, 'ACTIVE') AS "DELETE_STATUS",
-            TO_CHAR(p.DELETE_DEADLINE_AT, 'YYYY-MM-DD') AS "DELETE_DEADLINE_DATE",
+            NVL(p.PROJ_ICON, CASE UPPER(NVL(p.PROJ_CATEGORY, p.PROJ_TYPE))
+                WHEN 'WORK' THEN 'briefcase'
+                WHEN 'STUDY' THEN 'book-open'
+                WHEN 'TRAVEL' THEN 'plane'
+                WHEN 'EVENT' THEN 'calendar-star'
+                WHEN 'DEVELOPMENT' THEN 'code'
+                WHEN 'DESIGN' THEN 'pen-tool'
+                WHEN 'MUSIC' THEN 'music-note'
+                WHEN 'ART' THEN 'palette'
+                WHEN 'CONTENT' THEN 'video'
+                WHEN 'EXERCISE' THEN 'dumbbell'
+                WHEN 'HOBBY' THEN 'sparkles'
+                WHEN 'LIFE' THEN 'target'
+                ELSE 'shapes'
+            END) AS "PROJ_ICON",
+            NVL(p.ACCESS_SCOPE, 'WORKSPACE_READ') AS "ACCESS_SCOPE",
+            CASE
+                WHEN NVL(w.STATUS, 'ACTIVE') = 'DELETE_PENDING' THEN 'DELETE_PENDING'
+                ELSE NVL(p.STATUS, 'ACTIVE')
+            END AS "DELETE_STATUS",
+            TO_CHAR(
+                CASE
+                    WHEN NVL(w.STATUS, 'ACTIVE') = 'DELETE_PENDING'
+                        THEN w.DELETE_DEADLINE_AT
+                    ELSE p.DELETE_DEADLINE_AT
+                END,
+                'YYYY-MM-DD'
+            ) AS "DELETE_DEADLINE_DATE",
             p.LEADER_ID AS "LEADER_ID",
             CASE
                 WHEN NVL(leader_wp.USE_ACCOUNT_PROFILE, 'Y') = 'N'
                     THEN NVL(leader_wp.DISPLAY_NAME, u.USER_NAME)
                 ELSE u.USER_NAME
             END AS "LEADER_NAME",
+            CASE
+                WHEN NVL(leader_wp.USE_ACCOUNT_PROFILE, 'Y') = 'N' THEN leader_wp.PROFILE_IMAGE_PATH
+                ELSE u.PROFILE_IMAGE_PATH
+            END AS "LEADER_PROFILE_IMAGE_PATH",
             TO_CHAR(pd.START_DT, 'YYYY-MM-DD') AS "START_DATE",
             TO_CHAR(pd.END_DT, 'YYYY-MM-DD') AS "END_DATE",
+            CASE WHEN pd.START_DT IS NOT NULL AND pd.END_DT IS NOT NULL THEN 'Y' ELSE 'N' END AS "PERIOD_ENABLED_YN",
+            CASE
+                WHEN pd.START_DT IS NOT NULL AND TRUNC(pd.START_DT) > TRUNC(SYSDATE) THEN TRUNC(pd.START_DT) - TRUNC(SYSDATE)
+                WHEN pd.END_DT IS NOT NULL AND TRUNC(pd.END_DT) >= TRUNC(SYSDATE) THEN TRUNC(pd.END_DT) - TRUNC(SYSDATE)
+                ELSE NULL
+            END AS "DDAY",
             CASE
                 WHEN pd.START_DT IS NOT NULL AND TRUNC(pd.START_DT) &gt; TRUNC(SYSDATE) THEN 'SCHEDULED'
-                WHEN pd.END_DT IS NOT NULL AND TRUNC(pd.END_DT) &lt;= TRUNC(SYSDATE) THEN 'COMPLETED'
+                WHEN pd.END_DT IS NOT NULL AND TRUNC(pd.END_DT) &lt; TRUNC(SYSDATE) THEN 'COMPLETED'
                 ELSE 'IN_PROGRESS'
             END AS "PROJECT_STATUS",
-            (SELECT COUNT(*) FROM PROJ_MEMBERS pm WHERE pm.PROJ_ID = p.PROJ_ID) AS "MEMBER_COUNT",
+            NVL(ms.MEMBER_COUNT, 0) AS "MEMBER_COUNT",
+            NVL(ts.TASK_TOTAL, 0) AS "TASK_TOTAL",
+            NVL(ts.TASK_DONE, 0) AS "TASK_DONE",
+            CASE
+                WHEN NVL(ts.TASK_TOTAL, 0) = 0 THEN NULL
+                ELSE ROUND(ts.TASK_DONE * 100 / ts.TASK_TOTAL)
+            END AS "PROGRESS_PERCENT",
+            CASE
+                WHEN #{viewerUserId, jdbcType=NUMERIC} IS NULL THEN 'UNKNOWN'
+                WHEN (
+                    NVL(p.STATUS, 'ACTIVE') = 'DELETE_PENDING'
+                    OR NVL(w.STATUS, 'ACTIVE') = 'DELETE_PENDING'
+                )
+                AND (
+                    p.LEADER_ID = #{viewerUserId, jdbcType=NUMERIC}
+                    OR EXISTS (
+                        SELECT 1 FROM PROJ_MEMBERS viewer_pm
+                         WHERE viewer_pm.PROJ_ID = p.PROJ_ID
+                           AND viewer_pm.USER_ID = #{viewerUserId, jdbcType=NUMERIC}
+                    )
+                    OR NVL(p.ACCESS_SCOPE, 'WORKSPACE_READ') = 'WORKSPACE_READ'
+                ) THEN 'READ_ONLY'
+                WHEN p.LEADER_ID = #{viewerUserId, jdbcType=NUMERIC} THEN 'MANAGE'
+                WHEN EXISTS (
+                    SELECT 1 FROM PROJ_MEMBERS viewer_pm
+                     WHERE viewer_pm.PROJ_ID = p.PROJ_ID
+                       AND viewer_pm.USER_ID = #{viewerUserId, jdbcType=NUMERIC}
+                ) THEN 'PARTICIPANT'
+                WHEN NVL(p.ACCESS_SCOPE, 'WORKSPACE_READ') = 'WORKSPACE_READ' THEN 'READ_ONLY'
+                ELSE 'LOCKED'
+            END AS "ACCESS_STATE",
+            CASE
+                WHEN #{viewerUserId, jdbcType=NUMERIC} IS NOT NULL
+                 AND (p.LEADER_ID = #{viewerUserId, jdbcType=NUMERIC}
+                      OR EXISTS (
+                          SELECT 1 FROM PROJ_MEMBERS viewer_pm
+                           WHERE viewer_pm.PROJ_ID = p.PROJ_ID
+                             AND viewer_pm.USER_ID = #{viewerUserId, jdbcType=NUMERIC}
+                      ))
+                    THEN 'Y'
+                ELSE 'N'
+            END AS "IS_PARTICIPANT_YN",
+            CASE
+                WHEN #{viewerUserId, jdbcType=NUMERIC} IS NOT NULL
+                 AND (
+                    (
+                        NVL(p.STATUS, 'ACTIVE') = 'DELETE_PENDING'
+                        OR NVL(w.STATUS, 'ACTIVE') = 'DELETE_PENDING'
+                    )
+                    AND (
+                        p.LEADER_ID = #{viewerUserId, jdbcType=NUMERIC}
+                        OR EXISTS (
+                            SELECT 1 FROM PROJ_MEMBERS viewer_pm
+                             WHERE viewer_pm.PROJ_ID = p.PROJ_ID
+                               AND viewer_pm.USER_ID = #{viewerUserId, jdbcType=NUMERIC}
+                        )
+                        OR NVL(p.ACCESS_SCOPE, 'WORKSPACE_READ') = 'WORKSPACE_READ'
+                    )
+                    OR (
+                        NVL(p.ACCESS_SCOPE, 'WORKSPACE_READ') = 'WORKSPACE_READ'
+                        AND p.LEADER_ID != #{viewerUserId, jdbcType=NUMERIC}
+                        AND NOT EXISTS (
+                            SELECT 1 FROM PROJ_MEMBERS viewer_pm
+                             WHERE viewer_pm.PROJ_ID = p.PROJ_ID
+                               AND viewer_pm.USER_ID = #{viewerUserId, jdbcType=NUMERIC}
+                        )
+                    )
+                 )
+                    THEN 'Y'
+                ELSE 'N'
+            END AS "READ_ONLY_YN",
+            CASE
+                WHEN #{viewerUserId, jdbcType=NUMERIC} IS NULL THEN 'N'
+                WHEN p.LEADER_ID = #{viewerUserId, jdbcType=NUMERIC} THEN 'Y'
+                WHEN EXISTS (
+                    SELECT 1 FROM PROJ_MEMBERS viewer_pm
+                     WHERE viewer_pm.PROJ_ID = p.PROJ_ID
+                       AND viewer_pm.USER_ID = #{viewerUserId, jdbcType=NUMERIC}
+                ) THEN 'Y'
+                WHEN NVL(p.ACCESS_SCOPE, 'WORKSPACE_READ') = 'WORKSPACE_READ' THEN 'Y'
+                ELSE 'N'
+            END AS "CAN_ENTER_YN",
             (
                 SELECT LISTAGG(
                            CASE
@@ -413,25 +635,19 @@
                 WHERE pm2.PROJ_ID = p.PROJ_ID
             ) AS "MEMBER_NAMES"
         FROM PROJECTS p
+        JOIN WORKSPACES w ON w.WS_ID = p.WS_ID
         LEFT JOIN USERS u ON u.USER_ID = p.LEADER_ID
         LEFT JOIN WS_MEMBER_PROFILES leader_wp
           ON leader_wp.WS_ID = p.WS_ID
          AND leader_wp.USER_ID = p.LEADER_ID
-        LEFT JOIN (
-            SELECT
-                PROJ_ID,
-                MIN(START_DT) AS START_DT,
-                MAX(END_DT) AS END_DT
-            FROM EVENTS
-            WHERE ITEM_TYPE = 'PROJ'
-              AND EVENT_TYPE = 'PROJECT_PERIOD'
-            GROUP BY PROJ_ID
-        ) pd ON pd.PROJ_ID = p.PROJ_ID
+        LEFT JOIN period_data pd ON pd.PROJ_ID = p.PROJ_ID
+        LEFT JOIN task_stats ts ON ts.PROJ_ID = p.PROJ_ID
+        LEFT JOIN member_stats ms ON ms.PROJ_ID = p.PROJ_ID
         WHERE p.WS_ID = #{wsId}
         ORDER BY
             CASE
                 WHEN pd.START_DT IS NOT NULL AND TRUNC(pd.START_DT) &gt; TRUNC(SYSDATE) THEN 2
-                WHEN pd.END_DT IS NOT NULL AND TRUNC(pd.END_DT) &lt;= TRUNC(SYSDATE) THEN 3
+                WHEN pd.END_DT IS NOT NULL AND TRUNC(pd.END_DT) &lt; TRUNC(SYSDATE) THEN 3
                 ELSE 1
             END,
             CASE
@@ -444,13 +660,32 @@
                     THEN pd.START_DT
             END ASC NULLS LAST,
             CASE
-                WHEN pd.END_DT IS NOT NULL AND TRUNC(pd.END_DT) &lt;= TRUNC(SYSDATE)
+                WHEN pd.END_DT IS NOT NULL AND TRUNC(pd.END_DT) &lt; TRUNC(SYSDATE)
                     THEN pd.END_DT
             END DESC NULLS LAST,
             p.PROJ_ID DESC
     </select>
 
     <select id="selectPersonalProjects" resultType="map">
+        WITH period_data AS (
+            SELECT PROJ_ID, MIN(START_DT) AS START_DT, MAX(END_DT) AS END_DT
+              FROM EVENTS
+             WHERE ITEM_TYPE = 'PROJ'
+               AND EVENT_TYPE = 'PROJECT_PERIOD'
+             GROUP BY PROJ_ID
+        ),
+        task_stats AS (
+            SELECT PROJ_ID,
+                   COUNT(*) AS TASK_TOTAL,
+                   SUM(CASE WHEN STATUS = 'DONE' THEN 1 ELSE 0 END) AS TASK_DONE
+              FROM PROJECT_TASKS
+             GROUP BY PROJ_ID
+        ),
+        member_stats AS (
+            SELECT PROJ_ID, COUNT(*) AS MEMBER_COUNT
+              FROM PROJ_MEMBERS
+             GROUP BY PROJ_ID
+        )
         SELECT
             p.PROJ_ID AS "PROJ_ID",
             p.WS_ID AS "WS_ID",
@@ -458,53 +693,80 @@
             p.PROJ_DESC AS "PROJ_DESC",
             p.PROJ_TYPE AS "PROJ_TYPE",
             p.PROJ_CATEGORY AS "PROJ_CATEGORY",
+            NVL(p.PROJ_ICON, CASE UPPER(NVL(p.PROJ_CATEGORY, p.PROJ_TYPE))
+                WHEN 'WORK' THEN 'briefcase'
+                WHEN 'STUDY' THEN 'book-open'
+                WHEN 'TRAVEL' THEN 'plane'
+                WHEN 'EVENT' THEN 'calendar-star'
+                WHEN 'DEVELOPMENT' THEN 'code'
+                WHEN 'DESIGN' THEN 'pen-tool'
+                WHEN 'MUSIC' THEN 'music-note'
+                WHEN 'ART' THEN 'palette'
+                WHEN 'CONTENT' THEN 'video'
+                WHEN 'EXERCISE' THEN 'dumbbell'
+                WHEN 'HOBBY' THEN 'sparkles'
+                WHEN 'LIFE' THEN 'target'
+                ELSE 'shapes'
+            END) AS "PROJ_ICON",
+            NVL(p.ACCESS_SCOPE, 'OWNER_ONLY') AS "ACCESS_SCOPE",
             NVL(p.STATUS, 'ACTIVE') AS "DELETE_STATUS",
             TO_CHAR(p.DELETE_DEADLINE_AT, 'YYYY-MM-DD') AS "DELETE_DEADLINE_DATE",
             NVL(UPPER(p.PROJ_SCOPE), CASE WHEN p.WS_ID IS NULL THEN 'PERSONAL' ELSE 'GROUP' END) AS "PROJ_SCOPE",
             p.LEADER_ID AS "LEADER_ID",
             u.USER_NAME AS "LEADER_NAME",
+            u.PROFILE_IMAGE_PATH AS "LEADER_PROFILE_IMAGE_PATH",
             w.WS_NAME AS "WS_NAME",
             w.WS_IMAGE_PATH AS "WS_IMAGE_PATH",
             TO_CHAR(pd.START_DT, 'YYYY-MM-DD') AS "START_DATE",
             TO_CHAR(pd.END_DT, 'YYYY-MM-DD') AS "END_DATE",
+            CASE WHEN pd.START_DT IS NOT NULL AND pd.END_DT IS NOT NULL THEN 'Y' ELSE 'N' END AS "PERIOD_ENABLED_YN",
+            CASE
+                WHEN pd.START_DT IS NOT NULL AND TRUNC(pd.START_DT) > TRUNC(SYSDATE) THEN TRUNC(pd.START_DT) - TRUNC(SYSDATE)
+                WHEN pd.END_DT IS NOT NULL AND TRUNC(pd.END_DT) >= TRUNC(SYSDATE) THEN TRUNC(pd.END_DT) - TRUNC(SYSDATE)
+                ELSE NULL
+            END AS "DDAY",
             CASE
                 WHEN pd.START_DT IS NOT NULL AND TRUNC(pd.START_DT) &gt; TRUNC(SYSDATE) THEN 'SCHEDULED'
-                WHEN pd.END_DT IS NOT NULL AND TRUNC(pd.END_DT) &lt;= TRUNC(SYSDATE) THEN 'COMPLETED'
+                WHEN pd.END_DT IS NOT NULL AND TRUNC(pd.END_DT) &lt; TRUNC(SYSDATE) THEN 'COMPLETED'
                 ELSE 'IN_PROGRESS'
             END AS "PROJECT_STATUS",
-            (SELECT COUNT(*) FROM PROJ_MEMBERS pm WHERE pm.PROJ_ID = p.PROJ_ID) AS "MEMBER_COUNT",
-            (SELECT COUNT(*) FROM PROJECT_TASKS t WHERE t.PROJ_ID = p.PROJ_ID) AS "TASK_TOTAL",
-            (SELECT COUNT(*) FROM PROJECT_TASKS t WHERE t.PROJ_ID = p.PROJ_ID AND t.STATUS = 'DONE') AS "TASK_DONE",
+            NVL(ms.MEMBER_COUNT, 0) AS "MEMBER_COUNT",
+            NVL(ts.TASK_TOTAL, 0) AS "TASK_TOTAL",
+            NVL(ts.TASK_DONE, 0) AS "TASK_DONE",
+            CASE
+                WHEN NVL(ts.TASK_TOTAL, 0) = 0 THEN NULL
+                ELSE ROUND(ts.TASK_DONE * 100 / ts.TASK_TOTAL)
+            END AS "PROGRESS_PERCENT",
+            'MANAGE' AS "ACCESS_STATE",
+            'Y' AS "IS_PARTICIPANT_YN",
+            'N' AS "READ_ONLY_YN",
+            'Y' AS "CAN_ENTER_YN",
             (
                 SELECT LISTAGG(u2.USER_NAME, ', ') WITHIN GROUP (ORDER BY u2.USER_NAME)
-                FROM PROJ_MEMBERS pm2
-                JOIN USERS u2 ON u2.USER_ID = pm2.USER_ID
-                WHERE pm2.PROJ_ID = p.PROJ_ID
+                  FROM PROJ_MEMBERS pm2
+                  JOIN USERS u2 ON u2.USER_ID = pm2.USER_ID
+                 WHERE pm2.PROJ_ID = p.PROJ_ID
             ) AS "MEMBER_NAMES"
         FROM PROJECTS p
         LEFT JOIN USERS u ON u.USER_ID = p.LEADER_ID
         LEFT JOIN WORKSPACES w ON w.WS_ID = p.WS_ID
-        LEFT JOIN (
-            SELECT PROJ_ID, MIN(START_DT) AS START_DT, MAX(END_DT) AS END_DT
-            FROM EVENTS
-            WHERE ITEM_TYPE = 'PROJ'
-              AND EVENT_TYPE = 'PROJECT_PERIOD'
-            GROUP BY PROJ_ID
-        ) pd ON pd.PROJ_ID = p.PROJ_ID
+        LEFT JOIN period_data pd ON pd.PROJ_ID = p.PROJ_ID
+        LEFT JOIN task_stats ts ON ts.PROJ_ID = p.PROJ_ID
+        LEFT JOIN member_stats ms ON ms.PROJ_ID = p.PROJ_ID
         WHERE NVL(UPPER(p.PROJ_SCOPE), CASE WHEN p.WS_ID IS NULL THEN 'PERSONAL' ELSE 'GROUP' END) = 'PERSONAL'
           AND (
               p.LEADER_ID = #{userId}
               OR EXISTS (
                   SELECT 1
-                  FROM PROJ_MEMBERS pm
-                  WHERE pm.PROJ_ID = p.PROJ_ID
-                    AND pm.USER_ID = #{userId}
+                    FROM PROJ_MEMBERS pm
+                   WHERE pm.PROJ_ID = p.PROJ_ID
+                     AND pm.USER_ID = #{userId}
               )
           )
         ORDER BY
             CASE
                 WHEN pd.START_DT IS NOT NULL AND TRUNC(pd.START_DT) &gt; TRUNC(SYSDATE) THEN 2
-                WHEN pd.END_DT IS NOT NULL AND TRUNC(pd.END_DT) &lt;= TRUNC(SYSDATE) THEN 3
+                WHEN pd.END_DT IS NOT NULL AND TRUNC(pd.END_DT) &lt; TRUNC(SYSDATE) THEN 3
                 ELSE 1
             END,
             NVL(pd.START_DT, SYSDATE) DESC,
@@ -526,6 +788,12 @@
         SELECT
             t.TASK_ID AS "TASK_ID", t.PROJ_ID AS "PROJ_ID", t.TITLE AS "TITLE",
             t.DESCRIPTION AS "DESCRIPTION", t.STATUS AS "STATUS",
+            t.CREATED_BY AS "CREATED_BY",
+            CASE
+                WHEN p.WS_ID IS NOT NULL AND NVL(cwp.USE_ACCOUNT_PROFILE, 'Y') = 'N'
+                    THEN NVL(cwp.DISPLAY_NAME, cu.USER_NAME)
+                ELSE cu.USER_NAME
+            END AS "CREATOR_NAME",
             t.ASSIGNEE_ID AS "USER_ID", t.ASSIGNEE_ID AS "ASSIGNEE_ID",
             CASE
                 WHEN p.WS_ID IS NOT NULL AND NVL(wp.USE_ACCOUNT_PROFILE, 'Y') = 'N'
@@ -561,6 +829,8 @@
         LEFT JOIN USERS u ON u.USER_ID = t.ASSIGNEE_ID
         LEFT JOIN PROJ_MEMBERS pm ON pm.PROJ_ID = t.PROJ_ID AND pm.USER_ID = t.ASSIGNEE_ID
         LEFT JOIN WS_MEMBER_PROFILES wp ON wp.WS_ID = p.WS_ID AND wp.USER_ID = t.ASSIGNEE_ID
+        LEFT JOIN USERS cu ON cu.USER_ID = t.CREATED_BY
+        LEFT JOIN WS_MEMBER_PROFILES cwp ON cwp.WS_ID = p.WS_ID AND cwp.USER_ID = t.CREATED_BY
         WHERE t.PROJ_ID = #{projId, jdbcType=NUMERIC}
         ORDER BY
             CASE t.STATUS
@@ -1132,6 +1402,20 @@
     </insert>
 
     <select id="selectProjectById" resultType="com.springboot.project.dto.projectRequestDTO">
+        WITH period_data AS (
+            SELECT PROJ_ID, MIN(START_DT) AS START_DT, MAX(END_DT) AS END_DT
+              FROM EVENTS
+             WHERE ITEM_TYPE = 'PROJ'
+               AND EVENT_TYPE = 'PROJECT_PERIOD'
+             GROUP BY PROJ_ID
+        ),
+        task_stats AS (
+            SELECT PROJ_ID,
+                   COUNT(*) AS TASK_TOTAL,
+                   SUM(CASE WHEN STATUS = 'DONE' THEN 1 ELSE 0 END) AS TASK_DONE
+              FROM PROJECT_TASKS
+             GROUP BY PROJ_ID
+        )
         SELECT
             p.PROJ_ID,
             p.WS_ID,
@@ -1142,28 +1426,72 @@
             p.PROJ_SCOPE,
             p.PROJ_CATEGORY,
             p.PROJ_CATEGORY_DETAIL,
-            NVL(p.STATUS, 'ACTIVE') AS STATUS,
-            p.DELETE_REQUESTED_AT,
-            p.DELETE_DEADLINE_AT,
-            TO_CHAR(p.DELETE_DEADLINE_AT, 'YYYY-MM-DD') AS DELETE_DEADLINE_DATE,
-            TO_CHAR(e.START_DT, 'YYYY-MM-DD') AS START_DATE,
-            TO_CHAR(e.END_DT, 'YYYY-MM-DD') AS END_DATE
+            NVL(p.PROJ_ICON, CASE UPPER(NVL(p.PROJ_CATEGORY, p.PROJ_TYPE))
+                WHEN 'WORK' THEN 'briefcase'
+                WHEN 'STUDY' THEN 'book-open'
+                WHEN 'TRAVEL' THEN 'plane'
+                WHEN 'EVENT' THEN 'calendar-star'
+                WHEN 'DEVELOPMENT' THEN 'code'
+                WHEN 'DESIGN' THEN 'pen-tool'
+                WHEN 'MUSIC' THEN 'music-note'
+                WHEN 'ART' THEN 'palette'
+                WHEN 'CONTENT' THEN 'video'
+                WHEN 'EXERCISE' THEN 'dumbbell'
+                WHEN 'HOBBY' THEN 'sparkles'
+                WHEN 'LIFE' THEN 'target'
+                ELSE 'shapes'
+            END) AS PROJ_ICON,
+            NVL(p.ACCESS_SCOPE, CASE WHEN p.WS_ID IS NULL THEN 'OWNER_ONLY' ELSE 'WORKSPACE_READ' END) AS ACCESS_SCOPE,
+            CASE
+                WHEN NVL(w.STATUS, 'ACTIVE') = 'DELETE_PENDING' THEN 'DELETE_PENDING'
+                ELSE NVL(p.STATUS, 'ACTIVE')
+            END AS STATUS,
+            CASE
+                WHEN NVL(w.STATUS, 'ACTIVE') = 'DELETE_PENDING' THEN w.DELETE_REQUESTED_AT
+                ELSE p.DELETE_REQUESTED_AT
+            END AS DELETE_REQUESTED_AT,
+            CASE
+                WHEN NVL(w.STATUS, 'ACTIVE') = 'DELETE_PENDING' THEN w.DELETE_DEADLINE_AT
+                ELSE p.DELETE_DEADLINE_AT
+            END AS DELETE_DEADLINE_AT,
+            TO_CHAR(
+                CASE
+                    WHEN NVL(w.STATUS, 'ACTIVE') = 'DELETE_PENDING' THEN w.DELETE_DEADLINE_AT
+                    ELSE p.DELETE_DEADLINE_AT
+                END,
+                'YYYY-MM-DD'
+            ) AS DELETE_DEADLINE_DATE,
+            TO_CHAR(pd.START_DT, 'YYYY-MM-DD') AS START_DATE,
+            TO_CHAR(pd.END_DT, 'YYYY-MM-DD') AS END_DATE,
+            CASE WHEN pd.START_DT IS NOT NULL AND pd.END_DT IS NOT NULL THEN 'Y' ELSE 'N' END AS PERIOD_ENABLED_YN,
+            NVL(ts.TASK_TOTAL, 0) AS TASK_TOTAL,
+            NVL(ts.TASK_DONE, 0) AS TASK_DONE,
+            CASE
+                WHEN NVL(ts.TASK_TOTAL, 0) = 0 THEN NULL
+                ELSE ROUND(ts.TASK_DONE * 100 / ts.TASK_TOTAL)
+            END AS PROGRESS_PERCENT
         FROM PROJECTS p
-        LEFT JOIN (
-            SELECT
-                PROJ_ID,
-                MIN(START_DT) AS START_DT,
-                MAX(END_DT) AS END_DT
-            FROM EVENTS
-            WHERE ITEM_TYPE = 'PROJ'
-              AND EVENT_TYPE = 'PROJECT_PERIOD'
-            GROUP BY PROJ_ID
-        ) e ON p.PROJ_ID = e.PROJ_ID
+        LEFT JOIN WORKSPACES w ON w.WS_ID = p.WS_ID
+        LEFT JOIN period_data pd ON pd.PROJ_ID = p.PROJ_ID
+        LEFT JOIN task_stats ts ON ts.PROJ_ID = p.PROJ_ID
         WHERE p.PROJ_ID = #{projId}
     </select>
 
     <select id="getTaskDetail" parameterType="long" resultType="map">
         SELECT t.TASK_ID AS "TASK_ID", t.PROJ_ID AS "PROJ_ID", t.TITLE AS "TITLE", t.DESCRIPTION AS "DESCRIPTION", t.STATUS AS "STATUS",
+               t.CREATED_BY AS "CREATED_BY",
+               CASE
+                   WHEN p.WS_ID IS NOT NULL AND NVL(cwp.USE_ACCOUNT_PROFILE, 'Y') = 'N'
+                       THEN NVL(cwp.DISPLAY_NAME, cu.USER_NAME)
+                   ELSE cu.USER_NAME
+               END AS "CREATOR_NAME",
+               CASE
+                   WHEN p.WS_ID IS NOT NULL AND NVL(cwp.USE_ACCOUNT_PROFILE, 'Y') = 'N'
+                       THEN cwp.PROFILE_IMAGE_PATH
+                   WHEN NVL(cu.PROFILE_AVATAR_TYPE, 'DEFAULT') = 'IMAGE'
+                       THEN cu.PROFILE_IMAGE_PATH
+                   ELSE NULL
+               END AS "CREATOR_PROFILE_IMAGE_PATH",
                t.ASSIGNEE_ID AS "USER_ID", t.ASSIGNEE_ID AS "ASSIGNEE_ID",
                CASE
                    WHEN p.WS_ID IS NOT NULL AND NVL(wp.USE_ACCOUNT_PROFILE, 'Y') = 'N'
@@ -1186,6 +1514,8 @@
                CASE WHEN t.STATUS!='DONE' AND t.END_AT IS NOT NULL AND t.END_AT&lt;SYSDATE THEN 'Y' ELSE 'N' END AS "DELAYED_YN", t.SORT_ORDER AS "SORT_ORDER", 0 AS "PROGRESS"
           FROM PROJECT_TASKS t
           JOIN PROJECTS p ON p.PROJ_ID=t.PROJ_ID
+          LEFT JOIN USERS cu ON cu.USER_ID=t.CREATED_BY
+          LEFT JOIN WS_MEMBER_PROFILES cwp ON cwp.WS_ID=p.WS_ID AND cwp.USER_ID=t.CREATED_BY
           LEFT JOIN USERS u ON u.USER_ID=t.ASSIGNEE_ID
           LEFT JOIN PROJ_MEMBERS pm ON pm.PROJ_ID=t.PROJ_ID AND pm.USER_ID=t.ASSIGNEE_ID
           LEFT JOIN WS_MEMBER_PROFILES wp ON wp.WS_ID=p.WS_ID AND wp.USER_ID=t.ASSIGNEE_ID
@@ -1217,13 +1547,16 @@
             PROJ_TYPE = NVL(#{projType, jdbcType=VARCHAR}, PROJ_TYPE),
             PROJ_SCOPE = NVL(#{projScope, jdbcType=VARCHAR}, PROJ_SCOPE),
             PROJ_CATEGORY = NVL(#{projCategory, jdbcType=VARCHAR}, PROJ_CATEGORY),
-            PROJ_CATEGORY_DETAIL = NULL
+            PROJ_CATEGORY_DETAIL = NULL,
+            PROJ_ICON = NVL(#{projIcon, jdbcType=VARCHAR}, PROJ_ICON),
+            ACCESS_SCOPE = NVL(#{accessScope, jdbcType=VARCHAR}, ACCESS_SCOPE)
         WHERE PROJ_ID = #{projId, jdbcType=NUMERIC}
     </update>
 
     <update id="updateProjectEvent">
         UPDATE EVENTS
         SET
+            TITLE = #{projName, jdbcType=VARCHAR},
             START_DT = TO_DATE(#{startDate}, 'YYYY-MM-DD'),
             END_DT   = TO_DATE(#{endDate}, 'YYYY-MM-DD')
         WHERE PROJ_ID = #{projId}
@@ -1571,6 +1904,43 @@
                       FROM POLLS p
                      WHERE p.PROJ_ID = #{projId, jdbcType=NUMERIC}
                 ))
+    </delete>
+
+    <!-- 프로젝트 기록 대상 하위 FK 정리: LINK/LOCATION -> ITEM -> TARGET -->
+    <delete id="deleteProjectRecordLinksForFinalDelete">
+        DELETE FROM CONTENT_RECORD_LINKS l
+         WHERE l.RECORD_ITEM_ID IN (
+               SELECT i.RECORD_ITEM_ID
+                 FROM CONTENT_RECORD_ITEMS i
+                 JOIN CONTENT_RECORD_TARGETS t
+                   ON t.RECORD_TARGET_ID = i.RECORD_TARGET_ID
+                WHERE t.PROJ_ID = #{projId, jdbcType=NUMERIC}
+         )
+    </delete>
+
+    <delete id="deleteProjectRecordLocationsForFinalDelete">
+        DELETE FROM CONTENT_RECORD_LOCATIONS l
+         WHERE l.RECORD_ITEM_ID IN (
+               SELECT i.RECORD_ITEM_ID
+                 FROM CONTENT_RECORD_ITEMS i
+                 JOIN CONTENT_RECORD_TARGETS t
+                   ON t.RECORD_TARGET_ID = i.RECORD_TARGET_ID
+                WHERE t.PROJ_ID = #{projId, jdbcType=NUMERIC}
+         )
+    </delete>
+
+    <delete id="deleteProjectRecordItemsForFinalDelete">
+        DELETE FROM CONTENT_RECORD_ITEMS i
+         WHERE i.RECORD_TARGET_ID IN (
+               SELECT t.RECORD_TARGET_ID
+                 FROM CONTENT_RECORD_TARGETS t
+                WHERE t.PROJ_ID = #{projId, jdbcType=NUMERIC}
+         )
+    </delete>
+
+    <delete id="deleteProjectRecordTargetsForFinalDelete">
+        DELETE FROM CONTENT_RECORD_TARGETS
+         WHERE PROJ_ID = #{projId, jdbcType=NUMERIC}
     </delete>
 
     <!-- 20-25: 프로젝트 고유 데이터 삭제 순서 -->

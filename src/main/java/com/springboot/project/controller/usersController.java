@@ -429,7 +429,10 @@ public class usersController {
 
 	    model.addAttribute("mypageUser", profileUser);
 	    model.addAttribute("isOwnProfile", isOwnProfile);
-	    model.addAttribute("showProfileEmail", isOwnProfile);
+	    // 프로필 연락/생일 정보는 본인과 ACCEPTED 친구에게만 공개한다.
+	    // 비친구에게는 JSP에서 해당 메타 영역 자체를 렌더링하지 않는다.
+	    model.addAttribute("showProfileEmail", isOwnProfile || acceptedFriend);
+	    model.addAttribute("showProfileBirth", isOwnProfile || acceptedFriend);
 	    model.addAttribute("profileOwnerId", profileUser.getUserId());
 	    model.addAttribute("photosVisible", photosVisible);
 	    model.addAttribute("groupsVisible", groupsVisible);

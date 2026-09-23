@@ -121,7 +121,10 @@ window.updateWeeklyPlanFromTimeGrid = async function(plan, dayOfWeek, startMinut
         repeatEndDate: source.repeatEndDate || null,
         color: source.color,
         activeYn: source.activeYn,
-        sortOrder: Number(source.sortOrder || 1)
+        sortOrder: Number(source.sortOrder || 1),
+        recordEnabledYn: source.recordEnabledYn || null,
+        recordVisibility: source.recordVisibility || null,
+        editorUserIds: Array.isArray(source.editorUserIds) ? source.editorUserIds.map(Number) : null
     };
     const response = await fetch(getWeeklyPlanApiUrl('/' + encodeURIComponent(id)), {
         method: 'PUT',

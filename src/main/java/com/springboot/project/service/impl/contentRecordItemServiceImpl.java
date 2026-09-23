@@ -49,7 +49,13 @@ public class contentRecordItemServiceImpl implements IcontentRecordItemService {
         contentRecordItemDTO current=itemDAO.selectItem(targetId,recordItemId,userId);
         if(current==null||current.getContentId()==null) throw new IllegalArgumentException("수정할 노트를 찾을 수 없습니다.");
         if(same(current.getTitle(),title)&&same(current.getPreviewContent(),input.getPreviewContent())) return current;
-        if(itemDAO.updateNoteContent(targetId,recordItemId,title,input.getPreviewContent(),userId)<=0) throw new IllegalArgumentException("수정할 노트를 찾을 수 없습니다.");
+
+        // 사용자가 편집을 시작했을 때 보았던 제목/본문을 조건으로 UPDATE한다.
+        // 다른 사용자가 먼저 저장했다면 현재 DB 값이 base 값과 달라져 UPDATE 0건이 되고,
+        // 호출자는 409 Conflict로 처리하여 조용한 덮어쓰기를 막는다.
+        String baseTitle=input.getBaseTitle()!=null?input.getBaseTitle():current.getTitle();
+        String baseContent=input.getBaseContent()!=null?input.getBaseContent():current.getPreviewContent();
+        if(itemDAO.updateNoteContent(targetId,recordItemId,title,input.getPreviewContent(),userId,baseTitle,baseContent)<=0) return null;
         itemDAO.updateItemTitle(targetId,recordItemId,title);
         noteService.recordCurrentNoteVersion(current.getContentId(),userId,"UPDATE",null);
         return itemDAO.selectItem(targetId,recordItemId,userId);

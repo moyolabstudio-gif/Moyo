@@ -336,8 +336,7 @@
                 ? `<span class="is-personal photo-grid-card__collected" title="${escapeHtml(sourceCreatorName ? sourceCreatorName + '에게서 담은 사진' : '담아온 사진')}" aria-label="${escapeHtml(sourceCreatorName ? sourceCreatorName + '에게서 담은 사진' : '담아온 사진')}"><i class="fa-solid fa-bookmark" aria-hidden="true"></i></span>`
                 : '';
             const listStateMarkup = [
-                isShared ? '<span class="photo-list-state is-share-state is-active" title="친구 공유됨" aria-label="친구 공유됨"><i class="fa-solid fa-share-nodes" aria-hidden="true"></i></span>' : '',
-                isMoyoPublic ? `<span class="photo-list-state is-send" data-explorer-friend-send data-content-id="${item.id}" role="button" tabindex="0" title="친구에게 보내기" aria-label="친구에게 보내기"><i class="fa-regular fa-paper-plane" aria-hidden="true"></i></span>` : '',
+                isPersonal && isOwner ? `<span class="photo-list-state is-share-state${isShared ? ' is-active' : ''}" data-explorer-share-open data-content-id="${item.id}" role="button" tabindex="0" title="공유" aria-label="공유"><i class="fa-solid fa-share-nodes" aria-hidden="true"></i></span>` : '',
                 isMoyoPublic && !isOwner ? `<span class="photo-list-state is-collect${collectedByMe || isCollectedCopy ? ' is-active' : ''}" title="${collectedByMe || isCollectedCopy ? '담김' : '담기'}" aria-label="${collectedByMe || isCollectedCopy ? '담김' : '담기'}"><i class="${collectedByMe || isCollectedCopy ? 'fa-solid' : 'fa-regular'} fa-bookmark" aria-hidden="true"></i></span>` : '',
                 isMoyoPublic ? `<span class="photo-list-state is-moyo is-active" title="MOYO 공개" aria-label="MOYO 공개"><img src="${escapeHtml((root.dataset.context || document.body.dataset.contextPath || '') + '/brand/moyo_mark.png?v=moyo-mark-v34')}" alt="" aria-hidden="true"></span>` : ''
             ].filter(Boolean).join('');
@@ -387,8 +386,7 @@
                             <button type="button" class="photo-grid-card__reaction photo-grid-card__comment" data-photo-explorer-comment="${item.id}" title="댓글 보기">
                                 <i class="fa-regular fa-comment" aria-hidden="true"></i><span data-photo-explorer-comment-count>${commentCount}</span>
                             </button>
-                            ${isShared ? '<span class="is-personal photo-grid-card__shared" title="친구 공유됨" aria-label="친구 공유됨"><i class="fa-solid fa-share-nodes" aria-hidden="true"></i></span>' : ''}
-                            ${isMoyoPublic ? `<span class="is-personal photo-grid-card__send" data-explorer-friend-send data-content-id="${item.id}" role="button" tabindex="0" title="친구에게 보내기" aria-label="친구에게 보내기"><i class="fa-regular fa-paper-plane" aria-hidden="true"></i></span>` : ''}
+                            ${isPersonal && isOwner ? `<span class="is-personal photo-grid-card__shared${isShared ? ' is-active' : ''}" data-explorer-share-open data-content-id="${item.id}" role="button" tabindex="0" title="공유" aria-label="공유"><i class="fa-solid fa-share-nodes" aria-hidden="true"></i></span>` : ''}
                             ${isMoyoPublic && !isOwner ? `<span class="is-personal photo-grid-card__collect${collectedByMe || isCollectedCopy ? ' is-active' : ''}" title="${collectedByMe || isCollectedCopy ? '담김' : '담기'}" aria-label="${collectedByMe || isCollectedCopy ? '담김' : '담기'}"><i class="${collectedByMe || isCollectedCopy ? 'fa-solid' : 'fa-regular'} fa-bookmark" aria-hidden="true"></i></span>` : ''}
                             ${collectedSourceMarkup}
                             ${isMoyoPublic ? `<span class="is-personal is-moyo" title="MOYO 공개" aria-label="MOYO 공개"><img src="${escapeHtml((root.dataset.context || document.body.dataset.contextPath || '') + '/brand/moyo_mark.png?v=moyo-mark-v34')}" alt="" aria-hidden="true"></span>` : ''}

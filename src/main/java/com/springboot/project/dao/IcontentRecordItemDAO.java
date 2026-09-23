@@ -10,7 +10,7 @@ import com.springboot.project.dto.contentRecordItemDTO;
 public interface IcontentRecordItemDAO {
     int insertItem(contentRecordItemDTO item);
     int insertNoteContent(contentRecordItemDTO item);
-    int updateNoteContent(@Param("recordTargetId") Long recordTargetId, @Param("recordItemId") Long recordItemId, @Param("title") String title, @Param("content") String content, @Param("userId") Long userId);
+    int updateNoteContent(@Param("recordTargetId") Long recordTargetId, @Param("recordItemId") Long recordItemId, @Param("title") String title, @Param("content") String content, @Param("userId") Long userId, @Param("baseTitle") String baseTitle, @Param("baseContent") String baseContent);
     int updateItemTitle(@Param("recordTargetId") Long recordTargetId, @Param("recordItemId") Long recordItemId, @Param("title") String title);
     int softDeleteNoteContent(@Param("recordTargetId") Long recordTargetId, @Param("recordItemId") Long recordItemId, @Param("userId") Long userId);
     int softDeleteNoteItem(@Param("recordTargetId") Long recordTargetId, @Param("recordItemId") Long recordItemId);
@@ -42,6 +42,11 @@ public interface IcontentRecordItemDAO {
     List<contentRecordItemDTO> selectItems(@Param("recordTargetId") Long recordTargetId, @Param("userId") Long userId);
     contentRecordItemDTO selectItem(@Param("recordTargetId") Long recordTargetId, @Param("recordItemId") Long recordItemId, @Param("userId") Long userId);
     int countByType(@Param("recordTargetId") Long recordTargetId, @Param("recordType") String recordType);
+    int countActiveItemsByContent(@Param("recordType") String recordType, @Param("contentId") Long contentId);
+    int touchActiveItemsByContent(@Param("recordType") String recordType, @Param("contentId") Long contentId);
+    int updateItemsDeletedByContent(@Param("recordType") String recordType, @Param("contentId") Long contentId, @Param("deletedYn") String deletedYn);
+    int deleteItemsByContent(@Param("recordType") String recordType, @Param("contentId") Long contentId);
+    int deleteExpiredPhotoRecordItems();
     Long selectRecordFileFolderId(@Param("recordTargetId") Long recordTargetId);
     int moveRecordFilesToFolder(@Param("recordTargetId") Long recordTargetId, @Param("folderId") Long folderId, @Param("userId") Long userId);
     Long sumActiveFileSize(@Param("recordTargetId") Long recordTargetId);

@@ -937,7 +937,6 @@
                     <button type="button" data-photo-viewer-info aria-label="사진 정보 보기" aria-expanded="false" title="정보">${svgIcon('info')}</button>
                     <button type="button" data-photo-viewer-edit aria-label="사진 수정" title="사진 수정" hidden>${svgIcon('crop')}</button>
                     <button type="button" data-photo-viewer-share aria-label="사진 공유" title="공유">${svgIcon('share')}</button>
-                    <button type="button" data-photo-viewer-friend-send aria-label="친구에게 보내기" title="친구에게 보내기">${svgIcon('send')}</button>
                     <button type="button" data-photo-viewer-collect aria-label="내 사진에 담기" title="담기">${svgIcon('bookmark')}</button>
                     <button type="button" data-photo-viewer-trash aria-label="휴지통으로 이동" title="휴지통으로 이동" hidden>${svgIcon('trash')}</button>
                     <button type="button" data-photo-viewer-restore aria-label="사진 복원" title="복원" hidden>${svgIcon('restore')}</button>
@@ -2027,7 +2026,7 @@
                                 <button type="button" class="photo-runtime-like" data-photo-common-like aria-pressed="false" aria-label="좋아요">${svgIcon('heart')}<strong id="photoRuntimeLikeCount">0</strong></button>
                                 <span class="photo-runtime-comment-stat" aria-label="댓글">${svgIcon('comment')}<strong id="photoRuntimeCommentCount">0</strong></span>
                                 <span class="photo-runtime-action-pair">
-                                    <button type="button" class="photo-runtime-share" data-photo-common-share aria-label="사진 공유" title="공유">${svgIcon('send')}</button>
+                                    <button type="button" class="photo-runtime-share" data-photo-common-share aria-label="사진 공유" title="공유">${svgIcon('share')}</button>
                                     <button type="button" class="photo-runtime-collect" data-photo-common-collect aria-label="담아가기" title="담아가기">${svgIcon('bookmark')}</button>
                                     <span id="photoRuntimeCollectedSource" class="photo-collected-source-runtime" hidden></span>
                                 </span>
@@ -2086,6 +2085,7 @@
             menuToggle: box ? box.querySelector('[data-photo-common-menu-toggle]') : null,
             menu: box ? box.querySelector('[data-photo-common-menu]') : null,
             share: box ? box.querySelector('[data-photo-common-share]') : null,
+            friendSend: box ? box.querySelector('[data-photo-common-friend-send]') : null,
             collect: box ? box.querySelector('[data-photo-common-collect]') : null,
             like: box ? box.querySelector('[data-photo-common-like]') : null,
             likeCount: document.getElementById('photoRuntimeLikeCount'),
@@ -2396,6 +2396,7 @@
         if (n.commentSection) n.commentSection.hidden = trashMode;
         if (n.form) n.form.hidden = trashMode;
         if (n.share) n.share.hidden = trashMode || !canSharePost(post);
+        if (n.friendSend) n.friendSend.hidden = trashMode || !isMoyoPublic(post);
         if (n.collect) {
             const ownerId = postOwnerId(post);
             const currentUserId = getCurrentUserId();
@@ -2997,6 +2998,8 @@
         }
         const share = event.target.closest('[data-photo-common-share]');
         if (share) { event.preventDefault(); return actionEvent('share'); }
+        const friendSend = event.target.closest('[data-photo-common-friend-send]');
+        if (friendSend) { event.preventDefault(); return openStandaloneShareModal(state.post, 'FEED', 'SEND'); }
         const collect = event.target.closest('[data-photo-common-collect]');
         if (collect) { event.preventDefault(); return actionEvent('collect'); }
         if (event.target.closest('[data-photo-common-prev]')) return move(-1);
@@ -3108,6 +3111,20 @@
         }
     }
 
+    async function openStandaloneFriendSendByPostId(postId) {
+        const id = Number(postId);
+        if (!id) return toast('보낼 사진 정보를 찾지 못했습니다.', true);
+        try {
+            const data = await request(`/api/photo-posts/${id}`);
+            const detail = normalizeDetail(data, id);
+            const post = detail.post || { postId: id, POST_ID: id };
+            if (!isMoyoPublic(post)) return toast('MOYO 공개 사진만 친구에게 보낼 수 있습니다.', true);
+            return openStandaloneShareModal(post, 'FEED', 'SEND');
+        } catch (error) {
+            toast(error.message || '친구에게 보내기 정보를 불러오지 못했습니다.', true);
+        }
+    }
+
     function updateProfilePhotoCard(detail) {
         const postId = String(detail && detail.postId || '');
         if (!postId) return;
@@ -3172,15 +3189,17 @@
     document.addEventListener('click', event => {
         const like = event.target.closest && event.target.closest('[data-profile-photo-like]');
         const share = event.target.closest && event.target.closest('[data-profile-photo-share]');
+        const friendSend = event.target.closest && event.target.closest('[data-profile-photo-friend-send]');
         const comment = event.target.closest && event.target.closest('[data-profile-photo-comment]');
         const collect = event.target.closest && event.target.closest('[data-profile-photo-collect]');
-        const action = like || share || comment || collect;
+        const action = like || share || friendSend || comment || collect;
         if (!action) return;
         event.preventDefault();
         event.stopPropagation();
         if (event.stopImmediatePropagation) event.stopImmediatePropagation();
         if (like) return toggleLike(like.dataset.profilePhotoLike);
         if (share) return openStandaloneShareByPostId(share.dataset.profilePhotoShare);
+        if (friendSend) return openStandaloneFriendSendByPostId(friendSend.dataset.profilePhotoFriendSend);
         if (comment) return open(comment.dataset.profilePhotoComment);
         if (collect) return toggleProfileCollect(collect.dataset.profilePhotoCollect, collect);
     }, true);

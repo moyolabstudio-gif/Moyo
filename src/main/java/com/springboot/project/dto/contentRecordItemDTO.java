@@ -32,6 +32,9 @@ public class contentRecordItemDTO {
     private String locationDescription;
     private String primaryYn;
     private String previewContent;
+    // 기록 노트 낙관적 잠금용: 사용자가 편집을 시작했을 때의 서버 제목/본문
+    private String baseTitle;
+    private String baseContent;
     private String thumbnailUrl;
     private String creatorName;
     private Integer likeCount;
@@ -71,6 +74,8 @@ public class contentRecordItemDTO {
     public String getLocationDescription(){return locationDescription;} public void setLocationDescription(String v){locationDescription=v;}
     public String getPrimaryYn(){return primaryYn;} public void setPrimaryYn(String v){primaryYn=v;}
     public String getPreviewContent(){return previewContent;} public void setPreviewContent(String v){previewContent=v;}
+    public String getBaseTitle(){return baseTitle;} public void setBaseTitle(String v){baseTitle=v;}
+    public String getBaseContent(){return baseContent;} public void setBaseContent(String v){baseContent=v;}
     public String getThumbnailUrl(){return thumbnailUrl;} public void setThumbnailUrl(String v){thumbnailUrl=v;}
     public String getCreatorName(){return creatorName;} public void setCreatorName(String v){creatorName=v;}
     public Integer getLikeCount(){return likeCount;} public void setLikeCount(Integer v){likeCount=v;}

@@ -5,23 +5,18 @@
             <h3 class="project-task-title"><i class="fa-solid fa-list-check" aria-hidden="true"></i><span>진행 보드</span></h3>
         </div>
         <div class="project-task-head-actions">
-            <button type="button" class="project-task-view-btn" id="projectTaskViewToggle" onclick="toggleProjectTaskWorkspace()">
-                <i class="fa-solid fa-expand"></i><span>전체 보기</span>
+            <button type="button" class="project-task-add-btn" onclick="openProjectTaskModal()">
+                <i class="fa-solid fa-plus"></i><span>할 일 추가</span>
             </button>
-            <c:if test="${isPersonalProject or canManageProject eq true}">
-                <button type="button" class="project-task-add-btn" onclick="openProjectTaskModal()">
-                    <i class="fa-solid fa-plus"></i><span>업무 추가</span>
-                </button>
-            </c:if>
         </div>
     </div>
 
-    <div class="project-task-summary" aria-label="업무 상태 필터">
+    <div class="project-task-summary" aria-label="할 일 상태 필터">
         <button type="button" class="project-task-metric moyo-task-status moyo-task-status--all is-active" data-task-filter="ALL" aria-pressed="true" onclick="setProjectTaskFilter('ALL')">
-            <span>전체 업무</span><strong id="task-total-count">0</strong>
+            <span>전체 할 일</span><strong id="task-total-count">0</strong>
         </button>
         <button type="button" class="project-task-metric moyo-task-status moyo-task-status--todo" data-task-filter="TODO" aria-pressed="false" onclick="setProjectTaskFilter('TODO')">
-            <span>할 일</span><strong id="task-todo-summary">0</strong>
+            <span>예정</span><strong id="task-todo-summary">0</strong>
         </button>
         <button type="button" class="project-task-metric moyo-task-status moyo-task-status--progress" data-task-filter="IN_PROGRESS" aria-pressed="false" onclick="setProjectTaskFilter('IN_PROGRESS')">
             <span>진행 중</span><strong id="task-progress-summary">0</strong>
@@ -37,7 +32,7 @@
     <div class="project-task-tools" id="projectTaskTools">
         <label class="project-task-search">
             <i class="fa-solid fa-magnifying-glass"></i>
-            <input type="search" id="projectTaskSearch" placeholder="업무명 또는 담당자 검색" autocomplete="off">
+            <input type="search" id="projectTaskSearch" placeholder="할 일 또는 담당자 검색" autocomplete="off">
         </label>
         <div class="project-task-person-filter" id="projectTaskPersonFilter" aria-label="담당자 필터"></div>
         <button type="button" class="project-task-reset-btn" onclick="resetProjectTaskFilters()">
@@ -47,7 +42,7 @@
 
     <div class="project-task-board" id="projectTaskBoard">
         <article class="project-task-column" data-task-column="TODO">
-            <header><span class="project-task-column-dot todo"></span><strong>할 일</strong><em id="todo-count">0</em></header>
+            <header><span class="project-task-column-dot todo"></span><strong>예정</strong><em id="todo-count">0</em></header>
             <div id="todo-list" class="project-task-list" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
         </article>
         <article class="project-task-column" data-task-column="IN_PROGRESS">

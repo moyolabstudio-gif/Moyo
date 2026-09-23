@@ -98,7 +98,7 @@
                                 </a>
                             </c:if>
                             <button type="button" class="profile-note-detail-action" data-profile-note-share data-note-id="${note.noteId}" title="공유" aria-label="공유">
-                                <i class="fa-regular fa-paper-plane" aria-hidden="true"></i><span>공유</span>
+                                <i class="fa-solid fa-share-nodes" aria-hidden="true"></i><span>공유</span>
                             </button>
                             <button type="button" class="profile-note-detail-action is-icon profile-note-detail-pin ${note.pinned ? 'is-pinned' : ''}" data-profile-note-pin data-note-id="${note.noteId}" data-pinned="${note.pinned}" title="${note.pinned ? '중요 해제' : '중요 표시'}" aria-label="${note.pinned ? '중요 해제' : '중요 표시'}" aria-pressed="${note.pinned}">
                                 <i class="${note.pinned ? 'fa-solid' : 'fa-regular'} fa-star" aria-hidden="true"></i>
@@ -135,7 +135,7 @@
                                 <i class="fa-regular fa-bookmark" aria-hidden="true"></i><span>담기</span>
                             </button>
                             <button type="button" class="profile-note-detail-action" data-profile-note-share data-note-id="${note.noteId}" title="공유" aria-label="공유">
-                                <i class="fa-regular fa-paper-plane" aria-hidden="true"></i><span>공유</span>
+                                <i class="fa-solid fa-share-nodes" aria-hidden="true"></i><span>공유</span>
                             </button>
                             <button type="button" class="profile-note-detail-action is-icon profile-note-detail-pin ${note.pinned ? 'is-pinned' : ''}" data-profile-note-pin data-note-id="${note.noteId}" data-pinned="${note.pinned}" title="${note.pinned ? '중요 해제' : '중요 표시'}" aria-label="${note.pinned ? '중요 해제' : '중요 표시'}" aria-pressed="${note.pinned}">
                                 <i class="${note.pinned ? 'fa-solid' : 'fa-regular'} fa-star" aria-hidden="true"></i>

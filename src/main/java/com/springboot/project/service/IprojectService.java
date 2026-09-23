@@ -14,7 +14,7 @@ public interface IprojectService {
     // 프로젝트를 생성하고, 생성한 유저를 팀장으로 등록하는 표준 메서드
     void insertProject(projectRequestDTO dto, Long userId);
     List<projectRequestDTO> getProjectsByWsId(Long wsId);
-    List<Map<String, Object>> getProjectListByWorkspaceId(Long wsId);
+    List<Map<String, Object>> getProjectListByWorkspaceId(Long wsId, Long viewerUserId);
     List<Map<String, Object>> getPersonalProjects(Long userId);
  // 프로젝트에 할당 가능한 멤버 목록 가져오기
     List<Map<String, Object>> getAssignableMembers(Long wsId, Long projId);
@@ -28,12 +28,14 @@ public interface IprojectService {
     Map<String, Object> getProjectMemberProfile(Long projId, Long targetUserId, Long viewerUserId);
     boolean updateProjectMemberPosition(Long projId, Long userId, String projPosition);
     boolean updateProjectMemberSetting(Long projId, Long userId, String projPosition, String projRole);
+    String updateProjectMembers(Long projId, Long requesterId, List<Map<String, Object>> changes);
+    String removeProjectMembers(Long projId, Long requesterId, List<Long> userIds);
     Map<String, Object> getProjectTaskSummary(Long projId);
     List<Map<String, Object>> getProjectTasks(Long projId);
     Map<String, Object> getProjectMemberTasks(Long projId, Long userId);
     Map<String, Object> getProjectMemberContributions(Long projId, Long userId, Long viewerUserId);
     List<Map<String, Object>> getProjectMemberRecentActivities(Long projId, Long userId, Long viewerUserId);
-    boolean addTask(
+    Long addTask(
             Long projId,
             List<Long> assigneeIds,
             Long createdBy,
@@ -123,6 +125,7 @@ boolean updateTaskStatus(Long taskId, String status);
     boolean isProjectPlanEditor(Long projId, String planType, Long planId, Long userId);
     void replaceProjectPlanEditors(Long projId, String planType, Long planId, List<Long> userIds, Long grantedBy);
 
+    projectPlanFeatureDTO getProjectPlanFeature(Long projId);
     projectPlanFeatureDTO getOrCreateProjectPlanFeature(Long projId);
     projectPlanFeatureDTO updateProjectPlanFeature(projectPlanFeatureDTO dto);
     projectPlanFeatureDTO removeProjectPlanFeature(Long projId, String type);

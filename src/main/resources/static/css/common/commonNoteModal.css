@@ -17,7 +17,16 @@
 .moyo-note-modal__status-wrap{display:flex;align-items:center;gap:9px;min-width:0;}
 .moyo-note-modal__library{max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;font-weight:700;color:#586579;}
 .moyo-note-modal__status-separator{flex:0 0 auto;color:#c4cbd5;font-size:12px;}
-.moyo-note-modal__eyebrow{font-size:10px;font-weight:800;letter-spacing:.14em;color:#929bad;}
+.moyo-note-modal__eyebrow{
+  font-size:10px;
+  font-weight:800;
+  letter-spacing:.14em;
+  color:#4f7cff;
+  background:linear-gradient(135deg,#45d6c0 0%,#4f7cff 52%,#8b5cf6 100%);
+  -webkit-background-clip:text;
+  background-clip:text;
+  -webkit-text-fill-color:transparent;
+}
 .moyo-note-modal__status{font-size:12px;font-weight:600;color:#98a3b4;}
 .moyo-note-modal__status.is-saving{color:#738198;}.moyo-note-modal__status.is-saved{color:#24a27a;}.moyo-note-modal__status.is-error{color:#e05b65;}
 .moyo-note-modal__retry{flex:0 0 auto;border:0;background:transparent;padding:2px 0;color:#d44f5b;font-size:11px;font-weight:750;cursor:pointer;}
@@ -209,8 +218,6 @@
 @media(max-width:980px){
     .moyo-note-modal__editor-wrap{width:100%!important;}
     .moyo-note-modal .moyo-ckeditor .ck.ck-toolbar{
-        overflow-x:auto!important;
-        overflow-y:hidden!important;
         scrollbar-width:none;
     }
     .moyo-note-modal .moyo-ckeditor .ck.ck-toolbar::-webkit-scrollbar{display:none;}
@@ -433,32 +440,13 @@
 
 
 /* ==========================================================================
-   NOTE CKEditor dropdown floating fix
-   - 표/색상 등의 dropdown panel은 툴바 레이아웃에 참여하지 않고
-     CKEditor 기본 방식처럼 버튼 아래에 떠야 한다.
+   NOTE CKEditor dropdown
+   - 위치/크기는 CKEditor 기본 floating 동작을 사용한다.
+   - 툴바는 상위 항목 숨김 로직으로 폭을 맞추므로 panel을 자르지 않는다.
    ========================================================================== */
 .moyo-note-modal .moyo-ckeditor .ck.ck-toolbar,
 .moyo-note-modal .moyo-ckeditor .ck.ck-toolbar__items {
     overflow: visible !important;
-}
-
-.moyo-note-modal .moyo-ckeditor .ck.ck-dropdown {
-    position: relative !important;
-}
-
-.moyo-note-modal .moyo-ckeditor .ck.ck-dropdown > .ck.ck-dropdown__panel {
-    position: absolute !important;
-    top: calc(100% + 4px) !important;
-    left: 0 !important;
-    right: auto !important;
-    margin: 0 !important;
-    z-index: 20050 !important;
-}
-
-/* 오른쪽 끝의 dropdown은 패널이 모달 밖으로 빠지지 않도록 우측 정렬 */
-.moyo-note-modal .moyo-ckeditor .ck.ck-toolbar__items > .ck.ck-dropdown:last-of-type > .ck.ck-dropdown__panel {
-    left: auto !important;
-    right: 0 !important;
 }
 
 /* =========================================================
@@ -614,12 +602,6 @@
     .moyo-note-modal__document-meta::-webkit-scrollbar{display:none;}
 }
 
-/* 표 선택창은 툴바 오른쪽에서 모달 밖으로 빠지지 않도록 안쪽 정렬 */
-.moyo-note-modal .moyo-ckeditor .ck.ck-dropdown > .ck.ck-dropdown__panel:has(.ck-insert-table-dropdown){
-    left:auto !important;
-    right:0 !important;
-}
-
 /* 20260918 NOTE sticky toolbar shadow fix
    - 모달 스크롤 중 CKEditor sticky 상태에서 생기는 기본 그림자 제거
    - 떠있는 카드 느낌 대신 얇은 하단 구분선만 유지 */
@@ -665,7 +647,7 @@
     display:flex !important;
     flex-wrap:nowrap !important;
     align-items:center !important;
-    overflow:hidden !important;
+    overflow:visible !important;
     box-sizing:border-box !important;
 }
 .moyo-note-modal .moyo-ckeditor--note .ck.ck-toolbar .ck-toolbar__items {

@@ -14,6 +14,7 @@ public class contentRecordTargetDTO {
     private Long projId;
     private Long noteFolderId;
     private Long photoAlbumId;
+    private Long fileFolderId;
     private Long createdBy;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -41,6 +42,8 @@ public class contentRecordTargetDTO {
     public void setNoteFolderId(Long noteFolderId) { this.noteFolderId = noteFolderId; }
     public Long getPhotoAlbumId() { return photoAlbumId; }
     public void setPhotoAlbumId(Long photoAlbumId) { this.photoAlbumId = photoAlbumId; }
+    public Long getFileFolderId() { return fileFolderId; }
+    public void setFileFolderId(Long fileFolderId) { this.fileFolderId = fileFolderId; }
     public Long getCreatedBy() { return createdBy; }
     public void setCreatedBy(Long createdBy) { this.createdBy = createdBy; }
     public LocalDateTime getCreatedAt() { return createdAt; }

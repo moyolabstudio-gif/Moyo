@@ -1,292 +1,1437 @@
 /* =====================================================================
-   Common community widgets
-   - Recent activity / active poll / notice / free feed / resources.
+   Common content widgets
+   - Shared note and photo widget row, empty state and photo reactions.
    ===================================================================== */
-.moyo-community-widgets .workspace-core-row,
-.moyo-community-widgets .workspace-widget-grid {
+.common-content-widget-row {
     align-items: stretch;
 }
 
-.moyo-community-widgets .workspace-core-card > .workspace-core-head,
-.moyo-community-widgets .workspace-widget-card > .board-title {
+.common-content-widget-row > .workspace-note-feature-card,
+.common-content-widget-row > .workspace-photo-feature-card {
+    display: flex;
+    flex-direction: column;
+}
+
+.common-content-widget-row .board-title {
     flex: 0 0 auto;
 }
 
-.moyo-community-widgets .today-schedule-list,
-.moyo-community-widgets .workspace-poll-summary-area,
-.moyo-community-widgets .board-list {
+.common-content-widget-row .workspace-note-list,
+.common-content-widget-row .workspace-photo-grid {
     flex: 1 1 auto;
     min-height: 0;
 }
 
-/* Empty/loading/error states occupy the whole body and sit on its center axis. */
-.moyo-community-widgets .today-schedule-list:has(> .moyo-widget-state),
-.moyo-community-widgets .board-list:has(> .moyo-widget-state),
-.moyo-community-widgets .workspace-poll-summary-body.is-empty {
+.common-content-widget-row .workspace-note-list:has(> .workspace-content-empty),
+.common-content-widget-row .workspace-photo-grid:has(> .workspace-content-empty) {
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
-.moyo-community-widgets .moyo-widget-state {
-    min-height: 0 !important;
-    height: auto !important;
-    padding-block: 8px;
-}
-
-/* Poll rendering uses a script-created body wrapper. */
-.moyo-community-widgets .workspace-poll-summary-area {
+.common-content-widget-row .workspace-content-empty {
+    min-height: 0;
+    height: auto;
+    padding: 14px 16px;
     display: flex;
     flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    border: 0;
+    border-radius: 12px;
+    background: transparent;
+    color: inherit;
+    box-shadow: none;
+}
+
+.common-content-widget-row .workspace-content-empty__icon {
+    width: 36px;
+    height: 36px;
+    flex: 0 0 36px;
+    display: grid;
+    place-items: center;
+    border-radius: 10px;
+    background: #f3f6fa;
+    font-size: 18px;
+    font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
+    line-height: 1;
+}
+
+.common-content-widget-row .workspace-content-empty__copy {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+}
+
+.common-content-widget-row .workspace-content-empty__title {
+    color: #26364d;
+    font-size: 12px;
+    font-weight: 800;
+    line-height: 1.45;
+}
+
+.common-content-widget-row .workspace-content-empty__description {
+    color: #94a0b3;
+    font-size: 10.5px;
+    line-height: 1.45;
+}
+
+.common-content-widget-row .workspace-content-empty__action {
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: #2f78df;
+    font: inherit;
+    font-size: 10.5px;
+    font-weight: 800;
+    line-height: 1.45;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.common-content-widget-row .workspace-content-empty__action:hover {
+    color: #235fbe;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+/* Photo reaction controls belong to the photo/content area, not the shell. */
+.workspace-photo-feature-card .workspace-photo-post {
+    cursor: pointer;
+}
+
+.workspace-photo-feature-card .workspace-photo-post-overlay {
+    align-items: flex-start !important;
+}
+
+.workspace-photo-feature-card .workspace-photo-post-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.workspace-photo-feature-card .workspace-photo-post-actions {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    margin-top: 5px;
+}
+
+.workspace-photo-feature-card .workspace-photo-post-actions button {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: #fff;
+    font: inherit;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.workspace-photo-feature-card .workspace-photo-post-actions button:hover,
+.workspace-photo-feature-card .workspace-photo-post-actions button:focus-visible {
+    transform: translateY(-1px);
+}
+
+.workspace-photo-feature-card .workspace-photo-post-actions .workspace-photo-like-button.is-liked {
+    color: #ff5b78;
+}
+
+.workspace-photo-feature-card .workspace-photo-post-actions i {
+    width: 14px;
+    text-align: center;
+    font-size: 13px;
+}
+
+.workspace-photo-feature-card .workspace-photo-post-actions span {
+    font-size: 11px;
+    font-weight: 700;
+}
+
+/* =====================================================================
+   Canonical note/photo widget geometry v2
+   - Shared content widgets no longer depend on workspace-only geometry.
+   ===================================================================== */
+.moyo-main-shell .common-content-widget-row > .moyo-widget-card {
+    min-height: 344px !important;
+    padding: 18px 20px 18px !important;
+    border: 1px solid var(--moyo-widget-card-border);
+    border-radius: var(--moyo-widget-card-radius);
+    background: #fff;
+    box-shadow: var(--moyo-widget-card-shadow);
+}
+
+.moyo-main-shell .common-content-widget-row > .moyo-widget-card::after {
+    display: none !important;
+}
+
+.moyo-main-shell .common-content-widget-row .board-title.moyo-widget-head {
+    flex: 0 0 auto;
+    height: 43px !important;
+    min-height: 43px !important;
+    margin: 0 !important;
+    padding: 0 0 11px !important;
+    border-bottom: 1px solid #edf1f6 !important;
+}
+
+.moyo-main-shell .common-content-widget-row .board-title .moyo-widget-title {
+    font-size: 16px;
+    font-weight: 900;
+    line-height: 1;
+}
+
+.moyo-main-shell .common-content-widget-row .workspace-note-list,
+.moyo-main-shell .common-content-widget-row .workspace-photo-grid {
+    margin-top: 12px !important;
+}
+
+.moyo-main-shell .common-content-widget-row .workspace-note-list:not(.is-ready),
+.moyo-main-shell .common-content-widget-row .workspace-photo-grid:not(.is-ready),
+.moyo-main-shell .common-content-widget-row .workspace-photo-grid.is-empty {
+    min-height: 100px;
+    height: 100px;
     padding: 0;
 }
 
-.moyo-community-widgets .workspace-poll-summary-body {
-    flex: 1 1 auto;
-    min-height: 0;
+.moyo-main-shell .common-content-widget-row.is-all-empty > .moyo-widget-card {
+    min-height: 214px !important;
+    height: 214px !important;
+}
+
+.moyo-main-shell .common-content-widget-row:not(.is-all-empty) > .moyo-widget-card:has(.workspace-note-list.is-ready),
+.moyo-main-shell .common-content-widget-row:not(.is-all-empty) > .moyo-widget-card:has(.workspace-photo-grid.is-ready) {
+    min-height: 352px !important;
+    padding-bottom: 20px !important;
+}
+
+.moyo-main-shell .common-content-widget-row .workspace-note-items.workspace-note-paper-grid {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+}
+
+@media (max-width: 760px) {
+    .moyo-main-shell .common-content-widget-row > .moyo-widget-card,
+    .moyo-main-shell .common-content-widget-row.is-all-empty > .moyo-widget-card {
+        min-height: auto !important;
+        height: auto !important;
+        padding: 16px !important;
+    }
+}
+
+/* MOYO common content widgets: isolated ownership v8
+   This block owns the group/project NOTE + PHOTO widgets.
+   Do not style these from workspaceMain.css or project CSS. */
+.moyo-content-widget-row {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 20px !important;
+    align-items: stretch !important;
     width: 100%;
-    display: flex;
-    flex-direction: column;
+    min-width: 0;
 }
 
-.moyo-community-widgets .workspace-poll-summary-body.is-empty > .moyo-widget-state {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding-inline: 12px;
-}
-
-.moyo-community-widgets .workspace-poll-summary-list {
-    width: 100%;
-}
-
-/* Final common contract: poll body must fill the stretched top-row card. */
-.moyo-community-widgets .workspace-core-row > .workspace-main-poll-card {
-    display: flex !important;
-    flex-direction: column !important;
-}
-
-.moyo-community-widgets .workspace-main-poll-card > .workspace-poll-summary-area {
-    flex: 1 1 auto !important;
-    height: auto !important;
+.moyo-content-widget {
+    display: block !important;
+    min-width: 0 !important;
     min-height: 0 !important;
+    height: auto !important;
     max-height: none !important;
-    overflow: visible !important;
-    display: flex !important;
-    flex-direction: column !important;
+    align-self: stretch !important;
+    margin: 0 !important;
+    padding: 18px 24px 20px !important;
+    border: 1px solid #dfe7f1 !important;
+    border-radius: 22px !important;
+    background: #fff !important;
+    box-shadow: 0 10px 28px rgba(15, 23, 42, .035) !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
 }
 
-.moyo-community-widgets .workspace-main-poll-card .workspace-poll-summary-body {
+.moyo-content-widget__head {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 12px !important;
+    min-height: 48px !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 0 0 12px !important;
+    border-bottom: 1px solid #edf1f6 !important;
+    box-sizing: border-box !important;
+}
+
+.moyo-content-widget__body {
+    display: block !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    height: auto !important;
+    max-height: none !important;
+    margin: 14px 0 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+}
+
+/* Note/photo both begin immediately below the same header line.
+   No vertical centering and no flex-grow. */
+.moyo-content-note-grid {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 14px !important;
+    align-items: start !important;
+    align-content: start !important;
+    justify-content: start !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.moyo-content-widget__body--photo.is-ready {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 14px !important;
+    align-items: start !important;
+    align-content: start !important;
+    justify-content: start !important;
+}
+
+.moyo-content-photo-card {
+    position: relative;
+    display: block;
+    min-width: 0;
+    width: 100%;
+    margin: 0;
+    border-radius: 14px;
+    overflow: hidden;
+    cursor: pointer;
+    background: #f4f7fb;
+}
+
+.moyo-content-photo-thumb {
+    position: relative;
+    display: block;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    background: #edf2f8 center / cover no-repeat;
+    overflow: hidden;
+}
+
+.moyo-content-photo-thumb::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(10,18,32,.68), transparent 56%);
+    opacity: 0;
+    transition: opacity .18s ease;
+}
+
+.moyo-content-photo-overlay {
+    position: absolute;
+    z-index: 2;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 12px;
+    color: #fff;
+    opacity: 0;
+    transform: translateY(4px);
+    transition: opacity .18s ease, transform .18s ease;
+}
+
+.moyo-content-photo-card:hover .moyo-content-photo-thumb::after,
+.moyo-content-photo-card:focus-visible .moyo-content-photo-thumb::after,
+.moyo-content-photo-card:hover .moyo-content-photo-overlay,
+.moyo-content-photo-card:focus-visible .moyo-content-photo-overlay {
+    opacity: 1;
+    transform: none;
+}
+
+.moyo-content-photo-count {
+    position: absolute;
+    z-index: 3;
+    top: 9px;
+    right: 9px;
+    padding: 5px 8px;
+    border-radius: 999px;
+    background: rgba(15,23,42,.72);
+    color: #fff;
+    font-size: 12px;
+}
+
+.moyo-content-photo-meta,
+.moyo-content-photo-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.moyo-content-photo-meta {
+    justify-content: space-between;
+}
+
+.moyo-content-photo-actions button {
+    border: 0;
+    padding: 0;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+}
+
+.moyo-content-empty {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 12px !important;
+    width: 100% !important;
+    min-height: 120px !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 20px !important;
+    text-align: center;
+    box-sizing: border-box;
+}
+
+.moyo-content-empty__copy {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.moyo-content-empty__title {
+    color: #26364d;
+    font-weight: 800;
+}
+
+.moyo-content-empty__description {
+    color: #8391a7;
+    font-size: 13px;
+}
+
+.moyo-content-empty__action {
+    margin-top: 8px;
+    border: 0;
+    background: none;
+    color: #4d73dc;
+    font-weight: 700;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+/* Keep common note cards top-aligned even when the shared paper component
+   brings its own internal classes. */
+.moyo-content-note-grid > * {
+    align-self: start !important;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+}
+
+@media (max-width: 760px) {
+    .moyo-content-widget-row {
+        grid-template-columns: minmax(0, 1fr) !important;
+        gap: 16px !important;
+    }
+
+    .moyo-content-widget {
+        padding: 16px 18px 18px !important;
+    }
+
+    .moyo-content-note-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+
+    .moyo-content-widget__body--photo.is-ready {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .moyo-content-note-grid,
+    .moyo-content-widget__body--photo.is-ready {
+        grid-template-columns: minmax(0, 1fr) !important;
+    }
+}
+
+
+/* Equal-height pair v9
+   The taller NOTE/PHOTO widget defines the grid row height.
+   The other widget stretches to the same outer height.
+   Inner cards stay top-aligned and do not vertically center. */
+.moyo-content-widget-row {
+    align-items: stretch !important;
+}
+
+.moyo-content-widget-row > .moyo-content-widget {
+    min-height: 0 !important;
+    height: auto !important;
+    align-self: stretch !important;
+}
+
+.moyo-content-widget__body,
+.moyo-content-note-grid,
+.moyo-content-widget__body--photo.is-ready {
+    align-content: start !important;
+    align-items: start !important;
+}
+
+
+/* Responsive shared preview height v10
+   NOTE and PHOTO preview cards use one responsive height token.
+   The token is based on each common widget's own width, so both cards
+   grow/shrink smoothly together without viewport-specific hard jumps. */
+.moyo-content-widget {
+    container-type: inline-size;
+    --moyo-content-preview-height: clamp(150px, 42cqw, 205px);
+}
+
+/* NOTE: keep the paper proportions/contents but let the outer preview height
+   follow the same responsive token as PHOTO. */
+.moyo-content-note-grid > * {
+    height: var(--moyo-content-preview-height) !important;
+    min-height: 0 !important;
+    max-height: var(--moyo-content-preview-height) !important;
+    overflow: hidden !important;
+}
+
+.moyo-content-note-grid > * > .workspace-note-paper-button,
+.moyo-content-note-grid > * > .project-note-paper-button {
+    height: 100% !important;
+    min-height: 0 !important;
+    max-height: 100% !important;
+}
+
+.moyo-content-note-grid .workspace-note-paper,
+.moyo-content-note-grid .project-note-paper {
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    max-height: 100% !important;
+    aspect-ratio: auto !important;
+    box-sizing: border-box !important;
+}
+
+.moyo-content-note-grid .workspace-note-paper-inner,
+.moyo-content-note-grid .project-note-paper-inner {
+    height: 100% !important;
+    min-height: 0 !important;
+    max-height: 100% !important;
+    box-sizing: border-box !important;
+}
+
+/* PHOTO: crop the image naturally into the exact same responsive height. */
+.moyo-content-photo-card,
+.moyo-content-photo-thumb {
+    height: var(--moyo-content-preview-height) !important;
+    min-height: 0 !important;
+    max-height: var(--moyo-content-preview-height) !important;
+}
+
+.moyo-content-photo-thumb {
+    aspect-ratio: auto !important;
+    background-size: cover !important;
+    background-position: center !important;
+}
+
+/* The pair remains equal-height outside, while both inner preview types
+   begin at the same top line and consume the same natural responsive height. */
+.moyo-content-widget-row {
+    align-items: stretch !important;
+}
+
+.moyo-content-widget-row > .moyo-content-widget {
+    align-self: stretch !important;
+}
+
+@container (max-width: 360px) {
+    .moyo-content-widget {
+        --moyo-content-preview-height: clamp(145px, 46cqw, 175px);
+    }
+}
+
+
+/* Compact note title protection v11
+   When the shared preview shrinks, title space is protected first.
+   Secondary metadata/body/decorations compress before the title does. */
+.moyo-content-note-grid > * {
+    container-type: inline-size;
+}
+
+.moyo-content-note-inner {
+    padding: clamp(12px, 10cqw, 18px) clamp(10px, 8cqw, 16px) 12px !important;
+    overflow: hidden !important;
+}
+
+.moyo-content-note-title {
+    position: relative !important;
+    z-index: 3 !important;
+    display: -webkit-box !important;
+    flex: 0 0 auto !important;
+    min-height: 0 !important;
+    max-height: 2.7em !important;
+    margin: 0 0 clamp(4px, 4cqw, 7px) !important;
+    overflow: hidden !important;
+    color: #17243a !important;
+    font-size: clamp(10px, 8.2cqw, 12px) !important;
+    font-weight: 900 !important;
+    line-height: 1.35 !important;
+    white-space: normal !important;
+    text-overflow: clip !important;
+    word-break: break-word !important;
+    -webkit-line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
+}
+
+.moyo-content-note-meta {
+    flex: 0 0 auto !important;
+    min-height: 12px !important;
+    height: 12px !important;
+    margin: clamp(2px, 2.5cqw, 5px) 0 2px !important;
+    font-size: clamp(8px, 6.8cqw, 10px) !important;
+    line-height: 12px !important;
+}
+
+.moyo-content-note-rule {
+    flex: 0 0 auto !important;
+    margin-top: clamp(3px, 3cqw, 5px) !important;
+}
+
+.moyo-content-note-body {
+    flex: 0 0 auto !important;
+    min-height: 0 !important;
+    max-height: 3.1em !important;
+    margin-top: clamp(7px, 7cqw, 13px) !important;
+    overflow: hidden !important;
+    font-size: clamp(8.5px, 7.2cqw, 10px) !important;
+    line-height: 1.5 !important;
+}
+
+.moyo-content-note-lines {
+    margin-top: auto !important;
+    gap: clamp(3px, 3.6cqw, 6px) !important;
+}
+
+/* Very narrow cards: keep the title readable and sacrifice secondary detail first. */
+@container (max-width: 118px) {
+    .moyo-content-note-inner {
+        padding: 11px 9px 9px !important;
+    }
+
+    .moyo-content-note-title {
+        font-size: 10px !important;
+        line-height: 1.3 !important;
+        max-height: 2.6em !important;
+        margin-bottom: 5px !important;
+    }
+
+    .moyo-content-note-meta {
+        display: none !important;
+    }
+
+    .moyo-content-note-body {
+        margin-top: 8px !important;
+        max-height: 3em !important;
+    }
+
+    .moyo-content-note-lines span:nth-child(n+4) {
+        display: none !important;
+    }
+}
+
+
+/* Compact photo hover typography v12
+   Keep overlay text proportional to the responsive photo preview. */
+.moyo-content-photo-overlay {
+    padding: clamp(8px, 4cqw, 10px) clamp(9px, 4.5cqw, 12px) !important;
+    gap: 3px !important;
+}
+
+.moyo-content-photo-meta strong {
+    font-size: clamp(11px, 4.2cqw, 12px) !important;
+    line-height: 1.2 !important;
+    font-weight: 800 !important;
+}
+
+.moyo-content-photo-meta small {
+    font-size: clamp(9px, 3.5cqw, 10px) !important;
+    line-height: 1.2 !important;
+    font-weight: 600 !important;
+}
+
+.moyo-content-photo-actions {
+    gap: 6px !important;
+    font-size: clamp(10px, 3.8cqw, 11px) !important;
+    line-height: 1.2 !important;
+}
+
+.moyo-content-photo-actions button {
+    gap: 2px !important;
+    font-size: inherit !important;
+    line-height: inherit !important;
+}
+
+.moyo-content-photo-actions i {
+    font-size: .95em !important;
+}
+
+
+/* Photo like color v13
+   Unliked stays neutral/white on overlay; liked state is clearly distinguished. */
+.moyo-content-photo-like-button {
+    color: rgba(255, 255, 255, .92) !important;
+}
+
+.moyo-content-photo-like-button.is-liked {
+    color: #ff5f7e !important;
+}
+
+.moyo-content-photo-like-button.is-liked i {
+    color: #ff5f7e !important;
+}
+
+.moyo-content-photo-like-button:hover {
+    color: #ffd1dc !important;
+}
+
+.moyo-content-photo-like-button.is-liked:hover {
+    color: #ff4f72 !important;
+}
+
+
+/* =====================================================================
+   2026-09-18 Shared note responsive-only list v19
+   - 데스크톱/기존 카드 UI는 절대 변경하지 않음
+   - 760px 이하에서만 공유 노트를 컴팩트 리스트로 전환
+   - 사진첩/기타 콘텐츠는 기존 규칙 유지
+   ===================================================================== */
+@media (max-width: 760px) {
+    .moyo-content-note-grid {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) !important;
+        gap: 8px !important;
+    }
+
+    .moyo-content-note-grid > * {
+        grid-column: auto !important;
+        width: 100% !important;
+        max-width: none !important;
+        height: 86px !important;
+        min-height: 86px !important;
+        max-height: 86px !important;
+        margin: 0 !important;
+        overflow: hidden !important;
+        border-radius: 12px !important;
+    }
+
+    .moyo-content-note-grid > * > .workspace-note-paper-button,
+    .moyo-content-note-grid > * > .project-note-paper-button,
+    .moyo-content-note-grid .workspace-note-paper,
+    .moyo-content-note-grid .project-note-paper {
+        position: relative !important;
+        display: block !important;
+        width: 100% !important;
+        height: 86px !important;
+        min-height: 86px !important;
+        max-height: 86px !important;
+        aspect-ratio: auto !important;
+    }
+
+    .moyo-content-note-grid .workspace-note-paper-inner,
+    .moyo-content-note-grid .project-note-paper-inner,
+    .moyo-content-note-grid .moyo-content-note-inner {
+        height: 100% !important;
+        min-height: 0 !important;
+        max-height: 100% !important;
+        padding: 10px 132px 9px 13px !important;
+        overflow: hidden !important;
+        box-sizing: border-box !important;
+    }
+
+    .moyo-content-note-grid .workspace-note-paper-title,
+    .moyo-content-note-grid .project-note-paper-title,
+    .moyo-content-note-grid .moyo-content-note-title {
+        display: block !important;
+        margin: 0 0 6px !important;
+        overflow: hidden !important;
+        font-size: 13px !important;
+        line-height: 1.35 !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+        -webkit-line-clamp: unset !important;
+    }
+
+    /* 제목 아래 구분선 1개만 */
+    .moyo-content-note-grid .workspace-note-paper-line,
+    .moyo-content-note-grid .project-note-paper-line,
+    .moyo-content-note-grid .moyo-content-note-rule {
+        display: block !important;
+        width: 100% !important;
+        height: 1px !important;
+        margin: 0 0 6px !important;
+        border: 0 !important;
+        background: #e8eef6 !important;
+    }
+
+    /* 카드 장식용 하단 선 제거 */
+    .moyo-content-note-grid .workspace-note-paper-lines,
+    .moyo-content-note-grid .project-note-paper-lines,
+    .moyo-content-note-grid .moyo-content-note-lines {
+        display: none !important;
+    }
+
+    .moyo-content-note-grid .workspace-note-paper-body,
+    .moyo-content-note-grid .project-note-paper-body,
+    .moyo-content-note-grid .moyo-content-note-body {
+        display: block !important;
+        min-height: 0 !important;
+        max-height: none !important;
+        margin: 0 !important;
+        overflow: hidden !important;
+        font-size: 11px !important;
+        line-height: 1.3 !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+        -webkit-line-clamp: unset !important;
+    }
+
+    /* 기존 hover 레이어를 모바일에서만 우측 메타 표시로 재배치 */
+    .moyo-content-note-grid .workspace-note-paper-hover,
+    .moyo-content-note-grid .project-note-paper-hover {
+        position: absolute !important;
+        inset: 10px 11px auto auto !important;
+        width: 108px !important;
+        min-height: 0 !important;
+        padding: 0 !important;
+        border: 0 !important;
+        border-radius: 0 !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        opacity: 1 !important;
+        transform: none !important;
+        pointer-events: auto !important;
+    }
+
+    .moyo-content-note-grid .workspace-note-hover-main,
+    .moyo-content-note-grid .profile-note-hover-main {
+        display: grid !important;
+        justify-items: end !important;
+        gap: 5px !important;
+        width: 100% !important;
+    }
+
+    .moyo-content-note-grid .workspace-note-hover-meta,
+    .moyo-content-note-grid .profile-note-hover-meta {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: flex-end !important;
+        gap: 4px !important;
+        width: 100% !important;
+    }
+
+    .moyo-content-note-grid .workspace-note-hover-meta strong,
+    .moyo-content-note-grid .profile-note-hover-meta strong {
+        display: block !important;
+        max-width: 54px !important;
+        overflow: hidden !important;
+        font-size: 9.5px !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+    }
+
+    .moyo-content-note-grid .workspace-note-hover-dot,
+    .moyo-content-note-grid .profile-note-hover-dot {
+        display: inline !important;
+        font-size: 8px !important;
+    }
+
+    .moyo-content-note-grid .workspace-note-hover-date,
+    .moyo-content-note-grid .profile-note-hover-date {
+        font-size: 9px !important;
+    }
+
+    .moyo-content-note-grid .workspace-note-hover-actions,
+    .moyo-content-note-grid .profile-note-feed-actions {
+        display: flex !important;
+        justify-content: flex-end !important;
+        gap: 8px !important;
+        width: 100% !important;
+        font-size: 9px !important;
+    }
+}
+
+@media (max-width: 520px) {
+    .moyo-content-note-grid > *,
+    .moyo-content-note-grid > * > .workspace-note-paper-button,
+    .moyo-content-note-grid > * > .project-note-paper-button,
+    .moyo-content-note-grid .workspace-note-paper,
+    .moyo-content-note-grid .project-note-paper {
+        height: 80px !important;
+        min-height: 80px !important;
+        max-height: 80px !important;
+    }
+
+    .moyo-content-note-grid .workspace-note-paper-inner,
+    .moyo-content-note-grid .project-note-paper-inner,
+    .moyo-content-note-grid .moyo-content-note-inner {
+        padding-right: 104px !important;
+    }
+
+    .moyo-content-note-grid .workspace-note-paper-hover,
+    .moyo-content-note-grid .project-note-paper-hover {
+        width: 82px !important;
+    }
+
+    .moyo-content-note-grid .workspace-note-hover-meta strong,
+    .moyo-content-note-grid .profile-note-hover-meta strong {
+        max-width: 38px !important;
+    }
+}
+
+
+/* =====================================================================
+   2026-09-18 Shared note responsive list meta polish v20-fixed
+   - 반드시 v19 리스트형 위에 누적
+   - 데스크톱/기본 카드 UI는 변경하지 않음
+   ===================================================================== */
+@media (max-width: 760px) {
+    .moyo-content-note-grid .workspace-note-paper-inner,
+    .moyo-content-note-grid .project-note-paper-inner,
+    .moyo-content-note-grid .moyo-content-note-inner {
+        padding-right: 154px !important;
+    }
+
+    .moyo-content-note-grid .workspace-note-paper-hover,
+    .moyo-content-note-grid .project-note-paper-hover {
+        width: 132px !important;
+        inset: 10px 11px auto auto !important;
+    }
+
+    .moyo-content-note-grid .workspace-note-hover-main,
+    .moyo-content-note-grid .profile-note-hover-main {
+        display: grid !important;
+        grid-template-rows: auto auto !important;
+        justify-items: end !important;
+        align-content: start !important;
+        gap: 5px !important;
+        width: 100% !important;
+    }
+
+    .moyo-content-note-grid .workspace-note-hover-meta,
+    .moyo-content-note-grid .profile-note-hover-meta {
+        width: 100% !important;
+        justify-content: flex-end !important;
+        gap: 4px !important;
+        min-width: 0 !important;
+    }
+
+    .moyo-content-note-grid .workspace-note-hover-meta strong,
+    .moyo-content-note-grid .profile-note-hover-meta strong {
+        display: block !important;
+        max-width: 72px !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+    }
+
+    .moyo-content-note-grid .workspace-note-hover-date,
+    .moyo-content-note-grid .profile-note-hover-date {
+        flex: 0 0 auto !important;
+        white-space: nowrap !important;
+    }
+
+    .moyo-content-note-grid .workspace-note-hover-actions,
+    .moyo-content-note-grid .profile-note-feed-actions {
+        width: 100% !important;
+        justify-content: flex-end !important;
+        gap: 8px !important;
+        white-space: nowrap !important;
+    }
+}
+
+@media (max-width: 520px) {
+    .moyo-content-note-grid .workspace-note-paper-inner,
+    .moyo-content-note-grid .project-note-paper-inner,
+    .moyo-content-note-grid .moyo-content-note-inner {
+        padding-right: 124px !important;
+    }
+
+    .moyo-content-note-grid .workspace-note-paper-hover,
+    .moyo-content-note-grid .project-note-paper-hover {
+        width: 102px !important;
+    }
+
+    .moyo-content-note-grid .workspace-note-hover-meta strong,
+    .moyo-content-note-grid .profile-note-hover-meta strong {
+        max-width: 46px !important;
+    }
+}
+
+
+/* =====================================================================
+   2026-09-19 Shared note mobile card spacing v21
+   - 모바일 리스트형 유지
+   - 카드 3개 노출 구조는 유지하면서 각 카드 높이를 확보
+   - 제목 / 구성정보 / 본문 / 우측 작성자·반응 정보가 서로 눌리지 않게 정리
+   ===================================================================== */
+@media (max-width: 760px) {
+    .moyo-content-note-grid {
+        gap: 8px !important;
+    }
+
+    .moyo-content-note-grid > *,
+    .moyo-content-note-grid > * > .workspace-note-paper-button,
+    .moyo-content-note-grid > * > .project-note-paper-button,
+    .moyo-content-note-grid .workspace-note-paper,
+    .moyo-content-note-grid .project-note-paper {
+        height: 94px !important;
+        min-height: 94px !important;
+        max-height: 94px !important;
+    }
+
+    .moyo-content-note-grid .workspace-note-paper-inner,
+    .moyo-content-note-grid .project-note-paper-inner,
+    .moyo-content-note-grid .moyo-content-note-inner {
+        padding: 10px 154px 10px 13px !important;
+    }
+
+    .moyo-content-note-grid .workspace-note-paper-title,
+    .moyo-content-note-grid .project-note-paper-title,
+    .moyo-content-note-grid .moyo-content-note-title {
+        margin: 0 0 4px !important;
+        font-size: 13px !important;
+        line-height: 18px !important;
+    }
+
+    .moyo-content-note-grid .workspace-note-content-meta,
+    .moyo-content-note-grid .project-note-content-meta,
+    .moyo-content-note-grid .profile-note-content-meta {
+        min-height: 14px !important;
+        height: 14px !important;
+        margin: 0 0 4px !important;
+        line-height: 14px !important;
+    }
+
+    .moyo-content-note-grid .workspace-note-paper-line,
+    .moyo-content-note-grid .project-note-paper-line,
+    .moyo-content-note-grid .moyo-content-note-rule {
+        width: 100% !important;
+        height: 1px !important;
+        margin: 0 0 5px !important;
+    }
+
+    .moyo-content-note-grid .workspace-note-paper-body,
+    .moyo-content-note-grid .project-note-paper-body,
+    .moyo-content-note-grid .moyo-content-note-body {
+        min-height: 0 !important;
+        margin: 0 !important;
+        font-size: 11px !important;
+        line-height: 16px !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+    }
+
+    .moyo-content-note-grid .workspace-note-paper-hover,
+    .moyo-content-note-grid .project-note-paper-hover {
+        inset: 10px 11px auto auto !important;
+        width: 132px !important;
+    }
+
+    .moyo-content-note-grid .workspace-note-hover-main,
+    .moyo-content-note-grid .profile-note-hover-main {
+        gap: 8px !important;
+    }
+}
+
+@media (max-width: 520px) {
+    .moyo-content-note-grid > *,
+    .moyo-content-note-grid > * > .workspace-note-paper-button,
+    .moyo-content-note-grid > * > .project-note-paper-button,
+    .moyo-content-note-grid .workspace-note-paper,
+    .moyo-content-note-grid .project-note-paper {
+        height: 92px !important;
+        min-height: 92px !important;
+        max-height: 92px !important;
+    }
+
+    .moyo-content-note-grid .workspace-note-paper-inner,
+    .moyo-content-note-grid .project-note-paper-inner,
+    .moyo-content-note-grid .moyo-content-note-inner {
+        padding: 9px 124px 9px 12px !important;
+    }
+
+    .moyo-content-note-grid .workspace-note-paper-hover,
+    .moyo-content-note-grid .project-note-paper-hover {
+        inset: 9px 10px auto auto !important;
+        width: 102px !important;
+    }
+
+    .moyo-content-note-grid .workspace-note-hover-main,
+    .moyo-content-note-grid .profile-note-hover-main {
+        gap: 7px !important;
+    }
+}
+
+
+/* 상단 공통 위젯 본문 높이
+   - GROUP / PROJECT가 commonCommunityWidgets.jspf를 공유하므로 여기서만 관리한다.
+   - 최근 활동과 투표의 빈/로딩/오류 상태가 같은 Y축 중심을 사용한다. */
+.moyo-community-widgets {
+    --moyo-community-core-body-height: 146px;
+}
+
+/* 진행 중인 투표: 최근 활동과 동일한 본문 높이 기준으로 중앙 정렬 */
+.moyo-community-widgets [data-dashboard-widget="poll"] .workspace-poll-summary-area:has(.moyo-widget-state),
+.moyo-community-widgets [data-dashboard-widget="poll"] .workspace-poll-summary-body.is-empty {
+    display: flex !important;
+    flex: 1 1 auto !important;
+    align-items: stretch !important;
+    justify-content: stretch !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: var(--moyo-community-core-body-height) !important;
+    height: var(--moyo-community-core-body-height) !important;
+    max-height: var(--moyo-community-core-body-height) !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
+}
+
+.moyo-community-widgets [data-dashboard-widget="poll"] .workspace-poll-summary-body.is-empty > .moyo-widget-state,
+.moyo-community-widgets [data-dashboard-widget="poll"] .workspace-poll-summary-area > .moyo-widget-state {
     flex: 1 1 auto !important;
     width: 100% !important;
     min-height: 0 !important;
+    height: 100% !important;
     max-height: none !important;
+    margin: 0 !important;
     display: flex !important;
     flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
 }
 
-.moyo-community-widgets .workspace-main-poll-card .workspace-poll-summary-body.is-empty,
-.moyo-community-widgets .workspace-main-poll-card > .workspace-poll-summary-area:has(> .moyo-widget-state) {
-    flex: 1 1 auto !important;
+
+/* =====================================================================
+   Recent activity common geometry
+   - Shared by GROUP / PROJECT through commonCommunityWidgets.jspf
+   - Show 3 activity cards, scroll from the 4th item
+   - Keep this rule here only. Do not duplicate in workspace/project CSS.
+   ===================================================================== */
+.moyo-community-widgets [data-dashboard-widget="schedule"] {
+    height: 210px !important;
+    min-height: 210px !important;
+    max-height: 210px !important;
+    overflow: hidden !important;
+}
+
+.moyo-community-widgets [data-dashboard-widget="schedule"] .workspace-recent-activity-list {
+    box-sizing: border-box !important;
+    height: var(--moyo-community-core-body-height) !important;
+    min-height: var(--moyo-community-core-body-height) !important;
+    max-height: var(--moyo-community-core-body-height) !important;
+    margin: 0 !important;
+    padding: 8px 4px 0 0 !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    align-content: start !important;
+    scrollbar-gutter: stable;
+}
+
+.moyo-community-widgets [data-dashboard-widget="schedule"] .workspace-recent-activity-list > li {
+    min-height: 42px !important;
+    max-height: 42px !important;
+}
+
+.moyo-community-widgets [data-dashboard-widget="schedule"] .workspace-recent-activity-item {
+    height: 42px !important;
+    min-height: 42px !important;
+    max-height: 42px !important;
+    box-sizing: border-box !important;
+}
+
+.moyo-community-widgets [data-dashboard-widget="schedule"] .workspace-recent-activity-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.moyo-community-widgets [data-dashboard-widget="schedule"] .workspace-recent-activity-list::-webkit-scrollbar-thumb {
+    border-radius: 999px;
+    background: #d8e1ee;
+}
+
+.moyo-community-widgets [data-dashboard-widget="schedule"] .workspace-recent-activity-list::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+/* Loading / empty state remains centered inside the same common body. */
+.moyo-community-widgets [data-dashboard-widget="schedule"] .workspace-recent-activity-list:has(> .moyo-widget-state) {
+    display: flex !important;
     align-items: center !important;
     justify-content: center !important;
 }
 
-.moyo-community-widgets .workspace-main-poll-card .workspace-poll-summary-body.is-empty > .moyo-widget-state,
-.moyo-community-widgets .workspace-main-poll-card > .workspace-poll-summary-area > .moyo-widget-state {
-    margin: auto 0 !important;
-    padding-block: 0 !important;
-}
-
-/* Common community list item rhythm: recent activity and active poll cards share one compact row height. */
-.moyo-community-widgets .workspace-main-today-card .workspace-recent-activity-item,
-.moyo-community-widgets .workspace-main-poll-card .workspace-poll-summary-item {
-    min-height: 42px !important;
-    height: 42px !important;
-    box-sizing: border-box;
-}
-
-.moyo-community-widgets .workspace-main-poll-card .workspace-poll-summary-item {
-    padding: 6px 9px !important;
-    border-radius: 11px !important;
-}
-
-.moyo-community-widgets .workspace-main-poll-card .workspace-poll-summary-main {
-    gap: 2px;
-}
-
-/* Common community item skin: active poll rows use the same visual shell as recent activity rows. */
-.moyo-community-widgets .workspace-main-poll-card .workspace-poll-summary-item {
-    border: 1px solid #e4ebf5 !important;
-    background: linear-gradient(100deg, rgba(45, 211, 189, .07), rgba(75, 136, 255, .05), rgba(124, 77, 255, .04)) !important;
-    box-shadow: none !important;
-    transition: border-color .15s ease, box-shadow .15s ease, transform .15s ease !important;
-}
-
-.moyo-community-widgets .workspace-main-poll-card .workspace-poll-summary-item:hover {
-    border-color: #cbdcf7 !important;
-    background: linear-gradient(100deg, rgba(45, 211, 189, .07), rgba(75, 136, 255, .05), rgba(124, 77, 255, .04)) !important;
-    box-shadow: 0 5px 14px rgba(56, 91, 150, .08) !important;
-    transform: none !important;
-}
-
-/* =====================================================================
-   Canonical community widget geometry v2
-   - Workspace and project use the exact same top/board card contract.
-   ===================================================================== */
-.moyo-main-shell .moyo-community-widgets .workspace-core-row > .moyo-widget-card {
-    height: 210px !important;
-    min-height: 210px !important;
-    padding: 15px 17px 14px !important;
-}
-
-.moyo-main-shell .moyo-community-widgets .workspace-core-head.moyo-widget-head {
-    flex: 0 0 auto;
-    min-height: 24px;
-    margin: 0 0 10px !important;
-    padding: 0 0 9px !important;
-    border-bottom: 1px solid var(--moyo-widget-divider) !important;
-}
-
-.moyo-main-shell .moyo-community-widgets .workspace-core-titleline.moyo-widget-title {
-    gap: 6px;
-}
-
-.moyo-main-shell .moyo-community-widgets .workspace-core-titleline .moyo-widget-title__text {
-    display: flex;
-    align-items: center;
-    min-height: 20px;
-    margin: 0;
-    color: var(--moyo-widget-title-color);
-    font: inherit;
-}
-
-.moyo-main-shell .moyo-community-widgets .workspace-title-count.moyo-widget-count {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 18px;
-    height: 18px;
-    margin: 0;
-    padding: 0 6px;
-    line-height: 1;
-}
-
-.moyo-main-shell .moyo-community-widgets .workspace-core-row .today-schedule-list,
-.moyo-main-shell .moyo-community-widgets .workspace-core-row .workspace-poll-summary-area {
-    flex: 1 1 auto;
-    width: 100%;
-    min-height: 138px !important;
-    max-height: 138px !important;
-    margin: 0;
-    overflow: hidden !important;
-    box-sizing: border-box;
-}
-
-.moyo-main-shell .moyo-community-widgets .workspace-core-row .workspace-core-state {
-    min-height: 100%;
-    height: 100%;
-    padding: 8px 14px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 4px;
-    border: 0;
-    background: transparent;
-    list-style: none;
-}
-
-.moyo-main-shell .moyo-community-widgets .workspace-project-card-row > .workspace-board-card {
-    display: grid;
-    grid-template-rows: var(--moyo-widget-head-height) minmax(0, 1fr);
-    height: 148px !important;
-    min-height: 148px !important;
-    padding: 0 18px 12px !important;
-}
-
-.moyo-main-shell .moyo-community-widgets .workspace-project-card-row .board-title.moyo-widget-head {
-    height: var(--moyo-widget-head-height);
-    min-height: var(--moyo-widget-head-height);
-    margin: 0 !important;
-    padding: 0 !important;
-    border-bottom: 1px solid var(--moyo-widget-divider) !important;
-}
-
-.moyo-main-shell .moyo-community-widgets .workspace-project-card-row .board-title-label.moyo-widget-title {
-    font-size: 15px;
-    font-weight: 800;
-    line-height: 1;
-}
-
-.moyo-main-shell .moyo-community-widgets .workspace-project-card-row .board-list {
-    display: block;
-    min-width: 0;
+.moyo-community-widgets [data-dashboard-widget="schedule"] .workspace-recent-activity-list:has(> .moyo-widget-state) > .moyo-widget-state {
+    width: 100% !important;
     min-height: 0 !important;
     max-height: none !important;
-    height: 91px;
-    margin: 0;
-    padding: 0;
-    overflow: hidden;
-    border: 0;
-    background: transparent;
 }
 
 @media (max-width: 760px) {
-    .moyo-main-shell .moyo-community-widgets .workspace-core-row > .moyo-widget-card {
+    .moyo-community-widgets [data-dashboard-widget="schedule"] {
         height: 210px !important;
         min-height: 210px !important;
-        padding: 14px 15px 13px !important;
+        max-height: 210px !important;
     }
 
-    .moyo-main-shell .moyo-community-widgets .workspace-project-card-row > .workspace-board-card {
-        height: 150px !important;
-        min-height: 150px !important;
-        padding-inline: 16px !important;
+    .moyo-community-widgets [data-dashboard-widget="schedule"] .workspace-recent-activity-list {
+        height: 146px !important;
+        min-height: 146px !important;
+        max-height: 146px !important;
     }
 }
 
-/* Shared recent activity viewport: three 42px cards and two 6px gaps.
-   The fourth item and beyond stay inside the widget scroll viewport. */
-.moyo-main-shell .moyo-community-widgets .workspace-core-row .workspace-recent-activity-list {
-    flex: 0 0 138px;
-    width: 100% !important;
-    min-width: 0 !important;
-    max-width: none !important;
-    height: 138px !important;
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) !important;
-    grid-template-rows: none !important;
-    grid-auto-rows: 42px !important;
-    align-content: start;
-    justify-items: stretch;
-    gap: 6px !important;
-    padding-block: 0 !important;
-    overflow-y: auto !important;
+/* =====================================================================
+   2026-09-22 Top core widgets final geometry
+   - GROUP / PROJECT 공통
+   - 최근 활동 / 진행 중인 투표 외곽 높이는 동일하게 고정한다.
+   - 최근 활동은 4개 항목 높이만 노출하고 5번째부터 내부 스크롤한다.
+   - 빈/로딩/오류 상태는 헤더 아래 본문 영역의 정중앙에 둔다.
+   ===================================================================== */
+.moyo-community-widgets {
+    --moyo-community-top-card-height: 264px;
+    --moyo-community-activity-row-height: 42px;
+    --moyo-community-activity-gap: 5px;
+    --moyo-community-activity-visible-count: 4;
+    --moyo-community-activity-body-height: calc(
+        (var(--moyo-community-activity-row-height) * var(--moyo-community-activity-visible-count)) +
+        (var(--moyo-community-activity-gap) * 3) +
+        8px
+    );
+}
+
+.moyo-community-widgets > .workspace-core-row {
+    align-items: stretch !important;
+}
+
+.moyo-community-widgets > .workspace-core-row > .workspace-core-card {
+    height: var(--moyo-community-top-card-height) !important;
+    min-height: var(--moyo-community-top-card-height) !important;
+    max-height: var(--moyo-community-top-card-height) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+    box-sizing: border-box !important;
+}
+
+.moyo-community-widgets > .workspace-core-row > .workspace-core-card > .moyo-widget-body {
+    min-height: 0 !important;
+    box-sizing: border-box !important;
+}
+
+/* 최근 활동: 4개만 보이고 이후 항목은 카드 내부에서 스크롤 */
+.moyo-community-widgets [data-dashboard-widget="schedule"] .workspace-recent-activity-list {
+    flex: 0 0 var(--moyo-community-activity-body-height) !important;
+    height: var(--moyo-community-activity-body-height) !important;
+    min-height: var(--moyo-community-activity-body-height) !important;
+    max-height: var(--moyo-community-activity-body-height) !important;
+    margin: 0 !important;
+    padding: 8px 4px 0 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: var(--moyo-community-activity-gap) !important;
     overflow-x: hidden !important;
+    overflow-y: auto !important;
+    align-content: start !important;
+    scrollbar-gutter: stable;
 }
-.moyo-main-shell .moyo-community-widgets .workspace-recent-activity-list > li:not(.moyo-widget-state) {
+
+.moyo-community-widgets [data-dashboard-widget="schedule"] .workspace-recent-activity-list > li {
+    flex: 0 0 var(--moyo-community-activity-row-height) !important;
+    height: var(--moyo-community-activity-row-height) !important;
+    min-height: var(--moyo-community-activity-row-height) !important;
+    max-height: var(--moyo-community-activity-row-height) !important;
+}
+
+.moyo-community-widgets [data-dashboard-widget="schedule"] .workspace-recent-activity-item {
+    height: 100% !important;
+    min-height: 0 !important;
+    max-height: 100% !important;
+    box-sizing: border-box !important;
+}
+
+/* 최근 활동 빈/로딩 상태는 동일 본문 높이의 중앙 */
+.moyo-community-widgets [data-dashboard-widget="schedule"] .workspace-recent-activity-list:has(> .moyo-widget-state:only-child) {
+    align-items: center !important;
+    justify-content: center !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+}
+
+.moyo-community-widgets [data-dashboard-widget="schedule"] .workspace-recent-activity-list > .moyo-widget-state:only-child {
+    flex: 0 0 auto !important;
     width: 100% !important;
-    min-width: 0 !important;
-    max-width: none !important;
-    justify-self: stretch !important;
-    height: 42px;
-    min-height: 42px;
-    margin-block: 0;
-    box-sizing: border-box;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    margin: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
 }
-.moyo-main-shell .moyo-community-widgets .workspace-main-today-card .workspace-recent-activity-item {
-    display: grid;
+
+/* 진행 중인 투표: 본문이 남는 높이를 사용하고 빈 상태는 정중앙 */
+.moyo-community-widgets [data-dashboard-widget="poll"] .workspace-active-poll-area,
+.moyo-community-widgets [data-dashboard-widget="poll"] .workspace-poll-summary-area {
+    flex: 1 1 auto !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    box-sizing: border-box !important;
+}
+
+.moyo-community-widgets [data-dashboard-widget="poll"] .workspace-active-poll-area:has(.moyo-widget-state),
+.moyo-community-widgets [data-dashboard-widget="poll"] .workspace-poll-summary-area:has(.moyo-widget-state),
+.moyo-community-widgets [data-dashboard-widget="poll"] .workspace-poll-summary-body.is-empty {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.moyo-community-widgets [data-dashboard-widget="poll"] :is(
+    .workspace-active-poll-area,
+    .workspace-poll-summary-area,
+    .workspace-poll-summary-body.is-empty
+) > .moyo-widget-state {
     width: 100% !important;
-    inline-size: 100% !important;
-    min-width: 0 !important;
-    max-width: none !important;
-    justify-self: stretch !important;
-    box-sizing: border-box;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    margin: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
 }
-.moyo-main-shell .moyo-community-widgets .workspace-recent-activity-list:has(> .moyo-widget-state) {
-    display: flex;
-    align-items: center;
-    justify-content: center;
+
+@media (max-width: 760px) {
+    .moyo-community-widgets {
+        --moyo-community-top-card-height: 230px;
+        --moyo-community-activity-visible-count: 3;
+        --moyo-community-activity-body-height: calc(
+            (var(--moyo-community-activity-row-height) * var(--moyo-community-activity-visible-count)) +
+            (var(--moyo-community-activity-gap) * 2) +
+            8px
+        );
+    }
+}
+
+/* =====================================================================
+   2026-09-22 community widget correction v2
+   - Recent activity: show exactly 3 rows, scroll from the 4th.
+   - Every GROUP / PROJECT dashboard empty/loading/error state is centered
+     in the remaining widget body without changing populated layouts.
+   ===================================================================== */
+.moyo-community-widgets {
+    --moyo-community-top-card-height: 210px !important;
+    --moyo-community-activity-visible-count: 3 !important;
+    --moyo-community-activity-body-height: calc(
+        (var(--moyo-community-activity-row-height) * 3) +
+        (var(--moyo-community-activity-gap) * 2) +
+        8px
+    ) !important;
+}
+
+.moyo-community-widgets [data-dashboard-widget="schedule"] .workspace-recent-activity-list {
+    flex: 0 0 var(--moyo-community-activity-body-height) !important;
+    height: var(--moyo-community-activity-body-height) !important;
+    min-height: var(--moyo-community-activity-body-height) !important;
+    max-height: var(--moyo-community-activity-body-height) !important;
+}
+
+/* Direct empty/loading/error state used by recent activity + board widgets. */
+.moyo-community-widgets .moyo-widget-body:has(> .moyo-widget-state:only-child) {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.moyo-community-widgets .moyo-widget-body > .moyo-widget-state:only-child {
+    flex: 0 0 auto !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    margin: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+}
+
+/* Poll wraps its state one level deeper. */
+.moyo-community-widgets [data-dashboard-widget="poll"] .workspace-poll-summary-area:has(.moyo-widget-state),
+.moyo-community-widgets [data-dashboard-widget="poll"] .workspace-poll-summary-body.is-empty {
+    display: flex !important;
+    flex: 1 1 auto !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-height: 0 !important;
+    height: auto !important;
+    max-height: none !important;
+}
+
+.moyo-community-widgets [data-dashboard-widget="poll"] .workspace-poll-summary-body.is-empty > .moyo-widget-state,
+.moyo-community-widgets [data-dashboard-widget="poll"] .workspace-poll-summary-area > .moyo-widget-state {
+    flex: 0 0 auto !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    margin: 0 !important;
+}
+
+/* Shared NOTE / PHOTO widgets use a different body/state contract. */
+.moyo-content-widget__body:has(> .moyo-content-empty:only-child) {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.moyo-content-widget__body > .moyo-content-empty:only-child {
+    flex: 0 0 auto !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    margin: 0 !important;
+}
+
+@media (max-width: 760px) {
+    .moyo-community-widgets {
+        --moyo-community-top-card-height: 210px !important;
+        --moyo-community-activity-visible-count: 3 !important;
+        --moyo-community-activity-body-height: calc(
+            (var(--moyo-community-activity-row-height) * 3) +
+            (var(--moyo-community-activity-gap) * 2) +
+            8px
+        ) !important;
+    }
 }

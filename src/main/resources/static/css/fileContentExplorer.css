@@ -370,3 +370,35 @@
 .file-explorer[data-content-type="FILE"] .file-browser-grid.is-list .file-item {
     border-radius: var(--moyo-radius-md, 12px) !important;
 }
+
+/* 2026-09-19: 자료실 그리드 선택 이펙트 통일
+   - 노트/사진 탐색기처럼 카드 자체에만 선택 상태를 표현한다.
+   - 공통 선택 스타일의 두꺼운 외곽 링은 제거하고 MOYO의 옅은 그라데이션을 사용한다. */
+.file-explorer[data-content-type="FILE"] .file-browser-grid:not(.is-list) > .file-item.is-selected {
+    border: 1px solid rgba(70, 127, 245, .62) !important;
+    background: linear-gradient(
+        135deg,
+        rgba(77, 218, 202, .055) 0%,
+        rgba(70, 127, 245, .075) 58%,
+        rgba(126, 92, 255, .045) 100%
+    ) !important;
+    box-shadow: 0 8px 22px rgba(45, 78, 145, .08) !important;
+    transform: none !important;
+}
+
+.file-explorer[data-content-type="FILE"] .file-browser-grid:not(.is-list) > .file-item.is-selected::before,
+.file-explorer[data-content-type="FILE"] .file-browser-grid:not(.is-list) > .file-item.is-selected::after {
+    content: none !important;
+    display: none !important;
+}
+
+.file-explorer[data-content-type="FILE"] .file-browser-grid:not(.is-list) > .file-item.is-selected:hover {
+    border-color: rgba(70, 127, 245, .76) !important;
+    background: linear-gradient(
+        135deg,
+        rgba(77, 218, 202, .07) 0%,
+        rgba(70, 127, 245, .09) 58%,
+        rgba(126, 92, 255, .055) 100%
+    ) !important;
+    box-shadow: 0 10px 24px rgba(45, 78, 145, .10) !important;
+}

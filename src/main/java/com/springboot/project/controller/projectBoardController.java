@@ -97,8 +97,12 @@ public class projectBoardController {
         model.addAttribute("boardType", type);
         model.addAttribute("wsId", wsId);
         model.addAttribute("searchType", searchType);
+        Long viewerUserId = currentUserId(session);
+        boolean projectReadOnly = viewerUserId != null
+                && projectAuthorizationService.isProjectReadOnly(projId, viewerUserId);
         model.addAttribute("keyword", keyword);
-        model.addAttribute("canManageBoard", canManagePin(wsId, projId, session));
+        model.addAttribute("projectReadOnly", projectReadOnly);
+        model.addAttribute("canManageBoard", !projectReadOnly && canManagePin(wsId, projId, session));
         addPagingModel(model, page, size, totalCount);
 
         return "board/boardList";
@@ -123,6 +127,9 @@ public class projectBoardController {
             return Map.of("status", "NO_PERMISSION");
         }
         Long userId = currentUserId(session);
+        if (!projectAuthorizationService.canModifyProjectContent(post.getProjId(), userId)) {
+            return Map.of("status", "READ_ONLY");
+        }
         boolean canManage = boardAuthorizationService.canManageBoard(post.getWsId(), post.getProjId(), userId);
         if ("NOTICE".equalsIgnoreCase(post.getBoardType()) && !canManage) {
             return Map.of("status", "NO_PERMISSION");
@@ -141,6 +148,11 @@ public class projectBoardController {
     public Map<String, String> delete(@PathVariable Long postId, HttpSession session) {
         Long userId = currentUserId(session);
         if (userId == null) return Map.of("status", "LOGIN_REQUIRED");
+        postDTO post = iboardService.getPostDetail(postId.intValue());
+        if (post != null && post.getProjId() != null
+                && !projectAuthorizationService.canModifyProjectContent(post.getProjId(), userId)) {
+            return Map.of("status", "READ_ONLY");
+        }
         if (!boardAuthorizationService.canDeletePost(postId, userId)) return Map.of("status", "NO_PERMISSION");
         return Map.of("status", iboardService.deletePost(postId) ? "SUCCESS" : "FAIL");
     }

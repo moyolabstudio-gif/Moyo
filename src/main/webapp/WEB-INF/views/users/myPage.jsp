@@ -10,14 +10,14 @@
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/moyoUi.css?v=profile-relation-menu-compact-20260707">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/myPage.css?v=20260907-friend-responsive-73">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common/commonContentCard.css?v=20260907-profile-responsive-73">
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/myPage-tabs.css?v=20260907-profile-responsive-73">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/myPage-tabs.css?v=20260919-profile-meta-mobile-polish-75">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/myPage-settings.css?v=settings-cleanup-20260906">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/commonPeopleModal.css?v=20260906-avatar-isolation-59">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/commonPhotoPostDetail.css?v=20260809-fit-atomic">
     
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/commonCalendarEventPreview.css?v=event-header-actions-unified-v1">
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common/commonContentRecordModal.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common/commonContentRecordModal.css?v=record-readonly-upload-hide-v85-20260920">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/commonGroupPreview.css?v=profile-group-preview-v1">
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/css/commonNoteDetail.css?v=profile-note-actions-v1">
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/css/commonFolderModal.css?v=common-folder-card-v2">
@@ -122,7 +122,7 @@
                             <c:choose>
                                 <c:when test="${relationStatus eq 'ACCEPTED'}">
                                     <div class="profile-relation-wrap">
-                                        <button type="button" class="profile-action is-friend" data-relation-menu-toggle aria-haspopup="true" aria-expanded="false">친구</button>
+                                        <button type="button" class="profile-action is-friend" data-relation-menu-toggle aria-haspopup="true" aria-expanded="false"><i class="fa-solid fa-user-group profile-action__icon" aria-hidden="true"></i><span>친구</span></button>
                                         <div class="profile-relation-menu" data-relation-menu hidden role="menu">
                                             <button type="button" role="menuitem" class="is-danger" data-friend-action="delete" data-friend-id="${relationId}">친구 해제</button>
                                         </div>
@@ -195,16 +195,32 @@
             </div>
 
             <div class="profile-meta-line">
-                <c:if test="${isOwnerProfile or showProfileEmail}">
-                    <span><c:out value="${currentUser.email}" /></span>
+                <c:if test="${showProfileEmail}">
+                    <span class="profile-meta-item profile-meta-email">
+                        <i class="fa-regular fa-envelope profile-meta-icon" aria-hidden="true"></i>
+                        <c:out value="${currentUser.email}" />
+                    </span>
                 </c:if>
-                <c:if test="${not empty currentUser.birthDate && birthPublic ne 'N'}">
-                    <span>
-                        <c:if test="${birthType eq 'LUNAR'}">음력 </c:if><c:out value="${currentUser.birthDate}" />
+                <c:if test="${showProfileBirth and not empty currentUser.birthDate && birthPublic ne 'N'}">
+                    <span class="profile-meta-item profile-meta-birth">
+                        <i class="fa-solid fa-cake-candles profile-meta-icon" aria-hidden="true"></i>
+                        <c:out value="${fn:replace(fn:substring(currentUser.birthDate, 5, 10), '-', '.')}" />
+                        <c:choose>
+                            <c:when test="${birthType eq 'LUNAR'}">
+                                <i class="fa-regular fa-moon profile-birth-type-icon is-lunar" role="img" aria-label="음력" title="음력"></i>
+                            </c:when>
+                            <c:otherwise>
+                                <i class="fa-regular fa-sun profile-birth-type-icon is-solar" role="img" aria-label="양력" title="양력"></i>
+                            </c:otherwise>
+                        </c:choose>
                     </span>
                 </c:if>
                 <c:if test="${isOwnerProfile and birthPublic eq 'N'}">
-                    <span>생일 비공개</span>
+                    <span class="profile-meta-item profile-meta-birth is-private">
+                        <i class="fa-solid fa-cake-candles profile-meta-icon" aria-hidden="true"></i>
+                        <span>생일 비공개</span>
+                        <i class="fa-solid fa-lock profile-birth-type-icon" aria-hidden="true"></i>
+                    </span>
                 </c:if>
             </div>
         </div>

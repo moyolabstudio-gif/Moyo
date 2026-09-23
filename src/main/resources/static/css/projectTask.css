@@ -1,7 +1,7 @@
 .project-task-product{position:relative;overflow:visible;}.project-task-head{display:flex;justify-content:space-between;gap:24px;}.project-task-heading{min-width:0;}.project-task-kicker{display:block;font-weight:900;}.project-task-heading h3{margin:0;color:#182230;font-weight:900;}.project-task-heading p{margin:7px 0 0;color:#758195;}.project-task-head-actions{display:flex;gap:9px;flex-shrink:0;}.project-task-view-btn,.project-task-add-btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;font-size:12px;font-weight:900;cursor:pointer;transition:.18s ease;}.project-task-view-btn{border:1px solid #dfe7ef;background:#fff;color:#526175;}.project-task-view-btn:hover{border-color:#9fc8ef;background:#f7fbff;color:#377fc7;}.project-task-add-btn{border:0;background:linear-gradient(135deg,#55DDBF 0%,#4a90e2 56%,#7568d8 100%);color:#fff;box-shadow:0 8px 20px rgba(74,144,226,.2);}.project-task-add-btn:hover{transform:translateY(-1px);box-shadow:0 11px 24px rgba(74,144,226,.25);}
 .project-task-summary{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));}.project-task-metric{display:flex;align-items:center;justify-content:space-between;gap:10px;min-width:0;border:1px solid #e7ecf2;color:#697587;cursor:pointer;transition:.18s ease;}.project-task-metric span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:800;}.project-task-metric strong{color:#1d2939;font-weight:900;}.project-task-metric:hover,.project-task-metric.is-active{border-color:#a9caeb;background:#f7fbff;box-shadow:0 6px 16px rgba(74,144,226,.08);}.project-task-metric.is-delay strong{color:#e45c69;}.project-task-metric.is-delay.is-active{border-color:#f3bdc2;background:#fff8f8;color:#d84f5c;}
 .project-task-tools{display:none;align-items:center;gap:10px;margin-bottom:18px;}.project-task-product.is-workspace .project-task-tools{display:flex;}.project-task-search{display:flex;align-items:center;gap:9px;min-width:260px;height:38px;padding:0 12px;border:1px solid #dde5ed;border-radius:12px;background:#fff;color:#99a5b5;}.project-task-search:focus-within{border-color:#86b9e7;box-shadow:0 0 0 3px rgba(74,144,226,.1);}.project-task-search input{width:100%;border:0;outline:0;background:transparent;color:#273142;font-size:12px;}.project-task-person-filter{display:flex;align-items:center;gap:7px;min-width:0;overflow-x:auto;padding:2px;}.project-task-person-filter::-webkit-scrollbar{height:4px;}.project-task-person-chip{display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 10px;border:1px solid #e1e7ee;border-radius:999px;background:#fff;color:#637083;font-size:11px;font-weight:800;white-space:nowrap;cursor:pointer;}.project-task-person-chip.is-active{border-color:#82b9e9;background:#eef7ff;color:#2f7fc9;}.project-task-reset-btn{display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 10px;border:0;background:transparent;color:#8a95a5;font-size:11px;font-weight:800;cursor:pointer;white-space:nowrap;}
-.project-task-board{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));}.project-task-column{min-width:0;border:1px solid #e8edf2;background:#f7f9fb;}.project-task-column>header{display:flex;align-items:center;gap:8px;color:#354052;}.project-task-column>header strong{font-size:13px;font-weight:900;}.project-task-column>header em{display:inline-flex;align-items:center;justify-content:center;min-width:23px;height:22px;padding:0 7px;border-radius:999px;background:#fff;color:#667085;font-size:11px;font-style:normal;font-weight:900;}.project-task-column-dot{width:8px;height:8px;border-radius:50%;}.project-task-column-dot.todo{background:#8ea1b8;}.project-task-column-dot.progress{background:#f0b65a;}.project-task-column-dot.done{background:#55c7ad;}.project-task-list{display:flex;flex-direction:column;gap:9px;}.project-task-card{display:block;width:100%;border:1px solid #e3e9ef;background:#fff;text-align:left;box-shadow:0 4px 12px rgba(31,42,68,.04);cursor:pointer;transition:.18s ease;}.project-task-card:hover{transform:translateY(-2px);border-color:#bad2e8;box-shadow:0 10px 22px rgba(31,42,68,.08);}.project-task-card.is-dragging{opacity:.45;}.project-task-card.is-delayed{border-color:#f0c8cc;background:linear-gradient(180deg,#fff 0%,#fffafa 100%);}.project-task-card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;}.project-task-card-top strong{min-width:0;color:#202b3c;font-weight:900;word-break:break-word;}.project-task-card-top i{margin-top:3px;color:#b4becb;font-size:11px;}.project-task-card-period{display:flex;align-items:center;gap:6px;color:#7b8797;font-weight:750;}.project-task-card-bottom{display:flex;align-items:center;justify-content:space-between;gap:10px;border-top:1px solid #f0f3f6;}.project-task-person{display:flex;align-items:center;min-width:0;}.project-task-person>span:last-child{display:flex;flex-direction:column;min-width:0;}.project-task-person b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#344054;font-weight:900;}.project-task-person small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:700;}.project-task-card-bottom>em{flex-shrink:0;border-radius:999px;background:#f4f7fa;color:#728094;font-size:10px;font-style:normal;font-weight:900;}.project-task-avatar{position:relative;display:inline-grid;place-items:center;overflow:hidden;flex:0 0 auto;padding:0;border:0;border-radius:50%;color:#fff;font-weight:900;box-shadow:none;}.project-task-avatar.small{font-size:10px;}.project-task-avatar.tiny{width:24px;min-width:24px;max-width:24px;height:24px;min-height:24px;max-height:24px;font-size:9px;}.project-task-avatar.has-image{background:transparent!important;background-image:none!important;}.project-task-avatar.is-default-profile{background:var(--moyo-avatar-gradient,linear-gradient(135deg,#55D5CE 0%,#4288EF 52%,#5A55EE 100%));}.project-task-avatar>img{position:absolute;inset:0;display:block;width:100%;height:100%;border:0;border-radius:inherit;background:transparent;}.project-task-avatar>img.is-cover-image{object-fit:cover;transform:none;}.project-task-avatar>img.is-contain-image,.project-task-avatar>img.is-transparent-image{object-fit:contain;transform:scale(1.16);transform-origin:center;}.project-task-avatar.has-image>.moyo-member-avatar-fallback{display:none!important;}.project-task-avatar.is-default-profile>.moyo-member-avatar-fallback{display:grid!important;}.project-task-avatar>.moyo-member-avatar-fallback{position:absolute;inset:0;place-items:center;color:#fff;font-size:inherit;font-weight:900;}
+.project-task-board{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));}.project-task-column{min-width:0;border:1px solid #e8edf2;background:#f7f9fb;}.project-task-column>header{display:flex;align-items:center;gap:8px;color:#354052;}.project-task-column>header strong{font-size:13px;font-weight:900;}.project-task-column>header em{display:inline-flex;align-items:center;justify-content:center;min-width:23px;height:22px;padding:0 7px;border-radius:999px;background:#fff;color:#667085;font-size:11px;font-style:normal;font-weight:900;}.project-task-column-dot{width:8px;height:8px;border-radius:50%;}.project-task-column-dot.todo{background:#8ea1b8;}.project-task-column-dot.progress{background:#f0b65a;}.project-task-column-dot.done{background:#55c7ad;}.project-task-list{display:flex;flex-direction:column;gap:9px;}.project-task-card{display:block;width:100%;border:1px solid #e3e9ef;background:#fff;text-align:left;box-shadow:0 4px 12px rgba(31,42,68,.04);cursor:pointer;transition:.18s ease;}.project-task-card:hover{transform:translateY(-2px);border-color:#bad2e8;box-shadow:0 10px 22px rgba(31,42,68,.08);}.project-task-card.is-dragging{opacity:.45;}.project-task-card.is-delayed{border-color:#e3e9ef;background:#fff;box-shadow:inset 3px 0 0 rgba(226,75,88,.72),0 4px 12px rgba(31,42,68,.04);}.project-task-card.is-delayed:hover{border-color:#bad2e8;box-shadow:inset 3px 0 0 rgba(226,75,88,.82),0 10px 22px rgba(31,42,68,.08);}.project-task-card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;}.project-task-card-top strong{min-width:0;color:#202b3c;font-weight:900;word-break:break-word;}.project-task-card-top i{margin-top:3px;color:#b4becb;font-size:11px;}.project-task-card-period{display:flex;align-items:center;gap:6px;color:#7b8797;font-weight:750;}.project-task-card-bottom{display:flex;align-items:center;justify-content:space-between;gap:10px;border-top:1px solid #f0f3f6;}.project-task-person{display:flex;align-items:center;min-width:0;}.project-task-person>span:last-child{display:flex;flex-direction:column;min-width:0;}.project-task-person b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#344054;font-weight:900;}.project-task-person small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:700;}.project-task-card-bottom>em{flex-shrink:0;border-radius:999px;background:#f4f7fa;color:#728094;font-size:10px;font-style:normal;font-weight:900;}.project-task-avatar{position:relative;display:inline-grid;place-items:center;overflow:hidden;flex:0 0 auto;padding:0;border:0;border-radius:50%;color:#fff;font-weight:900;box-shadow:none;}.project-task-avatar.small{font-size:10px;}.project-task-avatar.tiny{width:24px;min-width:24px;max-width:24px;height:24px;min-height:24px;max-height:24px;font-size:9px;}.project-task-avatar.has-image{background:transparent!important;background-image:none!important;}.project-task-avatar.is-default-profile{background:var(--moyo-avatar-gradient,linear-gradient(135deg,#55D5CE 0%,#4288EF 52%,#5A55EE 100%));}.project-task-avatar>img{position:absolute;inset:0;display:block;width:100%;height:100%;border:0;border-radius:inherit;background:transparent;}.project-task-avatar>img.is-cover-image{object-fit:cover;transform:none;}.project-task-avatar>img.is-contain-image,.project-task-avatar>img.is-transparent-image{object-fit:contain;transform:scale(1.16);transform-origin:center;}.project-task-avatar.has-image>.moyo-member-avatar-fallback{display:none!important;}.project-task-avatar.is-default-profile>.moyo-member-avatar-fallback{display:grid!important;}.project-task-avatar>.moyo-member-avatar-fallback{position:absolute;inset:0;place-items:center;color:#fff;font-size:inherit;font-weight:900;}
 .project-task-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;color:#a0aaba;font-weight:750;text-align:center;}.project-task-empty i{color:#c2cbd6;}.project-task-empty.is-error{color:#d4606a;}.project-task-product:not(.is-workspace) .project-task-list{overflow:hidden;}.project-task-product.is-workspace{width:100%;max-width:100%;margin:0;}.project-task-product.is-workspace .project-task-board{align-items:start;}
 .project-task-modal-overlay{position:fixed;inset:0;z-index:10000;display:none;align-items:center;justify-content:center;}.project-task-modal-overlay.is-open{display:flex;}.project-task-modal{background:#fff;}.project-task-modal-head span{display:block;margin-bottom:4px;color:#55bfae;font-size:9px;font-weight:900;letter-spacing:.14em;}.project-task-modal-head-actions{display:flex;align-items:center;}.project-task-close-btn,.project-task-delete-btn{display:inline-flex;align-items:center;justify-content:center;color:#7d8999;font-size:20px;cursor:pointer;}.project-task-field{display:flex;flex-direction:column;gap:7px;}.project-task-field-wide{grid-column:1/-1;}.project-task-field>span{color:#4c596b;font-size:11px;font-weight:900;}.project-task-field input,.project-task-field select{width:100%;height:42px;padding:0 12px;border:1px solid #dfe6ed;border-radius:11px;background:#fff;color:#283446;font-size:12px;outline:none;}.project-task-field input:focus,.project-task-field select:focus{border-color:#7eb6e7;box-shadow:0 0 0 3px rgba(74,144,226,.1);}.project-task-time-toggle{display:flex;align-items:center;gap:8px;color:#566274;font-size:11px;font-weight:850;}.project-task-time-toggle input{accent-color:#4a90e2;}.project-task-time-fields{display:none;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;}.project-task-time-fields.is-visible{display:grid;}.project-task-form-note{line-height:1.5;}.project-task-form-note i{margin-right:5px;}.project-task-submit-btn{grid-column:1/-1;cursor:pointer;}.project-task-submit-btn:disabled{opacity:.55;cursor:wait;}.project-task-modal-open{overflow:hidden;}
 @media(max-width:900px){.project-task-summary{grid-template-columns:repeat(3,minmax(0,1fr));}.project-task-board{grid-template-columns:1fr;}.project-task-product:not(.is-workspace) .project-task-list{max-height:none;}.project-task-product.is-workspace{width:auto;margin-left:0;}.project-task-tools{align-items:stretch;flex-direction:column;}.project-task-search{min-width:0;}.project-task-person-filter{width:100%;}}
@@ -1712,4 +1712,650 @@ body.moyo-app-sidebar-enabled .project-task-detail .project-task-avatar.has-imag
 }
 body.moyo-app-sidebar-enabled .project-task-detail .project-task-avatar.has-image > img {
     background: transparent !important;
+}
+
+
+/* =====================================================================
+   2026-09-20 진행 보드 반응형 최종 정리
+   - 상단 5개 상태 필터는 한 화면 유지
+   - 모바일 보드는 예정/진행 중/완료를 세로 3개 섹션으로 유지
+   - 각 섹션은 카드 1개 정도 높이 + 내부 스크롤
+   - 카드 핵심 정보(제목/기간·마감/담당자/업데이트)는 유지
+   - 작성자/역할 같은 보조 정보는 좁은 폭에서 우선 숨김
+   ===================================================================== */
+@media (max-width: 760px) {
+  .project-task-product{
+    padding:14px !important;
+  }
+
+  .project-task-head{
+    display:flex !important;
+    flex-direction:row !important;
+    align-items:center !important;
+    justify-content:space-between !important;
+    gap:8px !important;
+    margin:0 0 10px !important;
+    padding:0 0 9px !important;
+  }
+  .project-task-title-wrap{flex:1 1 auto !important;min-width:0 !important;}
+  .project-task-title{
+    gap:6px !important;
+    font-size:15px !important;
+    white-space:nowrap !important;
+  }
+  .project-task-head-actions{
+    display:flex !important;
+    align-items:center !important;
+    flex:0 0 auto !important;
+    width:auto !important;
+    margin-left:auto !important;
+    gap:6px !important;
+  }
+  .project-task-view-btn{
+    width:34px !important;
+    height:34px !important;
+    flex:0 0 34px !important;
+    padding:0 !important;
+  }
+  .project-task-view-btn span{display:none !important;}
+  .project-task-add-btn{
+    height:34px !important;
+    flex:0 0 auto !important;
+    padding:0 10px !important;
+    font-size:11px !important;
+    white-space:nowrap !important;
+  }
+
+  .project-task-summary{
+    display:grid !important;
+    grid-template-columns:repeat(5,minmax(0,1fr)) !important;
+    gap:4px !important;
+    width:100% !important;
+    margin:0 0 10px !important;
+    padding:0 !important;
+    border:0 !important;
+    border-radius:0 !important;
+    background:transparent !important;
+  }
+  .project-task-metric{
+    min-width:0 !important;
+    height:36px !important;
+    padding:0 6px !important;
+    gap:3px !important;
+    border-radius:10px !important;
+  }
+  .project-task-metric span{
+    min-width:0 !important;
+    overflow:hidden !important;
+    font-size:9px !important;
+    letter-spacing:-.03em !important;
+    text-overflow:ellipsis !important;
+    white-space:nowrap !important;
+  }
+  .project-task-metric strong{
+    flex:0 0 auto !important;
+    font-size:13px !important;
+    line-height:1 !important;
+  }
+
+  .project-task-tools{
+    display:flex !important;
+    flex-direction:column !important;
+    align-items:stretch !important;
+    gap:7px !important;
+    margin-bottom:6px !important;
+  }
+  .project-task-search{
+    width:100% !important;
+    min-width:0 !important;
+    height:36px !important;
+  }
+  .project-task-person-filter{
+    width:100% !important;
+    min-width:0 !important;
+    overflow-x:auto !important;
+    overflow-y:hidden !important;
+    padding:1px 0 3px !important;
+    scrollbar-width:none !important;
+  }
+  .project-task-person-filter::-webkit-scrollbar{display:none !important;}
+  .project-task-person-chip{
+    height:31px !important;
+    flex:0 0 auto !important;
+    padding:0 9px !important;
+    font-size:10px !important;
+  }
+
+  .project-task-board{
+    display:grid !important;
+    grid-template-columns:minmax(0,1fr) !important;
+    grid-auto-flow:row !important;
+    gap:7px !important;
+    width:100% !important;
+    overflow:visible !important;
+    padding:0 !important;
+  }
+  .project-task-column{
+    display:flex !important;
+    flex-direction:column !important;
+    width:100% !important;
+    min-width:0 !important;
+    min-height:0 !important;
+    height:auto !important;
+    padding:7px !important;
+    border-radius:11px !important;
+  }
+  .project-task-column>header{
+    flex:0 0 auto !important;
+    height:25px !important;
+    padding:0 2px 5px !important;
+    gap:6px !important;
+  }
+  .project-task-column>header strong{font-size:11.5px !important;}
+  .project-task-column>header em{
+    min-width:19px !important;
+    height:19px !important;
+    padding:0 5px !important;
+    font-size:9.5px !important;
+  }
+
+  .project-task-list,
+  .project-task-product:not(.is-workspace) .project-task-list,
+  .project-task-product.is-workspace .project-task-list{
+    display:flex !important;
+    flex-direction:column !important;
+    align-items:stretch !important;
+    flex:0 1 auto !important;
+    min-height:0 !important;
+    height:auto !important;
+    max-height:122px !important;
+    gap:6px !important;
+    overflow-x:hidden !important;
+    overflow-y:auto !important;
+    padding:0 2px 0 0 !important;
+    scrollbar-width:thin !important;
+    overscroll-behavior:contain !important;
+  }
+  .project-task-list{
+    scrollbar-color:rgba(113,128,150,.18) transparent !important;
+  }
+  .project-task-list:hover{
+    scrollbar-color:rgba(113,128,150,.34) transparent !important;
+  }
+  .project-task-list::-webkit-scrollbar{width:4px !important;}
+  .project-task-list::-webkit-scrollbar-track{background:transparent !important;}
+  .project-task-list::-webkit-scrollbar-thumb{
+    border-radius:999px !important;
+    background:rgba(113,128,150,.18) !important;
+  }
+  .project-task-list:hover::-webkit-scrollbar-thumb{
+    background:rgba(113,128,150,.34) !important;
+  }
+  .project-task-list>.project-task-card,
+  .project-task-product:not(.is-workspace) .project-task-list>.project-task-card,
+  .project-task-product.is-workspace .project-task-list>.project-task-card{
+    position:relative !important;
+    inset:auto !important;
+    flex:0 0 auto !important;
+    width:100% !important;
+    height:auto !important;
+    min-height:0 !important;
+    margin:0 !important;
+    transform:none !important;
+    box-sizing:border-box !important;
+  }
+  .project-task-list>.project-task-card:hover{transform:none !important;}
+  .project-task-empty,
+  .project-task-product.is-workspace .project-task-empty{
+    min-height:80px !important;
+    height:80px !important;
+    max-height:80px !important;
+    padding:8px 6px !important;
+    gap:3px !important;
+    box-sizing:border-box !important;
+  }
+  .project-task-empty i{font-size:13px !important;}
+  .project-task-empty span{font-size:9.5px !important;white-space:nowrap !important;}
+  .project-task-empty small{display:none !important;}
+
+  .project-task-card{
+    padding:7px 9px !important;
+    border-radius:10px !important;
+  }
+  .project-task-card-top{
+    align-items:center !important;
+    gap:7px !important;
+  }
+  .project-task-card-top strong{
+    display:block !important;
+    min-width:0 !important;
+    overflow:hidden !important;
+    font-size:12px !important;
+    line-height:1.3 !important;
+    text-overflow:ellipsis !important;
+    white-space:nowrap !important;
+    word-break:normal !important;
+  }
+  .project-task-card-period{
+    margin-top:4px !important;
+    gap:5px !important;
+    min-width:0 !important;
+    overflow:hidden !important;
+    font-size:9px !important;
+    line-height:1.2 !important;
+    white-space:nowrap !important;
+  }
+  .project-task-card-period-main{min-width:0 !important;}
+  .project-task-card-period-main>span{
+    overflow:hidden !important;
+    text-overflow:ellipsis !important;
+    white-space:nowrap !important;
+  }
+  .project-task-card-period>em{
+    flex:0 0 auto !important;
+    padding:3px 5px !important;
+    font-size:8.5px !important;
+  }
+  .project-task-card-bottom{
+    margin-top:5px !important;
+    padding-top:5px !important;
+    gap:6px !important;
+  }
+  .project-task-person{gap:5px !important;min-width:0 !important;}
+  .project-task-avatar.small{
+    width:21px !important;
+    min-width:21px !important;
+    max-width:21px !important;
+    height:21px !important;
+    min-height:21px !important;
+    max-height:21px !important;
+    font-size:8px !important;
+  }
+  .project-task-avatar-more{
+    width:21px !important;
+    height:21px !important;
+    margin-left:-6px !important;
+    font-size:8px !important;
+  }
+  .project-task-avatar-stack .project-task-avatar{margin-left:-6px !important;}
+  .project-task-avatar-stack .project-task-avatar:first-child{margin-left:0 !important;}
+  .project-task-person b{
+    max-width:104px !important;
+    font-size:9.5px !important;
+    line-height:1.2 !important;
+  }
+  .project-task-person small,
+  .project-task-card-creator{
+    display:none !important;
+  }
+  .project-task-card-bottom>em{
+    padding:3px 5px !important;
+    font-size:8.5px !important;
+    white-space:nowrap !important;
+  }
+
+  .project-task-product.is-workspace,
+  .project-task-product.is-workspace .project-task-column{
+    min-height:0 !important;
+  }
+}
+
+@media (max-width: 520px) {
+  .project-task-product{padding:12px !important;}
+  .project-task-title{font-size:14px !important;}
+  .project-task-view-btn{
+    width:32px !important;
+    height:32px !important;
+    flex-basis:32px !important;
+  }
+  .project-task-add-btn{
+    height:32px !important;
+    padding:0 8px !important;
+    font-size:10.5px !important;
+  }
+  .project-task-summary{gap:3px !important;}
+  .project-task-metric{
+    height:34px !important;
+    padding:0 4px !important;
+  }
+  .project-task-metric span{font-size:8.5px !important;}
+  .project-task-metric strong{font-size:12px !important;}
+  .project-task-board{gap:6px !important;}
+  .project-task-column{padding:6px !important;}
+  .project-task-list,
+  .project-task-product:not(.is-workspace) .project-task-list,
+  .project-task-product.is-workspace .project-task-list{
+    flex-basis:auto !important;
+    min-height:0 !important;
+    height:auto !important;
+    max-height:112px !important;
+  }
+  .project-task-empty,
+  .project-task-product.is-workspace .project-task-empty{
+    min-height:76px !important;
+    height:76px !important;
+    max-height:76px !important;
+  }
+  .project-task-person b{max-width:84px !important;}
+}
+
+@media (max-width: 390px) {
+  .project-task-list,
+  .project-task-product:not(.is-workspace) .project-task-list,
+  .project-task-product.is-workspace .project-task-list{
+    flex-basis:auto !important;
+    min-height:0 !important;
+    height:auto !important;
+    max-height:104px !important;
+  }
+  .project-task-add-btn span{display:none !important;}
+  .project-task-add-btn{
+    width:32px !important;
+    padding:0 !important;
+  }
+  .project-task-metric span{font-size:8px !important;}
+  .project-task-metric strong{font-size:11px !important;}
+}
+
+/* =====================================================================
+   2026-09-19 진행 보드 단일 보기
+   - 요약/전체 보기 전환 제거: 필터/검색/담당자 도구를 항상 노출
+   - 데스크톱 보드 높이를 짧게 고정하고 각 컬럼 내부만 스크롤
+   - 모바일 v6의 세로 컴팩트/내부 스크롤 정책은 그대로 유지
+   ===================================================================== */
+.project-task-tools{
+    display:flex;
+}
+
+@media (min-width: 761px) {
+    .project-task-product:not(.is-workspace) .project-task-column,
+    .project-task-column{
+        display:flex;
+        flex-direction:column;
+        height:300px;
+        min-height:300px;
+        max-height:300px;
+    }
+
+    .project-task-column > header{
+        flex:0 0 auto;
+    }
+
+    .project-task-list,
+    .project-task-product:not(.is-workspace) .project-task-list,
+    .project-task-product.is-workspace .project-task-list{
+        flex:1 1 auto;
+        min-height:0;
+        height:auto;
+        max-height:none;
+        overflow-x:hidden;
+        overflow-y:auto;
+        overscroll-behavior:contain;
+        scrollbar-gutter:stable;
+    }
+
+    .project-task-empty,
+    .project-task-product.is-workspace .project-task-empty{
+        min-height:100%;
+        height:100%;
+    }
+
+    .project-task-list::-webkit-scrollbar{
+        width:5px;
+    }
+
+    .project-task-list::-webkit-scrollbar-thumb{
+        border-radius:999px;
+        background:rgba(113,128,150,.28);
+    }
+
+    .project-task-list::-webkit-scrollbar-track{
+        background:transparent;
+    }
+}
+
+/* MOYO 진행 보드 상태 색상 통일: 예정 / 진행 중 / 완료 / 지연 */
+.project-task-product{
+  --moyo-task-todo-bg:#fff8ed;
+  --moyo-task-todo-text:#c77700;
+  --moyo-task-todo-border:#ffe4b8;
+  --moyo-task-progress-bg:#eef6ff;
+  --moyo-task-progress-text:#1d6fd8;
+  --moyo-task-progress-border:#beddff;
+  --moyo-task-done-bg:#effcf8;
+  --moyo-task-done-text:#07966f;
+  --moyo-task-done-border:#c7f0e3;
+  --moyo-task-delay-bg:#fff3f4;
+  --moyo-task-delay-text:#e24b58;
+  --moyo-task-delay-border:#ffc9ce;
+}
+
+/* 보드 컬럼 상태 점 */
+.project-task-column-dot.todo{background:var(--moyo-task-todo-text,#c77700);}
+.project-task-column-dot.progress{background:var(--moyo-task-progress-text,#1d6fd8);}
+.project-task-column-dot.done{background:var(--moyo-task-done-text,#07966f);}
+
+/* 할 일 추가/수정 모달 상태 선택 */
+.project-task-status-option[data-task-status="TODO"].is-selected{
+  background:var(--moyo-task-todo-bg,#fff8ed);
+  color:var(--moyo-task-todo-text,#c77700);
+}
+.project-task-status-option[data-task-status="IN_PROGRESS"].is-selected{
+  background:var(--moyo-task-progress-bg,#eef6ff);
+  color:var(--moyo-task-progress-text,#1d6fd8);
+}
+.project-task-status-option[data-task-status="DONE"].is-selected{
+  background:var(--moyo-task-done-bg,#effcf8);
+  color:var(--moyo-task-done-text,#07966f);
+}
+
+/* 미확인 업데이트 표시 - 기존 카드/상세 레이아웃 유지 */
+.project-task-card-top-action{position:relative;}
+.project-task-card-update-dot{
+    position:absolute;top:1px;left:-10px;right:auto;width:6px;height:6px;
+    border-radius:50%;background:#f04438;box-shadow:0 0 0 2px #fff;pointer-events:none;
+}
+.project-task-record-summary__icon{position:relative;display:inline-flex;align-items:center;justify-content:center;}
+.project-task-record-type-dot{
+    position:absolute;top:-4px;right:-5px;width:6px;height:6px;border-radius:50%;
+    background:#f04438;box-shadow:0 0 0 2px #fff;pointer-events:none;
+}
+
+
+/* ========================================================================== */
+/* 진행 보드 카드 정보 위계 정리                                               */
+/* 제목 > 기간/마감 > 담당자 > 작성자 순서. 기존 기능/레이아웃은 유지합니다. */
+/* ========================================================================== */
+.project-task-card-top{
+    min-width:0;
+}
+.project-task-card-top>strong{
+    flex:1 1 auto;
+    min-width:0;
+}
+.project-task-card-top-action{
+    flex:0 0 auto;
+}
+.project-task-card-period{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+    min-width:0;
+}
+.project-task-card-period-main{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    min-width:0;
+    overflow:hidden;
+}
+.project-task-card-period-main>i{
+    flex:0 0 auto;
+}
+.project-task-card-period-main>span{
+    display:block;
+    min-width:0;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+}
+.project-task-card-period>em{
+    flex:0 0 auto;
+    padding:5px 8px;
+    border-radius:999px;
+    background:#f4f7fa;
+    color:#728094;
+    font-size:10px;
+    font-style:normal;
+    font-weight:900;
+    line-height:1;
+    white-space:nowrap;
+}
+.project-task-card-period>em.is-today{background:#eef6ff;color:#2f75c8;}
+.project-task-card-period>em.is-soon{background:#fff8e8;color:#b7791f;}
+.project-task-card-period>em.is-neutral{background:#f4f7fa;color:#728094;}
+.project-task-card-period>em.is-delay{background:#fff0f1;color:#c84b55;box-shadow:inset 0 0 0 1px rgba(200,75,85,.10);}
+.project-task-card-period>em.is-done{background:#effaf6;color:#19866d;}
+.project-task-card-bottom{
+    min-width:0;
+}
+.project-task-card-bottom>.project-task-person{
+    flex:1 1 auto;
+    min-width:0;
+}
+.project-task-card-creator{
+    display:inline-flex;
+    align-items:center;
+    gap:4px;
+    flex:0 1 auto;
+    min-width:0;
+    max-width:42%;
+    color:#98a2b3;
+    font-size:9.5px;
+    font-weight:700;
+    line-height:1.2;
+    white-space:nowrap;
+}
+.project-task-card-creator>span{
+    flex:0 0 auto;
+    color:#a6afbb;
+    font-weight:750;
+}
+.project-task-card-creator>b{
+    display:block;
+    min-width:0;
+    overflow:hidden;
+    color:#7f8b9b;
+    font-size:inherit;
+    font-weight:800;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+}
+
+/* 카드가 좁아지면 작성자부터 감추고 핵심 정보는 유지 */
+@media (max-width: 760px){
+    .project-task-card-creator{display:none!important;}
+    .project-task-card-period>em{
+        padding:4px 6px;
+        font-size:9px;
+    }
+}
+
+/* ========================================================================== */
+/* 2026-09-20 미확인 업데이트 점 위치 최종 통일                               */
+/* 카드/기록 요약/기록 행에서 점이 제목·프로필·액션과 겹치지 않도록 전용 앵커를 사용 */
+/* ========================================================================== */
+.project-task-card-top-action{
+  position:relative !important;
+  display:inline-flex !important;
+  align-items:flex-start !important;
+  justify-content:flex-end !important;
+  flex:0 0 auto !important;
+  min-width:30px !important;
+  min-height:30px !important;
+}
+.project-task-card-top-action.is-indicator-only{
+  min-width:14px !important;
+  width:14px !important;
+}
+.project-task-card-update-dot{
+  position:absolute !important;
+  z-index:5 !important;
+  top:-2px !important;
+  right:-2px !important;
+  left:auto !important;
+  width:7px !important;
+  min-width:7px !important;
+  height:7px !important;
+  min-height:7px !important;
+  margin:0 !important;
+  padding:0 !important;
+  border:0 !important;
+  border-radius:50% !important;
+  background:#f04438 !important;
+  box-shadow:0 0 0 2px #fff !important;
+  pointer-events:none !important;
+}
+.project-task-card-top-action.is-indicator-only .project-task-card-update-dot{
+  top:1px !important;
+  right:1px !important;
+}
+
+/* 업무 상세의 기록 바로가기: 점은 아이콘 우측 상단에 고정 */
+.project-task-record-summary__icon{
+  position:relative !important;
+  display:inline-flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  width:20px !important;
+  height:20px !important;
+  overflow:visible !important;
+}
+.project-task-record-type-dot{
+  position:absolute !important;
+  z-index:4 !important;
+  top:-3px !important;
+  right:-4px !important;
+  width:6px !important;
+  min-width:6px !important;
+  height:6px !important;
+  min-height:6px !important;
+  margin:0 !important;
+  padding:0 !important;
+  border:0 !important;
+  border-radius:50% !important;
+  background:#f04438 !important;
+  box-shadow:0 0 0 2px #fff !important;
+  pointer-events:none !important;
+}
+
+/* 공통 기록 행에서 후처리로 붙는 업데이트 점 */
+.project-task-record-update-dot{
+  display:inline-block !important;
+  position:relative !important;
+  top:-5px !important;
+  width:6px !important;
+  min-width:6px !important;
+  height:6px !important;
+  min-height:6px !important;
+  margin-left:5px !important;
+  padding:0 !important;
+  border:0 !important;
+  border-radius:50% !important;
+  background:#f04438 !important;
+  box-shadow:0 0 0 2px #fff !important;
+  vertical-align:middle !important;
+  pointer-events:none !important;
+}
+
+@media(max-width:640px){
+  .project-task-card-update-dot{
+    width:6px !important;
+    min-width:6px !important;
+    height:6px !important;
+    min-height:6px !important;
+    top:-1px !important;
+    right:-1px !important;
+  }
 }

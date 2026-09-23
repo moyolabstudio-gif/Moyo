@@ -22,21 +22,22 @@
             <link rel="icon" type="image/png" href="${pageContext.request.contextPath}/brand/moyo_mark.png?v=moyo-tab-mascot-v1">
         </c:otherwise>
     </c:choose>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/moyoUi.css?v=person-avatar-policy-v2-20260913">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common/commonContentCard.css?v=note-card-common-meta-v1">
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/workspaceMain.css?v=person-avatar-policy-v2-20260913">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/workspaceMain.css?v=collab-activity-v1-20260919">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/commonWorkspaceInvite.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/commonMemberProfile.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/commonMemberActivityProfile.css?v=profile-brand-v2-20260910">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common/commonMainShell.css?v=person-avatar-policy-v2-20260913">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common/commonMainDashboard.css?v=person-avatar-policy-v2-20260913">
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common/commonMainHero.css?v=hero-menu-pointer-v1-20260911">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common/commonMainHero.css?v=hero-mobile-actions-v4-20260918">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common/commonWidgetBase.css?v=widget-more-link-v1-20260910">
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common/commonCommunityWidgets.css?v=recent-activity-3rows-width-v1-20260911">
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common/commonContentWidgets.css?v=common-widget-photo-like-v13-20260917">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common/commonCommunityWidgets.css?v=mobile-widget-heights-cumulative-final-20260918">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common/commonContentWidgets.css?v=content-empty-center-v14-20260922">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common/commonMiniCalendar.css?v=person-avatar-policy-v2-20260913">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common/commonQuickCalendarCreate.css?v=attendee-share-avatar-v40">
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common/commonContentRecordModal.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common/commonContentRecordModal.css?v=record-readonly-upload-hide-v85-20260920">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/commonCalendarEventPreview.css?v=event-header-actions-unified-v1">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common/commonMemberWidget.css?v=person-avatar-policy-v4-20260913">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/commonPeopleModal.css?v=person-avatar-policy-v2-20260913">
@@ -52,7 +53,7 @@
     <script defer src="${pageContext.request.contextPath}/js/common/commonContentRecordModal.js"></script>
     <script defer src="${pageContext.request.contextPath}/js/commonCalendarEventPreview.js?v=calendar-preview-avatar-policy-v12"></script>
     <script defer src="${pageContext.request.contextPath}/js/commonQuickCalendarCreate.js?v=attendee-share-avatar-v29"></script>
-    <script defer src="${pageContext.request.contextPath}/js/commonCommunityWidgets.js?v=recent-activity-group-v3"></script>
+    <script defer src="${pageContext.request.contextPath}/js/commonCommunityWidgets.js?v=collab-log-single-source-v6-20260919"></script>
     <script defer src="${pageContext.request.contextPath}/js/commonPeopleModal.js?v=20260809-photo-full-cleanup"></script>
     <script defer src="${pageContext.request.contextPath}/js/commonMemberWidget.js?v=person-avatar-policy-v4"></script>
     <script defer src="${pageContext.request.contextPath}/js/commonMemberDataAdapter.js?v=common-member-activity-v5-20260910"></script>

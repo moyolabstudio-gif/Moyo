@@ -62,10 +62,8 @@
             (options.showSharedState
                 ? `<button type="button" class="${esc(actionClass)} is-shared-state is-icon-only" data-explorer-share-open data-content-id="${esc(id)}" title="친구 공유" aria-label="친구 공유"><i class="fa-solid fa-share-nodes" aria-hidden="true"></i></button>`
                 : '') +
-            (options.showShare
-                ? (options.shareAction === 'friend-send'
-                    ? `<button type="button" class="${esc(actionClass)} is-friend-send is-icon-only" data-explorer-friend-send data-profile-note-card-friend-send data-content-id="${esc(id)}" title="${esc(options.shareTitle || '친구에게 보내기')}" aria-label="${esc(options.shareAriaLabel || options.shareTitle || '친구에게 보내기')}"><i class="fa-regular fa-paper-plane" aria-hidden="true"></i></button>`
-                    : `<button type="button" class="${esc(actionClass)} is-icon-only" data-profile-note-card-share data-note-id="${esc(id)}" title="${esc(options.shareTitle || '공유')}" aria-label="${esc(options.shareAriaLabel || options.shareTitle || '공유')}"><i class="fa-regular fa-paper-plane" aria-hidden="true"></i></button>`)
+            (options.showShare && options.shareAction !== 'friend-send'
+                ? `<button type="button" class="${esc(actionClass)} is-icon-only" data-profile-note-card-share data-note-id="${esc(id)}" title="${esc(options.shareTitle || '공유')}" aria-label="${esc(options.shareAriaLabel || options.shareTitle || '공유')}"><i class="fa-solid fa-share-nodes" aria-hidden="true"></i></button>`
                 : '') +
             (options.showCollect
                 ? `<button type="button" class="${esc(actionClass)} is-icon-only" data-profile-note-card-collect data-profile-note-collect data-note-id="${esc(id)}" title="담기" aria-pressed="false"><i class="fa-regular fa-bookmark" aria-hidden="true"></i></button>`

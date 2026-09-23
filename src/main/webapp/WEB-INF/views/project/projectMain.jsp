@@ -38,15 +38,15 @@
             </c:otherwise>
         </c:choose>
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common/commonContentCard.css?v=note-card-common-meta-v1">
-        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/workspaceMain.css?v=person-avatar-policy-v2-20260913">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/workspaceMain.css?v=collab-activity-v1-20260919">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/projectMain.css?v=person-avatar-policy-v2-20260913">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common/commonMainShell.css?v=person-avatar-policy-v2-20260913">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common/commonMainDashboard.css?v=person-avatar-policy-v2-20260913">
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common/commonMainHero.css?v=hero-menu-pointer-v1-20260911">
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common/commonCommunityWidgets.css?v=recent-activity-3rows-width-v1-20260911">
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common/commonContentWidgets.css?v=common-widget-photo-like-v13-20260917">
-<link rel="stylesheet" href="${pageContext.request.contextPath}/css/projectTask.css?v=task-detail-scope-v38">
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common/commonContentRecordModal.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common/commonMainHero.css?v=hero-mobile-actions-v4-20260918">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common/commonCommunityWidgets.css?v=mobile-widget-heights-cumulative-final-20260918">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common/commonContentWidgets.css?v=content-empty-center-v14-20260922">
+<link rel="stylesheet" href="${pageContext.request.contextPath}/css/projectTask.css?v=task-responsive-autoheight-v83-20260920">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common/commonContentRecordModal.css?v=record-readonly-upload-hide-v85-20260920">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/projectMember.css?v=project-member-avatar-policy-v3">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common/commonMemberWidget.css?v=person-avatar-policy-v4-20260913">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/commonMemberActivityProfile.css?v=profile-brand-v2-20260910">
@@ -57,7 +57,7 @@
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common/commonNoteModal.css?v=20260822-toolbar-fix-5">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common/commonNoteHistoryModal.css?v=common-note-history-v2">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/commonNoteDetail.css?v=common-note-widget-v4">
-        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/projectTimeline.css?v=time-plan-picker-bound-color-v1">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/projectTimeline.css?v=project-plan-meta-order-v3-20260921">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common/commonWidgetBase.css?v=widget-more-link-v1-20260910">
     <script>
         window.PROJECT_MAIN_CONFIG = {
@@ -76,9 +76,11 @@
             isPersonalProject: ${isPersonalProject ? 'true' : 'false'},
             groupProject: ${isPersonalProject ? 'false' : 'true'},
             projectScope: '<c:out value="${effectiveProjectScope}"/>',
+            projectReadOnly: <c:choose><c:when test="${projectReadOnly eq true}">true</c:when><c:otherwise>false</c:otherwise></c:choose>,
             canManageProject: <c:choose><c:when test="${canManageProject eq true}">true</c:when><c:otherwise>false</c:otherwise></c:choose>,
-            canManageTasks: <c:choose><c:when test="${isPersonalProject or canManageProject eq true}">true</c:when><c:otherwise>false</c:otherwise></c:choose>,
-            canWriteProjectNote: <c:choose><c:when test="${isPersonalProject or canManageProject eq true}">true</c:when><c:otherwise>false</c:otherwise></c:choose>,
+            canCreateTasks: <c:choose><c:when test="${projectReadOnly ne true}">true</c:when><c:otherwise>false</c:otherwise></c:choose>,
+            canManageTasks: <c:choose><c:when test="${projectReadOnly ne true and (isPersonalProject or canManageProject eq true)}">true</c:when><c:otherwise>false</c:otherwise></c:choose>,
+            canWriteProjectNote: <c:choose><c:when test="${projectReadOnly ne true and (isPersonalProject or canManageProject eq true)}">true</c:when><c:otherwise>false</c:otherwise></c:choose>,
             showGroupWidgets: ${showProjectGroupWidgets ? 'true' : 'false'},
             showMembers: ${showProjectMembers ? 'true' : 'false'},
             showOwnerCard: ${showProjectOwnerCard ? 'true' : 'false'}
@@ -89,9 +91,9 @@
     <script src="${pageContext.request.contextPath}/js/projectTaskData.js?v=project-task-hover-clip-fix-v6"></script>
     <script src="${pageContext.request.contextPath}/js/commonMemberActivityProfile.js?v=permission-state-v1-20260910"></script>
     <script src="${pageContext.request.contextPath}/js/projectMember.js?v=common-member-activity-v5-20260910"></script>
-    <script src="${pageContext.request.contextPath}/js/common/commonContentRecordModal.js"></script>
-    <script src="${pageContext.request.contextPath}/js/projectTask.js?v=task-detail-scope-v3"></script>
-    <script src="${pageContext.request.contextPath}/js/commonCommunityWidgets.js?v=recent-detail-entry-v2"></script>
+    <script src="${pageContext.request.contextPath}/js/common/commonContentRecordModal.js?v=record-location-readonly-preview-v41-20260920"></script>
+    <script src="${pageContext.request.contextPath}/js/projectTask.js?v=task-status-detail-v80-20260920"></script>
+    <script src="${pageContext.request.contextPath}/js/commonCommunityWidgets.js?v=task-card-indicators-v1-20260919"></script>
     <script src="${pageContext.request.contextPath}/js/projectWidget.js?v=project-widget-data-connect-v1"></script>
     <script src="${pageContext.request.contextPath}/js/commonFolderModal.js?v=20260809-photo-location-common"></script>
     <script src="${pageContext.request.contextPath}/js/commonPhotoPostDetail.js?v=20260809-fit-atomic"></script>
@@ -118,7 +120,7 @@
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common/commonQuickCalendarCreate.css?v=attendee-share-avatar-v40">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/commonCalendarEventPreview.css?v=event-header-actions-unified-v1">
 </head>
-<body class="${isPersonalProject ? 'personal-project-main' : 'group-project-main'}" data-user-id="${sessionScope.user.userId}" data-current-user-id="${sessionScope.user.userId}" data-context-path="${pageContext.request.contextPath}" data-project-scope="${effectiveProjectScope}" data-project-name="<c:out value="${projectDetail.projName}"/>" data-scope-status="<c:out value='${projectDetail.status}'/>" data-main-shell-mode="${isPersonalProject ? 'PERSONAL_PROJECT' : 'GROUP_PROJECT'}"
+<body class="${isPersonalProject ? 'personal-project-main' : 'group-project-main'}${projectReadOnly eq true ? ' project-read-only' : ''}" data-user-id="${sessionScope.user.userId}" data-current-user-id="${sessionScope.user.userId}" data-context-path="${pageContext.request.contextPath}" data-project-scope="${effectiveProjectScope}" data-project-read-only="${projectReadOnly eq true ? 'true' : 'false'}" data-project-name="<c:out value="${projectDetail.projName}"/>" data-scope-status="<c:out value='${projectDetail.status}'/>" data-main-shell-mode="${isPersonalProject ? 'PERSONAL_PROJECT' : 'GROUP_PROJECT'}"
       data-show-group-widgets="${showProjectGroupWidgets}"
       data-show-project-members="${showProjectMembers}"
       data-show-owner-card="${showProjectOwnerCard}">

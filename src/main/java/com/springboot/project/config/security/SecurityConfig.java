@@ -158,13 +158,13 @@ public class SecurityConfig {
                     + "frame-ancestors 'self'; "
                     + "form-action 'self'; "
                     + "script-src 'self' 'unsafe-inline' 'unsafe-eval' "
-                    + "https://cdn.ckeditor.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://code.jquery.com; "
+                    + "https://cdn.ckeditor.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://code.jquery.com https://t1.kakaocdn.net https://t1.daumcdn.net; "
                     + "style-src 'self' 'unsafe-inline' https://cdn.ckeditor.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; "
                     + "img-src 'self' data: blob: https:; "
                     + "font-src 'self' data: https:; "
                     + "connect-src 'self' ws: wss: https:; "
                     + "media-src 'self' blob: https:; "
-                    + "frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com https://player.vimeo.com https://maps.google.com"
+                    + "frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com https://player.vimeo.com https://maps.google.com https://www.google.com http://postcode.map.kakao.com https://postcode.map.kakao.com http://postcode.map.daum.net https://postcode.map.daum.net"
                 ))
                 .addHeaderWriter(new StaticHeadersWriter(
                     "Permissions-Policy",

@@ -7,6 +7,7 @@ import com.springboot.project.dto.noteFolderDTO;
 import com.springboot.project.dto.projectRequestDTO;
 import com.springboot.project.dto.contentShareDTO;
 import com.springboot.project.dao.InoteFolderDAO;
+import com.springboot.project.dao.IcontentRecordItemDAO;
 import com.springboot.project.dao.IworkspaceDAO;
 import com.springboot.project.dao.IprojectDAO;
 import com.springboot.project.dao.IfriendDAO;
@@ -77,6 +78,9 @@ public class noteController {
 
     @Autowired
     private InoteFolderDAO noteFolderDAO;
+
+    @Autowired
+    private IcontentRecordItemDAO contentRecordItemDAO;
 
     @Autowired
     private IcontentShareService contentShareService;
@@ -1538,7 +1542,19 @@ public class noteController {
             @RequestParam(name = "folderId", required = false) Long folderId,
             HttpSession session) {
         Map<String,Object> r=new HashMap<>();usersDto u=getLoginUser(session);
-        r.put("success",u!=null&&noteFolderDAO.moveNote(noteId,folderId,u.getUserId())>0);return r;
+        boolean success = u != null && noteFolderDAO.moveNote(noteId, folderId, u.getUserId()) > 0;
+        int recordLinkedCount = 0;
+        if (success) {
+            recordLinkedCount = contentRecordItemDAO.countActiveItemsByContent("NOTE", noteId);
+            if (recordLinkedCount > 0) {
+                // 탐색기 위치만 바꾸고 기록 연결(RECORD_TARGET_ID/CONTENT_ID)은 그대로 유지한다.
+                contentRecordItemDAO.touchActiveItemsByContent("NOTE", noteId);
+            }
+        }
+        r.put("success", success);
+        r.put("recordLinkedCount", recordLinkedCount);
+        r.put("recordLinkPreserved", success);
+        return r;
     }
 
     @PostMapping("/api/note/trash")
