@@ -355,6 +355,13 @@
             box.innerHTML = String(value || '');
             return String(box.textContent || '').replace(/\s+/g, ' ').trim();
         }
+        function noteHasMeaningfulContent(value) {
+            const html = String(value || '');
+            if (htmlText(html)) return true;
+            const box = document.createElement('div');
+            box.innerHTML = html;
+            return !!box.querySelector('img,figure,table,iframe,video,audio,object,embed');
+        }
         function noteAutoTitle(value) {
             const box = document.createElement('div');
             box.innerHTML = String(value || '');
@@ -533,13 +540,13 @@
                 const recordItemId = pick(item, 'recordItemId', 'RECORD_ITEM_ID');
                 const draggable = canEdit() && recordItemId ? ' data-note-draggable="true" data-note-record-item-id="' + esc(recordItemId) + '"' : '';
                 return '<div class="moyo-record-note-tab ' + (active ? 'is-active' : '') + '" data-note-index="' + index + '" data-record-item-id="' + esc(recordItemId) + '"' + draggable + '>' +
-                    '<button type="button" class="moyo-record-note-tab__select" data-note-select title="' + (canEdit() && recordItemId ? '드래그하여 순서 변경' : '') + '"><span class="moyo-record-note-tab__label">' + esc(noteTabName(item, index)) + unreadItemDot(item) + '</span></button>' +
+                    '<button type="button" class="moyo-record-note-tab__select" data-note-select title="' + esc(noteTabName(item, index)) + '"><span class="moyo-record-note-tab__label">' + esc(noteTabName(item, index)) + unreadItemDot(item) + '</span></button>' +
                     (active && (canEdit() || canDelete()) ? '<button type="button" class="moyo-record-note-tab__menu" data-note-menu-trigger aria-label="노트 메뉴" title="노트 메뉴"><span aria-hidden="true">⋮</span></button>' : '') +
                     '</div>';
             }).join('');
             if (state.newNoteMode && canEdit()) {
                 html += '<div class="moyo-record-note-tab is-active is-draft" data-note-draft>' +
-                    '<button type="button" class="moyo-record-note-tab__select" data-note-draft-select><span>' + esc(state.newNoteTitle || '새 노트') + '</span></button>' +
+                    '<button type="button" class="moyo-record-note-tab__select" data-note-draft-select title="' + esc(state.newNoteTitle || '새 노트') + '"><span>' + esc(state.newNoteTitle || '새 노트') + '</span></button>' +
                     '<button type="button" class="moyo-record-note-tab__menu" data-note-draft-menu aria-label="노트 이름 수정" title="노트 이름 수정"><span aria-hidden="true">⋮</span></button>' +
                     '</div>';
             }
@@ -646,7 +653,7 @@
                     const raw = window.localStorage.getItem(key);
                     if (!raw) continue;
                     const draft = JSON.parse(raw);
-                    const hasContent = !!(draft && htmlText(draft.content));
+                    const hasContent = !!(draft && noteHasMeaningfulContent(draft.content));
                     const hasTitle = !!(draft && String(draft.title || '').trim() && draft.manualTitle);
                     if (draft && (hasContent || hasTitle)) drafts.push(draft);
                 }
@@ -731,6 +738,14 @@
             const editor = state.noteEditorInstance;
             if (!form || !canEdit()) return false;
 
+            // CKEditor 이미지 업로드가 진행 중이면 서버 URL 확정 후 본문을 저장한다.
+            // 업로드 전에 getData()를 읽으면 임시 이미지 상태가 저장 대상으로 잡혀
+            // 이미지가 빠진 채 노트 저장이 완료될 수 있다.
+            if (editor && window.MoyoCkeditor && typeof window.MoyoCkeditor.waitForUploads === 'function') {
+                setNoteStatus('이미지 업로드 중', 'saving');
+                await window.MoyoCkeditor.waitForUploads(editor);
+            }
+
             const content = editor ? editor.getData() : String((form.elements.content && form.elements.content.value) || '');
             const noteMode = form.getAttribute('data-note-mode') || 'create';
             const recordItemId = form.getAttribute('data-record-item-id') || null;
@@ -742,7 +757,7 @@
                 : (currentTitle || noteAutoTitle(content));
             const saveRevision = state.noteEditRevision;
 
-            const hasContent = !!htmlText(content);
+            const hasContent = noteHasMeaningfulContent(content);
             const hasMeaningfulTitle = noteMode === 'create'
                 ? !!(state.newNoteManualTitle && String(title || '').trim())
                 : !!String(title || '').trim();
@@ -900,7 +915,7 @@
             const noteMode = form.getAttribute('data-note-mode') || 'create';
             const recordItemId = form.getAttribute('data-record-item-id') || null;
 
-            const hasContent = !!htmlText(content);
+            const hasContent = noteHasMeaningfulContent(content);
             const hasManualTitle = noteMode === 'create'
                 && state.newNoteManualTitle
                 && !!String(state.newNoteTitle || '').trim();

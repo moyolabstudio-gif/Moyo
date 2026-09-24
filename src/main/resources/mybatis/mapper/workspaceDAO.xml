@@ -222,6 +222,7 @@
             u.USER_ID,
             p.CONTACT_EMAIL AS CUSTOM_CONTACT_EMAIL,
             NVL(p.CONTACT_EMAIL, u.EMAIL) AS EMAIL,
+            NVL(p.SHOW_EMAIL, 'Y') AS SHOW_EMAIL,
             CASE
                 WHEN NVL(p.USE_ACCOUNT_PROFILE, 'Y') = 'N'
                     THEN NVL(p.DISPLAY_NAME, u.USER_NAME)
@@ -757,6 +758,14 @@
                     THEN NVL(p.CONTACT_EMAIL, u.EMAIL)
                 ELSE NULL
             END AS EMAIL,
+            CASE
+                WHEN m.USER_ID = #{viewerUserId}
+                     OR NVL(p.SHOW_EMAIL, 'Y') = 'Y'
+                     OR NVL(p.SHOW_PHONE, 'Y') = 'Y'
+                     OR NVL(p.SHOW_BIRTH, 'Y') = 'Y'
+                    THEN 'Y'
+                ELSE 'N'
+            END AS CAN_VIEW_PRIVATE_PROFILE,
             p.INTRO_TEXT,
             u.USER_NAME AS ACCOUNT_NAME,
             u.PROFILE_IMAGE_PATH AS ACCOUNT_PROFILE_IMAGE_PATH,

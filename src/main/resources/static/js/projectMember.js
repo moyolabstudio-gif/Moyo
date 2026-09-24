@@ -90,7 +90,7 @@ function renderProjectMemberList(members, tasks) {
         stats: stats
     });
     const widgetMembers = normalized.map(function (member) {
-        return Object.assign({}, member, { secondary: member.position || '' });
+        return Object.assign({}, member, { secondary: member.position || member.email || '' });
     });
     window.CommonMemberWidget.renderMembers({
         listId: 'projectMemberList',

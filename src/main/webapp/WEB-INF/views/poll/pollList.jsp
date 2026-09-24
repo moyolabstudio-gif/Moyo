@@ -4,7 +4,9 @@
 <head>
 <meta charset="UTF-8">
 <title>투표</title>
-<link rel="icon" href="data:,">
+<link rel="icon" type="image/png" sizes="32x32" href="${pageContext.request.contextPath}/brand/favicon-32x32.png?v=moyo-favicon-v2">
+<link rel="icon" type="image/png" sizes="16x16" href="${pageContext.request.contextPath}/brand/favicon-16x16.png?v=moyo-favicon-v2">
+<link rel="shortcut icon" href="${pageContext.request.contextPath}/brand/favicon.ico?v=moyo-favicon-v2">
 <style>
 body{margin:0;background:#f6f8fa;color:#111827;font-family:'Pretendard',sans-serif}
 .poll-page{max-width:1120px;margin:34px auto 72px;padding:0 24px;box-sizing:border-box}

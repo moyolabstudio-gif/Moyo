@@ -2,9 +2,6 @@
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
 
-<c:if test="${empty requestScope.moyoTabFaviconManaged}">
-<link rel="icon" type="image/png" href="${pageContext.request.contextPath}/brand/moyo_mark.png?v=moyo-tab-mascot-v1">
-</c:if>
 
 <!-- MOYO 공통 아이콘: 모든 헤더 포함 화면에서 한 번만 로드 -->
 <link id="moyo-fontawesome-css" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" referrerpolicy="no-referrer">
@@ -709,11 +706,12 @@
 }
 #alarmDropdown .moyo-alarm-item-title,
 #alarmDropdown .moyo-alarm-item-desc{
-    overflow:visible;
-    text-overflow:clip;
-    white-space:normal;
-    overflow-wrap:anywhere;
-    word-break:keep-all;
+    display:block;
+    min-width:0;
+    max-width:100%;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
 }
 #alarmDropdown .moyo-alarm-approved-action{
     max-width:100%;

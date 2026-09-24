@@ -19,7 +19,9 @@
             <link rel="icon" href="<c:out value='${workspace.wsImagePath}'/>">
         </c:when>
         <c:otherwise>
-            <link rel="icon" type="image/png" href="${pageContext.request.contextPath}/brand/moyo_mark.png?v=moyo-tab-mascot-v1">
+            <link rel="icon" type="image/png" sizes="32x32" href="${pageContext.request.contextPath}/brand/favicon-32x32.png?v=moyo-favicon-v2">
+            <link rel="icon" type="image/png" sizes="16x16" href="${pageContext.request.contextPath}/brand/favicon-16x16.png?v=moyo-favicon-v2">
+            <link rel="shortcut icon" href="${pageContext.request.contextPath}/brand/favicon.ico?v=moyo-favicon-v2">
         </c:otherwise>
     </c:choose>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -28,7 +30,7 @@
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/workspaceMain.css?v=collab-activity-v1-20260919">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/commonWorkspaceInvite.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/commonMemberProfile.css">
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/commonMemberActivityProfile.css?v=profile-brand-v2-20260910">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/commonMemberActivityProfile.css?v=member-profile-v6-24-20260924">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common/commonMainShell.css?v=person-avatar-policy-v2-20260913">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common/commonMainDashboard.css?v=person-avatar-policy-v2-20260913">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common/commonMainHero.css?v=hero-mobile-actions-v4-20260918">
@@ -71,7 +73,7 @@
     <script defer src="${pageContext.request.contextPath}/js/workspaceMain.js?v=common-member-activity-v5-20260910"></script>
     <script defer src="${pageContext.request.contextPath}/js/commonWorkspaceInvite.js"></script>
     <script defer src="${pageContext.request.contextPath}/js/commonMemberProfile.js?v=profile-crop-export-v1-20260910"></script>
-    <script defer src="${pageContext.request.contextPath}/js/commonMemberActivityProfile.js?v=permission-state-v1-20260910"></script>
+    <script defer src="${pageContext.request.contextPath}/js/commonMemberActivityProfile.js?v=member-profile-v6-24-20260924"></script>
 </head>
 <body class="moyo-app-sidebar-enabled workspace-community-body moyo-main-shell-page moyo-main-shell-page--workspace"
       data-ws-id="${effectiveWorkspaceId}"

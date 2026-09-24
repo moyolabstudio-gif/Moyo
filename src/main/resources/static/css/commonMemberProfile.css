@@ -1215,3 +1215,6 @@ input[type="checkbox"]:focus {
         align-items: center;
     }
 }
+
+/* Actual PNG/JPG/WebP profile images sit on a neutral surface; only fallback initials use gradient. */
+.common-member-profile .workspace-profile-avatar:not(.is-fallback) { background:#fff !important; background-image:none !important; }

@@ -4010,7 +4010,7 @@ body.moyo-app-sidebar-enabled .workspace-community-container .workspace-member-h
     object-fit: cover;
     background: transparent;
 }
-.workspace-community-container .workspace-recent-activity-avatar.has-image { background: transparent; }
+.workspace-community-container .workspace-recent-activity-avatar.has-image { background: #fff; background-image: none; }
 .workspace-community-container .workspace-recent-activity-main {
     display: grid;
     min-width: 0;

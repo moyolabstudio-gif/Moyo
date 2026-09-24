@@ -6,6 +6,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" sizes="32x32" href="${pageContext.request.contextPath}/brand/favicon-32x32.png?v=moyo-favicon-v2">
+    <link rel="icon" type="image/png" sizes="16x16" href="${pageContext.request.contextPath}/brand/favicon-16x16.png?v=moyo-favicon-v2">
+    <link rel="shortcut icon" href="${pageContext.request.contextPath}/brand/favicon.ico?v=moyo-favicon-v2">
     <title><c:choose><c:when test="${empty isOwnProfile or isOwnProfile}">내 프로필 - MOYO</c:when><c:otherwise><c:out value="${empty mypageUser.userName ? '사용자' : mypageUser.userName}" />님의 프로필 - MOYO</c:otherwise></c:choose></title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/moyoUi.css?v=profile-relation-menu-compact-20260707">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/myPage.css?v=20260907-friend-responsive-73">

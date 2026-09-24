@@ -1818,20 +1818,83 @@
                     THEN u.PROFILE_IMAGE_PATH
                 ELSE NULL
             END AS PROFILE_IMAGE_PATH,
+            u.USER_NAME AS ACCOUNT_NAME,
+            u.EMAIL AS ACCOUNT_EMAIL,
+            u.PROFILE_IMAGE_PATH AS ACCOUNT_PROFILE_IMAGE_PATH,
+            u.PROFILE_ORIGINAL_IMAGE_PATH AS ACCOUNT_PROFILE_ORIGINAL_IMAGE_PATH,
+            NVL(u.PROFILE_CROP_SCALE, 1) AS ACCOUNT_PROFILE_CROP_SCALE,
+            NVL(u.PROFILE_CROP_X, 0) AS ACCOUNT_PROFILE_CROP_X,
+            NVL(u.PROFILE_CROP_Y, 0) AS ACCOUNT_PROFILE_CROP_Y,
+            NVL(u.PROFILE_AVATAR_TYPE, 'DEFAULT') AS ACCOUNT_PROFILE_AVATAR_TYPE,
+            NVL(wp.USE_ACCOUNT_PROFILE, 'Y') AS USE_ACCOUNT_PROFILE,
+            wp.DISPLAY_NAME AS CUSTOM_DISPLAY_NAME,
+            wp.CONTACT_EMAIL AS CUSTOM_CONTACT_EMAIL,
+            wp.PROFILE_IMAGE_PATH AS CUSTOM_PROFILE_IMAGE_PATH,
+            wp.PROFILE_IMAGE_ORIGINAL_PATH AS CUSTOM_PROFILE_IMAGE_ORIGINAL_PATH,
+            NVL(wp.PROFILE_IMAGE_CROP_SCALE, 1) AS CUSTOM_PROFILE_IMAGE_CROP_SCALE,
+            NVL(wp.PROFILE_IMAGE_CROP_X, 0) AS CUSTOM_PROFILE_IMAGE_CROP_X,
+            NVL(wp.PROFILE_IMAGE_CROP_Y, 0) AS CUSTOM_PROFILE_IMAGE_CROP_Y,
+            CASE
+                WHEN pr.WS_ID IS NOT NULL THEN wp.INTRO_TEXT
+                ELSE u.PROFILE_INTRO
+            END AS INTRO_TEXT,
             CASE
                 WHEN pm.USER_ID = #{viewerUserId}
-                     OR NVL(wp.SHOW_EMAIL, 'Y') = 'Y'
+                  OR (pr.WS_ID IS NOT NULL AND NVL(wp.SHOW_EMAIL, 'Y') = 'Y')
+                  OR (pr.WS_ID IS NULL AND EXISTS (
+                        SELECT 1 FROM USER_FRIENDS uf
+                        WHERE uf.STATUS = 'ACCEPTED'
+                          AND ((uf.REQUESTER_ID = #{viewerUserId} AND uf.ADDRESSEE_ID = pm.USER_ID)
+                            OR (uf.REQUESTER_ID = pm.USER_ID AND uf.ADDRESSEE_ID = #{viewerUserId}))
+                     ))
                     THEN NVL(wp.CONTACT_EMAIL, u.EMAIL)
                 ELSE NULL
             END AS EMAIL,
-            NVL(wp.SHOW_EMAIL, 'Y') AS SHOW_EMAIL,
+            CASE
+                WHEN pm.USER_ID = #{viewerUserId}
+                  OR (pr.WS_ID IS NOT NULL AND (NVL(wp.SHOW_EMAIL, 'Y') = 'Y' OR NVL(wp.SHOW_PHONE, 'Y') = 'Y' OR NVL(wp.SHOW_BIRTH, 'Y') = 'Y'))
+                  OR (pr.WS_ID IS NULL AND EXISTS (
+                        SELECT 1 FROM USER_FRIENDS uf
+                        WHERE uf.STATUS = 'ACCEPTED'
+                          AND ((uf.REQUESTER_ID = #{viewerUserId} AND uf.ADDRESSEE_ID = pm.USER_ID)
+                            OR (uf.REQUESTER_ID = pm.USER_ID AND uf.ADDRESSEE_ID = #{viewerUserId}))
+                     )) THEN 'Y'
+                ELSE 'N'
+            END AS CAN_VIEW_PRIVATE_PROFILE,
             CASE
                 WHEN pm.USER_ID = #{viewerUserId}
                      OR NVL(wp.SHOW_PHONE, 'Y') = 'Y'
                     THEN wp.PHONE_NUMBER
                 ELSE NULL
             END AS PHONE_NUMBER,
+            NVL(wp.SHOW_EMAIL, 'Y') AS SHOW_EMAIL,
             NVL(wp.SHOW_PHONE, 'Y') AS SHOW_PHONE,
+            NVL(wp.SHOW_BIRTH, 'Y') AS SHOW_BIRTH,
+            CASE
+                WHEN pm.USER_ID = #{viewerUserId}
+                  OR (pr.WS_ID IS NOT NULL AND NVL(wp.SHOW_BIRTH, 'Y') = 'Y')
+                  OR (pr.WS_ID IS NULL AND EXISTS (
+                        SELECT 1 FROM USER_FRIENDS uf
+                        WHERE uf.STATUS = 'ACCEPTED'
+                          AND ((uf.REQUESTER_ID = #{viewerUserId} AND uf.ADDRESSEE_ID = pm.USER_ID)
+                            OR (uf.REQUESTER_ID = pm.USER_ID AND uf.ADDRESSEE_ID = #{viewerUserId}))
+                     ))
+                    THEN TO_CHAR(u.BIRTH_DATE, 'MM-DD')
+                ELSE NULL
+            END AS BIRTH_DATE,
+            CASE
+                WHEN pm.USER_ID = #{viewerUserId}
+                  OR (pr.WS_ID IS NOT NULL AND NVL(wp.SHOW_BIRTH, 'Y') = 'Y')
+                  OR (pr.WS_ID IS NULL AND EXISTS (
+                        SELECT 1 FROM USER_FRIENDS uf
+                        WHERE uf.STATUS = 'ACCEPTED'
+                          AND ((uf.REQUESTER_ID = #{viewerUserId} AND uf.ADDRESSEE_ID = pm.USER_ID)
+                            OR (uf.REQUESTER_ID = pm.USER_ID AND uf.ADDRESSEE_ID = #{viewerUserId}))
+                     ))
+                    THEN NVL(u.BIRTH_CALENDAR_TYPE, 'SOLAR')
+                ELSE NULL
+            END AS BIRTH_CALENDAR_TYPE,
+            wm.WS_ROLE,
             wp.POSITION_NAME AS WS_POSITION,
             pm.PROJ_POSITION,
             pm.PROJ_ROLE,

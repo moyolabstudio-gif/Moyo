@@ -6,11 +6,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <c:choose>
+        <c:when test="${groupEntry and not empty workspace.wsImagePath}">
+            <link rel="icon" href="<c:out value='${workspace.wsImagePath}'/>">
+        </c:when>
+        <c:otherwise>
+            <link rel="icon" type="image/png" sizes="32x32" href="${pageContext.request.contextPath}/brand/favicon-32x32.png?v=moyo-favicon-v2">
+            <link rel="icon" type="image/png" sizes="16x16" href="${pageContext.request.contextPath}/brand/favicon-16x16.png?v=moyo-favicon-v2">
+            <link rel="shortcut icon" href="${pageContext.request.contextPath}/brand/favicon.ico?v=moyo-favicon-v2">
+        </c:otherwise>
+    </c:choose>
     <title>MOYO - 새 프로젝트 생성</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/moyoUi.css?v=moyo-ui-controls-v2">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/commonProjectForm.css?v=20260921-project-form-common-1">
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/projectCreate.css?v=20260923-member-step-detail-finish-1">
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/moyoCreate.css?v=20260923-project-step1-simple-1">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/projectCreate.css?v=20260923-mobile-step2-final">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/moyoCreate.css?v=20260923-fixed-cta-mobile1">
 </head>
 <body>
 <jsp:include page="/WEB-INF/views/common/header.jsp" />
@@ -36,11 +46,11 @@
                 </div>
             </c:if>
             <div class="project-create-content${groupEntry and not canCreateGroupProject ? ' is-blocked' : ''}">
-            <div class="create-step moyo-create-step" id="createStepLabel">1 / 2</div>
+            <div class="create-step moyo-create-step" id="createStepLabel"><c:choose><c:when test="${personalEntry}">1 / 1</c:when><c:otherwise>1 / 2</c:otherwise></c:choose></div>
 
             <div class="create-title-row moyo-create-header">
                 <div>
-                    <h1 id="createTitle">새 프로젝트 만들기</h1>
+                    <h1 id="createTitle"><c:choose><c:when test="${personalEntry}">개인 프로젝트 만들기</c:when><c:otherwise>새 프로젝트 만들기</c:otherwise></c:choose></h1>
                     <p id="createSubTitle">함께 진행할 프로젝트를 만들어보세요.</p>
                 </div>
                 <div class="project-create-title-actions">
@@ -64,7 +74,7 @@
 
                     <div class="create-form-grid">
                         <div class="moyo-project-form__group field full project-create-type-field moyo-create-field" data-project-field="type">
-                            <div class="moyo-project-form__label-row project-create-type-label-row moyo-create-label-row">
+                            <div class="project-field-label-stack">
                                 <span class="moyo-project-form__label moyo-create-label">프로젝트 유형 <span class="moyo-project-form__required moyo-create-required">*</span></span>
                                 <span class="moyo-project-form__help moyo-create-help">가장 가까운 유형을 선택하세요.</span>
                             </div>
@@ -102,9 +112,9 @@
                             <p class="moyo-project-form__error moyo-create-error" data-project-form-error="name" hidden></p>
                         </div>
                         <div class="moyo-project-form__group field full moyo-create-field" data-project-field="description">
-                            <div class="moyo-project-form__label-row moyo-create-label-row">
+                            <div class="project-field-label-stack">
                                 <label class="moyo-project-form__label moyo-create-label" for="projDesc">프로젝트 설명</label>
-                                <span class="moyo-project-form__help moyo-create-help">목표나 준비할 내용을 간단히 적어두세요.</span>
+                                <span class="moyo-project-form__help moyo-create-help">목표나 준비할 내용을 간단히 적어주세요.</span>
                             </div>
                             <div class="moyo-project-description-wrap moyo-create-textarea-wrap">
                                 <textarea class="moyo-project-form__control moyo-create-control" id="projDesc" rows="3" maxlength="1000" data-project-description placeholder="프로젝트 목표나 준비할 내용을 간단히 입력하세요."></textarea>
@@ -114,7 +124,7 @@
 
                         <div class="moyo-project-form__group field full moyo-create-field project-period-field" data-project-field="period">
                             <div class="moyo-project-form__label-row moyo-create-label-row project-period-label-row">
-                                <div>
+                                <div class="project-field-label-stack">
                                     <span class="moyo-project-form__label moyo-create-label">프로젝트 기간</span>
                                     <span class="moyo-project-form__help moyo-create-help project-period-help">필요할 때만 시작일과 종료일을 지정하세요.</span>
                                 </div>
@@ -153,7 +163,7 @@
                         <c:choose>
                             <c:when test="${groupEntry}">
                                 <div class="moyo-project-form__group field full moyo-create-field" data-project-field="access">
-                                    <div class="moyo-project-form__label-row moyo-create-label-row">
+                                    <div class="project-field-label-stack">
                                         <span class="moyo-project-form__label moyo-create-label">프로젝트 공개 범위</span>
                                         <span class="moyo-project-form__help moyo-create-help">프로젝트를 볼 수 있는 범위를 선택하세요.</span>
                                     </div>
@@ -179,12 +189,14 @@
                         </c:choose>
 
                         <div class="field full link-field moyo-create-field moyo-create-link-field">
-                            <div class="moyo-create-link-head">
-                                <div class="moyo-create-link-title">
-                                    <span class="field-label moyo-create-label">외부 링크</span>
-                                    <span class="moyo-create-link-count" id="projectCreateLinkCount">0 / 5</span>
+                            <div class="moyo-create-link-head project-link-head">
+                                <div class="project-link-heading">
+                                    <div class="moyo-create-link-title">
+                                        <span class="field-label moyo-create-label">외부 링크</span>
+                                        <span class="moyo-create-link-count" id="projectCreateLinkCount">0 / 5</span>
+                                    </div>
                                 </div>
-                                <button type="button" id="projectCreateLinkAdd" class="moyo-create-link-add" onclick="addProjectCreateLink()">
+                                <button type="button" id="projectCreateLinkAdd" class="moyo-create-link-add" >
                                     <i class="fa-solid fa-plus" aria-hidden="true"></i><span>링크 추가</span>
                                 </button>
                             </div>
@@ -193,13 +205,14 @@
                                 <i class="fa-solid fa-link" aria-hidden="true"></i>
                                 <span>등록된 링크가 없습니다.</span>
                             </div>
-                            <small class="moyo-create-help">Git, Notion, 문서 등 필요한 링크를 최대 5개까지 등록할 수 있어요.</small>
+                            <small class="moyo-create-help moyo-create-link-help">Git, Notion, 문서 등 필요한 링크를 최대 5개까지 등록할 수 있어요.</small>
                             <p id="projectCreateLinkError" class="moyo-create-error moyo-create-link-error" hidden></p>
                         </div>
                     </div>
                 </section>
             </section>
 
+            <c:if test="${groupEntry}">
             <section id="stepMembers" class="project-step-panel moyo-create-panel" data-step="2">
                 <section id="memberSection" class="create-card member-card">
                     <div class="create-card-head member-head member-head--compact">
@@ -208,8 +221,7 @@
                             <span>함께할 멤버를 선택하고 역할을 정하세요.</span>
                         </div>
                         <div class="role-guide" aria-label="멤버 역할 안내">
-                            <span><i class="fa-solid fa-crown" aria-hidden="true"></i> 팀장 1명</span>
-                            <span><i class="fa-solid fa-user-shield" aria-hidden="true"></i> 관리자 지정 가능</span>
+                            <span><i class="fa-solid fa-crown" aria-hidden="true"></i> 팀장 1명 · 관리자 지정 가능</span>
                         </div>
                     </div>
 
@@ -218,11 +230,8 @@
                             <i class="fa-solid fa-magnifying-glass member-search-icon" aria-hidden="true"></i>
                             <input class="moyo-create-control" type="search" id="memberSearchInput" placeholder="이름 또는 이메일로 멤버 검색" autocomplete="off">
                         </label>
-                        <button type="button" id="memberSelectedFilter" class="member-filter-btn" aria-pressed="false"><i class="fa-solid fa-user-check" aria-hidden="true"></i><span>선택한 멤버만</span></button>
-                        <span id="memberSelectedCount" class="member-selected-count" aria-live="polite"><i class="fa-solid fa-users" aria-hidden="true"></i><span>참여 멤버 1명</span></span>
-                    </div>
-                    <div class="member-list-head" aria-hidden="true">
-                        <span>멤버</span><span>담당</span><span>권한</span>
+                        <span id="memberSelectedCount" class="member-selected-count" aria-live="polite"><i class="fa-solid fa-users" aria-hidden="true"></i><span>참여 1명</span></span>
+                        <button type="button" id="memberSelectedFilter" class="member-filter-btn" aria-pressed="false"><i class="fa-solid fa-user-check" aria-hidden="true"></i><span>선택만</span></button>
                     </div>
                     <div id="memberList" class="member-list">
                         <div class="member-loading">그룹 멤버를 불러오는 중입니다.</div>
@@ -230,10 +239,18 @@
                     <div id="memberFilterEmpty" class="member-filter-empty" hidden>검색 조건에 맞는 멤버가 없습니다.</div>
                 </section>
             </section>
+            </c:if>
             <div class="create-actions moyo-create-actions">
-                <button type="button" id="btnPrevStep" class="create-btn ghost" hidden>이전</button>
-                <button type="button" id="btnNextStep" class="create-btn primary">다음</button>
-                <button type="button" id="btnSubmit" class="create-btn primary" hidden>프로젝트 생성</button>
+                <c:choose>
+                    <c:when test="${groupEntry}">
+                        <button type="button" id="btnPrevStep" class="create-btn ghost" hidden>이전</button>
+                        <button type="button" id="btnNextStep" class="create-btn primary">다음</button>
+                        <button type="button" id="btnSubmit" class="create-btn primary" hidden>프로젝트 생성</button>
+                    </c:when>
+                    <c:otherwise>
+                        <button type="button" id="btnSubmit" class="create-btn primary">프로젝트 생성</button>
+                    </c:otherwise>
+                </c:choose>
             </div>
             </div>
         </section>
@@ -241,7 +258,8 @@
 </div>
 
 <jsp:include page="/WEB-INF/views/common/footer.jsp" />
+<script src="${pageContext.request.contextPath}/js/moyoCreate.js?v=20260923-responsive-conflict-fix2"></script>
 <script src="${pageContext.request.contextPath}/js/commonProjectForm.js?v=20260923-project-period-ui-1"></script>
-<script src="${pageContext.request.contextPath}/js/projectCreate.js?v=20260923-member-step-detail-finish-1"></script>
+<script src="${pageContext.request.contextPath}/js/projectCreate.js?v=20260923-member-compact-final1"></script>
 </body>
 </html>

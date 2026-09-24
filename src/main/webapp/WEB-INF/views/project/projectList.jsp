@@ -6,6 +6,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <c:choose>
+        <c:when test="${not personalMode and not empty workspace.wsImagePath}">
+            <link rel="icon" href="<c:out value='${workspace.wsImagePath}'/>">
+        </c:when>
+        <c:otherwise>
+            <link rel="icon" type="image/png" sizes="32x32" href="${pageContext.request.contextPath}/brand/favicon-32x32.png?v=moyo-favicon-v2">
+            <link rel="icon" type="image/png" sizes="16x16" href="${pageContext.request.contextPath}/brand/favicon-16x16.png?v=moyo-favicon-v2">
+            <link rel="shortcut icon" href="${pageContext.request.contextPath}/brand/favicon.ico?v=moyo-favicon-v2">
+        </c:otherwise>
+    </c:choose>
     <title><c:choose><c:when test="${personalMode}">개인 프로젝트</c:when><c:otherwise><c:out value="${workspace.wsName}"/> 프로젝트</c:otherwise></c:choose> - MOYO</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/moyoUi.css?v=css-structure-v1-20260910">

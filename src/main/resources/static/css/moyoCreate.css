@@ -1,4 +1,48 @@
 /* ========================================================================
+   MOYO Create Design Tokens
+   그룹 / 프로젝트 생성 화면에서 공통으로 사용하는 시각 규칙
+   ======================================================================== */
+:root {
+    --moyo-create-mint: #55d6c2;
+    --moyo-create-blue: #4a90e2;
+    --moyo-create-purple: #7567f4;
+    --moyo-create-brand-gradient: linear-gradient(135deg, var(--moyo-create-mint) 0%, var(--moyo-create-blue) 54%, var(--moyo-create-purple) 100%);
+    --moyo-create-brand-gradient-hover: linear-gradient(135deg, #45c7b3 0%, #3f82d4 54%, #6758e6 100%);
+
+    --moyo-create-bg: #f7f9fc;
+    --moyo-create-surface: #ffffff;
+    --moyo-create-surface-subtle: #f8fafc;
+    --moyo-create-surface-hover: #fbfdff;
+
+    --moyo-create-text-strong: #142033;
+    --moyo-create-text: #334155;
+    --moyo-create-text-secondary: #526173;
+    --moyo-create-text-muted: #7b8798;
+    --moyo-create-text-soft: #94a3b8;
+
+    --moyo-create-border: #dce4ed;
+    --moyo-create-border-soft: #e2e8f0;
+    --moyo-create-border-subtle: #edf1f5;
+    --moyo-create-border-hover: #c5d3e2;
+
+    --moyo-create-focus: #6fa8e8;
+    --moyo-create-focus-ring: rgba(74, 144, 226, .10);
+    --moyo-create-danger: #d64a54;
+    --moyo-create-danger-border: #e68a91;
+
+    --moyo-create-radius-card: 22px;
+    --moyo-create-radius-option: 14px;
+    --moyo-create-radius-control: 11px;
+    --moyo-create-radius-button: 12px;
+    --moyo-create-radius-small: 9px;
+
+    --moyo-create-shadow-card: 0 16px 44px rgba(15, 23, 42, .055);
+    --moyo-create-shadow-selected: 0 7px 18px rgba(74, 144, 226, .08);
+    --moyo-create-shadow-primary: 0 8px 18px rgba(74, 144, 226, .22);
+    --moyo-create-shadow-primary-hover: 0 10px 22px rgba(74, 144, 226, .27);
+}
+
+/* ========================================================================
    MOYO Create Shell
    그룹 / 프로젝트 생성 화면 공통 레이아웃 규칙
    ======================================================================== */
@@ -254,7 +298,8 @@ body:has(.moyo-create-shell) {
     .moyo-create-actions button {
         min-height: 38px !important;
         height: 38px !important;
-        flex: 1 1 0;
+        flex: 0 0 auto !important;
+        width: auto !important;
     }
 }
 
@@ -770,7 +815,7 @@ textarea.moyo-create-control,
     outline-offset: 2px !important;
 }
 
-@media (max-width: 720px) {
+@media (max-width: 520px) {
     .moyo-create-choice-grid--3 {
         grid-template-columns: 1fr !important;
     }
@@ -964,65 +1009,638 @@ textarea.moyo-create-control,
 }
 
 /* ========================================================================
-   2026-09-23 · Project create STEP 1 structure simplification
-   - 그룹 컨텍스트는 프로필 + 그룹명만 유지
-   - 유형 → 이름 → 설명 → 기간 → 공개범위 → 외부링크 순으로 시선 흐름 통일
+   2026-09-23 · Create CTA system final unification
+   그룹 / 개인 프로젝트 / 그룹 프로젝트 생성 화면의 하단 액션 공통 규칙
    ======================================================================== */
-.project-create-group-mini {
-    gap: 7px !important;
-    max-width: 190px !important;
-    padding: 4px 8px 4px 5px !important;
-    border-color: #e3eaf2 !important;
-    border-radius: 10px !important;
-    background: #f9fbfd !important;
+.moyo-create-actions {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    gap: 9px !important;
+    margin-top: 20px !important;
+    padding-top: 16px !important;
+    border-top: 1px solid #edf1f5 !important;
 }
 
-.project-create-group-mini__avatar {
-    flex-basis: 28px !important;
-    width: 28px !important;
-    height: 28px !important;
-    border-radius: 8px !important;
-}
-
-.project-create-group-mini__copy {
-    display: block !important;
-    min-width: 0 !important;
-}
-
-.project-create-group-mini__copy strong {
-    display: block !important;
-    max-width: 138px !important;
-    overflow: hidden !important;
-    color: #304257 !important;
-    font-size: 11px !important;
+.moyo-create-actions .create-btn,
+.moyo-create-actions button.create-btn {
+    box-sizing: border-box !important;
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    min-width: 92px !important;
+    width: auto !important;
+    min-height: 40px !important;
+    height: 40px !important;
+    padding: 0 18px !important;
+    margin: 0 !important;
+    border: 1px solid #d7e1ec !important;
+    border-radius: 12px !important;
+    background: #fff !important;
+    color: #526277 !important;
+    box-shadow: none !important;
+    font-family: inherit !important;
+    font-size: 13px !important;
     font-weight: 800 !important;
-    line-height: 1.2 !important;
+    line-height: 1 !important;
+    text-align: center !important;
     white-space: nowrap !important;
-    text-overflow: ellipsis !important;
+    vertical-align: middle !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    user-select: none !important;
+    transition: background .16s ease, border-color .16s ease, color .16s ease,
+                box-shadow .16s ease, transform .16s ease !important;
 }
 
-.project-create-group-mini__copy small {
+.moyo-create-actions .create-btn:not(.primary):hover,
+.moyo-create-actions .create-btn.ghost:hover {
+    border-color: #c5d3e2 !important;
+    background: #f7f9fc !important;
+    color: #33445a !important;
+    box-shadow: 0 4px 10px rgba(50, 72, 100, .06) !important;
+    transform: none !important;
+}
+
+.moyo-create-actions .create-btn.primary,
+.moyo-create-actions button.create-btn.primary {
+    border: 0 !important;
+    color: #fff !important;
+    background: linear-gradient(135deg, #55d6c2 0%, #4a90e2 54%, #7567f4 100%) !important;
+    box-shadow: 0 8px 18px rgba(74, 144, 226, .22) !important;
+}
+
+.moyo-create-actions .create-btn.primary:hover,
+.moyo-create-actions button.create-btn.primary:hover {
+    background: linear-gradient(135deg, #45c7b3 0%, #3f82d4 54%, #6758e6 100%) !important;
+    box-shadow: 0 10px 22px rgba(74, 144, 226, .27) !important;
+    transform: translateY(-1px) !important;
+}
+
+.moyo-create-actions .create-btn:active:not(:disabled),
+.moyo-create-actions button.create-btn:active:not(:disabled) {
+    transform: translateY(0) !important;
+}
+
+.moyo-create-actions .create-btn:focus-visible,
+.moyo-create-actions button.create-btn:focus-visible {
+    outline: 0 !important;
+    border-color: #89b2e8 !important;
+    box-shadow: 0 0 0 3px rgba(74, 144, 226, .12) !important;
+}
+
+.moyo-create-actions .create-btn.primary:focus-visible,
+.moyo-create-actions button.create-btn.primary:focus-visible {
+    border: 0 !important;
+    box-shadow: 0 0 0 3px rgba(74, 144, 226, .15),
+                0 8px 18px rgba(74, 144, 226, .22) !important;
+}
+
+.moyo-create-actions .create-btn:disabled,
+.moyo-create-actions .create-btn[aria-disabled="true"],
+.moyo-create-actions button.create-btn:disabled,
+.moyo-create-actions button.create-btn[aria-disabled="true"] {
+    opacity: .5 !important;
+    cursor: not-allowed !important;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+/* hidden은 display 강제 규칙보다 항상 우선한다. */
+.moyo-create-actions .create-btn[hidden],
+.moyo-create-actions button.create-btn[hidden] {
     display: none !important;
 }
 
-.project-create-card .basic-card {
-    padding-top: 0 !important;
+@media (max-width: 640px) {
+    .moyo-create-actions {
+        gap: 8px !important;
+        margin-top: 16px !important;
+        padding-top: 14px !important;
+    }
+
+    .moyo-create-actions .create-btn,
+    .moyo-create-actions button.create-btn {
+        flex: 1 1 0 !important;
+        min-width: 0 !important;
+        height: 40px !important;
+        min-height: 40px !important;
+        padding: 0 14px !important;
+    }
+
+    /* CTA가 하나뿐인 STEP1도 지나치게 넓어지지 않게 우측 정렬 유지 */
+    .moyo-create-actions .create-btn:only-child,
+    .moyo-create-actions button.create-btn:only-child {
+        flex: 0 0 auto !important;
+        min-width: 92px !important;
+    }
 }
 
-.project-create-card .basic-card .create-form-grid {
-    gap: 14px !important;
+
+/* ========================================================================
+   2026-09-23 · MOYO Create design-token canonical layer
+   이전 화면별 CSS가 남아 있어도 생성 화면은 이 규칙을 최종 기준으로 사용한다.
+   ======================================================================== */
+body:has(.moyo-create-page),
+body:has(.moyo-create-shell) {
+    background: var(--moyo-create-bg) !important;
 }
 
-.project-create-card .project-create-type-field {
-    margin-top: 0 !important;
+.moyo-create-card {
+    border-color: var(--moyo-create-border-soft) !important;
+    border-radius: var(--moyo-create-radius-card) !important;
+    background: var(--moyo-create-surface) !important;
+    box-shadow: var(--moyo-create-shadow-card) !important;
+}
+
+.moyo-create-title h1,
+.moyo-create-title h2,
+.moyo-create-header h1,
+.moyo-create-header h2 {
+    color: var(--moyo-create-text-strong) !important;
+}
+
+.moyo-create-step,
+.moyo-create-required,
+.moyo-create-field .moyo-project-form__required {
+    color: var(--moyo-create-blue) !important;
+}
+
+.moyo-create-title .create-desc,
+.moyo-create-header p,
+.moyo-create-help,
+.moyo-create-field .moyo-project-form__help,
+.moyo-create-field .form-help,
+.moyo-create-field .workspace-link-help {
+    color: var(--moyo-create-text-muted) !important;
+}
+
+.moyo-create-label,
+.moyo-create-field > label,
+.moyo-create-field > .field-title,
+.moyo-create-field .moyo-project-form__label,
+.moyo-create-field .field-label {
+    color: var(--moyo-create-text) !important;
+}
+
+.moyo-create-control,
+.moyo-create-field input[type="text"],
+.moyo-create-field input[type="tel"],
+.moyo-create-field input[type="search"],
+.moyo-create-field input[type="email"],
+.moyo-create-field input[type="url"],
+.moyo-create-field select,
+.moyo-create-field textarea,
+.moyo-create-field .moyo-project-form__control {
+    border-color: var(--moyo-create-border) !important;
+    border-radius: var(--moyo-create-radius-control) !important;
+    background: var(--moyo-create-surface) !important;
+    color: var(--moyo-create-text) !important;
+}
+
+.moyo-create-control:hover:not(:disabled):not([readonly]),
+.moyo-create-field input:hover:not(:disabled):not([readonly]),
+.moyo-create-field textarea:hover:not(:disabled):not([readonly]),
+.moyo-create-field select:hover:not(:disabled) {
+    border-color: var(--moyo-create-border-hover) !important;
+}
+
+.moyo-create-control:focus,
+.moyo-create-control:focus-visible,
+.moyo-create-field input:focus,
+.moyo-create-field input:focus-visible,
+.moyo-create-field textarea:focus,
+.moyo-create-field textarea:focus-visible,
+.moyo-create-field select:focus,
+.moyo-create-field select:focus-visible {
+    border-color: var(--moyo-create-focus) !important;
+    box-shadow: 0 0 0 3px var(--moyo-create-focus-ring) !important;
+}
+
+.moyo-create-field textarea,
+textarea.moyo-create-control,
+.moyo-create-field textarea.moyo-project-form__control {
+    resize: none !important;
+}
+
+.moyo-create-type-option,
+.moyo-create-type-grid .moyo-project-type-option,
+.moyo-create-choice,
+.moyo-project-choice.moyo-create-choice {
+    border-color: var(--moyo-create-border-soft) !important;
+    border-radius: var(--moyo-create-radius-option) !important;
+    background: var(--moyo-create-surface) !important;
+}
+
+.moyo-create-type-option:hover,
+.moyo-create-type-grid .moyo-project-type-option:hover,
+.moyo-create-choice-option:hover .moyo-create-choice,
+.moyo-create-choice:hover,
+.moyo-project-choice.moyo-create-choice:hover {
+    border-color: var(--moyo-create-border-hover) !important;
+    background: var(--moyo-create-surface-hover) !important;
+}
+
+.moyo-create-type-option.is-selected,
+.moyo-create-type-option[aria-pressed="true"],
+.moyo-create-type-grid .moyo-project-type-option.is-selected,
+.moyo-create-type-grid .moyo-project-type-option[aria-pressed="true"],
+.moyo-create-choice-input:checked + .moyo-create-choice,
+.moyo-create-choice[aria-pressed="true"],
+.moyo-project-choice.moyo-create-choice[aria-pressed="true"] {
+    border-color: transparent !important;
+    background:
+        linear-gradient(var(--moyo-create-surface), var(--moyo-create-surface)) padding-box,
+        var(--moyo-create-brand-gradient) border-box !important;
+    box-shadow: var(--moyo-create-shadow-selected) !important;
+}
+
+.moyo-create-actions {
+    border-top-color: var(--moyo-create-border-subtle) !important;
+}
+
+.moyo-create-actions .create-btn,
+.moyo-create-actions button.create-btn,
+.moyo-create-back-button,
+#btnCancelTop.moyo-create-back-button,
+.moyo-create-link-add,
+.moyo-create-link-remove {
+    border-radius: var(--moyo-create-radius-button) !important;
+}
+
+.moyo-create-actions .create-btn.primary,
+.moyo-create-actions button.create-btn.primary {
+    background: var(--moyo-create-brand-gradient) !important;
+    box-shadow: var(--moyo-create-shadow-primary) !important;
+}
+
+.moyo-create-actions .create-btn.primary:hover,
+.moyo-create-actions button.create-btn.primary:hover {
+    background: var(--moyo-create-brand-gradient-hover) !important;
+    box-shadow: var(--moyo-create-shadow-primary-hover) !important;
+}
+
+.moyo-create-actions .create-btn:not(.primary),
+.moyo-create-back-button,
+#btnCancelTop.moyo-create-back-button,
+.moyo-create-link-add {
+    border-color: var(--moyo-create-border) !important;
+    background: var(--moyo-create-surface) !important;
+    color: var(--moyo-create-text-secondary) !important;
+}
+
+.moyo-create-actions .create-btn:not(.primary):hover,
+.moyo-create-back-button:hover,
+#btnCancelTop.moyo-create-back-button:hover,
+.moyo-create-link-add:hover:not(:disabled) {
+    border-color: var(--moyo-create-border-hover) !important;
+    background: var(--moyo-create-surface-subtle) !important;
+    color: #2f76c4 !important;
+}
+
+.moyo-create-link-count {
+    border-color: var(--moyo-create-border-soft) !important;
+    background: var(--moyo-create-surface-subtle) !important;
+    color: var(--moyo-create-text-soft) !important;
+}
+
+.moyo-create-link-empty {
+    border-color: var(--moyo-create-border) !important;
+    background: #fbfcfd !important;
+    color: var(--moyo-create-text-soft) !important;
+}
+
+.moyo-create-field.is-error .moyo-create-control,
+.moyo-create-field.is-error input,
+.moyo-create-field.is-error textarea,
+.moyo-create-field.is-error select,
+.moyo-create-field [aria-invalid="true"] {
+    border-color: var(--moyo-create-danger-border) !important;
+}
+
+.moyo-create-error,
+.moyo-create-field .moyo-project-form__error {
+    color: var(--moyo-create-danger) !important;
+}
+
+/* ========================================================================
+   2026-09-23 · Create responsive final pass
+   그룹 / 프로젝트 생성 공통 반응형 최종 규칙
+   ======================================================================== */
+
+/* 낮은 해상도 노트북: 정보 밀도만 줄이고 구조는 유지한다. */
+@media (min-width: 900px) and (max-height: 820px) {
+    .moyo-create-page,
+    .moyo-create-shell {
+        margin-top: 16px !important;
+        margin-bottom: 28px !important;
+    }
+
+    .moyo-create-card {
+        padding: 22px 26px 20px !important;
+    }
+
+    .moyo-create-header {
+        margin-bottom: 18px !important;
+    }
+
+    .moyo-create-field,
+    .moyo-create-field-group {
+        margin-bottom: 13px !important;
+    }
+
+    .moyo-create-type-option,
+    .moyo-create-type-grid .moyo-project-type-option {
+        min-height: 74px !important;
+        padding-top: 8px !important;
+        padding-bottom: 8px !important;
+    }
+
+    .moyo-create-choice,
+    .moyo-project-choice.moyo-create-choice {
+        min-height: 80px !important;
+        padding: 12px !important;
+    }
+
+    .moyo-create-actions {
+        margin-top: 16px !important;
+        padding-top: 14px !important;
+    }
+}
+
+/* 태블릿: 카드 폭을 충분히 쓰고 라벨/도움말이 충돌하지 않게 한다. */
+@media (max-width: 760px) {
+    .moyo-create-label-row {
+        min-width: 0;
+    }
+
+    .moyo-create-label-row > * {
+        min-width: 0;
+    }
+
+    .moyo-create-help {
+        max-width: 58%;
+        text-align: right;
+        white-space: normal !important;
+        word-break: keep-all;
+    }
+
+    .moyo-create-type-grid,
+    .moyo-create-type-grid--project,
+    .moyo-create-type-grid--workspace {
+        grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    }
+
+    .workspace-image-summary {
+        grid-template-columns: 58px minmax(0, 1fr) !important;
+        gap: 10px !important;
+    }
+
+    .workspace-image-preview {
+        width: 58px !important;
+        height: 58px !important;
+    }
+
+    .profile-account-actions {
+        flex-wrap: wrap;
+    }
+
+    .profile-choice {
+        gap: 9px !important;
+    }
+}
+
+/* 작은 모바일: 라벨/보조문구와 조작 요소를 자연스럽게 세로 배치한다. */
+@media (max-width: 560px) {
+    .moyo-create-header {
+        flex-wrap: wrap !important;
+    }
+
+    .moyo-create-title-actions,
+    .project-create-title-actions {
+        max-width: 100%;
+    }
+
+    .moyo-create-label-row {
+        align-items: flex-start !important;
+        flex-wrap: wrap !important;
+        row-gap: 4px !important;
+    }
+
+    .moyo-create-help {
+        width: 100%;
+        max-width: none;
+        text-align: left;
+    }
+
+    .moyo-create-type-grid,
+    .moyo-create-type-grid--project,
+    .moyo-create-type-grid--workspace {
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        gap: 7px !important;
+    }
+
+    .moyo-create-type-option,
+    .moyo-create-type-grid .moyo-project-type-option {
+        min-height: 72px !important;
+    }
+
+    .moyo-create-link-head {
+        align-items: center;
+        gap: 8px;
+    }
+
+    .moyo-create-link-title {
+        flex-wrap: wrap;
+    }
+
+    .workspace-image-summary {
+        grid-template-columns: 54px minmax(0, 1fr) !important;
+        padding: 10px !important;
+    }
+
+    .workspace-image-preview {
+        width: 54px !important;
+        height: 54px !important;
+    }
+
+    .profile-choice {
+        grid-template-columns: 1fr !important;
+    }
+
+    .profile-identity-card {
+        grid-template-columns: 1fr !important;
+        gap: 12px !important;
+    }
+
+    .profile-identity-card .profile-account-editor {
+        grid-template-columns: 52px minmax(0, 1fr) !important;
+    }
+
+    .profile-identity-card .profile-account-preview {
+        width: 52px !important;
+        height: 52px !important;
+    }
+
+    .profile-detail-head {
+        align-items: center !important;
+    }
+
+    .profile-contact-control {
+        grid-template-columns: minmax(0, 1fr) auto !important;
+    }
+
+    .profile-contact-verify {
+        grid-column: 1 / -1 !important;
+        width: 100% !important;
+    }
+}
+
+@media (max-width: 420px) {
+    .moyo-create-page,
+    .moyo-create-shell {
+        width: calc(100% - 14px) !important;
+        margin-top: 8px !important;
+    }
+
+    .moyo-create-card {
+        padding: 18px 13px 14px !important;
+        border-radius: 15px !important;
+    }
+
+    .moyo-create-title h1,
+    .moyo-create-title h2,
+    .moyo-create-header h1,
+    .moyo-create-header h2 {
+        font-size: 20px !important;
+    }
+
+    .moyo-create-type-grid,
+    .moyo-create-type-grid--project,
+    .moyo-create-type-grid--workspace {
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    }
+
+    .moyo-create-choice,
+    .moyo-project-choice.moyo-create-choice {
+        min-height: 72px !important;
+        padding: 11px !important;
+    }
+
+    .moyo-create-choice__icon,
+    .moyo-project-choice__icon.moyo-create-choice__icon {
+        width: 32px !important;
+        height: 32px !important;
+        flex-basis: 32px !important;
+    }
+}
+
+/* ========================================================================
+   2026-09-23 · Create responsive breakpoint correction
+   분할창/태블릿 폭(561~760px)을 모바일로 너무 일찍 떨어뜨리지 않는다.
+   ======================================================================== */
+@media (min-width: 561px) and (max-width: 760px) {
+    /* 프로젝트 유형은 14개를 7 x 2로 유지한다. */
+    .project-create-page .moyo-create-type-grid--project {
+        grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
+        gap: 7px !important;
+    }
+
+    .project-create-page .moyo-create-type-grid--project .moyo-project-type-option {
+        min-height: 68px !important;
+        padding: 7px 4px !important;
+    }
+
+    .project-create-page .moyo-create-type-grid--project .moyo-project-type-option__icon {
+        width: 30px !important;
+        height: 30px !important;
+        border-radius: 9px !important;
+    }
+
+    .project-create-page .moyo-create-type-grid--project .moyo-project-type-option__name {
+        font-size: 10px !important;
+        line-height: 1.15 !important;
+    }
+
+    /* 프로젝트 상단 컨텍스트는 분할창에서도 한 줄을 유지한다. */
+    .project-create-page .create-title-row.moyo-create-header {
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        align-items: flex-start !important;
+        justify-content: space-between !important;
+        gap: 12px !important;
+    }
+
+    .project-create-page .project-create-title-actions {
+        width: auto !important;
+        max-width: 48% !important;
+        margin-left: auto !important;
+        flex: 0 0 auto !important;
+        justify-content: flex-end !important;
+        gap: 8px !important;
+    }
+
+    .project-create-page .project-create-group-mini {
+        flex: 0 1 auto !important;
+        max-width: 180px !important;
+        min-width: 0 !important;
+    }
+
+    /* 그룹 가입 방식은 태블릿/분할창에서도 3열을 유지한다. */
+    .create-wrap .moyo-create-choice-grid--3 {
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        gap: 9px !important;
+    }
+
+    .create-wrap .moyo-create-choice-grid--3 .moyo-create-choice {
+        min-height: 88px !important;
+        padding: 12px !important;
+    }
+    .create-wrap .join-type-options {
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        gap: 9px !important;
+    }
+
+    .create-wrap .join-type-card {
+        min-height: 88px !important;
+        padding: 11px 10px !important;
+    }
+}
+
+/* 일반 모바일: 프로젝트 유형은 4열로 내려간다. */
+@media (min-width: 421px) and (max-width: 560px) {
+    .project-create-page .moyo-create-type-grid--project {
+        grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    }
+}
+
+/* 아주 작은 모바일에서만 3열. */
+@media (max-width: 420px) {
+    .project-create-page .moyo-create-type-grid--project {
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    }
+}
+
+
+/* External link helper: shared copy + safe wrapping on split/tablet widths */
+.moyo-create-link-help {
+    display: block !important;
+    width: 100% !important;
+    max-width: none !important;
+    margin-top: 6px !important;
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    overflow-wrap: break-word !important;
+    word-break: keep-all !important;
+    text-align: left !important;
 }
 
 @media (max-width: 760px) {
-    .project-create-group-mini {
-        max-width: min(58vw, 180px) !important;
-    }
-
-    .project-create-group-mini__copy strong {
-        max-width: 118px !important;
+    .moyo-create-link-help {
+        max-width: none !important;
+        text-align: left !important;
+        line-height: 1.5 !important;
     }
 }

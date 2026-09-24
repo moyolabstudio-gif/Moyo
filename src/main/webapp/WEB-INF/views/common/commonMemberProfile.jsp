@@ -129,19 +129,13 @@
                     <div class="workspace-profile-field-block workspace-profile-full-field">
                         <div class="workspace-profile-field-head">
                             <label for="profileContactEmail" class="workspace-profile-field-title">${profileScopeLabel} 이메일</label>
-                            <c:if test="${not isProjectProfileScope}">
-                                <label class="workspace-profile-check-row workspace-profile-inline-privacy">
-                                    <input type="checkbox" id="profileShowEmail">
-                                    <span>공개</span>
-                                </label>
-                            </c:if>
                         </div>
                         <input type="email"
                                id="profileContactEmail"
                                maxlength="100"
                                autocomplete="email"
                                required>
-                        <small class="workspace-profile-helper-text">${profileScopeLabel}에서 표시할 연락용 이메일</small>
+                        <small class="workspace-profile-helper-text">이메일 공개는 MOYO 친구 관계 기준으로 자동 적용됩니다.</small>
                     </div>
                     <div class="workspace-profile-field-block workspace-profile-full-field">
                         <div class="workspace-profile-field-head">
@@ -161,14 +155,10 @@
                     <div class="workspace-profile-field-block workspace-profile-full-field workspace-profile-birth-block">
                         <div class="workspace-profile-field-head">
                             <span class="workspace-profile-field-title">생일</span>
-                            <label class="workspace-profile-check-row workspace-profile-inline-privacy">
-                                <input type="checkbox" id="profileShowBirth">
-                                <span>공개</span>
-                            </label>
                         </div>
                         <div class="workspace-profile-birth-display">
                             <strong id="profileBirthValue">등록된 생일 없음</strong>
-                            <small class="workspace-profile-helper-text">계정 프로필 생일 · 여기서는 공개 여부만 설정</small>
+                            <small class="workspace-profile-helper-text">계정 프로필 생일 · 월·일만 표시 · 친구 관계 기준 자동 공개</small>
                         </div>
                     </div>
                 </div>

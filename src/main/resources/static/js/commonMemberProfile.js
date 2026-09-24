@@ -574,6 +574,10 @@ function workspacePath(path) {
 }
 
 function openWorkspaceMemberProfile(userId) {
+    if (typeof window.openWorkspaceMemberActivityProfile === 'function' && document.getElementById('memberActivityProfileComponent')) {
+        window.openWorkspaceMemberActivityProfile(userId);
+        return;
+    }
     const loading = document.getElementById('memberProfileLoading');
     const content = document.getElementById('memberProfileContent');
     if (!loading || !content) return;
@@ -1500,8 +1504,7 @@ async function saveWorkspaceMemberProfile(event) {
     formData.append('displayName', displayName);
     formData.append('contactEmail', contactEmail);
     formData.append('introText', introText);
-    const showEmailInput = document.getElementById('profileShowEmail');
-    formData.append('showEmail', showEmailInput && !showEmailInput.checked ? 'N' : 'Y');
+    formData.append('showEmail', 'Y');
     formData.append('positionName', positionName);
     formData.append('phoneNumber', phoneNumber);
     formData.append(
@@ -1510,10 +1513,7 @@ async function saveWorkspaceMemberProfile(event) {
             ? 'Y'
             : 'N'
     );
-    formData.append(
-        'showBirth',
-        document.getElementById('profileShowBirth')?.checked ? 'Y' : 'N'
-    );
+    formData.append('showBirth', 'Y');
 
     if (useAccount === 'N' && modalWorkspaceProfileCropper) {
         const removeProfileImage =

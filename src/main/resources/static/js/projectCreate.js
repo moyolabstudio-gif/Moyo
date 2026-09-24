@@ -1,99 +1,30 @@
 (function () {
     'use strict';
 
-    const PROJECT_LINK_MAX = 5;
-
-    function normalizeProjectLinkUrl(value) {
-        const raw = String(value || '').trim();
-        if (!raw) return '';
-        if (/^https?:\/\//i.test(raw)) return raw;
-        return 'https://' + raw;
-    }
-
-    function clearProjectLinkError() {
-        const error = document.getElementById('projectCreateLinkError');
-        if (!error) return;
-        error.hidden = true;
-        error.textContent = '';
-    }
-
-    function updateProjectLinkUi() {
-        const list = document.getElementById('projectCreateLinkList');
-        if (!list) return;
-        const count = list.querySelectorAll('.project-link-row').length;
-        const countEl = document.getElementById('projectCreateLinkCount');
-        const emptyEl = document.getElementById('projectCreateLinkEmpty');
-        const addButton = document.getElementById('projectCreateLinkAdd');
-        if (countEl) countEl.textContent = count + ' / ' + PROJECT_LINK_MAX;
-        if (emptyEl) emptyEl.hidden = count > 0;
-        if (addButton) {
-            addButton.disabled = count >= PROJECT_LINK_MAX;
-            addButton.setAttribute('aria-disabled', count >= PROJECT_LINK_MAX ? 'true' : 'false');
-        }
-    }
-
-    window.addProjectCreateLink = function(name, url) {
-        const list = document.getElementById('projectCreateLinkList');
-        if (!list) return;
-        const count = list.querySelectorAll('.project-link-row').length;
-        if (count >= PROJECT_LINK_MAX) return;
-
-        const row = document.createElement('div');
-        row.className = 'project-link-row moyo-create-link-row';
-        row.innerHTML =
-            '<input type="text" class="project-link-name moyo-create-control moyo-create-link-name" maxlength="50" placeholder="링크 이름" aria-label="링크 이름">' +
-            '<input type="url" class="project-link-url moyo-create-control moyo-create-link-url" maxlength="500" placeholder="https://..." aria-label="링크 주소">' +
-            '<button type="button" class="project-link-remove-btn moyo-create-link-remove" onclick="removeProjectCreateLink(this)" aria-label="링크 삭제"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>';
-        row.querySelector('.project-link-name').value = name || '';
-        row.querySelector('.project-link-url').value = normalizeProjectLinkUrl(url || '');
-        row.querySelector('.project-link-url').addEventListener('blur', function() {
-            this.value = normalizeProjectLinkUrl(this.value);
-            clearProjectLinkError();
-        });
-        list.appendChild(row);
-        updateProjectLinkUi();
-        clearProjectLinkError();
-        if (!name && !url) row.querySelector('.project-link-name').focus();
-    };
-
-    window.removeProjectCreateLink = function(button) {
-        const row = button.closest('.project-link-row');
-        if (row) row.remove();
-        updateProjectLinkUi();
-        clearProjectLinkError();
-    };
+    const projectLinkController = window.MoyoCreate.createLinkList({
+        list: '#projectCreateLinkList',
+        count: '#projectCreateLinkCount',
+        empty: '#projectCreateLinkEmpty',
+        addButton: '#projectCreateLinkAdd',
+        error: '#projectCreateLinkError',
+        rowSelector: '.project-link-row',
+        rowClass: 'project-link-row moyo-create-link-row',
+        nameSelector: '.project-link-name',
+        nameClass: 'project-link-name moyo-create-control moyo-create-link-name',
+        urlSelector: '.project-link-url',
+        urlClass: 'project-link-url moyo-create-control moyo-create-link-url',
+        removeClass: 'project-link-remove-btn moyo-create-link-remove',
+        max: 5
+    });
 
     function validateProjectLinks() {
-        const rows = document.querySelectorAll('#projectCreateLinkList .project-link-row');
-        const error = document.getElementById('projectCreateLinkError');
-        for (const row of rows) {
-            const urlInput = row.querySelector('.project-link-url');
-            const nameInput = row.querySelector('.project-link-name');
-            const name = nameInput.value.trim();
-            const normalized = normalizeProjectLinkUrl(urlInput.value);
-            urlInput.value = normalized;
-            if (!name && !normalized) continue;
-            try {
-                const parsed = new URL(normalized);
-                if (!/^https?:$/.test(parsed.protocol)) throw new Error('invalid');
-            } catch (e) {
-                if (error) {
-                    error.textContent = '링크 주소를 확인해주세요.';
-                    error.hidden = false;
-                }
-                urlInput.focus();
-                return false;
-            }
-        }
-        clearProjectLinkError();
-        return true;
+        return projectLinkController ? projectLinkController.validate() : true;
     }
 
 
     const page = document.querySelector('.project-create-page');
     if (!page) return;
 
-    updateProjectLinkUi();
 
     const contextPath = page.dataset.contextPath || '';
     const initialWsId = String(page.dataset.wsId || '').trim();
@@ -313,18 +244,12 @@
         return groupEntry ? initialWsId : '';
     }
 
-    function setVisible(button, visible) {
-        if (!button) return;
-        button.hidden = !visible;
-        button.style.display = visible ? 'inline-flex' : 'none';
-    }
-
     function setStep(step) {
         currentStep = step;
         const isStep2 = step === 2;
 
-        stepBasic.classList.toggle('is-active', !isStep2);
-        stepMembers.classList.toggle('is-active', isStep2);
+        if (stepBasic) stepBasic.classList.toggle('is-active', !isStep2);
+        if (stepMembers) stepMembers.classList.toggle('is-active', isStep2);
 
         const personal = getScope() === 'PERSONAL';
         stepLabel.textContent = personal ? '1 / 1' : (isStep2 ? '2 / 2' : '1 / 2');
@@ -335,22 +260,13 @@
                 ? '함께 진행할 프로젝트를 만들어보세요.'
                 : '함께 진행할 프로젝트를 만들어보세요.');
 
-        setVisible(prevButton, isStep2);
-        setVisible(nextButton, !personal && !isStep2);
-        setVisible(submitButton, personal || isStep2);
+        window.MoyoCreate.setVisible(prevButton, isStep2);
+        window.MoyoCreate.setVisible(nextButton, !personal && !isStep2);
+        window.MoyoCreate.setVisible(submitButton, personal || isStep2);
     }
 
     function collectProjectLinks() {
-        return Array.from(document.querySelectorAll('#projectCreateLinkList .project-link-row'))
-            .map(function(row) {
-                return {
-                    linkName: row.querySelector('.project-link-name').value.trim(),
-                    linkUrl: row.querySelector('.project-link-url').value.trim()
-                };
-            })
-            .filter(function(link) {
-                return link.linkName || link.linkUrl;
-            });
+        return projectLinkController ? projectLinkController.collect() : [];
     }
 
     function normalizeMemberSearchText(value) {
@@ -539,8 +455,8 @@
         }).length;
         if (memberSelectedCount) {
             const countText = memberSelectedCount.querySelector('span');
-            if (countText) countText.textContent = '참여 멤버 ' + selectedCount + '명';
-            else memberSelectedCount.textContent = '참여 멤버 ' + selectedCount + '명';
+            if (countText) countText.textContent = '참여 ' + selectedCount + '명';
+            else memberSelectedCount.textContent = '참여 ' + selectedCount + '명';
         }
         syncAllMemberRoleControls();
         applyMemberFilters();
@@ -597,8 +513,11 @@
                 'PROFILE_IMAGE_URL', 'profileImageUrl', 'imagePath'
             ]));
             const profileImagePath = memberProfileImagePath || (isCurrent ? currentUserProfileImage : '');
+            const cleanProfileImagePath = String(profileImagePath || '').split('?')[0].split('#')[0].toLowerCase();
+            const isTransparentProfileImage = /\.(png|webp)$/.test(cleanProfileImagePath);
+            const avatarImageClass = isTransparentProfileImage ? ' class="is-transparent-image"' : '';
             const avatarImage = profileImagePath
-                ? '<img src="' + escapeHtml(profileImagePath) + '" alt="" loading="lazy" onerror="this.closest(\'.member-avatar\').classList.remove(\'has-image\'); this.remove();">'
+                ? '<img' + avatarImageClass + ' src="' + escapeHtml(profileImagePath) + '" alt="" loading="lazy" onerror="this.closest(\'.member-avatar\').classList.remove(\'has-image\'); this.remove();">'
                 : '';
             const avatarClass = profileImagePath ? 'member-avatar has-image' : 'member-avatar';
 
@@ -764,9 +683,8 @@
         const payload = buildPayload();
         if (!payload) return;
 
-        submitButton.disabled = true;
+        window.MoyoCreate.setButtonBusy(submitButton, true, { busy: '생성 중...', idle: '프로젝트 생성' });
         if (nextButton) nextButton.disabled = true;
-        submitButton.textContent = '생성 중...';
 
         fetch(contextPath + '/project/api/create', {
             method: 'POST',
@@ -781,9 +699,8 @@
         .catch(function (error) {
             console.error(error);
             alert(error.message || '프로젝트 생성 중 오류가 발생했습니다.');
-            submitButton.disabled = false;
+            window.MoyoCreate.setButtonBusy(submitButton, false, { idle: '프로젝트 생성' });
             if (nextButton) nextButton.disabled = false;
-            submitButton.textContent = '프로젝트 생성';
         });
     }
 
@@ -1028,23 +945,21 @@
             || commonProjectForm.querySelector('[data-project-type]');
         syncTypeSummary(initialTypeButton);
         const nameInput = commonProjectForm.querySelector('[data-project-name]');
-        const syncNameCount = function() {
-            if (projectNameCount && nameInput) projectNameCount.textContent = String(nameInput.value.length);
-        };
-        if (nameInput) nameInput.addEventListener('input', syncNameCount);
-        syncNameCount();
+        if (nameInput && projectNameCount) window.MoyoCreate.bindCounter(nameInput, projectNameCount);
     }
 
     if (topCancelButton) topCancelButton.addEventListener('click', goBack);
 
-    nextButton.addEventListener('click', function () {
-        if (!validateBasic()) return;
-        loadMembers();
-        setStep(2);
-    });
+    if (nextButton) {
+        nextButton.addEventListener('click', function () {
+            if (!validateBasic()) return;
+            loadMembers();
+            setStep(2);
+        });
+    }
 
-    prevButton.addEventListener('click', function () { setStep(1); });
-    submitButton.addEventListener('click', submitProject);
+    if (prevButton) prevButton.addEventListener('click', function () { setStep(1); });
+    if (submitButton) submitButton.addEventListener('click', submitProject);
 
     setDefaultDates();
     syncEndDate();

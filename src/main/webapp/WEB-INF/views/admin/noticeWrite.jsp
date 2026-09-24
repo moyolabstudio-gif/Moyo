@@ -6,6 +6,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" sizes="32x32" href="${pageContext.request.contextPath}/brand/favicon-32x32.png?v=moyo-favicon-v2">
+    <link rel="icon" type="image/png" sizes="16x16" href="${pageContext.request.contextPath}/brand/favicon-16x16.png?v=moyo-favicon-v2">
+    <link rel="shortcut icon" href="${pageContext.request.contextPath}/brand/favicon.ico?v=moyo-favicon-v2">
     <title>공지사항 작성</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/moyoUi.css?v=moyo-ui-scope-20260617">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/commonRichContent.css?v=rich-content-v3">
@@ -48,7 +51,7 @@
 
                 <div class="notice-form-field">
                     <label class="notice-form-label" for="memo">내용<span class="notice-form-required">*</span></label>
-                    <textarea id="memo" name="content" required></textarea>
+                    <textarea id="memo" name="content"></textarea>
                 </div>
             </section>
 
@@ -87,8 +90,26 @@
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     MoyoCkeditor.create('#memo', {
+        profile: 'BOARD',
         uploadUrl: '${pageContext.request.contextPath}/admin/notice/image-upload',
-        placeholder: '공지 내용을 입력하세요.'
+        placeholder: '공지 내용을 입력하세요.',
+        onReady: function (editor) {
+            var form = document.querySelector('.notice-form-card');
+            if (!form) return;
+
+            form.addEventListener('submit', function (event) {
+                var html = editor.getData();
+                var doc = new DOMParser().parseFromString(html, 'text/html');
+                var text = (doc.body.textContent || '').replace(/\u00a0/g, ' ').trim();
+                var hasVisualContent = !!doc.body.querySelector('img, video, iframe, table, figure');
+
+                if (!text && !hasVisualContent) {
+                    event.preventDefault();
+                    alert('공지 내용을 입력해주세요.');
+                    editor.focus();
+                }
+            });
+        }
     }).catch(function (error) {
         console.error('에디터 초기화 실패:', error);
     });

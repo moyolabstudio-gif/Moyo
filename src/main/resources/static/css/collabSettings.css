@@ -1,0 +1,150 @@
+/*
+ * MOYO 협업 설정 공통 셸
+ * 그룹/프로젝트 설정의 화면 밀도와 인터랙션 인상을 한 곳에서 유지한다.
+ * 각 페이지 CSS는 데이터/기능별 상세만 담당한다.
+ */
+:root {
+    --collab-settings-bg: #f7f9fc;
+    --collab-settings-surface: #fff;
+    --collab-settings-line: #e7ebf2;
+    --collab-settings-text: #182235;
+    --collab-settings-muted: #748097;
+    --collab-settings-mint: #4fd5c3;
+    --collab-settings-blue: #4c78ff;
+    --collab-settings-purple: #8b63f6;
+    --collab-settings-shadow: 0 16px 45px rgba(36,52,84,.08);
+}
+
+.ws-settings-shell,
+.project-settings-shell {
+    width: min(1180px, calc(100% - 40px));
+    margin: 0 auto;
+    padding: 34px 0 72px;
+    color: var(--collab-settings-text);
+}
+
+.ws-settings-context,
+.project-settings-context {
+    min-height: 82px;
+    padding: 12px 4px 18px;
+    border-bottom: 1px solid var(--collab-settings-line);
+}
+
+.ws-settings-tabs,
+.project-settings-tabs {
+    display: flex;
+    gap: 26px;
+    min-height: 62px;
+    border-bottom: 1px solid var(--collab-settings-line);
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+.ws-settings-tabs::-webkit-scrollbar,
+.project-settings-tabs::-webkit-scrollbar { display:none; }
+
+.ws-settings-tab,
+.project-settings-tab {
+    position: relative;
+    border: 0;
+    background: transparent;
+    padding: 0 2px;
+    color: #7a869c;
+    font-weight: 750;
+    white-space: nowrap;
+    cursor: pointer;
+}
+.ws-settings-tab::after,
+.project-settings-tab::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -1px;
+    height: 3px;
+    border-radius: 3px 3px 0 0;
+    background: linear-gradient(135deg, var(--collab-settings-mint), var(--collab-settings-blue), var(--collab-settings-purple));
+    transform: scaleX(0);
+    transform-origin: center;
+    transition: transform .18s ease;
+}
+.ws-settings-tab.is-active,
+.project-settings-tab.is-active { color: var(--collab-settings-text); }
+.ws-settings-tab.is-active::after,
+.project-settings-tab.is-active::after { transform: scaleX(1); }
+
+.ws-settings-content,
+.project-settings-content { padding-top: 26px; }
+
+.ws-settings-panel__head,
+.project-settings-panel__head { margin-bottom: 20px; }
+.ws-settings-panel__head h2,
+.project-settings-panel__head h2 {
+    margin: 0 0 6px;
+    font-size: 24px;
+    letter-spacing: -.02em;
+}
+.ws-settings-panel__head p,
+.project-settings-panel__head p {
+    margin: 0;
+    color: #6f7b91;
+    font-size: 13.5px;
+    line-height: 1.6;
+}
+
+.ws-settings-savebar,
+.project-settings-savebar {
+    position: sticky;
+    bottom: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 8px 8px 8px 12px;
+    border: 1px solid rgba(221,227,237,.85);
+    border-radius: 13px;
+    background: rgba(255,255,255,.96);
+    backdrop-filter: blur(14px);
+    box-shadow: var(--collab-settings-shadow);
+    z-index: 5;
+}
+.ws-settings-savebar > span,
+.project-settings-savebar > span {
+    color: #6f7b8f;
+    font-size: 12.5px;
+    font-weight: 650;
+}
+
+.ws-settings-member-row,
+.project-settings-member-row {
+    min-height: 76px;
+    border-bottom: 1px solid #edf0f4;
+}
+.ws-settings-member-main,
+.project-settings-member-main { min-width:0; }
+
+/* 실제 파일이 있으면 기본 아바타 그라데이션을 사용하지 않는다. */
+.ws-settings-person-avatar:has(> img),
+.project-settings-person-avatar:has(> img) {
+    background: #fff !important;
+    background-image: none !important;
+}
+.ws-settings-person-avatar > img,
+.project-settings-person-avatar > img {
+    background: transparent !important;
+}
+
+@media (max-width: 760px) {
+    .ws-settings-shell,
+    .project-settings-shell {
+        width: min(100% - 24px, 1180px);
+        padding-top: 20px;
+    }
+    .ws-settings-tabs,
+    .project-settings-tabs { min-height: 54px; gap: 19px; }
+    .ws-settings-content,
+    .project-settings-content { padding-top: 20px; }
+    .ws-settings-panel__head h2,
+    .project-settings-panel__head h2 { font-size: 21px; }
+    .ws-settings-savebar,
+    .project-settings-savebar { bottom: 8px; }
+}

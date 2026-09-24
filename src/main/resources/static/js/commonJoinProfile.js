@@ -20,10 +20,29 @@
     const positionInput = document.getElementById("joinProfilePosition");
     const introInput = document.getElementById("joinProfileIntro");
     const phoneInput = document.getElementById("joinProfilePhone");
+    const avatarColumn = document.querySelector(".join-profile-avatar-column");
+    const workspaceMark = document.getElementById("joinProfileWorkspaceMark");
+    const workspaceImage = document.getElementById("joinProfileWorkspaceImage");
+    const workspaceFallback = document.getElementById("joinProfileWorkspaceFallback");
     const showEmailInput = document.getElementById("joinProfileShowEmail");
     const showPhoneInput = document.getElementById("joinProfileShowPhone");
     const showBirthInput = document.getElementById("joinProfileShowBirth");
     const submitButton = document.getElementById("joinProfileSubmit");
+    const emailVerifyBadge = document.getElementById("joinProfileEmailVerifyBadge");
+    const emailVerifyButton = document.getElementById("joinProfileEmailVerifyButton");
+    const emailCodeRow = document.getElementById("joinProfileEmailCodeRow");
+    const emailCodeInput = document.getElementById("joinProfileEmailCode");
+    const emailCodeVerifyButton = document.getElementById("joinProfileEmailCodeVerifyButton");
+    const emailVerifyText = document.getElementById("joinProfileEmailVerifyText");
+    const birthValue = document.getElementById("joinProfileBirthValue");
+    const birthHelp = document.getElementById("joinProfileBirthHelp");
+    const birthTypeBadge = document.getElementById("joinProfileBirthTypeBadge");
+
+    const accountEmail = (modal.dataset.accountEmail || "").trim();
+    const accountBirth = (modal.dataset.accountBirth || "").trim();
+    const accountBirthType = (modal.dataset.accountBirthType || "SOLAR").trim().toUpperCase();
+    const accountBirthPublic = (modal.dataset.accountBirthPublic || "N").trim().toUpperCase();
+    let verifiedJoinEmail = accountEmail.toLowerCase();
 
     const contextPath = modal.dataset.contextPath || "";
     const accountName = preview.dataset.accountName || "사용자";
@@ -35,6 +54,7 @@
         requestId: null,
         workspaceId: null,
         workspaceName: "",
+        workspaceImagePath: "",
         onSuccess: null,
         sourceUrl: "",
         finalBlob: null,
@@ -48,6 +68,150 @@
         baseHeight: 0
     };
 
+
+
+    function syncWorkspaceMark() {
+        if (!workspaceMark) return;
+        const name = String(state.workspaceName || "그룹").trim();
+        const fallbackText = name ? name.substring(0, 1).toUpperCase() : "그";
+        if (workspaceFallback) workspaceFallback.textContent = fallbackText;
+
+        const imagePath = String(state.workspaceImagePath || "").trim();
+        if (!workspaceImage || !imagePath) {
+            if (workspaceImage) {
+                workspaceImage.hidden = true;
+                workspaceImage.removeAttribute("src");
+            }
+            if (workspaceFallback) workspaceFallback.hidden = false;
+            workspaceMark.classList.remove("has-image");
+            workspaceMark.classList.add("is-default");
+            return;
+        }
+
+        const resolved = MoyoProfileUtils.resolvePath(imagePath, contextPath);
+        workspaceImage.onload = function () {
+            workspaceImage.hidden = false;
+            if (workspaceFallback) workspaceFallback.hidden = true;
+            workspaceMark.classList.add("has-image");
+            workspaceMark.classList.remove("is-default");
+        };
+        workspaceImage.onerror = function () {
+            workspaceImage.hidden = true;
+            if (workspaceFallback) workspaceFallback.hidden = false;
+            workspaceMark.classList.remove("has-image");
+            workspaceMark.classList.add("is-default");
+        };
+        workspaceImage.src = resolved;
+    }
+
+    async function loadWorkspaceContext() {
+        const params = new URLSearchParams();
+        if (state.invitationId) params.set("inviteId", state.invitationId);
+        if (state.requestId) params.set("requestId", state.requestId);
+        if (!params.toString()) {
+            syncWorkspaceMark();
+            return;
+        }
+
+        try {
+            const response = await fetch(
+                contextPath + "/workspace/api/join-profile-context?" + params.toString(),
+                {credentials: "same-origin"}
+            );
+            if (!response.ok) {
+                syncWorkspaceMark();
+                return;
+            }
+            const payload = await response.json();
+            if (!payload || payload.success !== true) {
+                syncWorkspaceMark();
+                return;
+            }
+            if (payload.workspaceName) state.workspaceName = payload.workspaceName;
+            state.workspaceImagePath = payload.workspaceImagePath || "";
+
+            const workspaceNameEl = document.getElementById("joinProfileWorkspaceName");
+            const subtitleEl = document.getElementById("joinProfileSubtitle");
+            if (workspaceNameEl) workspaceNameEl.textContent = state.workspaceName;
+            if (subtitleEl) {
+                subtitleEl.textContent = state.workspaceName + "에서 사용할 프로필과 공개 정보를 확인해주세요.";
+            }
+            syncWorkspaceMark();
+        } catch (error) {
+            syncWorkspaceMark();
+        }
+    }
+
+    function syncImageActions() {
+        if (!avatarColumn) return;
+        const hasCustomImage = !useAccount() && Boolean(state.sourceUrl || state.finalBlob);
+        avatarColumn.classList.toggle("has-custom-image", hasCustomImage);
+    }
+
+    function normalizeEmail(value) {
+        return String(value || "").trim().toLowerCase();
+    }
+
+    function isValidEmail(value) {
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value || "").trim());
+    }
+
+    function syncEmailVerification() {
+        if (!emailVerifyBadge || !emailVerifyText) return false;
+        const email = normalizeEmail(emailInput.value);
+        const verified = !!email && (email === normalizeEmail(accountEmail) || email === normalizeEmail(verifiedJoinEmail));
+        emailVerifyBadge.hidden = !verified;
+        emailVerifyBadge.classList.toggle("is-verified", verified);
+        if (emailVerifyButton) emailVerifyButton.hidden = !email || verified;
+        if (!email) {
+            emailVerifyText.textContent = "이메일을 입력해주세요.";
+            if (emailCodeRow) emailCodeRow.hidden = true;
+            return false;
+        }
+        if (verified) {
+            emailVerifyBadge.innerHTML = '<i class="fa-solid fa-check" aria-hidden="true"></i> 인증됨';
+            emailVerifyText.textContent = email === normalizeEmail(accountEmail)
+                ? "계정 이메일은 추가 인증 없이 사용할 수 있어요."
+                : "인증된 이메일입니다.";
+            if (emailCodeRow) emailCodeRow.hidden = true;
+            return true;
+        }
+        emailVerifyText.textContent = "계정과 다른 이메일은 인증 후 사용할 수 있어요.";
+        return false;
+    }
+
+    function formatBirthMonthDay(raw) {
+        if (!raw) return "";
+        const match = String(raw).match(/(?:\d{4}[-/.])?(\d{1,2})[-/.](\d{1,2})/);
+        if (!match) return "";
+        return String(Number(match[1])).padStart(2, "0") + "." + String(Number(match[2])).padStart(2, "0");
+    }
+
+    function syncBirthInfo() {
+        if (!birthValue || !showBirthInput) return;
+        const formatted = formatBirthMonthDay(accountBirth);
+        const hasBirth = Boolean(formatted);
+        birthValue.textContent = hasBirth ? formatted : "등록된 생일 없음";
+        showBirthInput.disabled = !hasBirth;
+        if (!hasBirth) showBirthInput.checked = false;
+        if (birthTypeBadge) {
+            birthTypeBadge.innerHTML = accountBirthType === "LUNAR"
+                ? '<i class="fa-regular fa-moon" aria-hidden="true"></i>'
+                : '<i class="fa-regular fa-sun" aria-hidden="true"></i>';
+            birthTypeBadge.setAttribute("aria-label", accountBirthType === "LUNAR" ? "음력" : "양력");
+        }
+        if (birthHelp) birthHelp.textContent = hasBirth
+            ? "생일은 연도 없이 월/일만 다른 그룹 멤버에게 표시됩니다."
+            : "마이페이지에 생일을 등록하면 그룹에서 공개 여부를 선택할 수 있습니다.";
+    }
+
+    function syncPrivacyAvailability() {
+        if (showEmailInput) showEmailInput.disabled = !emailInput.value.trim();
+        if (showPhoneInput) {
+            showPhoneInput.disabled = !phoneInput.value.trim();
+            if (showPhoneInput.disabled) showPhoneInput.checked = false;
+        }
+    }
     function resolvedAccountImage() {
         return MoyoProfileUtils.resolvePath(rawAccountImage, contextPath);
     }
@@ -78,9 +242,15 @@
         const accountMode = useAccount();
 
         displayNameInput.readOnly = accountMode;
+        emailInput.readOnly = accountMode;
         fileInput.disabled = accountMode;
         defaultButton.disabled = accountMode;
         adjustButton.disabled = accountMode || !state.sourceUrl;
+        syncImageActions();
+
+        if (accountMode && accountEmail) {
+            emailInput.value = accountEmail;
+        }
 
         const fileLabel = document.querySelector('label[for="joinProfileFile"]');
         if (fileLabel) fileLabel.style.opacity = accountMode ? ".45" : "1";
@@ -88,6 +258,7 @@
         if (accountMode) {
             displayNameInput.value = accountName;
             renderPreview(resolvedAccountImage(), accountName);
+            syncImageActions();
             return;
         }
 
@@ -98,6 +269,7 @@
         } else {
             renderPreview("", displayNameInput.value || accountName);
         }
+        syncImageActions();
     }
 
     async function loadSavedProfile(workspaceId) {
@@ -136,6 +308,7 @@
                 || accountName;
             emailInput.value =
                 value("contactEmail", "CONTACT_EMAIL", emailInput.value) || "";
+            verifiedJoinEmail = normalizeEmail(emailInput.value);
             positionInput.value =
                 value("positionName", "POSITION_NAME", "") || "";
             introInput.value =
@@ -143,13 +316,13 @@
             phoneInput.value =
                 value("phoneNumber", "PHONE_NUMBER", "") || "";
             showEmailInput.checked = String(
-                value("showEmail", "SHOW_EMAIL", "Y")
+                value("showEmail", "SHOW_EMAIL", "N")
             ).toUpperCase() === "Y";
             showPhoneInput.checked = String(
-                value("showPhone", "SHOW_PHONE", "Y")
+                value("showPhone", "SHOW_PHONE", "N")
             ).toUpperCase() === "Y";
             showBirthInput.checked = String(
-                value("showBirth", "SHOW_BIRTH", "Y")
+                value("showBirth", "SHOW_BIRTH", "N")
             ).toUpperCase() === "Y";
 
             state.sourceUrl = "";
@@ -163,15 +336,19 @@
             );
 
             if (!accountMode && savedImage) {
-                state.sourceUrl = resolvePath(savedImage);
+                state.sourceUrl = MoyoProfileUtils.resolvePath(savedImage, contextPath);
                 renderPreview(
                     state.sourceUrl,
                     displayNameInput.value || accountName
                 );
                 adjustButton.disabled = false;
+        syncImageActions();
             }
 
             syncMode();
+            syncEmailVerification();
+            syncBirthInfo();
+            syncPrivacyAvailability();
             return true;
         } catch (error) {
             return false;
@@ -236,13 +413,17 @@
         introInput.value = "";
         phoneInput.value = "";
         showEmailInput.checked = true;
-        showPhoneInput.checked = true;
+        showPhoneInput.checked = false;
+        showBirthInput.checked = Boolean(formatBirthMonthDay(accountBirth));
 
         state.sourceUrl = "";
         state.finalBlob = null;
         fileInput.value = "";
         resetCropState();
         syncMode();
+        syncEmailVerification();
+        syncBirthInfo();
+        syncPrivacyAvailability();
     }
 
     async function openModal(options) {
@@ -253,20 +434,30 @@
         state.requestId = config.requestId || null;
         state.workspaceId = config.workspaceId || config.wsId || null;
         state.workspaceName = config.workspaceName || config.wsName || "그룹";
+        state.workspaceImagePath = config.workspaceImagePath || config.wsImagePath || "";
         state.onSuccess =
             typeof config.onSuccess === "function" ? config.onSuccess : null;
 
         resetForm();
 
-        document.getElementById("joinProfileTitle").textContent =
-            state.workspaceName + " 참여 프로필";
+        document.getElementById("joinProfileTitle").textContent = "그룹 참여 설정";
+        const workspaceNameEl = document.getElementById("joinProfileWorkspaceName");
+        const subtitleEl = document.getElementById("joinProfileSubtitle");
+        if (workspaceNameEl) workspaceNameEl.textContent = state.workspaceName;
+        syncWorkspaceMark();
+        if (subtitleEl) {
+            subtitleEl.textContent = state.workspaceName + "에서 사용할 프로필과 공개 정보를 확인해주세요.";
+        }
         submitButton.textContent = submitLabel();
 
         overlay.style.display = "block";
         modal.style.display = "block";
         document.body.style.overflow = "hidden";
 
-        await loadSavedProfile(state.workspaceId);
+        await Promise.all([
+            loadWorkspaceContext(),
+            loadSavedProfile(state.workspaceId)
+        ]);
     }
 
     window.openJoinProfileModal = openModal;
@@ -302,6 +493,60 @@
     };
 
     useAccountInput.addEventListener("change", syncMode);
+    emailInput.addEventListener("input", function () {
+        if (normalizeEmail(this.value) !== normalizeEmail(verifiedJoinEmail)) {
+            if (emailCodeInput) emailCodeInput.value = "";
+        }
+        syncEmailVerification();
+        syncPrivacyAvailability();
+    });
+    emailVerifyButton?.addEventListener("click", async function () {
+        const email = normalizeEmail(emailInput.value);
+        if (!isValidEmail(email)) {
+            emailVerifyText.textContent = "올바른 이메일 형식을 입력해주세요.";
+            emailInput.focus();
+            return;
+        }
+        emailVerifyButton.disabled = true;
+        try {
+            const response = await fetch(contextPath + "/users/email-verification/send", {
+                method: "POST",
+                credentials: "same-origin",
+                headers: {"Content-Type":"application/x-www-form-urlencoded;charset=UTF-8"},
+                body: new URLSearchParams({email: email})
+            });
+            const data = await response.json().catch(function(){ return {}; });
+            if (!response.ok || !data.success) throw new Error(data.message || "인증번호 발송에 실패했습니다.");
+            emailCodeRow.hidden = false;
+            emailVerifyText.textContent = data.message || "인증번호를 발송했습니다.";
+            emailCodeInput.focus();
+        } catch (error) {
+            emailVerifyText.textContent = error.message || "인증번호 발송에 실패했습니다.";
+        } finally { emailVerifyButton.disabled = false; }
+    });
+    emailCodeVerifyButton?.addEventListener("click", async function () {
+        const email = normalizeEmail(emailInput.value);
+        const code = String(emailCodeInput.value || "").trim();
+        if (!/^\d{6}$/.test(code)) {
+            emailVerifyText.textContent = "인증번호 6자리를 입력해주세요.";
+            emailCodeInput.focus();
+            return;
+        }
+        emailCodeVerifyButton.disabled = true;
+        try {
+            const response = await fetch(contextPath + "/users/email-verification/verify", {
+                method: "POST", credentials: "same-origin",
+                headers: {"Content-Type":"application/x-www-form-urlencoded;charset=UTF-8"},
+                body: new URLSearchParams({email: email, code: code})
+            });
+            const data = await response.json().catch(function(){ return {}; });
+            if (!response.ok || !data.success) throw new Error(data.message || "이메일 인증에 실패했습니다.");
+            verifiedJoinEmail = email;
+            syncEmailVerification();
+        } catch (error) { emailVerifyText.textContent = error.message || "이메일 인증에 실패했습니다."; }
+        finally { emailCodeVerifyButton.disabled = false; }
+    });
+    phoneInput.addEventListener("input", syncPrivacyAvailability);
 
     displayNameInput.addEventListener("input", function () {
         if (!state.sourceUrl && !useAccount()) {
@@ -336,6 +581,7 @@
         };
         cropImage.src = state.sourceUrl;
         adjustButton.disabled = false;
+        syncImageActions();
     });
 
     adjustButton.addEventListener("click", openCrop);
@@ -351,6 +597,7 @@
         adjustButton.disabled = true;
         resetCropState();
         renderPreview("", displayNameInput.value || accountName);
+        syncImageActions();
     });
 
     zoom.addEventListener("input", function () {
@@ -433,6 +680,25 @@
             alert("그룹 이메일을 입력해주세요.");
             emailInput.focus();
             return;
+        }
+
+        if (!isValidEmail(email)) {
+            alert("이메일 형식을 확인해주세요.");
+            emailInput.focus();
+            return;
+        }
+
+        if (!syncEmailVerification()) {
+            alert("계정과 다른 이메일은 인증 후 사용할 수 있습니다.");
+            emailInput.focus();
+            return;
+        }
+
+        if (showPhoneInput.checked && !phoneInput.value.trim()) {
+            showPhoneInput.checked = false;
+        }
+        if (showBirthInput.checked && !formatBirthMonthDay(accountBirth)) {
+            showBirthInput.checked = false;
         }
 
         if (!accountMode && !displayName) {
@@ -561,4 +827,7 @@
     });
 
     syncMode();
+    syncEmailVerification();
+    syncBirthInfo();
+    syncPrivacyAvailability();
 })();

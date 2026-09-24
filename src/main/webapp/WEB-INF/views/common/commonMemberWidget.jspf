@@ -16,8 +16,6 @@
                             data-workspace-member-all-button
                             aria-haspopup="dialog">전체 보기</button>
                     <c:if test="${isWorkspaceAdmin}">
-                        <a href="${pageContext.request.contextPath}/workspace/settings?wsId=${workspace.wsId}&amp;tab=members"
-                           class="workspace-member-manage-btn">관리</a>
                         <button type="button" class="moyo-member-widget__primary-action workspace-member-invite-btn" onclick="openInviteModal()">초대</button>
                     </c:if>
                 </div>
@@ -36,7 +34,6 @@
                     <span aria-hidden="true">👥</span>
                     <strong id="commonProjectMemberTitle">프로젝트 멤버</strong>
                     <span id="projectMemberCount" class="moyo-member-widget__count moyo-widget-count project-member-count">0</span>
-                    <button type="button" id="projectMemberActivityBadge" class="moyo-collab-activity-badge" hidden onclick="MoyoCommunityWidgets.focusActivity('MEMBER')" title="최근 멤버 변경 보기"></button>
                 </div>
                 <div class="moyo-member-widget__actions project-member-head-actions">
                     <button type="button" class="moyo-member-widget__all-button"
@@ -44,8 +41,6 @@
                             aria-haspopup="dialog"
                             onclick="openProjectMemberAllModal()">전체 보기</button>
                     <c:if test="${canManageProject}">
-                        <a href="${pageContext.request.contextPath}/project/settings?projId=${projId}&amp;wsId=${wsId}&amp;tab=members"
-                           class="project-member-manage-btn">관리</a>
                         <button type="button" class="moyo-member-widget__primary-action project-member-invite-btn" onclick="openAssignModal()">추가</button>
                     </c:if>
                 </div>

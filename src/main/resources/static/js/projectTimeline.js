@@ -59,9 +59,15 @@ function syncProjectPlanActionLabels(features) {
     if (actionGroup) actionGroup.hidden = !canManage;
 }
 
+function hasProjectPeriodForPeriodPlan() {
+    const config = window.PROJECT_MAIN_CONFIG || {};
+    return !!(parseProjectPlanDate(config.projectStartDate) && parseProjectPlanDate(config.projectEndDate));
+}
+
 function syncProjectPlanTypeChooser() {
     const features = getEffectiveProjectPlanFeatures();
     const states = { GANTT: features.gantt, TIME_SCHEDULE: features.timeSchedule, WEEKLY: features.weekly };
+    const periodPlanAvailable = hasProjectPeriodForPeriodPlan();
     const hasCreated = states.GANTT || states.TIME_SCHEDULE || states.WEEKLY;
     const title = document.getElementById('projectPlanTypeChooserTitle');
     const description = title && title.parentElement ? title.parentElement.querySelector('p') : null;
@@ -71,13 +77,21 @@ function syncProjectPlanTypeChooser() {
         : '프로젝트에 어울리는 방식을 선택하세요.';
 
     document.querySelectorAll('[data-plan-type-option]').forEach(function(option) {
-        const created = !!states[option.dataset.planTypeOption];
+        const type = option.dataset.planTypeOption;
+        const created = !!states[type];
+        const unavailable = type === 'GANTT' && !created && !periodPlanAvailable;
         option.classList.toggle('is-created', created);
+        option.classList.toggle('is-unavailable', unavailable);
         const status = option.querySelector('[data-plan-type-status]');
         const create = option.querySelector('[data-plan-create]');
         const remove = option.querySelector('[data-plan-remove]');
-        if (status) status.textContent = created ? '생성 완료' : '미생성';
-        if (create) create.hidden = created;
+        if (status) status.textContent = created ? '생성 완료' : (unavailable ? '기간 설정 필요' : '미생성');
+        if (create) {
+            create.hidden = created;
+            create.disabled = unavailable;
+            create.setAttribute('aria-disabled', unavailable ? 'true' : 'false');
+            create.title = unavailable ? '프로젝트 기간을 먼저 설정해 주세요.' : '';
+        }
         if (remove) remove.hidden = !created;
     });
 }
@@ -135,6 +149,10 @@ async function removeProjectPlanFeature(type) {
 function chooseProjectPlanType(type) {
     closeProjectPlanTypeChooser();
     if (type === 'GANTT') {
+        if (!hasProjectPeriodForPeriodPlan()) {
+            alert('기간별 계획을 사용하려면 프로젝트 기간을 먼저 설정해 주세요.');
+            return;
+        }
         const features = getEffectiveProjectPlanFeatures();
         if (!features.gantt) createProjectPlanFeature('GANTT');
         else {
@@ -389,9 +407,11 @@ function updateProjectPlanGuide() {
     if (deadline) {
         deadline.classList.remove('is-upcoming', 'is-urgent', 'is-today', 'is-overdue', 'is-none');
         if (!end) {
-            deadline.textContent = '마감 없음';
+            deadline.textContent = '';
+            deadline.hidden = true;
             deadline.classList.add('is-none');
         } else {
+            deadline.hidden = false;
             const today = new Date(); today.setHours(0,0,0,0); end.setHours(0,0,0,0);
             const diff = Math.round((end - today) / 86400000);
             deadline.textContent = diff > 0 ? 'D-' + diff : diff === 0 ? '오늘 마감' : 'D+' + Math.abs(diff);

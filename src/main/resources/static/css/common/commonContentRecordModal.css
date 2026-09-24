@@ -2931,9 +2931,6 @@ body.moyo-record-note-reordering,
 body.moyo-record-note-reordering *{
     cursor:grabbing!important;
 }
-.moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-note-tab{
-    will-change:transform;
-}
 .moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-note-tabs-shell > .moyo-record-note-tabs__add{
     cursor:pointer!important;
     filter:none!important;
@@ -3108,7 +3105,8 @@ body.moyo-record-note-reordering *{
     box-shadow: none !important;
 }
 .moyo-record-modal__tabs button.is-active:after {
-    height: 3px !important;
+    bottom: 0 !important;
+    height: 4px !important;
     background: linear-gradient(90deg, #38CDB6 0%, #4A90E2 56%, #7368F6 100%) !important;
 }
 .moyo-record-inline-form,
@@ -3884,4 +3882,85 @@ body.moyo-record-note-reordering *{
 .moyo-record-modal.is-read-only [data-record-form="PHOTO"],
 .moyo-record-modal.is-read-only [data-record-form="FILE"] {
     display: none;
+}
+
+/* 2026-09-23 기록 노트 탭 / CKEditor seam 최종 보정
+   이미지가 포함된 CKEditor가 리페인트/높이 재계산돼도 탭 행은 절대 수축하지 않는다. */
+.moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-note-tabs-shell {
+    position: relative !important;
+    z-index: 5 !important;
+    flex: 0 0 38px !important;
+    height: 38px !important;
+    min-height: 38px !important;
+    max-height: 38px !important;
+    align-self: stretch !important;
+    overflow: visible !important;
+}
+
+.moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-note-tabs {
+    flex: 0 0 38px !important;
+    height: 38px !important;
+    min-height: 38px !important;
+    max-height: 38px !important;
+    align-items: flex-end !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+}
+
+.moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-note-tab,
+.moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-note-tab.is-active {
+    position: relative !important;
+    flex-shrink: 0 !important;
+    height: 38px !important;
+    min-height: 38px !important;
+    max-height: 38px !important;
+    transform: none !important;
+    will-change: auto !important;
+    overflow: hidden !important;
+    box-sizing: border-box !important;
+}
+
+.moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-note-tab.is-active {
+    border: 1px solid #a7b7ca !important;
+    border-bottom: 0 !important;
+    border-radius: 10px 10px 0 0 !important;
+    background: #fff !important;
+}
+
+/* 활성선은 탭 내부의 고정 4px 레이어 하나만 사용 */
+.moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-note-tab.is-active::before {
+    content: "" !important;
+    display: block !important;
+    position: absolute !important;
+    inset: 0 0 auto 0 !important;
+    height: 4px !important;
+    z-index: 10 !important;
+    border-radius: 9px 9px 0 0 !important;
+    background: linear-gradient(90deg,#57e6c8 0%,#4f8cff 52%,#7667ff 100%) !important;
+    pointer-events: none !important;
+}
+
+.moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-note-tab.is-active::after {
+    content: none !important;
+    display: none !important;
+}
+
+/* CKEditor는 탭 행 아래에서만 레이아웃되고 탭 높이에 관여하지 않는다. */
+.moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-note-editor,
+.moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-note-form,
+.moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-note-form > .ck-editor {
+    min-height: 0 !important;
+}
+
+.moyo-record-modal[data-active-record-type="NOTE"] .moyo-record-note-form > .ck-editor {
+    position: relative !important;
+    z-index: 1 !important;
+    flex: 1 1 0 !important;
+}
+
+/* 상단 기록 타입 탭은 4px 유지 */
+.moyo-record-modal .moyo-record-modal__tabs button.is-active::after {
+    bottom: 0 !important;
+    height: 3px !important;
+    border-radius: 3px 3px 0 0 !important;
 }

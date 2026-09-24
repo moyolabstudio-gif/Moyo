@@ -11,8 +11,10 @@
     let activeProfileTab = 'TASKS';
     let groupEditPreviewObjectUrl = '';
     let groupImageSourceObjectUrl = '';
+    let groupImageEditorBaseSource = '';
     let groupImageDraft = null;
     let groupProfileCropper = null;
+    let verifiedMemberProfileEmail = "";
 
     function mode() {
         const explicitMode = String(document.body?.dataset?.memberActivityMode || '').toUpperCase();
@@ -137,6 +139,28 @@
         return role === 'ADMIN' ? 'ADMIN' : 'MEMBER';
     }
 
+    function isSelfProfile() {
+        return Number(openedUserId || 0) > 0 && Number(openedUserId || 0) === currentUserId();
+    }
+
+    function currentUserIsScopeOwnerOrLeader() {
+        if (isProjectMode()) {
+            const leaderId = Number(config().projectLeaderId || config().leaderId || 0);
+            return leaderId > 0 && leaderId === currentUserId()
+                || config().isLeader === true
+                || String(config().isLeader).toLowerCase() === 'true';
+        }
+        return config().isOwner === true
+            || String(config().isOwner).toLowerCase() === 'true'
+            || String(document.body?.dataset?.workspaceOwner || '').toLowerCase() === 'true';
+    }
+
+    function profileReloadUrl() {
+        return isProjectMode()
+            ? contextPath() + '/project/api/member-profile?projId=' + encodeURIComponent(projectId()) + '&userId=' + encodeURIComponent(openedUserId)
+            : contextPath() + '/workspace/api/' + encodeURIComponent(workspaceId()) + '/members/' + encodeURIComponent(openedUserId) + '/profile';
+    }
+
     function closeAdminMenu() {
         const menu = document.getElementById('memberActivityProfileAdminMenu');
         const button = document.getElementById('memberActivityProfileAdminMenuButton');
@@ -146,21 +170,39 @@
 
     function renderAdminActions(data) {
         const host = document.getElementById('memberActivityProfileAdminActions');
+        const profileEditAction = document.getElementById('memberActivityProfileProfileEditAction');
+        const positionAction = document.getElementById('memberActivityProfilePositionAction');
         const roleAction = document.getElementById('memberActivityProfileRoleAction');
+        const transferAction = document.getElementById('memberActivityProfileTransferAction');
         const removeAction = document.getElementById('memberActivityProfileRemoveAction');
-        if (!host || !roleAction || !removeAction) return;
+        if (!host || !profileEditAction || !positionAction || !roleAction || !transferAction || !removeAction) return;
 
         const targetId = Number(openedUserId || 0);
-        const visible = isScopeManager() && !isScopeMutationLocked() && targetId > 0 && targetId !== currentUserId() && !isProtectedTarget(data);
-        host.hidden = !visible;
-        closeAdminMenu();
-        if (!visible) return;
+        const self = targetId > 0 && targetId === currentUserId();
+        const targetIsProtected = isProtectedTarget(data);
+        const canManageOther = isScopeManager() && !isScopeMutationLocked() && targetId > 0 && !self && !targetIsProtected;
+        const canEditSelf = self && !isScopeMutationLocked();
 
-        const currentRole = currentScopeRole(data);
-        roleAction.dataset.nextRole = currentRole === 'ADMIN' ? 'MEMBER' : 'ADMIN';
-        roleAction.dataset.currentRole = currentRole;
-        roleAction.textContent = roleLabel(roleAction.dataset.nextRole) + '로 변경';
-        removeAction.textContent = isProjectMode() ? '프로젝트에서 내보내기' : '그룹에서 내보내기';
+        host.hidden = !(canEditSelf || canManageOther);
+        closeAdminMenu();
+        if (host.hidden) return;
+
+        profileEditAction.hidden = !canEditSelf;
+        profileEditAction.textContent = '프로필 수정';
+        positionAction.hidden = !canManageOther;
+        roleAction.hidden = !canManageOther;
+        transferAction.hidden = !canManageOther || !currentUserIsScopeOwnerOrLeader();
+        removeAction.hidden = !canManageOther;
+
+        if (canManageOther) {
+            positionAction.textContent = isProjectMode() ? '프로젝트 직책 · 담당 수정' : '그룹 직책 · 담당 수정';
+            const currentRole = currentScopeRole(data);
+            roleAction.dataset.nextRole = currentRole === 'ADMIN' ? 'MEMBER' : 'ADMIN';
+            roleAction.dataset.currentRole = currentRole;
+            roleAction.textContent = '권한 변경 · ' + roleLabel(currentRole) + ' → ' + roleLabel(roleAction.dataset.nextRole);
+            transferAction.textContent = isProjectMode() ? '팀장 위임' : '그룹장 위임';
+            removeAction.textContent = isProjectMode() ? '프로젝트에서 제외' : '그룹에서 제외';
+        }
     }
 
     function roleLabel(role) {
@@ -246,6 +288,43 @@
         }
     }
 
+    async function transferScopeLeadership() {
+        if (!openedProfile || !openedUserId || isScopeMutationLocked() || !currentUserIsScopeOwnerOrLeader() || isSelfProfile() || isProtectedTarget(openedProfile)) return;
+        const targetId = openedUserId;
+        const name = String(value(openedProfile, 'displayName', 'DISPLAY_NAME') || '이 멤버').trim();
+        const label = isProjectMode() ? '팀장' : '그룹장';
+        closeAdminMenu();
+        if (!global.confirm(name + '님에게 ' + label + '을 위임할까요?')) return;
+
+        const body = new URLSearchParams();
+        const url = isProjectMode() ? contextPath() + '/project/api/transfer-leader' : contextPath() + '/workspace/api/transfer-admin';
+        if (isProjectMode()) {
+            body.append('projId', projectId());
+            body.append('userId', targetId);
+            body.append('projPosition', String(value(openedProfile, 'projPosition', 'PROJ_POSITION') || '').trim());
+        } else {
+            body.append('wsId', workspaceId());
+            body.append('newAdminId', targetId);
+        }
+
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                credentials: 'same-origin',
+                body: body.toString()
+            });
+            const result = (await response.text()).trim();
+            const success = isProjectMode() ? result === 'SUCCESS' : result === 'success';
+            if (!success) throw new Error(result || 'FAIL');
+            alert(name + '님에게 ' + label + '을 위임했습니다.');
+            global.location.reload();
+        } catch (error) {
+            console.error(label + ' 위임 실패:', error);
+            alert(label + ' 위임에 실패했습니다.');
+        }
+    }
+
     async function removeManagedMember() {
         if (!openedProfile || !openedUserId || !isScopeManager() || isScopeMutationLocked() || isProtectedTarget(openedProfile)) return;
         const targetId = openedUserId;
@@ -294,6 +373,61 @@
         }
     }
 
+    function birthDisplay(data) {
+        const raw = String(value(data, 'birthDate', 'BIRTH_DATE') || '').trim();
+        if (!raw) return null;
+        const matched = raw.match(/^(?:\d{4}[-./])?(\d{1,2})[-./](\d{1,2})$/);
+        const dateText = matched
+            ? String(Number(matched[1])).padStart(2, '0') + '.' + String(Number(matched[2])).padStart(2, '0')
+            : raw;
+        const lunar = String(value(data, 'birthCalendarType', 'BIRTH_CALENDAR_TYPE') || 'SOLAR').toUpperCase() === 'LUNAR';
+        return { dateText: dateText, lunar: lunar };
+    }
+
+    function formatBirthForView(data) {
+        const info = birthDisplay(data);
+        return info ? info.dateText : '';
+    }
+
+    function renderProfileMeta(data) {
+        const workspacePosition = String(value(data, 'wsPosition', 'WS_POSITION') || value(data, 'positionName', 'POSITION_NAME') || '').trim();
+        const email = String(value(data, 'email', 'EMAIL') || '').trim();
+        const birth = formatBirthForView(data);
+        const phone = String(value(data, 'phoneNumber', 'PHONE_NUMBER') || '').trim();
+        const intro = String(value(data, 'introText', 'INTRO_TEXT') || value(data, 'profileIntro', 'PROFILE_INTRO') || '').trim();
+
+        const introEl = document.getElementById('memberActivityProfileIntroText');
+        if (introEl) {
+            introEl.textContent = intro;
+            introEl.hidden = !intro;
+        }
+
+        const privateMeta = document.getElementById('memberActivityProfilePrivateMeta');
+        const emailMeta = document.getElementById('memberActivityProfileEmailMeta');
+        const birthMeta = document.getElementById('memberActivityProfileBirthMeta');
+        const phoneMeta = document.getElementById('memberActivityProfilePhoneMeta');
+        const emailEl = document.getElementById('memberActivityProfileEmailValue');
+        const birthEl = document.getElementById('memberActivityProfileBirthValue');
+        const phoneEl = document.getElementById('memberActivityProfilePhoneValue');
+
+        if (emailMeta && emailEl) {
+            emailMeta.hidden = !email;
+            emailEl.textContent = email;
+        }
+        if (birthMeta && birthEl) {
+            const birthInfo = birthDisplay(data);
+            birthMeta.hidden = !birthInfo;
+            birthEl.innerHTML = birthInfo
+                ? safeHtml(birthInfo.dateText) + ' <i class="fa-solid ' + (birthInfo.lunar ? 'fa-moon' : 'fa-sun') + '" aria-label="' + (birthInfo.lunar ? '음력' : '양력') + '"></i>'
+                : '';
+        }
+        if (phoneMeta && phoneEl) {
+            phoneMeta.hidden = !phone;
+            phoneEl.textContent = phone;
+        }
+        if (privateMeta) privateMeta.hidden = !(email || birth || phone);
+    }
+
     function renderAvatar(data) {
         const host = document.getElementById('memberActivityProfileAvatar');
         if (!host) return;
@@ -321,16 +455,12 @@
     function render(data) {
         openedProfile = data;
         const name = String(value(data, 'displayName', 'DISPLAY_NAME') || value(data, 'accountName', 'ACCOUNT_NAME') || '사용자').trim();
+        const workspacePosition = String(value(data, 'wsPosition', 'WS_POSITION') || value(data, 'positionName', 'POSITION_NAME') || '').trim();
+        const projectPosition = String(value(data, 'projPosition', 'PROJ_POSITION') || '').trim();
         const position = isProjectMode()
-            ? String(value(data, 'projPosition', 'PROJ_POSITION') || '').trim()
-            : String(value(data, 'positionName', 'POSITION_NAME') || '').trim();
-        const joinedAt = isProjectMode()
-            ? String(value(data, 'projJoinedAt', 'PROJ_JOINED_AT') || '').trim()
-            : String(value(data, 'joinedAt', 'JOINED_AT') || '').trim();
-        const currentUserId = Number(config().currentUserId || config().loginUserId || document.body?.dataset?.currentUserId || document.body?.dataset?.userId || 0);
-        const canEdit = !isScopeMutationLocked() && (isProjectMode()
-            ? Boolean(value(data, 'canEditProjectRole', 'CAN_EDIT_PROJECT_ROLE'))
-            : (Number(openedUserId || 0) === currentUserId));
+            ? projectPosition
+            : workspacePosition;
+        const self = isSelfProfile();
         const role = roleInfo(data);
 
         renderAvatar(data);
@@ -342,22 +472,25 @@
         renderAdminActions(data);
 
         const positionEl = document.getElementById('memberActivityProfilePosition');
-        positionEl.textContent = position || (isProjectMode() ? '담당 역할 미지정' : '직책 · 담당 미지정');
+        positionEl.textContent = position || (isProjectMode() ? '프로젝트 담당 미지정' : '역할·담당 미지정');
         positionEl.classList.toggle('is-empty', !position);
 
-        const joinedEl = document.getElementById('memberActivityProfileJoinedAt');
-        const joinedLabel = isProjectMode() ? '프로젝트 참여일' : '그룹 가입일';
-        joinedEl.textContent = joinedAt ? joinedLabel + ' · ' + joinedAt : joinedLabel + ' 정보 없음';
+        renderProfileMeta(data);
+
 
         const editButton = document.getElementById('memberActivityProfileEditPositionButton');
-        editButton.hidden = !canEdit;
-        editButton.textContent = isProjectMode() ? '담당 역할 수정' : '프로필 수정';
-        document.getElementById('memberActivityProfilePositionInput').value = position;
+        const baseEditButton = document.getElementById('memberActivityProfileEditBaseProfileButton');
+        if (editButton) editButton.hidden = true;
+        if (baseEditButton) baseEditButton.hidden = true;
+
+        document.getElementById('memberActivityProfilePositionInput').value = isProjectMode() ? projectPosition : workspacePosition;
         document.getElementById('memberActivityProfilePositionForm').hidden = true;
         setGroupEditVisible(false);
 
         const kicker = document.querySelector('.member-activity-profile__kicker');
-        if (kicker) kicker.textContent = isProjectMode() ? '프로젝트 프로필' : '그룹 프로필';
+        if (kicker) kicker.textContent = isProjectMode() ? '프로젝트 멤버 프로필' : '그룹 멤버 프로필';
+        const title = document.getElementById('memberActivityProfileTitle');
+        if (title) title.textContent = name + ' 프로필';
         const contentDesc = document.getElementById('memberActivityProfileContentDescription');
         if (contentDesc) contentDesc.textContent = isProjectMode()
             ? '이 프로젝트에서 작성하거나 업로드한 기록입니다.'
@@ -367,7 +500,6 @@
             ? '프로젝트 안에서의 최근 변경과 참여 기록입니다.'
             : '그룹 안에서의 최근 작성과 참여 기록입니다.';
     }
-
 
     function setProfileTab(tab) {
         const fallback = isProjectMode() ? 'TASKS' : 'CONTENT';
@@ -821,18 +953,12 @@
     }
 
     function formatGroupBirthText(data) {
-        const raw = String(value(data, 'birthDate', 'BIRTH_DATE') || '').trim();
-        if (!raw) return '등록된 생일 없음';
-        const matched = raw.match(/^(\d{1,2})-(\d{1,2})$/);
-        const dateText = matched
-            ? String(Number(matched[1])).padStart(2, '0') + '월 ' + String(Number(matched[2])).padStart(2, '0') + '일'
-            : raw;
-        const calendar = String(value(data, 'birthCalendarType', 'BIRTH_CALENDAR_TYPE') || 'SOLAR').toUpperCase() === 'LUNAR' ? '음력' : '양력';
-        return dateText + ' · ' + calendar;
+        const info = birthDisplay(data);
+        return info ? info.dateText : '등록된 생일 없음';
     }
 
     function ensureGroupProfileCropper() {
-        if (groupProfileCropper || isProjectMode()) return groupProfileCropper;
+        if (groupProfileCropper || (isProjectMode() && isPersonalProject())) return groupProfileCropper;
         if (typeof global.createProfileCropper !== 'function') {
             console.warn('프로필 이미지 조정기를 불러오지 못했습니다.');
             return null;
@@ -904,7 +1030,15 @@
         if (groupImageDraft?.sourceUrl) return groupImageDraft.sourceUrl;
         return resolvePath(value(openedProfile, 'customProfileImageOriginalPath', 'CUSTOM_PROFILE_IMAGE_ORIGINAL_PATH'))
             || resolvePath(value(openedProfile, 'customProfileImagePath', 'CUSTOM_PROFILE_IMAGE_PATH'))
+            || resolvePath(value(openedProfile, 'profileImagePath', 'PROFILE_IMAGE_PATH'))
             || '';
+    }
+
+    function renderedProfileImageSource() {
+        const host = document.getElementById('memberActivityProfileAvatar');
+        const img = host?.querySelector('img');
+        if (!img) return '';
+        return String(img.currentSrc || img.src || '').trim();
     }
 
     function resetCropperSession(cropper, src, state, fallbackText) {
@@ -922,7 +1056,7 @@
     }
 
     function openGroupImageEditor() {
-        if (isProjectMode() || document.getElementById('memberActivityProfileUseAccount')?.checked) return;
+        if ((isProjectMode() && isPersonalProject()) || document.getElementById('memberActivityProfileUseAccount')?.checked) return;
         const editor = document.getElementById('memberActivityProfileImageEditor');
         const cropper = ensureGroupProfileCropper();
         if (!editor || !cropper) return;
@@ -930,8 +1064,12 @@
         document.body.classList.add('member-activity-profile-image-editor-open');
         requestAnimationFrame(function () {
             const fallback = currentGroupFallbackName();
-            const src = currentCustomImageSource();
-            const state = groupImageDraft?.state || (src ? groupCustomCropState(openedProfile) : { scale: 1, x: 0, y: 0 });
+            const hasDraftSource = !!(groupImageDraft?.originalFile || groupImageDraft?.sourceUrl);
+            const src = hasDraftSource ? currentCustomImageSource() : (renderedProfileImageSource() || currentCustomImageSource());
+            const state = hasDraftSource
+                ? (groupImageDraft?.state || { scale: 1, x: 0, y: 0 })
+                : { scale: 1, x: 0, y: 0 };
+            groupImageEditorBaseSource = src || '';
             resetCropperSession(cropper, src, state, fallback);
         });
     }
@@ -954,7 +1092,7 @@
             originalFile: originalFile || groupImageDraft?.originalFile || null,
             state: state,
             blob: blob,
-            sourceUrl: originalFile ? '' : currentCustomImageSource()
+            sourceUrl: originalFile ? '' : (groupImageEditorBaseSource || currentCustomImageSource())
         };
 
         revokeGroupPreviewUrl();
@@ -965,11 +1103,12 @@
             groupEditPreviewObjectUrl = URL.createObjectURL(blob);
             setSummaryAvatarPreview(groupEditPreviewObjectUrl, fallback);
         }
+        syncGroupImageRevertButton();
         closeGroupImageEditor();
     }
 
     function syncGroupAvatarPreview() {
-        if (!openedProfile || isProjectMode()) return;
+        if (!openedProfile || (isProjectMode() && isPersonalProject())) return;
         const useAccount = document.getElementById('memberActivityProfileUseAccount')?.checked;
         const fallback = currentGroupFallbackName();
         if (useAccount) {
@@ -992,13 +1131,6 @@
         setSummaryAvatarPreview(customImage, fallback);
     }
 
-    function groupCustomCropState(data) {
-        return {
-            scale: Number(value(data, 'customProfileImageCropScale', 'CUSTOM_PROFILE_IMAGE_CROP_SCALE') || 1),
-            x: Number(value(data, 'customProfileImageCropX', 'CUSTOM_PROFILE_IMAGE_CROP_X') || 0),
-            y: Number(value(data, 'customProfileImageCropY', 'CUSTOM_PROFILE_IMAGE_CROP_Y') || 0)
-        };
-    }
 
     function updateGroupImageFileName() {
         const image = document.getElementById('memberActivityProfileImage');
@@ -1012,6 +1144,86 @@
         const name = document.getElementById('memberActivityProfileDisplayName')?.value.trim() || '사용자';
         cropper.setFallbackText(name.substring(0, 1) || '?');
         cropper.resetToDefault();
+        groupImageDraft = { removeRequested: true, originalFile: null, state: { scale: 1, x: 0, y: 0 }, blob: null, sourceUrl: '' };
+        syncGroupImageRevertButton();
+    }
+
+    function syncGroupImageRevertButton() {
+        const button = document.getElementById('memberActivityProfileRevertImageButton');
+        if (button) button.disabled = !groupImageDraft && !groupEditPreviewObjectUrl;
+    }
+
+    function revertGroupProfileImageDraft() {
+        groupImageDraft = null;
+        groupImageEditorBaseSource = '';
+        revokeGroupPreviewUrl();
+        revokeGroupSourceUrl();
+        const image = document.getElementById('memberActivityProfileImage');
+        if (image) image.value = '';
+        const fileName = document.getElementById('memberActivityProfileImageFileName');
+        if (fileName) fileName.textContent = '현재 그룹 프로필 이미지';
+        syncGroupAvatarPreview();
+        syncGroupImageRevertButton();
+        closeGroupImageEditor();
+    }
+
+    function syncMemberEmailVerification() {
+        const input = document.getElementById('memberActivityProfileEmail');
+        const status = document.getElementById('memberActivityProfileEmailStatus');
+        const button = document.getElementById('memberActivityProfileEmailVerifyButton');
+        const codeRow = document.getElementById('memberActivityProfileEmailCodeRow');
+        const help = document.getElementById('memberActivityProfileEmailHelp');
+        if (!input || !status || !button || !help) return true;
+        const email = input.value.trim().toLowerCase();
+        const accountEmail = String(value(openedProfile, 'accountEmail', 'ACCOUNT_EMAIL') || '').trim().toLowerCase();
+        const verified = !!email && (email === accountEmail || email === verifiedMemberProfileEmail);
+        status.hidden = !verified;
+        button.hidden = !email || verified;
+        help.hidden = true;
+        help.textContent = '';
+        if (!email) { if (codeRow) codeRow.hidden = true; return false; }
+        if (verified) { if (codeRow) codeRow.hidden = true; return true; }
+        return false;
+    }
+
+    async function sendMemberEmailVerification() {
+        const input = document.getElementById('memberActivityProfileEmail');
+        const button = document.getElementById('memberActivityProfileEmailVerifyButton');
+        const codeRow = document.getElementById('memberActivityProfileEmailCodeRow');
+        const codeInput = document.getElementById('memberActivityProfileEmailCode');
+        const help = document.getElementById('memberActivityProfileEmailHelp');
+        const email = input?.value.trim().toLowerCase() || '';
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { if (help) { help.hidden = false; help.textContent = '올바른 이메일 형식을 입력해주세요.'; } input?.focus(); return; }
+        button.disabled = true;
+        try {
+            const response = await fetch(contextPath() + '/users/email-verification/send', {
+                method:'POST', credentials:'same-origin', headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'}, body:new URLSearchParams({email:email})
+            });
+            const data = await response.json().catch(function(){ return {}; });
+            if (!response.ok || !data.success) throw new Error(data.message || '인증번호 발송에 실패했습니다.');
+            codeRow.hidden = false; if (help) { help.hidden = false; help.textContent = data.message || '인증번호를 발송했습니다.'; } codeInput?.focus();
+        } catch (error) { if (help) { help.hidden = false; help.textContent = error.message || '인증번호 발송에 실패했습니다.'; } }
+        finally { button.disabled = false; }
+    }
+
+    async function verifyMemberEmailCode() {
+        const input = document.getElementById('memberActivityProfileEmail');
+        const codeInput = document.getElementById('memberActivityProfileEmailCode');
+        const button = document.getElementById('memberActivityProfileEmailCodeVerifyButton');
+        const help = document.getElementById('memberActivityProfileEmailHelp');
+        const email = input?.value.trim().toLowerCase() || '';
+        const code = codeInput?.value.trim() || '';
+        if (!/^\d{6}$/.test(code)) { if (help) { help.hidden = false; help.textContent = '인증번호 6자리를 입력해주세요.'; } codeInput?.focus(); return; }
+        button.disabled = true;
+        try {
+            const response = await fetch(contextPath() + '/users/email-verification/verify', {
+                method:'POST', credentials:'same-origin', headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'}, body:new URLSearchParams({email:email, code:code})
+            });
+            const data = await response.json().catch(function(){ return {}; });
+            if (!response.ok || !data.success) throw new Error(data.message || '이메일 인증에 실패했습니다.');
+            verifiedMemberProfileEmail = email; syncMemberEmailVerification();
+        } catch (error) { if (help) { help.hidden = false; help.textContent = error.message || '이메일 인증에 실패했습니다.'; } }
+        finally { button.disabled = false; }
     }
 
     function fillGroupEditForm() {
@@ -1021,22 +1233,43 @@
         const customName = String(value(openedProfile, 'customDisplayName', 'CUSTOM_DISPLAY_NAME') || '').trim();
         const accountEmail = String(value(openedProfile, 'accountEmail', 'ACCOUNT_EMAIL') || '').trim();
         const customEmail = String(value(openedProfile, 'customContactEmail', 'CUSTOM_CONTACT_EMAIL') || '').trim();
+        const currentEmail = customEmail || accountEmail || String(value(openedProfile, 'email', 'EMAIL') || '').trim();
+        verifiedMemberProfileEmail = currentEmail.toLowerCase();
 
         document.getElementById('memberActivityProfileUseAccount').checked = useAccount;
         document.getElementById('memberActivityProfileDisplayName').value = customName || accountName;
-        document.getElementById('memberActivityProfileGroupPosition').value = String(value(openedProfile, 'positionName', 'POSITION_NAME') || '').trim();
+        document.getElementById('memberActivityProfileGroupPosition').value = isProjectMode()
+            ? String(value(openedProfile, 'projPosition', 'PROJ_POSITION') || '').trim()
+            : String(value(openedProfile, 'wsPosition', 'WS_POSITION') || value(openedProfile, 'positionName', 'POSITION_NAME') || '').trim();
         document.getElementById('memberActivityProfileIntro').value = String(value(openedProfile, 'introText', 'INTRO_TEXT') || '').trim();
-        document.getElementById('memberActivityProfileEmail').value = customEmail || accountEmail || String(value(openedProfile, 'email', 'EMAIL') || '').trim();
+        document.getElementById('memberActivityProfileEmail').value = currentEmail;
         document.getElementById('memberActivityProfilePhone').value = String(value(openedProfile, 'phoneNumber', 'PHONE_NUMBER') || '').trim();
         document.getElementById('memberActivityProfileShowEmail').checked = String(value(openedProfile, 'showEmail', 'SHOW_EMAIL') || 'Y').toUpperCase() !== 'N';
-        document.getElementById('memberActivityProfileShowPhone').checked = String(value(openedProfile, 'showPhone', 'SHOW_PHONE') || 'Y').toUpperCase() !== 'N';
+        document.getElementById('memberActivityProfileShowPhone').checked = String(value(openedProfile, 'showPhone', 'SHOW_PHONE') || 'N').toUpperCase() !== 'N';
         document.getElementById('memberActivityProfileShowBirth').checked = String(value(openedProfile, 'showBirth', 'SHOW_BIRTH') || 'Y').toUpperCase() !== 'N';
         document.getElementById('memberActivityProfileBirthText').textContent = formatGroupBirthText(openedProfile);
+        const birthInfo = birthDisplay(openedProfile);
+        const birthIcon = document.getElementById('memberActivityProfileBirthTypeIcon');
+        if (birthIcon) {
+            birthIcon.innerHTML = birthInfo ? '<i class="fa-solid ' + (birthInfo.lunar ? 'fa-moon' : 'fa-sun') + '" aria-hidden="true"></i>' : '';
+            birthIcon.setAttribute('aria-label', birthInfo ? (birthInfo.lunar ? '음력' : '양력') : '');
+        }
+        const notice = document.getElementById('memberActivityProfileProjectSharedNotice');
+        if (notice) notice.hidden = !isProjectMode();
+        const positionLabel = document.getElementById('memberActivityProfilePositionEditLabel');
+        const positionHelp = document.getElementById('memberActivityProfilePositionEditHelp');
+        if (positionLabel) positionLabel.textContent = isProjectMode() ? '프로젝트 직책 · 담당' : '그룹 직책 · 담당';
+        if (positionHelp) positionHelp.textContent = isProjectMode()
+            ? '이 프로젝트에서만 사용하는 직책·담당입니다.'
+            : '이 그룹에서 맡고 있는 직책이나 담당을 입력하세요.';
         groupImageDraft = null;
+        groupImageEditorBaseSource = '';
         revokeGroupPreviewUrl();
         revokeGroupSourceUrl();
         document.getElementById('memberActivityProfileImage').value = '';
         document.getElementById('memberActivityProfileImageFileName').textContent = '현재 그룹 프로필 이미지';
+        syncGroupImageRevertButton();
+        syncMemberEmailVerification();
         syncGroupEditModeInputs();
     }
 
@@ -1074,11 +1307,32 @@
         if (panels) panels.hidden = visible;
         if (!visible) closeGroupImageEditor();
         const editButton = document.getElementById('memberActivityProfileEditPositionButton');
-        if (editButton && !isProjectMode()) editButton.hidden = visible || isScopeMutationLocked() || !(Number(openedUserId || 0) === Number(config().currentUserId || config().loginUserId || document.body?.dataset?.currentUserId || document.body?.dataset?.userId || 0));
+        const baseEditButton = document.getElementById('memberActivityProfileEditBaseProfileButton');
+        if (editButton) editButton.hidden = true;
+        if (baseEditButton) baseEditButton.hidden = true;
+    }
+
+    function openPositionEditForm() {
+        const form = document.getElementById('memberActivityProfilePositionForm');
+        const input = document.getElementById('memberActivityProfilePositionInput');
+        const label = document.getElementById('memberActivityProfilePositionFormLabel');
+        const description = document.getElementById('memberActivityProfilePositionFormDescription');
+        if (!form || !input) return;
+        form.hidden = false;
+        if (isProjectMode()) {
+            input.value = String(value(openedProfile, 'projPosition', 'PROJ_POSITION') || '').trim();
+            if (label) label.textContent = '프로젝트 담당';
+            if (description) description.textContent = '이 프로젝트에서 맡고 있는 담당을 수정합니다. 그룹 역할과는 별도로 저장됩니다.';
+        } else {
+            input.value = String(value(openedProfile, 'wsPosition', 'WS_POSITION') || value(openedProfile, 'positionName', 'POSITION_NAME') || '').trim();
+            if (label) label.textContent = '그룹 역할·담당';
+            if (description) description.textContent = '이 그룹에서 맡고 있는 역할·담당을 수정합니다.';
+        }
+        requestAnimationFrame(function () { input.focus(); });
     }
 
     function startPositionEdit() {
-        if (!openedProfile || isScopeMutationLocked()) return;
+        if (!openedProfile || isScopeMutationLocked() || !isSelfProfile()) return;
         if (!isProjectMode()) {
             fillGroupEditForm();
             setGroupEditVisible(true);
@@ -1088,11 +1342,27 @@
             });
             return;
         }
-        const form = document.getElementById('memberActivityProfilePositionForm');
-        const input = document.getElementById('memberActivityProfilePositionInput');
-        form.hidden = false;
-        input.value = String(value(openedProfile, 'projPosition', 'PROJ_POSITION') || '').trim();
-        requestAnimationFrame(function () { input.focus(); });
+        openPositionEditForm();
+    }
+
+    function startBaseProfileEdit() {
+        if (!openedProfile || isScopeMutationLocked() || !isSelfProfile()) return;
+        if (isProjectMode() && isPersonalProject()) {
+            global.location.href = contextPath() + '/users/mypage';
+            return;
+        }
+        fillGroupEditForm();
+        setGroupEditVisible(true);
+        requestAnimationFrame(function () {
+            const first = document.getElementById('memberActivityProfileDisplayName');
+            if (first) first.focus();
+        });
+    }
+
+    function startManagedPositionEdit() {
+        if (!openedProfile || !isScopeManager() || isScopeMutationLocked() || isProtectedTarget(openedProfile)) return;
+        closeAdminMenu();
+        openPositionEditForm();
     }
 
     function cancelGroupEdit() {
@@ -1102,7 +1372,7 @@
 
     async function saveGroupProfile(event) {
         event.preventDefault();
-        if (isProjectMode() || !openedUserId || !workspaceId() || isScopeMutationLocked()) return;
+        if (!openedUserId || !workspaceId() || isScopeMutationLocked() || (isProjectMode() && isPersonalProject())) return;
 
         const currentUserId = Number(config().currentUserId || document.body?.dataset?.currentUserId || 0);
         if (Number(openedUserId) !== currentUserId) return;
@@ -1125,17 +1395,25 @@
             if (saveButton) { saveButton.disabled = false; saveButton.textContent = originalText; }
             return;
         }
+        if (!syncMemberEmailVerification()) {
+            alert('계정과 다른 이메일은 인증 후 사용할 수 있습니다.');
+            if (saveButton) { saveButton.disabled = false; saveButton.textContent = originalText; }
+            document.getElementById('memberActivityProfileEmail')?.focus();
+            return;
+        }
 
         const body = new FormData();
         body.append('useAccountProfile', useAccount ? 'Y' : 'N');
         body.append('displayName', displayName);
         body.append('contactEmail', contactEmail);
         body.append('introText', document.getElementById('memberActivityProfileIntro').value.trim());
-        body.append('positionName', document.getElementById('memberActivityProfileGroupPosition').value.trim());
+        const editedPosition = document.getElementById('memberActivityProfileGroupPosition').value.trim();
+        const existingWorkspacePosition = String(value(openedProfile, 'wsPosition', 'WS_POSITION') || value(openedProfile, 'positionName', 'POSITION_NAME') || '').trim();
+        body.append('positionName', isProjectMode() ? existingWorkspacePosition : editedPosition);
         body.append('phoneNumber', document.getElementById('memberActivityProfilePhone').value.trim());
         body.append('showEmail', document.getElementById('memberActivityProfileShowEmail').checked ? 'Y' : 'N');
-        body.append('showPhone', document.getElementById('memberActivityProfileShowPhone').checked ? 'Y' : 'N');
         body.append('showBirth', document.getElementById('memberActivityProfileShowBirth').checked ? 'Y' : 'N');
+        body.append('showPhone', document.getElementById('memberActivityProfileShowPhone').checked && document.getElementById('memberActivityProfilePhone').value.trim() ? 'Y' : 'N');
 
         if (!useAccount && groupImageDraft) {
             const removeProfileImage = Boolean(groupImageDraft.removeRequested);
@@ -1162,8 +1440,18 @@
                 return payload;
             });
         }).then(function () {
+            if (!isProjectMode()) return;
+            const params = new URLSearchParams({ projId: projectId(), userId: openedUserId, projPosition: editedPosition });
+            return fetch(contextPath() + '/project/api/member-profile/position', {
+                method: 'POST', credentials: 'same-origin',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
+                body: params.toString()
+            }).then(function (response) { return response.text(); }).then(function (result) {
+                if (result.trim() !== 'SUCCESS') throw new Error(result || 'POSITION_SAVE_FAILED');
+            });
+        }).then(function () {
             setGroupEditVisible(false);
-            return fetch(contextPath() + '/workspace/api/' + encodeURIComponent(workspaceId()) + '/members/' + encodeURIComponent(openedUserId) + '/profile', { credentials: 'same-origin' });
+            return fetch(profileReloadUrl(), { credentials: 'same-origin' });
         }).then(function (response) {
             if (!response.ok) throw new Error('RELOAD_FAILED');
             return response.json();
@@ -1187,7 +1475,10 @@
 
     function savePosition(event) {
         event.preventDefault();
-        if (!isProjectMode() || !openedUserId || !projectId()) return;
+        if (!openedUserId || isScopeMutationLocked()) return;
+        const self = isSelfProfile();
+        if (!self && !isScopeManager()) return;
+
         const input = document.getElementById('memberActivityProfilePositionInput');
         const saveButton = event.currentTarget.querySelector('.member-activity-profile__save');
         const originalText = saveButton.textContent;
@@ -1195,32 +1486,54 @@
         saveButton.textContent = '저장 중';
 
         const params = new URLSearchParams();
-        params.append('projId', projectId());
-        params.append('userId', openedUserId);
-        params.append('projPosition', input.value.trim());
+        let url;
+        let successText;
+        const nextPosition = input.value.trim();
 
-        fetch(contextPath() + '/project/api/member-profile/position', {
+        if (isProjectMode()) {
+            params.append('projId', projectId());
+            params.append('userId', openedUserId);
+            params.append('projPosition', nextPosition);
+            url = self && !isScopeManager()
+                ? contextPath() + '/project/api/member-profile/position'
+                : contextPath() + '/project/api/update-member-position';
+            successText = 'SUCCESS';
+        } else {
+            params.append('wsId', workspaceId());
+            params.append('userId', openedUserId);
+            params.append('positionName', nextPosition);
+            url = contextPath() + '/workspace/api/update-member-position';
+            successText = 'success';
+        }
+
+        fetch(url, {
             method: 'POST',
             credentials: 'same-origin',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
             body: params.toString()
         }).then(function (response) { return response.text(); })
           .then(function (result) {
-              if (result !== 'SUCCESS') throw new Error(result || 'SAVE_FAILED');
+              if (result.trim() !== successText) throw new Error(result || 'SAVE_FAILED');
               if (openedProfile) {
-                  openedProfile.projPosition = input.value.trim();
-                  openedProfile.PROJ_POSITION = input.value.trim();
+                  if (isProjectMode()) {
+                      openedProfile.projPosition = nextPosition;
+                      openedProfile.PROJ_POSITION = nextPosition;
+                  } else {
+                      openedProfile.wsPosition = nextPosition;
+                      openedProfile.WS_POSITION = nextPosition;
+                      openedProfile.positionName = nextPosition;
+                      openedProfile.POSITION_NAME = nextPosition;
+                  }
                   render(openedProfile);
               }
-              if (typeof global.refreshProjectMemberPanel === 'function') {
-                  global.refreshProjectMemberPanel();
-              }
+              if (isProjectMode() && typeof global.refreshProjectMemberPanel === 'function') global.refreshProjectMemberPanel();
+              if (!isProjectMode() && typeof global.refreshWorkspaceMemberPanel === 'function') global.refreshWorkspaceMemberPanel();
           })
           .catch(function (error) {
-              console.error('프로젝트 담당 역할 저장 실패:', error);
-              alert(error.message === 'NO_PERMISSION'
-                  ? '내 프로젝트 담당 역할만 수정할 수 있습니다.'
-                  : '담당 역할 저장에 실패했습니다.');
+              console.error('멤버 역할·담당 저장 실패:', error);
+              alert(error.message === 'NO_PERMISSION' || error.message === 'forbidden'
+                  ? '역할·담당을 수정할 권한이 없습니다.'
+                  : '역할·담당 저장에 실패했습니다.');
           })
           .finally(function () {
               saveButton.disabled = false;
@@ -1241,7 +1554,10 @@
             menu.hidden = !menu.hidden;
             this.setAttribute('aria-expanded', menu.hidden ? 'false' : 'true');
         });
+        document.getElementById('memberActivityProfileProfileEditAction')?.addEventListener('click', function(){ closeAdminMenu(); startBaseProfileEdit(); });
+        document.getElementById('memberActivityProfilePositionAction')?.addEventListener('click', startManagedPositionEdit);
         document.getElementById('memberActivityProfileRoleAction')?.addEventListener('click', openRoleChangeModal);
+        document.getElementById('memberActivityProfileTransferAction')?.addEventListener('click', transferScopeLeadership);
         document.getElementById('memberActivityProfileRoleConfirm')?.addEventListener('click', changeManagedMemberRole);
         document.querySelectorAll('[data-member-role-modal-close]').forEach(function (element) {
             element.addEventListener('click', closeRoleChangeModal);
@@ -1251,11 +1567,15 @@
             if (!event.target.closest('#memberActivityProfileAdminActions')) closeAdminMenu();
         });
         document.getElementById('memberActivityProfileEditPositionButton')?.addEventListener('click', startPositionEdit);
+        document.getElementById('memberActivityProfileEditBaseProfileButton')?.addEventListener('click', startBaseProfileEdit);
         document.getElementById('memberActivityProfilePositionCancel')?.addEventListener('click', cancelPositionEdit);
         document.getElementById('memberActivityProfilePositionForm')?.addEventListener('submit', savePosition);
         document.getElementById('memberActivityProfileGroupEditForm')?.addEventListener('submit', saveGroupProfile);
         document.getElementById('memberActivityProfileGroupEditCancel')?.addEventListener('click', cancelGroupEdit);
         document.getElementById('memberActivityProfileUseAccount')?.addEventListener('change', syncGroupEditModeInputs);
+        document.getElementById('memberActivityProfileEmail')?.addEventListener('input', function(){ if (this.value.trim().toLowerCase() !== verifiedMemberProfileEmail) { const code = document.getElementById('memberActivityProfileEmailCode'); if (code) code.value=''; } syncMemberEmailVerification(); });
+        document.getElementById('memberActivityProfileEmailVerifyButton')?.addEventListener('click', sendMemberEmailVerification);
+        document.getElementById('memberActivityProfileEmailCodeVerifyButton')?.addEventListener('click', verifyMemberEmailCode);
         document.getElementById('memberActivityProfileImage')?.addEventListener('change', updateGroupImageFileName);
         document.getElementById('memberActivityProfileDisplayName')?.addEventListener('input', function () {
             const cropper = ensureGroupProfileCropper();
@@ -1271,6 +1591,7 @@
             document.getElementById('memberActivityProfileImage')?.click();
         });
         document.getElementById('memberActivityProfileRemoveImageButton')?.addEventListener('click', resetGroupProfileImage);
+        document.getElementById('memberActivityProfileRevertImageButton')?.addEventListener('click', revertGroupProfileImageDraft);
         document.getElementById('memberActivityProfileImageEditorApply')?.addEventListener('click', applyGroupImageEditor);
         document.getElementById('memberActivityProfileImageEditorCancel')?.addEventListener('click', closeGroupImageEditor);
         document.querySelectorAll('[data-group-image-editor-close]').forEach(function (element) {
@@ -1290,8 +1611,7 @@
             if (!button) return;
             const next = String(button.dataset.memberActivityTaskFilter || 'ALL').toUpperCase();
             activeTaskFilter = ['ALL', 'TODO', 'IN_PROGRESS', 'DONE', 'DELAYED'].includes(next) ? next : 'ALL';
-            const summary = {};
-            // 기존 서버 카운트 대신 현재 버튼의 숫자를 유지하기 위해 DOM은 active 상태만 갱신한다.
+            // 서버 카운트는 유지하고 active 상태와 목록만 갱신한다.
             document.querySelectorAll('[data-member-activity-task-filter]').forEach(function (item) {
                 const active = item.dataset.memberActivityTaskFilter === activeTaskFilter;
                 item.classList.toggle('is-active', active);

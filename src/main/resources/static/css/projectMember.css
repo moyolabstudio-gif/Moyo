@@ -1012,7 +1012,7 @@ body.personal-project-main .project-widget-notice-poll {
 .moyo-member-avatar.has-image,
 .project-member-avatar.has-image,
 .member-avatar.has-image {
-    background:transparent !important;
+    background:#fff !important;
     background-image:none !important;
     box-shadow:none !important;
 }

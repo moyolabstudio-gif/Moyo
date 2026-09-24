@@ -11,16 +11,16 @@
         <header class="member-activity-profile__head">
             <div>
                 <span class="member-activity-profile__kicker">프로젝트 프로필</span>
-                <h3 id="memberActivityProfileTitle">멤버 활동</h3>
+                <h3 id="memberActivityProfileTitle">멤버 프로필</h3>
             </div>
             <button type="button"
                     class="member-activity-profile__close"
                     data-member-activity-close
-                    aria-label="멤버 활동 프로필 닫기">&times;</button>
+                    aria-label="멤버 프로필 닫기">&times;</button>
         </header>
 
         <div id="memberActivityProfileLoading" class="member-activity-profile__loading">
-            멤버 활동 프로필을 불러오는 중입니다.
+            멤버 프로필을 불러오는 중입니다.
         </div>
 
         <div id="memberActivityProfileContent" class="member-activity-profile__content" hidden>
@@ -42,17 +42,20 @@
                     </div>
                     <div class="member-activity-profile__position-line">
                         <span id="memberActivityProfilePosition">담당 역할 미지정</span>
-                        <input type="text" id="memberActivityProfileGroupPosition" class="member-activity-profile__inline-position-input" maxlength="50" placeholder="직책 · 담당" data-group-inline-edit hidden>
                         <button type="button"
                                 id="memberActivityProfileEditPositionButton"
                                 class="member-activity-profile__edit-position"
-                                hidden>담당 역할 수정</button>
+                                hidden>담당 수정</button>
+                        <button type="button"
+                                id="memberActivityProfileEditBaseProfileButton"
+                                class="member-activity-profile__edit-position"
+                                hidden>그룹 프로필 수정</button>
                     </div>
                     <label class="member-activity-profile__inline-account-toggle" data-group-inline-edit hidden>
                         <input type="checkbox" id="memberActivityProfileUseAccount" aria-label="계정 프로필 사용">
                         <span><strong>계정 프로필 사용</strong><small>계정의 이름과 이미지를 이 그룹에서도 사용합니다.</small></span>
                     </label>
-                    <span id="memberActivityProfileJoinedAt" class="member-activity-profile__joined"></span>
+                    <p id="memberActivityProfileIntroText" class="member-activity-profile__intro" hidden></p>
                 </div>
 
                 <div id="memberActivityProfileAdminActions"
@@ -69,9 +72,22 @@
                          role="menu"
                          hidden>
                         <button type="button"
+                                id="memberActivityProfileProfileEditAction"
+                                class="member-activity-profile__admin-menu-item"
+                                role="menuitem" hidden>프로필 수정</button>
+                        <button type="button"
+                                id="memberActivityProfilePositionAction"
+                                class="member-activity-profile__admin-menu-item"
+                                role="menuitem">역할·담당 수정</button>
+                        <button type="button"
                                 id="memberActivityProfileRoleAction"
                                 class="member-activity-profile__admin-menu-item"
-                                role="menuitem">관리자로 변경</button>
+                                role="menuitem">권한 변경</button>
+                        <button type="button"
+                                id="memberActivityProfileTransferAction"
+                                class="member-activity-profile__admin-menu-item"
+                                role="menuitem"
+                                hidden>위임</button>
                         <button type="button"
                                 id="memberActivityProfileRemoveAction"
                                 class="member-activity-profile__admin-menu-item is-danger"
@@ -80,10 +96,25 @@
                 </div>
             </section>
 
+            <section id="memberActivityProfilePrivateMeta" class="member-activity-profile__private-meta" aria-label="공개 프로필 정보" hidden>
+                <div id="memberActivityProfileEmailMeta" class="member-activity-profile__private-item" hidden>
+                    <span><i class="fa-regular fa-envelope" aria-hidden="true"></i> 이메일</span>
+                    <strong id="memberActivityProfileEmailValue"></strong>
+                </div>
+                <div id="memberActivityProfilePhoneMeta" class="member-activity-profile__private-item" hidden>
+                    <span><i class="fa-solid fa-phone" aria-hidden="true"></i> 연락처</span>
+                    <strong id="memberActivityProfilePhoneValue"></strong>
+                </div>
+                <div id="memberActivityProfileBirthMeta" class="member-activity-profile__private-item" hidden>
+                    <span><i class="fa-solid fa-cake-candles" aria-hidden="true"></i> 생일</span>
+                    <strong id="memberActivityProfileBirthValue"></strong>
+                </div>
+            </section>
+
             <form id="memberActivityProfilePositionForm"
                   class="member-activity-profile__position-form"
                   hidden>
-                <label for="memberActivityProfilePositionInput">프로젝트 담당 역할</label>
+                <label id="memberActivityProfilePositionFormLabel" for="memberActivityProfilePositionInput">역할·담당</label>
                 <div class="member-activity-profile__position-edit-row">
                     <input type="text"
                            id="memberActivityProfilePositionInput"
@@ -92,41 +123,78 @@
                     <button type="submit" class="member-activity-profile__save">저장</button>
                     <button type="button" id="memberActivityProfilePositionCancel" class="member-activity-profile__cancel">취소</button>
                 </div>
-                <small>프로젝트에서 실제로 맡고 있는 역할을 표시합니다.</small>
+                <small id="memberActivityProfilePositionFormDescription">이 공간에서 맡고 있는 역할·담당을 표시합니다.</small>
             </form>
 
             <form id="memberActivityProfileGroupEditForm"
                   class="member-activity-profile__group-edit member-activity-profile__group-edit--details"
                   enctype="multipart/form-data"
                   hidden>
-                <div class="member-activity-profile__group-edit-grid">
-                    <label class="member-activity-profile__edit-field member-activity-profile__edit-field--full">
-                        <span>한 줄 소개</span>
-                        <input type="text" id="memberActivityProfileIntro" maxlength="120" placeholder="그룹에서의 역할이나 소개를 입력하세요">
+                <div id="memberActivityProfileProjectSharedNotice" class="member-activity-profile__shared-notice" hidden>
+                    <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+                    <span>공통 프로필 정보는 그룹과 함께 사용되며, <strong>프로젝트 직책·담당만 별도로 저장됩니다.</strong></span>
+                </div>
+
+                <div class="member-activity-profile__edit-core">
+                    <label class="member-activity-profile__edit-field">
+                        <span id="memberActivityProfilePositionEditLabel">그룹 직책 · 담당</span>
+                        <input type="text" id="memberActivityProfileGroupPosition" maxlength="50" placeholder="예: 개발, 운영, 기록, 발표 등">
+                        <small id="memberActivityProfilePositionEditHelp">이 그룹에서 맡고 있는 직책이나 담당을 입력하세요.</small>
                     </label>
+                    <label class="member-activity-profile__edit-field">
+                        <span>한 줄 소개</span>
+                        <input type="text" id="memberActivityProfileIntro" maxlength="120" placeholder="나를 간단히 소개해보세요">
+                        <small>역할과 별개로 나를 짧게 소개하는 문장입니다.</small>
+                    </label>
+                </div>
 
-                    <div class="member-activity-profile__edit-field">
-                        <span>연락 이메일</span>
-                        <div class="member-activity-profile__edit-input-with-option">
-                            <input type="email" id="memberActivityProfileEmail" maxlength="100" autocomplete="email">
-                            <label class="member-activity-profile__check-line"><input type="checkbox" id="memberActivityProfileShowEmail"><span>공개</span></label>
+                <div class="member-activity-profile__public-list" aria-label="공개 정보">
+                    <div class="member-activity-profile__public-row">
+                        <span class="member-activity-profile__field-label"><i class="fa-regular fa-envelope" aria-hidden="true"></i> 이메일</span>
+                        <div class="member-activity-profile__public-value">
+                            <div class="member-activity-profile__email-control">
+                                <input type="email" id="memberActivityProfileEmail" maxlength="100" autocomplete="email">
+                                <span id="memberActivityProfileEmailStatus" class="member-activity-profile__email-status" hidden><i class="fa-solid fa-check" aria-hidden="true"></i> 인증됨</span>
+                                <button type="button" id="memberActivityProfileEmailVerifyButton" class="member-activity-profile__verify-button" hidden>인증하기</button>
+                            </div>
+                            <div id="memberActivityProfileEmailCodeRow" class="member-activity-profile__email-code" hidden>
+                                <input type="text" id="memberActivityProfileEmailCode" maxlength="6" inputmode="numeric" placeholder="인증번호 6자리">
+                                <button type="button" id="memberActivityProfileEmailCodeVerifyButton" class="member-activity-profile__verify-button">확인</button>
+                            </div>
+                            <small id="memberActivityProfileEmailHelp" hidden></small>
                         </div>
+                        <label class="member-activity-profile__visibility-toggle" for="memberActivityProfileShowEmail">
+                            <input type="checkbox" id="memberActivityProfileShowEmail">
+                            <span class="member-activity-profile__visibility-switch" aria-hidden="true"></span>
+                            <span>멤버 공개</span>
+                        </label>
                     </div>
-                    <div class="member-activity-profile__edit-field">
-                        <span>전화번호</span>
-                        <div class="member-activity-profile__edit-input-with-option">
+
+                    <div class="member-activity-profile__public-row">
+                        <span class="member-activity-profile__field-label"><i class="fa-solid fa-phone" aria-hidden="true"></i> 연락처</span>
+                        <div class="member-activity-profile__public-value">
                             <input type="tel" id="memberActivityProfilePhone" maxlength="30" inputmode="tel" autocomplete="tel" placeholder="010-0000-0000">
-                            <label class="member-activity-profile__check-line"><input type="checkbox" id="memberActivityProfileShowPhone"><span>공개</span></label>
                         </div>
+                        <label class="member-activity-profile__visibility-toggle" for="memberActivityProfileShowPhone">
+                            <input type="checkbox" id="memberActivityProfileShowPhone">
+                            <span class="member-activity-profile__visibility-switch" aria-hidden="true"></span>
+                            <span>멤버 공개</span>
+                        </label>
                     </div>
 
-                    <div class="member-activity-profile__edit-field">
-                        <span>생일</span>
-                        <div class="member-activity-profile__birth-edit-line">
-                            <strong id="memberActivityProfileBirthText">등록된 생일 없음</strong>
-                            <label class="member-activity-profile__check-line"><input type="checkbox" id="memberActivityProfileShowBirth"><span>공개</span></label>
+                    <div class="member-activity-profile__public-row">
+                        <span class="member-activity-profile__field-label"><i class="fa-solid fa-cake-candles" aria-hidden="true"></i> 생일</span>
+                        <div class="member-activity-profile__public-value">
+                            <div class="member-activity-profile__birth-edit-line">
+                                <strong id="memberActivityProfileBirthText">등록된 생일 없음</strong>
+                                <span id="memberActivityProfileBirthTypeIcon" class="member-activity-profile__birth-type-icon" aria-label="양력"></span>
+                            </div>
                         </div>
-                        <small>생일 정보는 계정 프로필에서 변경할 수 있습니다.</small>
+                        <label class="member-activity-profile__visibility-toggle" for="memberActivityProfileShowBirth">
+                            <input type="checkbox" id="memberActivityProfileShowBirth">
+                            <span class="member-activity-profile__visibility-switch" aria-hidden="true"></span>
+                            <span>멤버 공개</span>
+                        </label>
                     </div>
                 </div>
 
@@ -251,6 +319,7 @@
                 <div class="member-activity-profile__image-editor-source-actions">
                     <button type="button" id="memberActivityProfileImageFileSelectButton" class="member-activity-profile__image-select">새 이미지 선택</button>
                     <button type="button" id="memberActivityProfileRemoveImageButton" class="member-activity-profile__image-remove">기본 아바타</button>
+                    <button type="button" id="memberActivityProfileRevertImageButton" class="member-activity-profile__image-remove" disabled>되돌리기</button>
                     <span id="memberActivityProfileImageFileName" class="member-activity-profile__image-file-name" hidden>현재 프로필 이미지</span>
                 </div>
                 <label class="member-activity-profile__crop-zoom member-activity-profile__crop-zoom--large">

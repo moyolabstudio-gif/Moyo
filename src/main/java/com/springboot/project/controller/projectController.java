@@ -43,6 +43,7 @@ import com.springboot.project.dto.workspaceDTO;
 import com.springboot.project.service.IprojectService;
 import com.springboot.project.service.IprojectAuthorizationService;
 import com.springboot.project.service.IworkspaceService;
+import com.springboot.project.service.IfriendService;
 import com.springboot.project.service.InoteService;
 import com.springboot.project.service.CollaborationActivityService;
 import com.springboot.project.service.ProjectPolicy;
@@ -57,6 +58,7 @@ public class projectController {
     private final IprojectService projectService;
     private final IprojectAuthorizationService projectAuthorizationService;
     private final IworkspaceService workspaceService;
+    private final IfriendService friendService;
     private final IworkspaceDAO workspaceDAO;
     private final InoteService noteService;
     private final CollaborationActivityService collaborationActivityService;
@@ -65,6 +67,7 @@ public class projectController {
     public projectController(IprojectService projectService,
                              IprojectAuthorizationService projectAuthorizationService,
                              IworkspaceService workspaceService,
+                             IfriendService friendService,
                              IworkspaceDAO workspaceDAO,
                              InoteService noteService,
                              CollaborationActivityService collaborationActivityService,
@@ -72,10 +75,43 @@ public class projectController {
         this.projectService = projectService;
         this.projectAuthorizationService = projectAuthorizationService;
         this.workspaceService = workspaceService;
+        this.friendService = friendService;
         this.workspaceDAO = workspaceDAO;
         this.noteService = noteService;
         this.collaborationActivityService = collaborationActivityService;
         this.objectMapper = objectMapper;
+    }
+
+    private Set<Long> visibleContactUserIds(Long viewerUserId) {
+        Set<Long> visible = new java.util.HashSet<>();
+        if (viewerUserId == null) return visible;
+        visible.add(viewerUserId);
+        try {
+            for (com.springboot.project.dto.friendDTO friend : friendService.getFriends(viewerUserId, null)) {
+                if (friend != null && friend.getUserId() != null) visible.add(friend.getUserId());
+            }
+        } catch (Exception ignored) { }
+        return visible;
+    }
+
+    private void redactPrivateMemberContacts(List<Map<String, Object>> members, Long viewerUserId) {
+        if (members == null || members.isEmpty()) return;
+        Set<Long> visible = visibleContactUserIds(viewerUserId);
+        for (Map<String, Object> member : members) {
+            if (member == null) continue;
+            Object raw = member.get("USER_ID");
+            Long targetId = null;
+            if (raw instanceof Number) targetId = ((Number) raw).longValue();
+            else if (raw != null) {
+                try { targetId = Long.valueOf(String.valueOf(raw)); } catch (Exception ignored) { }
+            }
+            if (targetId == null || !visible.contains(targetId)) {
+                member.remove("EMAIL");
+                member.remove("email");
+                member.remove("CUSTOM_CONTACT_EMAIL");
+                member.remove("customContactEmail");
+            }
+        }
     }
 
     @GetMapping("/create")
@@ -285,6 +321,7 @@ public class projectController {
         wsId = projectDetail.getWsId();
         // 2. 기존 로직
         List<Map<String, Object>> projectMemberList = projectService.getProjectMembers(projId);
+        redactPrivateMemberContacts(projectMemberList, loginUser.getUserId());
         Map<String, Object> taskSummary = projectService.getProjectTaskSummary(projId);
         
         // 3. 모델에 추가
@@ -391,6 +428,7 @@ public class projectController {
 
         List<Map<String, Object>> projectMemberList =
                 projectService.getProjectMembers(projId);
+        redactPrivateMemberContacts(projectMemberList, loginUser.getUserId());
 
         boolean isProjectLeader = projectDetail.getLeaderId() != null
                 && projectDetail.getLeaderId().equals(loginUser.getUserId());
@@ -409,10 +447,16 @@ public class projectController {
         projectDetail.setProjCategory(normalizedProjectType);
         projectDetail.setProjIcon(ProjectPolicy.normalizeIcon(projectDetail.getProjIcon(), normalizedProjectType));
         projectDetail.setAccessScope(ProjectPolicy.normalizeAccessScope(projectDetail.getAccessScope(), projectDetail.getProjScope()));
+
+        // 설정의 date input은 yyyy-MM-dd 형식만 허용한다.
+        // 기존/과거 데이터가 Timestamp 형태(yyyy-MM-dd HH:mm:ss)나 ISO datetime으로
+        // 조회되더라도 생성 당시 기간이 설정 화면에서 비어 보이지 않도록 date-only로 정규화한다.
+        String settingsStartDate = normalizeProjectSettingsDate(projectDetail.getStartDate());
+        String settingsEndDate = normalizeProjectSettingsDate(projectDetail.getEndDate());
+        projectDetail.setStartDate(settingsStartDate);
+        projectDetail.setEndDate(settingsEndDate);
         projectDetail.setPeriodEnabledYn(
-                projectDetail.getStartDate() != null && !projectDetail.getStartDate().isBlank()
-                        && projectDetail.getEndDate() != null && !projectDetail.getEndDate().isBlank()
-                        ? "Y" : "N");
+                settingsStartDate != null && settingsEndDate != null ? "Y" : "N");
         String currentProjectRole = isProjectLeader
                 ? "LEADER"
                 : (groupProject ? "GROUP_MEMBER" : "OWNER");
@@ -441,6 +485,8 @@ public class projectController {
                 || "DELETE_PENDING".equalsIgnoreCase(projectDetail.getStatus());
 
         model.addAttribute("projectDetail", projectDetail);
+        model.addAttribute("projectSettingsStartDate", settingsStartDate == null ? "" : settingsStartDate);
+        model.addAttribute("projectSettingsEndDate", settingsEndDate == null ? "" : settingsEndDate);
         if (groupProject && wsId != null) {
             model.addAttribute("projectWorkspace", workspaceService.getWorkspaceDetail(wsId));
         }
@@ -463,6 +509,24 @@ public class projectController {
         return "project/projectSettings";
     }
 
+    /**
+     * 프로젝트 설정 화면의 input[type=date]에 안전하게 주입할 yyyy-MM-dd 값으로 정규화한다.
+     * 생성/기존 데이터가 yyyy-MM-dd, yyyy-MM-ddTHH:mm:ss, yyyy-MM-dd HH:mm:ss 형태로
+     * 섞여 있어도 앞의 date-only 값만 사용한다. 유효하지 않은 값은 null로 처리한다.
+     */
+    private String normalizeProjectSettingsDate(String rawDate) {
+        if (rawDate == null) return null;
+        String value = rawDate.trim();
+        if (value.isEmpty()) return null;
+        if (value.length() >= 10) {
+            String dateOnly = value.substring(0, 10);
+            if (dateOnly.matches("\\d{4}-\\d{2}-\\d{2}")) {
+                return dateOnly;
+            }
+        }
+        return value.matches("\\d{4}-\\d{2}-\\d{2}") ? value : null;
+    }
+
 
  // 1. 초대 가능한 멤버 목록 조회 (GET)
     @GetMapping("/api/assignable-members")
@@ -480,7 +544,9 @@ public class projectController {
                 || projectAuthorizationService.isDeletePending(project)) {
             return List.of();
         }
-        return projectService.getAssignableMembers(project.getWsId(), projId);
+        List<Map<String, Object>> members = projectService.getAssignableMembers(project.getWsId(), projId);
+        redactPrivateMemberContacts(members, loginUser.getUserId());
+        return members;
     }
 
     
@@ -1482,6 +1548,9 @@ public class projectController {
         }
         dto.setWsId(project.getWsId());
         dto.setProjScope(project.getProjScope());
+        // 기간을 새로 지정하는 경우 PROJECT_PERIOD 이벤트가 없으면 insertProjectEvent가 실행된다.
+        // 이때 이벤트 USER_ID에 사용할 팀장 ID가 update payload에는 없으므로 기존 프로젝트에서 복원한다.
+        dto.setLeaderId(project.getLeaderId());
         boolean isUpdated = projectService.updateProject(dto);
         return isUpdated ? "SUCCESS" : "FAIL";
     }
@@ -1511,10 +1580,11 @@ public class projectController {
             return ResponseEntity.status(404).body(Map.of("status", "NOT_FOUND"));
         }
 
-        // 프로필 모달에서는 본인의 프로젝트 역할만 수정한다.
-        // 다른 멤버의 권한/역할 수정은 프로젝트 설정 > 멤버 관리에서 처리한다.
+        // 멤버 설정 탭을 제거했으므로 멤버 프로필이 사람 상세 + 운영의 진입점이다.
+        // 본인은 자신의 담당을, 프로젝트 운영자는 대상 멤버의 담당/권한을 관리할 수 있다.
         profile.put("CAN_EDIT_PROJECT_ROLE",
-                targetUserId.equals(loginUser.getUserId()));
+                targetUserId.equals(loginUser.getUserId())
+                        || projectAuthorizationService.canManageProject(projId, loginUser.getUserId()));
 
         return ResponseEntity.ok(profile);
     }
@@ -1642,7 +1712,9 @@ public class projectController {
         if (loginUser == null || projectAuthorizationService.getAccessibleProject(projId, null, loginUser.getUserId()) == null) {
             return List.of();
         }
-        return projectService.getProjectMembers(projId);
+        List<Map<String, Object>> members = projectService.getProjectMembers(projId);
+        redactPrivateMemberContacts(members, loginUser.getUserId());
+        return members;
     }
     
     
@@ -1810,6 +1882,15 @@ public class projectController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("status", "FORBIDDEN"));
         }
         normalizePlanFeatureYn(feature);
+        if ("Y".equalsIgnoreCase(feature.getPeriodEnabledYn())) {
+            projectRequestDTO project = projectService.getProjectById(feature.getProjId());
+            if (project == null || project.getStartDate() == null || project.getStartDate().isBlank()
+                    || project.getEndDate() == null || project.getEndDate().isBlank()) {
+                return ResponseEntity.badRequest().body(Map.of(
+                        "status", "PROJECT_PERIOD_REQUIRED",
+                        "message", "기간별 계획을 사용하려면 프로젝트 기간을 먼저 설정해 주세요."));
+            }
+        }
         String rangeError = validateTimePlanFeatureRange(feature);
         if (rangeError != null) return ResponseEntity.badRequest().body(Map.of("status", "INVALID_RANGE", "message", rangeError));
         projectPlanFeatureDTO saved = projectService.updateProjectPlanFeature(feature);

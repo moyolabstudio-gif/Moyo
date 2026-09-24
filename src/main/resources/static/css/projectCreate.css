@@ -528,7 +528,7 @@ body {
     .project-create-shell { width: min(100%, 760px); }
     .member-list { grid-template-columns: 1fr; max-height: 340px; }
 }
-@media (max-width: 760px) {
+@media (max-width: 560px) {
     .project-create-page { padding: 20px 14px 30px; }
     .project-create-card { padding: 24px 20px 22px; border-radius: 22px; }
     .create-title-row { flex-direction: column; gap: 14px; margin-bottom: 18px; }
@@ -1084,7 +1084,7 @@ body {
     display: block;
 }
 
-@media (max-width: 760px) {
+@media (max-width: 560px) {
     .project-create-page { padding-inline: 12px; }
     .project-create-card { padding: 22px 18px 18px; }
     .basic-card .create-form-grid { gap: 16px; }
@@ -1259,7 +1259,7 @@ body {
     .project-create-type-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); }
 }
 
-@media (max-width: 680px) {
+@media (max-width: 560px) {
     .create-title-row { align-items: flex-start; }
     .project-create-title-actions { width: 100%; justify-content: space-between; }
     .project-create-group-mini { max-width: min(70vw, 240px); }
@@ -3054,4 +3054,831 @@ body {
 }
 .member-role-portal .member-role-option.is-selected i {
     opacity: 1;
+}
+
+/* 2026-09-23 · Project create CTA cursor */
+.create-actions.moyo-create-actions .create-btn:not(:disabled) {
+    cursor: pointer !important;
+}
+.create-actions.moyo-create-actions .create-btn:disabled,
+.create-actions.moyo-create-actions .create-btn[aria-disabled="true"] {
+    cursor: not-allowed !important;
+}
+
+/* ========================================================================
+   2026-09-23 · Project create responsive final pass
+   STEP1 / STEP2 반응형 최종 규칙
+   ======================================================================== */
+
+@media (min-width: 900px) and (max-height: 820px) {
+    .basic-card .create-form-grid {
+        gap: 12px !important;
+    }
+
+    .project-create-type-field {
+        margin-bottom: 12px !important;
+    }
+
+    #stepMembers .member-list {
+        max-height: 300px !important;
+    }
+}
+
+@media (max-width: 760px) {
+    .create-title-row.moyo-create-header {
+        flex-wrap: wrap !important;
+    }
+
+    .project-create-title-actions {
+        width: 100%;
+        justify-content: space-between;
+        gap: 8px;
+    }
+
+    .project-create-group-mini {
+        flex: 1 1 auto;
+        max-width: min(72vw, 260px);
+    }
+
+    .project-period-dates {
+        grid-template-columns: 1fr !important;
+        gap: 8px !important;
+    }
+
+    .project-period-separator {
+        display: none !important;
+    }
+
+    #stepMembers .member-head.member-head--compact {
+        gap: 8px;
+    }
+
+    #stepMembers .role-guide {
+        width: 100%;
+        justify-content: flex-start;
+        flex-wrap: wrap;
+    }
+
+    #stepMembers .member-tools {
+        grid-template-columns: minmax(0, 1fr) auto auto !important;
+        gap: 7px !important;
+    }
+
+    #stepMembers .member-search {
+        min-width: 0;
+    }
+
+    #stepMembers .member-row {
+        grid-template-columns: minmax(0, 1fr) minmax(150px, .8fr) !important;
+        gap: 10px !important;
+    }
+
+    #stepMembers .member-main {
+        grid-column: 1 / -1 !important;
+    }
+
+    #stepMembers .member-control__label {
+        display: block;
+    }
+
+    #stepMembers .member-list {
+        max-height: min(48vh, 380px) !important;
+    }
+}
+
+@media (max-width: 620px) {
+    #stepMembers .member-tools {
+        grid-template-columns: 1fr 1fr !important;
+    }
+
+    #stepMembers .member-search {
+        grid-column: 1 / -1 !important;
+    }
+
+    #stepMembers .member-filter-btn,
+    #stepMembers .member-selected-count {
+        width: 100%;
+    }
+
+    #stepMembers .member-row {
+        grid-template-columns: 1fr !important;
+    }
+
+    #stepMembers .member-main,
+    #stepMembers .member-control {
+        grid-column: 1 !important;
+    }
+
+    #stepMembers .member-position,
+    #stepMembers .member-role-trigger {
+        width: 100%;
+    }
+}
+
+@media (max-width: 520px) {
+    .project-create-group-mini {
+        max-width: calc(100% - 76px);
+    }
+
+    .project-create-group-mini__copy strong {
+        max-width: 100%;
+    }
+
+    .project-period-label-row {
+        align-items: flex-start !important;
+    }
+
+    .project-period-mode {
+        width: 100%;
+        display: grid !important;
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .project-period-mode__button {
+        width: 100%;
+        justify-content: center;
+    }
+
+    #stepMembers .member-tools {
+        grid-template-columns: 1fr !important;
+    }
+
+    #stepMembers .member-search,
+    #stepMembers .member-filter-btn,
+    #stepMembers .member-selected-count {
+        grid-column: 1 !important;
+        width: 100%;
+    }
+
+    #stepMembers .member-list {
+        max-height: min(52vh, 420px) !important;
+        padding-right: 2px !important;
+    }
+
+    #stepMembers .member-row {
+        padding: 11px !important;
+    }
+
+    #stepMembers .member-main {
+        gap: 9px !important;
+    }
+
+    #stepMembers .member-avatar {
+        width: 38px !important;
+        height: 38px !important;
+    }
+
+    .member-role-portal {
+        max-width: calc(100vw - 20px) !important;
+    }
+}
+
+@media (max-width: 420px) {
+    .project-create-title-actions {
+        align-items: center;
+    }
+
+    #stepMembers .member-email {
+        max-width: 210px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+}
+
+/* Final regression: real transparent profile images keep their own canvas. */
+#stepMembers .member-avatar.has-image,
+.member-avatar.has-image {
+    background-color: transparent !important;
+    background-image: none !important;
+    box-shadow: none !important;
+}
+#stepMembers .member-avatar.has-image > img,
+.member-avatar.has-image > img {
+    background: transparent !important;
+}
+#stepMembers .member-avatar.has-image > img.is-transparent-image,
+.member-avatar.has-image > img.is-transparent-image {
+    object-fit: contain !important;
+    object-position: center !important;
+}
+
+
+/* 2026-09-23 · split-window/tablet conflict cleanup */
+@media (min-width: 561px) and (max-width: 760px) {
+    .project-create-page .create-title-row.moyo-create-header {
+        flex-direction: row !important;
+        align-items: flex-start !important;
+        justify-content: space-between !important;
+        gap: 12px !important;
+    }
+    .project-create-page .project-create-title-actions {
+        width: auto !important;
+        max-width: 48% !important;
+        margin-left: auto !important;
+        justify-content: flex-end !important;
+    }
+    .project-create-page .basic-card .moyo-project-form__label-row,
+    .project-create-page .moyo-create-label-row {
+        flex-direction: row !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: 10px !important;
+    }
+    .project-create-page .moyo-create-help,
+    .project-create-page .moyo-project-form__help {
+        width: auto !important;
+        max-width: 58% !important;
+        text-align: right !important;
+    }
+}
+
+/* 2026-09-23 · split-window period/access regression fix */
+@media (min-width: 561px) and (max-width: 760px) {
+    .project-create-page .project-period-label-row {
+        flex-direction: row !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: 12px !important;
+    }
+
+    .project-create-page .project-period-label-row > div:first-child {
+        flex: 1 1 auto !important;
+        min-width: 0 !important;
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: baseline !important;
+        gap: 10px !important;
+        white-space: nowrap !important;
+    }
+
+    .project-create-page .project-period-label-row .moyo-create-label,
+    .project-create-page .project-period-label-row .project-period-help {
+        white-space: nowrap !important;
+        writing-mode: horizontal-tb !important;
+        word-break: keep-all !important;
+    }
+
+    .project-create-page .project-period-mode {
+        width: auto !important;
+        flex: 0 0 auto !important;
+        display: inline-grid !important;
+        grid-template-columns: repeat(2, auto) !important;
+    }
+
+    .project-create-page .project-period-mode__button {
+        width: auto !important;
+        min-width: 88px !important;
+    }
+
+    .project-create-page .project-period-dates {
+        grid-template-columns: minmax(0, 1fr) 24px minmax(0, 1fr) !important;
+        gap: 8px !important;
+    }
+
+    .project-create-page .project-period-separator {
+        display: grid !important;
+    }
+
+    .project-create-page .basic-card [data-project-field="access"] .moyo-project-choice-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+}
+
+
+/* 2026-09-23 - STEP2 member compact product layout */
+#stepMembers .member-head.member-head--compact {
+    align-items: center;
+    flex-direction: row;
+    gap: 12px;
+    margin-bottom: 8px;
+}
+#stepMembers .member-head__copy {
+    flex: 1 1 auto;
+    flex-direction: row;
+    align-items: baseline;
+    gap: 8px;
+}
+#stepMembers .member-head__copy strong {
+    flex: 0 0 auto;
+    font-size: 14px;
+}
+#stepMembers .member-head__copy span {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    font-size: 10.5px;
+}
+#stepMembers .role-guide {
+    flex: 0 0 auto;
+    gap: 0;
+}
+#stepMembers .role-guide span {
+    min-height: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: #8593a4;
+    font-size: 10px;
+    font-weight: 800;
+}
+#stepMembers .role-guide i {
+    margin-right: 2px;
+    font-size: 9px;
+}
+#stepMembers .member-tools {
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    gap: 6px;
+    margin-bottom: 8px;
+}
+#stepMembers .member-search .moyo-create-control,
+#stepMembers .member-filter-btn,
+#stepMembers .member-selected-count {
+    height: 36px;
+    min-height: 36px;
+}
+#stepMembers .member-search .moyo-create-control {
+    padding-left: 34px;
+    border-radius: 10px;
+    font-size: 11.5px;
+}
+#stepMembers .member-search-icon {
+    left: 12px !important;
+    font-size: 11px;
+}
+#stepMembers .member-filter-btn,
+#stepMembers .member-selected-count {
+    gap: 5px;
+    padding: 0 9px;
+    border-radius: 10px;
+    font-size: 10.5px;
+}
+#stepMembers .member-list-head { display: none !important; }
+#stepMembers .member-list {
+    gap: 5px;
+    max-height: 300px;
+    padding: 1px 3px 1px 0;
+}
+#stepMembers .member-row,
+#stepMembers .member-row:not(.is-disabled),
+#stepMembers .member-row:has(.member-check:checked) {
+    grid-template-columns: minmax(0, 1fr) minmax(135px, 165px) 108px;
+    gap: 7px;
+    min-height: 58px;
+    padding: 7px 9px;
+    border-radius: 13px;
+}
+#stepMembers .member-main { gap: 8px; }
+#stepMembers .member-check {
+    width: 16px;
+    height: 16px;
+}
+#stepMembers .member-avatar {
+    width: 36px;
+    height: 36px;
+    font-size: 12px;
+}
+#stepMembers .member-name { font-size: 12px; }
+#stepMembers .member-email {
+    margin-top: 2px;
+    font-size: 10px;
+}
+#stepMembers .member-position,
+#stepMembers .member-role {
+    height: 36px;
+    min-height: 36px;
+    border-radius: 9px;
+    font-size: 11px;
+}
+#stepMembers .member-position::placeholder {
+    color: #a8b3c1;
+    font-weight: 700;
+}
+#stepMembers .member-control__label { display: none; }
+#stepMembers .member-filter-empty,
+#stepMembers .member-loading,
+#stepMembers .member-empty,
+#stepMembers .member-error {
+    min-height: 72px;
+    padding: 18px 12px;
+}
+#stepMembers + .create-actions,
+.project-step-panel[data-step="2"] ~ .create-actions {
+    margin-top: 9px;
+    padding-top: 12px;
+}
+
+/* Split-window / tablet: keep the member row compact instead of turning into a management form. */
+@media (min-width: 561px) and (max-width: 760px) {
+    #stepMembers .member-head.member-head--compact {
+        align-items: center;
+        flex-direction: row;
+        gap: 10px;
+    }
+    #stepMembers .member-head__copy {
+        flex-direction: row;
+        align-items: baseline;
+        gap: 6px;
+    }
+    #stepMembers .role-guide { justify-content: flex-end; }
+    #stepMembers .member-tools {
+        grid-template-columns: minmax(0, 1fr) auto auto;
+    }
+    #stepMembers .member-search { grid-column: auto; }
+    #stepMembers .member-row,
+    #stepMembers .member-row:not(.is-disabled),
+    #stepMembers .member-row:has(.member-check:checked) {
+        grid-template-columns: minmax(0, 1fr) minmax(125px, 155px) 104px;
+        gap: 6px;
+        padding: 7px 8px;
+    }
+    #stepMembers .member-main { grid-column: auto; }
+    #stepMembers .member-control { grid-column: auto; }
+    #stepMembers .member-control__label { display: none; }
+}
+
+@media (max-width: 560px) {
+    #stepMembers .member-head.member-head--compact {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 5px;
+    }
+    #stepMembers .member-head__copy {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 2px;
+    }
+    #stepMembers .member-head__copy span {
+        white-space: normal;
+    }
+    #stepMembers .member-tools {
+        grid-template-columns: 1fr auto auto;
+        gap: 5px;
+    }
+    #stepMembers .member-search { grid-column: 1 / -1; }
+    #stepMembers .member-row,
+    #stepMembers .member-row:not(.is-disabled),
+    #stepMembers .member-row:has(.member-check:checked) {
+        grid-template-columns: 1fr 1fr;
+        gap: 7px;
+        padding: 8px;
+    }
+    #stepMembers .member-main { grid-column: 1 / -1; }
+    #stepMembers .member-control__label { display: block; }
+}
+
+@media (max-width: 420px) {
+    #stepMembers .member-tools { grid-template-columns: 1fr 1fr; }
+    #stepMembers .member-search { grid-column: 1 / -1; }
+    #stepMembers .member-filter-btn,
+    #stepMembers .member-selected-count { width: 100%; }
+    #stepMembers .member-row,
+    #stepMembers .member-row:not(.is-disabled),
+    #stepMembers .member-row:has(.member-check:checked) {
+        grid-template-columns: 1fr;
+    }
+    #stepMembers .member-main,
+    #stepMembers .member-control { grid-column: 1; }
+}
+
+
+/* 2026-09-23 · project mobile header/footer final alignment */
+@media (max-width: 560px) {
+    .project-create-page .project-create-title-actions {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin-left: 0 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: flex-end !important;
+        gap: 8px !important;
+    }
+
+    .project-create-page .project-create-group-mini {
+        flex: 0 1 auto !important;
+        width: auto !important;
+        max-width: calc(100% - 84px) !important;
+        min-width: 0 !important;
+    }
+
+    .project-create-page #btnCancelTop.moyo-create-back-button,
+    .project-create-page #btnCancelTop.btn {
+        flex: 0 0 auto !important;
+        width: auto !important;
+        min-width: 76px !important;
+        max-width: none !important;
+    }
+
+    .project-create-page .moyo-create-actions .create-btn,
+    .project-create-page .create-actions.moyo-create-actions .create-btn {
+        flex: 0 0 auto !important;
+        width: auto !important;
+        min-width: 92px !important;
+    }
+}
+
+@media (min-width: 561px) and (max-width: 760px) {
+    .project-create-page #btnCancelTop.moyo-create-back-button,
+    .project-create-page #btnCancelTop.btn {
+        flex: 0 0 auto !important;
+        width: auto !important;
+        min-width: 76px !important;
+    }
+
+    .project-create-page .moyo-create-actions .create-btn,
+    .project-create-page .create-actions.moyo-create-actions .create-btn {
+        flex: 0 0 auto !important;
+        width: auto !important;
+        min-width: 92px !important;
+    }
+}
+
+/* 2026-09-23 · final create grammar alignment with workspace create */
+.project-create-page .create-title-row.moyo-create-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: nowrap;
+}
+.project-create-page .create-title-row.moyo-create-header > div:first-child {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+.project-create-page .project-create-title-actions {
+    flex: 0 0 auto;
+    width: auto !important;
+    max-width: 48%;
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+}
+.project-create-page .project-create-group-mini {
+    flex: 0 1 auto;
+    width: auto;
+    min-width: 0;
+    max-width: 190px;
+}
+.project-create-page .project-create-group-mini__copy strong {
+    display: block;
+    max-width: 126px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.project-create-page #btnCancelTop.moyo-create-back-button {
+    flex: 0 0 auto;
+    width: auto !important;
+    min-width: 76px;
+}
+
+/* Project field headings follow the workspace pattern: title first, help directly below. */
+.project-create-page .project-field-label-stack {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    margin-bottom: 8px;
+    min-width: 0;
+}
+.project-create-page .project-field-label-stack .moyo-create-help,
+.project-create-page .project-field-label-stack .moyo-project-form__help {
+    width: auto !important;
+    max-width: 100% !important;
+    text-align: left !important;
+    white-space: normal !important;
+    line-height: 1.4;
+}
+
+/* Period keeps the mode control at the right while its copy is stacked like the group form. */
+.project-create-page .project-period-label-row {
+    display: flex;
+    align-items: flex-start !important;
+    justify-content: space-between;
+    gap: 12px;
+}
+.project-create-page .project-period-label-row > .project-field-label-stack {
+    flex: 1 1 auto;
+    margin-bottom: 0;
+}
+.project-create-page .project-period-mode {
+    flex: 0 0 auto;
+    width: auto !important;
+}
+
+/* External link heading uses the same title -> description order. */
+.project-create-page .project-link-head {
+    align-items: flex-start;
+}
+.project-create-page .project-link-heading {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+}
+.project-create-page .project-link-heading .moyo-create-link-title {
+    width: auto;
+}
+.project-create-page .project-link-heading .moyo-create-link-help {
+    margin: 0;
+    text-align: left;
+    line-height: 1.4;
+}
+.project-create-page .project-link-head .moyo-create-link-add {
+    flex: 0 0 auto;
+}
+
+/* Type cards: same compact rhythm as workspace type cards. */
+.project-create-page .project-create-type-grid,
+.project-create-page .basic-card .project-create-type-grid {
+    gap: 8px !important;
+}
+.project-create-page .project-create-type-option,
+.project-create-page .basic-card .project-create-type-option {
+    min-height: 66px !important;
+    padding: 9px 6px !important;
+    gap: 5px !important;
+}
+.project-create-page .project-create-type-option .moyo-project-type-option__icon {
+    width: 30px !important;
+    height: 30px !important;
+}
+.project-create-page .project-create-type-option .moyo-project-type-option__name {
+    line-height: 1.25 !important;
+}
+
+@media (min-width: 561px) and (max-width: 760px) {
+    .project-create-page .create-title-row.moyo-create-header {
+        flex-direction: row !important;
+        align-items: flex-start !important;
+        flex-wrap: nowrap !important;
+        gap: 10px !important;
+    }
+    .project-create-page .project-create-title-actions {
+        width: auto !important;
+        max-width: 50% !important;
+        margin-left: auto !important;
+    }
+    .project-create-page .project-create-group-mini {
+        max-width: 150px !important;
+    }
+    .project-create-page .project-create-group-mini__copy strong {
+        max-width: 90px;
+    }
+    .project-create-page .project-create-type-option,
+    .project-create-page .basic-card .project-create-type-option {
+        min-height: 62px !important;
+        padding: 8px 5px !important;
+    }
+    .project-create-page .project-field-label-stack {
+        margin-bottom: 7px;
+    }
+    .project-create-page .project-period-label-row {
+        flex-direction: row !important;
+        align-items: flex-start !important;
+    }
+    .project-create-page .project-period-label-row > .project-field-label-stack {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 4px !important;
+        white-space: normal !important;
+    }
+}
+
+@media (max-width: 560px) {
+    .project-create-page .create-title-row.moyo-create-header {
+        flex-direction: row !important;
+        align-items: flex-start !important;
+        flex-wrap: nowrap !important;
+        gap: 8px !important;
+    }
+    .project-create-page .project-create-title-actions {
+        width: auto !important;
+        max-width: 48% !important;
+        margin-left: auto !important;
+    }
+    .project-create-page .project-create-group-mini {
+        max-width: 118px !important;
+    }
+    .project-create-page .project-create-group-mini__copy strong {
+        max-width: 64px !important;
+    }
+    .project-create-page #btnCancelTop.moyo-create-back-button {
+        min-width: 70px !important;
+        padding-left: 10px !important;
+        padding-right: 10px !important;
+    }
+    .project-create-page .project-period-label-row {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 8px !important;
+    }
+    .project-create-page .project-period-mode {
+        align-self: flex-start;
+    }
+    .project-create-page .project-link-head {
+        gap: 8px;
+    }
+}
+
+@media (max-width: 420px) {
+    .project-create-page .create-title-row.moyo-create-header {
+        flex-wrap: wrap !important;
+    }
+    .project-create-page .project-create-title-actions {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+}
+
+/* 2026-09-23 · keep project-name counter aligned with the label on every width */
+.project-create-page [data-project-field="name"] .moyo-create-label-row,
+.project-create-page [data-project-field="name"] .moyo-project-form__label-row {
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 8px !important;
+}
+.project-create-page [data-project-field="name"] .project-name-count {
+    margin-left: auto !important;
+    flex: 0 0 auto !important;
+    white-space: nowrap !important;
+}
+
+/* 2026-09-23 · mobile member filters stay as a compact two-button row */
+@media (max-width: 560px) {
+    #stepMembers .member-tools {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+        gap: 6px !important;
+    }
+
+    #stepMembers .member-search {
+        grid-column: 1 / -1 !important;
+    }
+
+    #stepMembers .member-selected-count,
+    #stepMembers .member-filter-btn {
+        width: 100% !important;
+        min-width: 0 !important;
+        justify-content: center !important;
+    }
+}
+
+/* 2026-09-23 · STEP2 mobile compact two-column controls */
+@media (max-width: 560px) {
+    #stepMembers .member-tools {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+    }
+
+    #stepMembers .member-search {
+        grid-column: 1 / -1 !important;
+    }
+
+    #stepMembers .member-selected-count {
+        grid-column: 1 !important;
+    }
+
+    #stepMembers .member-filter-btn {
+        grid-column: 2 !important;
+    }
+
+    #stepMembers .member-row,
+    #stepMembers .member-row:not(.is-disabled),
+    #stepMembers .member-row:has(.member-check:checked) {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+    }
+
+    #stepMembers .member-main {
+        grid-column: 1 / -1 !important;
+    }
+
+    #stepMembers .member-control {
+        grid-column: auto !important;
+        min-width: 0 !important;
+    }
+
+    #stepMembers .member-position,
+    #stepMembers .member-role-select,
+    #stepMembers .member-role-trigger {
+        width: 100% !important;
+        min-width: 0 !important;
+    }
+}
+
+@media (max-width: 360px) {
+    #stepMembers .member-row,
+    #stepMembers .member-row:not(.is-disabled),
+    #stepMembers .member-row:has(.member-check:checked) {
+        grid-template-columns: 1fr !important;
+    }
+
+    #stepMembers .member-main,
+    #stepMembers .member-control {
+        grid-column: 1 !important;
+    }
 }

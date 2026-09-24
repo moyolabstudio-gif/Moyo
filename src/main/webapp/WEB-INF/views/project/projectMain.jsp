@@ -34,7 +34,9 @@
                 <link rel="icon" href="<c:out value='${projectWorkspace.wsImagePath}'/>">
             </c:when>
             <c:otherwise>
-                <link rel="icon" type="image/png" href="${pageContext.request.contextPath}/brand/moyo_mark.png?v=moyo-tab-mascot-v1">
+                <link rel="icon" type="image/png" sizes="32x32" href="${pageContext.request.contextPath}/brand/favicon-32x32.png?v=moyo-favicon-v2">
+                <link rel="icon" type="image/png" sizes="16x16" href="${pageContext.request.contextPath}/brand/favicon-16x16.png?v=moyo-favicon-v2">
+                <link rel="shortcut icon" href="${pageContext.request.contextPath}/brand/favicon.ico?v=moyo-favicon-v2">
             </c:otherwise>
         </c:choose>
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common/commonContentCard.css?v=note-card-common-meta-v1">
@@ -42,14 +44,14 @@
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/projectMain.css?v=person-avatar-policy-v2-20260913">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common/commonMainShell.css?v=person-avatar-policy-v2-20260913">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common/commonMainDashboard.css?v=person-avatar-policy-v2-20260913">
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common/commonMainHero.css?v=hero-mobile-actions-v4-20260918">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common/commonMainHero.css?v=project-icon-design-v6-22-20260924">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common/commonCommunityWidgets.css?v=mobile-widget-heights-cumulative-final-20260918">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common/commonContentWidgets.css?v=content-empty-center-v14-20260922">
 <link rel="stylesheet" href="${pageContext.request.contextPath}/css/projectTask.css?v=task-responsive-autoheight-v83-20260920">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common/commonContentRecordModal.css?v=record-readonly-upload-hide-v85-20260920">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/projectMember.css?v=project-member-avatar-policy-v3">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common/commonMemberWidget.css?v=person-avatar-policy-v4-20260913">
-        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/commonMemberActivityProfile.css?v=profile-brand-v2-20260910">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/commonMemberActivityProfile.css?v=member-profile-v6-24-20260924">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/projectWidget.css?v=project-note-photo-height-21-7">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/commonFolderModal.css?v=20260809-photo-location-common">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/commonPhotoPostDetail.css?v=20260809-fit-atomic">
@@ -89,7 +91,8 @@
     <script src="${pageContext.request.contextPath}/js/projectPlanLoader.js?v=time-plan-picker-bound-color-v1"></script>
     <script src="${pageContext.request.contextPath}/js/projectMain.js?v=project-main-hero-detail-v1"></script>
     <script src="${pageContext.request.contextPath}/js/projectTaskData.js?v=project-task-hover-clip-fix-v6"></script>
-    <script src="${pageContext.request.contextPath}/js/commonMemberActivityProfile.js?v=permission-state-v1-20260910"></script>
+    <script src="${pageContext.request.contextPath}/js/commonProfileCropper.js?v=profile-cropper-20260924"></script>
+    <script src="${pageContext.request.contextPath}/js/commonMemberActivityProfile.js?v=member-profile-v6-24-20260924"></script>
     <script src="${pageContext.request.contextPath}/js/projectMember.js?v=common-member-activity-v5-20260910"></script>
     <script src="${pageContext.request.contextPath}/js/common/commonContentRecordModal.js?v=record-location-readonly-preview-v41-20260920"></script>
     <script src="${pageContext.request.contextPath}/js/projectTask.js?v=task-status-detail-v80-20260920"></script>

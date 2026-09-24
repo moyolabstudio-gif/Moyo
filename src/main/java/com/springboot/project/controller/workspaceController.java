@@ -73,6 +73,27 @@ public class workspaceController {
     @Autowired
     private ObjectMapper objectMapper;
    
+    private void redactPrivateMemberContacts(List<Map<String, Object>> members, Long viewerUserId) {
+        if (members == null || members.isEmpty()) return;
+        for (Map<String, Object> member : members) {
+            if (member == null) continue;
+            Long targetId = null;
+            Object raw = member.get("USER_ID");
+            if (raw instanceof Number) targetId = ((Number) raw).longValue();
+            else if (raw != null) {
+                try { targetId = Long.valueOf(String.valueOf(raw)); } catch (Exception ignored) { }
+            }
+            boolean self = viewerUserId != null && targetId != null && viewerUserId.equals(targetId);
+            boolean showEmail = "Y".equalsIgnoreCase(String.valueOf(member.getOrDefault("SHOW_EMAIL", "Y")));
+            if (!self && !showEmail) {
+                member.remove("EMAIL");
+                member.remove("email");
+                member.remove("CUSTOM_CONTACT_EMAIL");
+                member.remove("customContactEmail");
+            }
+        }
+    }
+
     @PostMapping("/api/create")
     @ResponseBody
     public Map<String, Object> createWorkspace(
@@ -87,6 +108,7 @@ public class workspaceController {
             @RequestParam(value = "displayName", required = false) String displayName,
             @RequestParam(value = "contactEmail", required = false) String contactEmail,
             @RequestParam(value = "positionName", required = false) String positionName,
+            @RequestParam(value = "introText", required = false) String introText,
             @RequestParam(value = "phoneNumber", required = false) String phoneNumber,
             @RequestParam(value = "profileImage", required = false) MultipartFile profileImage,
             @RequestParam(value = "showEmail", defaultValue = "Y") String showEmail,
@@ -165,6 +187,7 @@ public class workspaceController {
         profile.put("displayName", displayName);
         profile.put("contactEmail", contactEmail);
         profile.put("positionName", positionName);
+        profile.put("introText", introText);
         profile.put("phoneNumber", phoneNumber);
         if ("N".equals(normalizedProfileMode)
                 && profileImage != null && !profileImage.isEmpty()) {
@@ -246,6 +269,7 @@ public class workspaceController {
         model.addAttribute("projectOverview", projectService.getProjectListByWorkspaceId(wsId, loginUser.getUserId()));
 
         List<Map<String, Object>> memberList = workspaceService.getWorkspaceMembers(wsId);
+        redactPrivateMemberContacts(memberList, loginUser.getUserId());
         model.addAttribute("memberList", memberList);
 
         boolean isWorkspaceAdmin = workspaceAuthorizationService.canManage(wsId, loginUser.getUserId());
@@ -333,7 +357,9 @@ public class workspaceController {
 
         model.addAttribute("workspace", workspace);
         model.addAttribute("workspaceLinks", workspaceService.getWorkspaceLinks(wsId));
-        model.addAttribute("memberList", workspaceService.getWorkspaceMembers(wsId));
+        List<Map<String, Object>> settingsMembers = workspaceService.getWorkspaceMembers(wsId);
+        redactPrivateMemberContacts(settingsMembers, loginUser.getUserId());
+        model.addAttribute("memberList", settingsMembers);
         model.addAttribute("pendingInvitationList", workspaceService.getPendingInvitationsByWorkspace(wsId));
         model.addAttribute("currentUserId", loginUser.getUserId());
         model.addAttribute("currentUserIsOwner", isOwner);
@@ -944,6 +970,79 @@ public class workspaceController {
         return response;
     }
 
+    @GetMapping("/api/join-profile-context")
+    @ResponseBody
+    public Map<String, Object> getJoinProfileContext(
+            @RequestParam(value = "inviteId", required = false) Long inviteId,
+            @RequestParam(value = "requestId", required = false) Long requestId,
+            HttpSession session) {
+
+        Map<String, Object> result = new HashMap<>();
+        usersDto user = (usersDto) session.getAttribute("user");
+        if (user == null) {
+            result.put("success", false);
+            result.put("status", "LOGIN_REQUIRED");
+            return result;
+        }
+        if (inviteId == null && requestId == null) {
+            result.put("success", false);
+            result.put("status", "INVALID_REQUEST");
+            return result;
+        }
+
+        Long wsId = null;
+        if (inviteId != null) {
+            Map<String, Object> invite = workspaceDAO.selectInvitationById(inviteId);
+            if (invite == null) {
+                result.put("success", false);
+                result.put("status", "NOT_FOUND");
+                return result;
+            }
+            Object inviteeValue = invite.get("INVITEE_ID");
+            if (inviteeValue == null
+                    || !user.getUserId().equals(Long.valueOf(String.valueOf(inviteeValue)))) {
+                result.put("success", false);
+                result.put("status", "FORBIDDEN");
+                return result;
+            }
+            Object wsValue = invite.get("WS_ID");
+            if (wsValue != null) wsId = Long.valueOf(String.valueOf(wsValue));
+        } else {
+            Map<String, Object> request = workspaceDAO.selectJoinRequestById(requestId);
+            if (request == null) {
+                result.put("success", false);
+                result.put("status", "NOT_FOUND");
+                return result;
+            }
+            Object requesterValue = request.get("REQUESTERID") != null ? request.get("REQUESTERID")
+                    : (request.get("REQUESTER_ID") != null ? request.get("REQUESTER_ID") : request.get("requesterId"));
+            Object statusValue = request.get("STATUS") != null ? request.get("STATUS") : request.get("status");
+            if (requesterValue == null
+                    || !user.getUserId().equals(Long.valueOf(String.valueOf(requesterValue)))
+                    || !"APPROVED".equalsIgnoreCase(String.valueOf(statusValue))) {
+                result.put("success", false);
+                result.put("status", "FORBIDDEN");
+                return result;
+            }
+            Object wsValue = request.get("WSID") != null ? request.get("WSID")
+                    : (request.get("WS_ID") != null ? request.get("WS_ID") : request.get("wsId"));
+            if (wsValue != null) wsId = Long.valueOf(String.valueOf(wsValue));
+        }
+
+        workspaceDTO workspace = wsId == null ? null : workspaceService.getWorkspaceDetail(wsId);
+        if (workspace == null) {
+            result.put("success", false);
+            result.put("status", "NOT_FOUND");
+            return result;
+        }
+
+        result.put("success", true);
+        result.put("workspaceId", workspace.getWsId());
+        result.put("workspaceName", workspace.getWsName());
+        result.put("workspaceImagePath", workspace.getWsImagePath());
+        return result;
+    }
+
     @PostMapping(value = "/api/join-request/complete", consumes = org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE)
     @ResponseBody
     public Map<String, Object> completeApprovedJoinRequest(
@@ -1484,6 +1583,20 @@ public class workspaceController {
                     .body(Map.of("success", false, "message", "그룹 멤버만 프로필을 수정할 수 있습니다."));
         }
 
+        String normalizedContactEmail = contactEmail == null ? "" : contactEmail.trim().toLowerCase();
+        String normalizedAccountEmail = loginUser.getEMAIL() == null ? "" : loginUser.getEMAIL().trim().toLowerCase();
+        Map<String, Object> savedProfile = workspaceService.getSavedWorkspaceMemberProfile(wsId, loginUser.getUserId());
+        String savedContactEmail = savedProfile == null ? ""
+                : String.valueOf(savedProfile.getOrDefault("CONTACT_EMAIL", savedProfile.getOrDefault("contactEmail", ""))).trim().toLowerCase();
+        boolean unchangedSavedEmail = !normalizedContactEmail.isEmpty() && normalizedContactEmail.equals(savedContactEmail);
+        if (!normalizedContactEmail.isEmpty()
+                && !normalizedContactEmail.equals(normalizedAccountEmail)
+                && !unchangedSavedEmail
+                && !emailVerificationService.isVerified(normalizedContactEmail, session)) {
+            return org.springframework.http.ResponseEntity.badRequest()
+                    .body(Map.of("success", false, "message", "계정과 다른 이메일은 인증 후 사용할 수 있습니다."));
+        }
+
         String uploadedPath = null;
         String uploadedOriginalPath = null;
         try {
@@ -1584,20 +1697,7 @@ public class workspaceController {
 
         usersDto loginUser = (usersDto) session.getAttribute("user");
         List<Map<String, Object>> members = workspaceService.getWorkspaceMembers(wsId);
-
-        // 일반 멤버용 목록 API에서는 계정 식별용 이메일을 노출하지 않는다.
-        // 공개 여부에 따른 이메일/연락처/생일은 공통 프로필 상세 API에서만 반환한다.
-        // 그룹장/관리자는 멤버 관리 화면의 계정 식별 목적으로 이메일을 유지한다.
-        if (loginUser == null || !workspaceAuthorizationService.canManage(wsId, loginUser.getUserId())) {
-            for (Map<String, Object> member : members) {
-                if (member == null) continue;
-                member.remove("EMAIL");
-                member.remove("email");
-                member.remove("CUSTOM_CONTACT_EMAIL");
-                member.remove("customContactEmail");
-            }
-        }
-
+        redactPrivateMemberContacts(members, loginUser == null ? null : loginUser.getUserId());
         return org.springframework.http.ResponseEntity.ok(members);
     }
 

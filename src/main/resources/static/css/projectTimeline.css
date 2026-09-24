@@ -3585,6 +3585,30 @@ button.project-plan-type-option:hover {transform: translateY(-1px);
 .project-plan-type-option.is-created .project-plan-type-option__title-row em {background: rgba(45, 212, 191, .12);
     color: #188678;}
 
+.project-plan-type-option.is-unavailable {
+    background: #f8fafc;
+    border-color: #e6ebf1;
+}
+
+.project-plan-type-option.is-unavailable .project-plan-type-option__icon,
+.project-plan-type-option.is-unavailable .project-plan-type-option__copy {
+    opacity: .58;
+}
+
+.project-plan-type-option.is-unavailable .project-plan-type-option__title-row em {
+    background: #eef2f6;
+    color: #7b8794;
+}
+
+.project-plan-type-option__primary:disabled,
+.project-plan-type-option__primary[aria-disabled="true"] {
+    background: #e8edf3;
+    color: #98a2b3;
+    box-shadow: none;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
 .project-plan-type-option__actions {display: flex;
     align-items: center;
     justify-content: flex-end;

@@ -821,3 +821,47 @@
     margin: 0 !important;
     line-height: 1 !important;
 }
+
+/* 2026-09-24: project hero icon must use the same visual language as project settings.
+   One gradient tile + icon, with no nested white tile. Workspace hero is untouched. */
+.moyo-main-hero--project {
+    --moyo-hero-avatar-size: 56px;
+}
+
+.moyo-main-hero--project .moyo-main-hero__avatar--project {
+    width: var(--moyo-hero-avatar-size) !important;
+    height: var(--moyo-hero-avatar-size) !important;
+    min-width: var(--moyo-hero-avatar-size) !important;
+    flex-basis: var(--moyo-hero-avatar-size) !important;
+    border: 0 !important;
+    border-radius: 16px !important;
+    background: linear-gradient(135deg, rgba(79,213,195,.18), rgba(76,120,255,.16), rgba(139,99,246,.15)) !important;
+    box-shadow: none !important;
+}
+
+.moyo-main-hero--project .moyo-main-hero__avatar-visual--project {
+    background: transparent !important;
+}
+
+.moyo-main-hero--project .moyo-main-hero__avatar-icon {
+    width: auto !important;
+    height: auto !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    color: #5d67ca !important;
+    font-size: 20px !important;
+    box-shadow: none !important;
+}
+
+@media (max-width: 760px) {
+    .moyo-main-hero--project {
+        --moyo-hero-avatar-size: 48px;
+    }
+    .moyo-main-hero--project .moyo-main-hero__avatar--project {
+        border-radius: 14px !important;
+    }
+    .moyo-main-hero--project .moyo-main-hero__avatar-icon {
+        font-size: 18px !important;
+    }
+}
+

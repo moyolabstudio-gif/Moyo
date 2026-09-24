@@ -58,7 +58,9 @@
             profileAvatarType: text(first(raw, ['PROFILE_AVATAR_TYPE', 'profileAvatarType', 'AVATAR_TYPE', 'avatarType'], 'DEFAULT'), 'DEFAULT').toUpperCase(),
             role: role,
             position: position,
-            secondary: [position, email].filter(Boolean).join(' · '),
+            // 멤버 카드 보조 문구는 프로젝트/그룹 역할(포지션)을 우선 표시하고,
+            // 역할이 비어 있을 때만 이메일을 대체값으로 사용한다.
+            secondary: position || email,
             email: email,
             isOwner: isOwner,
             joinedAt: text(first(raw, ['JOINED_AT', 'joinedAt'], '')),
@@ -69,33 +71,59 @@
     function isDelayed(task) {
         const status = text(first(task, ['STATUS', 'status'], 'TODO')).toUpperCase();
         if (status === 'DONE') return false;
+
+        // 진행 보드와 동일한 판정 함수를 그대로 사용한다.
+        // 기존에는 endDate/endTime/status를 개별 인자로 넘겨 isTaskDelayed(task)와
+        // 호출 규격이 달라 멤버 카드의 지연 수가 항상 0으로 남을 수 있었다.
         if (typeof global.isTaskDelayed === 'function') {
-            return !!global.isTaskDelayed(
-                first(task, ['END_DATE', 'endDate'], ''),
-                first(task, ['END_TIME', 'endTime', 'END_TIME_SLOT', 'endTimeSlot'], ''),
-                status
-            );
+            return !!global.isTaskDelayed(task);
         }
+
+        const explicit = text(first(task, ['IS_OVERDUE', 'isOverdue', 'DELAYED_YN', 'delayedYn'], '')).toUpperCase();
+        if (['Y', 'TRUE'].includes(explicit)) return true;
+
         const dateText = text(first(task, ['END_DATE', 'endDate'], '')).replace(/[./]/g, '-');
         if (!dateText) return false;
-        const timeText = text(first(task, ['END_TIME', 'endTime', 'END_TIME_SLOT', 'endTimeSlot'], ''), '23:59');
-        const due = new Date(dateText + 'T' + timeText.substring(0, 5) + ':00');
+
+        const useTime = text(first(task, ['USE_TIME', 'useTime'], '')).toUpperCase();
+        const allDay = text(first(task, ['ALL_DAY_YN', 'allDayYn'], '')).toUpperCase();
+        const hasTime = useTime === 'Y' || allDay === 'N';
+        const rawTime = text(first(task, ['END_TIME', 'endTime', 'END_TIME_SLOT', 'endTimeSlot'], ''));
+        const timeText = hasTime && rawTime ? rawTime.substring(0, 5) : '23:59';
+        const due = new Date(dateText + 'T' + timeText + ':59');
         return !Number.isNaN(due.getTime()) && due.getTime() < Date.now();
+    }
+
+    function taskAssigneeIds(task) {
+        const rows = first(task, ['assignees', 'ASSIGNEES'], null);
+        if (Array.isArray(rows) && rows.length) {
+            return Array.from(new Set(rows.map(function (person) {
+                return text(first(person, ['userId', 'USER_ID', 'id', 'ASSIGNEE_ID', 'assigneeId'], ''));
+            }).filter(Boolean)));
+        }
+
+        const legacyUserId = text(first(task, ['ASSIGNED_USER_ID', 'assignedUserId', 'USER_ID', 'userId', 'ASSIGNEE_ID', 'assigneeId'], ''));
+        return legacyUserId ? [legacyUserId] : [];
     }
 
     function buildStats(tasks) {
         const stats = Object.create(null);
         (Array.isArray(tasks) ? tasks : []).forEach(function (task) {
-            const userId = text(first(task, ['ASSIGNED_USER_ID', 'assignedUserId', 'USER_ID', 'userId'], ''));
-            if (!userId) return;
-            const item = stats[userId] || { total: 0, todo: 0, progress: 0, done: 0, delay: 0 };
+            const assigneeIds = taskAssigneeIds(task);
+            if (!assigneeIds.length) return;
+
             const status = text(first(task, ['STATUS', 'status'], 'TODO')).toUpperCase();
-            if (status === 'DONE') item.done += 1;
-            else if (status === 'IN_PROGRESS') item.progress += 1;
-            else item.todo += 1;
-            if (isDelayed(task)) item.delay += 1;
-            item.total = item.todo + item.progress + item.done;
-            stats[userId] = item;
+            const delayed = isDelayed(task);
+
+            assigneeIds.forEach(function (userId) {
+                const item = stats[userId] || { total: 0, todo: 0, progress: 0, done: 0, delay: 0 };
+                if (status === 'DONE') item.done += 1;
+                else if (status === 'IN_PROGRESS') item.progress += 1;
+                else item.todo += 1;
+                if (delayed) item.delay += 1;
+                item.total = item.todo + item.progress + item.done;
+                stats[userId] = item;
+            });
         });
         return stats;
     }
@@ -159,7 +187,7 @@
                 workspaceMembersCache = members.slice();
                 document.dispatchEvent(new CustomEvent('moyo:content-activity', { detail: { scope: 'WORKSPACE', scopeId: wsId, wsId: wsId, contextPath: contextPath(), members: members, leaves: leaves } }));
                 const widgetMembers = members.map(function (member) {
-                    return Object.assign({}, member, { secondary: member.position || '' });
+                    return Object.assign({}, member, { secondary: member.secondary || '' });
                 });
                 render({
                     listId: opts.listId || 'workspaceMemberList',

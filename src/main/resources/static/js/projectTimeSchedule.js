@@ -1479,7 +1479,7 @@ function moveTimePlanCalendarMonth(kind, delta) {
 
 function selectTimePlanCalendarDate(kind, value) {
     const bounds = getProjectTimePlanBounds();
-    if (!value || value < bounds.start || value > bounds.end) return;
+    if (!value || (bounds.start && value < bounds.start) || (bounds.end && value > bounds.end)) return;
     const startInput = document.getElementById('timePlanRangeStart');
     const endInput = document.getElementById('timePlanRangeEnd');
     if (!startInput || !endInput) return;
@@ -1526,7 +1526,7 @@ function renderTimePlanCalendar(kind) {
         if (value === selectedValue) classes.push('is-selected');
         const endValue = document.getElementById('timePlanRangeEnd')?.value || '';
         if (startValue && endValue && value >= startValue && value <= endValue) classes.push('is-in-range');
-        let disabled = value < bounds.start || value > bounds.end;
+        let disabled = (bounds.start && value < bounds.start) || (bounds.end && value > bounds.end);
         if (kind === 'end' && startValue) {
             disabled = disabled || value < startValue || getInclusiveDayCount(startValue, value) > TIME_PLAN_MAX_DAYS;
         }
@@ -1608,10 +1608,12 @@ function isValidTimePlanRange(range) {
 
 function ensureTimePlanRange() {
     const bounds = getProjectTimePlanBounds();
-    if (!bounds.start || !bounds.end) return null;
+    const saved = readSavedTimePlanRange();
+    if (!bounds.start || !bounds.end) {
+        return isValidTimePlanRange(saved) ? saved : null;
+    }
     const projectDays = getInclusiveDayCount(bounds.start, bounds.end);
     if (projectDays <= TIME_PLAN_MAX_DAYS) return bounds;
-    const saved = readSavedTimePlanRange();
     return isValidTimePlanRange(saved) ? saved : null;
 }
 
@@ -1649,8 +1651,12 @@ function openTimePlanRangeModal(required) {
     if (!modal || !startInput || !endInput) return;
     const bounds = getProjectTimePlanBounds();
     const saved = readSavedTimePlanRange();
-    const defaultStart = saved && isValidTimePlanRange(saved) ? saved.start : bounds.start;
-    let defaultEnd = saved && isValidTimePlanRange(saved) ? saved.end : bounds.end;
+    const today = formatProjectDate(new Date());
+    const fallbackEndDate = parseProjectDate(today);
+    fallbackEndDate.setDate(fallbackEndDate.getDate() + 6);
+    const fallbackEnd = formatProjectDate(fallbackEndDate);
+    const defaultStart = saved && isValidTimePlanRange(saved) ? saved.start : (bounds.start || today);
+    let defaultEnd = saved && isValidTimePlanRange(saved) ? saved.end : (bounds.end || fallbackEnd);
     if (getInclusiveDayCount(defaultStart, defaultEnd) > TIME_PLAN_MAX_DAYS) {
         const endDate = parseProjectDate(defaultStart);
         endDate.setDate(endDate.getDate() + TIME_PLAN_MAX_DAYS - 1);
@@ -1683,7 +1689,12 @@ async function saveTimePlanRange() {
     let message = '';
     if (!start || !end) message = '시작일과 종료일을 모두 선택해 주세요.';
     else if (start > end) message = '종료일은 시작일보다 빠를 수 없어요.';
-    else if (!isValidTimePlanRange(range)) message = '프로젝트 기간 안에서 최대 28일까지 선택해 주세요.';
+    else if (!isValidTimePlanRange(range)) {
+        const bounds = getProjectTimePlanBounds();
+        message = bounds.start && bounds.end
+            ? '프로젝트 기간 안에서 최대 28일까지 선택해 주세요.'
+            : '시간별 계획 기간은 최대 28일까지 선택해 주세요.';
+    }
     if (message) {
         if (error) { error.textContent = message; error.hidden = false; }
         return;

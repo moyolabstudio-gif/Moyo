@@ -635,8 +635,10 @@
             taskBadge.textContent = '';
         }
         if (memberBadge) {
-            memberBadge.hidden = memberCount === 0;
-            memberBadge.textContent = memberCount ? ('변경 ' + memberCount) : '';
+            // 프로젝트 멤버 제목 옆의 '변경 N' 칩은 사용하지 않는다.
+            // 멤버 변경 이력 자체는 최근활동에 계속 남긴다.
+            memberBadge.hidden = true;
+            memberBadge.textContent = '';
         }
     }
 

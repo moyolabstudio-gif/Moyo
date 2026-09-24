@@ -120,7 +120,10 @@
             NVL(A.TARGET_TYPE, CASE WHEN A.NOTICE_ID IS NOT NULL THEN 'NOTICE' ELSE NULL END) AS targetType,
             NVL(A.TARGET_ID, A.NOTICE_ID) AS targetId,
             COALESCE(A.TITLE, N.TITLE, '새 알림') AS title,
-            COALESCE(A.CONTENT, DBMS_LOB.SUBSTR(N.CONTENT, 1000, 1)) AS content,
+            CASE
+                WHEN A.NOTICE_ID IS NOT NULL THEN '새 공지가 등록되었습니다.'
+                ELSE A.CONTENT
+            END AS content,
             A.LINK_URL AS linkUrl,
             A.IS_READ AS isRead,
             A.REG_DT AS regDt

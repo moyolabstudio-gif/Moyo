@@ -255,9 +255,23 @@ function createProfileCropper(config) {
         }
     }
 
+    function resolveProfileImagePath(src) {
+        const raw = String(src || '').trim();
+        if (!raw) return '';
+        if (/^(https?:)?\/\//i.test(raw) || raw.startsWith('data:') || raw.startsWith('blob:')) {
+            return raw;
+        }
+
+        const contextPath = String(document.body?.dataset?.contextPath || '').replace(/\/+$/, '');
+        if (contextPath && (raw === contextPath || raw.startsWith(contextPath + '/'))) {
+            return raw;
+        }
+        return contextPath + (raw.startsWith('/') ? raw : '/' + raw);
+    }
+
     function setExistingImage(src, cropState) {
         state.removeRequested = false;
-        state.externalSrc = src ? workspacePath(src) : '';
+        state.externalSrc = resolveProfileImagePath(src);
 
         if (state.mode === 'account') {
             revokeLocalUrl();

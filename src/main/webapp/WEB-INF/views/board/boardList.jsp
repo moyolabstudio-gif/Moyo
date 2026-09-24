@@ -4,6 +4,9 @@
 <html>
 <head>
     <meta charset="UTF-8">
+    <link rel="icon" type="image/png" sizes="32x32" href="${pageContext.request.contextPath}/brand/favicon-32x32.png?v=moyo-favicon-v2">
+    <link rel="icon" type="image/png" sizes="16x16" href="${pageContext.request.contextPath}/brand/favicon-16x16.png?v=moyo-favicon-v2">
+    <link rel="shortcut icon" href="${pageContext.request.contextPath}/brand/favicon.ico?v=moyo-favicon-v2">
     <title>게시판</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/moyoUi.css?v=stage3-list-ui">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/boardUi.css?v=board-report-empty-final-v1">

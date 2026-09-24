@@ -73,7 +73,28 @@
             <c:when test="${projectTypeKey eq 'LIFE' or projectTypeKey eq '생활' or projectTypeKey eq '생활·가정' or projectTypeKey eq '생활 · 가정'}"><c:set var="projectTypeLabel" value="생활" /></c:when>
             <c:when test="${projectTypeKey eq 'RECORD' or projectTypeKey eq '기록'}"><c:set var="projectTypeLabel" value="기록" /></c:when>
         </c:choose>
-        <c:set var="projectIconKey" value="${empty projectDetail.projIcon ? 'shapes' : projectDetail.projIcon}" />
+        <%-- 프로젝트 설정에서 저장한 PROJ_ICON을 히어로의 단일 아이콘 소스로 사용한다. --%>
+        <c:set var="projectIconKey" value="${projectDetail.projIcon}" />
+        <c:if test="${empty projectIconKey}">
+            <c:choose>
+                <c:when test="${projectTypeKey eq 'WORK'}"><c:set var="projectIconKey" value="briefcase" /></c:when>
+                <c:when test="${projectTypeKey eq 'DEVELOPMENT'}"><c:set var="projectIconKey" value="code" /></c:when>
+                <c:when test="${projectTypeKey eq 'PLANNING'}"><c:set var="projectIconKey" value="clipboard-list" /></c:when>
+                <c:when test="${projectTypeKey eq 'DESIGN'}"><c:set var="projectIconKey" value="palette" /></c:when>
+                <c:when test="${projectTypeKey eq 'STUDY'}"><c:set var="projectIconKey" value="book-open" /></c:when>
+                <c:when test="${projectTypeKey eq 'EXAM'}"><c:set var="projectIconKey" value="graduation-cap" /></c:when>
+                <c:when test="${projectTypeKey eq 'TRAVEL'}"><c:set var="projectIconKey" value="plane" /></c:when>
+                <c:when test="${projectTypeKey eq 'MEETING'}"><c:set var="projectIconKey" value="comments" /></c:when>
+                <c:when test="${projectTypeKey eq 'GATHERING'}"><c:set var="projectIconKey" value="user-group" /></c:when>
+                <c:when test="${projectTypeKey eq 'EVENT'}"><c:set var="projectIconKey" value="calendar-days" /></c:when>
+                <c:when test="${projectTypeKey eq 'EXERCISE'}"><c:set var="projectIconKey" value="dumbbell" /></c:when>
+                <c:when test="${projectTypeKey eq 'HOBBY'}"><c:set var="projectIconKey" value="puzzle-piece" /></c:when>
+                <c:when test="${projectTypeKey eq 'MUSIC'}"><c:set var="projectIconKey" value="music" /></c:when>
+                <c:when test="${projectTypeKey eq 'LIFE'}"><c:set var="projectIconKey" value="house" /></c:when>
+                <c:when test="${projectTypeKey eq 'RECORD'}"><c:set var="projectIconKey" value="note-sticky" /></c:when>
+                <c:otherwise><c:set var="projectIconKey" value="shapes" /></c:otherwise>
+            </c:choose>
+        </c:if>
         <c:set var="heroTypeLabel" value="${projectTypeLabel}" />
 
         <c:set var="heroTaskTotal" value="${empty taskSummary.TOTAL ? 0 : taskSummary.TOTAL}" />
@@ -104,8 +125,8 @@
     </c:otherwise>
 </c:choose>
 
-<div class="moyo-main-shell__hero moyo-main-hero">
-    <div class="moyo-main-hero__avatar${heroIsWorkspace ? (empty workspace.wsImagePath ? ' is-default' : ' has-image') : ''}">
+<div class="moyo-main-shell__hero moyo-main-hero${heroIsWorkspace ? '' : ' moyo-main-hero--project'}">
+    <div class="moyo-main-hero__avatar${heroIsWorkspace ? (empty workspace.wsImagePath ? ' is-default' : ' has-image') : ' moyo-main-hero__avatar--project'}">
         <c:choose>
             <c:when test="${heroIsWorkspace}">
                 <div class="moyo-main-hero__avatar-visual moyo-main-hero__avatar-visual--workspace${empty workspace.wsImagePath ? ' is-default' : ' has-image'}">
