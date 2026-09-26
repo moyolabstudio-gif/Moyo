@@ -49,14 +49,39 @@
        <c:when test="${personalRoot}">
         <div class="file-tree-context__avatar is-personal${empty sessionScope.user.profileImagePath ? ' is-default' : ' has-image'}" aria-hidden="true">
          <c:if test="${not empty sessionScope.user.profileImagePath}">
-          <img src="<c:out value='${sessionScope.user.profileImagePath}'/>" alt="" onerror="this.hidden=true; this.nextElementSibling.hidden=false;">
+          <img src="<c:out value='${sessionScope.user.profileImagePath}'/>" alt="" onerror="this.hidden=true; this.parentElement.classList.remove('has-image'); this.parentElement.classList.add('is-default'); this.nextElementSibling.hidden=false;">
          </c:if>
          <span class="file-tree-context__fallback" ${not empty sessionScope.user.profileImagePath ? 'hidden' : ''}><c:out value="${fn:toUpperCase(fn:substring(sessionScope.user.userName, 0, 1))}"/></span>
         </div>
         <div class="file-tree-context__text"><strong><c:out value="${sessionScope.user.userName}"/></strong><span>내 ${itemLabel}</span></div>
        </c:when>
        <c:otherwise>
-        <div class="file-tree-context__avatar is-personal" aria-hidden="true"><i class="fa-regular fa-folder-open"></i></div>
+        <%-- 개인 프로젝트 탐색기: 프로젝트 히어로와 동일하게 PROJ_ICON을 우선 사용한다. --%>
+        <c:set var="explorerProjectTypeKey" value="${empty projectDetail.projType ? projectDetail.projCategory : projectDetail.projType}" />
+        <c:set var="explorerProjectIconKey" value="${projectDetail.projIcon}" />
+        <c:if test="${empty explorerProjectIconKey}">
+         <c:choose>
+          <c:when test="${explorerProjectTypeKey eq 'WORK'}"><c:set var="explorerProjectIconKey" value="briefcase" /></c:when>
+          <c:when test="${explorerProjectTypeKey eq 'DEVELOPMENT'}"><c:set var="explorerProjectIconKey" value="code" /></c:when>
+          <c:when test="${explorerProjectTypeKey eq 'PLANNING'}"><c:set var="explorerProjectIconKey" value="clipboard-list" /></c:when>
+          <c:when test="${explorerProjectTypeKey eq 'DESIGN'}"><c:set var="explorerProjectIconKey" value="palette" /></c:when>
+          <c:when test="${explorerProjectTypeKey eq 'STUDY'}"><c:set var="explorerProjectIconKey" value="book-open" /></c:when>
+          <c:when test="${explorerProjectTypeKey eq 'EXAM'}"><c:set var="explorerProjectIconKey" value="graduation-cap" /></c:when>
+          <c:when test="${explorerProjectTypeKey eq 'TRAVEL'}"><c:set var="explorerProjectIconKey" value="plane" /></c:when>
+          <c:when test="${explorerProjectTypeKey eq 'MEETING'}"><c:set var="explorerProjectIconKey" value="comments" /></c:when>
+          <c:when test="${explorerProjectTypeKey eq 'GATHERING'}"><c:set var="explorerProjectIconKey" value="user-group" /></c:when>
+          <c:when test="${explorerProjectTypeKey eq 'EVENT'}"><c:set var="explorerProjectIconKey" value="calendar-days" /></c:when>
+          <c:when test="${explorerProjectTypeKey eq 'EXERCISE'}"><c:set var="explorerProjectIconKey" value="dumbbell" /></c:when>
+          <c:when test="${explorerProjectTypeKey eq 'HOBBY'}"><c:set var="explorerProjectIconKey" value="puzzle-piece" /></c:when>
+          <c:when test="${explorerProjectTypeKey eq 'MUSIC'}"><c:set var="explorerProjectIconKey" value="music" /></c:when>
+          <c:when test="${explorerProjectTypeKey eq 'LIFE'}"><c:set var="explorerProjectIconKey" value="house" /></c:when>
+          <c:when test="${explorerProjectTypeKey eq 'RECORD'}"><c:set var="explorerProjectIconKey" value="note-sticky" /></c:when>
+          <c:otherwise><c:set var="explorerProjectIconKey" value="shapes" /></c:otherwise>
+         </c:choose>
+        </c:if>
+        <div class="file-tree-context__avatar is-project-type" aria-hidden="true">
+         <i class="fa-solid fa-<c:out value='${explorerProjectIconKey}'/>"></i>
+        </div>
         <div class="file-tree-context__text"><strong>개인 프로젝트</strong><span><c:out value="${projectDetail.projName}"/></span></div>
        </c:otherwise>
       </c:choose>

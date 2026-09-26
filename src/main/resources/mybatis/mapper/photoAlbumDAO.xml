@@ -115,11 +115,11 @@
             ELSE U.USER_NAME
         END AS CREATOR_NAME,
         CASE
-            WHEN PP.SCOPE_TYPE = 'PROJECT' THEN (
+            WHEN PP.SCOPE_TYPE = 'PROJECT' THEN NVL((
                 SELECT CASE
                            WHEN NVL(WMP.USE_ACCOUNT_PROFILE, 'Y') = 'N'
                                THEN WMP.PROFILE_IMAGE_PATH
-                           ELSE CASE WHEN NVL(U.PROFILE_AVATAR_TYPE, 'DEFAULT') = 'IMAGE' THEN U.PROFILE_IMAGE_PATH END
+                           ELSE U.PROFILE_IMAGE_PATH
                        END
                   FROM PROJECTS PR
                   LEFT JOIN WS_MEMBER_PROFILES WMP
@@ -127,25 +127,25 @@
                    AND WMP.USER_ID = PP.CREATED_BY
                  WHERE PR.PROJ_ID = PP.SCOPE_ID
                    AND PR.WS_ID IS NOT NULL
-            )
-            WHEN PP.SCOPE_TYPE IN ('WORKSPACE', 'GROUP') THEN (
+            ), U.PROFILE_IMAGE_PATH)
+            WHEN PP.SCOPE_TYPE IN ('WORKSPACE', 'GROUP') THEN NVL((
                 SELECT CASE
                            WHEN NVL(WMP.USE_ACCOUNT_PROFILE, 'Y') = 'N'
                                THEN WMP.PROFILE_IMAGE_PATH
-                           ELSE CASE WHEN NVL(U.PROFILE_AVATAR_TYPE, 'DEFAULT') = 'IMAGE' THEN U.PROFILE_IMAGE_PATH END
+                           ELSE U.PROFILE_IMAGE_PATH
                        END
                   FROM WS_MEMBER_PROFILES WMP
                  WHERE WMP.WS_ID = PP.SCOPE_ID
                    AND WMP.USER_ID = PP.CREATED_BY
-            )
-            ELSE CASE WHEN NVL(U.PROFILE_AVATAR_TYPE, 'DEFAULT') = 'IMAGE' THEN U.PROFILE_IMAGE_PATH END
+            ), U.PROFILE_IMAGE_PATH)
+            ELSE U.PROFILE_IMAGE_PATH
         END AS CREATOR_PROFILE_IMAGE_PATH,
         CASE
-            WHEN PP.SCOPE_TYPE = 'PROJECT' THEN (
+            WHEN PP.SCOPE_TYPE = 'PROJECT' THEN NVL((
                 SELECT CASE
                            WHEN NVL(WMP.USE_ACCOUNT_PROFILE, 'Y') = 'N'
                                THEN WMP.PROFILE_IMAGE_PATH
-                           ELSE CASE WHEN NVL(U.PROFILE_AVATAR_TYPE, 'DEFAULT') = 'IMAGE' THEN U.PROFILE_IMAGE_PATH END
+                           ELSE U.PROFILE_IMAGE_PATH
                        END
                   FROM PROJECTS PR
                   LEFT JOIN WS_MEMBER_PROFILES WMP
@@ -153,18 +153,18 @@
                    AND WMP.USER_ID = PP.CREATED_BY
                  WHERE PR.PROJ_ID = PP.SCOPE_ID
                    AND PR.WS_ID IS NOT NULL
-            )
-            WHEN PP.SCOPE_TYPE IN ('WORKSPACE', 'GROUP') THEN (
+            ), U.PROFILE_IMAGE_PATH)
+            WHEN PP.SCOPE_TYPE IN ('WORKSPACE', 'GROUP') THEN NVL((
                 SELECT CASE
                            WHEN NVL(WMP.USE_ACCOUNT_PROFILE, 'Y') = 'N'
                                THEN WMP.PROFILE_IMAGE_PATH
-                           ELSE CASE WHEN NVL(U.PROFILE_AVATAR_TYPE, 'DEFAULT') = 'IMAGE' THEN U.PROFILE_IMAGE_PATH END
+                           ELSE U.PROFILE_IMAGE_PATH
                        END
                   FROM WS_MEMBER_PROFILES WMP
                  WHERE WMP.WS_ID = PP.SCOPE_ID
                    AND WMP.USER_ID = PP.CREATED_BY
-            )
-            ELSE CASE WHEN NVL(U.PROFILE_AVATAR_TYPE, 'DEFAULT') = 'IMAGE' THEN U.PROFILE_IMAGE_PATH END
+            ), U.PROFILE_IMAGE_PATH)
+            ELSE U.PROFILE_IMAGE_PATH
         END AS PROFILE_IMAGE_PATH,
         TO_CHAR(PP.CREATED_AT, 'YYYY-MM-DD HH24:MI') AS CREATED_AT,
         TO_CHAR(PP.UPDATED_AT, 'YYYY-MM-DD HH24:MI') AS UPDATED_AT,
@@ -316,11 +316,11 @@
             ELSE U.USER_NAME
         END AS CREATOR_NAME,
         CASE
-            WHEN PP.SCOPE_TYPE = 'PROJECT' THEN (
+            WHEN PP.SCOPE_TYPE = 'PROJECT' THEN NVL((
                 SELECT CASE
                            WHEN NVL(WMP.USE_ACCOUNT_PROFILE, 'Y') = 'N'
                                THEN WMP.PROFILE_IMAGE_PATH
-                           ELSE CASE WHEN NVL(U.PROFILE_AVATAR_TYPE, 'DEFAULT') = 'IMAGE' THEN U.PROFILE_IMAGE_PATH END
+                           ELSE U.PROFILE_IMAGE_PATH
                        END
                   FROM PROJECTS PR
                   LEFT JOIN WS_MEMBER_PROFILES WMP
@@ -328,25 +328,25 @@
                    AND WMP.USER_ID = PP.CREATED_BY
                  WHERE PR.PROJ_ID = PP.SCOPE_ID
                    AND PR.WS_ID IS NOT NULL
-            )
-            WHEN PP.SCOPE_TYPE IN ('WORKSPACE', 'GROUP') THEN (
+            ), U.PROFILE_IMAGE_PATH)
+            WHEN PP.SCOPE_TYPE IN ('WORKSPACE', 'GROUP') THEN NVL((
                 SELECT CASE
                            WHEN NVL(WMP.USE_ACCOUNT_PROFILE, 'Y') = 'N'
                                THEN WMP.PROFILE_IMAGE_PATH
-                           ELSE CASE WHEN NVL(U.PROFILE_AVATAR_TYPE, 'DEFAULT') = 'IMAGE' THEN U.PROFILE_IMAGE_PATH END
+                           ELSE U.PROFILE_IMAGE_PATH
                        END
                   FROM WS_MEMBER_PROFILES WMP
                  WHERE WMP.WS_ID = PP.SCOPE_ID
                    AND WMP.USER_ID = PP.CREATED_BY
-            )
-            ELSE CASE WHEN NVL(U.PROFILE_AVATAR_TYPE, 'DEFAULT') = 'IMAGE' THEN U.PROFILE_IMAGE_PATH END
+            ), U.PROFILE_IMAGE_PATH)
+            ELSE U.PROFILE_IMAGE_PATH
         END AS CREATOR_PROFILE_IMAGE_PATH,
         CASE
-            WHEN PP.SCOPE_TYPE = 'PROJECT' THEN (
+            WHEN PP.SCOPE_TYPE = 'PROJECT' THEN NVL((
                 SELECT CASE
                            WHEN NVL(WMP.USE_ACCOUNT_PROFILE, 'Y') = 'N'
                                THEN WMP.PROFILE_IMAGE_PATH
-                           ELSE CASE WHEN NVL(U.PROFILE_AVATAR_TYPE, 'DEFAULT') = 'IMAGE' THEN U.PROFILE_IMAGE_PATH END
+                           ELSE U.PROFILE_IMAGE_PATH
                        END
                   FROM PROJECTS PR
                   LEFT JOIN WS_MEMBER_PROFILES WMP
@@ -354,18 +354,18 @@
                    AND WMP.USER_ID = PP.CREATED_BY
                  WHERE PR.PROJ_ID = PP.SCOPE_ID
                    AND PR.WS_ID IS NOT NULL
-            )
-            WHEN PP.SCOPE_TYPE IN ('WORKSPACE', 'GROUP') THEN (
+            ), U.PROFILE_IMAGE_PATH)
+            WHEN PP.SCOPE_TYPE IN ('WORKSPACE', 'GROUP') THEN NVL((
                 SELECT CASE
                            WHEN NVL(WMP.USE_ACCOUNT_PROFILE, 'Y') = 'N'
                                THEN WMP.PROFILE_IMAGE_PATH
-                           ELSE CASE WHEN NVL(U.PROFILE_AVATAR_TYPE, 'DEFAULT') = 'IMAGE' THEN U.PROFILE_IMAGE_PATH END
+                           ELSE U.PROFILE_IMAGE_PATH
                        END
                   FROM WS_MEMBER_PROFILES WMP
                  WHERE WMP.WS_ID = PP.SCOPE_ID
                    AND WMP.USER_ID = PP.CREATED_BY
-            )
-            ELSE CASE WHEN NVL(U.PROFILE_AVATAR_TYPE, 'DEFAULT') = 'IMAGE' THEN U.PROFILE_IMAGE_PATH END
+            ), U.PROFILE_IMAGE_PATH)
+            ELSE U.PROFILE_IMAGE_PATH
         END AS PROFILE_IMAGE_PATH,
         TO_CHAR(PP.CREATED_AT, 'YYYY-MM-DD HH24:MI') AS CREATED_AT,
         TO_CHAR(PP.UPDATED_AT, 'YYYY-MM-DD HH24:MI') AS UPDATED_AT,

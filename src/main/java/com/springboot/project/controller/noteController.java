@@ -397,6 +397,8 @@ public class noteController {
         response.put("ownedByMe", note.isOwnedByMe());
         response.put("viewCount", note.getViewCount() == null ? 0 : note.getViewCount());
         response.put("likeCount", note.getLikeCount() == null ? 0 : note.getLikeCount());
+        response.put("likedByMe", note.isLikedByMe());
+        response.put("feedbackCount", note.getFeedbackCount());
         response.put("imageCount", note.getImageCount());
         response.put("tableCount", note.getTableCount());
         response.put("linkCount", note.getLinkCount());
@@ -1734,6 +1736,9 @@ public class noteController {
             item.put("projName", firstMapValue(row, "projName", "PROJ_NAME", "PROJNAME"));
             item.put("wsId", firstMapValue(row, "wsId", "WS_ID", "WSID"));
             item.put("wsName", firstMapValue(row, "wsName", "WS_NAME", "WSNAME"));
+            item.put("projType", firstMapValue(row, "projType", "PROJ_TYPE", "PROJTYPE"));
+            item.put("projCategory", firstMapValue(row, "projCategory", "PROJ_CATEGORY", "PROJCATEGORY"));
+            item.put("projIcon", firstMapValue(row, "projIcon", "PROJ_ICON", "PROJICON"));
             item.put("canManage", firstMapValue(row, "canManage", "CAN_MANAGE", "CANMANAGE"));
             if (item.get("projId") != null) result.add(item);
         }
@@ -1836,8 +1841,8 @@ public class noteController {
 
         noteDTO note = inoteService.getNoteDetail(noteId, user.getUserId());
         if (note == null) return ResponseEntity.status(404).body(Map.of("message", "노트를 찾을 수 없습니다."));
-        if (note.getUserId() == null || !note.getUserId().equals(user.getUserId()) || !"PRIVATE".equalsIgnoreCase(note.getScopeType())) {
-            return ResponseEntity.status(403).body(Map.of("message", "개인 노트 작성자만 MOYO 공개 여부를 변경할 수 있습니다."));
+        if (note.getUserId() == null || !note.getUserId().equals(user.getUserId()) || !isPersonalPermissionNote(note)) {
+            return ResponseEntity.status(403).body(Map.of("message", "개인/개인 프로젝트 노트 작성자만 MOYO 공개 여부를 변경할 수 있습니다."));
         }
 
         Object raw = body == null ? null : body.get("moyoPublic");
@@ -1895,6 +1900,18 @@ public class noteController {
         }
         if (sentCount == 0) return ResponseEntity.badRequest().body(Map.of("message", "보낼 수 있는 친구를 찾지 못했습니다."));
         return ResponseEntity.ok(Map.of("status", "SUCCESS", "sentCount", sentCount));
+    }
+
+
+    private boolean isPersonalPermissionNote(noteDTO note) {
+        if (note == null) return false;
+        String scope = note.getScopeType() == null ? "" : note.getScopeType().trim().toUpperCase();
+        if ("PRIVATE".equals(scope) || "PERSONAL".equals(scope)) return true;
+        if (("PROJ".equals(scope) || "PROJECT".equals(scope)) && note.getProjId() != null) {
+            projectRequestDTO project = projectDAO.selectProjectById(note.getProjId());
+            return project != null && project.getWsId() == null;
+        }
+        return false;
     }
 
     private boolean canAccessNoteScope(String scopeType, Long wsId, Long projId, Long userId) {

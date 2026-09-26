@@ -18,6 +18,7 @@ import java.util.stream.Collectors;
 public class ProjectSchemaInitializer implements ApplicationRunner {
 
     private static final String PROJECT_CATEGORY_CONSTRAINT = "CK_PROJECT_CATEGORY";
+    private static final String NOTE_SCOPE_IDS_CONSTRAINT = "CK_NOTES_SCOPE_IDS";
 
     private final JdbcTemplate jdbcTemplate;
 
@@ -56,6 +57,10 @@ public class ProjectSchemaInitializer implements ApplicationRunner {
          */
         normalizeLegacyProjectCategories();
         ensureProjectCategoryConstraint();
+
+        // Personal projects use PROJ scope with PROJ_ID only. Older DBs can still
+        // require WS_ID for every PROJ note, which rejects personal-project notes.
+        ensureNoteScopeIdsConstraint();
 
         // Give rows without an explicit icon the current catalog default.
         backfillProjectIcons();
@@ -131,6 +136,71 @@ public class ProjectSchemaInitializer implements ApplicationRunner {
         } catch (EmptyResultDataAccessException ignored) {
             return null;
         }
+    }
+
+
+    /**
+     * NOTES scope/id rule:
+     * - PRIVATE : WS_ID null, PROJ_ID null
+     * - WS      : WS_ID present, PROJ_ID null
+     * - PROJ    : PROJ_ID present; WS_ID is optional
+     *
+     * PROJECTS.WS_ID is the canonical source for deciding whether a project is
+     * personal or group-owned, so NOTES does not need to duplicate WS_ID for
+     * project notes. This also allows personal projects (PROJECTS.WS_ID IS NULL).
+     */
+    private void ensureNoteScopeIdsConstraint() {
+        String currentCondition = null;
+        try {
+            currentCondition = jdbcTemplate.queryForObject("""
+                    SELECT SEARCH_CONDITION_VC
+                      FROM USER_CONSTRAINTS
+                     WHERE TABLE_NAME = 'NOTES'
+                       AND CONSTRAINT_NAME = ?
+                       AND CONSTRAINT_TYPE = 'C'
+                    """, String.class, NOTE_SCOPE_IDS_CONSTRAINT);
+        } catch (EmptyResultDataAccessException ignored) {
+            // Recreate below.
+        }
+
+        String normalized = currentCondition == null
+                ? ""
+                : currentCondition.toUpperCase().replaceAll("\\s+", " ");
+
+        boolean supportsProjectWithoutWorkspace =
+                normalized.contains("SCOPE_TYPE = 'PROJ'")
+                && normalized.contains("PROJ_ID IS NOT NULL")
+                && !projectBranchRequiresWorkspace(normalized);
+
+        if (supportsProjectWithoutWorkspace) {
+            return;
+        }
+
+        if (currentCondition != null) {
+            jdbcTemplate.execute("ALTER TABLE NOTES DROP CONSTRAINT " + NOTE_SCOPE_IDS_CONSTRAINT);
+        }
+
+        jdbcTemplate.execute("""
+                ALTER TABLE NOTES ADD CONSTRAINT CK_NOTES_SCOPE_IDS CHECK (
+                       (SCOPE_TYPE = 'PRIVATE' AND WS_ID IS NULL     AND PROJ_ID IS NULL)
+                    OR (SCOPE_TYPE = 'WS'      AND WS_ID IS NOT NULL AND PROJ_ID IS NULL)
+                    OR (SCOPE_TYPE = 'PROJ'    AND PROJ_ID IS NOT NULL)
+                )
+                """);
+    }
+
+    private boolean projectBranchRequiresWorkspace(String normalizedCondition) {
+        int projPos = normalizedCondition.indexOf("SCOPE_TYPE = 'PROJ'");
+        if (projPos < 0) {
+            return true;
+        }
+
+        int nextOr = normalizedCondition.indexOf(" OR ", projPos);
+        String projectBranch = nextOr < 0
+                ? normalizedCondition.substring(projPos)
+                : normalizedCondition.substring(projPos, nextOr);
+
+        return projectBranch.contains("WS_ID IS NOT NULL");
     }
 
     private void backfillProjectIcons() {

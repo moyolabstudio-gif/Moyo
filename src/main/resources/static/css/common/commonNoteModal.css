@@ -77,14 +77,14 @@
 .moyo-note-modal__icon-action[hidden]{display:none!important;}
 .moyo-note-modal__icon-action svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
 .moyo-note-modal__shell{position:relative;z-index:1;display:flex;align-items:stretch;width:min(1010px,calc(100vw - 56px));height:min(700px,calc(100vh - 72px));transition:width .18s ease;}
-.moyo-note-modal__panel{width:100%;height:100%;flex:0 0 100%;}
+.moyo-note-modal__panel{width:100%;height:100%;flex:0 0 100%;box-sizing:border-box;}
 .moyo-note-modal.is-info-open .moyo-note-modal__shell{width:min(1302px,calc(100vw - 56px));}
 .moyo-note-modal.is-info-open .moyo-note-modal__panel{flex-basis:min(1010px,calc(100vw - 348px));}
-.moyo-note-modal__info-panel{position:relative;flex:0 0 292px;width:292px;height:100%;min-width:0;border-left:1px solid #e6eaf0;background:#fbfcfd;display:flex;flex-direction:column;overflow:hidden;border-radius:0 22px 22px 0;box-shadow:18px 20px 48px rgba(15,23,42,.14);}
+.moyo-note-modal__info-panel{position:relative;flex:0 0 292px;width:292px;height:100%;min-width:0;box-sizing:border-box;border-top:1px solid rgba(148,163,184,.20);border-right:1px solid rgba(148,163,184,.20);border-bottom:1px solid rgba(148,163,184,.20);border-left:1px solid #e6eaf0;background:#fbfcfd;display:flex;flex-direction:column;overflow:hidden;border-radius:0 22px 22px 0;box-shadow:18px 20px 48px rgba(15,23,42,.14);}
 .moyo-note-modal.is-info-open .moyo-note-modal__panel{border-radius:22px 0 0 22px;}
 .moyo-note-modal__info-panel[hidden]{display:none!important;}
-.moyo-note-modal__info-head{height:52px;display:flex;align-items:center;justify-content:space-between;padding:0 18px;border-bottom:1px solid #edf0f4;color:#364153;font-size:13px;}
-.moyo-note-modal__info-close{width:30px;height:30px;border:0;border-radius:8px;background:transparent;color:#7d8796;font-size:22px;line-height:1;cursor:pointer;}
+.moyo-note-modal__info-head{height:56px;flex:0 0 56px;box-sizing:border-box;display:flex;align-items:center;justify-content:space-between;padding:0 18px;border-bottom:1px solid #eef1f5;color:#364153;font-size:13px;}
+.moyo-note-modal__info-close{width:30px;height:30px;display:grid;place-items:center;border:0;border-radius:8px;background:transparent;color:#7d8796;line-height:1;cursor:pointer;}
 .moyo-note-modal__info-close:hover{background:#f0f3f6;color:#374151;}
 .moyo-note-modal__info-body{padding:16px 18px;display:flex;flex-direction:column;gap:16px;overflow:auto;}
 .moyo-note-modal__info-field{display:flex;flex-direction:column;gap:7px;}
@@ -664,4 +664,461 @@
 }
 .moyo-note-modal .moyo-ckeditor--note .ck.ck-toolbar .ck-toolbar__grouped-dropdown {
     display:none !important;
+}
+
+/* 20260926 NOTE reactions + personal visibility */
+.moyo-note-modal__document-meta{
+    justify-content:space-between;
+    gap:18px;
+    min-width:0;
+}
+.moyo-note-modal__document-meta-main{
+    min-width:0;
+    display:flex;
+    align-items:center;
+    gap:7px;
+    overflow:hidden;
+    white-space:nowrap;
+}
+.moyo-note-modal__document-meta-main>#moyoNoteModalAuthor,
+.moyo-note-modal__document-meta-main>#moyoNoteModalDate{
+    flex:0 1 auto;
+    min-width:0;
+    overflow:hidden;
+    text-overflow:ellipsis;
+}
+.moyo-note-modal__document-meta .moyo-note-modal__content-meta{
+    flex:0 0 auto;
+    gap:9px;
+    padding:0;
+    color:#a0a9b7;
+}
+.moyo-note-modal__moyo-mark{
+    flex:0 0 auto;
+    width:19px;
+    height:19px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+}
+.moyo-note-modal__moyo-mark[hidden]{display:none!important;}
+.moyo-note-modal__moyo-mark img{width:18px;height:18px;display:block;object-fit:contain;}
+.moyo-note-modal__reactions{
+    flex:0 0 auto;
+    display:flex;
+    align-items:center;
+    gap:12px;
+    color:#8f99a9;
+}
+.moyo-note-modal__reactions[hidden]{display:none!important;}
+.moyo-note-modal__reaction{
+    min-width:38px;
+    height:24px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:flex-start;
+    gap:5px;
+    border:0;
+    background:transparent;
+    padding:0;
+    color:inherit;
+    font:inherit;
+    font-size:11px;
+    line-height:1;
+    white-space:nowrap;
+}
+.moyo-note-modal__reaction strong{min-width:12px;font:inherit;font-weight:700;color:#7b8797;}
+.moyo-note-modal__reaction-btn{cursor:pointer;border-radius:7px;transition:background .15s ease,color .15s ease;}
+.moyo-note-modal__reaction-btn:hover{color:#566274;background:#f6f8fa;}
+.moyo-note-modal__reaction-btn.is-active{color:#536173;background:#f5f7f9;}
+.moyo-note-modal__reaction-btn.is-active strong{color:#536173;}
+.moyo-note-modal__reaction-btn:disabled{opacity:.55;cursor:default;}
+
+.moyo-note-modal__comments{
+    flex:1;
+    min-height:0;
+    display:flex;
+    flex-direction:column;
+    padding:14px 16px 16px;
+    overflow:hidden;
+    background:#fbfcfd;
+}
+.moyo-note-modal__comments[hidden]{display:none!important;}
+.moyo-note-modal__comments-summary{display:flex;align-items:center;gap:6px;padding:0 2px 11px;border-bottom:1px solid #edf0f4;color:#7d8796;font-size:11px;font-weight:700;}
+.moyo-note-modal__comments-summary strong{color:#566174;font-size:11px;font-weight:800;}
+.moyo-note-modal__comments-scroll{flex:1;min-height:0;overflow-y:auto;padding:14px 2px 8px;scrollbar-width:thin;scrollbar-color:#d8dee7 transparent;}
+.moyo-note-modal__comments-list{display:flex;flex-direction:column;gap:14px;}
+.moyo-note-modal__comments-empty{padding:18px 0;color:#a0a8b4;font-size:11.5px;text-align:center;}
+.moyo-note-modal__comments-empty[hidden]{display:none!important;}
+.moyo-note-modal__comment{display:flex;align-items:flex-start;gap:8px;min-width:0;}
+.moyo-note-modal__comment.is-reply{margin-left:22px;}
+.moyo-note-modal__comment-avatar{width:27px;height:27px;flex:0 0 27px;border-radius:50%;overflow:hidden;display:grid;place-items:center;background:transparent;color:#fff;font-size:10.5px;font-weight:800;}
+.moyo-note-modal__comment-avatar.is-default{background:var(--moyo-avatar-gradient,linear-gradient(135deg,#55D5CE 0%,#4288EF 52%,#5A55EE 100%));box-shadow:0 3px 9px rgba(57,145,216,.18);}
+.moyo-note-modal__comment-avatar.has-image{background:transparent;box-shadow:none;}
+.moyo-note-modal__comment-avatar img{width:100%;height:100%;object-fit:cover;display:block;background:transparent;}
+.moyo-note-modal__comment-avatar-initial{display:grid;place-items:center;width:100%;height:100%;color:#fff;font-size:10.5px;font-weight:800;line-height:1;}
+.moyo-note-modal__comment-avatar-initial[hidden]{display:none!important;}
+.moyo-note-modal__comment-main{min-width:0;flex:1;}
+.moyo-note-modal__comment-head{display:flex;align-items:center;gap:6px;min-width:0;}
+.moyo-note-modal__comment-head strong{max-width:135px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#465164;font-size:11.5px;font-weight:780;}
+.moyo-note-modal__comment-head time{margin-left:auto;color:#a5adba;font-size:9.5px;white-space:nowrap;}
+.moyo-note-modal__comment-content{margin-top:4px;color:#465164;font-size:12.5px;line-height:1.55;white-space:pre-wrap;word-break:break-word;}
+.moyo-note-modal__comment-actions{display:flex;align-items:center;gap:9px;margin-top:5px;}
+.moyo-note-modal__comment-actions button{border:0;background:transparent;padding:0;color:#98a2b1;font-size:9.5px;font-weight:700;cursor:pointer;}
+.moyo-note-modal__comment-actions button:hover,.moyo-note-modal__comment-actions button.is-active{color:#59687a;}
+.moyo-note-modal__comment-actions button i{margin-right:3px;}
+.moyo-note-modal__comment-form{flex:0 0 auto;display:flex;align-items:center;gap:7px;padding-top:12px;border-top:1px solid #edf0f4;background:#fbfcfd;}
+.moyo-note-modal__comment-form input{flex:1;min-width:0;height:36px;border:1px solid #dfe5ec;border-radius:9px;background:#fff;padding:0 10px;color:#3e4858;font-size:11.5px;outline:none;}
+.moyo-note-modal__comment-form input:focus{border-color:#aeb8c6;box-shadow:0 0 0 3px rgba(148,163,184,.10);}
+.moyo-note-modal__comment-form button{height:34px;padding:0 10px;border:0;border-radius:8px;background:#eef2f6;color:#566174;font-size:10.5px;font-weight:800;cursor:pointer;}
+.moyo-note-modal__comment-form button:hover{background:#e5ebf1;color:#384456;}
+.moyo-note-modal__comment-form button:disabled{opacity:.55;cursor:default;}
+
+.moyo-note-modal__personal-public-field{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:2px 0;}
+.moyo-note-modal__personal-public-field[hidden]{display:none!important;}
+.moyo-note-modal__personal-public-copy{min-width:0;display:flex;flex-direction:column;gap:3px;}
+.moyo-note-modal__personal-public-copy>span{color:#697386;font-size:12px;font-weight:750;}
+.moyo-note-modal__personal-public-copy>small{color:#9aa4b3;font-size:10px;line-height:1.35;}
+.moyo-note-modal__moyo-public-toggle{flex:0 0 auto;height:32px;display:inline-flex;align-items:center;gap:6px;border:1px solid #e4e8ee;border-radius:9px;background:#fff;padding:0 9px;color:#707b8d;font-size:11px;font-weight:750;cursor:pointer;}
+.moyo-note-modal__moyo-public-toggle img{width:17px;height:17px;display:block;opacity:.55;}
+.moyo-note-modal__moyo-public-toggle.is-active{border-color:#dce3e9;background:#f7f9fa;color:#526173;}
+.moyo-note-modal__moyo-public-toggle.is-active img{opacity:1;}
+.moyo-note-modal__moyo-public-toggle:disabled{opacity:.6;cursor:default;}
+
+@media(max-width:760px){
+    .moyo-note-modal__document-meta{gap:10px;}
+    .moyo-note-modal__document-meta-main{flex:1;}
+    .moyo-note-modal__document-meta-main>#moyoNoteModalDate{max-width:132px;}
+    .moyo-note-modal__document-meta .moyo-note-modal__content-meta{display:none!important;}
+    .moyo-note-modal__reactions{gap:6px;}
+    .moyo-note-modal__reaction{min-width:32px;}
+    .moyo-note-modal__comments{padding-left:14px;padding-right:14px;}
+    .moyo-note-modal__comment.is-reply{margin-left:18px;}
+}
+
+/* 20260926 side panel mode isolation + reaction polish */
+.moyo-note-modal__info-body[hidden],
+.moyo-note-modal__info-footer[hidden]{
+    display:none!important;
+}
+
+.moyo-note-modal__reaction-btn,
+.moyo-note-modal__reaction-btn:hover,
+.moyo-note-modal__reaction-btn:focus,
+.moyo-note-modal__reaction-btn:focus-visible,
+.moyo-note-modal__reaction-btn.is-active{
+    border:0!important;
+    outline:0!important;
+    box-shadow:none!important;
+    background:transparent!important;
+}
+
+.moyo-note-modal__reaction-btn:hover,
+.moyo-note-modal__reaction-btn:focus-visible{
+    color:#5f6b7a;
+}
+
+.moyo-note-modal__reaction-btn.is-active{
+    color:#ef5b72;
+}
+
+.moyo-note-modal__reaction-btn.is-active strong{
+    color:#ef5b72;
+}
+
+
+/* 20260926 NOTE comment like icon alignment
+   Keep the comment-heart visual identical to the note reaction heart:
+   neutral blue-gray, same icon size, no chip/button styling, solid only when liked. */
+#moyoNoteModal .moyo-note-modal__comment-actions button[data-comment-like]{
+    display:inline-flex;
+    align-items:center;
+    gap:4px;
+    border:0 !important;
+    outline:0 !important;
+    box-shadow:none !important;
+    background:transparent !important;
+    padding:0 !important;
+    color:#8f99a9;
+    font-size:10px;
+    font-weight:700;
+    line-height:1;
+}
+#moyoNoteModal .moyo-note-modal__comment-actions button[data-comment-like] i{
+    margin:0 !important;
+    width:11px;
+    min-width:11px;
+    font-size:11px;
+    line-height:1;
+    text-align:center;
+    color:#9aa6b7;
+}
+#moyoNoteModal .moyo-note-modal__comment-actions button[data-comment-like]:hover,
+#moyoNoteModal .moyo-note-modal__comment-actions button[data-comment-like]:focus-visible{
+    color:#5f6b7a;
+}
+#moyoNoteModal .moyo-note-modal__comment-actions button[data-comment-like]:hover i,
+#moyoNoteModal .moyo-note-modal__comment-actions button[data-comment-like]:focus-visible i{
+    color:#5f6b7a;
+}
+
+#moyoNoteModal .moyo-note-modal__comment-actions button[data-comment-like].is-active,
+#moyoNoteModal .moyo-note-modal__comment-actions button[data-comment-like].is-active i{
+    color:#ef5b72;
+}
+
+
+/* 20260926 NOTE side panel alignment / fold affordance */
+#moyoNoteModalInfoClose svg{
+    width:15px;
+    height:15px;
+    fill:none;
+    stroke:currentColor;
+    stroke-width:1.9;
+    stroke-linecap:round;
+    stroke-linejoin:round;
+}
+
+
+/* 20260926 FIX: comment toggle uses an ID, not data-note-comments.
+   Override generic active reaction pink so only LIKE stays pink. */
+#moyoNoteModal #moyoNoteModalCommentsToggle.is-active,
+#moyoNoteModal #moyoNoteModalCommentsToggle.is-active strong,
+#moyoNoteModal #moyoNoteModalCommentsToggle.is-active i,
+#moyoNoteModal #moyoNoteModalCommentsToggle.is-active svg{
+    color:#4f7ff7 !important;
+    stroke:#4f7ff7 !important;
+}
+
+
+/* 20260926 NOTE info panel fit + public-state mascot
+   Keep every info control inside the panel padding and show the MOYO mascot only
+   when the note is actually MOYO-public. */
+#moyoNoteModal .moyo-note-modal__info-body,
+#moyoNoteModal .moyo-note-modal__info-field{
+    width:100%;
+    min-width:0;
+    box-sizing:border-box;
+}
+
+#moyoNoteModal .moyo-note-modal__info-field input,
+#moyoNoteModal .moyo-note-modal__info-value-action{
+    width:100%;
+    max-width:100%;
+    min-width:0;
+    box-sizing:border-box;
+}
+
+
+/* 20260926 NOTE personal MOYO-public setting
+   Info panel: always show the MOYO mark + label, and express state only with the switch.
+   Note metadata: existing #moyoNoteModalMoyoMark remains visible only while active. */
+#moyoNoteModal .moyo-note-modal__personal-public-field{
+    width:100%;
+    min-width:0;
+    box-sizing:border-box;
+    padding:0;
+}
+
+#moyoNoteModal .moyo-note-modal__moyo-public-toggle{
+    width:100%;
+    max-width:100%;
+    min-width:0;
+    height:40px;
+    box-sizing:border-box;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    padding:0 2px;
+    border:0;
+    border-radius:0;
+    background:transparent;
+    color:#526173;
+    cursor:pointer;
+}
+
+#moyoNoteModal .moyo-note-modal__moyo-public-toggle:hover{
+    background:transparent;
+    color:#364153;
+}
+
+#moyoNoteModal .moyo-note-modal__moyo-public-toggle:disabled{
+    opacity:.55;
+    cursor:default;
+}
+
+#moyoNoteModal .moyo-note-modal__moyo-public-label{
+    min-width:0;
+    display:inline-flex;
+    align-items:center;
+    gap:7px;
+    font-size:12px;
+    font-weight:750;
+    color:#526173;
+}
+
+#moyoNoteModal .moyo-note-modal__moyo-public-toggle .moyo-note-modal__moyo-public-label img{
+    display:block !important;
+    width:18px;
+    height:18px;
+    flex:0 0 18px;
+    object-fit:contain;
+    opacity:1;
+}
+
+#moyoNoteModal .moyo-note-modal__switch{
+    position:relative;
+    flex:0 0 34px;
+    width:34px;
+    height:19px;
+    border-radius:999px;
+    background:#dce2ea;
+    transition:background .16s ease;
+}
+
+#moyoNoteModal .moyo-note-modal__switch > span{
+    position:absolute;
+    top:2px;
+    left:2px;
+    width:15px;
+    height:15px;
+    border-radius:50%;
+    background:#fff;
+    box-shadow:0 1px 3px rgba(15,23,42,.18);
+    transition:transform .16s ease;
+}
+
+#moyoNoteModal .moyo-note-modal__moyo-public-toggle.is-active .moyo-note-modal__switch{
+    background:#4f7ff7;
+}
+
+#moyoNoteModal .moyo-note-modal__moyo-public-toggle.is-active .moyo-note-modal__switch > span{
+    transform:translateX(15px);
+}
+
+/* The inline NOTE metadata uses the mascot only when MOYO-public. */
+#moyoNoteModal #moyoNoteModalMoyoMark[hidden]{
+    display:none !important;
+}
+
+
+/* 20260926 NOTE title/meta hierarchy polish
+   Treat title + document metadata as one header group, then place one divider below it. */
+#moyoNoteModal .moyo-note-modal__title-wrap{
+    padding:9px 4px 4px;
+    border-bottom:0;
+}
+
+#moyoNoteModal #moyoNoteModalTitle.moyo-note-modal__title{
+    padding:2px 0 !important;
+}
+
+#moyoNoteModal .moyo-note-modal__document-meta{
+    margin:0;
+    padding:2px 4px 10px;
+    border-bottom:1px solid #eef1f5;
+}
+
+#moyoNoteModal .moyo-note-modal__moyo-mark{
+    width:16px;
+    height:16px;
+    margin-left:3px;
+    margin-right:1px;
+}
+
+#moyoNoteModal .moyo-note-modal__moyo-mark img{
+    width:15px;
+    height:15px;
+}
+
+#moyoNoteModal .moyo-note-modal__document-meta .moyo-note-modal__content-meta{
+    margin-left:7px;
+}
+
+
+/* 20260926 MOYO public mark vertical alignment */
+#moyoNoteModal .moyo-note-modal__moyo-mark{
+    transform:translateY(-1px);
+}
+
+
+/* 20260926 NOTE brand hierarchy polish
+   NOTE is the product/section label, so keep it slightly stronger than the library name.
+   Gradient follows MOYO mascot: mint -> blue -> violet. */
+#moyoNoteModal .moyo-note-modal__eyebrow{
+    font-size:11px;
+    font-weight:900;
+    letter-spacing:.12em;
+    line-height:1;
+    background:linear-gradient(135deg,#4fdac6 0%,#4d8cf5 52%,#6f63f4 100%);
+    -webkit-background-clip:text;
+    background-clip:text;
+    -webkit-text-fill-color:transparent;
+}
+
+#moyoNoteModal .moyo-note-modal__library{
+    font-size:12px;
+    font-weight:700;
+    color:#5d697b;
+}
+
+
+/* 20260926 NOTE title/meta spacing polish
+   Tighten only the title-to-meta relationship; keep toolbar spacing unchanged. */
+#moyoNoteModal .moyo-note-modal__title-wrap{
+    padding-bottom:1px;
+}
+
+#moyoNoteModal .moyo-note-modal__document-meta{
+    padding-top:0;
+}
+
+
+/* 20260926 NOTE side-panel internal alignment
+   Info and comments share the exact same desktop panel width and content start line. */
+@media (min-width:1358px){
+    #moyoNoteModal .moyo-note-modal__info-panel{
+        flex:0 0 292px;
+        width:292px;
+    }
+}
+
+#moyoNoteModal .moyo-note-modal__comments{
+    padding:16px 18px 16px;
+}
+
+#moyoNoteModal .moyo-note-modal__comments-summary{
+    padding:0 0 11px;
+}
+
+#moyoNoteModal .moyo-note-modal__comments-scroll{
+    padding:16px 0 8px;
+}
+
+
+/* 20260926 NOTE comment panel spacing polish
+   Match the vertical rhythm of the info panel without changing panel width/layout. */
+#moyoNoteModal .moyo-note-modal__comments-summary{
+    padding-bottom:14px;
+}
+
+#moyoNoteModal .moyo-note-modal__comments-scroll{
+    padding-top:18px;
+}
+
+#moyoNoteModal .moyo-note-modal__comments-compose{
+    padding-top:14px;
+}
+
+
+/* 20260926 NOTE comment panel final micro-alignment
+   Only nudge the first comment block and bottom composer; keep all panel geometry unchanged. */
+#moyoNoteModal .moyo-note-modal__comments-scroll{
+    padding-top:21px;
+}
+
+#moyoNoteModal .moyo-note-modal__comments-compose{
+    padding-top:16px;
+    padding-bottom:14px;
 }

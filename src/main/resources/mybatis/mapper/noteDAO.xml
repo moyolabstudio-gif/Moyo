@@ -85,7 +85,13 @@
         (
             (n.SCOPE_TYPE = 'PRIVATE' AND n.USER_ID = #{userId, jdbcType=NUMERIC})
             OR
-            (n.SCOPE_TYPE = 'PRIVATE' AND NVL(n.MOYO_PUBLIC_YN, 'N') = 'Y'
+            ((n.SCOPE_TYPE = 'PRIVATE'
+               OR (n.SCOPE_TYPE = 'PROJ' AND EXISTS (
+                    SELECT 1 FROM PROJECTS personal_public_proj
+                     WHERE personal_public_proj.PROJ_ID = n.PROJ_ID
+                       AND personal_public_proj.WS_ID IS NULL
+               )))
+                AND NVL(n.MOYO_PUBLIC_YN, 'N') = 'Y'
                 AND EXISTS (
                     SELECT 1 FROM USERS public_owner
                      WHERE public_owner.USER_ID = n.USER_ID
@@ -766,7 +772,12 @@
                 CONNECT BY PRIOR f.FOLDER_ID = f.PARENT_FOLDER_ID
             ) nfp ON nfp.FOLDER_ID = n.FOLDER_ID
             WHERE n.USER_ID = #{profileUserId, jdbcType=NUMERIC}
-              AND n.SCOPE_TYPE = 'PRIVATE'
+              AND (n.SCOPE_TYPE = 'PRIVATE'
+                   OR (n.SCOPE_TYPE = 'PROJ' AND EXISTS (
+                        SELECT 1 FROM PROJECTS profile_personal_proj
+                         WHERE profile_personal_proj.PROJ_ID = n.PROJ_ID
+                           AND profile_personal_proj.WS_ID IS NULL
+                   )))
               AND NVL(n.DELETED_YN, 'N') = 'N'
               AND NVL(n.MOYO_PUBLIC_YN, 'N') = 'Y'
             ORDER BY NVL(n.MOYO_PUBLIC_AT, NVL(n.UPD_DT, n.REG_DT)) DESC, n.NOTE_ID DESC
@@ -778,7 +789,12 @@
         SELECT COUNT(*)
           FROM NOTES n
          WHERE n.USER_ID = #{profileUserId, jdbcType=NUMERIC}
-           AND n.SCOPE_TYPE = 'PRIVATE'
+           AND (n.SCOPE_TYPE = 'PRIVATE'
+                OR (n.SCOPE_TYPE = 'PROJ' AND EXISTS (
+                     SELECT 1 FROM PROJECTS profile_count_personal_proj
+                      WHERE profile_count_personal_proj.PROJ_ID = n.PROJ_ID
+                        AND profile_count_personal_proj.WS_ID IS NULL
+                )))
            AND NVL(n.DELETED_YN, 'N') = 'N'
            AND NVL(n.MOYO_PUBLIC_YN, 'N') = 'Y'
     </select>
@@ -959,7 +975,8 @@
           AND (
                 n.USER_ID = #{userId, jdbcType=NUMERIC}
                 OR (n.SCOPE_TYPE = 'WS' AND (w.OWNER_ID = #{userId, jdbcType=NUMERIC} OR UPPER(NVL(wm.WS_ROLE, 'MEMBER')) = 'ADMIN'))
-                OR (n.SCOPE_TYPE = 'PROJ' AND (p.LEADER_ID = #{userId, jdbcType=NUMERIC} OR UPPER(NVL(pm.PROJ_ROLE, 'MEMBER')) = 'ADMIN'))
+                OR (n.SCOPE_TYPE = 'PROJ' AND p.WS_ID IS NOT NULL
+                    AND (p.LEADER_ID = #{userId, jdbcType=NUMERIC} OR UPPER(NVL(pm.PROJ_ROLE, 'MEMBER')) = 'ADMIN'))
               )
     </select>
 
@@ -1019,6 +1036,7 @@
                      AND (nw.OWNER_ID = #{userId, jdbcType=NUMERIC}
                           OR UPPER(NVL(wm_role.WS_ROLE, 'MEMBER')) = 'ADMIN') THEN 1
                 WHEN n.SCOPE_TYPE = 'PROJ'
+                     AND np.WS_ID IS NOT NULL
                      AND (np.LEADER_ID = #{userId, jdbcType=NUMERIC}
                           OR UPPER(NVL(pm_role.PROJ_ROLE, 'MEMBER')) = 'ADMIN') THEN 1
                 ELSE 0
@@ -1046,6 +1064,7 @@
                      AND (nw.OWNER_ID = #{userId, jdbcType=NUMERIC}
                           OR UPPER(NVL(wm_role.WS_ROLE, 'MEMBER')) = 'ADMIN') THEN 1
                 WHEN n.SCOPE_TYPE = 'PROJ'
+                     AND np.WS_ID IS NOT NULL
                      AND (np.LEADER_ID = #{userId, jdbcType=NUMERIC}
                           OR UPPER(NVL(pm_role.PROJ_ROLE, 'MEMBER')) = 'ADMIN') THEN 1
                 ELSE 0
@@ -1158,8 +1177,21 @@
                     OR EXISTS (SELECT 1 FROM WS_MEMBERS wm WHERE wm.WS_ID=n.WS_ID AND wm.USER_ID=#{userId} AND UPPER(NVL(wm.WS_ROLE,'MEMBER'))='ADMIN')
                 ))
                 OR (n.SCOPE_TYPE = 'PROJ' AND (
-                    EXISTS (SELECT 1 FROM PROJECTS p WHERE p.PROJ_ID=n.PROJ_ID AND p.LEADER_ID=#{userId})
-                    OR EXISTS (SELECT 1 FROM PROJ_MEMBERS pm WHERE pm.PROJ_ID=n.PROJ_ID AND pm.USER_ID=#{userId} AND UPPER(NVL(pm.PROJ_ROLE,'MEMBER'))='ADMIN')
+                    EXISTS (
+                        SELECT 1 FROM PROJECTS p
+                         WHERE p.PROJ_ID=n.PROJ_ID
+                           AND p.WS_ID IS NOT NULL
+                           AND p.LEADER_ID=#{userId}
+                    )
+                    OR EXISTS (
+                        SELECT 1
+                          FROM PROJECTS p
+                          JOIN PROJ_MEMBERS pm ON pm.PROJ_ID=p.PROJ_ID
+                         WHERE p.PROJ_ID=n.PROJ_ID
+                           AND p.WS_ID IS NOT NULL
+                           AND pm.USER_ID=#{userId}
+                           AND UPPER(NVL(pm.PROJ_ROLE,'MEMBER'))='ADMIN'
+                    )
                 ))
            )
     </update>
@@ -1245,7 +1277,12 @@
                UPD_DT = SYSDATE
          WHERE NOTE_ID = #{noteId}
            AND USER_ID = #{userId}
-           AND SCOPE_TYPE = 'PRIVATE'
+           AND (SCOPE_TYPE = 'PRIVATE'
+                OR (SCOPE_TYPE = 'PROJ' AND EXISTS (
+                    SELECT 1 FROM PROJECTS personal_proj
+                     WHERE personal_proj.PROJ_ID = NOTES.PROJ_ID
+                       AND personal_proj.WS_ID IS NULL
+                )))
            AND NVL(DELETED_YN, 'N') = 'N'
     </update>
 
@@ -1253,7 +1290,12 @@
         SELECT COUNT(*)
           FROM NOTES n
          WHERE n.NOTE_ID = #{noteId, jdbcType=NUMERIC}
-           AND n.SCOPE_TYPE = 'PRIVATE'
+           AND (n.SCOPE_TYPE = 'PRIVATE'
+                OR (n.SCOPE_TYPE = 'PROJ' AND EXISTS (
+                    SELECT 1 FROM PROJECTS public_personal_proj
+                     WHERE public_personal_proj.PROJ_ID = n.PROJ_ID
+                       AND public_personal_proj.WS_ID IS NULL
+                )))
            AND NVL(n.DELETED_YN, 'N') = 'N'
            AND NVL(n.MOYO_PUBLIC_YN, 'N') = 'Y'
     </select>

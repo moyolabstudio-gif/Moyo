@@ -36,16 +36,26 @@
      <span id="moyoNoteModalTitleHint" class="moyo-note-modal__title-hint">본문에서 자동으로 만들었어요</span>
     </div>
     <div id="moyoNoteModalDocumentMeta" class="moyo-note-modal__document-meta" hidden>
-     <span id="moyoNoteModalAuthor">작성자</span>
-     <span aria-hidden="true">·</span>
-     <span id="moyoNoteModalDate">작성일</span>
-     <span id="moyoNoteModalContentMeta" class="moyo-note-modal__content-meta" hidden aria-live="polite">
-      <span class="moyo-note-modal__meta-item" data-note-meta="image" title="이미지" aria-label="이미지"><i class="fa-regular fa-image" aria-hidden="true"></i><strong>0</strong></span>
-      <span class="moyo-note-modal__meta-item" data-note-meta="table" title="표" aria-label="표"><i class="fa-solid fa-table-cells" aria-hidden="true"></i><strong>0</strong></span>
-      <span class="moyo-note-modal__meta-item" data-note-meta="link" title="링크" aria-label="링크"><i class="fa-solid fa-link" aria-hidden="true"></i><strong>0</strong></span>
-      <span class="moyo-note-modal__meta-item" data-note-meta="video" title="동영상" aria-label="동영상"><i class="fa-regular fa-circle-play" aria-hidden="true"></i><strong>0</strong></span>
-     </span>
-     <span id="moyoNoteModalReadonly" class="moyo-note-modal__readonly" hidden>읽기 전용</span>
+     <div class="moyo-note-modal__document-meta-main">
+      <span id="moyoNoteModalAuthor">작성자</span>
+      <span aria-hidden="true">·</span>
+      <span id="moyoNoteModalDate">작성일</span>
+      <span id="moyoNoteModalMoyoMark" class="moyo-note-modal__moyo-mark" hidden title="모요 공개" aria-label="모요 공개">
+       <img src="${pageContext.request.contextPath}/brand/moyo_mark.png?v=moyo-mark-v34" alt="" aria-hidden="true">
+      </span>
+      <span id="moyoNoteModalContentMeta" class="moyo-note-modal__content-meta" hidden aria-live="polite">
+       <span class="moyo-note-modal__meta-item" data-note-meta="image" title="이미지" aria-label="이미지"><i class="fa-regular fa-image" aria-hidden="true"></i><strong>0</strong></span>
+       <span class="moyo-note-modal__meta-item" data-note-meta="table" title="표" aria-label="표"><i class="fa-solid fa-table-cells" aria-hidden="true"></i><strong>0</strong></span>
+       <span class="moyo-note-modal__meta-item" data-note-meta="link" title="링크" aria-label="링크"><i class="fa-solid fa-link" aria-hidden="true"></i><strong>0</strong></span>
+       <span class="moyo-note-modal__meta-item" data-note-meta="video" title="동영상" aria-label="동영상"><i class="fa-regular fa-circle-play" aria-hidden="true"></i><strong>0</strong></span>
+      </span>
+      <span id="moyoNoteModalReadonly" class="moyo-note-modal__readonly" hidden>읽기 전용</span>
+     </div>
+     <div id="moyoNoteModalReactions" class="moyo-note-modal__reactions" hidden aria-label="노트 반응">
+      <span class="moyo-note-modal__reaction" title="조회수"><i class="fa-regular fa-eye" aria-hidden="true"></i><strong id="moyoNoteModalViewCount">0</strong></span>
+      <button id="moyoNoteModalLike" type="button" class="moyo-note-modal__reaction moyo-note-modal__reaction-btn" aria-pressed="false" title="좋아요"><i class="fa-regular fa-heart" aria-hidden="true"></i><strong id="moyoNoteModalLikeCount">0</strong></button>
+      <button id="moyoNoteModalCommentsToggle" type="button" class="moyo-note-modal__reaction moyo-note-modal__reaction-btn" aria-expanded="false" title="댓글"><i class="fa-regular fa-comment" aria-hidden="true"></i><strong id="moyoNoteModalCommentCount">0</strong></button>
+     </div>
     </div>
     <textarea id="moyoNoteModalEditor" aria-label="노트 내용"></textarea>
    </div>
@@ -53,10 +63,10 @@
  </section>
  <aside id="moyoNoteModalInfoPanel" class="moyo-note-modal__info-panel" hidden aria-label="노트 정보">
   <div class="moyo-note-modal__info-head">
-   <strong>노트 정보</strong>
-   <button id="moyoNoteModalInfoClose" type="button" class="moyo-note-modal__info-close" aria-label="정보 닫기">×</button>
+   <strong id="moyoNoteModalSideTitle">노트 정보</strong>
+   <button id="moyoNoteModalInfoClose" type="button" class="moyo-note-modal__info-close" aria-label="패널 접기" title="접기"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button>
   </div>
-  <div class="moyo-note-modal__info-body">
+  <div id="moyoNoteModalInfoBody" class="moyo-note-modal__info-body">
    <label class="moyo-note-modal__info-field">
     <span>제목</span>
     <input id="moyoNoteModalInfoTitle" type="text" maxlength="120" autocomplete="off" />
@@ -71,6 +81,15 @@
    </div>
    <div id="moyoNoteModalPermissionsSection" class="moyo-note-modal__info-section moyo-note-modal__permissions-section" hidden>
     <div class="moyo-note-modal__info-section-title"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i><span>공개 및 권한</span></div>
+    <div id="moyoNoteModalPersonalPublicField" class="moyo-note-modal__personal-public-field" hidden>
+     <button id="moyoNoteModalMoyoPublicToggle" type="button" class="moyo-note-modal__moyo-public-toggle" aria-pressed="false">
+      <span class="moyo-note-modal__moyo-public-label">
+       <img src="${pageContext.request.contextPath}/brand/moyo_mark.png?v=moyo-mark-v34" alt="" aria-hidden="true">
+       <span id="moyoNoteModalMoyoPublicText">모요 공개</span>
+      </span>
+      <span class="moyo-note-modal__switch" aria-hidden="true"><span></span></span>
+     </button>
+    </div>
     <div id="moyoNoteModalAccessField" class="moyo-note-modal__access-field" hidden>
      <div class="moyo-note-modal__access-options" role="radiogroup" aria-label="공개 범위">
       <button id="moyoNoteModalAccessScope" type="button" data-note-access-mode="SCOPE"><i class="fa-solid fa-users" aria-hidden="true"></i><span>전체 공개</span></button>
@@ -84,7 +103,18 @@
     </div>
    </div>
   </div>
-  <div class="moyo-note-modal__info-footer">
+  <section id="moyoNoteModalComments" class="moyo-note-modal__comments" hidden aria-label="댓글">
+   <div class="moyo-note-modal__comments-summary"><span>댓글</span><strong id="moyoNoteModalCommentsCountText">0</strong></div>
+   <div class="moyo-note-modal__comments-scroll">
+    <div id="moyoNoteModalCommentsList" class="moyo-note-modal__comments-list"></div>
+    <div id="moyoNoteModalCommentsEmpty" class="moyo-note-modal__comments-empty">첫 댓글을 남겨보세요.</div>
+   </div>
+   <form id="moyoNoteModalCommentForm" class="moyo-note-modal__comment-form">
+    <input id="moyoNoteModalCommentInput" type="text" maxlength="1000" autocomplete="off" placeholder="댓글을 입력하세요" aria-label="댓글 입력">
+    <button type="submit">등록</button>
+   </form>
+  </section>
+  <div id="moyoNoteModalInfoFooter" class="moyo-note-modal__info-footer">
    <button id="moyoNoteModalShareManage" type="button" class="moyo-note-modal__history-action" hidden><i class="fa-solid fa-user-pen" aria-hidden="true"></i> 권한 멤버 관리</button>
    <button id="moyoNoteModalHistory" type="button" class="moyo-note-modal__history-action" hidden><i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i> 변경 기록</button>
    <button id="moyoNoteModalDelete" type="button" class="moyo-note-modal__danger-action" hidden><i class="fa-regular fa-trash-can" aria-hidden="true"></i> 휴지통으로 이동</button>

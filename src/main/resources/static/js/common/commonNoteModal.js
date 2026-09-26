@@ -14,12 +14,28 @@
  const authorEl=document.getElementById('moyoNoteModalAuthor');
  const dateEl=document.getElementById('moyoNoteModalDate');
  const readonlyEl=document.getElementById('moyoNoteModalReadonly');
+ const moyoMarkEl=document.getElementById('moyoNoteModalMoyoMark');
+ const reactionsEl=document.getElementById('moyoNoteModalReactions');
+ const viewCountEl=document.getElementById('moyoNoteModalViewCount');
+ const likeBtn=document.getElementById('moyoNoteModalLike');
+ const likeCountEl=document.getElementById('moyoNoteModalLikeCount');
+ const commentsToggle=document.getElementById('moyoNoteModalCommentsToggle');
+ const commentCountEl=document.getElementById('moyoNoteModalCommentCount');
+ const commentsPanel=document.getElementById('moyoNoteModalComments');
+ const commentsCountText=document.getElementById('moyoNoteModalCommentsCountText');
+ const commentsList=document.getElementById('moyoNoteModalCommentsList');
+ const commentsEmpty=document.getElementById('moyoNoteModalCommentsEmpty');
+ const commentForm=document.getElementById('moyoNoteModalCommentForm');
+ const commentInput=document.getElementById('moyoNoteModalCommentInput');
  const modeToggle=document.getElementById('moyoNoteModalModeToggle');
  const pdfBtn=document.getElementById('moyoNoteModalPdf');
  const printBtn=document.getElementById('moyoNoteModalPrint');
  const infoToggle=document.getElementById('moyoNoteModalInfoToggle');
  const infoPanel=document.getElementById('moyoNoteModalInfoPanel');
  const infoClose=document.getElementById('moyoNoteModalInfoClose');
+ const sideTitle=document.getElementById('moyoNoteModalSideTitle');
+ const infoBody=document.getElementById('moyoNoteModalInfoBody');
+ const infoFooter=document.getElementById('moyoNoteModalInfoFooter');
  const infoTitle=document.getElementById('moyoNoteModalInfoTitle');
  const infoLibrary=document.getElementById('moyoNoteModalInfoLibrary');
  const moveLibraryBtn=document.getElementById('moyoNoteModalMoveLibrary');
@@ -33,6 +49,9 @@
  const accessScopeBtn=document.getElementById('moyoNoteModalAccessScope');
  const accessRestrictedBtn=document.getElementById('moyoNoteModalAccessRestricted');
  const accessHelp=document.getElementById('moyoNoteModalAccessHelp');
+ const personalPublicField=document.getElementById('moyoNoteModalPersonalPublicField');
+ const moyoPublicToggle=document.getElementById('moyoNoteModalMoyoPublicToggle');
+ const moyoPublicText=document.getElementById('moyoNoteModalMoyoPublicText');
  const editorsField=document.getElementById('moyoNoteModalEditorsField');
  const editorsEl=document.getElementById('moyoNoteModalEditors');
  const historyBtn=document.getElementById('moyoNoteModalHistory');
@@ -106,6 +125,13 @@
  let restrictedAccess=false;
  let accessModeLoaded=false;
  let accessModeLoading=false;
+ let reactionState={viewCount:0,likeCount:0,liked:false};
+ let commentsLoaded=false;
+ let commentsLoading=false;
+ let commentsOpen=false;
+ let commentsState=[];
+ let commentCurrentUserId=null;
+ let moyoPublicLoading=false;
 
  function setStatus(text,state,showRetry){
   if(statusEl){
@@ -402,13 +428,203 @@
  function escapeHtml(value){
   return String(value==null?'':value).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
  }
+
+ function isPersonalNoteScope(){
+  const scope=String(context?.scopeType||detailState?.scopeType||'').toUpperCase();
+  if(scope==='PRIVATE'||scope==='PERSONAL')return true;
+  if(scope==='PROJECT'||scope==='PROJ'){
+   if(detailState&&Object.prototype.hasOwnProperty.call(detailState,'groupContent')){
+    return !(detailState.groupContent===true||String(detailState.groupContent).toUpperCase()==='TRUE');
+   }
+   return !(context?.wsId||detailState?.wsId);
+  }
+  return false;
+ }
+ function renderReactions(){
+  if(!reactionsEl)return;
+  const visible=!!noteId;
+  reactionsEl.hidden=!visible;
+  if(viewCountEl)viewCountEl.textContent=String(Math.max(0,Number(reactionState.viewCount)||0));
+  if(likeCountEl)likeCountEl.textContent=String(Math.max(0,Number(reactionState.likeCount)||0));
+  if(commentCountEl)commentCountEl.textContent=String(Math.max(0,Number(detailState?.feedbackCount??commentsState.length)||0));
+  if(likeBtn){
+   likeBtn.classList.toggle('is-active',!!reactionState.liked);
+   likeBtn.setAttribute('aria-pressed',reactionState.liked?'true':'false');
+   likeBtn.title=reactionState.liked?'좋아요 취소':'좋아요';
+   const icon=likeBtn.querySelector('i');
+   if(icon)icon.className=(reactionState.liked?'fa-solid':'fa-regular')+' fa-heart';
+  }
+  if(commentsToggle){
+   commentsToggle.classList.toggle('is-active',commentsOpen);
+   commentsToggle.setAttribute('aria-expanded',commentsOpen?'true':'false');
+  }
+  if(commentsCountText)commentsCountText.textContent=String(Math.max(0,Number(detailState?.feedbackCount??commentsState.length)||0));
+ }
+ function renderMoyoPublic(){
+  const personalScope=isPersonalNoteScope();
+  const active=personalScope&&String(detailState?.moyoPublicYn||'N').toUpperCase()==='Y';
+  if(moyoMarkEl)moyoMarkEl.hidden=!active;
+  const visible=!!noteId&&personalScope;
+  const editable=detailState?.ownedByMe===true;
+  if(personalPublicField)personalPublicField.hidden=!visible;
+  if(moyoPublicToggle){
+   moyoPublicToggle.disabled=moyoPublicLoading||!editable;
+   moyoPublicToggle.classList.toggle('is-active',active);
+   moyoPublicToggle.setAttribute('aria-pressed',active?'true':'false');
+  }
+  if(moyoPublicText)moyoPublicText.textContent='모요 공개';
+  syncPermissionsSection();
+ }
+ async function toggleMoyoPublic(){
+  if(!noteId||!isPersonalNoteScope()||detailState?.ownedByMe!==true||moyoPublicLoading)return;
+  const next=String(detailState?.moyoPublicYn||'N').toUpperCase()!=='Y';
+  moyoPublicLoading=true;renderMoyoPublic();
+  try{
+   const res=await fetch(contextPath+'/note/api/'+encodeURIComponent(noteId)+'/moyo-public',{
+    method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},
+    body:JSON.stringify({moyoPublic:next}),credentials:'same-origin'
+   });
+   const data=await res.json().catch(()=>({}));
+   if(!res.ok||data.success===false)throw new Error(data.message||'모요 공개 상태를 변경하지 못했습니다.');
+   if(detailState)detailState.moyoPublicYn=String(data.moyoPublicYn|| (next?'Y':'N'));
+   renderMoyoPublic();
+   global.dispatchEvent(new CustomEvent('moyo:note-updated',{detail:{noteId:Number(noteId)||0,reason:'moyo-public',moyoPublicYn:detailState?.moyoPublicYn||'N'}}));
+  }catch(error){alert(error?.message||'모요 공개 상태를 변경하지 못했습니다.');}
+  finally{moyoPublicLoading=false;renderMoyoPublic();}
+ }
+ async function recordView(){
+  if(!noteId)return;
+  try{
+   const data=await request('/note/api/public/view',{noteId});
+   if(data&&data.viewCount!=null)reactionState.viewCount=Math.max(reactionState.viewCount,Number(data.viewCount)||0);
+   renderReactions();
+  }catch(error){console.warn('[MOYO Note] 조회수 반영 실패:',error);}
+ }
+ async function toggleLike(){
+  if(!noteId||likeBtn?.disabled)return;
+  if(likeBtn)likeBtn.disabled=true;
+  const before={...reactionState};
+  reactionState.liked=!before.liked;
+  reactionState.likeCount=Math.max(0,before.likeCount+(before.liked?-1:1));
+  renderReactions();
+  try{
+   const data=await request('/note/api/public/like',{noteId});
+   reactionState.likeCount=Math.max(0,Number(data.likeCount)||0);
+   reactionState.liked=data.liked===true||String(data.liked||'').toUpperCase()==='TRUE';
+   renderReactions();
+   global.dispatchEvent(new CustomEvent('moyo:note-reaction-changed',{detail:{noteId:Number(noteId),...reactionState}}));
+  }catch(error){reactionState=before;renderReactions();alert(error?.message||'좋아요를 반영하지 못했습니다.');}
+  finally{if(likeBtn)likeBtn.disabled=false;}
+ }
+ function commentDate(value){
+  if(!value)return '';
+  const d=new Date(value);if(Number.isNaN(d.getTime()))return '';
+  const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,'0'),day=String(d.getDate()).padStart(2,'0');
+  const hh=String(d.getHours()).padStart(2,'0'),mm=String(d.getMinutes()).padStart(2,'0');
+  return `${y}.${m}.${day} ${hh}:${mm}`;
+ }
+ function commentAvatar(reply){
+  const path=String(reply?.profileImagePath||'').trim();
+  const initial=String(reply?.userName||'?').trim().charAt(0)||'?';
+  if(path)return `<span class="moyo-note-modal__comment-avatar has-image"><img src="${escapeHtml(normalizeUploadUrlForDisplay(path))}" alt="" onerror="this.hidden=true;this.parentElement.classList.remove('has-image');this.parentElement.classList.add('is-default');this.nextElementSibling.hidden=false;"><span class="moyo-note-modal__comment-avatar-initial" hidden>${escapeHtml(initial)}</span></span>`;
+  return `<span class="moyo-note-modal__comment-avatar is-default"><span class="moyo-note-modal__comment-avatar-initial">${escapeHtml(initial)}</span></span>`;
+ }
+ function renderComments(){
+  if(!commentsList)return;
+  const rows=Array.isArray(commentsState)?commentsState:[];
+  const byParent=new Map();
+  rows.forEach(r=>{const key=r.parentReplyId==null?'':String(r.parentReplyId);if(!byParent.has(key))byParent.set(key,[]);byParent.get(key).push(r);});
+  const renderOne=(r,nested)=>{
+   const mine=String(r.userId||'')===String(commentCurrentUserId||'');
+   const liked=r.likedByMe===true||String(r.likedByMe||'').toUpperCase()==='TRUE';
+   const rootId=nested?(r.parentReplyId||r.replyId):r.replyId;
+   return `<article class="moyo-note-modal__comment${nested?' is-reply':''}" data-reply-id="${escapeHtml(r.replyId)}">
+    ${commentAvatar(r)}
+    <div class="moyo-note-modal__comment-main">
+     <div class="moyo-note-modal__comment-head"><strong>${escapeHtml(r.userName||'사용자')}</strong><time>${escapeHtml(commentDate(r.regDt))}</time></div>
+     <div class="moyo-note-modal__comment-content">${escapeHtml(r.replyContent||'')}</div>
+     <div class="moyo-note-modal__comment-actions">
+      <button type="button" data-comment-like class="${liked?'is-active':''}"><i class="${liked?'fa-solid':'fa-regular'} fa-heart" aria-hidden="true"></i>${Math.max(0,Number(r.likeCount)||0)}</button>
+      <button type="button" data-comment-reply data-root-reply-id="${escapeHtml(rootId)}" data-user-name="${escapeHtml(r.userName||'')}">답글</button>
+      ${mine?'<button type="button" data-comment-delete>삭제</button>':''}
+     </div>
+    </div>
+   </article>`;
+  };
+  const html=[];
+  (byParent.get('')||[]).forEach(rootReply=>{
+   html.push(renderOne(rootReply,false));
+   (byParent.get(String(rootReply.replyId))||[]).forEach(child=>html.push(renderOne(child,true)));
+  });
+  commentsList.innerHTML=html.join('');
+  if(commentsEmpty)commentsEmpty.hidden=rows.length>0;
+  const count=rows.length;
+  if(detailState)detailState.feedbackCount=count;
+  renderReactions();
+ }
+ async function loadComments(force){
+  if(!noteId||commentsLoading||(!force&&commentsLoaded))return;
+  commentsLoading=true;
+  try{
+   const data=await requestJson('/note/api/replies?noteId='+encodeURIComponent(noteId));
+   commentsState=Array.isArray(data.replies)?data.replies:[];
+   commentCurrentUserId=data.currentUserId??commentCurrentUserId;
+   commentsLoaded=true;
+   renderComments();
+  }catch(error){console.warn('[MOYO Note] 댓글 조회 실패:',error);}
+  finally{commentsLoading=false;}
+ }
+ async function setCommentsOpen(open){
+  commentsOpen=!!open&&!!noteId;
+  if(commentsOpen){
+   if(infoPanel)infoPanel.hidden=false;
+   if(infoBody)infoBody.hidden=true;
+   if(infoFooter)infoFooter.hidden=true;
+   if(commentsPanel)commentsPanel.hidden=false;
+   if(sideTitle)sideTitle.textContent='댓글';
+   if(infoToggle){infoToggle.classList.remove('is-active');infoToggle.setAttribute('aria-pressed','false');}
+   root.classList.add('is-info-open');
+   renderReactions();
+   await loadComments(false);
+   return;
+  }
+  if(commentsPanel)commentsPanel.hidden=true;
+  renderReactions();
+  if(infoPanel?.hidden===false&&infoBody?.hidden===true)setInfoOpen(false);
+ }
+ async function submitComment(event){
+  event?.preventDefault();
+  if(!noteId||!commentInput)return;
+  let text=String(commentInput.value||'').trim();
+  if(!text)return;
+  const parentId=commentForm?.dataset?.parentReplyId||'';
+  const mention=String(commentForm?.dataset?.replyMention||'').trim();
+  if(parentId&&mention&&!text.startsWith('@'))text='@'+mention+' '+text;
+  const body={noteId,replyContent:text};
+  if(parentId)body.parentReplyId=parentId;
+  const submit=commentForm?.querySelector('button[type="submit"]');if(submit)submit.disabled=true;
+  try{
+   const data=await request('/note/api/replies/add',body);
+   commentsState=Array.isArray(data.replies)?data.replies:[];commentCurrentUserId=data.currentUserId??commentCurrentUserId;commentsLoaded=true;
+   commentInput.value='';if(commentForm){delete commentForm.dataset.parentReplyId;delete commentForm.dataset.replyMention;}commentInput.placeholder='댓글을 입력하세요';
+   renderComments();
+  }catch(error){alert(error?.message||'댓글을 등록하지 못했습니다.');}
+  finally{if(submit)submit.disabled=false;}
+ }
+ async function mutateComment(replyId,action){
+  if(!noteId||!replyId)return;
+  try{
+   const data=await request('/note/api/replies/'+action,{noteId,replyId});
+   commentsState=Array.isArray(data.replies)?data.replies:[];commentCurrentUserId=data.currentUserId??commentCurrentUserId;commentsLoaded=true;renderComments();
+  }catch(error){alert(error?.message||'댓글을 처리하지 못했습니다.');}
+ }
  function shareStatusActive(value){
   const status=String(value||'').trim().toUpperCase();
   return status==='ACCEPTED'||status==='PENDING';
  }
  function syncPermissionsSection(){
   if(!permissionsSection)return;
-  permissionsSection.hidden=!!accessField?.hidden&&!!editorsField?.hidden;
+  permissionsSection.hidden=!!accessField?.hidden&&!!editorsField?.hidden&&!!personalPublicField?.hidden;
  }
  function renderEditorSummary(shares){
   if(!editorsField||!editorsEl)return;
@@ -520,16 +736,34 @@
    shareManageBtn.innerHTML=isGroupContent()?'<i class="fa-solid fa-user-pen" aria-hidden="true"></i> 권한 멤버 관리':'<i class="fa-solid fa-share-nodes" aria-hidden="true"></i> 공유 관리';
   }
   renderAccessMode();
+  renderMoyoPublic();
   if(historyBtn)historyBtn.hidden=!noteId;
   if(deleteBtn)deleteBtn.hidden=!noteId||!canDeleteCurrent;
  }
  function setInfoOpen(open){
   if(!infoPanel)return;
   const next=!!open&&!!noteId;
+  commentsOpen=false;
+  if(commentsPanel)commentsPanel.hidden=true;
   infoPanel.hidden=!next;
+  if(infoBody)infoBody.hidden=!next;
+  if(infoFooter)infoFooter.hidden=!next;
+  if(sideTitle)sideTitle.textContent='노트 정보';
   if(infoToggle){infoToggle.classList.toggle('is-active',next);infoToggle.setAttribute('aria-pressed',next?'true':'false');}
   root.classList.toggle('is-info-open',next);
+  renderReactions();
   if(next){renderInfo(detailState);refreshEditorSummary();loadAccessMode(false).catch(()=>{});}
+ }
+ function closeSidePanel(){
+  commentsOpen=false;
+  if(commentsPanel)commentsPanel.hidden=true;
+  if(infoBody)infoBody.hidden=false;
+  if(infoFooter)infoFooter.hidden=false;
+  if(infoPanel)infoPanel.hidden=true;
+  if(sideTitle)sideTitle.textContent='노트 정보';
+  if(infoToggle){infoToggle.classList.remove('is-active');infoToggle.setAttribute('aria-pressed','false');}
+  root.classList.remove('is-info-open');
+  renderReactions();
  }
 
  function ensureShareModal(){
@@ -569,24 +803,35 @@
   return shareModalApi;
  }
  async function refreshDetailAfterCreate(){
-  if(!noteId)return;
+  if(!noteId)return false;
   try{
    const detail=await requestJson('/note/api/detail?noteId='+encodeURIComponent(noteId));
    canEditCurrent=detail.canEdit!==false;
    canDeleteCurrent=detail.canDelete===true;
    canManageShareCurrent=detail.canManageShare===true;
    detailState={...(detailState||{}),...detail};
+   reactionState={
+    viewCount:Math.max(0,Number(detail.viewCount)||0),
+    likeCount:Math.max(0,Number(detail.likeCount)||0),
+    liked:detail.likedByMe===true||String(detail.likedByMe||'').toUpperCase()==='TRUE'
+   };
    if(context){
     if(detail.scopeType)context.scopeType=detail.scopeType;
-    if(detail.wsId!=null)context.wsId=detail.wsId;
-    if(detail.projId!=null)context.projId=detail.projId;
+    if(detail.wsId!==undefined)context.wsId=detail.wsId;
+    if(detail.projId!==undefined)context.projId=detail.projId;
     if(detail.folderId!==undefined)context.folderId=detail.folderId;
+    context.libraryName=detail.folderName||context.libraryName||'라이브러리';
+    setLibrary(context.libraryName);
    }
    renderDocumentMeta(detailState);
    renderInfo(detailState);
+   renderReactions();
+   refreshEditorSummary().catch(()=>{});
    renderMode();
+   return true;
   }catch(error){
    console.warn('[MOYO Note] 신규 노트 상세 동기화 실패:',error);
+   return false;
   }
  }
 
@@ -637,6 +882,8 @@
    dateEl.textContent=upd&&upd!==reg?`${reg||upd} · 수정 ${upd}`:(reg||upd||'');
   }
   if(readonlyEl)readonlyEl.hidden=detail.canEdit!==false;
+  renderMoyoPublic();
+  renderReactions();
   documentMeta.hidden=false;
  }
  function setEditorReadOnly(readOnly){
@@ -731,8 +978,20 @@
  }
  function scopePayload(){
   const scope=String(context?.scopeType||'PERSONAL').toUpperCase();
-  if(scope==='GROUP'||scope==='WORKSPACE')return {scope:'WS',wsId:context?.wsId||context?.scopeId};
-  if(scope==='PROJECT')return {scope:'PROJ',projId:context?.projId||context?.scopeId,wsId:context?.wsId||null};
+
+  // 탐색기/프로젝트 페이지에서 이미 정규화된 WS / PROJ 값이 들어오는 경우도
+  // 그대로 같은 저장 스코프로 처리해야 한다.
+  if(scope==='GROUP'||scope==='WORKSPACE'||scope==='WS'){
+   return {scope:'WS',wsId:context?.wsId||context?.scopeId};
+  }
+  if(scope==='PROJECT'||scope==='PROJ'){
+   return {
+    scope:'PROJ',
+    projId:context?.projId||context?.scopeId,
+    // 개인 프로젝트는 wsId=null, 그룹 프로젝트는 실제 wsId를 그대로 전달
+    wsId:context?.wsId||null
+   };
+  }
   return {scope:'PRIVATE'};
  }
  function currentData(){return editor?normalizeRichContentForStorage(editor.getData()):'';}
@@ -860,10 +1119,17 @@
   if(created)historyBaseline={data:snapshot.data,title:savedTitle};
   currentTitle=savedTitle;
   if(detailState){detailState.noteTitle=savedTitle;detailState.updDt=new Date().toISOString();}
-  renderInfo(detailState);
-  if(created)refreshEditorSummary();
   if(titleInput&&document.activeElement!==titleInput)titleInput.value=savedTitle;
   renderTitle(snapshot.data);
+  if(created){
+   // 최초 생성 직후 서버의 실제 작성자/작성일/권한/공개상태/반응 메타를 한 번만 다시 받아
+   // 상단 메타와 오른쪽 정보 패널을 닫았다 열지 않아도 즉시 채운다.
+   await refreshDetailAfterCreate();
+  }else{
+   // 이후 자동 저장은 전체 detail 재조회 없이 변경 시각 등 현재 메타만 즉시 반영한다.
+   renderDocumentMeta(detailState);
+   renderInfo(detailState);
+  }
   clearLocalDraft(created);
   lastError=null;
   setStatus('저장됨','saved');
@@ -991,6 +1257,11 @@
   canManageShareCurrent=false;
   detailState=null;
   accessModeLoaded=false;restrictedAccess=false;
+  reactionState={viewCount:0,likeCount:0,liked:false};
+  commentsLoaded=false;commentsLoading=false;commentsOpen=false;commentsState=[];commentCurrentUserId=null;
+  if(commentsPanel)commentsPanel.hidden=true;
+  if(commentForm){delete commentForm.dataset.parentReplyId;delete commentForm.dataset.replyMention;}
+  if(commentInput){commentInput.value='';commentInput.placeholder='댓글을 입력하세요';}
   historyBaseline=null;
   setInfoOpen(false);
   mode=noteId?'VIEW':'EDIT';
@@ -1036,9 +1307,16 @@
     canDeleteCurrent=detail.canDelete===true;
     canManageShareCurrent=detail.canManageShare===true;
     detailState=detail;
+    reactionState={
+     viewCount:Math.max(0,Number(detail.viewCount)||0),
+     likeCount:Math.max(0,Number(detail.likeCount)||0),
+     liked:detail.likedByMe===true||String(detail.likedByMe||'').toUpperCase()==='TRUE'
+    };
     renderInfo(detail);
+    renderReactions();
     refreshEditorSummary();
     applyMode('VIEW');
+    recordView().catch(()=>{});
     lastSavedSnapshot={
      data:detail.memo||'',
      title:currentTitle,
@@ -1064,24 +1342,20 @@
     canEditCurrent=true;
     applyMode('EDIT');
     renderDocumentMeta(null);
-    const draft=readLocalDraft();
-    if(draft&&hasContent(draft.data)){
-     noteId=Number(draft.noteId)||null;
-     renderMode();
-     titleMode=draft.titleMode==='manual'?'manual':'auto';
-     currentTitle=normalizeTitle(draft.title);
-     hydrating=true;
-     instance.setData(normalizeRichContentForDisplay(draft.data||''));
-     hydrating=false;
-     markEmptyState(draft.data||'');
-     applyMode('EDIT');
-     setStatus(navigator.onLine?'임시본 복구 · 저장 대기':'임시본 복구 · 오프라인','error',!navigator.onLine);
-     scheduleSave(300);
-    }else{
-     hydrating=true;
-     instance.setData('');
-     hydrating=false;
-    }
+
+    // '새 노트'는 언제나 완전히 빈 편집기로 시작한다.
+    // 같은 라이브러리/폴더의 이전 context draft를 자동 복구하면
+    // 새 노트에서 과거 내용이 다시 나타날 수 있으므로 여기서는 폐기한다.
+    clearLocalDraft(true);
+    noteId=null;
+    titleMode='auto';
+    currentTitle='';
+    if(titleInput)titleInput.value='';
+    hydrating=true;
+    instance.setData('');
+    hydrating=false;
+    markEmptyState('');
+    setStatus('바로 적어보세요');
    }
    if(mode==='EDIT'&&canEditCurrent)setTimeout(()=>instance.editing.view.focus(),0);
   }catch(error){
@@ -1288,8 +1562,11 @@
   if(!global.confirm('현재 노트를 인쇄할까요?'))return;
   printNote();
  });
- if(infoToggle)infoToggle.addEventListener('click',()=>setInfoOpen(infoPanel?.hidden!==false));
- if(infoClose)infoClose.addEventListener('click',()=>setInfoOpen(false));
+ if(infoToggle)infoToggle.addEventListener('click',()=>{
+  const showingInfo=infoPanel?.hidden===false&&infoBody?.hidden===false;
+  if(showingInfo)setInfoOpen(false);else setInfoOpen(true);
+ });
+ if(infoClose)infoClose.addEventListener('click',closeSidePanel);
  if(infoTitle){
   infoTitle.addEventListener('input',()=>{if(!canEditCurrent)return;clearTimeout(infoTitleTimer);infoTitleTimer=setTimeout(()=>saveInfoTitle(),500);});
   infoTitle.addEventListener('blur',()=>{if(!canEditCurrent)return;clearTimeout(infoTitleTimer);saveInfoTitle();});
@@ -1297,6 +1574,10 @@
  }
  if(moveLibraryBtn)moveLibraryBtn.addEventListener('click',openLibraryMove);
  if(shareManageBtn)shareManageBtn.addEventListener('click',openShareManager);
+ if(moyoPublicToggle)moyoPublicToggle.addEventListener('click',toggleMoyoPublic);
+ if(likeBtn)likeBtn.addEventListener('click',toggleLike);
+ if(commentsToggle)commentsToggle.addEventListener('click',()=>setCommentsOpen(!commentsOpen));
+ if(commentForm)commentForm.addEventListener('submit',submitComment);
  if(accessScopeBtn)accessScopeBtn.addEventListener('click',()=>updateAccessMode('SCOPE'));
  if(accessRestrictedBtn)accessRestrictedBtn.addEventListener('click',()=>updateAccessMode('RESTRICTED'));
 
@@ -1317,7 +1598,22 @@
   });
  }
  root.addEventListener('click',e=>{
-  if(e.target.closest('[data-note-modal-close]'))close();
+  if(e.target.closest('[data-note-modal-close]')){close();return;}
+  const commentItem=e.target.closest('.moyo-note-modal__comment[data-reply-id]');
+  if(!commentItem)return;
+  const replyId=commentItem.dataset.replyId;
+  if(e.target.closest('[data-comment-like]')){mutateComment(replyId,'like');return;}
+  if(e.target.closest('[data-comment-delete]')){
+   if(global.confirm('이 댓글을 삭제할까요?'))mutateComment(replyId,'delete');
+   return;
+  }
+  const replyBtn=e.target.closest('[data-comment-reply]');
+  if(replyBtn&&commentForm&&commentInput){
+   commentForm.dataset.parentReplyId=replyBtn.dataset.rootReplyId||replyId;
+   commentForm.dataset.replyMention=replyBtn.dataset.userName||'';
+   commentInput.placeholder=(replyBtn.dataset.userName||'사용자')+'님에게 답글';
+   commentInput.focus();
+  }
  });
  document.addEventListener('keydown',e=>{
   if(e.key==='Escape'&&!root.hidden){e.preventDefault();close();}

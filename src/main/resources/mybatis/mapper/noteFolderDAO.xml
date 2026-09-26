@@ -132,7 +132,13 @@
   ORDER BY w.WS_NAME
  </select>
  <select id="selectAccessibleProjects" resultType="map">
-  SELECT p.PROJ_ID AS "projId", p.PROJ_NAME AS "projName", p.WS_ID AS "wsId", w.WS_NAME AS "wsName",
+  SELECT p.PROJ_ID AS "projId",
+         p.PROJ_NAME AS "projName",
+         p.WS_ID AS "wsId",
+         w.WS_NAME AS "wsName",
+         p.PROJ_TYPE AS "projType",
+         p.PROJ_CATEGORY AS "projCategory",
+         p.PROJ_ICON AS "projIcon",
          CASE WHEN p.LEADER_ID=#{userId} OR EXISTS (SELECT 1 FROM PROJ_MEMBERS pa WHERE pa.PROJ_ID=p.PROJ_ID AND pa.USER_ID=#{userId} AND UPPER(NVL(pa.PROJ_ROLE,'MEMBER'))='ADMIN') THEN 1 ELSE 0 END AS "canManage"
   FROM PROJECTS p
   LEFT JOIN WORKSPACES w ON w.WS_ID=p.WS_ID

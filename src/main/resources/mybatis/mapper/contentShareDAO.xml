@@ -337,6 +337,7 @@
                                ON pm.PROJ_ID=pr.PROJ_ID
                               AND pm.USER_ID=#{targetUserId}
                             WHERE pr.PROJ_ID=n.PROJ_ID
+                              AND pr.WS_ID IS NOT NULL
                               AND (pr.LEADER_ID=#{targetUserId} OR pm.USER_ID IS NOT NULL)
                         ))
                    )
@@ -361,6 +362,7 @@
                                ON pm.PROJ_ID=pr.PROJ_ID
                               AND pm.USER_ID=#{targetUserId}
                             WHERE pr.PROJ_ID=pp.SCOPE_ID
+                              AND pr.WS_ID IS NOT NULL
                               AND (pr.LEADER_ID=#{targetUserId} OR pm.USER_ID IS NOT NULL)
                         ))
                    )
@@ -385,6 +387,7 @@
                                ON pm.PROJ_ID=pr.PROJ_ID
                               AND pm.USER_ID=#{targetUserId}
                             WHERE pr.PROJ_ID=f.PROJ_ID
+                              AND pr.WS_ID IS NOT NULL
                               AND (pr.LEADER_ID=#{targetUserId} OR pm.USER_ID IS NOT NULL)
                         ))
                    )
@@ -438,7 +441,7 @@
                         (UPPER(n.SCOPE_TYPE) IN ('PROJ','PROJECT') AND EXISTS (
                             SELECT 1 FROM PROJECTS pr
                              LEFT JOIN PROJ_MEMBERS pm ON pm.PROJ_ID=pr.PROJ_ID AND pm.USER_ID=u.USER_ID
-                            WHERE pr.PROJ_ID=n.PROJ_ID AND (pr.LEADER_ID=u.USER_ID OR pm.USER_ID IS NOT NULL)
+                            WHERE pr.PROJ_ID=n.PROJ_ID AND pr.WS_ID IS NOT NULL AND (pr.LEADER_ID=u.USER_ID OR pm.USER_ID IS NOT NULL)
                         ))
                    )
             )
@@ -456,7 +459,7 @@
                         (UPPER(pp.SCOPE_TYPE)='PROJECT' AND EXISTS (
                             SELECT 1 FROM PROJECTS pr
                              LEFT JOIN PROJ_MEMBERS pm ON pm.PROJ_ID=pr.PROJ_ID AND pm.USER_ID=u.USER_ID
-                            WHERE pr.PROJ_ID=pp.SCOPE_ID AND (pr.LEADER_ID=u.USER_ID OR pm.USER_ID IS NOT NULL)
+                            WHERE pr.PROJ_ID=pp.SCOPE_ID AND pr.WS_ID IS NOT NULL AND (pr.LEADER_ID=u.USER_ID OR pm.USER_ID IS NOT NULL)
                         ))
                    )
             )
@@ -474,7 +477,7 @@
                         (UPPER(f.SCOPE_TYPE)='PROJECT' AND EXISTS (
                             SELECT 1 FROM PROJECTS pr
                              LEFT JOIN PROJ_MEMBERS pm ON pm.PROJ_ID=pr.PROJ_ID AND pm.USER_ID=u.USER_ID
-                            WHERE pr.PROJ_ID=f.PROJ_ID AND (pr.LEADER_ID=u.USER_ID OR pm.USER_ID IS NOT NULL)
+                            WHERE pr.PROJ_ID=f.PROJ_ID AND pr.WS_ID IS NOT NULL AND (pr.LEADER_ID=u.USER_ID OR pm.USER_ID IS NOT NULL)
                         ))
                    )
             )

@@ -5777,3 +5777,46 @@ html, body {
         display: none !important;
     }
 }
+
+
+/* 개인 탐색기 사람 아바타: 공통 헤더 프로필 정책과 동일 */
+.file-tree-context__avatar.is-personal.is-default {
+    background: var(--moyo-avatar-gradient, linear-gradient(135deg, #55D5CE 0%, #4288EF 52%, #5A55EE 100%));
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(57,145,216,.20);
+}
+
+.file-tree-context__avatar.is-personal.has-image {
+    background: transparent;
+    box-shadow: none;
+}
+
+.file-tree-context__avatar.is-personal.has-image img {
+    background: transparent;
+}
+
+
+/* 20260926 개인 프로젝트 탐색기 대표 아이콘
+   프로젝트 히어로와 동일한 유형 아이콘 언어를 사용한다. */
+.file-tree-context__avatar.is-project-type{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    border-radius:12px;
+    border:0;
+    background:linear-gradient(
+        135deg,
+        rgba(79,213,195,.18),
+        rgba(76,120,255,.16),
+        rgba(139,99,246,.15)
+    );
+    color:#5d67ca;
+    box-shadow:none;
+    overflow:hidden;
+}
+
+.file-tree-context__avatar.is-project-type i{
+    font-size:18px;
+    line-height:1;
+    color:inherit;
+}
