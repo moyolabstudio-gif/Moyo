@@ -10,8 +10,16 @@
         p.TITLE as title,
         p.USER_ID as userId,
         CASE WHEN NVL(wmp.USE_ACCOUNT_PROFILE, 'Y') = 'N' THEN NVL(wmp.DISPLAY_NAME, u.USER_NAME) ELSE u.USER_NAME END as writerName,
+        CASE
+            WHEN NVL(wmp.USE_ACCOUNT_PROFILE, 'Y') = 'N' THEN NVL(wmp.PROFILE_IMAGE_PATH, wmp.PROFILE_IMAGE_ORIGINAL_PATH)
+            WHEN UPPER(NVL(u.PROFILE_AVATAR_TYPE, 'DEFAULT')) &lt;&gt; 'DEFAULT' THEN NVL(u.PROFILE_IMAGE_PATH, NVL(upi.CROPPED_IMAGE_PATH, NVL(u.PROFILE_ORIGINAL_IMAGE_PATH, upi.ORIGINAL_IMAGE_PATH)))
+            ELSE NULL
+        END AS "writerProfileImagePath",
         p.VIEW_COUNT as viewCount,
         p.BOARD_TYPE as boardType,
+        p.CHANNEL_ID as channelId,
+        c.CHANNEL_NAME as channelName,
+        c.CHANNEL_TYPE as channelType,
         CASE WHEN p.IS_PINNED = 'Y' AND (p.PIN_START_DT IS NULL OR p.PIN_START_DT &lt;= SYSDATE) AND (p.PIN_END_DT IS NULL OR p.PIN_END_DT >= TRUNC(SYSDATE)) THEN 'Y' ELSE 'N' END as isPinned,
         TO_CHAR(p.PIN_START_DT, 'YYYY-MM-DD') as pinStartDt,
         TO_CHAR(p.PIN_END_DT, 'YYYY-MM-DD') as pinEndDt,
@@ -20,19 +28,35 @@
             THEN TO_CHAR(p.REG_DT, 'HH24:MI')
             ELSE TO_CHAR(p.REG_DT, 'YYYY-MM-DD')
         END as regDt,
-        (SELECT COUNT(*) FROM BOARD_REPLIES r WHERE r.POST_ID = p.POST_ID) as replyCount,
+        (SELECT COUNT(*) FROM BOARD_REPLIES r WHERE r.POST_ID = p.POST_ID AND NVL(r.DELETED_YN, 'N') = 'N') as replyCount,
         (SELECT COUNT(*) FROM ATTACHMENTS a WHERE a.POST_ID = p.POST_ID) as fileCount,
         CASE WHEN EXISTS (SELECT 1 FROM ATTACHMENTS a WHERE a.POST_ID = p.POST_ID) THEN 1 ELSE 0 END as hasFile,
+        REGEXP_COUNT(NVL(p.CONTENT, ' '), '&lt;[[:space:]]*img([[:space:]>])', 1, 'i') as imageCount,
+        REGEXP_COUNT(NVL(p.CONTENT, ' '), '&lt;[[:space:]]*(svg|canvas)([[:space:]>])', 1, 'i') as drawingCount,
+        REGEXP_COUNT(NVL(p.CONTENT, ' '), '&lt;[[:space:]]*(video|iframe|oembed)([[:space:]>])', 1, 'i') as videoCount,
+        REGEXP_COUNT(NVL(p.CONTENT, ' '), '&lt;[[:space:]]*a([[:space:]>])', 1, 'i') as linkCount,
+        (SELECT COUNT(*) FROM ATTACHMENTS a WHERE a.POST_ID = p.POST_ID) as documentCount,
         (SELECT COUNT(*) FROM CONTENT_REACTIONS cr
           WHERE cr.CONTENT_ID = p.POST_ID
-            AND cr.CONTENT_TYPE = CASE WHEN p.BOARD_TYPE = 'NOTICE' THEN 'NOTICE' ELSE 'BOARD' END
+            AND cr.CONTENT_TYPE = CASE WHEN NVL(c.CHANNEL_TYPE, p.BOARD_TYPE) = 'NOTICE' THEN 'NOTICE' ELSE 'BOARD' END
             AND cr.REACTION_TYPE = 'LIKE') as likeCount
     FROM BOARD_POSTS p
+    LEFT JOIN BOARD_CHANNELS c ON c.CHANNEL_ID = p.CHANNEL_ID AND c.DELETED_YN = 'N'
     JOIN USERS u ON p.USER_ID = u.USER_ID
+    LEFT JOIN (
+        SELECT USER_ID, ORIGINAL_IMAGE_PATH, CROPPED_IMAGE_PATH
+        FROM (
+            SELECT pi.*, ROW_NUMBER() OVER (PARTITION BY pi.USER_ID ORDER BY CASE WHEN pi.IS_CURRENT='Y' THEN 0 ELSE 1 END, pi.CREATED_AT DESC, pi.PROFILE_IMAGE_ID DESC) RN
+            FROM USER_PROFILE_IMAGES pi
+        ) WHERE RN=1
+    ) upi ON upi.USER_ID = u.USER_ID
     LEFT JOIN WS_MEMBER_PROFILES wmp ON wmp.WS_ID = p.WS_ID AND wmp.USER_ID = p.USER_ID
     WHERE p.WS_ID = #{wsId}
-      AND p.BOARD_TYPE = #{boardType}
+      AND ((#{boardType}='NOTICE' AND NVL(c.CHANNEL_TYPE, p.BOARD_TYPE)='NOTICE')
+           OR (#{boardType}!='NOTICE' AND NVL(c.CHANNEL_TYPE, CASE WHEN p.BOARD_TYPE='NOTICE' THEN 'NOTICE' ELSE 'GENERAL' END)='GENERAL'))
+      AND (c.CHANNEL_ID IS NULL OR c.ACTIVE_YN='Y')
       AND p.PROJ_ID IS NULL
+      AND NVL(p.DELETED_YN, 'N') = 'N'
     ORDER BY CASE WHEN p.IS_PINNED = 'Y' AND (p.PIN_START_DT IS NULL OR p.PIN_START_DT &lt;= SYSDATE) AND (p.PIN_END_DT IS NULL OR p.PIN_END_DT >= TRUNC(SYSDATE)) THEN 0 ELSE 1 END, p.REG_DT DESC
     FETCH FIRST 3 ROWS ONLY
     </select>
@@ -47,6 +71,7 @@
         CASE WHEN NVL(wmp.USE_ACCOUNT_PROFILE, 'Y') = 'N' THEN NVL(wmp.DISPLAY_NAME, u.USER_NAME) ELSE u.USER_NAME END as writerName,
         p.VIEW_COUNT as viewCount,
         p.BOARD_TYPE as boardType,
+        p.CHANNEL_ID as channelId,
         CASE WHEN p.IS_PINNED = 'Y' AND (p.PIN_START_DT IS NULL OR p.PIN_START_DT &lt;= SYSDATE) AND (p.PIN_END_DT IS NULL OR p.PIN_END_DT >= TRUNC(SYSDATE)) THEN 'Y' ELSE 'N' END as isPinned,
         TO_CHAR(p.PIN_START_DT, 'YYYY-MM-DD') as pinStartDt,
         TO_CHAR(p.PIN_END_DT, 'YYYY-MM-DD') as pinEndDt,
@@ -55,7 +80,7 @@
             THEN TO_CHAR(p.REG_DT, 'HH24:MI')
             ELSE TO_CHAR(p.REG_DT, 'YYYY-MM-DD')
         END as regDt,
-        (SELECT COUNT(*) FROM BOARD_REPLIES r WHERE r.POST_ID = p.POST_ID) as replyCount,
+        (SELECT COUNT(*) FROM BOARD_REPLIES r WHERE r.POST_ID = p.POST_ID AND NVL(r.DELETED_YN, 'N') = 'N') as replyCount,
         (SELECT COUNT(*) FROM ATTACHMENTS a WHERE a.POST_ID = p.POST_ID) as fileCount,
         CASE WHEN EXISTS (SELECT 1 FROM ATTACHMENTS a WHERE a.POST_ID = p.POST_ID) THEN 1 ELSE 0 END as hasFile,
         (SELECT COUNT(*) FROM CONTENT_REACTIONS cr
@@ -68,6 +93,7 @@
     WHERE p.WS_ID = #{wsId}
       AND p.BOARD_TYPE = #{boardType}
       AND p.PROJ_ID IS NULL
+      AND NVL(p.DELETED_YN, 'N') = 'N'
     <if test="keyword != null and keyword != ''">
         <choose>
             <when test="searchType == 'title'">
@@ -106,6 +132,7 @@
     WHERE p.WS_ID = #{wsId}
       AND p.BOARD_TYPE = #{boardType}
       AND p.PROJ_ID IS NULL
+      AND NVL(p.DELETED_YN, 'N') = 'N'
     <if test="keyword != null and keyword != ''">
         <choose>
             <when test="searchType == 'title'">
@@ -140,13 +167,14 @@
     </selectKey>
     
     INSERT INTO BOARD_POSTS (
-        POST_ID, WS_ID, PROJ_ID, USER_ID, BOARD_TYPE, TITLE, CONTENT, IS_PINNED, PIN_START_DT, PIN_END_DT
+        POST_ID, WS_ID, PROJ_ID, USER_ID, BOARD_TYPE, CHANNEL_ID, TITLE, CONTENT, IS_PINNED, PIN_START_DT, PIN_END_DT
     ) VALUES (
         #{postId}, 
         #{wsId}, 
         #{projId, jdbcType=NUMERIC}, 
         #{userId}, 
         #{boardType}, 
+        #{channelId, jdbcType=NUMERIC},
         #{title}, 
         #{content}, 
         #{isPinned, jdbcType=CHAR},
@@ -170,8 +198,8 @@
     SELECT * FROM ATTACHMENTS WHERE POST_ID = #{postId}
 </select>
 <select id="selectFileById" resultType="map" parameterType="string">
-    SELECT FILE_ID, FILE_NAME, FILE_ORIGINAL_NAME, FILE_SIZE 
-    FROM ATTACHMENTS 
+    SELECT FILE_ID, POST_ID, FILE_NAME, FILE_ORIGINAL_NAME, FILE_SIZE
+    FROM ATTACHMENTS
     WHERE FILE_ID = #{fileId}
 </select>
     <select id="selectPostDetail" resultType="com.springboot.project.dto.postDTO">
@@ -183,45 +211,114 @@
             p.USER_ID as userId,
             p.PROJ_ID as projId,
             CASE WHEN (CASE WHEN p.PROJ_ID IS NOT NULL THEN pr.WS_ID ELSE p.WS_ID END) IS NOT NULL AND NVL(wmp.USE_ACCOUNT_PROFILE, 'Y') = 'N' THEN NVL(wmp.DISPLAY_NAME, u.USER_NAME) ELSE u.USER_NAME END as writerName,
+            CASE
+                WHEN NVL(wmp.USE_ACCOUNT_PROFILE, 'Y') = 'N' THEN
+                    CASE
+                        WHEN (wmp.PROFILE_IMAGE_PATH IS NOT NULL OR wmp.PROFILE_IMAGE_ORIGINAL_PATH IS NOT NULL)
+                         AND NOT (UPPER(NVL(u.PROFILE_AVATAR_TYPE, 'DEFAULT')) = 'DEFAULT'
+                                  AND NVL(wmp.PROFILE_IMAGE_PATH, '#') = NVL(u.PROFILE_IMAGE_PATH, '#')
+                                  AND NVL(wmp.PROFILE_IMAGE_ORIGINAL_PATH, '#') = NVL(u.PROFILE_ORIGINAL_IMAGE_PATH, '#'))
+                            THEN NVL(wmp.PROFILE_IMAGE_PATH, wmp.PROFILE_IMAGE_ORIGINAL_PATH)
+                    END
+                WHEN UPPER(NVL(u.PROFILE_AVATAR_TYPE, 'DEFAULT')) &lt;&gt; 'DEFAULT'
+                    THEN NVL(u.PROFILE_IMAGE_PATH, NVL(upi.CROPPED_IMAGE_PATH, NVL(u.PROFILE_ORIGINAL_IMAGE_PATH, upi.ORIGINAL_IMAGE_PATH)))
+                ELSE NULL
+            END AS "writerProfileImagePath",
+            CASE
+                WHEN NVL(wmp.USE_ACCOUNT_PROFILE, 'Y') = 'N' THEN
+                    CASE WHEN (wmp.PROFILE_IMAGE_PATH IS NOT NULL OR wmp.PROFILE_IMAGE_ORIGINAL_PATH IS NOT NULL) THEN 'IMAGE' ELSE 'DEFAULT' END
+                WHEN UPPER(NVL(u.PROFILE_AVATAR_TYPE, 'DEFAULT')) = 'DEFAULT' THEN 'DEFAULT'
+                WHEN NVL(u.PROFILE_IMAGE_PATH, upi.CROPPED_IMAGE_PATH) IS NOT NULL OR NVL(u.PROFILE_ORIGINAL_IMAGE_PATH, upi.ORIGINAL_IMAGE_PATH) IS NOT NULL THEN 'IMAGE'
+                ELSE UPPER(NVL(u.PROFILE_AVATAR_TYPE, 'DEFAULT'))
+            END AS "writerProfileAvatarType",
             p.VIEW_COUNT as viewCount,
             p.BOARD_TYPE as boardType,
+            p.CHANNEL_ID as channelId,
+            c.CHANNEL_NAME as channelName,
+            c.CHANNEL_TYPE as channelType,
             CASE WHEN p.IS_PINNED = 'Y' AND (p.PIN_START_DT IS NULL OR p.PIN_START_DT &lt;= SYSDATE) AND (p.PIN_END_DT IS NULL OR p.PIN_END_DT >= TRUNC(SYSDATE)) THEN 'Y' ELSE 'N' END as isPinned,
         TO_CHAR(p.PIN_START_DT, 'YYYY-MM-DD') as pinStartDt,
         TO_CHAR(p.PIN_END_DT, 'YYYY-MM-DD') as pinEndDt,
             TO_CHAR(p.REG_DT, 'YYYY-MM-DD HH24:MI') as regDt,
-            (SELECT COUNT(*) FROM BOARD_REPLIES r WHERE r.POST_ID = p.POST_ID) as replyCount,
+            (SELECT COUNT(*) FROM BOARD_REPLIES r WHERE r.POST_ID = p.POST_ID AND NVL(r.DELETED_YN, 'N') = 'N') as replyCount,
             (SELECT COUNT(*) FROM ATTACHMENTS a WHERE a.POST_ID = p.POST_ID) as fileCount,
             CASE WHEN EXISTS (SELECT 1 FROM ATTACHMENTS a WHERE a.POST_ID = p.POST_ID) THEN 1 ELSE 0 END as hasFile,
+            REGEXP_COUNT(NVL(p.CONTENT, ' '), '&lt;[[:space:]]*img([[:space:]>])', 1, 'i') as imageCount,
+            REGEXP_COUNT(NVL(p.CONTENT, ' '), '&lt;[[:space:]]*(svg|canvas)([[:space:]>])', 1, 'i') as drawingCount,
+            REGEXP_COUNT(NVL(p.CONTENT, ' '), '&lt;[[:space:]]*(video|iframe|oembed)([[:space:]>])', 1, 'i') as videoCount,
+            REGEXP_COUNT(NVL(p.CONTENT, ' '), '&lt;[[:space:]]*a([[:space:]>])', 1, 'i') as linkCount,
+            (SELECT COUNT(*) FROM ATTACHMENTS a WHERE a.POST_ID = p.POST_ID) as documentCount,
             (SELECT COUNT(*) FROM CONTENT_REACTIONS cr
               WHERE cr.CONTENT_ID = p.POST_ID
-                AND cr.CONTENT_TYPE = CASE WHEN p.BOARD_TYPE = 'NOTICE' THEN 'NOTICE' ELSE 'BOARD' END
+                AND cr.CONTENT_TYPE = CASE WHEN NVL(c.CHANNEL_TYPE, p.BOARD_TYPE) = 'NOTICE' THEN 'NOTICE' ELSE 'BOARD' END
                 AND cr.REACTION_TYPE = 'LIKE') as likeCount
         FROM BOARD_POSTS p
+        LEFT JOIN BOARD_CHANNELS c ON c.CHANNEL_ID = p.CHANNEL_ID
         JOIN USERS u ON p.USER_ID = u.USER_ID
+        LEFT JOIN (
+            SELECT USER_ID, ORIGINAL_IMAGE_PATH, CROPPED_IMAGE_PATH
+            FROM (
+                SELECT pi.*, ROW_NUMBER() OVER (PARTITION BY pi.USER_ID ORDER BY CASE WHEN pi.IS_CURRENT='Y' THEN 0 ELSE 1 END, pi.CREATED_AT DESC, pi.PROFILE_IMAGE_ID DESC) RN
+                FROM USER_PROFILE_IMAGES pi
+            ) WHERE RN=1
+        ) upi ON upi.USER_ID = u.USER_ID
         LEFT JOIN PROJECTS pr ON pr.PROJ_ID = p.PROJ_ID
         LEFT JOIN WS_MEMBER_PROFILES wmp
           ON wmp.WS_ID = CASE WHEN p.PROJ_ID IS NOT NULL THEN pr.WS_ID ELSE p.WS_ID END
          AND wmp.USER_ID = p.USER_ID
         WHERE p.POST_ID = #{postId}
+          AND NVL(p.DELETED_YN, 'N') = 'N'
     </select>
+
+    <update id="incrementPostViewCount">
+        UPDATE BOARD_POSTS
+           SET VIEW_COUNT = NVL(VIEW_COUNT, 0) + 1
+         WHERE POST_ID = #{postId}
+           AND NVL(DELETED_YN, 'N') = 'N'
+    </update>
 
 	<select id="selectReplyList" parameterType="int" resultType="map">
         SELECT 
             R.REPLY_ID,
             R.POST_ID,
             R.PARENT_REPLY_ID,
-            R.CONTENT,
+            CASE WHEN NVL(R.DELETED_YN, 'N') = 'Y' THEN '삭제된 댓글입니다.' ELSE R.CONTENT END AS CONTENT,
             R.USER_ID,
+            NVL(R.DELETED_YN, 'N') AS DELETED_YN,
+            R.DELETED_BY,
+            TO_CHAR(R.DELETED_AT, 'YYYY-MM-DD HH24:MI') AS DELETED_AT,
             TO_CHAR(R.REG_DT, 'YYYY-MM-DD HH24:MI') AS REG_DT,
-            CASE WHEN (CASE WHEN BP.PROJ_ID IS NOT NULL THEN PR.WS_ID ELSE BP.WS_ID END) IS NOT NULL AND NVL(WMP.USE_ACCOUNT_PROFILE, 'Y') = 'N' THEN NVL(WMP.DISPLAY_NAME, U.USER_NAME) ELSE U.USER_NAME END AS USER_NAME
+            CASE WHEN (CASE WHEN BP.PROJ_ID IS NOT NULL THEN PR.WS_ID ELSE BP.WS_ID END) IS NOT NULL AND NVL(WMP.USE_ACCOUNT_PROFILE, 'Y') = 'N' THEN NVL(WMP.DISPLAY_NAME, U.USER_NAME) ELSE U.USER_NAME END AS USER_NAME,
+            CASE
+                WHEN NVL(WMP.USE_ACCOUNT_PROFILE, 'Y')='N' THEN NVL(WMP.PROFILE_IMAGE_PATH, WMP.PROFILE_IMAGE_ORIGINAL_PATH)
+                WHEN UPPER(NVL(U.PROFILE_AVATAR_TYPE, 'DEFAULT')) &lt;&gt; 'DEFAULT' THEN NVL(U.PROFILE_IMAGE_PATH, NVL(UPI.CROPPED_IMAGE_PATH, NVL(U.PROFILE_ORIGINAL_IMAGE_PATH, UPI.ORIGINAL_IMAGE_PATH)))
+                ELSE NULL
+            END AS PROFILE_IMAGE_PATH
         FROM BOARD_REPLIES R
         JOIN BOARD_POSTS BP ON BP.POST_ID = R.POST_ID
         JOIN USERS U ON R.USER_ID = U.USER_ID
+        LEFT JOIN (
+            SELECT USER_ID, ORIGINAL_IMAGE_PATH, CROPPED_IMAGE_PATH
+            FROM (
+                SELECT pi.*, ROW_NUMBER() OVER (PARTITION BY pi.USER_ID ORDER BY CASE WHEN pi.IS_CURRENT='Y' THEN 0 ELSE 1 END, pi.CREATED_AT DESC, pi.PROFILE_IMAGE_ID DESC) RN
+                FROM USER_PROFILE_IMAGES pi
+            ) WHERE RN=1
+        ) UPI ON UPI.USER_ID = U.USER_ID
         LEFT JOIN PROJECTS PR ON PR.PROJ_ID = BP.PROJ_ID
         LEFT JOIN WS_MEMBER_PROFILES WMP
           ON WMP.WS_ID = CASE WHEN BP.PROJ_ID IS NOT NULL THEN PR.WS_ID ELSE BP.WS_ID END
          AND WMP.USER_ID = R.USER_ID
         WHERE R.POST_ID = #{postId}
+          AND NVL(BP.DELETED_YN, 'N') = 'N'
+          AND (
+              NVL(R.DELETED_YN, 'N') = 'N'
+              OR EXISTS (
+                  SELECT 1
+                  FROM BOARD_REPLIES CHILD
+                  WHERE CHILD.PARENT_REPLY_ID = R.REPLY_ID
+                    AND NVL(CHILD.DELETED_YN, 'N') = 'N'
+              )
+          )
         ORDER BY NVL(R.PARENT_REPLY_ID, R.REPLY_ID) ASC,
                  CASE WHEN R.PARENT_REPLY_ID IS NULL THEN 0 ELSE 1 END ASC,
                  R.REG_DT ASC
@@ -231,6 +328,7 @@
         SELECT REPLY_ID, POST_ID, PARENT_REPLY_ID, USER_ID, CONTENT, REG_DT
         FROM BOARD_REPLIES
         WHERE REPLY_ID = #{replyId}
+          AND NVL(DELETED_YN, 'N') = 'N' 
     </select>
 
     <insert id="insertReply" parameterType="map">
@@ -247,15 +345,21 @@
     </insert>
     
     <update id="updateReply" parameterType="map">
-	    UPDATE BOARD_REPLIES
-	       SET CONTENT = #{content}
-	     WHERE REPLY_ID = #{replyId}
-	</update>
-	
-	<delete id="deleteReply" parameterType="int">
-	    DELETE FROM BOARD_REPLIES
-	     WHERE REPLY_ID = #{replyId}
-	</delete>
+        UPDATE BOARD_REPLIES
+           SET CONTENT = #{content},
+               UPD_DT = SYSDATE
+         WHERE REPLY_ID = #{replyId}
+           AND NVL(DELETED_YN, 'N') = 'N'
+    </update>
+
+    <update id="softDeleteReply">
+        UPDATE BOARD_REPLIES
+           SET DELETED_YN = 'Y',
+               DELETED_BY = #{deletedBy},
+               DELETED_AT = SYSDATE
+         WHERE REPLY_ID = #{replyId}
+           AND NVL(DELETED_YN, 'N') = 'N'
+    </update>
 <select id="selectWorkspaceCalendar" parameterType="long" resultType="map">
     SELECT TITLE, EVENT_DATE, TYPE 
     FROM (
@@ -275,7 +379,7 @@
             TO_CHAR(REG_DT, 'YYYY-MM-DD') AS EVENT_DATE, 
             'NOTICE' AS TYPE 
         FROM BOARD_POSTS 
-        WHERE WS_ID = #{wsId} AND BOARD_TYPE = 'NOTICE' AND PROJ_ID IS NULL AND REG_DT IS NOT NULL
+        WHERE WS_ID = #{wsId} AND BOARD_TYPE = 'NOTICE' AND PROJ_ID IS NULL AND REG_DT IS NOT NULL AND NVL(DELETED_YN, 'N') = 'N'
     )
     ORDER BY EVENT_DATE ASC
 </select>
@@ -289,12 +393,18 @@
         PIN_END_DT = TO_DATE(#{pinEndDt, jdbcType=VARCHAR}, 'YYYY-MM-DD'),
         UPD_DT = SYSDATE
     WHERE POST_ID = #{postId}
+      AND NVL(DELETED_YN, 'N') = 'N'
 </update>
 
-    <delete id="deletePost" parameterType="long">
-        DELETE FROM BOARD_POSTS
-        WHERE POST_ID = #{postId}
-    </delete>
+    <update id="softDeletePost">
+        UPDATE BOARD_POSTS
+           SET DELETED_YN = 'Y',
+               DELETED_BY = #{deletedBy},
+               DELETED_AT = SYSDATE,
+               IS_PINNED = 'N'
+         WHERE POST_ID = #{postId}
+           AND NVL(DELETED_YN, 'N') = 'N'
+    </update>
     <delete id="deleteFile" parameterType="int">
     DELETE FROM ATTACHMENTS WHERE FILE_ID = #{fileId}
 </delete>
@@ -317,8 +427,16 @@
         p.TITLE as title,
         p.USER_ID as userId,
         CASE WHEN pr.WS_ID IS NOT NULL AND NVL(wmp.USE_ACCOUNT_PROFILE, 'Y') = 'N' THEN NVL(wmp.DISPLAY_NAME, u.USER_NAME) ELSE u.USER_NAME END as writerName,
+        CASE
+            WHEN pr.WS_ID IS NOT NULL AND NVL(wmp.USE_ACCOUNT_PROFILE, 'Y') = 'N' THEN NVL(wmp.PROFILE_IMAGE_PATH, wmp.PROFILE_IMAGE_ORIGINAL_PATH)
+            WHEN UPPER(NVL(u.PROFILE_AVATAR_TYPE, 'DEFAULT')) &lt;&gt; 'DEFAULT' THEN NVL(u.PROFILE_IMAGE_PATH, NVL(upi.CROPPED_IMAGE_PATH, NVL(u.PROFILE_ORIGINAL_IMAGE_PATH, upi.ORIGINAL_IMAGE_PATH)))
+            ELSE NULL
+        END AS "writerProfileImagePath",
         p.VIEW_COUNT as viewCount,
         p.BOARD_TYPE as boardType,
+        p.CHANNEL_ID as channelId,
+        c.CHANNEL_NAME as channelName,
+        c.CHANNEL_TYPE as channelType,
         CASE WHEN p.IS_PINNED = 'Y' AND (p.PIN_START_DT IS NULL OR p.PIN_START_DT &lt;= SYSDATE) AND (p.PIN_END_DT IS NULL OR p.PIN_END_DT >= TRUNC(SYSDATE)) THEN 'Y' ELSE 'N' END as isPinned,
         TO_CHAR(p.PIN_START_DT, 'YYYY-MM-DD') as pinStartDt,
         TO_CHAR(p.PIN_END_DT, 'YYYY-MM-DD') as pinEndDt,
@@ -327,19 +445,35 @@
             THEN TO_CHAR(p.REG_DT, 'HH24:MI')
             ELSE TO_CHAR(p.REG_DT, 'YYYY-MM-DD')
         END as regDt,
-        (SELECT COUNT(*) FROM BOARD_REPLIES r WHERE r.POST_ID = p.POST_ID) as replyCount,
+        (SELECT COUNT(*) FROM BOARD_REPLIES r WHERE r.POST_ID = p.POST_ID AND NVL(r.DELETED_YN, 'N') = 'N') as replyCount,
         (SELECT COUNT(*) FROM ATTACHMENTS a WHERE a.POST_ID = p.POST_ID) as fileCount,
         CASE WHEN EXISTS (SELECT 1 FROM ATTACHMENTS a WHERE a.POST_ID = p.POST_ID) THEN 1 ELSE 0 END as hasFile,
+        REGEXP_COUNT(NVL(p.CONTENT, ' '), '&lt;[[:space:]]*img([[:space:]>])', 1, 'i') as imageCount,
+        REGEXP_COUNT(NVL(p.CONTENT, ' '), '&lt;[[:space:]]*(svg|canvas)([[:space:]>])', 1, 'i') as drawingCount,
+        REGEXP_COUNT(NVL(p.CONTENT, ' '), '&lt;[[:space:]]*(video|iframe|oembed)([[:space:]>])', 1, 'i') as videoCount,
+        REGEXP_COUNT(NVL(p.CONTENT, ' '), '&lt;[[:space:]]*a([[:space:]>])', 1, 'i') as linkCount,
+        (SELECT COUNT(*) FROM ATTACHMENTS a WHERE a.POST_ID = p.POST_ID) as documentCount,
         (SELECT COUNT(*) FROM CONTENT_REACTIONS cr
           WHERE cr.CONTENT_ID = p.POST_ID
-            AND cr.CONTENT_TYPE = CASE WHEN p.BOARD_TYPE = 'NOTICE' THEN 'NOTICE' ELSE 'BOARD' END
+            AND cr.CONTENT_TYPE = CASE WHEN NVL(c.CHANNEL_TYPE, p.BOARD_TYPE) = 'NOTICE' THEN 'NOTICE' ELSE 'BOARD' END
             AND cr.REACTION_TYPE = 'LIKE') as likeCount
     FROM BOARD_POSTS p
     JOIN PROJECTS pr ON pr.PROJ_ID = p.PROJ_ID
+    LEFT JOIN BOARD_CHANNELS c ON c.CHANNEL_ID = p.CHANNEL_ID AND c.DELETED_YN = 'N'
     JOIN USERS u ON p.USER_ID = u.USER_ID
+    LEFT JOIN (
+        SELECT USER_ID, ORIGINAL_IMAGE_PATH, CROPPED_IMAGE_PATH
+        FROM (
+            SELECT pi.*, ROW_NUMBER() OVER (PARTITION BY pi.USER_ID ORDER BY CASE WHEN pi.IS_CURRENT='Y' THEN 0 ELSE 1 END, pi.CREATED_AT DESC, pi.PROFILE_IMAGE_ID DESC) RN
+            FROM USER_PROFILE_IMAGES pi
+        ) WHERE RN=1
+    ) upi ON upi.USER_ID = u.USER_ID
     LEFT JOIN WS_MEMBER_PROFILES wmp ON wmp.WS_ID = pr.WS_ID AND wmp.USER_ID = p.USER_ID
     WHERE p.PROJ_ID = #{projId}
-      AND p.BOARD_TYPE = #{boardType}
+      AND ((#{boardType}='NOTICE' AND NVL(c.CHANNEL_TYPE, p.BOARD_TYPE)='NOTICE')
+           OR (#{boardType}!='NOTICE' AND NVL(c.CHANNEL_TYPE, CASE WHEN p.BOARD_TYPE='NOTICE' THEN 'NOTICE' ELSE 'GENERAL' END)='GENERAL'))
+      AND (c.CHANNEL_ID IS NULL OR c.ACTIVE_YN='Y')
+      AND NVL(p.DELETED_YN, 'N') = 'N'
     <if test="keyword != null and keyword != ''">
         <choose>
             <when test="searchType == 'title'">
@@ -378,6 +512,7 @@
     LEFT JOIN WS_MEMBER_PROFILES wmp ON wmp.WS_ID = pr.WS_ID AND wmp.USER_ID = p.USER_ID
     WHERE p.PROJ_ID = #{projId}
       AND p.BOARD_TYPE = #{boardType}
+      AND NVL(p.DELETED_YN, 'N') = 'N'
     <if test="keyword != null and keyword != ''">
         <choose>
             <when test="searchType == 'title'">
@@ -438,13 +573,79 @@
       AND REPORTER_ID = #{reporterId}
 </select>
 
+<select id="selectNextReportId" resultType="long">
+    SELECT SEQ_BOARD_REPORT_ID.NEXTVAL FROM DUAL
+</select>
+
 <insert id="insertReport">
     INSERT INTO BOARD_REPORTS (
         REPORT_ID, CONTENT_TYPE, CONTENT_ID, REPORTER_ID, REASON, DETAIL, STATUS, REG_DT
     ) VALUES (
-        SEQ_BOARD_REPORT_ID.NEXTVAL, #{contentType}, #{contentId}, #{reporterId}, #{reason}, #{detail}, 'WAITING', SYSDATE
+        #{reportId}, #{contentType}, #{contentId}, #{reporterId}, #{reason}, #{detail}, 'WAITING', SYSDATE
     )
 </insert>
+
+<select id="selectReportTargetContext" resultType="map">
+    <choose>
+        <when test="contentType == 'REPLY'">
+            SELECT p.POST_ID, p.WS_ID, p.PROJ_ID, p.TITLE, p.BOARD_TYPE
+            FROM BOARD_REPLIES r
+            JOIN BOARD_POSTS p ON p.POST_ID = r.POST_ID
+            WHERE r.REPLY_ID = #{contentId}
+        </when>
+        <when test="contentType == 'FILE'">
+            SELECT p.POST_ID, p.WS_ID, p.PROJ_ID, p.TITLE, p.BOARD_TYPE
+            FROM ATTACHMENTS a
+            JOIN BOARD_POSTS p ON p.POST_ID = a.POST_ID
+            WHERE a.FILE_ID = #{contentId}
+        </when>
+        <otherwise>
+            SELECT p.POST_ID, p.WS_ID, p.PROJ_ID, p.TITLE, p.BOARD_TYPE
+            FROM BOARD_POSTS p
+            WHERE p.POST_ID = #{contentId}
+        </otherwise>
+    </choose>
+</select>
+
+<select id="selectBoardReportManagerUserIds" resultType="long">
+    SELECT DISTINCT USER_ID
+    FROM (
+        <choose>
+            <when test="projId != null">
+                SELECT p.LEADER_ID AS USER_ID
+                FROM PROJECTS p
+                WHERE p.PROJ_ID = #{projId}
+                UNION ALL
+                SELECT pm.USER_ID
+                FROM PROJ_MEMBERS pm
+                WHERE pm.PROJ_ID = #{projId}
+                  AND UPPER(NVL(pm.PROJ_ROLE, 'MEMBER')) IN ('ADMIN', 'LEADER', 'OWNER', 'PM')
+                UNION ALL
+                SELECT w.OWNER_ID
+                FROM PROJECTS p
+                JOIN WORKSPACES w ON w.WS_ID = p.WS_ID
+                WHERE p.PROJ_ID = #{projId}
+                UNION ALL
+                SELECT wm.USER_ID
+                FROM PROJECTS p
+                JOIN WS_MEMBERS wm ON wm.WS_ID = p.WS_ID
+                WHERE p.PROJ_ID = #{projId}
+                  AND UPPER(NVL(wm.WS_ROLE, 'MEMBER')) IN ('ADMIN', 'OWNER', 'LEADER')
+            </when>
+            <otherwise>
+                SELECT w.OWNER_ID AS USER_ID
+                FROM WORKSPACES w
+                WHERE w.WS_ID = #{wsId}
+                UNION ALL
+                SELECT wm.USER_ID
+                FROM WS_MEMBERS wm
+                WHERE wm.WS_ID = #{wsId}
+                  AND UPPER(NVL(wm.WS_ROLE, 'MEMBER')) IN ('ADMIN', 'OWNER', 'LEADER')
+            </otherwise>
+        </choose>
+    )
+    WHERE USER_ID IS NOT NULL
+</select>
 
 
 <sql id="reportBaseSelect">
@@ -471,6 +672,9 @@
             ELSE REGEXP_REPLACE(DBMS_LOB.SUBSTR(post.CONTENT, 1000, 1), '&lt;[^&gt;]*&gt;', '')
         END AS TARGET_CONTENT,
         CASE WHEN br.CONTENT_TYPE = 'REPLY' THEN reply.REPLY_ID ELSE NULL END AS REPLY_ID,
+        CASE WHEN br.CONTENT_TYPE = 'REPLY' THEN NVL(reply.DELETED_YN, 'N') ELSE NVL(post.DELETED_YN, 'N') END AS TARGET_DELETED_YN,
+        CASE WHEN br.CONTENT_TYPE = 'REPLY' THEN reply.DELETED_BY ELSE post.DELETED_BY END AS TARGET_DELETED_BY,
+        TO_CHAR(CASE WHEN br.CONTENT_TYPE = 'REPLY' THEN reply.DELETED_AT ELSE post.DELETED_AT END, 'YYYY-MM-DD HH24:MI') AS TARGET_DELETED_AT,
         targetUser.USER_NAME AS TARGET_WRITER_NAME
     FROM BOARD_REPORTS br
     JOIN USERS reporter ON reporter.USER_ID = br.REPORTER_ID
@@ -565,5 +769,251 @@
            PROC_USER_ID = #{procUserId}
      WHERE REPORT_ID = #{reportId}
 </update>
+
+
+
+    <!-- 게시판 채널 관리 -->
+    <select id="selectBoardChannels" resultType="map">
+        SELECT CHANNEL_ID, SCOPE_TYPE, WS_ID, PROJ_ID, CHANNEL_NAME, CHANNEL_TYPE,
+               SORT_ORDER, ACTIVE_YN, DELETED_YN, CREATED_BY, CREATED_AT,
+               UPDATED_BY, UPDATED_AT, DELETED_BY, DELETED_AT
+        FROM BOARD_CHANNELS
+        WHERE DELETED_YN = 'N'
+        <choose>
+            <when test="projId != null">AND SCOPE_TYPE='PROJECT' AND PROJ_ID=#{projId}</when>
+            <otherwise>AND SCOPE_TYPE='GROUP' AND WS_ID=#{wsId} AND PROJ_ID IS NULL</otherwise>
+        </choose>
+        <if test="!includeInactive">AND ACTIVE_YN='Y'</if>
+        ORDER BY CASE WHEN CHANNEL_TYPE='NOTICE' THEN 0 ELSE 1 END, SORT_ORDER, CHANNEL_ID
+    </select>
+
+    <select id="selectBoardChannel" resultType="map">
+        SELECT CHANNEL_ID, SCOPE_TYPE, WS_ID, PROJ_ID, CHANNEL_NAME, CHANNEL_TYPE,
+               SORT_ORDER, ACTIVE_YN, DELETED_YN, CREATED_BY, CREATED_AT,
+               UPDATED_BY, UPDATED_AT, DELETED_BY, DELETED_AT
+        FROM BOARD_CHANNELS
+        WHERE CHANNEL_ID=#{channelId} AND DELETED_YN='N'
+    </select>
+
+    <select id="countGeneralChannels" resultType="int">
+        SELECT COUNT(*) FROM BOARD_CHANNELS
+        WHERE CHANNEL_TYPE='GENERAL' AND DELETED_YN='N'
+        <choose>
+            <when test="projId != null">AND SCOPE_TYPE='PROJECT' AND PROJ_ID=#{projId}</when>
+            <otherwise>AND SCOPE_TYPE='GROUP' AND WS_ID=#{wsId} AND PROJ_ID IS NULL</otherwise>
+        </choose>
+    </select>
+
+    <select id="countActiveGeneralChannels" resultType="int">
+        SELECT COUNT(*) FROM BOARD_CHANNELS
+        WHERE CHANNEL_TYPE='GENERAL' AND DELETED_YN='N' AND ACTIVE_YN='Y'
+        <choose>
+            <when test="projId != null">AND SCOPE_TYPE='PROJECT' AND PROJ_ID=#{projId}</when>
+            <otherwise>AND SCOPE_TYPE='GROUP' AND WS_ID=#{wsId} AND PROJ_ID IS NULL</otherwise>
+        </choose>
+    </select>
+
+    <select id="countChannelName" resultType="int">
+        SELECT COUNT(*) FROM BOARD_CHANNELS
+        WHERE DELETED_YN='N' AND UPPER(TRIM(CHANNEL_NAME))=UPPER(TRIM(#{channelName}))
+        <choose>
+            <when test="projId != null">AND SCOPE_TYPE='PROJECT' AND PROJ_ID=#{projId}</when>
+            <otherwise>AND SCOPE_TYPE='GROUP' AND WS_ID=#{wsId} AND PROJ_ID IS NULL</otherwise>
+        </choose>
+        <if test="excludeChannelId != null">AND CHANNEL_ID != #{excludeChannelId}</if>
+    </select>
+
+    <insert id="insertBoardChannel" parameterType="map">
+        <selectKey keyProperty="channelId" resultType="long" order="BEFORE">
+            SELECT SEQ_BOARD_CHANNEL_ID.NEXTVAL FROM DUAL
+        </selectKey>
+        INSERT INTO BOARD_CHANNELS (
+            CHANNEL_ID, SCOPE_TYPE, WS_ID, PROJ_ID, CHANNEL_NAME, CHANNEL_TYPE,
+            SORT_ORDER, ACTIVE_YN, DELETED_YN, CREATED_BY, CREATED_AT
+        ) VALUES (
+            #{channelId}, #{scopeType}, #{wsId, jdbcType=NUMERIC}, #{projId, jdbcType=NUMERIC},
+            #{channelName}, 'GENERAL',
+            (SELECT NVL(MAX(SORT_ORDER),0)+1 FROM BOARD_CHANNELS c
+             WHERE c.DELETED_YN='N' AND c.CHANNEL_TYPE='GENERAL'
+             AND ((#{projId, jdbcType=NUMERIC} IS NOT NULL AND c.PROJ_ID=#{projId, jdbcType=NUMERIC})
+                  OR (#{projId, jdbcType=NUMERIC} IS NULL AND c.PROJ_ID IS NULL AND c.WS_ID=#{wsId}))),
+            'Y', 'N', #{createdBy}, SYSDATE
+        )
+    </insert>
+
+    <insert id="insertDefaultNoticeChannel" parameterType="map">
+        INSERT INTO BOARD_CHANNELS (CHANNEL_ID, SCOPE_TYPE, WS_ID, PROJ_ID, CHANNEL_NAME, CHANNEL_TYPE, SORT_ORDER, ACTIVE_YN, DELETED_YN, CREATED_BY, CREATED_AT)
+        SELECT SEQ_BOARD_CHANNEL_ID.NEXTVAL, #{scopeType}, #{wsId, jdbcType=NUMERIC}, #{projId, jdbcType=NUMERIC}, '공지', 'NOTICE', 0, 'Y', 'N', #{createdBy}, SYSDATE
+        FROM DUAL
+        WHERE NOT EXISTS (
+            SELECT 1 FROM BOARD_CHANNELS c WHERE c.DELETED_YN='N' AND c.CHANNEL_TYPE='NOTICE'
+            AND ((#{projId, jdbcType=NUMERIC} IS NOT NULL AND c.PROJ_ID=#{projId, jdbcType=NUMERIC})
+                 OR (#{projId, jdbcType=NUMERIC} IS NULL AND c.PROJ_ID IS NULL AND c.WS_ID=#{wsId}))
+        )
+    </insert>
+
+    <insert id="insertDefaultGeneralChannel" parameterType="map">
+        INSERT INTO BOARD_CHANNELS (CHANNEL_ID, SCOPE_TYPE, WS_ID, PROJ_ID, CHANNEL_NAME, CHANNEL_TYPE, SORT_ORDER, ACTIVE_YN, DELETED_YN, CREATED_BY, CREATED_AT)
+        SELECT SEQ_BOARD_CHANNEL_ID.NEXTVAL, #{scopeType}, #{wsId, jdbcType=NUMERIC}, #{projId, jdbcType=NUMERIC}, '자유게시판', 'GENERAL', 1, 'Y', 'N', #{createdBy}, SYSDATE
+        FROM DUAL
+        WHERE NOT EXISTS (
+            SELECT 1 FROM BOARD_CHANNELS c WHERE c.DELETED_YN='N' AND c.CHANNEL_TYPE='GENERAL'
+            AND ((#{projId, jdbcType=NUMERIC} IS NOT NULL AND c.PROJ_ID=#{projId, jdbcType=NUMERIC})
+                 OR (#{projId, jdbcType=NUMERIC} IS NULL AND c.PROJ_ID IS NULL AND c.WS_ID=#{wsId}))
+        )
+    </insert>
+
+    <update id="updateBoardChannelName">
+        UPDATE BOARD_CHANNELS SET CHANNEL_NAME=#{channelName}, UPDATED_BY=#{updatedBy}, UPDATED_AT=SYSDATE
+        WHERE CHANNEL_ID=#{channelId} AND CHANNEL_TYPE='GENERAL' AND DELETED_YN='N'
+    </update>
+
+    <update id="updateBoardChannelActive">
+        UPDATE BOARD_CHANNELS SET ACTIVE_YN=#{activeYn}, UPDATED_BY=#{updatedBy}, UPDATED_AT=SYSDATE
+        WHERE CHANNEL_ID=#{channelId} AND CHANNEL_TYPE='GENERAL' AND DELETED_YN='N'
+    </update>
+
+    <update id="updateBoardChannelSort">
+        UPDATE BOARD_CHANNELS SET SORT_ORDER=#{sortOrder}, UPDATED_BY=#{updatedBy}, UPDATED_AT=SYSDATE
+        WHERE CHANNEL_ID=#{channelId} AND CHANNEL_TYPE='GENERAL' AND DELETED_YN='N'
+    </update>
+
+    <select id="countPostsByChannel" resultType="int">
+        SELECT COUNT(*) FROM BOARD_POSTS WHERE CHANNEL_ID=#{channelId} AND NVL(DELETED_YN,'N')='N'
+    </select>
+
+    <update id="movePostsToChannel">
+        UPDATE BOARD_POSTS SET CHANNEL_ID=#{toChannelId}
+        WHERE CHANNEL_ID=#{fromChannelId} AND NVL(DELETED_YN,'N')='N'
+    </update>
+
+    <update id="softDeleteBoardChannel">
+        UPDATE BOARD_CHANNELS
+        SET DELETED_YN='Y', ACTIVE_YN='N', DELETED_BY=#{deletedBy}, DELETED_AT=SYSDATE,
+            UPDATED_BY=#{deletedBy}, UPDATED_AT=SYSDATE
+        WHERE CHANNEL_ID=#{channelId} AND CHANNEL_TYPE='GENERAL' AND DELETED_YN='N'
+    </update>
+
+    <select id="selectPostsByChannel" resultType="com.springboot.project.dto.postDTO">
+        SELECT p.POST_ID as postId, p.WS_ID as wsId, p.PROJ_ID as projId, p.CHANNEL_ID as channelId,
+               c.CHANNEL_NAME as channelName, c.CHANNEL_TYPE as channelType,
+               p.TITLE as title, p.USER_ID as userId,
+               CASE WHEN NVL(wmp.USE_ACCOUNT_PROFILE, 'Y') = 'N' THEN NVL(wmp.DISPLAY_NAME, u.USER_NAME) ELSE u.USER_NAME END as writerName,
+               CASE
+                   WHEN NVL(wmp.USE_ACCOUNT_PROFILE, 'Y') = 'N' THEN
+                       CASE
+                           WHEN (wmp.PROFILE_IMAGE_PATH IS NOT NULL OR wmp.PROFILE_IMAGE_ORIGINAL_PATH IS NOT NULL)
+                            AND NOT (UPPER(NVL(u.PROFILE_AVATAR_TYPE, 'DEFAULT')) = 'DEFAULT'
+                                     AND NVL(wmp.PROFILE_IMAGE_PATH, '#') = NVL(u.PROFILE_IMAGE_PATH, '#')
+                                     AND NVL(wmp.PROFILE_IMAGE_ORIGINAL_PATH, '#') = NVL(u.PROFILE_ORIGINAL_IMAGE_PATH, '#'))
+                               THEN NVL(wmp.PROFILE_IMAGE_PATH, wmp.PROFILE_IMAGE_ORIGINAL_PATH)
+                       END
+                   WHEN UPPER(NVL(u.PROFILE_AVATAR_TYPE, 'DEFAULT')) &lt;&gt; 'DEFAULT'
+                       THEN NVL(u.PROFILE_IMAGE_PATH, NVL(upi.CROPPED_IMAGE_PATH, NVL(u.PROFILE_ORIGINAL_IMAGE_PATH, upi.ORIGINAL_IMAGE_PATH)))
+                   ELSE NULL
+               END AS "writerProfileImagePath",
+               CASE
+                   WHEN NVL(wmp.USE_ACCOUNT_PROFILE, 'Y') = 'N' THEN
+                       CASE
+                           WHEN (wmp.PROFILE_IMAGE_PATH IS NOT NULL OR wmp.PROFILE_IMAGE_ORIGINAL_PATH IS NOT NULL)
+                            AND NOT (UPPER(NVL(u.PROFILE_AVATAR_TYPE, 'DEFAULT')) = 'DEFAULT'
+                                     AND NVL(wmp.PROFILE_IMAGE_PATH, '#') = NVL(u.PROFILE_IMAGE_PATH, '#')
+                                     AND NVL(wmp.PROFILE_IMAGE_ORIGINAL_PATH, '#') = NVL(u.PROFILE_ORIGINAL_IMAGE_PATH, '#'))
+                               THEN 'IMAGE'
+                           ELSE 'DEFAULT'
+                       END
+                   WHEN UPPER(NVL(u.PROFILE_AVATAR_TYPE, 'DEFAULT')) = 'DEFAULT' THEN 'DEFAULT'
+                   WHEN NVL(u.PROFILE_IMAGE_PATH, upi.CROPPED_IMAGE_PATH) IS NOT NULL
+                     OR NVL(u.PROFILE_ORIGINAL_IMAGE_PATH, upi.ORIGINAL_IMAGE_PATH) IS NOT NULL THEN 'IMAGE'
+                   ELSE UPPER(NVL(u.PROFILE_AVATAR_TYPE, 'DEFAULT'))
+               END AS "writerProfileAvatarType",
+               p.VIEW_COUNT as viewCount, p.BOARD_TYPE as boardType,
+               CASE WHEN p.IS_PINNED='Y' AND (p.PIN_START_DT IS NULL OR p.PIN_START_DT &lt;= SYSDATE) AND (p.PIN_END_DT IS NULL OR p.PIN_END_DT &gt;= TRUNC(SYSDATE)) THEN 'Y' ELSE 'N' END as isPinned,
+               TO_CHAR(p.PIN_START_DT,'YYYY-MM-DD') as pinStartDt,
+               TO_CHAR(p.PIN_END_DT,'YYYY-MM-DD') as pinEndDt,
+               CASE WHEN TRUNC(p.REG_DT)=TRUNC(SYSDATE) THEN TO_CHAR(p.REG_DT,'HH24:MI') ELSE TO_CHAR(p.REG_DT,'YYYY-MM-DD') END as regDt,
+               (SELECT COUNT(*) FROM BOARD_REPLIES r WHERE r.POST_ID=p.POST_ID AND NVL(r.DELETED_YN,'N')='N') as replyCount,
+               (SELECT COUNT(*) FROM ATTACHMENTS a WHERE a.POST_ID=p.POST_ID) as fileCount,
+               CASE WHEN EXISTS (SELECT 1 FROM ATTACHMENTS a WHERE a.POST_ID=p.POST_ID) THEN 1 ELSE 0 END as hasFile,
+               /* 게시글 메타는 "어디에 넣었는지"를 기준으로 구분한다.
+                  - 에디터 본문에 삽입한 이미지는 사진
+                  - SVG/Canvas는 그림
+                  - 에디터 본문에 삽입한 영상은 영상
+                  - 본문 링크는 링크
+                  - 첨부 영역으로 올린 자료는 확장자와 무관하게 파일 */
+               REGEXP_COUNT(NVL(p.CONTENT, ' '), '&lt;[[:space:]]*img([[:space:]>])', 1, 'i') as imageCount,
+               REGEXP_COUNT(NVL(p.CONTENT, ' '), '&lt;[[:space:]]*(svg|canvas)([[:space:]>])', 1, 'i') as drawingCount,
+               REGEXP_COUNT(NVL(p.CONTENT, ' '), '&lt;[[:space:]]*(video|iframe|oembed)([[:space:]>])', 1, 'i') as videoCount,
+               REGEXP_COUNT(NVL(p.CONTENT, ' '), '&lt;[[:space:]]*a([[:space:]>])', 1, 'i') as linkCount,
+               (SELECT COUNT(*) FROM ATTACHMENTS a WHERE a.POST_ID=p.POST_ID) as documentCount,
+               (SELECT COUNT(*) FROM CONTENT_REACTIONS cr WHERE cr.CONTENT_ID=p.POST_ID AND cr.CONTENT_TYPE=CASE WHEN c.CHANNEL_TYPE='NOTICE' THEN 'NOTICE' ELSE 'BOARD' END AND cr.REACTION_TYPE='LIKE') as likeCount
+        FROM BOARD_POSTS p
+        JOIN BOARD_CHANNELS c ON c.CHANNEL_ID=p.CHANNEL_ID AND c.DELETED_YN='N'
+        JOIN USERS u ON u.USER_ID=p.USER_ID
+        LEFT JOIN (
+            SELECT USER_ID, ORIGINAL_IMAGE_PATH, CROPPED_IMAGE_PATH
+            FROM (
+                SELECT pi.*,
+                       ROW_NUMBER() OVER (
+                           PARTITION BY pi.USER_ID
+                           ORDER BY CASE WHEN pi.IS_CURRENT = 'Y' THEN 0 ELSE 1 END,
+                                    pi.CREATED_AT DESC,
+                                    pi.PROFILE_IMAGE_ID DESC
+                       ) AS RN
+                FROM USER_PROFILE_IMAGES pi
+            )
+            WHERE RN = 1
+        ) upi ON upi.USER_ID = u.USER_ID
+        LEFT JOIN PROJECTS pr ON pr.PROJ_ID=p.PROJ_ID
+        LEFT JOIN WS_MEMBER_PROFILES wmp ON wmp.WS_ID=CASE WHEN p.PROJ_ID IS NOT NULL THEN pr.WS_ID ELSE p.WS_ID END AND wmp.USER_ID=p.USER_ID
+        WHERE p.CHANNEL_ID=#{channelId} AND NVL(p.DELETED_YN,'N')='N'
+        <if test="keyword != null and keyword != ''">
+            <choose>
+                <when test="searchType == 'title'">AND UPPER(p.TITLE) LIKE '%' || UPPER(#{keyword}) || '%'</when>
+                <when test="searchType == 'content'">AND UPPER(p.CONTENT) LIKE '%' || UPPER(#{keyword}) || '%'</when>
+                <when test="searchType == 'writer'">AND UPPER(CASE WHEN NVL(wmp.USE_ACCOUNT_PROFILE,'Y')='N' THEN NVL(wmp.DISPLAY_NAME,u.USER_NAME) ELSE u.USER_NAME END) LIKE '%' || UPPER(#{keyword}) || '%'</when>
+                <otherwise>
+                    AND (UPPER(p.TITLE) LIKE '%' || UPPER(#{keyword}) || '%' OR UPPER(p.CONTENT) LIKE '%' || UPPER(#{keyword}) || '%'
+                         OR UPPER(CASE WHEN NVL(wmp.USE_ACCOUNT_PROFILE,'Y')='N' THEN NVL(wmp.DISPLAY_NAME,u.USER_NAME) ELSE u.USER_NAME END) LIKE '%' || UPPER(#{keyword}) || '%')
+                </otherwise>
+            </choose>
+        </if>
+        ORDER BY CASE WHEN p.IS_PINNED='Y' AND (p.PIN_START_DT IS NULL OR p.PIN_START_DT &lt;= SYSDATE) AND (p.PIN_END_DT IS NULL OR p.PIN_END_DT &gt;= TRUNC(SYSDATE)) THEN 0 ELSE 1 END, p.REG_DT DESC
+        OFFSET #{offset} ROWS FETCH NEXT #{size} ROWS ONLY
+    </select>
+
+    <select id="countPostsByChannelFiltered" resultType="int">
+        SELECT COUNT(*)
+        FROM BOARD_POSTS p
+        JOIN USERS u ON u.USER_ID=p.USER_ID
+        LEFT JOIN PROJECTS pr ON pr.PROJ_ID=p.PROJ_ID
+        LEFT JOIN WS_MEMBER_PROFILES wmp ON wmp.WS_ID=CASE WHEN p.PROJ_ID IS NOT NULL THEN pr.WS_ID ELSE p.WS_ID END AND wmp.USER_ID=p.USER_ID
+        WHERE p.CHANNEL_ID=#{channelId} AND NVL(p.DELETED_YN,'N')='N'
+        <if test="keyword != null and keyword != ''">
+            <choose>
+                <when test="searchType == 'title'">AND UPPER(p.TITLE) LIKE '%' || UPPER(#{keyword}) || '%'</when>
+                <when test="searchType == 'content'">AND UPPER(p.CONTENT) LIKE '%' || UPPER(#{keyword}) || '%'</when>
+                <when test="searchType == 'writer'">AND UPPER(CASE WHEN NVL(wmp.USE_ACCOUNT_PROFILE,'Y')='N' THEN NVL(wmp.DISPLAY_NAME,u.USER_NAME) ELSE u.USER_NAME END) LIKE '%' || UPPER(#{keyword}) || '%'</when>
+                <otherwise>AND (UPPER(p.TITLE) LIKE '%' || UPPER(#{keyword}) || '%' OR UPPER(p.CONTENT) LIKE '%' || UPPER(#{keyword}) || '%' OR UPPER(CASE WHEN NVL(wmp.USE_ACCOUNT_PROFILE,'Y')='N' THEN NVL(wmp.DISPLAY_NAME,u.USER_NAME) ELSE u.USER_NAME END) LIKE '%' || UPPER(#{keyword}) || '%')</otherwise>
+            </choose>
+        </if>
+    </select>
+
+    <select id="selectBoardNoticeRecipientUserIds" resultType="long">
+        <choose>
+            <when test="projId != null">
+                SELECT DISTINCT pm.USER_ID
+                  FROM PROJ_MEMBERS pm
+                 WHERE pm.PROJ_ID = #{projId, jdbcType=NUMERIC}
+                   AND pm.USER_ID != #{excludeUserId, jdbcType=NUMERIC}
+            </when>
+            <otherwise>
+                SELECT DISTINCT wm.USER_ID
+                  FROM WS_MEMBERS wm
+                 WHERE wm.WS_ID = #{wsId, jdbcType=NUMERIC}
+                   AND wm.USER_ID != #{excludeUserId, jdbcType=NUMERIC}
+            </otherwise>
+        </choose>
+    </select>
 
 </mapper>

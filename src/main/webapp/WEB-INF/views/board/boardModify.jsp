@@ -1,5 +1,5 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <!DOCTYPE html>
 <html>
 <head>
@@ -8,558 +8,115 @@
     <link rel="icon" type="image/png" sizes="16x16" href="${pageContext.request.contextPath}/brand/favicon-16x16.png?v=moyo-favicon-v2">
     <link rel="shortcut icon" href="${pageContext.request.contextPath}/brand/favicon.ico?v=moyo-favicon-v2">
     <title>게시글 수정</title>
-
     <script src="https://cdn.ckeditor.com/ckeditor5/41.1.0/super-build/ckeditor.js"></script>
     <script src="https://cdn.ckeditor.com/ckeditor5/41.1.0/super-build/translations/ko.js"></script>
     <script src="${pageContext.request.contextPath}/js/commonCkeditor.js?v=20260907-image-guard-1"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
-    <style>
-        body {
-            margin: 0;
-            background: #f8f9fa;
-            color: #333;
-            font-family: 'Pretendard', sans-serif;
-        }
-
-        .modify-page {
-            max-width: 1120px;
-            margin: 34px auto 60px;
-            padding: 0 24px;
-            box-sizing: border-box;
-        }
-
-        .form-card {
-            background: #fff;
-            border: 1px solid #eef0f2;
-            border-radius: 18px;
-            padding: 38px 46px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.03);
-            box-sizing: border-box;
-        }
-
-        .modify-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            gap: 16px;
-            margin-bottom: 30px;
-            padding-bottom: 20px;
-            border-bottom: 1px solid #222;
-        }
-
-        .modify-title {
-            margin: 0;
-            font-size: 28px;
-            color: #111;
-            font-weight: 800;
-            letter-spacing: -0.03em;
-            line-height: 1.25;
-        }
-
-        .modify-desc {
-            margin: 8px 0 0;
-            font-size: 13px;
-            color: #888;
-        }
-
-        .back-link {
-            flex-shrink: 0;
-            text-decoration: none;
-            color: #666;
-            font-size: 13px;
-            font-weight: 700;
-            padding: 8px 10px;
-            border-radius: 8px;
-        }
-
-        .back-link:hover {
-            color: #4A90E2;
-            background: #f8f9fa;
-        }
-
-        .form-group {
-            margin-bottom: 22px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-size: 13px;
-            font-weight: 800;
-            color: #444;
-        }
-
-        .form-control {
-            width: 100%;
-            padding: 13px 14px;
-            border: 1px solid #ddd;
-            border-radius: 10px;
-            box-sizing: border-box;
-            font-size: 15px;
-            font-family: inherit;
-            outline: none;
-            transition: border-color .2s, box-shadow .2s;
-        }
-
-        .form-control:focus {
-            border-color: #4A90E2;
-            box-shadow: 0 0 0 3px rgba(74,144,226,0.12);
-        }
-
-        textarea {
-            width: 100%;
-            height: 80px;
-            resize: none;
-            box-sizing: border-box;
-        }
-
-        .ck.ck-editor__editable_inline,
-        .ck-editor__editable {
-            min-height: 420px !important;
-            border: 1px solid #ddd !important;
-            border-radius: 0 0 10px 10px !important;
-            padding: 0 20px !important;
-            box-sizing: border-box;
-        }
-
-        .ck.ck-toolbar {
-            border: 1px solid #ddd !important;
-            border-radius: 10px 10px 0 0 !important;
-            background: #f8f9fa !important;
-        }
-
-        .file-panel {
-            border: 1px solid #eef0f2;
-            border-radius: 12px;
-            background: #f8f9fa;
-            padding: 16px 18px;
-        }
-
-        .file-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 12px;
-            padding: 10px 0;
-            border-bottom: 1px solid #eef0f2;
-            font-size: 13px;
-        }
-
-        .file-item:last-child {
-            border-bottom: none;
-        }
-
-        .file-delete-btn {
-            border: 1px solid #ffd6d6;
-            background: #fff;
-            color: #ff4d4d;
-            border-radius: 8px;
-            padding: 6px 10px;
-            font-size: 12px;
-            font-weight: 800;
-            cursor: pointer;
-        }
-
-        .file-delete-btn:hover {
-            background: #fff5f5;
-        }
-
-        .file-input {
-            width: 100%;
-            padding: 12px 14px;
-            border: 1px dashed #ccc;
-            border-radius: 10px;
-            background: #f8f9fa;
-            box-sizing: border-box;
-            font-size: 13px;
-        }
-
-        .btn-area {
-            display: flex;
-            justify-content: flex-end;
-            gap: 10px;
-            margin-top: 26px;
-            padding-top: 24px;
-            border-top: 1px solid #eef0f2;
-        }
-
-        .btn-save,
-        .btn-cancel {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            padding: 11px 18px;
-            border-radius: 8px;
-            font-size: 13px;
-            font-weight: 800;
-            cursor: pointer;
-            text-decoration: none;
-            box-sizing: border-box;
-        }
-
-        .btn-cancel {
-            color: #495057;
-            background: #fff;
-            border: 1px solid #dee2e6;
-        }
-
-        .btn-cancel:hover {
-            background: #f8f9fa;
-        }
-
-        .btn-save {
-            background: #4A90E2;
-            color: #fff;
-            border: 1px solid #4A90E2;
-            box-shadow: 0 4px 10px rgba(74,144,226,0.2);
-        }
-
-        .btn-save:hover {
-            background: #357ABD;
-        }
-
-        @media(max-width: 760px) {
-            .modify-page {
-                margin: 24px auto 40px;
-                padding: 0 14px;
-            }
-
-            .form-card {
-                padding: 28px 22px;
-                border-radius: 16px;
-            }
-
-            .modify-header {
-                flex-direction: column;
-            }
-
-            .modify-title {
-                font-size: 24px;
-            }
-
-            .btn-area {
-                justify-content: stretch;
-            }
-
-            .btn-save,
-            .btn-cancel {
-                flex: 1;
-            }
-        }
-
-        /* ===== MOYO Board Point Theme - subtle ===== */
-        :root {
-            --moyo-blue: #4A90E2;
-            --moyo-mint: #55DDBF;
-            --moyo-mint-dark: #12BFA6;
-            --moyo-border: #e9eef2;
-            --moyo-soft-mint: #F5FFFB;
-            --moyo-text: #222;
-            --moyo-muted: #7b8491;
-        }
-
-        body {
-            background: #f8f9fa !important;
-            color: var(--moyo-text) !important;
-        }
-
-        .detail-card,
-        .write-card,
-        .form-card,
-        .list-table-wrap,
-        .comment-box,
-        .attachment-box,
-        .file-box {
-            border-color: var(--moyo-border) !important;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.03) !important;
-        }
-
-        .list-header {
-            border: none !important;
-            box-shadow: none !important;
-            background: transparent !important;
-            overflow: visible !important;
-        }
-
-        .list-header::before,
-        .list-header::after {
-            display: none !important;
-        }
-
-        .detail-card::before,
-        .write-card::before,
-        .form-card::before {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 34px;
-            bottom: 34px;
-            width: 4px;
-            border-radius: 0 999px 999px 0;
-            background: linear-gradient(180deg, var(--moyo-blue), var(--moyo-mint));
-        }
-
-        .detail-card::after,
-        .write-card::after,
-        .form-card::after {
-            display: none !important;
-        }
-
-        .detail-card,
-        .write-card,
-        .form-card {
-            position: relative;
-            overflow: hidden;
-        }
-
-        .detail-card > *,
-        .write-card > *,
-        .form-card > * {
-            position: relative;
-            z-index: 1;
-        }
-
-        .page-title,
-        .detail-title,
-        .modify-title,
-        .write-title,
-        .list-header h2 {
-            color: #111 !important;
-            letter-spacing: -0.03em !important;
-        }
-
-        .back-btn {
-            color: #666 !important;
-        }
-
-        .back-btn:hover {
-            color: var(--moyo-blue) !important;
-        }
-
-        .write-btn,
-        .primary-btn,
-        .submit-btn,
-        .save-btn,
-        .btn-save,
-        .comment-submit-btn,
-        .comment-btn,
-        button[type="submit"],
-        input[type="submit"] {
-            background: var(--moyo-blue) !important;
-            border-color: var(--moyo-blue) !important;
-            color: #fff !important;
-            box-shadow: 0 5px 12px rgba(74,144,226,0.18) !important;
-            transition: transform .18s ease, background .18s ease, box-shadow .18s ease !important;
-        }
-
-        .write-btn:hover,
-        .primary-btn:hover,
-        .submit-btn:hover,
-        .save-btn:hover,
-        .btn-save:hover,
-        .comment-submit-btn:hover,
-        .comment-btn:hover,
-        button[type="submit"]:hover,
-        input[type="submit"]:hover {
-            background: #3f83d6 !important;
-            transform: translateY(-1px);
-            box-shadow: 0 7px 15px rgba(74,144,226,0.22) !important;
-        }
-
-        .cancel-btn,
-        .btn-cancel,
-        .secondary-btn {
-            background: #fff !important;
-            border: 1px solid #dde3ea !important;
-            color: #555 !important;
-            box-shadow: none !important;
-        }
-
-        .cancel-btn:hover,
-        .btn-cancel:hover,
-        .secondary-btn:hover {
-            background: #f8fafc !important;
-            border-color: #cfd8e3 !important;
-            color: #333 !important;
-        }
-
-        .delete-btn,
-        .btn-delete,
-        .danger-btn {
-            background: #fff !important;
-            border: 1px solid #ffd1d6 !important;
-            color: #dc3545 !important;
-            box-shadow: none !important;
-        }
-
-        .delete-btn:hover,
-        .btn-delete:hover,
-        .danger-btn:hover {
-            background: #fff5f5 !important;
-            color: #c82333 !important;
-            transform: translateY(-1px);
-        }
-
-        input[type="text"],
-        input[type="date"],
-        input[type="file"],
-        select,
-        textarea {
-            border-color: #dbe3ea !important;
-            border-radius: 12px !important;
-        }
-
-        input[type="text"]:focus,
-        input[type="date"]:focus,
-        input[type="file"]:focus,
-        select:focus,
-        textarea:focus {
-            outline: none !important;
-            border-color: var(--moyo-mint) !important;
-            box-shadow: 0 0 0 3px rgba(85,221,191,0.12) !important;
-        }
-
-        .ck.ck-editor__main > .ck-editor__editable,
-        .ck.ck-toolbar {
-            border-color: #dbe3ea !important;
-        }
-
-        .ck.ck-editor__editable:focus {
-            border-color: var(--moyo-mint) !important;
-            box-shadow: 0 0 0 3px rgba(85,221,191,0.10) !important;
-        }
-
-        .list-table th {
-            background: #f8fafc !important;
-            color: #333 !important;
-        }
-
-        .list-table tbody tr:hover {
-            background: #fbfffd !important;
-        }
-
-        .list-table a:hover,
-        .post-title-link:hover {
-            color: var(--moyo-blue) !important;
-        }
-
-        .attachment-box,
-        .file-box,
-        .comment-box,
-        .comment-form {
-            background: #fafbfc !important;
-        }
-
-        .meta,
-        .post-meta,
-        .detail-meta,
-        .list-date,
-        .empty-text,
-        .comment-date,
-        .file-empty {
-            color: var(--moyo-muted) !important;
-        }
-        /* ===== End MOYO Board Point Theme - subtle ===== */
-
-</style>
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/boardUi.css?v=board-editor-picker-v10">
-<link rel="stylesheet" href="${pageContext.request.contextPath}/css/common/commonCkeditor.css?v=moyo-ckeditor-common-v2">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common/commonCkeditor.css?v=moyo-ckeditor-common-v2">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/boardForm.css?v=board-final-20260928">
+    <script src="${pageContext.request.contextPath}/js/boardDateRangePicker.js?v=board-date-range-final-v2"></script>
+    <script src="${pageContext.request.contextPath}/js/common/commonContentExplorer.js?v=board-file-ui-v2"></script>
 </head>
-<body class="moyo-board-body">
-
+<body class="moyo-board-form-body">
     <jsp:include page="/WEB-INF/views/common/header.jsp" />
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/boardUi.css?v=board-editor-picker-v10">
-
-    <div class="modify-page ">
-        <div class="form-card">
-            <div class="modify-header">
-                <div>
-                    <h1 class="modify-title">
-                        <c:choose>
-                            <c:when test="${boardType eq 'NOTICE'}">공지사항 수정</c:when>
-                            <c:when test="${false}">자료 수정</c:when>
-                            <c:otherwise>게시글 수정</c:otherwise>
-                        </c:choose>
-                    </h1>
-                    <p class="modify-desc"><c:choose><c:when test="${false}">자료명, 설명, 첨부파일을 수정합니다.</c:when><c:otherwise>제목, 내용, 첨부파일을 수정합니다.</c:otherwise></c:choose></p>
-                </div>
-                <a id="backLink" href="/group/board/detail?postId=${post.postId}&wsId=${wsId}" class="back-link">← 상세로 돌아가기</a>
+    <main class="board-form-page">
+        <c:url var="boardFormListUrl" value="${empty projId ? '/group/board/list' : '/project/board/list'}">
+            <c:if test="${not empty wsId}"><c:param name="wsId" value="${wsId}" /></c:if>
+            <c:if test="${not empty boardType}"><c:param name="type" value="${boardType}" /></c:if>
+            <c:if test="${not empty post.channelId}"><c:param name="channelId" value="${post.channelId}" /></c:if>
+            <c:if test="${not empty projId}"><c:param name="projId" value="${projId}" /></c:if>
+        </c:url>
+        <header class="board-form-head">
+            <div class="board-form-head-copy">
+                <a class="board-form-kicker" href="${boardFormListUrl}" aria-label="게시판 목록으로 이동"><span class="board-form-kicker-icon" aria-hidden="true"><c:choose><c:when test="${boardType eq 'NOTICE'}">&#128226;</c:when><c:otherwise>&#128172;</c:otherwise></c:choose></span><span>게시판</span></a>
+                <h1>게시글 수정</h1>
+                <p><strong>${currentChannelName}</strong>에 등록된 글을 수정합니다.</p>
             </div>
+        </header>
 
-            <form action="/group/board/modify" method="POST" enctype="multipart/form-data">
-                <input type="hidden" name="postId" value="${post.postId}">
-                <input type="hidden" name="wsId" value="${wsId}">
-                <input type="hidden" name="boardType" value="${boardType}">
-                <input type="hidden" name="projId" value="${projId}">
+        <form class="board-form-shell" action="/group/board/modify" method="POST" enctype="multipart/form-data">
+            <input type="hidden" name="postId" value="${post.postId}">
+            <input type="hidden" name="wsId" value="${wsId}">
+            <input type="hidden" name="boardType" value="${boardType}">
+            <input type="hidden" name="projId" value="${projId}">
 
-                <div class="form-group">
-                    <label for="title"><c:choose><c:when test="${false}">자료명</c:when><c:otherwise>제목</c:otherwise></c:choose></label>
-                    <input type="text" id="title" name="title" class="form-control" value="${post.title}" required>
-                </div>
+            <section class="board-form-section">
+                <div class="board-form-section-head"><h2>게시판</h2><p>현재 글이 등록된 공간입니다.</p></div>
+                <div class="board-form-field"><span class="board-current-channel">${currentChannelName}</span></div>
+            </section>
 
+            <section class="board-form-section">
+                <div class="board-form-section-head"><h2>제목</h2><p>내용을 한눈에 알 수 있게 적어주세요.</p></div>
+                <div class="board-form-field"><input type="text" id="title" name="title" class="board-form-input" value="${post.title}" required></div>
+            </section>
 
-                <c:if test="${canManageBoard}">
-                    <div class="form-group board-pin-panel ${post.isPinned eq 'Y' ? 'is-active' : 'is-inactive'}">
-                        <div class="board-pin-head">
-                            <label class="board-pin-toggle">
-                                <input type="checkbox" name="isPinned" id="isPinned" value="Y" ${post.isPinned eq 'Y' ? 'checked' : ''}>
-                                <span>상단 고정</span>
-                            </label>
-                            <p>그룹장/팀장 또는 관리자만 사용할 수 있습니다. 기간을 비우면 계속 고정됩니다.</p>
-                        </div>
-                        <div class="board-pin-dates">
-                            <label>시작일
-                                <input type="date" name="pinStartDt" id="pinStartDt" class="pin-date-input" value="${post.pinStartDt}" ${post.isPinned eq 'Y' ? '' : 'disabled'}>
-                            </label>
-                            <label>종료일
-                                <input type="date" name="pinEndDt" id="pinEndDt" class="pin-date-input" value="${post.pinEndDt}" ${post.isPinned eq 'Y' ? '' : 'disabled'}>
-                            </label>
+            <section class="board-form-section">
+                <div class="board-form-section-head"><h2>내용</h2><p>텍스트와 이미지를 자유롭게 정리할 수 있어요.</p></div>
+                <div class="board-form-field board-editor-wrap"><textarea id="editor" name="content" autocomplete="off" spellcheck="false">${post.content}</textarea></div>
+            </section>
+
+            <c:if test="${canManageBoard and boardType eq 'NOTICE'}">
+                <section class="board-form-section board-notice-settings">
+                    <div class="board-form-section-head"><h2>공지 설정</h2><p>공지에 필요한 옵션만 선택해서 변경합니다.</p></div>
+                    <div class="board-form-field">
+                        <div class="board-notice-panel">
+                            <div class="board-setting-row">
+                                <div class="board-setting-copy"><strong>상단 고정</strong><span>공지 목록 상단에 고정해서 보여줍니다.</span></div>
+                                <label class="board-switch"><input type="checkbox" name="isPinned" id="isPinned" value="Y" ${post.isPinned eq 'Y' ? 'checked' : ''}><span class="board-switch-track"><i></i></span></label>
+                            </div>
+                            <div id="pinDateArea" class="board-pin-dates ${post.isPinned eq 'Y' ? '' : 'is-hidden'}">
+                                <div id="pinDateRangePicker" class="board-date-range-picker" data-start="${post.pinStartDt}" data-end="${post.pinEndDt}">
+                                    <input type="hidden" name="pinStartDt" id="pinStartDt" value="${post.pinStartDt}" ${post.isPinned eq 'Y' ? '' : 'disabled'}>
+                                    <input type="hidden" name="pinEndDt" id="pinEndDt" value="${post.pinEndDt}" ${post.isPinned eq 'Y' ? '' : 'disabled'}>
+                                    <button type="button" class="board-date-range-trigger" aria-haspopup="dialog" aria-expanded="false">
+                                        <span class="board-date-range-icon" aria-hidden="true"></span>
+                                        <span class="board-date-range-label">기간을 선택하세요</span>
+                                        <span class="board-date-range-caret" aria-hidden="true"></span>
+                                    </button>
+                                </div>
+                                <p>기간을 비우면 계속 고정됩니다.</p>
+                            </div>
+                            <div class="board-setting-row board-setting-row-divided">
+                                <div class="board-setting-copy"><strong>변경 내용을 다시 알림</strong><span>필요할 때만 멤버에게 수정된 공지를 다시 알려줍니다.</span></div>
+                                <label class="board-switch"><input type="checkbox" name="resendNotification" id="resendNotification" value="Y"><span class="board-switch-track"><i></i></span></label>
+                            </div>
                         </div>
                     </div>
-                </c:if>
+                </section>
+            </c:if>
 
-                <div class="form-group">
-                    <label for="editor"><c:choose><c:when test="${false}">자료 설명</c:when><c:otherwise>내용</c:otherwise></c:choose></label>
-                    <textarea id="editor" name="content" autocomplete="off" spellcheck="false">${post.content}</textarea>
-                </div>
-
-                <c:if test="${not empty fileList}">
-                    <div class="form-group">
-                        <label><c:choose><c:when test="${false}">기존 자료 파일</c:when><c:otherwise>기존 첨부 파일</c:otherwise></c:choose></label>
+            <section class="board-form-section">
+                <div class="board-form-section-head"><h2>파일 첨부</h2><p>기존 파일을 정리하거나 새 파일을 추가할 수 있어요.</p></div>
+                <div class="board-form-field">
+                    <c:if test="${not empty fileList}">
                         <div id="existingFiles" class="file-panel">
                             <c:forEach var="file" items="${fileList}">
-                                <div class="file-item" id="file-${file.FILE_ID}">
-                                    <span>💾 ${file.FILE_ORIGINAL_NAME}</span>
+                                <div class="file-item js-board-file-item" id="file-${file.FILE_ID}" data-board-file-name="<c:out value='${file.FILE_ORIGINAL_NAME}'/>">
+                                    <div class="board-file-meta">
+                                        <span class="board-file-icon" data-board-file-icon aria-hidden="true">📄</span>
+                                        <span class="board-file-name-wrap" data-board-file-name-slot title="<c:out value='${file.FILE_ORIGINAL_NAME}'/>">
+                                            <span class="board-file-stem"><c:out value="${file.FILE_ORIGINAL_NAME}"/></span>
+                                        </span>
+                                        <span class="board-file-size js-board-file-size" data-file-size="${file.FILE_SIZE}"></span>
+                                    </div>
                                     <button type="button" class="file-delete-btn" onclick="deleteFile(${file.FILE_ID})">삭제</button>
                                 </div>
                             </c:forEach>
                         </div>
-                    </div>
-                </c:if>
-
-                <div class="form-group">
-                    <label class="form-label" for="fileInput"><c:choose><c:when test="${false}">새 자료 파일 추가</c:when><c:otherwise>새 파일 추가</c:otherwise></c:choose></label>
-                    <div id="fileDropZone" class="board-file-dropzone ">
+                    </c:if>
+                    <div id="fileDropZone" class="board-file-dropzone">
                         <input type="file" id="fileInput" name="files" multiple class="file-input board-file-hidden">
-                        <div class="dropzone-icon">📎</div>
-                        <div class="dropzone-main"><c:choose><c:when test="${false}">자료 파일을 끌어다 놓거나 클릭해서 선택하세요</c:when><c:otherwise>파일을 끌어다 놓거나 클릭해서 선택하세요</c:otherwise></c:choose></div>
-                        <div class="dropzone-sub"><c:choose><c:when test="${false}">기존 자료 파일은 유지하면서 새 파일을 추가할 수 있습니다.</c:when><c:otherwise>여러 파일을 한 번에 추가할 수 있습니다.</c:otherwise></c:choose></div>
+                        <div class="dropzone-icon">📎</div><div><div class="dropzone-main">새 파일을 끌어다 놓거나 클릭해서 선택하세요</div><div class="dropzone-sub">기존 파일은 유지하면서 새 파일을 추가할 수 있습니다.</div></div>
                     </div>
                     <ul id="selectedFileList" class="selected-file-list"></ul>
                 </div>
+            </section>
 
-                <div class="btn-area">
-                    <a id="cancelLink" href="/group/board/detail?postId=${post.postId}&wsId=${wsId}" class="btn-cancel">취소</a>
-                    <button type="submit" class="btn-save"><c:choose><c:when test="${false}">자료 수정</c:when><c:otherwise>수정 완료</c:otherwise></c:choose></button>
-                </div>
-            </form>
-        </div>
-    </div>
-
+            <div class="board-form-actions"><a id="cancelLink" href="/group/board/detail?postId=${post.postId}&wsId=${wsId}" class="btn-cancel">취소</a><button type="submit" class="btn-save">수정 완료</button></div>
+        </form>
+    </main>
     <jsp:include page="/WEB-INF/views/common/footer.jsp" />
-
-    <script>
+<script>
         let myEditor;
 
         let selectedBoardFiles = [];
@@ -625,9 +182,31 @@
             selectedFileList.innerHTML = '';
             selectedBoardFiles.forEach((file, index) => {
                 const li = document.createElement('li');
-                li.innerHTML = '<span>📄 ' + escapeHtml(file.name) + ' <em>' + formatFileSize(file.size) + '</em></span>' +
+                const fileMeta = window.MoyoContentFileUi;
+                li.innerHTML = '<div class="board-file-meta">' +
+                               '<span class="board-file-icon" aria-hidden="true">' + fileMeta.fileIcon({ name: file.name, contentType: file.type }) + '</span>' +
+                               fileMeta.fileNameHtml(file.name) +
+                               '<span class="board-file-size">' + formatFileSize(file.size) + '</span>' +
+                               '</div>' +
                                '<button type="button" onclick="removeSelectedFile(' + index + ')">삭제</button>';
                 selectedFileList.appendChild(li);
+            });
+        }
+
+
+        function hydrateExistingBoardFileNames() {
+            document.querySelectorAll('[data-board-file-name]').forEach(function(item) {
+                const ui = window.MoyoContentFileUi;
+                if (!ui) return;
+                const raw = item.getAttribute('data-board-file-name') || '';
+                const icon = item.querySelector('[data-board-file-icon]');
+                const slot = item.querySelector('[data-board-file-name-slot]');
+                if (icon) icon.textContent = ui.fileIcon({ originalName: raw });
+                if (slot) slot.outerHTML = ui.fileNameHtml(raw);
+            });
+            document.querySelectorAll('.js-board-file-size').forEach(function(el) {
+                const size = Number(el.dataset.fileSize || 0);
+                el.textContent = size > 0 ? formatFileSize(size) : '';
             });
         }
 
@@ -716,35 +295,43 @@
                 ? "/group/board/detail?postId=${post.postId}&wsId=${wsId}&projId=" + projId
                 : "/group/board/detail?postId=${post.postId}&wsId=${wsId}";
 
-            document.getElementById("backLink").href = detailUrl;
             document.getElementById("cancelLink").href = detailUrl;
             initializeBoardFileDropZone();
+            hydrateExistingBoardFileNames();
+            if (window.MoyoDateRangePicker) {
+                window.MoyoDateRangePicker.create('pinDateRangePicker', 'pinStartDt', 'pinEndDt');
+            }
             initializeBoardPinToggle();
         });
 
 
-        function initializeBoardPinToggle() {
+        function syncPinState() {
             const isPinnedEl = document.getElementById('isPinned');
             const pinStartEl = document.getElementById('pinStartDt');
             const pinEndEl = document.getElementById('pinEndDt');
+            const pinDateArea = document.getElementById('pinDateArea');
             if (!isPinnedEl || !pinStartEl || !pinEndEl) return;
 
-            const panel = isPinnedEl.closest('.board-pin-panel');
-            const syncPinState = () => {
-                const enabled = isPinnedEl.checked;
-                [pinStartEl, pinEndEl].forEach(input => {
-                    input.disabled = !enabled;
-                    if (!enabled) input.value = '';
-                });
-                if (panel) {
-                    panel.classList.toggle('is-active', enabled);
-                    panel.classList.toggle('is-inactive', !enabled);
-                }
-            };
+            const enabled = isPinnedEl.checked;
+            pinStartEl.disabled = !enabled;
+            pinEndEl.disabled = !enabled;
+            if (!enabled) {
+                pinStartEl.value = '';
+                pinEndEl.value = '';
+            }
+            if (pinDateArea) pinDateArea.classList.toggle('is-hidden', !enabled);
+            if (window.MoyoDateRangePicker) {
+                window.MoyoDateRangePicker.setDisabled('pinDateRangePicker', !enabled);
+                if (!enabled) window.MoyoDateRangePicker.clear('pinDateRangePicker');
+            }
+        }
 
-            isPinnedEl.addEventListener('change', syncPinState);
+        function initializeBoardPinToggle() {
+            const isPinnedEl = document.getElementById('isPinned');
+            if (isPinnedEl) isPinnedEl.addEventListener('change', syncPinState);
             syncPinState();
         }
+
 
         window.MoyoCkeditor.create(document.querySelector('#editor'), {
             profile: 'BOARD',

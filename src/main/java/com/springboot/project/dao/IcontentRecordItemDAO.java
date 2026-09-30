@@ -10,7 +10,8 @@ import com.springboot.project.dto.contentRecordItemDTO;
 public interface IcontentRecordItemDAO {
     int insertItem(contentRecordItemDTO item);
     int insertNoteContent(contentRecordItemDTO item);
-    int updateNoteContent(@Param("recordTargetId") Long recordTargetId, @Param("recordItemId") Long recordItemId, @Param("title") String title, @Param("content") String content, @Param("userId") Long userId, @Param("baseTitle") String baseTitle, @Param("baseContent") String baseContent);
+    contentRecordItemDTO selectNoteForUpdate(@Param("recordTargetId") Long recordTargetId, @Param("recordItemId") Long recordItemId);
+    int updateNoteContent(@Param("contentId") Long contentId, @Param("title") String title, @Param("userId") Long userId, @Param("content") String content);
     int updateItemTitle(@Param("recordTargetId") Long recordTargetId, @Param("recordItemId") Long recordItemId, @Param("title") String title);
     int softDeleteNoteContent(@Param("recordTargetId") Long recordTargetId, @Param("recordItemId") Long recordItemId, @Param("userId") Long userId);
     int softDeleteNoteItem(@Param("recordTargetId") Long recordTargetId, @Param("recordItemId") Long recordItemId);

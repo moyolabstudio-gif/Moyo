@@ -1516,6 +1516,8 @@
         if (alertType === 'SHARE') return { icon: '🔗', label: '공유 알림' };
         if (alertType === 'PHOTO_SEND') return { icon: '📷', label: '사진 전달' };
         if (alertType === 'FRIEND_ACCEPTED') return { icon: '👥', label: '친구 알림' };
+        if (alertType === 'BOARD_REPORT') return { icon: '⚠', label: '신고 알림' };
+        if (alertType.indexOf('POLL_') === 0 || targetType === 'POLL') return { icon: '📊', label: '투표 알림' };
         return { icon: '📣', label: '공지 알림' };
     }
 

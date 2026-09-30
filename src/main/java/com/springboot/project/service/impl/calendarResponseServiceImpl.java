@@ -542,7 +542,14 @@ public class calendarResponseServiceImpl implements IcalendarResponseService {
         }
         Set<Long> addedAttendees = syncEventAttendees(dto.getId(), dto.getAttendeeUserIds());
         syncCalendarShareRequests(dto, dto.getUserId());
-        sendCalendarAttendeeNotices(dto, addedAttendees, dto.getUserId());
+        if (!isPollFinalizedEvent(dto)) {
+            sendCalendarAttendeeNotices(dto, addedAttendees, dto.getUserId());
+        }
+    }
+
+    private boolean isPollFinalizedEvent(calendarResponseDTO dto) {
+        if (dto == null || dto.getDescriptionText() == null) return false;
+        return dto.getDescriptionText().contains("[MOYO_POLL_ID:");
     }
     
  // 1. 인터페이스 규격에 맞춰 파라미터를 Map으로 변경 (@Override 에러 해결)

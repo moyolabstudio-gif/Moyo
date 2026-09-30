@@ -5,7 +5,7 @@
     var widgetStates = Object.create(null);
     var BOARD_LABELS = Object.freeze({
         NOTICE: { empty: '아직 공지사항이 없습니다.', description: '새로운 공지가 등록되면 이곳에서 확인할 수 있습니다.' },
-        FREE: { empty: '아직 자유 피드가 없습니다.', description: '멤버들과 가볍게 이야기를 시작해보세요.' },
+        FREE: { empty: '아직 게시글이 없습니다.', description: '게시판에 새로운 이야기를 남겨보세요.' },
     });
 
     function text(value) {
@@ -118,7 +118,7 @@
 
     function setBoardLoading() {
         setListState('noticeList', '공지사항을 불러오는 중입니다.', 'is-loading');
-        setListState('freeList', '자유 피드를 불러오는 중입니다.', 'is-loading');
+        setListState('freeList', '게시판을 불러오는 중입니다.', 'is-loading');
         setListState('fileList', '자료실을 불러오는 중입니다.', 'is-loading');
     }
 
@@ -252,7 +252,10 @@
             pinned: text(raw.isPinned || raw.IS_PINNED).toUpperCase() === 'Y',
             writerName: raw.writerName || raw.WRITER_NAME || '멤버',
             writerProfile: profileImageOf(raw),
-            boardType: text(raw.boardType || raw.BOARD_TYPE).toUpperCase()
+            boardType: text(raw.boardType || raw.BOARD_TYPE).toUpperCase(),
+            channelId: raw.channelId || raw.CHANNEL_ID || '',
+            channelName: raw.channelName || raw.CHANNEL_NAME || '',
+            channelType: text(raw.channelType || raw.CHANNEL_TYPE).toUpperCase()
         };
     }
 
@@ -311,6 +314,7 @@
         setPollLoading();
     }
 
+
     function renderBoard(config, targetId, rawList, type) {
         var target = document.getElementById(targetId);
         if (!target) return;
@@ -328,8 +332,12 @@
         target.innerHTML = list.slice(0, config.limits.board).map(function (post) {
             var pin = type === 'NOTICE' && post.pinned ? '<span class="pin-badge">고정</span>' : '';
             var reply = post.replyCount > 0 ? '<span class="reply-badge">' + post.replyCount + '</span>' : '';
-            return '<li class="board-item"><a href="' + escapeHtml(boardDetailUrl(config, post)) + '">' + pin +
-                '<span>' + escapeHtml(post.title) + '</span>' + reply + '</a>' +
+            var channelName = text(post.channelName).trim();
+            var channel = type !== 'NOTICE' && channelName
+                ? '<span class="board-channel-label" title="' + escapeHtml(channelName) + '">[' + escapeHtml(channelName) + ']</span>'
+                : '';
+            return '<li class="board-item"><a href="' + escapeHtml(boardDetailUrl(config, post)) + '">' + pin + channel +
+                '<span class="board-post-title">' + escapeHtml(post.title) + '</span>' + reply + '</a>' +
                 '<span class="board-date">' + escapeHtml(formatDate(post.regDt)) + '</span></li>';
         }).join('');
     }

@@ -35,7 +35,7 @@
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common/commonMainDashboard.css?v=person-avatar-policy-v2-20260913">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common/commonMainHero.css?v=hero-mobile-actions-v4-20260918">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common/commonWidgetBase.css?v=widget-more-link-v1-20260910">
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common/commonCommunityWidgets.css?v=mobile-widget-heights-cumulative-final-20260918">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common/commonCommunityWidgets.css?v=board-widget-renewal-20260930">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common/commonContentWidgets.css?v=content-empty-center-v14-20260922">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common/commonMiniCalendar.css?v=person-avatar-policy-v2-20260913">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common/commonQuickCalendarCreate.css?v=attendee-share-avatar-v40">
@@ -55,7 +55,7 @@
     <script defer src="${pageContext.request.contextPath}/js/common/commonContentRecordModal.js"></script>
     <script defer src="${pageContext.request.contextPath}/js/commonCalendarEventPreview.js?v=calendar-preview-avatar-policy-v12"></script>
     <script defer src="${pageContext.request.contextPath}/js/commonQuickCalendarCreate.js?v=attendee-share-avatar-v29"></script>
-    <script defer src="${pageContext.request.contextPath}/js/commonCommunityWidgets.js?v=collab-log-single-source-v6-20260919"></script>
+    <script defer src="${pageContext.request.contextPath}/js/commonCommunityWidgets.js?v=board-widget-renewal-20260930"></script>
     <script defer src="${pageContext.request.contextPath}/js/commonPeopleModal.js?v=20260809-photo-full-cleanup"></script>
     <script defer src="${pageContext.request.contextPath}/js/commonMemberWidget.js?v=person-avatar-policy-v4"></script>
     <script defer src="${pageContext.request.contextPath}/js/commonMemberDataAdapter.js?v=common-member-activity-v5-20260910"></script>

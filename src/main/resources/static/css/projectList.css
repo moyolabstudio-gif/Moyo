@@ -3269,3 +3269,51 @@ body.project-list-body .project-list-container {
 .project-list-type-filter {
     display: none !important;
 }
+
+/* Project list responsive grid final override - 2026-09-30
+   Keep one visual card grid across status sections: desktop 3 / notebook 2 / mobile 1. */
+.project-list-body .project-list-groups {
+    display: grid !important;
+    width: 100% !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    grid-auto-flow: row !important;
+    align-items: stretch !important;
+    justify-content: stretch !important;
+    gap: 14px !important;
+}
+
+.project-list-body .project-status-section,
+.project-list-body .project-list-grid {
+    display: contents !important;
+}
+
+.project-list-body .project-status-section[hidden] {
+    display: none !important;
+}
+
+.project-list-body .project-list-item,
+.project-list-body .project-list-grid > .project-list-item,
+.project-list-body .project-list-grid > .project-list-link,
+.project-list-body .project-list-grid > .project-list-link:only-child {
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: none !important;
+}
+
+.project-list-body .project-list-link {
+    width: 100% !important;
+    height: 100% !important;
+    box-sizing: border-box !important;
+}
+
+@media (max-width: 1180px) {
+    .project-list-body .project-list-groups {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+}
+
+@media (max-width: 720px) {
+    .project-list-body .project-list-groups {
+        grid-template-columns: minmax(0, 1fr) !important;
+    }
+}

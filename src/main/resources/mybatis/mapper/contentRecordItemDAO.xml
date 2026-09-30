@@ -44,16 +44,36 @@
            t.WS_ID,t.PROJ_ID,#{createdBy},NVL(NULLIF(TRIM(#{title}),''),'새 노트'),#{previewContent,jdbcType=CLOB},'TASK_RECORD',SYSDATE,#{createdBy},'N'
       FROM CONTENT_RECORD_TARGETS t WHERE t.RECORD_TARGET_ID=#{recordTargetId}
   </insert>
+  <select id="selectNoteForUpdate" resultType="com.springboot.project.dto.contentRecordItemDTO">
+    SELECT i.RECORD_ITEM_ID AS recordItemId,
+           i.RECORD_TARGET_ID AS recordTargetId,
+           n.NOTE_ID AS contentId,
+           n.NOTE_TITLE AS title,
+           n.MEMO AS previewContent
+      FROM CONTENT_RECORD_ITEMS i
+      JOIN NOTES n ON n.NOTE_ID=i.CONTENT_ID
+     WHERE i.RECORD_ITEM_ID=#{recordItemId}
+       AND i.RECORD_TARGET_ID=#{recordTargetId}
+       AND i.RECORD_TYPE='NOTE'
+       AND i.DELETED_YN='N'
+       AND NVL(n.DELETED_YN,'N')='N'
+     FOR UPDATE OF n.NOTE_TITLE, n.MEMO
+  </select>
   <update id="updateNoteContent">
-    UPDATE NOTES n SET n.NOTE_TITLE=NVL(NULLIF(TRIM(#{title}),''),SUBSTR(REGEXP_REPLACE(#{content},'[[:space:]]+',' '),1,30)),
-                       n.MEMO=#{content,jdbcType=CLOB},n.UPD_DT=SYSDATE,n.UPDATED_BY=#{userId}
-     WHERE n.NOTE_ID=(SELECT i.CONTENT_ID FROM CONTENT_RECORD_ITEMS i WHERE i.RECORD_ITEM_ID=#{recordItemId} AND i.RECORD_TARGET_ID=#{recordTargetId} AND i.RECORD_TYPE='NOTE' AND i.DELETED_YN='N')
-       AND NVL(n.NOTE_TITLE, CHR(0)) = NVL(#{baseTitle,jdbcType=VARCHAR}, CHR(0))
-       AND (
-            (n.MEMO IS NULL AND #{baseContent,jdbcType=CLOB} IS NULL)
-            OR (n.MEMO IS NOT NULL AND #{baseContent,jdbcType=CLOB} IS NOT NULL
-                AND DBMS_LOB.COMPARE(n.MEMO, #{baseContent,jdbcType=CLOB}) = 0)
-       )
+    MERGE INTO NOTES n
+    USING (
+      SELECT #{contentId} AS NOTE_ID,
+             #{title,jdbcType=VARCHAR} AS NEW_TITLE,
+             #{userId} AS USER_ID,
+             #{content,jdbcType=CLOB} AS NEW_CONTENT
+        FROM DUAL
+    ) src
+       ON (n.NOTE_ID=src.NOTE_ID)
+    WHEN MATCHED THEN UPDATE SET
+         n.NOTE_TITLE=src.NEW_TITLE,
+         n.UPD_DT=SYSDATE,
+         n.UPDATED_BY=src.USER_ID,
+         n.MEMO=src.NEW_CONTENT
   </update>
   <update id="updateItemTitle">
     UPDATE CONTENT_RECORD_ITEMS

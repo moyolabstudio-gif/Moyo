@@ -5,19 +5,38 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.springboot.project.dao.IpollDAO;
+import com.springboot.project.dao.IuserNoticeDAO;
+import com.springboot.project.dto.calendarResponseDTO;
+import com.springboot.project.service.IcalendarResponseService;
 import com.springboot.project.service.IpollService;
+import com.springboot.project.service.IprojectAuthorizationService;
+import com.springboot.project.service.WorkspaceAuthorizationService;
 
 @Service
 public class pollServiceImpl implements IpollService {
 
     @Autowired
     private IpollDAO pollDao;
+
+    @Autowired
+    private IuserNoticeDAO userNoticeDAO;
+
+    @Autowired
+    private IcalendarResponseService calendarResponseService;
+
+    @Autowired
+    private IprojectAuthorizationService projectAuthorizationService;
+
+    @Autowired
+    private WorkspaceAuthorizationService workspaceAuthorizationService;
 
     @Override
     public Map<String, Object> getActivePoll(String scope, Long wsId, Long projId, Long userId) {
@@ -55,6 +74,9 @@ public class pollServiceImpl implements IpollService {
         Date endDt = poll.get("END_DT") instanceof Date ? (Date) poll.get("END_DT") : null;
         String status = String.valueOf(poll.get("STATUS") == null ? "ACTIVE" : poll.get("STATUS")).toUpperCase();
         boolean isClosed = "CLOSED".equals(status) || (endDt != null && endDt.before(new Date()));
+        String showResultsYn = String.valueOf(poll.get("SHOW_RESULTS_YN") == null ? "N" : poll.get("SHOW_RESULTS_YN")).trim().toUpperCase();
+        boolean showResultsDuringVoting = "Y".equals(showResultsYn);
+        boolean showResults = isClosed || showResultsDuringVoting;
 
         Long myOptionId = null;
         if (userId != null && pollId != null) {
@@ -69,6 +91,10 @@ public class pollServiceImpl implements IpollService {
         if (rawOptions != null) {
             for (Map<String, Object> option : rawOptions) {
                 Map<String, Object> item = new HashMap<>(option);
+                if (!showResults) {
+                    item.put("COUNT", 0);
+                    item.put("count", 0);
+                }
 
                 String textValue = firstNonBlank(item, "TEXT", "text");
                 String mediaUrl = firstNonBlank(item,
@@ -116,18 +142,27 @@ public class pollServiceImpl implements IpollService {
         result.put("myOptionId", myOptionId);
         int totalVoteCount = pollDao.countPollVotes(pollId);
         Long createdBy = toLong(poll.get("USER_ID"));
-        boolean canManage = userId != null && createdBy != null && userId.equals(createdBy) && !isClosed;
+        boolean isCreator = userId != null && createdBy != null && userId.equals(createdBy);
+        boolean canEdit = isCreator && !isClosed;
+        boolean canExtend = isCreator && isClosed;
+        boolean canDelete = isCreator || isScopeManager(poll, userId);
 
-        result.put("showResults", true);
+        result.put("showResults", showResults);
+        result.put("showResultsYn", showResultsYn);
+        result.put("showResultsDuringVoting", showResultsDuringVoting);
         result.put("createdBy", createdBy);
         result.put("creatorName", poll.get("CREATOR_NAME"));
-        result.put("canManage", canManage);
-        result.put("canExtend", userId != null && createdBy != null && userId.equals(createdBy) && isClosed);
+        result.put("canEdit", canEdit);
+        result.put("canManage", canEdit);
+        result.put("canExtend", canExtend);
+        result.put("canDelete", canDelete);
         result.put("extendCount", poll.get("EXTEND_COUNT"));
         result.put("prevEndDt", poll.get("PREV_END_DT"));
         result.put("totalVoteCount", totalVoteCount);
-        result.put("canEditOptions", canManage);
+        result.put("canEditOptions", canEdit);
         result.put("options", options);
+
+        applyScheduleFinalState(result, poll, options, isClosed, isCreator);
 
         return result;
     }
@@ -192,6 +227,7 @@ public class pollServiceImpl implements IpollService {
             throw new IllegalArgumentException("프로젝트 투표에는 projId가 필요합니다.");
         }
 
+        params.put("showResultsYn", normalizeYn(params.get("showResultsYn"), "N"));
         pollDao.insertPoll(params);
 
         Long pollId = toLong(params.get("pollId"));
@@ -208,6 +244,11 @@ public class pollServiceImpl implements IpollService {
             }
         }
 
+        try {
+            sendPollCreatedNotifications(pollId, params);
+        } catch (Exception e) {
+            System.err.println("투표 등록 알림 생성 실패. pollId=" + pollId + ", error=" + e.getMessage());
+        }
         return pollId;
     }
 
@@ -238,6 +279,7 @@ public class pollServiceImpl implements IpollService {
             throw new IllegalStateException("마감된 투표는 수정할 수 없습니다.");
         }
 
+        params.put("showResultsYn", normalizeYn(params.get("showResultsYn"), "N"));
         pollDao.updatePoll(params);
 
         if (!(params.get("options") instanceof List<?>)) {
@@ -287,8 +329,9 @@ public class pollServiceImpl implements IpollService {
         }
 
         Long createdBy = toLong(poll.get("USER_ID"));
-        if (createdBy == null || !createdBy.equals(userId)) {
-            throw new IllegalStateException("투표 작성자만 삭제할 수 있습니다.");
+        boolean isCreator = createdBy != null && createdBy.equals(userId);
+        if (!isCreator && !isScopeManager(poll, userId)) {
+            throw new IllegalStateException("투표 작성자 또는 관리자만 삭제할 수 있습니다.");
         }
 
         pollDao.deletePollVotes(pollId);
@@ -314,7 +357,56 @@ public class pollServiceImpl implements IpollService {
         if (!"CLOSED".equals(status) && (endDt == null || endDt.after(new Date()))) {
             throw new IllegalStateException("종료된 투표만 연장할 수 있습니다.");
         }
+        if (pollDao.selectCalendarEventIdByPollId(pollId) != null) {
+            throw new IllegalStateException("이미 일정으로 확정된 투표는 연장할 수 없습니다.");
+        }
         pollDao.extendPoll(params);
+    }
+
+    @Override
+    public void finalizeExpiredSchedulePolls() {
+        List<Long> pollIds = pollDao.selectExpiredSchedulePollIds();
+        if (pollIds == null) return;
+        for (Long pollId : pollIds) {
+            if (pollId == null) continue;
+            try {
+                finalizeSchedulePollInternal(pollId, null, false);
+            } catch (Exception e) {
+                System.err.println("일정 투표 자동 확정 실패. pollId=" + pollId + ", error=" + e.getMessage());
+            }
+        }
+    }
+
+    @Override
+    public void finalizeExpiredRegularPolls() {
+        List<Long> pollIds = pollDao.selectExpiredRegularPollIds();
+        if (pollIds == null) return;
+        for (Long pollId : pollIds) {
+            if (pollId == null) continue;
+            try {
+                Map<String, Object> poll = pollDao.selectPollById(pollId);
+                if (poll == null || poll.isEmpty()) continue;
+                sendClosedPollNotifications(poll, null, false);
+                pollDao.closePoll(pollId);
+            } catch (Exception e) {
+                System.err.println("투표 마감 알림 처리 실패. pollId=" + pollId + ", error=" + e.getMessage());
+            }
+        }
+    }
+
+    @Override
+    @Transactional
+    public void finalizeScheduleTie(Long pollId, Long optionId, Long userId) {
+        if (pollId == null || optionId == null || userId == null) {
+            throw new IllegalArgumentException("pollId, optionId, userId는 필수입니다.");
+        }
+        Map<String, Object> poll = pollDao.selectPollById(pollId);
+        if (poll == null || poll.isEmpty()) throw new IllegalArgumentException("존재하지 않는 투표입니다.");
+        Long createdBy = toLong(poll.get("USER_ID"));
+        if (createdBy == null || !createdBy.equals(userId)) {
+            throw new IllegalStateException("동률 일정의 최종 확정은 투표 작성자만 할 수 있습니다.");
+        }
+        finalizeSchedulePollInternal(pollId, optionId, true);
     }
 
     private Map<String, Object> buildOptionParams(Long pollId, Object rawOption) {
@@ -342,7 +434,24 @@ public class pollServiceImpl implements IpollService {
             text = String.valueOf(rawOption == null ? "" : rawOption).trim();
         }
 
-        if ("IMAGE".equals(optionType)) {
+        if ("SCHEDULE".equals(optionType)) {
+            if (!(rawOption instanceof Map<?, ?>)) return null;
+            Map<?, ?> optionMap = (Map<?, ?>) rawOption;
+            String scheduleDate = cleanText(optionMap.get("scheduleDate"));
+            String startTime = cleanText(optionMap.get("startTime"));
+            String endTime = cleanText(optionMap.get("endTime"));
+            if (!scheduleDate.matches("\\d{4}-\\d{2}-\\d{2}")
+                    || !startTime.matches("(?:[01]\\d|2[0-3]):[0-5]\\d")
+                    || !endTime.matches("(?:[01]\\d|2[0-3]):[0-5]\\d")) {
+                throw new IllegalArgumentException("일정 선택지의 날짜와 시간을 확인해주세요.");
+            }
+            if (startTime.compareTo(endTime) >= 0) {
+                throw new IllegalArgumentException("일정 선택지의 종료 시간은 시작 시간보다 늦어야 합니다.");
+            }
+            text = "@MOYO_SCHEDULE@|" + scheduleDate + "|" + startTime + "|" + endTime;
+            optionType = "TEXT";
+            imagePath = null;
+        } else if ("IMAGE".equals(optionType)) {
             if (imagePath == null || imagePath.isEmpty()) return null;
             if (text.isEmpty()) text = "이미지 선택지";
         } else if ("AUDIO".equals(optionType)) {
@@ -369,6 +478,300 @@ public class pollServiceImpl implements IpollService {
         return option;
     }
 
+
+    private void applyScheduleFinalState(Map<String, Object> result, Map<String, Object> poll,
+                                         List<Map<String, Object>> options, boolean isClosed, boolean isCreator) {
+        if (!isScheduleOptions(options)) return;
+
+        result.put("schedulePoll", true);
+        Long pollId = toLong(poll.get("POLL_ID"));
+        Long eventId = pollId == null ? null : pollDao.selectCalendarEventIdByPollId(pollId);
+        if (eventId != null) {
+            result.put("scheduleFinalStatus", "REGISTERED");
+            result.put("calendarEventId", eventId);
+            return;
+        }
+        if (!isClosed) {
+            result.put("scheduleFinalStatus", "OPEN");
+            return;
+        }
+
+        int max = -1;
+        List<Long> winners = new ArrayList<>();
+        for (Map<String, Object> option : options) {
+            int count = toInt(option.get("COUNT"));
+            Long optionId = toLong(option.get("OPTION_ID"));
+            if (count > max) {
+                max = count;
+                winners.clear();
+                if (optionId != null) winners.add(optionId);
+            } else if (count == max && optionId != null) {
+                winners.add(optionId);
+            }
+        }
+        if (max <= 0) {
+            result.put("scheduleFinalStatus", "NO_VOTES");
+        } else if (winners.size() > 1) {
+            result.put("scheduleFinalStatus", "TIE");
+            result.put("scheduleTieOptionIds", winners);
+            result.put("canResolveScheduleTie", isCreator);
+        } else {
+            result.put("scheduleFinalStatus", "PENDING");
+        }
+    }
+
+    private void finalizeSchedulePollInternal(Long pollId, Long selectedOptionId, boolean manualTieResolve) {
+        Long existingEventId = pollDao.selectCalendarEventIdByPollId(pollId);
+        if (existingEventId != null) {
+            Map<String, Object> existingPoll = pollDao.selectPollById(pollId);
+            if (existingPoll != null && !existingPoll.isEmpty()) {
+                sendScheduleFinalizedNotifications(existingPoll, existingEventId);
+            }
+            pollDao.closePoll(pollId);
+            return;
+        }
+        Map<String, Object> poll = pollDao.selectPollById(pollId);
+        if (poll == null || poll.isEmpty()) return;
+        Date endDt = poll.get("END_DT") instanceof Date ? (Date) poll.get("END_DT") : null;
+        if (endDt == null || endDt.after(new Date())) {
+            if (manualTieResolve) throw new IllegalStateException("마감된 일정 투표만 확정할 수 있습니다.");
+            return;
+        }
+
+        List<Map<String, Object>> options = pollDao.selectPollOptions(pollId);
+        if (!isScheduleOptions(options)) {
+            pollDao.closePoll(pollId);
+            return;
+        }
+
+        int max = -1;
+        List<Map<String, Object>> winners = new ArrayList<>();
+        for (Map<String, Object> option : options) {
+            int count = toInt(option.get("COUNT"));
+            if (count > max) {
+                max = count;
+                winners.clear();
+                winners.add(option);
+            } else if (count == max) {
+                winners.add(option);
+            }
+        }
+
+        if (max <= 0) {
+            sendClosedPollNotifications(poll, null, true);
+            pollDao.closePoll(pollId);
+            return;
+        }
+
+        Map<String, Object> winner = null;
+        if (winners.size() == 1) {
+            winner = winners.get(0);
+        } else if (manualTieResolve) {
+            for (Map<String, Object> candidate : winners) {
+                if (selectedOptionId.equals(toLong(candidate.get("OPTION_ID")))) {
+                    winner = candidate;
+                    break;
+                }
+            }
+            if (winner == null) throw new IllegalArgumentException("최다 득표한 일정 중 하나를 선택해주세요.");
+        } else {
+            sendScheduleTieNotification(poll);
+            pollDao.closePoll(pollId);
+            return;
+        }
+
+        String[] schedule = parseScheduleOption(firstNonBlank(winner, "TEXT", "text"));
+        if (schedule == null) throw new IllegalStateException("확정 일정 정보를 읽을 수 없습니다.");
+
+        calendarResponseDTO event = new calendarResponseDTO();
+        event.setTitle(String.valueOf(poll.get("QUESTION")));
+        event.setStartDt(schedule[0] + "T" + schedule[1]);
+        event.setEndDt(schedule[0] + "T" + schedule[2]);
+        event.setUserId(toLong(poll.get("USER_ID")));
+        event.setWsId(toLong(poll.get("WS_ID")));
+        event.setProjId(toLong(poll.get("PROJ_ID")));
+        event.setItemType("PROJECT".equalsIgnoreCase(String.valueOf(poll.get("SCOPE"))) ? "PROJ" : "WS");
+        event.setEventType("APPOINTMENT");
+        event.setAllDay("N");
+        event.setIsRecurring("N");
+        event.setIsLunar("N");
+        event.setReminderYn("N");
+        event.setRecordEnabledYn("Y");
+        event.setDescriptionText("일정 투표에서 확정된 일정입니다. [MOYO_POLL_ID:" + pollId + "]");
+        event.setAttendeeUserIds(pollDao.selectPollVoterUserIds(pollId));
+        calendarResponseService.registerEvent(event);
+        Long eventId = event.getId();
+        if (eventId == null) {
+            eventId = pollDao.selectCalendarEventIdByPollId(pollId);
+        }
+        sendScheduleFinalizedNotifications(poll, eventId);
+        pollDao.closePoll(pollId);
+    }
+
+    private void sendPollCreatedNotifications(Long pollId, Map<String, Object> params) {
+        if (pollId == null || params == null) return;
+        Long creatorId = toLong(params.get("userId"));
+        Long wsId = toLong(params.get("wsId"));
+        Long projId = toLong(params.get("projId"));
+        String scope = normalizeScope(String.valueOf(params.get("scope")));
+        String question = cleanText(params.get("question"));
+        if (question.isBlank()) question = "새 투표";
+
+        List<Long> recipients = "PROJECT".equals(scope)
+                ? pollDao.selectProjectPollRecipientUserIds(projId, creatorId)
+                : pollDao.selectWorkspacePollRecipientUserIds(wsId, creatorId);
+        if (recipients == null || recipients.isEmpty()) return;
+
+        String link = buildPollLink(scope, wsId, projId, pollId);
+        for (Long recipientId : recipients) {
+            if (recipientId == null || recipientId.equals(creatorId)) continue;
+            userNoticeDAO.insertContentSendAlarmIfAbsent(
+                    recipientId,
+                    "POLL_CREATED",
+                    "POLL",
+                    pollId,
+                    "새 투표가 등록되었습니다.",
+                    "‘" + question + "’ 투표에 참여해 주세요.",
+                    link
+            );
+        }
+    }
+
+    private void sendClosedPollNotifications(Map<String, Object> poll, Long linkEventId, boolean scheduleNoVotes) {
+        if (poll == null || poll.isEmpty()) return;
+        Long pollId = toLong(poll.get("POLL_ID"));
+        Long creatorId = toLong(poll.get("USER_ID"));
+        if (pollId == null || creatorId == null) return;
+
+        Set<Long> recipients = new LinkedHashSet<>();
+        recipients.add(creatorId);
+        List<Long> voters = pollDao.selectPollVoterUserIds(pollId);
+        if (voters != null) recipients.addAll(voters);
+
+        String alertType = "POLL_CLOSED_" + pollRound(poll);
+        String question = cleanText(poll.get("QUESTION"));
+        if (question.isBlank()) question = "투표";
+        String link = linkEventId != null
+                ? "/calendar?viewEventId=" + linkEventId
+                : buildPollLink(String.valueOf(poll.get("SCOPE")), toLong(poll.get("WS_ID")), toLong(poll.get("PROJ_ID")), pollId);
+        String content = scheduleNoVotes
+                ? "‘" + question + "’ 일정 투표가 마감되었습니다. 참여 결과를 확인해 주세요."
+                : "‘" + question + "’ 투표가 마감되었습니다. 결과를 확인해 주세요.";
+
+        for (Long recipientId : recipients) {
+            if (recipientId == null) continue;
+            userNoticeDAO.insertContentSendAlarmIfAbsent(
+                    recipientId, alertType, "POLL", pollId,
+                    "투표가 마감되었습니다.", content, link
+            );
+        }
+    }
+
+    private void sendScheduleTieNotification(Map<String, Object> poll) {
+        if (poll == null || poll.isEmpty()) return;
+        Long pollId = toLong(poll.get("POLL_ID"));
+        Long creatorId = toLong(poll.get("USER_ID"));
+        if (pollId == null || creatorId == null) return;
+        String question = cleanText(poll.get("QUESTION"));
+        if (question.isBlank()) question = "일정 투표";
+        userNoticeDAO.insertContentSendAlarmIfAbsent(
+                creatorId,
+                "POLL_SCHEDULE_TIE_" + pollRound(poll),
+                "POLL",
+                pollId,
+                "일정 투표가 동률입니다.",
+                "‘" + question + "’의 최종 일정을 선택해 주세요.",
+                buildPollLink(String.valueOf(poll.get("SCOPE")), toLong(poll.get("WS_ID")), toLong(poll.get("PROJ_ID")), pollId)
+        );
+    }
+
+    private void sendScheduleFinalizedNotifications(Map<String, Object> poll, Long eventId) {
+        if (poll == null || poll.isEmpty()) return;
+        Long pollId = toLong(poll.get("POLL_ID"));
+        Long creatorId = toLong(poll.get("USER_ID"));
+        if (pollId == null || creatorId == null) return;
+
+        Set<Long> recipients = new LinkedHashSet<>();
+        recipients.add(creatorId);
+        List<Long> voters = pollDao.selectPollVoterUserIds(pollId);
+        if (voters != null) recipients.addAll(voters);
+
+        String question = cleanText(poll.get("QUESTION"));
+        if (question.isBlank()) question = "일정 투표";
+        String link = eventId == null
+                ? buildPollLink(String.valueOf(poll.get("SCOPE")), toLong(poll.get("WS_ID")), toLong(poll.get("PROJ_ID")), pollId)
+                : "/calendar?viewEventId=" + eventId;
+        String alertType = "POLL_SCHEDULE_FINALIZED_" + pollRound(poll);
+
+        for (Long recipientId : recipients) {
+            if (recipientId == null) continue;
+            userNoticeDAO.insertContentSendAlarmIfAbsent(
+                    recipientId, alertType, "POLL", pollId,
+                    "일정이 확정되었습니다.",
+                    "‘" + question + "’ 일정이 확정되었습니다. 캘린더에서 확인해 주세요.",
+                    link
+            );
+        }
+    }
+
+    private int pollRound(Map<String, Object> poll) {
+        if (poll == null) return 0;
+        int count = toInt(poll.get("EXTEND_COUNT"));
+        if (count == 0) count = toInt(poll.get("extendCount"));
+        return Math.max(0, count);
+    }
+
+    private String buildPollLink(String scopeValue, Long wsId, Long projId, Long pollId) {
+        String scope = normalizeScope(scopeValue);
+        StringBuilder link = new StringBuilder("/poll/list?scope=").append(scope);
+        if (wsId != null) link.append("&wsId=").append(wsId);
+        if ("PROJECT".equals(scope) && projId != null) link.append("&projId=").append(projId);
+        if (pollId != null) link.append("&pollId=").append(pollId);
+        return link.toString();
+    }
+
+    private boolean isScheduleOptions(List<Map<String, Object>> options) {
+        if (options == null || options.isEmpty()) return false;
+        String type = firstNonBlank(options.get(0), "OPTION_TYPE", "optionType");
+        String text = firstNonBlank(options.get(0), "TEXT", "text");
+        return "SCHEDULE".equalsIgnoreCase(type) || (text != null && text.startsWith("@MOYO_SCHEDULE@|"));
+    }
+
+    private String[] parseScheduleOption(String text) {
+        if (text == null || !text.startsWith("@MOYO_SCHEDULE@|")) return null;
+        String[] parts = text.substring("@MOYO_SCHEDULE@|".length()).split("\\|", -1);
+        if (parts.length != 3) return null;
+        return parts;
+    }
+
+    private int toInt(Object value) {
+        if (value == null) return 0;
+        if (value instanceof Number) return ((Number) value).intValue();
+        try { return Integer.parseInt(String.valueOf(value)); } catch (Exception e) { return 0; }
+    }
+
+    private boolean isScopeManager(Map<String, Object> poll, Long userId) {
+        if (poll == null || poll.isEmpty() || userId == null) return false;
+        Long projId = toLong(poll.get("PROJ_ID"));
+        Long wsId = toLong(poll.get("WS_ID"));
+        String scope = String.valueOf(poll.get("SCOPE") == null ? "" : poll.get("SCOPE")).trim().toUpperCase();
+        if ("PROJECT".equals(scope) || projId != null) {
+            return projId != null && projectAuthorizationService.canManageProject(projId, userId);
+        }
+        return wsId != null && workspaceAuthorizationService.canManage(wsId, userId);
+    }
+
+    private String cleanText(Object value) {
+        return value == null ? "" : String.valueOf(value).trim();
+    }
+
+    private String normalizeYn(Object value, String defaultValue) {
+        if (value == null) return defaultValue;
+        String text = String.valueOf(value).trim();
+        if ("Y".equalsIgnoreCase(text) || "TRUE".equalsIgnoreCase(text) || "1".equals(text)) return "Y";
+        if ("N".equalsIgnoreCase(text) || "FALSE".equalsIgnoreCase(text) || "0".equals(text)) return "N";
+        return defaultValue;
+    }
 
     private String firstNonBlank(Map<String, Object> map, String... keys) {
         if (map == null || keys == null) return null;

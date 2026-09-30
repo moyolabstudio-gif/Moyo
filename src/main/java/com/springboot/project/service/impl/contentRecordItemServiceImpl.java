@@ -46,16 +46,18 @@ public class contentRecordItemServiceImpl implements IcontentRecordItemService {
         if(recordItemId==null||input==null||(blank(input.getTitle())&&blank(input.getPreviewContent()))) throw new IllegalArgumentException("노트 제목 또는 내용을 입력하세요.");
         String title=blank(input.getTitle())?autoTitle(input.getPreviewContent()):input.getTitle().trim();
         if(input.getPreviewContent()==null) input.setPreviewContent("");
-        contentRecordItemDTO current=itemDAO.selectItem(targetId,recordItemId,userId);
+        // NOTES 행을 잠근 뒤 편집 시작 시점의 base 값과 비교한다.
+        // Oracle CLOB를 UPDATE 조건에서 직접 바인딩하지 않아 ORA-24816을 피하면서도
+        // 동시에 저장되는 경우의 조용한 덮어쓰기는 409 Conflict로 계속 차단한다.
+        contentRecordItemDTO current=itemDAO.selectNoteForUpdate(targetId,recordItemId);
         if(current==null||current.getContentId()==null) throw new IllegalArgumentException("수정할 노트를 찾을 수 없습니다.");
-        if(same(current.getTitle(),title)&&same(current.getPreviewContent(),input.getPreviewContent())) return current;
 
-        // 사용자가 편집을 시작했을 때 보았던 제목/본문을 조건으로 UPDATE한다.
-        // 다른 사용자가 먼저 저장했다면 현재 DB 값이 base 값과 달라져 UPDATE 0건이 되고,
-        // 호출자는 409 Conflict로 처리하여 조용한 덮어쓰기를 막는다.
         String baseTitle=input.getBaseTitle()!=null?input.getBaseTitle():current.getTitle();
         String baseContent=input.getBaseContent()!=null?input.getBaseContent():current.getPreviewContent();
-        if(itemDAO.updateNoteContent(targetId,recordItemId,title,input.getPreviewContent(),userId,baseTitle,baseContent)<=0) return null;
+        if(!same(current.getTitle(),baseTitle)||!same(current.getPreviewContent(),baseContent)) return null;
+        if(same(current.getTitle(),title)&&same(current.getPreviewContent(),input.getPreviewContent())) return itemDAO.selectItem(targetId,recordItemId,userId);
+
+        if(itemDAO.updateNoteContent(current.getContentId(),title,userId,input.getPreviewContent())<=0) return null;
         itemDAO.updateItemTitle(targetId,recordItemId,title);
         noteService.recordCurrentNoteVersion(current.getContentId(),userId,"UPDATE",null);
         return itemDAO.selectItem(targetId,recordItemId,userId);

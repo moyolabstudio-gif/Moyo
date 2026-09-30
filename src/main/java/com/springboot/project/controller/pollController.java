@@ -285,6 +285,34 @@ public class pollController {
         return result;
     }
 
+    @PostMapping("/api/polls/schedule/finalize")
+    public Map<String, Object> finalizeScheduleTie(@RequestBody Map<String, Object> params, HttpSession session) {
+        usersDto loginUser = (usersDto) session.getAttribute("user");
+        Map<String, Object> result = new HashMap<>();
+        if (loginUser == null) {
+            result.put("success", false);
+            result.put("message", "LOGIN_REQUIRED");
+            return result;
+        }
+
+        try {
+            Long pollId = toLong(params.get("pollId"));
+            Long optionId = toLong(params.get("optionId"));
+            Map<String, Object> poll = pollId == null ? null : pollService.getPoll(pollId, loginUser.getUserId());
+            if (poll == null || poll.isEmpty() || !hasPollScopeWriteAccess(poll, loginUser.getUserId())) {
+                result.put("success", false);
+                result.put("message", "POLL_SCOPE_ACCESS_DENIED");
+                return result;
+            }
+            pollService.finalizeScheduleTie(pollId, optionId, loginUser.getUserId());
+            result.put("success", true);
+        } catch (IllegalStateException | IllegalArgumentException e) {
+            result.put("success", false);
+            result.put("message", e.getMessage());
+        }
+        return result;
+    }
+
     @PostMapping("/api/polls/delete")
     public Map<String, Object> deletePoll(@RequestBody Map<String, Object> params,
                                           HttpSession session) {

@@ -91,6 +91,25 @@ public class BoardAuthorizationService {
         return canEditPost(longValue(file, "POST_ID", "postId"), userId);
     }
 
+    public boolean isOwnReportTarget(String contentType, Long contentId, Long userId) {
+        if (contentId == null || userId == null) return false;
+        String type = contentType == null ? "BOARD" : contentType.trim().toUpperCase();
+
+        if ("REPLY".equals(type)) {
+            Map<String, Object> reply = boardDAO.selectReplyById(contentId);
+            Long ownerId = longValue(reply, "USER_ID", "userId");
+            return userId.equals(ownerId);
+        }
+
+        Long postId = contentId;
+        if ("FILE".equals(type)) {
+            Map<String, Object> file = boardDAO.selectFileById(String.valueOf(contentId));
+            postId = file == null ? null : longValue(file, "POST_ID", "postId");
+        }
+        postDTO post = getPost(postId);
+        return post != null && userId.equals(post.getUserId());
+    }
+
     public boolean canReportContent(Long wsId, String contentType, Long contentId, Long userId) {
         if (contentId == null || userId == null) return false;
         String type = contentType == null ? "BOARD" : contentType.trim().toUpperCase();

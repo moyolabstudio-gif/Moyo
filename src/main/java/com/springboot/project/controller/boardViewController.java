@@ -1,8 +1,10 @@
 package com.springboot.project.controller;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 
@@ -66,6 +68,75 @@ public class boardViewController {
         return canManagePin(reportWsId, reportProjId, session);
     }
 
+    private String mapString(Map<String, Object> row, String key) {
+        if (row == null) return null;
+        Object value = row.get(key);
+        if (value == null) value = row.get(key.toLowerCase());
+        return value == null ? null : String.valueOf(value);
+    }
+
+    private Long mapLong(Map<String, Object> row, String key) {
+        if (row == null) return null;
+        Object value = row.get(key);
+        if (value == null) value = row.get(key.toLowerCase());
+        if (value instanceof Number n) return n.longValue();
+        try { return value == null ? null : Long.valueOf(String.valueOf(value)); } catch (NumberFormatException e) { return null; }
+    }
+
+
+    private void decorateBoardAttachmentDisplay(List<Map<String, Object>> fileList) {
+        if (fileList == null || fileList.isEmpty()) return;
+
+        for (Map<String, Object> file : fileList) {
+            if (file == null) continue;
+
+            String originalName = mapString(file, "FILE_ORIGINAL_NAME");
+            String storedName = mapString(file, "FILE_NAME");
+            String sourceName = (originalName != null && !originalName.isBlank()) ? originalName : storedName;
+
+            // 사용자가 업로드한 원본 파일명을 그대로 표시한다.
+            // FILE_NAME은 서버 저장용 이름이므로 원본명이 없는 레거시 데이터에서만 fallback으로 사용한다.
+            file.put("DISPLAY_NAME", sourceName);
+            file.put("DISPLAY_SIZE", formatAttachmentSize(file.get("FILE_SIZE") != null ? file.get("FILE_SIZE") : file.get("file_size")));
+        }
+    }
+
+    private String formatAttachmentSize(Object rawSize) {
+        if (rawSize == null) return "";
+        long bytes;
+        try {
+            bytes = rawSize instanceof Number n ? n.longValue() : Long.parseLong(String.valueOf(rawSize));
+        } catch (NumberFormatException e) {
+            return "";
+        }
+
+        if (bytes < 1024) return bytes + " B";
+        double kb = bytes / 1024d;
+        if (kb < 1024) return String.format(java.util.Locale.ROOT, kb >= 100 ? "%.0f KB" : "%.1f KB", kb);
+        double mb = kb / 1024d;
+        return String.format(java.util.Locale.ROOT, mb >= 100 ? "%.0f MB" : "%.1f MB", mb);
+    }
+
+    private boolean channelMatchesScope(Map<String, Object> channel, Long wsId, Long projId) {
+        if (channel == null) return false;
+        Long cWsId = mapLong(channel, "WS_ID");
+        Long cProjId = mapLong(channel, "PROJ_ID");
+        return projId != null ? projId.equals(cProjId) : cProjId == null && wsId != null && wsId.equals(cWsId);
+    }
+
+    private Map<String, Object> resolveChannel(Long wsId, Long projId, Long channelId, String legacyType, Long userId) {
+        iboardService.ensureDefaultChannels(wsId, projId, userId);
+        if (channelId != null) {
+            Map<String, Object> channel = iboardService.getBoardChannel(channelId);
+            return channelMatchesScope(channel, wsId, projId) ? channel : null;
+        }
+        String wanted = "NOTICE".equalsIgnoreCase(legacyType) ? "NOTICE" : "GENERAL";
+        for (Map<String, Object> channel : iboardService.getBoardChannels(wsId, projId, false)) {
+            if (wanted.equalsIgnoreCase(mapString(channel, "CHANNEL_TYPE"))) return channel;
+        }
+        return null;
+    }
+
     private String reportRedirectUrl(Long wsId, Long projId, String status, String contentType, String keyword, int page) {
         StringBuilder url = new StringBuilder("redirect:/group/board/reports?wsId=").append(wsId);
         if (projId != null) url.append("&projId=").append(projId);
@@ -109,6 +180,7 @@ public class boardViewController {
     public String boardList(
             @RequestParam(value = "wsId", required = false) Long wsId,
             @RequestParam(value = "projId", required = false) Long projId,
+            @RequestParam(value = "channelId", required = false) Long channelId,
             @RequestParam(value = "type", defaultValue = "FREE") String type,
             @RequestParam(value = "page", defaultValue = "1") int page,
             @RequestParam(value = "size", defaultValue = "10") int size,
@@ -127,21 +199,35 @@ public class boardViewController {
         size = Math.min(Math.max(size, 5), 50);
         keyword = keyword == null ? "" : keyword.trim();
 
-        if (wsId != null) {
-            int totalCount = iboardService.getBoardListCount(wsId, type, searchType, keyword);
-            int totalPages = (int) Math.ceil((double) totalCount / size);
-            if (totalPages > 0 && page > totalPages) page = totalPages;
-
-            List<postDTO> boardList = iboardService.getBoardList(wsId, type, page, size, searchType, keyword);
-            model.addAttribute("boardList", boardList);
-            addPagingModel(model, page, size, totalCount);
-        } else {
-            addPagingModel(model, page, size, 0);
+        boolean canManageBoard = canManagePin(wsId, projId, session);
+        Map<String, Object> currentChannel = resolveChannel(wsId, projId, channelId, type, userId);
+        if (currentChannel == null) return "redirect:/?authError=board";
+        if (!canManageBoard && "N".equalsIgnoreCase(mapString(currentChannel, "ACTIVE_YN"))) {
+            if (projId != null) {
+                return "redirect:/project/board/list?projId=" + projId + "&wsId=" + wsId;
+            }
+            return "redirect:/group/board/list?wsId=" + wsId;
         }
+        channelId = mapLong(currentChannel, "CHANNEL_ID");
+        type = "NOTICE".equalsIgnoreCase(mapString(currentChannel, "CHANNEL_TYPE")) ? "NOTICE" : "FREE";
+
+        int totalCount = iboardService.getBoardListByChannelCount(channelId, searchType, keyword);
+        int totalPages = (int) Math.ceil((double) totalCount / size);
+        if (totalPages > 0 && page > totalPages) page = totalPages;
+        List<postDTO> boardList = iboardService.getBoardListByChannel(channelId, page, size, searchType, keyword);
+        model.addAttribute("boardList", boardList);
+        addPagingModel(model, page, size, totalCount);
 
         model.addAttribute("wsId", wsId);
+        model.addAttribute("projId", projId);
         model.addAttribute("boardType", type);
-        model.addAttribute("canManageBoard", canManagePin(wsId, null, session));
+        model.addAttribute("channelId", channelId);
+        model.addAttribute("currentChannel", currentChannel);
+        model.addAttribute("currentChannelName", mapString(currentChannel, "CHANNEL_NAME"));
+        model.addAttribute("boardChannels", iboardService.getBoardChannels(wsId, projId, false));
+        model.addAttribute("manageChannels", canManageBoard ? iboardService.getBoardChannels(wsId, projId, true) : List.of());
+        model.addAttribute("canManageBoard", canManageBoard);
+        model.addAttribute("reportWaitingCount", canManageBoard ? iboardService.getWaitingReportCount(wsId, projId) : 0);
         model.addAttribute("searchType", searchType);
         model.addAttribute("keyword", keyword);
 
@@ -153,6 +239,7 @@ public class boardViewController {
     public String boardWriteForm(
             @RequestParam(value = "wsId", required = false) Long wsId,
             @RequestParam(value = "type", defaultValue = "FREE") String type,
+            @RequestParam(value = "channelId", required = false) Long channelId,
             @RequestParam(value = "projId", required = false) Long projId,
             Model model,
             HttpSession session) {
@@ -165,14 +252,23 @@ public class boardViewController {
         if (!boardAuthorizationService.canAccessBoard(wsId, projId, userId)) return "redirect:/?authError=board";
 
         boolean canManageBoard = boardAuthorizationService.canManageBoard(wsId, projId, userId);
+        Map<String, Object> currentChannel = resolveChannel(wsId, projId, channelId, type, userId);
+        if (currentChannel == null) return "redirect:/?authError=board";
+        channelId = mapLong(currentChannel, "CHANNEL_ID");
+        type = "NOTICE".equalsIgnoreCase(mapString(currentChannel, "CHANNEL_TYPE")) ? "NOTICE" : "FREE";
         if ("NOTICE".equalsIgnoreCase(type) && !canManageBoard) {
-            return "redirect:/group/board/list?wsId=" + wsId
-                    + (projId != null ? "&projId=" + projId : "")
-                    + "&type=NOTICE&error=notice_forbidden";
+            if (projId != null) {
+                return "redirect:/project/board/list?projId=" + projId + "&wsId=" + wsId
+                        + "&type=NOTICE&error=notice_forbidden";
+            }
+            return "redirect:/group/board/list?wsId=" + wsId + "&type=NOTICE&error=notice_forbidden";
         }
 
         model.addAttribute("wsId", wsId);
         model.addAttribute("boardType", type);
+        model.addAttribute("channelId", channelId);
+        model.addAttribute("currentChannelName", mapString(currentChannel, "CHANNEL_NAME"));
+        model.addAttribute("boardChannels", iboardService.getBoardChannels(wsId, projId, false));
         model.addAttribute("projId", projId);
         model.addAttribute("canManageBoard", canManageBoard);
 
@@ -193,8 +289,25 @@ public class boardViewController {
         if (post != null && "FILE".equalsIgnoreCase(post.getBoardType())) {
             return redirectLegacyFileBoard(post.getWsId() != null ? post.getWsId() : wsId, projId);
         }
+
+        // 같은 브라우저 세션에서는 동일 게시글 조회수를 1회만 집계한다.
+        // 새로고침/상세 내부 재요청으로 VIEW_COUNT가 반복 증가하는 것을 방지한다.
+        synchronized (session) {
+            @SuppressWarnings("unchecked")
+            Set<Integer> viewedPostIds = (Set<Integer>) session.getAttribute("moyoBoardViewedPostIds");
+            if (viewedPostIds == null) {
+                viewedPostIds = new HashSet<>();
+            }
+            if (!viewedPostIds.contains(postId) && iboardService.increasePostViewCount(postId)) {
+                viewedPostIds.add(postId);
+                session.setAttribute("moyoBoardViewedPostIds", viewedPostIds);
+                post = iboardService.getPostDetail(postId);
+            }
+        }
+
         List<Map<String, Object>> replyList = iboardService.getReplyList(postId);
         List<Map<String, Object>> fileList = iboardService.getFileList(postId);
+        decorateBoardAttachmentDisplay(fileList);
 
         model.addAttribute("post", post);
         model.addAttribute("replyList", replyList);
@@ -211,12 +324,14 @@ public class boardViewController {
     public String boardRegister(
             @RequestParam(value = "wsId", required = false) Long wsId,
             @RequestParam("boardType") String boardType,
+            @RequestParam(value = "channelId", required = false) Long channelId,
             @RequestParam(value = "projId", required = false) Long projId,
             @RequestParam("title") String title,
             @RequestParam("content") String content,
             @RequestParam(value = "isPinned", defaultValue = "N") String isPinned,
             @RequestParam(value = "pinStartDt", required = false) String pinStartDt,
             @RequestParam(value = "pinEndDt", required = false) String pinEndDt,
+            @RequestParam(value = "notifyMembers", defaultValue = "N") String notifyMembers,
             HttpSession session) {
 
         com.springboot.project.dto.usersDto loginUser = (com.springboot.project.dto.usersDto) session.getAttribute("user");
@@ -225,10 +340,21 @@ public class boardViewController {
         if ("FILE".equalsIgnoreCase(boardType)) {
             return redirectLegacyFileBoard(wsId, projId);
         }
+        Map<String, Object> currentChannel = resolveChannel(wsId, projId, channelId, boardType, loginUser.getUserId());
+        if (currentChannel == null) return "redirect:/?authError=board";
+        channelId = mapLong(currentChannel, "CHANNEL_ID");
+        boardType = "NOTICE".equalsIgnoreCase(mapString(currentChannel, "CHANNEL_TYPE")) ? "NOTICE" : "FREE";
+        if ("NOTICE".equalsIgnoreCase(boardType) && !boardAuthorizationService.canManageBoard(wsId, projId, loginUser.getUserId())) {
+            if (projId != null) {
+                return "redirect:/project/board/list?projId=" + projId + "&wsId=" + wsId + "&channelId=" + channelId;
+            }
+            return "redirect:/group/board/list?wsId=" + wsId + "&channelId=" + channelId;
+        }
 
         postDTO post = new postDTO();
         post.setWsId(wsId);
         post.setBoardType(boardType);
+        post.setChannelId(channelId);
         post.setTitle(title);
         post.setContent(content);
         post.setUserId(loginUser.getUSER_ID());
@@ -236,12 +362,15 @@ public class boardViewController {
 
         boolean canManage = boardAuthorizationService.canManageBoard(wsId, projId, loginUser.getUserId());
         if ("NOTICE".equalsIgnoreCase(boardType) && !canManage) {
-            return "redirect:/group/board/list?wsId=" + wsId
-                    + (projId != null ? "&projId=" + projId : "")
-                    + "&type=NOTICE&error=notice_forbidden";
+            if (projId != null) {
+                return "redirect:/project/board/list?projId=" + projId + "&wsId=" + wsId
+                        + "&type=NOTICE&error=notice_forbidden";
+            }
+            return "redirect:/group/board/list?wsId=" + wsId + "&type=NOTICE&error=notice_forbidden";
         }
 
-        if (canManage && "Y".equalsIgnoreCase(isPinned)) {
+        boolean isNotice = "NOTICE".equalsIgnoreCase(boardType);
+        if (canManage && isNotice && "Y".equalsIgnoreCase(isPinned)) {
             post.setIsPinned("Y");
             post.setPinStartDt(pinStartDt);
             post.setPinEndDt(pinEndDt);
@@ -250,17 +379,23 @@ public class boardViewController {
             post.setPinStartDt(null);
             post.setPinEndDt(null);
         }
+        post.setNotifyMembers(canManage && isNotice && "Y".equalsIgnoreCase(notifyMembers) ? "Y" : "N");
 
         boolean isSuccess = iboardService.registerPost(post);
 
         if (isSuccess) {
+            if ("NOTICE".equalsIgnoreCase(post.getBoardType()) && "Y".equalsIgnoreCase(post.getNotifyMembers())) {
+                iboardService.sendBoardNoticeNotification(post, loginUser.getUserId(), false);
+            }
             if (projId != null) {
-                return "redirect:/project/board/list?projId=" + projId + "&type=" + boardType + "&wsId=" + wsId;
+                return "redirect:/project/board/list?projId=" + projId + "&type=" + boardType + "&wsId=" + wsId + "&channelId=" + channelId;
             } else {
-                return "redirect:/group/board/list?wsId=" + wsId + "&type=" + boardType;
+                return "redirect:/group/board/list?wsId=" + wsId + "&type=" + boardType + "&channelId=" + channelId;
             }
         }
-        return "redirect:/group/board/write?wsId=" + wsId + "&type=" + boardType + "&error=failed";
+        return "redirect:/group/board/write?wsId=" + wsId
+                + (projId != null ? "&projId=" + projId : "")
+                + "&type=" + boardType + "&channelId=" + channelId + "&error=failed";
     }
 
     @GetMapping("/modifyForm")
@@ -285,6 +420,8 @@ public class boardViewController {
         model.addAttribute("wsId", wsId);
         model.addAttribute("projId", projId);
         model.addAttribute("boardType", post.getBoardType());
+        Map<String, Object> currentChannel = post.getChannelId() != null ? iboardService.getBoardChannel(post.getChannelId()) : null;
+        model.addAttribute("currentChannelName", currentChannel != null ? mapString(currentChannel, "CHANNEL_NAME") : ("NOTICE".equalsIgnoreCase(post.getBoardType()) ? "공지" : "자유게시판"));
         model.addAttribute("canManageBoard", canManagePin(post.getWsId(), projId, session));
         return "board/boardModify";
     }
@@ -300,6 +437,7 @@ public class boardViewController {
             @RequestParam(value = "isPinned", defaultValue = "N") String isPinned,
             @RequestParam(value = "pinStartDt", required = false) String pinStartDt,
             @RequestParam(value = "pinEndDt", required = false) String pinEndDt,
+            @RequestParam(value = "resendNotification", defaultValue = "N") String resendNotification,
             @RequestParam(value = "files", required = false) List<MultipartFile> files,
             HttpSession session) {
 
@@ -323,10 +461,22 @@ public class boardViewController {
         post.setContent(content);
 
         boolean canManage = boardAuthorizationService.canManageBoard(wsId, projId, userId);
-        if (canManage && "Y".equalsIgnoreCase(isPinned)) {
-            post.setIsPinned("Y");
-            post.setPinStartDt(pinStartDt);
-            post.setPinEndDt(pinEndDt);
+        boolean isNotice = "NOTICE".equalsIgnoreCase(boardType);
+        if (canManage && isNotice) {
+            if ("Y".equalsIgnoreCase(isPinned)) {
+                post.setIsPinned("Y");
+                post.setPinStartDt(pinStartDt);
+                post.setPinEndDt(pinEndDt);
+            } else {
+                post.setIsPinned("N");
+                post.setPinStartDt(null);
+                post.setPinEndDt(null);
+            }
+        } else if (!canManage && isNotice) {
+            // 내용 수정 권한만 가진 사용자는 관리자 전용 공지 설정을 변경할 수 없다.
+            post.setIsPinned(existingPost.getIsPinned());
+            post.setPinStartDt(existingPost.getPinStartDt());
+            post.setPinEndDt(existingPost.getPinEndDt());
         } else {
             post.setIsPinned("N");
             post.setPinStartDt(null);
@@ -356,6 +506,10 @@ public class boardViewController {
 
                 iboardService.insertFile(fileMap);
             }
+        }
+
+        if (canManage && isNotice && "Y".equalsIgnoreCase(resendNotification)) {
+            iboardService.sendBoardNoticeNotification(post, userId, true);
         }
 
         return "redirect:/group/board/detail?postId=" + postId
@@ -463,7 +617,7 @@ public class boardViewController {
         projId = existingPost.getProjId();
         boardType = existingPost.getBoardType();
 
-        boolean success = iboardService.deletePost(postId);
+        boolean success = iboardService.deletePost(postId, userId);
 
         if (!success) {
             return "redirect:/group/board/detail?postId=" + postId
@@ -475,10 +629,12 @@ public class boardViewController {
         if (projId != null) {
             return "redirect:/project/board/list?projId=" + projId
                     + "&type=" + boardType
-                    + "&wsId=" + wsId;
+                    + "&wsId=" + wsId
+                    + (existingPost.getChannelId() != null ? "&channelId=" + existingPost.getChannelId() : "");
         }
 
         return "redirect:/group/board/list?wsId=" + wsId
-                + "&type=" + boardType;
+                + "&type=" + boardType
+                + (existingPost.getChannelId() != null ? "&channelId=" + existingPost.getChannelId() : "");
     }
 }

@@ -53,4 +53,20 @@ public interface IpollDAO {
     void deletePoll(@Param("pollId") Long pollId);
 
     void insertPollOption(Map<String, Object> params);
+
+    List<Long> selectExpiredSchedulePollIds();
+
+    List<Long> selectExpiredRegularPollIds();
+
+    List<Long> selectWorkspacePollRecipientUserIds(@Param("wsId") Long wsId,
+                                                   @Param("excludeUserId") Long excludeUserId);
+
+    List<Long> selectProjectPollRecipientUserIds(@Param("projId") Long projId,
+                                                 @Param("excludeUserId") Long excludeUserId);
+
+    List<Long> selectPollVoterUserIds(@Param("pollId") Long pollId);
+
+    Long selectCalendarEventIdByPollId(@Param("pollId") Long pollId);
+
+    void closePoll(@Param("pollId") Long pollId);
 }

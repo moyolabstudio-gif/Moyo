@@ -1,6 +1,32 @@
 (() => {
     'use strict';
 
+    function splitSharedFileName(rawName) {
+        const value = String(rawName || '').trim() || '파일';
+        const slashIndex = Math.max(value.lastIndexOf('/'), value.lastIndexOf('\\'));
+        const name = slashIndex >= 0 ? value.slice(slashIndex + 1) : value;
+        const dotIndex = name.lastIndexOf('.');
+        if (dotIndex <= 0 || dotIndex === name.length - 1) {
+            return { name, stem: name, extensionRaw: '' };
+        }
+        return { name, stem: name.slice(0, dotIndex), extensionRaw: name.slice(dotIndex) };
+    }
+
+    function sharedFileNameHtml(rawName) {
+        const part = splitSharedFileName(rawName);
+        return '<span class="board-file-name-wrap" title="' + escapeHtml(part.name) + '">' +
+            '<span class="board-file-stem">' + escapeHtml(part.stem) + '</span>' +
+            (part.extensionRaw ? '<span class="board-file-extension">' + escapeHtml(part.extensionRaw) + '</span>' : '') +
+            '</span>';
+    }
+
+    // 자료실이 실제 사용하는 fileIcon()을 게시판도 그대로 재사용한다.
+    window.MoyoContentFileUi = {
+        fileIcon: fileIcon,
+        fileNameHtml: sharedFileNameHtml,
+        splitName: splitSharedFileName
+    };
+
     const root = document.querySelector('.file-explorer');
     if (!root) return;
 

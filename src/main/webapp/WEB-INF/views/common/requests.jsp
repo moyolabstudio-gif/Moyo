@@ -759,6 +759,8 @@ body { margin:0; background:linear-gradient(115deg, rgba(220,251,247,.72) 0%, rg
                         <c:choose>
                             <c:when test="${notice.alertType == 'NOTICE'}"><c:set var="noticeIconClass" value="is-notice"/></c:when>
                             <c:when test="${notice.targetType == 'CALENDAR' || notice.alertType == 'CALENDAR_ATTENDEE'}"><c:set var="noticeIconClass" value="is-calendar"/></c:when>
+                            <c:when test="${notice.alertType == 'BOARD_REPORT'}"><c:set var="noticeIconClass" value="is-activity"/></c:when>
+                            <c:when test="${fn:startsWith(notice.alertType, 'POLL_') || notice.targetType == 'POLL'}"><c:set var="noticeIconClass" value="is-activity"/></c:when>
                             <c:otherwise><c:set var="noticeIconClass" value="is-activity"/></c:otherwise>
                         </c:choose>
                         <button type="button"
@@ -802,6 +804,8 @@ body { margin:0; background:linear-gradient(115deg, rgba(220,251,247,.72) 0%, rg
                                         <c:choose>
                                             <c:when test="${notice.alertType == 'NOTICE'}">공지 알림</c:when>
                                             <c:when test="${notice.targetType == 'CALENDAR' || notice.alertType == 'CALENDAR_ATTENDEE'}">일정 알림</c:when>
+                                            <c:when test="${notice.alertType == 'BOARD_REPORT'}">신고 알림</c:when>
+                                            <c:when test="${fn:startsWith(notice.alertType, 'POLL_') || notice.targetType == 'POLL'}">투표 알림</c:when>
                                             <c:otherwise>활동 알림</c:otherwise>
                                         </c:choose>
                                     </span>

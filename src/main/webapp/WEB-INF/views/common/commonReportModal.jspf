@@ -1,0 +1,44 @@
+<%@ page pageEncoding="UTF-8" %>
+<div id="commonReportModal" class="common-report-modal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="commonReportTitle">
+    <div class="common-report-dim" data-common-report-close></div>
+    <div class="common-report-card" role="document">
+        <button type="button" class="common-report-close" data-common-report-close aria-label="신고 창 닫기">×</button>
+        <div class="common-report-head">
+            <span class="common-report-kicker" id="commonReportTargetLabel">콘텐츠</span>
+            <h3 id="commonReportTitle">신고하기</h3>
+            <p>관리자가 확인할 수 있도록 신고 사유를 알려주세요.</p>
+        </div>
+
+        <div class="common-report-field">
+            <label class="common-report-label" for="commonReportReasonButton">신고 사유</label>
+            <input type="hidden" id="commonReportReason" value="SPAM">
+            <div class="common-report-reason" id="commonReportReasonCustom">
+                <button type="button" id="commonReportReasonButton" class="common-report-reason-button" aria-haspopup="listbox" aria-expanded="false">
+                    <span id="commonReportReasonText">스팸/홍보성 내용</span>
+                    <span class="common-report-reason-arrow" aria-hidden="true"></span>
+                </button>
+                <div id="commonReportReasonMenu" class="common-report-reason-menu" role="listbox" aria-label="신고 사유" tabindex="-1">
+                    <button type="button" class="common-report-reason-option is-selected" role="option" aria-selected="true" data-value="SPAM"><span>스팸/홍보성 내용</span><span class="common-report-reason-check" aria-hidden="true">✓</span></button>
+                    <button type="button" class="common-report-reason-option" role="option" aria-selected="false" data-value="ABUSE"><span>욕설/비방</span><span class="common-report-reason-check" aria-hidden="true">✓</span></button>
+                    <button type="button" class="common-report-reason-option" role="option" aria-selected="false" data-value="INAPPROPRIATE"><span>부적절한 내용</span><span class="common-report-reason-check" aria-hidden="true">✓</span></button>
+                    <button type="button" class="common-report-reason-option" role="option" aria-selected="false" data-value="PRIVACY"><span>개인정보 노출</span><span class="common-report-reason-check" aria-hidden="true">✓</span></button>
+                    <button type="button" class="common-report-reason-option" role="option" aria-selected="false" data-value="ETC"><span>기타</span><span class="common-report-reason-check" aria-hidden="true">✓</span></button>
+                </div>
+            </div>
+        </div>
+
+        <div class="common-report-field">
+            <div class="common-report-label-row">
+                <label class="common-report-label" for="commonReportDetail">상세 내용</label>
+                <span class="common-report-counter"><b id="commonReportDetailCount">0</b>/300</span>
+            </div>
+            <textarea id="commonReportDetail" class="common-report-textarea" maxlength="300" placeholder="관리자가 판단하는 데 필요한 내용을 간단히 적어주세요."></textarea>
+        </div>
+
+        <div id="commonReportMessage" class="common-report-message" aria-live="polite"></div>
+        <div class="common-report-actions">
+            <button type="button" class="common-report-cancel" data-common-report-close>취소</button>
+            <button type="button" id="commonReportSubmitBtn" class="common-report-submit">신고 접수</button>
+        </div>
+    </div>
+</div>

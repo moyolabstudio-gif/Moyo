@@ -40,6 +40,8 @@ public class CollaborationActivityFilter extends OncePerRequestFilter {
         String lower = uri.toLowerCase(Locale.ROOT);
         // 기록 항목은 성공한 저장 결과를 알고 있는 contentRecordItemController에서 직접 기록한다.
         if (lower.contains("/api/content-records")) return true;
+        // 게시판 분류 관리는 실제 성공 결과와 채널 정보를 아는 boardApiController에서 직접 기록한다.
+        if (lower.contains("/board/channels")) return true;
         // 좋아요/조회/다운로드/권한확인/읽음처리 같은 비편집 액션은 최근활동에서 제외한다.
         return lower.contains("/reaction") || lower.contains("/like") || lower.contains("/view-count")
                 || lower.contains("/download") || lower.contains("/access") || lower.contains("/permission")

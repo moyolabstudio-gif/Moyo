@@ -131,6 +131,24 @@ public class contentReactionController {
                     : error(HttpStatus.FORBIDDEN, "이 게시글에 접근할 권한이 없습니다.");
         }
 
+        if ("BOARD_REPLY".equals(contentType)) {
+            Map<String, Object> reply = boardService.getReplyDetail(contentId);
+            if (reply == null) return error(HttpStatus.NOT_FOUND, "댓글을 찾을 수 없습니다.");
+
+            Long postId = toLong(value(reply, "postId", "POST_ID"));
+            if (postId == null) return error(HttpStatus.NOT_FOUND, "댓글이 연결된 게시글을 찾을 수 없습니다.");
+
+            postDTO boardPost = boardService.getPostDetail(postId.intValue());
+            if (boardPost == null) return error(HttpStatus.NOT_FOUND, "게시글을 찾을 수 없습니다.");
+
+            Long projId = boardPost.getProjId();
+            Long wsId = boardPost.getWsId();
+            boolean accessible = projId != null ? isProjectMember(projId, userId) : canAccess("WORKSPACE", wsId, userId);
+            return accessible
+                    ? null
+                    : error(HttpStatus.FORBIDDEN, "이 댓글에 접근할 권한이 없습니다.");
+        }
+
         return error(HttpStatus.BAD_REQUEST, "아직 연결되지 않은 콘텐츠 유형입니다.");
     }
 

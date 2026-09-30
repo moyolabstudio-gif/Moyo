@@ -45,7 +45,7 @@
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common/commonMainShell.css?v=person-avatar-policy-v2-20260913">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common/commonMainDashboard.css?v=person-avatar-policy-v2-20260913">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common/commonMainHero.css?v=project-icon-design-v6-22-20260924">
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common/commonCommunityWidgets.css?v=mobile-widget-heights-cumulative-final-20260918">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common/commonCommunityWidgets.css?v=board-widget-renewal-20260930">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common/commonContentWidgets.css?v=content-empty-center-v14-20260922">
 <link rel="stylesheet" href="${pageContext.request.contextPath}/css/projectTask.css?v=task-responsive-autoheight-v83-20260920">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common/commonContentRecordModal.css?v=record-readonly-upload-hide-v85-20260920">
@@ -96,7 +96,7 @@
     <script src="${pageContext.request.contextPath}/js/projectMember.js?v=common-member-activity-v5-20260910"></script>
     <script src="${pageContext.request.contextPath}/js/common/commonContentRecordModal.js?v=record-location-readonly-preview-v41-20260920"></script>
     <script src="${pageContext.request.contextPath}/js/projectTask.js?v=task-status-detail-v80-20260920"></script>
-    <script src="${pageContext.request.contextPath}/js/commonCommunityWidgets.js?v=task-card-indicators-v1-20260919"></script>
+    <script src="${pageContext.request.contextPath}/js/commonCommunityWidgets.js?v=board-widget-renewal-20260930"></script>
     <script src="${pageContext.request.contextPath}/js/projectWidget.js?v=project-widget-data-connect-v1"></script>
     <script src="${pageContext.request.contextPath}/js/commonFolderModal.js?v=20260809-photo-location-common"></script>
     <script src="${pageContext.request.contextPath}/js/commonPhotoPostDetail.js?v=20260809-fit-atomic"></script>

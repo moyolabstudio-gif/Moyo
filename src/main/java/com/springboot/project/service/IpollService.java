@@ -19,4 +19,10 @@ public interface IpollService {
     void deletePoll(Long pollId, Long userId);
 
     void extendPoll(Map<String, Object> params);
+
+    void finalizeExpiredSchedulePolls();
+
+    void finalizeExpiredRegularPolls();
+
+    void finalizeScheduleTie(Long pollId, Long optionId, Long userId);
 }

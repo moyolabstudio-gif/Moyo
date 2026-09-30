@@ -1435,3 +1435,29 @@
         ) !important;
     }
 }
+
+/* General-board widget: keep the existing flat row and expose only the source channel. */
+.moyo-community-widgets [data-dashboard-widget="free-feed"] .board-channel-label {
+    flex: 0 0 auto !important;
+    max-width: 88px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: #708198;
+    font-size: 10px;
+    font-weight: 750;
+    line-height: 1.2;
+}
+
+.moyo-community-widgets [data-dashboard-widget="free-feed"] .board-post-title {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+@media (max-width: 760px) {
+    .moyo-community-widgets [data-dashboard-widget="free-feed"] .board-channel-label {
+        max-width: 72px;
+    }
+}

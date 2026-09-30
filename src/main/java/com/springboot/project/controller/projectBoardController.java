@@ -42,6 +42,35 @@ public class projectBoardController {
         return iboardService.canManageBoardPin(wsId, projId, userId);
     }
 
+    private String mapString(Map<String, Object> row, String key) {
+        if (row == null) return null;
+        Object value = row.get(key);
+        if (value == null) value = row.get(key.toLowerCase());
+        return value == null ? null : String.valueOf(value);
+    }
+
+    private Long mapLong(Map<String, Object> row, String key) {
+        if (row == null) return null;
+        Object value = row.get(key);
+        if (value == null) value = row.get(key.toLowerCase());
+        if (value instanceof Number n) return n.longValue();
+        try { return value == null ? null : Long.valueOf(String.valueOf(value)); } catch (NumberFormatException e) { return null; }
+    }
+
+    private Map<String, Object> resolveChannel(Long wsId, Long projId, Long channelId, String legacyType, Long userId) {
+        iboardService.ensureDefaultChannels(wsId, projId, userId);
+        if (channelId != null) {
+            Map<String, Object> channel = iboardService.getBoardChannel(channelId);
+            if (channel != null && projId.equals(mapLong(channel, "PROJ_ID"))) return channel;
+            return null;
+        }
+        String wanted = "NOTICE".equalsIgnoreCase(legacyType) ? "NOTICE" : "GENERAL";
+        for (Map<String, Object> channel : iboardService.getBoardChannels(wsId, projId, false)) {
+            if (wanted.equalsIgnoreCase(mapString(channel, "CHANNEL_TYPE"))) return channel;
+        }
+        return null;
+    }
+
     private void addPagingModel(Model model, int page, int size, int totalCount) {
         int totalPages = (int) Math.ceil((double) totalCount / size);
         if (totalPages < 1) totalPages = 1;
@@ -65,6 +94,7 @@ public class projectBoardController {
     public String getBoardListPage(@RequestParam("projId") Long projId,
                                    @RequestParam(value = "type", required = false) String type,
                                    @RequestParam(value = "wsId", required = false) Long wsId,
+                                   @RequestParam(value = "channelId", required = false) Long channelId,
                                    @RequestParam(value = "page", defaultValue = "1") int page,
                                    @RequestParam(value = "size", defaultValue = "10") int size,
                                    @RequestParam(value = "searchType", defaultValue = "all") String searchType,
@@ -86,23 +116,37 @@ public class projectBoardController {
         size = Math.min(Math.max(size, 5), 50);
         keyword = keyword == null ? "" : keyword.trim();
 
-        int totalCount = iboardService.getProjectBoardListCount(projId, type, searchType, keyword);
+        Long viewerUserId = currentUserId(session);
+        boolean projectReadOnly = viewerUserId != null
+                && projectAuthorizationService.isProjectReadOnly(projId, viewerUserId);
+        boolean canManageBoard = !projectReadOnly && canManagePin(wsId, projId, session);
+        Map<String, Object> currentChannel = resolveChannel(wsId, projId, channelId, type, viewerUserId);
+        if (currentChannel == null) return "redirect:/project/list";
+        if (!canManageBoard && "N".equalsIgnoreCase(mapString(currentChannel, "ACTIVE_YN"))) {
+            return "redirect:/project/board/list?projId=" + projId + "&wsId=" + wsId;
+        }
+        channelId = mapLong(currentChannel, "CHANNEL_ID");
+        type = "NOTICE".equalsIgnoreCase(mapString(currentChannel, "CHANNEL_TYPE")) ? "NOTICE" : "FREE";
+
+        int totalCount = iboardService.getBoardListByChannelCount(channelId, searchType, keyword);
         int totalPages = (int) Math.ceil((double) totalCount / size);
         if (totalPages > 0 && page > totalPages) page = totalPages;
-
-        List<postDTO> boardList = iboardService.getListByProject(projId, type, page, size, searchType, keyword);
+        List<postDTO> boardList = iboardService.getBoardListByChannel(channelId, page, size, searchType, keyword);
 
         model.addAttribute("boardList", boardList);
         model.addAttribute("projId", projId);
         model.addAttribute("boardType", type);
+        model.addAttribute("channelId", channelId);
+        model.addAttribute("currentChannel", currentChannel);
+        model.addAttribute("currentChannelName", mapString(currentChannel, "CHANNEL_NAME"));
+        model.addAttribute("boardChannels", iboardService.getBoardChannels(wsId, projId, false));
+        model.addAttribute("manageChannels", canManageBoard ? iboardService.getBoardChannels(wsId, projId, true) : List.of());
         model.addAttribute("wsId", wsId);
         model.addAttribute("searchType", searchType);
-        Long viewerUserId = currentUserId(session);
-        boolean projectReadOnly = viewerUserId != null
-                && projectAuthorizationService.isProjectReadOnly(projId, viewerUserId);
         model.addAttribute("keyword", keyword);
         model.addAttribute("projectReadOnly", projectReadOnly);
-        model.addAttribute("canManageBoard", !projectReadOnly && canManagePin(wsId, projId, session));
+        model.addAttribute("canManageBoard", canManageBoard);
+        model.addAttribute("reportWaitingCount", canManageBoard ? iboardService.getWaitingReportCount(wsId, projId) : 0);
         addPagingModel(model, page, size, totalCount);
 
         return "board/boardList";
@@ -130,22 +174,33 @@ public class projectBoardController {
         if (!projectAuthorizationService.canModifyProjectContent(post.getProjId(), userId)) {
             return Map.of("status", "READ_ONLY");
         }
+        if (post.getChannelId() != null) {
+            Map<String, Object> channel = iboardService.getBoardChannel(post.getChannelId());
+            if (channel == null || !post.getProjId().equals(mapLong(channel, "PROJ_ID"))) return Map.of("status", "INVALID_CHANNEL");
+            post.setBoardType("NOTICE".equalsIgnoreCase(mapString(channel, "CHANNEL_TYPE")) ? "NOTICE" : "FREE");
+        }
         boolean canManage = boardAuthorizationService.canManageBoard(post.getWsId(), post.getProjId(), userId);
         if ("NOTICE".equalsIgnoreCase(post.getBoardType()) && !canManage) {
             return Map.of("status", "NO_PERMISSION");
         }
         post.setUserId(userId);
-        if (!canManage || !"Y".equalsIgnoreCase(post.getIsPinned())) {
+        boolean isNotice = "NOTICE".equalsIgnoreCase(post.getBoardType());
+        if (!canManage || !isNotice || !"Y".equalsIgnoreCase(post.getIsPinned())) {
             post.setIsPinned("N");
             post.setPinStartDt(null);
             post.setPinEndDt(null);
         }
-        return Map.of("status", iboardService.registerPost(post) ? "SUCCESS" : "FAIL");
+        post.setNotifyMembers(canManage && isNotice && "Y".equalsIgnoreCase(post.getNotifyMembers()) ? "Y" : "N");
+        boolean success = iboardService.registerPost(post);
+        if (success && "NOTICE".equalsIgnoreCase(post.getBoardType()) && "Y".equalsIgnoreCase(post.getNotifyMembers())) {
+            iboardService.sendBoardNoticeNotification(post, userId, false);
+        }
+        return Map.of("status", success ? "SUCCESS" : "FAIL");
     }
 
     @DeleteMapping("/api/delete/{postId}")
     @ResponseBody
-    public Map<String, String> delete(@PathVariable Long postId, HttpSession session) {
+    public Map<String, String> delete(@PathVariable("postId") Long postId, HttpSession session) {
         Long userId = currentUserId(session);
         if (userId == null) return Map.of("status", "LOGIN_REQUIRED");
         postDTO post = iboardService.getPostDetail(postId.intValue());
@@ -154,7 +209,7 @@ public class projectBoardController {
             return Map.of("status", "READ_ONLY");
         }
         if (!boardAuthorizationService.canDeletePost(postId, userId)) return Map.of("status", "NO_PERMISSION");
-        return Map.of("status", iboardService.deletePost(postId) ? "SUCCESS" : "FAIL");
+        return Map.of("status", iboardService.deletePost(postId, userId) ? "SUCCESS" : "FAIL");
     }
 
     private projectRequestDTO getAccessibleProject(Long projId, Long requestedWsId, HttpSession session) {

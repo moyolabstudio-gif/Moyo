@@ -49,8 +49,8 @@
             <ul id="noticeList" class="board-list moyo-widget-body"><li class="workspace-empty-state moyo-widget-state is-loading">공지사항을 불러오는 중입니다.</li></ul>
         </div>
         <div class="workspace-widget-card workspace-board-card free-widget-card workspace-free-feed-card moyo-widget-card moyo-dashboard-slot" data-dashboard-widget="free-feed">
-            <div class="board-title moyo-widget-head"><span class="board-title-label moyo-widget-title"><span class="board-title-icon" aria-hidden="true">💬</span><span>자유 피드</span></span><a class="moyo-widget-more" href="${communityFreeMoreUrl}">더보기</a></div>
-            <ul id="freeList" class="board-list free-board-list moyo-widget-body"><li class="workspace-empty-state moyo-widget-state is-loading">자유 피드를 불러오는 중입니다.</li></ul>
+            <div class="board-title moyo-widget-head"><span class="board-title-label moyo-widget-title"><span class="board-title-icon" aria-hidden="true">💬</span><span>게시판</span></span><a class="moyo-widget-more" href="${communityFreeMoreUrl}">더보기</a></div>
+            <ul id="freeList" class="board-list free-board-list moyo-widget-body"><li class="workspace-empty-state moyo-widget-state is-loading">게시판을 불러오는 중입니다.</li></ul>
         </div>
         <div class="workspace-widget-card workspace-board-card resource-widget-card moyo-widget-card moyo-dashboard-slot" data-dashboard-widget="resources">
             <div class="board-title moyo-widget-head"><span class="board-title-label moyo-widget-title"><span class="board-title-icon" aria-hidden="true">📁</span><span>자료실</span></span><a class="moyo-widget-more" href="${communityFileMoreUrl}">더보기</a></div>

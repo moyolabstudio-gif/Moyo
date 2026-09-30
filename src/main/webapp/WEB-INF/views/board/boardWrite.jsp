@@ -7,513 +7,109 @@
     <link rel="icon" type="image/png" sizes="32x32" href="${pageContext.request.contextPath}/brand/favicon-32x32.png?v=moyo-favicon-v2">
     <link rel="icon" type="image/png" sizes="16x16" href="${pageContext.request.contextPath}/brand/favicon-16x16.png?v=moyo-favicon-v2">
     <link rel="shortcut icon" href="${pageContext.request.contextPath}/brand/favicon.ico?v=moyo-favicon-v2">
-    <title>글쓰기</title>
+    <title>게시글 작성</title>
     <script src="https://cdn.ckeditor.com/ckeditor5/41.1.0/super-build/ckeditor.js"></script>
     <script src="https://cdn.ckeditor.com/ckeditor5/41.1.0/super-build/translations/ko.js"></script>
     <script src="${pageContext.request.contextPath}/js/commonCkeditor.js?v=20260907-image-guard-1"></script>
-    
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
-    <style>
-        body {
-            margin: 0;
-            background: #f8f9fa;
-            color: #333;
-            font-family: 'Pretendard', sans-serif;
-        }
-
-        .write-page {
-            max-width: 1120px;
-            margin: 34px auto 60px;
-            padding: 0 24px;
-            box-sizing: border-box;
-        }
-
-        .write-card {
-            background: #fff;
-            border: 1px solid #eef0f2;
-            border-radius: 18px;
-            padding: 38px 46px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.03);
-            box-sizing: border-box;
-        }
-
-        .write-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            gap: 16px;
-            margin-bottom: 30px;
-            padding-bottom: 20px;
-            border-bottom: 1px solid #222;
-        }
-
-        .write-title {
-            margin: 0;
-            font-size: 28px;
-            color: #111;
-            font-weight: 800;
-            letter-spacing: -0.03em;
-            line-height: 1.25;
-        }
-
-        .write-desc {
-            margin: 8px 0 0;
-            font-size: 13px;
-            color: #888;
-        }
-
-        .back-link {
-            flex-shrink: 0;
-            text-decoration: none;
-            color: #666;
-            font-size: 13px;
-            font-weight: 700;
-            padding: 8px 10px;
-            border-radius: 8px;
-        }
-
-        .back-link:hover {
-            color: #4A90E2;
-            background: #f8f9fa;
-        }
-
-        .form-group {
-            margin-bottom: 22px;
-        }
-
-        .form-label {
-            display: block;
-            margin-bottom: 8px;
-            font-size: 13px;
-            font-weight: 800;
-            color: #444;
-        }
-
-        .title-input {
-            width: 100%;
-            padding: 13px 14px;
-            border: 1px solid #ddd;
-            border-radius: 10px;
-            font-size: 15px;
-            box-sizing: border-box;
-            outline: none;
-            font-family: inherit;
-            transition: border-color .2s, box-shadow .2s;
-        }
-
-        .title-input:focus {
-            border-color: #4A90E2;
-            box-shadow: 0 0 0 3px rgba(74,144,226,0.12);
-        }
-
-        .file-input {
-            width: 100%;
-            padding: 12px 14px;
-            border: 1px dashed #ccc;
-            border-radius: 10px;
-            background: #f8f9fa;
-            box-sizing: border-box;
-            font-size: 13px;
-        }
-
-        textarea {
-            width: 100%;
-            height: 80px;
-            resize: none;
-            box-sizing: border-box;
-        }
-
-        .ck.ck-editor__editable_inline {
-            min-height: 420px !important;
-            border: 1px solid #ddd !important;
-            border-radius: 0 0 10px 10px !important;
-            padding: 0 20px !important;
-            box-sizing: border-box;
-        }
-
-        .ck.ck-toolbar {
-            border: 1px solid #ddd !important;
-            border-radius: 10px 10px 0 0 !important;
-            background: #f8f9fa !important;
-        }
-
-        .action-row {
-            display: flex;
-            justify-content: flex-end;
-            gap: 10px;
-            margin-top: 26px;
-            padding-top: 24px;
-            border-top: 1px solid #eef0f2;
-        }
-
-        .btn-cancel,
-        .btn-submit {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            padding: 11px 18px;
-            border-radius: 8px;
-            font-size: 13px;
-            font-weight: 800;
-            cursor: pointer;
-            text-decoration: none;
-            box-sizing: border-box;
-        }
-
-        .btn-cancel {
-            color: #495057;
-            background: #fff;
-            border: 1px solid #dee2e6;
-        }
-
-        .btn-cancel:hover {
-            background: #f8f9fa;
-        }
-
-        .btn-submit {
-            background: #4A90E2;
-            color: white;
-            border: 1px solid #4A90E2;
-            box-shadow: 0 4px 10px rgba(74,144,226,0.2);
-        }
-
-        .btn-submit:hover {
-            background: #357ABD;
-        }
-
-        @media(max-width: 760px) {
-            .write-page {
-                margin: 24px auto 40px;
-                padding: 0 14px;
-            }
-
-            .write-card {
-                padding: 28px 22px;
-                border-radius: 16px;
-            }
-
-            .write-header {
-                flex-direction: column;
-            }
-
-            .write-title {
-                font-size: 24px;
-            }
-
-            .action-row {
-                justify-content: stretch;
-            }
-
-            .btn-cancel,
-            .btn-submit {
-                flex: 1;
-            }
-        }
-
-        /* ===== MOYO Board Point Theme - subtle ===== */
-        :root {
-            --moyo-blue: #4A90E2;
-            --moyo-mint: #55DDBF;
-            --moyo-mint-dark: #12BFA6;
-            --moyo-border: #e9eef2;
-            --moyo-soft-mint: #F5FFFB;
-            --moyo-text: #222;
-            --moyo-muted: #7b8491;
-        }
-
-        body {
-            background: #f8f9fa !important;
-            color: var(--moyo-text) !important;
-        }
-
-        .detail-card,
-        .write-card,
-        .form-card,
-        .list-table-wrap,
-        .comment-box,
-        .attachment-box,
-        .file-box {
-            border-color: var(--moyo-border) !important;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.03) !important;
-        }
-
-        .list-header {
-            border: none !important;
-            box-shadow: none !important;
-            background: transparent !important;
-            overflow: visible !important;
-        }
-
-        .list-header::before,
-        .list-header::after {
-            display: none !important;
-        }
-
-        .detail-card::before,
-        .write-card::before,
-        .form-card::before {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 34px;
-            bottom: 34px;
-            width: 4px;
-            border-radius: 0 999px 999px 0;
-            background: linear-gradient(180deg, var(--moyo-blue), var(--moyo-mint));
-        }
-
-        .detail-card::after,
-        .write-card::after,
-        .form-card::after {
-            display: none !important;
-        }
-
-        .detail-card,
-        .write-card,
-        .form-card {
-            position: relative;
-            overflow: hidden;
-        }
-
-        .detail-card > *,
-        .write-card > *,
-        .form-card > * {
-            position: relative;
-            z-index: 1;
-        }
-
-        .page-title,
-        .detail-title,
-        .modify-title,
-        .write-title,
-        .list-header h2 {
-            color: #111 !important;
-            letter-spacing: -0.03em !important;
-        }
-
-        .back-btn {
-            color: #666 !important;
-        }
-
-        .back-btn:hover {
-            color: var(--moyo-blue) !important;
-        }
-
-        .write-btn,
-        .primary-btn,
-        .submit-btn,
-        .save-btn,
-        .btn-save,
-        .comment-submit-btn,
-        .comment-btn,
-        button[type="submit"],
-        input[type="submit"] {
-            background: var(--moyo-blue) !important;
-            border-color: var(--moyo-blue) !important;
-            color: #fff !important;
-            box-shadow: 0 5px 12px rgba(74,144,226,0.18) !important;
-            transition: transform .18s ease, background .18s ease, box-shadow .18s ease !important;
-        }
-
-        .write-btn:hover,
-        .primary-btn:hover,
-        .submit-btn:hover,
-        .save-btn:hover,
-        .btn-save:hover,
-        .comment-submit-btn:hover,
-        .comment-btn:hover,
-        button[type="submit"]:hover,
-        input[type="submit"]:hover {
-            background: #3f83d6 !important;
-            transform: translateY(-1px);
-            box-shadow: 0 7px 15px rgba(74,144,226,0.22) !important;
-        }
-
-        .cancel-btn,
-        .btn-cancel,
-        .secondary-btn {
-            background: #fff !important;
-            border: 1px solid #dde3ea !important;
-            color: #555 !important;
-            box-shadow: none !important;
-        }
-
-        .cancel-btn:hover,
-        .btn-cancel:hover,
-        .secondary-btn:hover {
-            background: #f8fafc !important;
-            border-color: #cfd8e3 !important;
-            color: #333 !important;
-        }
-
-        .delete-btn,
-        .btn-delete,
-        .danger-btn {
-            background: #fff !important;
-            border: 1px solid #ffd1d6 !important;
-            color: #dc3545 !important;
-            box-shadow: none !important;
-        }
-
-        .delete-btn:hover,
-        .btn-delete:hover,
-        .danger-btn:hover {
-            background: #fff5f5 !important;
-            color: #c82333 !important;
-            transform: translateY(-1px);
-        }
-
-        input[type="text"],
-        input[type="date"],
-        input[type="file"],
-        select,
-        textarea {
-            border-color: #dbe3ea !important;
-            border-radius: 12px !important;
-        }
-
-        input[type="text"]:focus,
-        input[type="date"]:focus,
-        input[type="file"]:focus,
-        select:focus,
-        textarea:focus {
-            outline: none !important;
-            border-color: var(--moyo-mint) !important;
-            box-shadow: 0 0 0 3px rgba(85,221,191,0.12) !important;
-        }
-
-        .ck.ck-editor__main > .ck-editor__editable,
-        .ck.ck-toolbar {
-            border-color: #dbe3ea !important;
-        }
-
-        .ck.ck-editor__editable:focus {
-            border-color: var(--moyo-mint) !important;
-            box-shadow: 0 0 0 3px rgba(85,221,191,0.10) !important;
-        }
-
-        .list-table th {
-            background: #f8fafc !important;
-            color: #333 !important;
-        }
-
-        .list-table tbody tr:hover {
-            background: #fbfffd !important;
-        }
-
-        .list-table a:hover,
-        .post-title-link:hover {
-            color: var(--moyo-blue) !important;
-        }
-
-        .attachment-box,
-        .file-box,
-        .comment-box,
-        .comment-form {
-            background: #fafbfc !important;
-        }
-
-        .meta,
-        .post-meta,
-        .detail-meta,
-        .list-date,
-        .empty-text,
-        .comment-date,
-        .file-empty {
-            color: var(--moyo-muted) !important;
-        }
-        /* ===== End MOYO Board Point Theme - subtle ===== */
-
-</style>
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/boardUi.css?v=board-editor-picker-v10">
-<link rel="stylesheet" href="${pageContext.request.contextPath}/css/common/commonCkeditor.css?v=moyo-ckeditor-common-v2">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common/commonCkeditor.css?v=moyo-ckeditor-common-v2">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/boardForm.css?v=board-final-20260928">
+    <script src="${pageContext.request.contextPath}/js/boardDateRangePicker.js?v=board-date-range-final-v2"></script>
+    <script src="${pageContext.request.contextPath}/js/common/commonContentExplorer.js?v=board-file-ui-v2"></script>
 </head>
-<body class="moyo-board-body">
+<body class="moyo-board-form-body">
     <jsp:include page="/WEB-INF/views/common/header.jsp" />
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/boardUi.css?v=board-editor-picker-v10">
-
-    <div class="write-page ">
-        <div class="write-card">
-            <div class="write-header">
-                <div>
-                    <h1 class="write-title">
-                        <c:choose>
-                            <c:when test="${boardType eq 'NOTICE'}">공지사항 작성</c:when>
-                            <c:when test="${false}">자료 등록</c:when>
-                            <c:otherwise>게시글 작성</c:otherwise>
-                        </c:choose>
-                    </h1>
-                    <p class="write-desc">
-                        <c:choose>
-                            <c:when test="${boardType eq 'NOTICE'}">중요한 소식과 안내를 구성원들과 공유합니다.</c:when>
-                            <c:when test="${false}">필요한 자료와 설명을 함께 등록합니다.</c:when>
-                            <c:otherwise>구성원들과 자유롭게 의견을 나눕니다.</c:otherwise>
-                        </c:choose>
-                    </p>
-                </div>
-                <a id="backLink" href="javascript:history.back();" class="back-link">← 돌아가기</a>
+    <main class="board-form-page">
+        <c:url var="boardFormListUrl" value="${empty projId ? '/group/board/list' : '/project/board/list'}">
+            <c:if test="${not empty wsId}"><c:param name="wsId" value="${wsId}" /></c:if>
+            <c:if test="${not empty boardType}"><c:param name="type" value="${boardType}" /></c:if>
+            <c:if test="${not empty channelId}"><c:param name="channelId" value="${channelId}" /></c:if>
+            <c:if test="${not empty projId}"><c:param name="projId" value="${projId}" /></c:if>
+        </c:url>
+        <header class="board-form-head">
+            <div class="board-form-head-copy">
+                <a id="boardFormListLink" class="board-form-kicker" href="${boardFormListUrl}" aria-label="게시판 목록으로 이동"><span class="board-form-kicker-icon" aria-hidden="true"><c:choose><c:when test="${boardType eq 'NOTICE'}">&#128226;</c:when><c:otherwise>&#128172;</c:otherwise></c:choose></span><span>게시판</span></a>
+                <h1><c:choose><c:when test="${boardType eq 'NOTICE'}">공지 작성</c:when><c:otherwise>새 글 작성</c:otherwise></c:choose></h1>
+                <p><strong id="currentChannelLabel">${currentChannelName}</strong>에 새로운 이야기를 남겨보세요.</p>
             </div>
+        </header>
 
-            <form id="writeForm" autocomplete="off">
-                <input type="hidden" id="wsId" value="${wsId}">
-                <input type="hidden" id="boardType" value="${boardType}">
-                <input type="hidden" id="projId" value="${projId}">
+        <form id="writeForm" class="board-form-shell" autocomplete="off">
+            <input type="hidden" id="wsId" value="${wsId}">
+            <input type="hidden" id="boardType" value="${boardType}">
+            <input type="hidden" id="channelId" value="${channelId}">
+            <input type="hidden" id="projId" value="${projId}">
 
-                <div class="form-group">
-                    <label class="form-label" for="title"><c:choose><c:when test="${false}">자료명</c:when><c:otherwise>제목</c:otherwise></c:choose></label>
-                    <input type="text" id="title" class="title-input" placeholder="<c:choose><c:when test='${false}'>자료명을 입력하세요</c:when><c:otherwise>제목을 입력하세요</c:otherwise></c:choose>" required>
+            <section class="board-form-section">
+                <div class="board-form-section-head"><h2>게시판</h2><p>글이 등록될 공간을 선택합니다.</p></div>
+                <div class="board-form-field">
+                    <div class="board-channel-options">
+                        <c:forEach var="channel" items="${boardChannels}">
+                            <c:if test="${canManageBoard or channel.CHANNEL_TYPE ne 'NOTICE'}">
+                                <button type="button" class="board-channel-option ${channel.CHANNEL_TYPE eq 'NOTICE' ? 'notice' : ''} ${channel.CHANNEL_ID eq channelId ? 'is-active' : ''}"
+                                    data-channel-id="${channel.CHANNEL_ID}" data-channel-type="${channel.CHANNEL_TYPE}" onclick="selectBoardChannel(this)"><c:out value="${channel.CHANNEL_NAME}"/></button>
+                            </c:if>
+                        </c:forEach>
+                    </div>
                 </div>
+            </section>
 
+            <section class="board-form-section">
+                <div class="board-form-section-head"><h2>제목</h2><p>내용을 한눈에 알 수 있게 적어주세요.</p></div>
+                <div class="board-form-field"><input type="text" id="title" class="board-form-input" placeholder="제목을 입력하세요" required></div>
+            </section>
 
+            <section class="board-form-section">
+                <div class="board-form-section-head"><h2>내용</h2><p>텍스트와 이미지를 자유롭게 정리할 수 있어요.</p></div>
+                <div class="board-form-field board-editor-wrap"><textarea id="editor" name="content" autocomplete="off" spellcheck="false"></textarea></div>
+            </section>
 
-                <c:if test="${canManageBoard}">
-                    <div class="form-group board-pin-panel is-inactive">
-                        <div class="board-pin-head">
-                            <label class="board-pin-toggle">
-                                <input type="checkbox" id="isPinned" value="Y">
-                                <span>상단 고정</span>
-                            </label>
-                            <p>그룹장/팀장 또는 관리자만 사용할 수 있습니다. 기간을 비우면 계속 고정됩니다.</p>
-                        </div>
-                        <div class="board-pin-dates">
-                            <label>시작일
-                                <input type="date" id="pinStartDt" class="pin-date-input" disabled>
-                            </label>
-                            <label>종료일
-                                <input type="date" id="pinEndDt" class="pin-date-input" disabled>
-                            </label>
+            <c:if test="${canManageBoard}">
+                <section id="noticeSettingsSection" class="board-form-section board-notice-settings ${boardType eq 'NOTICE' ? '' : 'is-hidden'}">
+                    <div class="board-form-section-head"><h2>공지 설정</h2><p>공지에 필요한 옵션만 선택해서 사용합니다.</p></div>
+                    <div class="board-form-field">
+                        <div class="board-notice-panel">
+                            <div class="board-setting-row">
+                                <div class="board-setting-copy"><strong>상단 고정</strong><span>공지 목록 상단에 고정해서 보여줍니다.</span></div>
+                                <label class="board-switch"><input type="checkbox" id="isPinned" value="Y"><span class="board-switch-track"><i></i></span></label>
+                            </div>
+                            <div id="pinDateArea" class="board-pin-dates is-hidden">
+                                <div id="pinDateRangePicker" class="board-date-range-picker" data-start="" data-end="">
+                                    <input type="hidden" id="pinStartDt" value="" disabled>
+                                    <input type="hidden" id="pinEndDt" value="" disabled>
+                                    <button type="button" class="board-date-range-trigger" aria-haspopup="dialog" aria-expanded="false">
+                                        <span class="board-date-range-icon" aria-hidden="true"></span>
+                                        <span class="board-date-range-label">기간을 선택하세요</span>
+                                        <span class="board-date-range-caret" aria-hidden="true"></span>
+                                    </button>
+                                </div>
+                                <p>기간을 비우면 계속 고정됩니다.</p>
+                            </div>
+                            <div class="board-setting-row board-setting-row-divided">
+                                <div class="board-setting-copy"><strong>멤버에게 알림 보내기</strong><span>이 공지를 그룹 또는 프로젝트 멤버에게 한 번 알려줍니다.</span></div>
+                                <label class="board-switch"><input type="checkbox" id="notifyMembers" value="Y"><span class="board-switch-track"><i></i></span></label>
+                            </div>
                         </div>
                     </div>
-                </c:if>
+                </section>
+            </c:if>
 
-                <div class="form-group">
-                    <label class="form-label" for="editor"><c:choose><c:when test="${false}">자료 설명</c:when><c:otherwise>내용</c:otherwise></c:choose></label>
-                    <textarea id="editor" name="content" autocomplete="off" spellcheck="false"></textarea>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label" for="fileInput"><c:choose><c:when test="${false}">자료 파일</c:when><c:otherwise>파일 첨부</c:otherwise></c:choose></label>
-                    <div id="fileDropZone" class="board-file-dropzone ">
+            <section class="board-form-section">
+                <div class="board-form-section-head"><h2>파일 첨부</h2><p>여러 파일을 한 번에 추가할 수 있어요.</p></div>
+                <div class="board-form-field">
+                    <div id="fileDropZone" class="board-file-dropzone">
                         <input type="file" id="fileInput" name="files" multiple class="file-input board-file-hidden">
-                        <div class="dropzone-icon">📎</div>
-                        <div class="dropzone-main"><c:choose><c:when test="${false}">자료 파일을 끌어다 놓거나 클릭해서 선택하세요</c:when><c:otherwise>파일을 끌어다 놓거나 클릭해서 선택하세요</c:otherwise></c:choose></div>
-                        <div class="dropzone-sub"><c:choose><c:when test="${false}">자료실 글은 파일 첨부를 권장합니다.</c:when><c:otherwise>여러 파일을 한 번에 추가할 수 있습니다.</c:otherwise></c:choose></div>
+                        <div class="dropzone-icon">📎</div><div><div class="dropzone-main">파일을 끌어다 놓거나 클릭해서 선택하세요</div><div class="dropzone-sub">선택한 파일은 등록 전에 다시 확인할 수 있습니다.</div></div>
                     </div>
                     <ul id="selectedFileList" class="selected-file-list"></ul>
                 </div>
+            </section>
 
-                <div class="action-row">
-                    <a id="cancelLink" href="javascript:history.back();" class="btn-cancel">취소</a>
-                    <button type="button" class="btn-submit" onclick="submitPost()"><c:choose><c:when test="${false}">자료 등록</c:when><c:otherwise>등록하기</c:otherwise></c:choose></button>
-                </div>
-            </form>
-        </div>
-    </div>
-
+            <div class="board-form-actions"><a id="cancelLink" href="javascript:history.back();" class="btn-cancel">취소</a><button type="button" class="btn-submit" onclick="submitPost()">등록하기</button></div>
+        </form>
+    </main>
     <jsp:include page="/WEB-INF/views/common/footer.jsp" />
-
-    <script>
+<script>
         let myEditor;
 
         let selectedBoardFiles = [];
@@ -579,9 +175,31 @@
             selectedFileList.innerHTML = '';
             selectedBoardFiles.forEach((file, index) => {
                 const li = document.createElement('li');
-                li.innerHTML = '<span>📄 ' + escapeHtml(file.name) + ' <em>' + formatFileSize(file.size) + '</em></span>' +
+                const fileMeta = window.MoyoContentFileUi;
+                li.innerHTML = '<div class="board-file-meta">' +
+                               '<span class="board-file-icon" aria-hidden="true">' + fileMeta.fileIcon({ name: file.name, contentType: file.type }) + '</span>' +
+                               fileMeta.fileNameHtml(file.name) +
+                               '<span class="board-file-size">' + formatFileSize(file.size) + '</span>' +
+                               '</div>' +
                                '<button type="button" onclick="removeSelectedFile(' + index + ')">삭제</button>';
                 selectedFileList.appendChild(li);
+            });
+        }
+
+
+        function hydrateExistingBoardFileNames() {
+            document.querySelectorAll('[data-board-file-name]').forEach(function(item) {
+                const ui = window.MoyoContentFileUi;
+                if (!ui) return;
+                const raw = item.getAttribute('data-board-file-name') || '';
+                const icon = item.querySelector('[data-board-file-icon]');
+                const slot = item.querySelector('[data-board-file-name-slot]');
+                if (icon) icon.textContent = ui.fileIcon({ originalName: raw });
+                if (slot) slot.outerHTML = ui.fileNameHtml(raw);
+            });
+            document.querySelectorAll('.js-board-file-size').forEach(function(el) {
+                const size = Number(el.dataset.fileSize || 0);
+                el.textContent = size > 0 ? formatFileSize(size) : '';
             });
         }
 
@@ -668,6 +286,7 @@
 
             const wsIdParam = urlParams.get('wsId');
             const projIdParam = urlParams.get('projId');
+            const channelIdParam = urlParams.get('channelId');
             const typeParam = urlParams.get('type');
 
             if (wsIdParam) {
@@ -677,6 +296,9 @@
             if (projIdParam) {
                 document.getElementById('projId').value = projIdParam;
             }
+            if (channelIdParam) {
+                document.getElementById('channelId').value = channelIdParam;
+            }
 
             if (typeParam) {
                 document.getElementById('boardType').value = typeParam;
@@ -685,15 +307,19 @@
             const wsId = document.getElementById('wsId').value;
             const projId = document.getElementById('projId').value;
             const boardType = document.getElementById('boardType').value;
+            const channelId = document.getElementById('channelId').value;
 
             const backUrl = projId
-                ? '/project/board/list?projId=' + projId + '&type=' + boardType + '&wsId=' + wsId
-                : '/group/board/list?wsId=' + wsId + '&type=' + boardType;
+                ? '/project/board/list?projId=' + projId + '&type=' + boardType + '&wsId=' + wsId + (channelId ? '&channelId=' + channelId : '')
+                : '/group/board/list?wsId=' + wsId + '&type=' + boardType + (channelId ? '&channelId=' + channelId : '');
 
-            document.getElementById('backLink').href = backUrl;
             document.getElementById('cancelLink').href = backUrl;
 
             initializeBoardFileDropZone();
+            hydrateExistingBoardFileNames();
+            if (window.MoyoDateRangePicker) {
+                window.MoyoDateRangePicker.create('pinDateRangePicker', 'pinStartDt', 'pinEndDt');
+            }
             initializeBoardPinToggle();
 
             console.log("글쓰기 wsId =", wsId);
@@ -702,28 +328,72 @@
         });
 
 
-        function initializeBoardPinToggle() {
+
+        function selectBoardChannel(button) {
+            const channelId = button ? button.dataset.channelId : '';
+            const channelType = button ? button.dataset.channelType : 'GENERAL';
+            const channelName = button ? button.textContent.trim() : '게시판';
+            const channelInput = document.getElementById('channelId');
+            const typeInput = document.getElementById('boardType');
+            if (channelInput) channelInput.value = channelId || '';
+            if (typeInput) typeInput.value = channelType === 'NOTICE' ? 'NOTICE' : 'FREE';
+            document.querySelectorAll('.board-channel-option').forEach(el => el.classList.remove('is-active'));
+            if (button) button.classList.add('is-active');
+            const current = document.getElementById('currentChannelLabel');
+            if (current) current.textContent = channelName || '게시판';
+            syncNoticeSettingsVisibility(channelType === 'NOTICE');
+            const wsId = document.getElementById('wsId')?.value || '';
+            const projId = document.getElementById('projId')?.value || '';
+            const boardType = typeInput ? typeInput.value : 'FREE';
+            const listUrl = projId
+                ? '/project/board/list?projId=' + encodeURIComponent(projId) + '&wsId=' + encodeURIComponent(wsId) + '&type=' + encodeURIComponent(boardType) + (channelId ? '&channelId=' + encodeURIComponent(channelId) : '')
+                : '/group/board/list?wsId=' + encodeURIComponent(wsId) + '&type=' + encodeURIComponent(boardType) + (channelId ? '&channelId=' + encodeURIComponent(channelId) : '');
+            const cancel = document.getElementById('cancelLink');
+            if (cancel) cancel.href = listUrl;
+            const listLink = document.getElementById('boardFormListLink');
+            if (listLink) listLink.href = listUrl;
+        }
+
+        function syncNoticeSettingsVisibility(isNotice) {
+            const section = document.getElementById('noticeSettingsSection');
+            const isPinnedEl = document.getElementById('isPinned');
+            const notifyEl = document.getElementById('notifyMembers');
+            if (section) section.classList.toggle('is-hidden', !isNotice);
+            if (!isNotice) {
+                if (isPinnedEl) isPinnedEl.checked = false;
+                if (notifyEl) notifyEl.checked = false;
+            }
+            syncPinState();
+        }
+
+        function syncPinState() {
             const isPinnedEl = document.getElementById('isPinned');
             const pinStartEl = document.getElementById('pinStartDt');
             const pinEndEl = document.getElementById('pinEndDt');
+            const pinDateArea = document.getElementById('pinDateArea');
             if (!isPinnedEl || !pinStartEl || !pinEndEl) return;
 
-            const panel = isPinnedEl.closest('.board-pin-panel');
-            const syncPinState = () => {
-                const enabled = isPinnedEl.checked;
-                [pinStartEl, pinEndEl].forEach(input => {
-                    input.disabled = !enabled;
-                    if (!enabled) input.value = '';
-                });
-                if (panel) {
-                    panel.classList.toggle('is-active', enabled);
-                    panel.classList.toggle('is-inactive', !enabled);
-                }
-            };
-
-            isPinnedEl.addEventListener('change', syncPinState);
-            syncPinState();
+            const enabled = isPinnedEl.checked && !document.getElementById('noticeSettingsSection')?.classList.contains('is-hidden');
+            pinStartEl.disabled = !enabled;
+            pinEndEl.disabled = !enabled;
+            if (!enabled) {
+                pinStartEl.value = '';
+                pinEndEl.value = '';
+            }
+            if (pinDateArea) pinDateArea.classList.toggle('is-hidden', !enabled);
+            if (window.MoyoDateRangePicker) {
+                window.MoyoDateRangePicker.setDisabled('pinDateRangePicker', !enabled);
+                if (!enabled) window.MoyoDateRangePicker.clear('pinDateRangePicker');
+            }
         }
+
+        function initializeBoardPinToggle() {
+            const isPinnedEl = document.getElementById('isPinned');
+            if (isPinnedEl) isPinnedEl.addEventListener('change', syncPinState);
+            const currentType = document.getElementById('boardType')?.value || 'FREE';
+            syncNoticeSettingsVisibility(currentType === 'NOTICE');
+        }
+
 
         window.MoyoCkeditor.create(document.querySelector('#editor'), {
             profile: 'BOARD',
@@ -754,6 +424,7 @@
             let wsId = document.getElementById('wsId').value;
             let projId = document.getElementById('projId').value;
             let boardType = document.getElementById('boardType').value;
+            let channelId = document.getElementById('channelId').value;
 
             const title = document.getElementById('title').value.trim();
             const submitButton = document.querySelector('.btn-submit');
@@ -818,6 +489,8 @@
             const isPinned = isPinnedEl && isPinnedEl.checked ? 'Y' : 'N';
             const pinStartDt = pinStartEl ? pinStartEl.value : '';
             const pinEndDt = pinEndEl ? pinEndEl.value : '';
+            const notifyMembersEl = document.getElementById('notifyMembers');
+            const notifyMembers = boardType === 'NOTICE' && notifyMembersEl && notifyMembersEl.checked ? 'Y' : 'N';
 
             if (isPinned === 'Y' && pinStartDt && pinEndDt && pinStartDt > pinEndDt) {
                 alert('상단 고정 종료일은 시작일보다 빠를 수 없습니다.');
@@ -827,11 +500,13 @@
             const postData = {
                 wsId: wsId,
                 boardType: boardType,
+                channelId: channelId || null,
                 title: title,
                 content: content,
-                isPinned: isPinned,
-                pinStartDt: pinStartDt,
-                pinEndDt: pinEndDt
+                isPinned: boardType === 'NOTICE' ? isPinned : 'N',
+                pinStartDt: boardType === 'NOTICE' ? pinStartDt : '',
+                pinEndDt: boardType === 'NOTICE' ? pinEndDt : '',
+                notifyMembers: notifyMembers
             };
 
             if (projId && projId !== "") {
@@ -856,9 +531,14 @@
                         alert('등록 완료!');
 
                         if (projId && projId !== "") {
-                            location.href = '/project/main?projId=' + projId + '&wsId=' + wsId;
+                            location.href = '/project/board/list?projId=' + encodeURIComponent(projId)
+                                + '&wsId=' + encodeURIComponent(wsId)
+                                + '&type=' + encodeURIComponent(boardType)
+                                + (channelId ? '&channelId=' + encodeURIComponent(channelId) : '');
                         } else {
-                            location.href = '/group/board/list?wsId=' + wsId + '&type=' + boardType;
+                            location.href = '/group/board/list?wsId=' + encodeURIComponent(wsId)
+                                + '&type=' + encodeURIComponent(boardType)
+                                + (channelId ? '&channelId=' + encodeURIComponent(channelId) : '');
                         }
                     } else {
                         alert('등록 실패: ' + (res.message || '알 수 없는 오류'));

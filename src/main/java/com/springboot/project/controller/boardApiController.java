@@ -32,6 +32,7 @@ import com.springboot.project.service.IboardService;
 import com.springboot.project.service.IcontentFileService;
 import com.springboot.project.service.BoardAuthorizationService;
 import com.springboot.project.service.UploadSecurityService;
+import com.springboot.project.service.CollaborationActivityService;
 
 @RestController
 @RequestMapping("/api/workspace")
@@ -51,6 +52,9 @@ public class boardApiController {
     
     @Autowired
     private UploadSecurityService uploadSecurityService;
+
+    @Autowired
+    private CollaborationActivityService collaborationActivityService;
 
 
     @Value("${moyo.upload.board-editor-dir:C:/uploads/editor/}")
@@ -173,7 +177,7 @@ public class boardApiController {
         if (!boardAuthorizationService.canDeleteReply((long) replyId, loginUser.getUserId())) {
             return ResponseEntity.status(403).body(Map.of("status", "FORBIDDEN"));
         }
-        boolean success = iboardService.removeReply(replyId);
+        boolean success = iboardService.removeReply(replyId, loginUser.getUserId());
         return ResponseEntity.ok(Map.of("status", success ? "SUCCESS" : "FAIL"));
     }
     @GetMapping("/{wsId}/board/{postId}/replies")
@@ -260,17 +264,25 @@ public class boardApiController {
             return ResponseEntity.status(401).body(Map.of("status", "LOGIN_REQUIRED", "message", "로그인이 필요합니다."));
         }
 
-        String contentType = String.valueOf(reportData.getOrDefault("contentType", "BOARD"));
+        String contentType = String.valueOf(reportData.getOrDefault("contentType", "BOARD")).trim().toUpperCase();
         Long contentId = null;
         Object rawContentId = reportData.get("contentId");
-        if (rawContentId instanceof Number) {
-            contentId = ((Number) rawContentId).longValue();
-        } else if (rawContentId != null && !String.valueOf(rawContentId).isBlank()) {
-            contentId = Long.parseLong(String.valueOf(rawContentId));
+        try {
+            if (rawContentId instanceof Number) {
+                contentId = ((Number) rawContentId).longValue();
+            } else if (rawContentId != null && !String.valueOf(rawContentId).isBlank()) {
+                contentId = Long.parseLong(String.valueOf(rawContentId));
+            }
+        } catch (NumberFormatException e) {
+            return ResponseEntity.badRequest().body(Map.of("status", "FAIL", "message", "신고 대상 정보가 올바르지 않습니다."));
         }
 
-        String reason = String.valueOf(reportData.getOrDefault("reason", "ETC"));
-        String detail = String.valueOf(reportData.getOrDefault("detail", ""));
+        String reason = String.valueOf(reportData.getOrDefault("reason", "ETC")).trim().toUpperCase();
+        String detail = String.valueOf(reportData.getOrDefault("detail", "")).trim();
+
+        if (boardAuthorizationService.isOwnReportTarget(contentType, contentId, loginUser.getUserId())) {
+            return ResponseEntity.badRequest().body(Map.of("status", "SELF_REPORT", "message", "내가 작성한 콘텐츠는 신고할 수 없습니다."));
+        }
 
         if (!boardAuthorizationService.canReportContent(wsId, contentType, contentId, loginUser.getUserId())) {
             return ResponseEntity.status(403).body(Map.of("status", "FORBIDDEN", "message", "신고 대상에 접근할 권한이 없습니다."));
@@ -316,18 +328,36 @@ public class boardApiController {
             return ResponseEntity.status(403).body(Map.of("status", "FORBIDDEN", "message", "게시판에 접근할 권한이 없습니다."));
         }
 
+        if (post.getChannelId() != null) {
+            Map<String, Object> channel = iboardService.getBoardChannel(post.getChannelId());
+            if (!channelBelongsToScope(channel, wsId, post.getProjId())) {
+                return ResponseEntity.status(400).body(Map.of("status", "INVALID_CHANNEL", "message", "게시판 분류가 올바르지 않습니다."));
+            }
+            Object channelType = channel.get("CHANNEL_TYPE");
+            if (channelType == null) channelType = channel.get("channel_type");
+            post.setBoardType("NOTICE".equalsIgnoreCase(String.valueOf(channelType)) ? "NOTICE" : "FREE");
+        } else {
+            iboardService.ensureDefaultChannels(wsId, post.getProjId(), loginUser.getUserId());
+        }
+
         boolean canManage = boardAuthorizationService.canManageBoard(wsId, post.getProjId(), loginUser.getUserId());
         if ("NOTICE".equalsIgnoreCase(post.getBoardType()) && !canManage) {
             return ResponseEntity.status(403).body(Map.of(
                     "status", "FORBIDDEN",
                     "message", "공지사항은 그룹장 또는 관리자만 작성할 수 있습니다."));
         }
-        if (!canManage || !"Y".equalsIgnoreCase(post.getIsPinned())) {
+        boolean isNotice = "NOTICE".equalsIgnoreCase(post.getBoardType());
+        if (!canManage || !isNotice || !"Y".equalsIgnoreCase(post.getIsPinned())) {
             post.setIsPinned("N");
             post.setPinStartDt(null);
             post.setPinEndDt(null);
         } else {
             post.setIsPinned("Y");
+        }
+        if (!canManage || !isNotice || !"Y".equalsIgnoreCase(post.getNotifyMembers())) {
+            post.setNotifyMembers("N");
+        } else {
+            post.setNotifyMembers("Y");
         }
 
         System.out.println("글 등록 wsId = " + wsId);
@@ -350,6 +380,9 @@ public class boardApiController {
         }
 
         iboardService.registerPostWithFiles(post, fileList);
+        if ("NOTICE".equalsIgnoreCase(post.getBoardType()) && "Y".equalsIgnoreCase(post.getNotifyMembers())) {
+            iboardService.sendBoardNoticeNotification(post, loginUser.getUserId(), false);
+        }
 
         return ResponseEntity.ok(Map.of("status", "SUCCESS"));
     }
@@ -407,7 +440,7 @@ public class boardApiController {
 
         // 한 위젯의 조회 실패가 공지/자유피드/자료실 전체를 500으로 만들지 않게 각각 격리한다.
         try {
-            List<postDTO> notices = iboardService.getListByProject(projId, "NOTICE");
+            List<postDTO> notices = iboardService.getListByProject(projId, "NOTICE", 1, 3, null, null);
             response.put("notice", notices == null ? List.of() : notices);
         } catch (Exception e) {
             System.err.println("[프로젝트 메인] 공지 위젯 조회 실패 projId=" + projId + " : " + e.getMessage());
@@ -415,7 +448,7 @@ public class boardApiController {
         }
 
         try {
-            List<postDTO> freeBoards = iboardService.getListByProject(projId, "FREE");
+            List<postDTO> freeBoards = iboardService.getListByProject(projId, "FREE", 1, 3, null, null);
             response.put("free", freeBoards == null ? List.of() : freeBoards);
         } catch (Exception e) {
             System.err.println("[프로젝트 메인] 자유피드 위젯 조회 실패 projId=" + projId + " : " + e.getMessage());
@@ -491,6 +524,149 @@ public class boardApiController {
 
         boolean success = iboardService.deleteReportedContent(reportId, loginUser.getUserId());
         return ResponseEntity.ok(Map.of("status", success ? "SUCCESS" : "FAIL"));
+    }
+
+
+    @GetMapping("/{wsId}/board/channels")
+    public ResponseEntity<Map<String, Object>> getBoardChannels(@PathVariable("wsId") Long wsId,
+                                                                 @RequestParam(value = "projId", required = false) Long projId,
+                                                                 HttpSession session) {
+        usersDto loginUser = (usersDto) session.getAttribute("user");
+        if (loginUser == null) return ResponseEntity.status(401).body(Map.of("status", "LOGIN_REQUIRED"));
+        if (!boardAuthorizationService.canAccessBoard(wsId, projId, loginUser.getUserId())) {
+            return ResponseEntity.status(403).body(Map.of("status", "NO_PERMISSION"));
+        }
+        iboardService.ensureDefaultChannels(wsId, projId, loginUser.getUserId());
+        boolean manager = boardAuthorizationService.canManageBoard(wsId, projId, loginUser.getUserId());
+        return ResponseEntity.ok(Map.of(
+                "status", "SUCCESS",
+                "canManage", manager,
+                "channels", iboardService.getBoardChannels(wsId, projId, manager)
+        ));
+    }
+
+    @PostMapping("/{wsId}/board/channels")
+    public ResponseEntity<Map<String, Object>> createBoardChannel(@PathVariable("wsId") Long wsId,
+                                                                   @RequestParam(value = "projId", required = false) Long projId,
+                                                                   @RequestBody Map<String, Object> body,
+                                                                   HttpSession session) {
+        usersDto loginUser = (usersDto) session.getAttribute("user");
+        if (loginUser == null) return ResponseEntity.status(401).body(Map.of("status", "LOGIN_REQUIRED"));
+        Long userId = loginUser.getUserId();
+        if (!boardAuthorizationService.canManageBoard(wsId, projId, userId)) {
+            return ResponseEntity.status(403).body(Map.of("status", "NO_PERMISSION"));
+        }
+        String name = body == null ? null : String.valueOf(body.getOrDefault("channelName", ""));
+        Map<String, Object> result = iboardService.createBoardChannel(wsId, projId, name, userId);
+        if ("SUCCESS".equals(result.get("status"))) {
+            recordChannelActivity(wsId, projId, userId, "BOARD_CHANNEL_CREATE", String.valueOf(result.get("channelId")), String.valueOf(result.get("channelName")), "게시판을 추가했어요.");
+        }
+        return ResponseEntity.ok(result);
+    }
+
+    @PutMapping("/{wsId}/board/channels/{channelId}/name")
+    public ResponseEntity<Map<String, Object>> renameBoardChannel(@PathVariable("wsId") Long wsId,
+                                                                   @PathVariable("channelId") Long channelId,
+                                                                   @RequestParam(value = "projId", required = false) Long projId,
+                                                                   @RequestBody Map<String, Object> body,
+                                                                   HttpSession session) {
+        usersDto loginUser = (usersDto) session.getAttribute("user");
+        if (loginUser == null) return ResponseEntity.status(401).body(Map.of("status", "LOGIN_REQUIRED"));
+        Long userId = loginUser.getUserId();
+        if (!boardAuthorizationService.canManageBoard(wsId, projId, userId)) {
+            return ResponseEntity.status(403).body(Map.of("status", "NO_PERMISSION"));
+        }
+        Map<String, Object> channel = iboardService.getBoardChannel(channelId);
+        if (!channelBelongsToScope(channel, wsId, projId)) return ResponseEntity.status(404).body(Map.of("status", "NOT_FOUND"));
+        String name = body == null ? null : String.valueOf(body.getOrDefault("channelName", ""));
+        Map<String, Object> result = iboardService.renameBoardChannel(channelId, name, userId);
+        if ("SUCCESS".equals(result.get("status"))) recordChannelActivity(wsId, projId, userId, "BOARD_CHANNEL_RENAME", String.valueOf(channelId), name, "게시판 이름을 변경했어요.");
+        return ResponseEntity.ok(result);
+    }
+
+    @PutMapping("/{wsId}/board/channels/{channelId}/active")
+    public ResponseEntity<Map<String, Object>> toggleBoardChannel(@PathVariable("wsId") Long wsId,
+                                                                   @PathVariable("channelId") Long channelId,
+                                                                   @RequestParam(value = "projId", required = false) Long projId,
+                                                                   @RequestBody Map<String, Object> body,
+                                                                   HttpSession session) {
+        usersDto loginUser = (usersDto) session.getAttribute("user");
+        if (loginUser == null) return ResponseEntity.status(401).body(Map.of("status", "LOGIN_REQUIRED"));
+        Long userId = loginUser.getUserId();
+        if (!boardAuthorizationService.canManageBoard(wsId, projId, userId)) {
+            return ResponseEntity.status(403).body(Map.of("status", "NO_PERMISSION"));
+        }
+        Map<String, Object> channel = iboardService.getBoardChannel(channelId);
+        if (!channelBelongsToScope(channel, wsId, projId)) return ResponseEntity.status(404).body(Map.of("status", "NOT_FOUND"));
+        boolean active = body != null && Boolean.parseBoolean(String.valueOf(body.getOrDefault("active", "false")));
+        Map<String, Object> result = iboardService.setBoardChannelActive(channelId, active, userId);
+        if ("SUCCESS".equals(result.get("status"))) {
+            Object n = channel.get("CHANNEL_NAME");
+            recordChannelActivity(wsId, projId, userId, active ? "BOARD_CHANNEL_SHOW" : "BOARD_CHANNEL_HIDE", String.valueOf(channelId), n == null ? "게시판" : String.valueOf(n), active ? "게시판을 다시 표시했어요." : "게시판을 숨겼어요.");
+        }
+        return ResponseEntity.ok(result);
+    }
+
+    @PutMapping("/{wsId}/board/channels/order")
+    public ResponseEntity<Map<String, Object>> reorderBoardChannels(@PathVariable("wsId") Long wsId,
+                                                                     @RequestParam(value = "projId", required = false) Long projId,
+                                                                     @RequestBody Map<String, Object> body,
+                                                                     HttpSession session) {
+        usersDto loginUser = (usersDto) session.getAttribute("user");
+        if (loginUser == null) return ResponseEntity.status(401).body(Map.of("status", "LOGIN_REQUIRED"));
+        Long userId = loginUser.getUserId();
+        if (!boardAuthorizationService.canManageBoard(wsId, projId, userId)) {
+            return ResponseEntity.status(403).body(Map.of("status", "NO_PERMISSION"));
+        }
+        List<Long> ids = new ArrayList<>();
+        Object raw = body == null ? null : body.get("channelIds");
+        if (raw instanceof List<?> list) {
+            for (Object item : list) {
+                try { ids.add(Long.valueOf(String.valueOf(item))); } catch (NumberFormatException ignored) {}
+            }
+        }
+        return ResponseEntity.ok(iboardService.reorderBoardChannels(wsId, projId, ids, userId));
+    }
+
+    @DeleteMapping("/{wsId}/board/channels/{channelId}")
+    public ResponseEntity<Map<String, Object>> deleteBoardChannel(@PathVariable("wsId") Long wsId,
+                                                                   @PathVariable("channelId") Long channelId,
+                                                                   @RequestParam(value = "projId", required = false) Long projId,
+                                                                   @RequestParam(value = "moveToChannelId", required = false) Long moveToChannelId,
+                                                                   HttpSession session) {
+        usersDto loginUser = (usersDto) session.getAttribute("user");
+        if (loginUser == null) return ResponseEntity.status(401).body(Map.of("status", "LOGIN_REQUIRED"));
+        Long userId = loginUser.getUserId();
+        if (!boardAuthorizationService.canManageBoard(wsId, projId, userId)) {
+            return ResponseEntity.status(403).body(Map.of("status", "NO_PERMISSION"));
+        }
+        Map<String, Object> channel = iboardService.getBoardChannel(channelId);
+        if (!channelBelongsToScope(channel, wsId, projId)) return ResponseEntity.status(404).body(Map.of("status", "NOT_FOUND"));
+        Map<String, Object> result = iboardService.deleteBoardChannel(channelId, moveToChannelId, userId);
+        if ("SUCCESS".equals(result.get("status"))) {
+            Object n = channel.get("CHANNEL_NAME");
+            recordChannelActivity(wsId, projId, userId, "BOARD_CHANNEL_DELETE", String.valueOf(channelId), n == null ? "게시판" : String.valueOf(n), "게시판을 삭제했어요. 삭제 기록은 보존됩니다.");
+        }
+        return ResponseEntity.ok(result);
+    }
+
+    private void recordChannelActivity(Long wsId, Long projId, Long userId, String activityType, String targetId, String title, String detail) {
+        collaborationActivityService.record(projId != null ? "PROJECT" : "WORKSPACE", wsId, projId, userId, activityType, "BOARD_CHANNEL", targetId, title, detail, "/api/workspace/" + wsId + "/board/channels");
+    }
+
+    private boolean channelBelongsToScope(Map<String, Object> channel, Long wsId, Long projId) {
+        if (channel == null) return false;
+        Long channelWsId = numberValue(channel.get("WS_ID"));
+        if (channelWsId == null) channelWsId = numberValue(channel.get("ws_id"));
+        Long channelProjId = numberValue(channel.get("PROJ_ID"));
+        if (channelProjId == null) channelProjId = numberValue(channel.get("proj_id"));
+        return projId != null ? projId.equals(channelProjId) : channelProjId == null && wsId != null && wsId.equals(channelWsId);
+    }
+
+    private Long numberValue(Object value) {
+        if (value instanceof Number n) return n.longValue();
+        if (value == null) return null;
+        try { return Long.valueOf(String.valueOf(value)); } catch (NumberFormatException e) { return null; }
     }
 
     private ResponseEntity<Map<String, Object>> authorizeWorkspaceMember(Long wsId, HttpSession session) {

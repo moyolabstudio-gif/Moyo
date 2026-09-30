@@ -25,7 +25,8 @@
                 p.REG_DT,
                 p.END_DT,
                 NVL(p.EXTEND_COUNT, 0) AS EXTEND_COUNT,
-                p.PREV_END_DT
+                p.PREV_END_DT,
+                NVL(p.SHOW_RESULTS_YN, 'N') AS SHOW_RESULTS_YN
             FROM POLLS p
             JOIN USERS u ON p.USER_ID = u.USER_ID
             LEFT JOIN WS_MEMBER_PROFILES wmp ON wmp.WS_ID = p.WS_ID AND wmp.USER_ID = p.USER_ID
@@ -60,7 +61,8 @@
                 p.REG_DT,
                 p.END_DT,
                 NVL(p.EXTEND_COUNT, 0) AS EXTEND_COUNT,
-                p.PREV_END_DT
+                p.PREV_END_DT,
+                NVL(p.SHOW_RESULTS_YN, 'N') AS SHOW_RESULTS_YN
             FROM POLLS p
             JOIN USERS u ON p.USER_ID = u.USER_ID
             LEFT JOIN WS_MEMBER_PROFILES wmp ON wmp.WS_ID = p.WS_ID AND wmp.USER_ID = p.USER_ID
@@ -79,6 +81,7 @@
             o.OPTION_ID,
             o.TEXT,
             CASE
+                WHEN o.OPTION_TYPE = 'TEXT' AND o.TEXT LIKE '@MOYO_SCHEDULE@|%' THEN 'SCHEDULE'
                 WHEN o.IMAGE_PATH IS NOT NULL AND REGEXP_LIKE(LOWER(o.IMAGE_PATH), '\.(mp3|wav|m4a|aac|ogg|flac)(\?.*)?$') THEN 'AUDIO'
                 WHEN (
                     o.IMAGE_PATH IS NOT NULL AND (
@@ -137,7 +140,8 @@
             p.REG_DT,
             p.END_DT,
             NVL(p.EXTEND_COUNT, 0) AS EXTEND_COUNT,
-            p.PREV_END_DT
+            p.PREV_END_DT,
+            NVL(p.SHOW_RESULTS_YN, 'N') AS SHOW_RESULTS_YN
         FROM POLLS p
         JOIN USERS u ON p.USER_ID = u.USER_ID
         LEFT JOIN WS_MEMBER_PROFILES wmp ON wmp.WS_ID = p.WS_ID AND wmp.USER_ID = p.USER_ID
@@ -199,7 +203,8 @@
             USER_ID,
             QUESTION,
             STATUS,
-            REG_DT
+            REG_DT,
+            SHOW_RESULTS_YN
             <if test="endDt != null and endDt != ''">, END_DT</if>
         ) VALUES (
             #{pollId, jdbcType=NUMERIC},
@@ -209,7 +214,8 @@
             #{userId, jdbcType=NUMERIC},
             #{question, jdbcType=VARCHAR},
             'ACTIVE',
-            SYSDATE
+            SYSDATE,
+            #{showResultsYn, jdbcType=VARCHAR}
             <if test="endDt != null and endDt != ''">
                 , TO_DATE(#{endDt, jdbcType=VARCHAR}, 'YYYY-MM-DD HH24:MI')
             </if>
@@ -219,7 +225,8 @@
     <update id="updatePoll" parameterType="map">
         UPDATE POLLS
         SET QUESTION = #{question, jdbcType=VARCHAR},
-            END_DT = TO_DATE(#{endDt, jdbcType=VARCHAR}, 'YYYY-MM-DD HH24:MI')
+            END_DT = TO_DATE(#{endDt, jdbcType=VARCHAR}, 'YYYY-MM-DD HH24:MI'),
+            SHOW_RESULTS_YN = #{showResultsYn, jdbcType=VARCHAR}
         WHERE POLL_ID = #{pollId, jdbcType=NUMERIC}
           AND USER_ID = #{userId, jdbcType=NUMERIC}
     </update>
@@ -361,5 +368,74 @@
             CASE WHEN p.STATUS = 'ACTIVE' AND (p.END_DT IS NULL OR p.END_DT >= SYSDATE) THEN p.END_DT END ASC NULLS LAST,
             p.REG_DT DESC
     </select>
+
+
+    <select id="selectExpiredSchedulePollIds" resultType="long">
+        SELECT DISTINCT p.POLL_ID
+          FROM POLLS p
+          JOIN POLL_OPTIONS o ON o.POLL_ID = p.POLL_ID
+         WHERE p.STATUS = 'ACTIVE'
+           AND p.END_DT IS NOT NULL
+           AND p.END_DT &lt; SYSDATE
+           AND o.OPTION_TYPE = 'TEXT'
+           AND o.TEXT LIKE '@MOYO_SCHEDULE@|%'
+    </select>
+
+    <select id="selectExpiredRegularPollIds" resultType="long">
+        SELECT p.POLL_ID
+          FROM POLLS p
+         WHERE p.STATUS = 'ACTIVE'
+           AND p.END_DT IS NOT NULL
+           AND p.END_DT &lt; SYSDATE
+           AND NOT EXISTS (
+                SELECT 1
+                  FROM POLL_OPTIONS o
+                 WHERE o.POLL_ID = p.POLL_ID
+                   AND o.OPTION_TYPE = 'TEXT'
+                   AND o.TEXT LIKE '@MOYO_SCHEDULE@|%'
+           )
+         ORDER BY p.POLL_ID
+    </select>
+
+    <select id="selectWorkspacePollRecipientUserIds" resultType="long">
+        SELECT DISTINCT wm.USER_ID
+          FROM WS_MEMBERS wm
+         WHERE wm.WS_ID = #{wsId, jdbcType=NUMERIC}
+           AND wm.USER_ID != #{excludeUserId, jdbcType=NUMERIC}
+         ORDER BY wm.USER_ID
+    </select>
+
+    <select id="selectProjectPollRecipientUserIds" resultType="long">
+        SELECT DISTINCT pm.USER_ID
+          FROM PROJ_MEMBERS pm
+         WHERE pm.PROJ_ID = #{projId, jdbcType=NUMERIC}
+           AND pm.USER_ID != #{excludeUserId, jdbcType=NUMERIC}
+         ORDER BY pm.USER_ID
+    </select>
+
+    <select id="selectPollVoterUserIds" resultType="long">
+        SELECT DISTINCT USER_ID
+          FROM VOTES
+         WHERE POLL_ID = #{pollId}
+         ORDER BY USER_ID
+    </select>
+
+    <select id="selectCalendarEventIdByPollId" resultType="long">
+        SELECT EVENT_ID
+          FROM (
+                SELECT EVENT_ID
+                  FROM EVENTS
+                 WHERE DESCRIPTION_TEXT LIKE '%[MOYO_POLL_ID:' || #{pollId} || ']%'
+                   AND NVL(STATUS, 'ACTIVE') != 'DELETED'
+                 ORDER BY EVENT_ID DESC
+               )
+         WHERE ROWNUM = 1
+    </select>
+
+    <update id="closePoll">
+        UPDATE POLLS
+           SET STATUS = 'CLOSED'
+         WHERE POLL_ID = #{pollId}
+    </update>
 
 </mapper>

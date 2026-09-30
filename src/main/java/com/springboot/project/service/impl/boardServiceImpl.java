@@ -18,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.springboot.project.dao.IboardDAO;
+import com.springboot.project.dao.IuserNoticeDAO;
 import com.springboot.project.dto.postDTO;
 import com.springboot.project.service.IboardService;
 import com.springboot.project.service.ContentInputSecurityService;
@@ -28,6 +29,9 @@ public class boardServiceImpl implements IboardService {
 
     @Autowired
     private IboardDAO iboardDAO;
+
+    @Autowired
+    private IuserNoticeDAO userNoticeDAO;
 
     @Autowired
     private ContentInputSecurityService contentInputSecurityService;
@@ -159,11 +163,211 @@ public class boardServiceImpl implements IboardService {
         return iboardDAO.countPostsByProject(projId, boardType, searchType, keyword);
     }
 
+    private String normalizeChannelName(String channelName) {
+        if (channelName == null) return "";
+        String safe = contentInputSecurityService.singleLine(channelName, 20, true);
+        return safe == null ? "" : safe.trim();
+    }
+
+    private Long channelLong(Map<String, Object> row, String key) {
+        if (row == null) return null;
+        Object value = row.get(key);
+        if (value == null) value = row.get(key.toLowerCase());
+        if (value instanceof Number n) return n.longValue();
+        if (value == null) return null;
+        try { return Long.valueOf(String.valueOf(value)); } catch (NumberFormatException e) { return null; }
+    }
+
+    private String channelString(Map<String, Object> row, String key) {
+        if (row == null) return null;
+        Object value = row.get(key);
+        if (value == null) value = row.get(key.toLowerCase());
+        return value == null ? null : String.valueOf(value);
+    }
+
+    private boolean sameScope(Map<String, Object> channel, Long wsId, Long projId) {
+        if (channel == null) return false;
+        Long channelWsId = channelLong(channel, "WS_ID");
+        Long channelProjId = channelLong(channel, "PROJ_ID");
+        if (projId != null) return projId.equals(channelProjId);
+        return channelProjId == null && wsId != null && wsId.equals(channelWsId);
+    }
+
+    @Override
+    @Transactional
+    public void ensureDefaultChannels(Long wsId, Long projId, Long userId) {
+        if (userId == null || (wsId == null && projId == null)) return;
+        List<Map<String, Object>> channels = iboardDAO.selectBoardChannels(wsId, projId, true);
+        boolean hasNotice = channels.stream().anyMatch(c -> "NOTICE".equalsIgnoreCase(channelString(c, "CHANNEL_TYPE")));
+        boolean hasGeneral = channels.stream().anyMatch(c -> "GENERAL".equalsIgnoreCase(channelString(c, "CHANNEL_TYPE")));
+        Map<String, Object> base = new java.util.HashMap<>();
+        base.put("wsId", wsId);
+        base.put("projId", projId);
+        base.put("scopeType", projId != null ? "PROJECT" : "GROUP");
+        base.put("createdBy", userId);
+        if (!hasNotice) iboardDAO.insertDefaultNoticeChannel(base);
+        if (!hasGeneral) iboardDAO.insertDefaultGeneralChannel(base);
+    }
+
+    @Override
+    public List<Map<String, Object>> getBoardChannels(Long wsId, Long projId, boolean includeInactive) {
+        return iboardDAO.selectBoardChannels(wsId, projId, includeInactive);
+    }
+
+    @Override
+    public Map<String, Object> getBoardChannel(Long channelId) {
+        return channelId == null ? null : iboardDAO.selectBoardChannel(channelId);
+    }
+
+    @Override
+    @Transactional
+    public Map<String, Object> createBoardChannel(Long wsId, Long projId, String channelName, Long userId) {
+        String name = normalizeChannelName(channelName);
+        if (name.isBlank()) return Map.of("status", "INVALID_NAME", "message", "게시판 이름을 입력해주세요.");
+        if (iboardDAO.countGeneralChannels(wsId, projId) >= 5) {
+            return Map.of("status", "LIMIT", "message", "일반 게시판은 최대 5개까지 만들 수 있습니다.");
+        }
+        if (iboardDAO.countChannelName(wsId, projId, name, null) > 0) {
+            return Map.of("status", "DUPLICATE", "message", "같은 이름의 게시판이 이미 있습니다.");
+        }
+        Map<String, Object> channel = new java.util.HashMap<>();
+        channel.put("wsId", wsId);
+        channel.put("projId", projId);
+        channel.put("scopeType", projId != null ? "PROJECT" : "GROUP");
+        channel.put("channelName", name);
+        channel.put("createdBy", userId);
+        iboardDAO.insertBoardChannel(channel);
+        return Map.of("status", "SUCCESS", "channelId", channel.get("channelId"), "channelName", name);
+    }
+
+    @Override
+    @Transactional
+    public Map<String, Object> renameBoardChannel(Long channelId, String channelName, Long userId) {
+        Map<String, Object> channel = iboardDAO.selectBoardChannel(channelId);
+        if (channel == null) return Map.of("status", "NOT_FOUND");
+        if ("NOTICE".equalsIgnoreCase(channelString(channel, "CHANNEL_TYPE"))) {
+            return Map.of("status", "SYSTEM_CHANNEL", "message", "공지 게시판 이름은 변경할 수 없습니다.");
+        }
+        String name = normalizeChannelName(channelName);
+        if (name.isBlank()) return Map.of("status", "INVALID_NAME", "message", "게시판 이름을 입력해주세요.");
+        Long wsId = channelLong(channel, "WS_ID");
+        Long projId = channelLong(channel, "PROJ_ID");
+        if (iboardDAO.countChannelName(wsId, projId, name, channelId) > 0) {
+            return Map.of("status", "DUPLICATE", "message", "같은 이름의 게시판이 이미 있습니다.");
+        }
+        return Map.of("status", iboardDAO.updateBoardChannelName(channelId, name, userId) > 0 ? "SUCCESS" : "FAIL");
+    }
+
+    @Override
+    @Transactional
+    public Map<String, Object> setBoardChannelActive(Long channelId, boolean active, Long userId) {
+        Map<String, Object> channel = iboardDAO.selectBoardChannel(channelId);
+        if (channel == null) return Map.of("status", "NOT_FOUND");
+        if ("NOTICE".equalsIgnoreCase(channelString(channel, "CHANNEL_TYPE"))) {
+            return Map.of("status", "SYSTEM_CHANNEL", "message", "공지 게시판은 숨길 수 없습니다.");
+        }
+        if (!active) {
+            Long wsId = channelLong(channel, "WS_ID");
+            Long projId = channelLong(channel, "PROJ_ID");
+            if (iboardDAO.countActiveGeneralChannels(wsId, projId) <= 1) {
+                return Map.of("status", "LAST_VISIBLE", "message", "최소 1개의 일반 게시판은 표시되어야 합니다.");
+            }
+        }
+        return Map.of("status", iboardDAO.updateBoardChannelActive(channelId, active ? "Y" : "N", userId) > 0 ? "SUCCESS" : "FAIL");
+    }
+
+    @Override
+    @Transactional
+    public Map<String, Object> reorderBoardChannels(Long wsId, Long projId, List<Long> channelIds, Long userId) {
+        if (channelIds == null) return Map.of("status", "FAIL");
+        int order = 1;
+        for (Long channelId : channelIds) {
+            Map<String, Object> channel = iboardDAO.selectBoardChannel(channelId);
+            if (channel == null || !sameScope(channel, wsId, projId)) return Map.of("status", "INVALID_SCOPE");
+            if ("NOTICE".equalsIgnoreCase(channelString(channel, "CHANNEL_TYPE"))) continue;
+            iboardDAO.updateBoardChannelSort(channelId, order++, userId);
+        }
+        return Map.of("status", "SUCCESS");
+    }
+
+    @Override
+    @Transactional
+    public Map<String, Object> deleteBoardChannel(Long channelId, Long moveToChannelId, Long userId) {
+        Map<String, Object> channel = iboardDAO.selectBoardChannel(channelId);
+        if (channel == null) return Map.of("status", "NOT_FOUND");
+        if ("NOTICE".equalsIgnoreCase(channelString(channel, "CHANNEL_TYPE"))) {
+            return Map.of("status", "SYSTEM_CHANNEL", "message", "공지 게시판은 삭제할 수 없습니다.");
+        }
+        Long scopeWsId = channelLong(channel, "WS_ID");
+        Long scopeProjId = channelLong(channel, "PROJ_ID");
+        if (iboardDAO.countGeneralChannels(scopeWsId, scopeProjId) <= 1) {
+            return Map.of("status", "LAST_GENERAL", "message", "최소 1개의 일반 게시판은 유지해야 합니다.");
+        }
+        int postCount = iboardDAO.countPostsByChannel(channelId);
+        if (postCount > 0) {
+            if (moveToChannelId == null || channelId.equals(moveToChannelId)) {
+                return Map.of("status", "MOVE_REQUIRED", "postCount", postCount, "message", "게시글을 이동할 게시판을 선택해주세요.");
+            }
+            Map<String, Object> target = iboardDAO.selectBoardChannel(moveToChannelId);
+            if (target == null
+                    || !sameScope(target, channelLong(channel, "WS_ID"), channelLong(channel, "PROJ_ID"))
+                    || !"GENERAL".equalsIgnoreCase(channelString(target, "CHANNEL_TYPE"))
+                    || "N".equalsIgnoreCase(channelString(target, "ACTIVE_YN"))) {
+                return Map.of("status", "INVALID_TARGET", "message", "이동할 게시판이 올바르지 않습니다.");
+            }
+            iboardDAO.movePostsToChannel(channelId, moveToChannelId);
+        }
+        int deleted = iboardDAO.softDeleteBoardChannel(channelId, userId);
+        return Map.of("status", deleted > 0 ? "SUCCESS" : "FAIL", "movedPosts", postCount);
+    }
+
+    @Override
+    public List<postDTO> getBoardListByChannel(Long channelId, int page, int size, String searchType, String keyword) {
+        return iboardDAO.selectPostsByChannel(channelId, calcOffset(page, size), size, searchType, keyword);
+    }
+
+    @Override
+    public int getBoardListByChannelCount(Long channelId, String searchType, String keyword) {
+        return iboardDAO.countPostsByChannelFiltered(channelId, searchType, keyword);
+    }
+
     @Override
     public boolean registerPost(postDTO postDto) {
         sanitizePostContent(postDto);
         return iboardDAO.insertPost(postDto) > 0;
     }
+
+    @Override
+    @Transactional
+    public void sendBoardNoticeNotification(postDTO post, Long actorUserId, boolean resend) {
+        if (post == null || post.getPostId() == null || actorUserId == null) return;
+        if (!"NOTICE".equalsIgnoreCase(post.getBoardType())) return;
+
+        List<Long> recipients = iboardDAO.selectBoardNoticeRecipientUserIds(post.getWsId(), post.getProjId(), actorUserId);
+        if (recipients == null || recipients.isEmpty()) return;
+
+        String safeTitle = post.getTitle() == null || post.getTitle().isBlank() ? "공지" : post.getTitle().trim();
+        String alertType = resend ? "BOARD_NOTICE_UPDATED" : "BOARD_NOTICE_CREATED";
+        String title = resend ? "공지 내용이 변경되었습니다." : "새 공지가 등록되었습니다.";
+        String content = "‘" + safeTitle + "’ 공지를 확인해 주세요.";
+        StringBuilder link = new StringBuilder("/group/board/detail?postId=").append(post.getPostId());
+        if (post.getWsId() != null) link.append("&wsId=").append(post.getWsId());
+        if (post.getProjId() != null) link.append("&projId=").append(post.getProjId());
+
+        for (Long recipientId : recipients) {
+            if (recipientId == null || recipientId.equals(actorUserId)) continue;
+            userNoticeDAO.insertContentSendAlarm(
+                    recipientId,
+                    alertType,
+                    "BOARD",
+                    post.getPostId(),
+                    title,
+                    content,
+                    link.toString()
+            );
+        }
+    }
+
 
     @Override
     @Transactional
@@ -199,8 +403,19 @@ public class boardServiceImpl implements IboardService {
     }
 
     @Override
+    public boolean increasePostViewCount(int postId) {
+        return iboardDAO.incrementPostViewCount(postId) > 0;
+    }
+
+    @Override
     public List<Map<String, Object>> getReplyList(int postId) {
         return iboardDAO.selectReplyList(postId);
+    }
+
+    @Override
+    public Map<String, Object> getReplyDetail(Long replyId) {
+        if (replyId == null) return null;
+        return iboardDAO.selectReplyById(replyId);
     }
 
     @Override
@@ -210,8 +425,9 @@ public class boardServiceImpl implements IboardService {
     }
 
     @Override
-    public boolean removeReply(int replyId) {
-        return iboardDAO.deleteReply(replyId) > 0;
+    public boolean removeReply(int replyId, Long deletedBy) {
+        if (deletedBy == null) return false;
+        return iboardDAO.softDeleteReply(replyId, deletedBy) > 0;
     }
 
     @Override
@@ -241,6 +457,41 @@ public class boardServiceImpl implements IboardService {
                 || "PM".equals(normalized);
     }
 
+    private void notifyReportManagers(Long reportId, String contentType, Long contentId, Long reporterId) {
+        try {
+            Map<String, Object> context = iboardDAO.selectReportTargetContext(contentType, contentId);
+            if (context == null) return;
+
+            Long wsId = channelLong(context, "WS_ID");
+            Long projId = channelLong(context, "PROJ_ID");
+            String targetTitle = channelString(context, "TITLE");
+
+            List<Long> managers = iboardDAO.selectBoardReportManagerUserIds(wsId, projId);
+            if (managers == null || managers.isEmpty()) return;
+
+            String safeTitle = targetTitle == null || targetTitle.isBlank() ? "게시판 콘텐츠" : targetTitle.trim();
+            StringBuilder link = new StringBuilder("/group/board/reports?wsId=").append(wsId);
+            if (projId != null) link.append("&projId=").append(projId);
+            link.append("&status=WAITING&openReportId=").append(reportId);
+
+            for (Long managerId : managers) {
+                if (managerId == null || managerId.equals(reporterId)) continue;
+                userNoticeDAO.insertContentSendAlarm(
+                        managerId,
+                        "BOARD_REPORT",
+                        "BOARD_REPORT",
+                        reportId,
+                        "새 신고가 접수되었습니다.",
+                        "‘" + safeTitle + "’에 대한 신고가 접수되었습니다.",
+                        link.toString()
+                );
+            }
+        } catch (Exception e) {
+            // 신고 저장 자체는 유지하고 관리자 알림 실패만 별도로 기록한다.
+            System.err.println("게시판 신고 관리자 알림 생성 실패: " + e.getMessage());
+        }
+    }
+
     @Override
     public Map<String, Object> reportContent(String contentType, Long contentId, Long reporterId, String reason, String detail) {
         if (reporterId == null) {
@@ -256,15 +507,29 @@ public class boardServiceImpl implements IboardService {
             return Map.of("status", "FAIL", "message", "신고 대상 ID가 없습니다.");
         }
 
-        String safeReason = reason == null ? "ETC" : reason.trim();
+        String safeReason = reason == null ? "ETC" : reason.trim().toUpperCase();
+        if (!List.of("SPAM", "ABUSE", "INAPPROPRIATE", "PRIVACY", "ETC").contains(safeReason)) {
+            return Map.of("status", "FAIL", "message", "신고 사유가 올바르지 않습니다.");
+        }
+
         String safeDetail = detail == null ? "" : detail.trim();
+        if (safeDetail.length() > 300) {
+            return Map.of("status", "FAIL", "message", "상세 내용은 300자 이내로 입력해 주세요.");
+        }
 
         int exists = iboardDAO.countReportByUser(safeType, contentId, reporterId);
         if (exists > 0) {
             return Map.of("status", "DUPLICATE", "message", "이미 신고한 항목입니다.");
         }
 
-        int inserted = iboardDAO.insertReport(safeType, contentId, reporterId, safeReason, safeDetail);
+        Long reportId = iboardDAO.selectNextReportId();
+        if (reportId == null) {
+            return Map.of("status", "FAIL", "message", "신고 번호를 생성하지 못했습니다.");
+        }
+        int inserted = iboardDAO.insertReport(reportId, safeType, contentId, reporterId, safeReason, safeDetail);
+        if (inserted > 0) {
+            notifyReportManagers(reportId, safeType, contentId, reporterId);
+        }
         return Map.of("status", inserted > 0 ? "SUCCESS" : "FAIL");
     }
 
@@ -305,14 +570,25 @@ public class boardServiceImpl implements IboardService {
     }
 
     @Override
+    public int getWaitingReportCount(Long wsId, Long projId) {
+        return iboardDAO.countReportList(wsId, projId, "WAITING", null, null);
+    }
+
+    @Override
     public Map<String, Object> getReportById(Long reportId) {
         return iboardDAO.selectReportById(reportId);
     }
 
     @Override
+    @Transactional
     public boolean updateReportStatus(Long reportId, String status, Long procUserId) {
         if (reportId == null || procUserId == null) return false;
-        return iboardDAO.updateReportStatus(reportId, normalizeReportStatus(status), procUserId) > 0;
+        String normalizedStatus = normalizeReportStatus(status);
+        boolean updated = iboardDAO.updateReportStatus(reportId, normalizedStatus, procUserId) > 0;
+        if (updated) {
+            userNoticeDAO.updateBoardReportAlarmReadState(reportId, "WAITING".equals(normalizedStatus) ? "N" : "Y");
+        }
+        return updated;
     }
 
     @Override
@@ -329,13 +605,14 @@ public class boardServiceImpl implements IboardService {
 
         boolean deleted;
         if ("REPLY".equalsIgnoreCase(contentType)) {
-            deleted = iboardDAO.deleteReply(Long.valueOf(String.valueOf(contentIdRaw)).intValue()) > 0;
+            deleted = iboardDAO.softDeleteReply(Long.valueOf(String.valueOf(contentIdRaw)).intValue(), procUserId) > 0;
         } else {
-            deleted = iboardDAO.deletePost(Long.valueOf(String.valueOf(contentIdRaw))) > 0;
+            deleted = iboardDAO.softDeletePost(Long.valueOf(String.valueOf(contentIdRaw)), procUserId) > 0;
         }
 
         if (deleted) {
             iboardDAO.updateReportStatus(reportId, "RESOLVED", procUserId);
+            userNoticeDAO.updateBoardReportAlarmReadState(reportId, "Y");
         }
         return deleted;
     }
@@ -348,8 +625,9 @@ public class boardServiceImpl implements IboardService {
     }
 
     @Override
-    public boolean deletePost(Long postId) {
-        return iboardDAO.deletePost(postId) > 0;
+    public boolean deletePost(Long postId, Long deletedBy) {
+        if (postId == null || deletedBy == null) return false;
+        return iboardDAO.softDeletePost(postId, deletedBy) > 0;
     }
 
     @Override
