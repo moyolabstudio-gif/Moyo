@@ -159,7 +159,7 @@ public class pollServiceImpl implements IpollService {
         result.put("extendCount", poll.get("EXTEND_COUNT"));
         result.put("prevEndDt", poll.get("PREV_END_DT"));
         result.put("totalVoteCount", totalVoteCount);
-        result.put("canEditOptions", canEdit);
+        result.put("canEditOptions", canEdit && totalVoteCount == 0);
         result.put("options", options);
 
         applyScheduleFinalState(result, poll, options, isClosed, isCreator);
@@ -202,6 +202,10 @@ public class pollServiceImpl implements IpollService {
 
         if ("CLOSED".equals(status) || (endDt != null && endDt.before(new Date()))) {
             throw new IllegalStateException("이미 마감된 투표입니다.");
+        }
+
+        if (!isOptionOwnedByPoll(pollId, optionId)) {
+            throw new IllegalArgumentException("해당 투표에 존재하지 않는 선택지입니다.");
         }
 
         Map<String, Object> voteParams = new HashMap<>();
@@ -281,6 +285,13 @@ public class pollServiceImpl implements IpollService {
 
         params.put("showResultsYn", normalizeYn(params.get("showResultsYn"), "N"));
         pollDao.updatePoll(params);
+
+        // 한 명이라도 참여한 뒤에는 선택지 자체는 고정한다.
+        // 질문/마감일/결과 공개 설정은 계속 수정할 수 있지만,
+        // 선택지 수정/추가/삭제 요청은 서버에서도 적용하지 않는다.
+        if (pollDao.countPollVotes(pollId) > 0) {
+            return;
+        }
 
         if (!(params.get("options") instanceof List<?>)) {
             return;
@@ -409,6 +420,19 @@ public class pollServiceImpl implements IpollService {
         finalizeSchedulePollInternal(pollId, optionId, true);
     }
 
+    private boolean isOptionOwnedByPoll(Long pollId, Long optionId) {
+        if (pollId == null || optionId == null) return false;
+        List<Map<String, Object>> options = pollDao.selectPollOptions(pollId);
+        if (options == null || options.isEmpty()) return false;
+
+        for (Map<String, Object> option : options) {
+            if (optionId.equals(toLong(option.get("OPTION_ID")))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private Map<String, Object> buildOptionParams(Long pollId, Object rawOption) {
         Map<String, Object> option = new HashMap<>();
         option.put("pollId", pollId);
@@ -489,6 +513,8 @@ public class pollServiceImpl implements IpollService {
         if (eventId != null) {
             result.put("scheduleFinalStatus", "REGISTERED");
             result.put("calendarEventId", eventId);
+            // 일정 투표가 이미 캘린더 일정으로 확정된 뒤에는 화면에서도 연장을 노출하지 않는다.
+            result.put("canExtend", false);
             return;
         }
         if (!isClosed) {
@@ -598,7 +624,11 @@ public class pollServiceImpl implements IpollService {
         event.setReminderYn("N");
         event.setRecordEnabledYn("Y");
         event.setDescriptionText("일정 투표에서 확정된 일정입니다. [MOYO_POLL_ID:" + pollId + "]");
-        event.setAttendeeUserIds(pollDao.selectPollVoterUserIds(pollId));
+        Long winnerOptionId = toLong(winner.get("OPTION_ID"));
+        // 확정된 일정에 실제로 투표한 사용자만 참석자로 등록한다.
+        event.setAttendeeUserIds(winnerOptionId == null
+                ? new ArrayList<>()
+                : pollDao.selectOptionVoterUserIds(pollId, winnerOptionId));
         calendarResponseService.registerEvent(event);
         Long eventId = event.getId();
         if (eventId == null) {

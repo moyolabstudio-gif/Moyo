@@ -203,16 +203,17 @@ body.poll-modal-open{overflow:hidden}
 .moyo-quick-time-meridiem{position:absolute;left:13px;top:50%;transform:translateY(-50%);z-index:1;padding:2px 7px;border-radius:999px;font-size:11px;font-weight:680;letter-spacing:-.03em;pointer-events:none}
 .moyo-quick-time-meridiem.is-am{background:#e9fbf7;color:#0f9f8f}.moyo-quick-time-meridiem.is-pm{background:#eef4ff;color:#245eea}
 .moyo-quick-picker-menu{position:fixed;z-index:10060;border:1px solid rgba(126,164,255,.28);border-radius:17px;background:#fff;box-shadow:0 14px 28px rgba(30,64,122,.12);padding:10px;color:#1f2c43;overflow:hidden}
+body.poll-embed-create > .poll-picker-portal{visibility:visible!important}
 .moyo-quick-picker-menu[hidden]{display:none!important}.moyo-quick-date-picker-menu{width:248px}.moyo-quick-time-picker-menu{width:268px}
 .moyo-quick-date-picker-head,.moyo-quick-time-picker-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:9px}
 .moyo-quick-date-picker-title,.moyo-quick-time-picker-title{font-size:13px;font-weight:900;letter-spacing:-.03em;color:#0f1e33}
 .moyo-quick-date-picker-nav{display:inline-flex;gap:4px}.moyo-quick-date-picker-nav button,.moyo-quick-time-picker-now{border:1px solid #d7e4f5;background:rgba(255,255,255,.78);color:#55708f;font-weight:740;cursor:pointer}
-.moyo-quick-date-picker-nav button{width:25px;height:25px;border-radius:999px}.moyo-quick-time-picker-now{height:28px;padding:0 9px;border-radius:10px;font-size:12px}
+.moyo-quick-date-picker-nav button{width:25px;height:25px;padding:0;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;line-height:1}.moyo-quick-date-picker-nav button span{display:block;line-height:1;transform:translateY(-1px)}.moyo-quick-time-picker-now{height:28px;padding:0 9px;border-radius:10px;font-size:12px}
 .moyo-quick-date-picker-nav button:hover,.moyo-quick-time-picker-now:hover{border-color:#9fc0ff;background:#f3f7ff;color:#2563eb}
 .moyo-quick-date-picker-weekdays,.moyo-quick-date-picker-days{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}.moyo-quick-date-picker-weekdays{margin-bottom:5px}
 .moyo-quick-date-picker-weekdays span{height:20px;display:flex;align-items:center;justify-content:center;color:#7c8aa0;font-size:11px;font-weight:900}.moyo-quick-date-picker-weekdays span:first-child{color:#ff6b87}.moyo-quick-date-picker-weekdays span:last-child{color:#4f7cff}
 .moyo-quick-date-picker-day{height:27px;border:1px solid transparent;border-radius:10px;background:transparent;color:#1f2c43;font-size:12px;font-weight:720;cursor:pointer}.moyo-quick-date-picker-day:nth-child(7n+1){color:#ff5d7a}.moyo-quick-date-picker-day:nth-child(7n){color:#4f7cff}.moyo-quick-date-picker-day:hover{border-color:#aac7ff;background:#f5f8ff;color:#2563eb}.moyo-quick-date-picker-day.is-muted{color:#b1bdca!important}.moyo-quick-date-picker-day.is-today{border-color:#64d6ca;color:#0f9f8f;background:#eefcf9}.moyo-quick-date-picker-day.is-selected{border-color:transparent;background:#5d7cff;color:#fff!important;box-shadow:0 7px 14px rgba(79,124,255,.18)}.moyo-quick-date-picker-day:disabled{color:#ccd3db!important;cursor:not-allowed;background:transparent!important;box-shadow:none!important}
-.moyo-quick-date-picker-foot{display:flex;justify-content:flex-end;margin-top:10px}.moyo-quick-date-picker-today{height:25px;padding:0 9px;border:1px solid #d7e4f5;border-radius:999px;background:rgba(255,255,255,.78);color:#55708f;font-size:11px;font-weight:740;cursor:pointer}
+.moyo-quick-date-picker-foot{display:flex;justify-content:flex-end;margin-top:10px}.moyo-quick-date-picker-today{height:25px;padding:0 9px;border:1px solid #d7e4f5;border-radius:999px;background:rgba(255,255,255,.78);color:#55708f;font-size:11px;font-weight:740;cursor:pointer}.moyo-quick-date-picker-today:disabled{opacity:.42;cursor:not-allowed;background:#f5f7fa;color:#9aa8b8}
 .moyo-quick-time-picker-ampm{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-bottom:9px}.moyo-quick-time-picker-ampm button,.moyo-quick-time-picker-grid button{height:30px;border:1px solid #dbe6f5;border-radius:10px;background:#fff;color:#334155;font-size:12px;font-weight:720;cursor:pointer}.moyo-quick-time-picker-ampm button:hover,.moyo-quick-time-picker-grid button:hover{border-color:#aac7ff;background:#f5f8ff;color:#2563eb}.moyo-quick-time-picker-ampm button[data-meridiem="AM"]{background:#fbfffe}.moyo-quick-time-picker-ampm button[data-meridiem="PM"]{background:#fbfcff}.moyo-quick-time-picker-ampm button[data-meridiem="AM"].is-selected{border-color:#5ad0c0;background:#e9fbf7;color:#0f9f8f}.moyo-quick-time-picker-ampm button[data-meridiem="PM"].is-selected{border-color:#5d86ff;background:#eef4ff;color:#245eea}.moyo-quick-time-picker-grid button.is-selected{border-color:#2f6dff;background:#2f6dff;color:#fff}.moyo-quick-time-picker-section{margin-top:8px}.moyo-quick-time-picker-label{margin-bottom:5px;color:#68778d;font-size:11px;font-weight:720}.moyo-quick-time-picker-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:5px}
 /* option row alignment: number chip and text input share one center line */
 .poll-option-input-list .poll-option-edit-row.text-mode{align-items:center!important;}
@@ -362,29 +363,1069 @@ body.poll-modal-open{overflow:hidden}
 
 </style>
 <script>
+/* ===== common poll form controls: deadline + schedule option pickers ===== */
 (function(){
+  'use strict';
+
   const WEEKDAYS=['\uC77C','\uC6D4','\uD654','\uC218','\uBAA9','\uAE08','\uD1A0'];
   const MINUTES=[0,5,10,15,20,25,30,35,40,45,50,55];
   const pad=n=>String(n).padStart(2,'0');
-  let dateMenu=null,timeMenu=null,dateView=null,timeState=null;
-  function parseDate(v){const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(String(v||''));if(!m)return null;const d=new Date(+m[1],+m[2]-1,+m[3]);if(d.getFullYear()!=+m[1]||d.getMonth()!=+m[2]-1||d.getDate()!=+m[3])return null;return d}
+  const state={dateMenu:null,timeMenu:null,dateView:null,timeState:null,target:null,kind:null,bound:false};
+
+  function modal(){return document.getElementById('pollFormModal')}
+  function parseDate(value){
+    const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(String(value||''));
+    if(!m)return null;
+    const d=new Date(Number(m[1]),Number(m[2])-1,Number(m[3]));
+    if(d.getFullYear()!==Number(m[1])||d.getMonth()!==Number(m[2])-1||d.getDate()!==Number(m[3]))return null;
+    d.setHours(0,0,0,0);
+    return d;
+  }
   function formatDate(d){return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())}
   function today(){const d=new Date();d.setHours(0,0,0,0);return d}
-  function syncDateDisplay(){const raw=document.getElementById('pollEndDateInput'),display=document.getElementById('pollEndDateDisplay');if(!raw||!display)return;const d=parseDate(raw.value);display.value=d?raw.value+' ('+WEEKDAYS[d.getDay()]+')':''}
-  function ensureDateMenu(){if(dateMenu)return dateMenu;dateMenu=document.createElement('div');dateMenu.className='moyo-quick-picker-menu moyo-quick-date-picker-menu';dateMenu.hidden=true;dateMenu.addEventListener('click',e=>{e.stopPropagation();const b=e.target.closest('button');if(!b)return;if(b.dataset.nav){dateView.setMonth(dateView.getMonth()+Number(b.dataset.nav));renderDate();return}if(b.dataset.date){const raw=document.getElementById('pollEndDateInput');raw.value=b.dataset.date;raw.dispatchEvent(new Event('change',{bubbles:true}));syncDateDisplay();closeAll();return}if(b.dataset.action==='today'){const raw=document.getElementById('pollEndDateInput');raw.value=formatDate(today());raw.dispatchEvent(new Event('change',{bubbles:true}));syncDateDisplay();closeAll()}});document.body.appendChild(dateMenu);return dateMenu}
-  function renderDate(){const menu=ensureDateMenu(),raw=document.getElementById('pollEndDateInput'),selected=parseDate(raw.value),first=new Date(dateView.getFullYear(),dateView.getMonth(),1),start=new Date(dateView.getFullYear(),dateView.getMonth(),1-first.getDay()),min=today();let days='';for(let i=0;i<42;i++){const d=new Date(start);d.setDate(start.getDate()+i);d.setHours(0,0,0,0);const val=formatDate(d),muted=d.getMonth()!==dateView.getMonth(),disabled=d<min,isToday=val===formatDate(min),isSel=selected&&val===formatDate(selected);days+='<button type="button" class="moyo-quick-date-picker-day'+(muted?' is-muted':'')+(isToday?' is-today':'')+(isSel?' is-selected':'')+'" data-date="'+val+'"'+(disabled?' disabled':'')+'>'+d.getDate()+'</button>'}menu.innerHTML='<div class="moyo-quick-date-picker-head"><div class="moyo-quick-date-picker-title">'+dateView.getFullYear()+'\uB144 '+(dateView.getMonth()+1)+'\uC6D4</div><div class="moyo-quick-date-picker-nav"><button type="button" data-nav="-1">\u2039</button><button type="button" data-nav="1">\u203A</button></div></div><div class="moyo-quick-date-picker-weekdays">'+WEEKDAYS.map(x=>'<span>'+x+'</span>').join('')+'</div><div class="moyo-quick-date-picker-days">'+days+'</div><div class="moyo-quick-date-picker-foot"><button type="button" class="moyo-quick-date-picker-today" data-action="today">\uC624\uB298</button></div>'}
-  function position(menu,field,w,h){const r=field.getBoundingClientRect();let left=Math.min(Math.max(10,r.left),window.innerWidth-w-10);let top=r.bottom+3;if(top+h>window.innerHeight-10)top=Math.max(10,r.top-h-3);menu.style.left=left+'px';menu.style.top=top+'px'}
-  function openDate(){closeAll();const raw=document.getElementById('pollEndDateInput'),d=parseDate(raw.value)||today();dateView=new Date(d.getFullYear(),d.getMonth(),1);renderDate();const menu=ensureDateMenu();position(menu,document.querySelector('.poll-date-control'),248,288);menu.hidden=false}
-  function currentTimeFromSelects(){const h=document.getElementById('pollEndHourInput'),m=document.getElementById('pollEndMinuteInput');return{hour:Number(h&&h.value||18),minute:Number(m&&m.value||0)}}
-  function syncTimeDisplay(){const v=currentTimeFromSelects(),input=document.getElementById('pollEndTimeDisplay'),chip=document.getElementById('pollEndTimeMeridiem');if(!input||!chip)return;const pm=v.hour>=12;input.value=pad(v.hour%12||12)+':'+pad(v.minute);chip.textContent=pm?'\uC624\uD6C4':'\uC624\uC804';chip.classList.toggle('is-am',!pm);chip.classList.toggle('is-pm',pm)}
-  function ensureTimeMenu(){if(timeMenu)return timeMenu;timeMenu=document.createElement('div');timeMenu.className='moyo-quick-picker-menu moyo-quick-time-picker-menu';timeMenu.hidden=true;timeMenu.addEventListener('click',e=>{e.stopPropagation();const b=e.target.closest('button');if(!b)return;if(b.dataset.action==='now'){const n=new Date(),rounded=Math.round(n.getMinutes()/5)*5;timeState={meridiem:n.getHours()>=12?'PM':'AM',hour12:n.getHours()%12||12,minute:rounded===60?0:rounded};if(rounded===60){const h=(n.getHours()+1)%24;timeState.meridiem=h>=12?'PM':'AM';timeState.hour12=h%12||12}}if(b.dataset.meridiem)timeState.meridiem=b.dataset.meridiem;if(b.dataset.hour)timeState.hour12=Number(b.dataset.hour);if(b.dataset.minute)timeState.minute=Number(b.dataset.minute);applyTimeState();renderTime()});document.body.appendChild(timeMenu);return timeMenu}
-  function applyTimeState(){let h=(timeState.hour12%12)+(timeState.meridiem==='PM'?12:0);const hs=document.getElementById('pollEndHourInput'),ms=document.getElementById('pollEndMinuteInput');if(hs){hs.value=pad(h);hs.dispatchEvent(new Event('change',{bubbles:true}))}if(ms){ms.value=pad(timeState.minute);ms.dispatchEvent(new Event('change',{bubbles:true}))}syncTimeDisplay()}
-  function renderTime(){const menu=ensureTimeMenu(),hours=Array.from({length:12},(_,i)=>i+1).map(h=>'<button type="button" data-hour="'+h+'" class="'+(timeState.hour12===h?'is-selected':'')+'">'+pad(h)+'</button>').join(''),mins=MINUTES.map(m=>'<button type="button" data-minute="'+m+'" class="'+(timeState.minute===m?'is-selected':'')+'">'+pad(m)+'</button>').join('');menu.innerHTML='<div class="moyo-quick-time-picker-head"><div class="moyo-quick-time-picker-title">\uC2DC\uAC04 \uC120\uD0DD</div><button type="button" class="moyo-quick-time-picker-now" data-action="now">\uD604\uC7AC \uC2DC\uAC04</button></div><div class="moyo-quick-time-picker-ampm"><button type="button" data-meridiem="AM" class="'+(timeState.meridiem==='AM'?'is-selected':'')+'">\uC624\uC804</button><button type="button" data-meridiem="PM" class="'+(timeState.meridiem==='PM'?'is-selected':'')+'">\uC624\uD6C4</button></div><div class="moyo-quick-time-picker-section"><div class="moyo-quick-time-picker-label">\uC2DC</div><div class="moyo-quick-time-picker-grid">'+hours+'</div></div><div class="moyo-quick-time-picker-section"><div class="moyo-quick-time-picker-label">\uBD84 \u00B7 5\uBD84 \uB2E8\uC704</div><div class="moyo-quick-time-picker-grid">'+mins+'</div></div>'}
-  function openTime(){closeAll();const v=currentTimeFromSelects();timeState={meridiem:v.hour>=12?'PM':'AM',hour12:v.hour%12||12,minute:Math.round(v.minute/5)*5%60};renderTime();const menu=ensureTimeMenu();position(menu,document.querySelector('.poll-time-control'),268,276);menu.hidden=false}
-  function closeAll(){if(dateMenu)dateMenu.hidden=true;if(timeMenu)timeMenu.hidden=true}
-  function bind(){const raw=document.getElementById('pollEndDateInput'),disp=document.getElementById('pollEndDateDisplay'),dateTrig=document.querySelector('.poll-date-trigger'),timeDisp=document.getElementById('pollEndTimeDisplay'),timeTrig=document.querySelector('.poll-time-trigger'),modal=document.getElementById('pollFormModal');if(!raw||!disp)return;disp.addEventListener('click',openDate);disp.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openDate()}});dateTrig&&dateTrig.addEventListener('click',e=>{e.stopPropagation();openDate()});timeDisp&&timeDisp.addEventListener('click',openTime);timeDisp&&timeDisp.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openTime()}});timeTrig&&timeTrig.addEventListener('click',e=>{e.stopPropagation();openTime()});raw.addEventListener('change',syncDateDisplay);['pollEndHourInput','pollEndMinuteInput'].forEach(id=>{const el=document.getElementById(id);if(el)el.addEventListener('change',syncTimeDisplay)});document.addEventListener('click',e=>{if(!e.target.closest('.moyo-quick-picker-menu')&&!e.target.closest('.poll-date-control')&&!e.target.closest('.poll-time-control'))closeAll()});document.addEventListener('keydown',e=>{if(e.key==='Escape'&&((dateMenu&&!dateMenu.hidden)||(timeMenu&&!timeMenu.hidden))){e.preventDefault();e.stopPropagation();closeAll()}});window.addEventListener('resize',closeAll);if(modal&&window.MutationObserver)new MutationObserver(()=>{if(modal.getAttribute('aria-hidden')==='false'){requestAnimationFrame(()=>{syncDateDisplay();syncTimeDisplay()})}else closeAll()}).observe(modal,{attributes:true,attributeFilter:['aria-hidden']});syncDateDisplay();syncTimeDisplay()}
+  function sameDate(a,b){return !!(a&&b&&a.getFullYear()===b.getFullYear()&&a.getMonth()===b.getMonth()&&a.getDate()===b.getDate())}
+  function roundUpToFive(date){
+    const d=new Date(date);
+    d.setSeconds(0,0);
+    const rem=d.getMinutes()%5;
+    if(rem)d.setMinutes(d.getMinutes()+(5-rem));
+    return d;
+  }
+  function formatDateLabel(value){const d=parseDate(value);return d?value+' ('+WEEKDAYS[d.getDay()]+')':String(value||'')}
+  function formatTimeLabel(value){
+    const m=/^(\d{2}):(\d{2})$/.exec(String(value||''));
+    if(!m)return '';
+    const h=Number(m[1]),min=Number(m[2]);
+    return (h>=12?'\uC624\uD6C4 ':'\uC624\uC804 ')+pad(h%12||12)+':'+pad(min);
+  }
+  function getDeadlineParts(){
+    const date=document.getElementById('pollEndDateInput')?.value||'';
+    const hour=document.getElementById('pollEndHourInput')?.value||'';
+    const minute=document.getElementById('pollEndMinuteInput')?.value||'';
+    return {date,hour,minute};
+  }
+  function getDeadlineDateTime(){
+    const v=getDeadlineParts();
+    if(!v.date||v.hour===''||v.minute==='')return null;
+    const d=new Date(v.date+'T'+v.hour+':'+v.minute+':00');
+    return Number.isNaN(d.getTime())?null:d;
+  }
+  function isDeadlineInPast(){
+    const deadline=getDeadlineDateTime();
+    return !!(deadline&&deadline.getTime()<=Date.now());
+  }
+  function ensureSelectOptions(){
+    const hour=document.getElementById('pollEndHourInput');
+    const minute=document.getElementById('pollEndMinuteInput');
+    if(hour&&hour.options.length!==24){
+      const current=hour.value;
+      hour.innerHTML=Array.from({length:24},(_,h)=>'<option value="'+pad(h)+'">'+pad(h)+'</option>').join('');
+      hour.value=/^\d{2}$/.test(current)?current:'18';
+    }
+    if(minute&&minute.options.length!==12){
+      const current=minute.value;
+      minute.innerHTML=MINUTES.map(m=>'<option value="'+pad(m)+'">'+pad(m)+'</option>').join('');
+      minute.value=MINUTES.includes(Number(current))?pad(Number(current)):'00';
+    }
+  }
+  function syncDeadlineDisplay(){
+    ensureSelectOptions();
+    const raw=document.getElementById('pollEndDateInput');
+    const dateDisplay=document.getElementById('pollEndDateDisplay');
+    if(raw&&dateDisplay)dateDisplay.value=formatDateLabel(raw.value);
+    const parts=getDeadlineParts();
+    const timeDisplay=document.getElementById('pollEndTimeDisplay');
+    const meridiem=document.getElementById('pollEndTimeMeridiem');
+    if(timeDisplay&&meridiem&&parts.hour!==''){
+      const h=Number(parts.hour),m=Number(parts.minute||0),pm=h>=12;
+      timeDisplay.value=pad(h%12||12)+':'+pad(m);
+      meridiem.textContent=pm?'\uC624\uD6C4':'\uC624\uC804';
+      meridiem.classList.toggle('is-am',!pm);
+      meridiem.classList.toggle('is-pm',pm);
+    }
+  }
+  function initializeDeadline(force){
+    ensureSelectOptions();
+    const raw=document.getElementById('pollEndDateInput');
+    const hour=document.getElementById('pollEndHourInput');
+    const minute=document.getElementById('pollEndMinuteInput');
+    if(!raw||!hour||!minute)return;
+    if(force||!parseDate(raw.value)){
+      const d=today();d.setDate(d.getDate()+1);
+      raw.value=formatDate(d);
+    }
+    if(force||!/^\d{2}$/.test(hour.value))hour.value='18';
+    if(force||!/^\d{2}$/.test(minute.value))minute.value='00';
+    syncDeadlineDisplay();
+  }
+  function emitDeadlineChange(source){
+    if(source)source.dispatchEvent(new Event('change',{bubbles:true}));
+    syncDeadlineDisplay();
+  }
+  function emitScheduleChange(input){
+    if(!input)return;
+    input.dispatchEvent(new CustomEvent('moyo:poll-schedule-change',{bubbles:true,detail:{
+      kind:input.classList.contains('poll-schedule-date')?'date':'time',
+      value:input.dataset.value||''
+    }}));
+  }
+  function setScheduleDate(input,value,opts){
+    if(!input)return;
+    input.dataset.value=value||'';
+    input.value=value?formatDateLabel(value):'';
+    if(!opts||opts.emit!==false)emitScheduleChange(input);
+  }
+  function setScheduleTime(input,value,opts){
+    if(!input)return;
+    const m=/^(\d{2}):(\d{2})$/.exec(String(value||''));
+    if(!m){input.dataset.value='';input.value='';if(!opts||opts.emit!==false)emitScheduleChange(input);return}
+    const h=Number(m[1]),min=Number(m[2]);
+    const normalized=pad(h)+':'+pad(min);
+    input.dataset.value=normalized;
+    input.value=formatTimeLabel(normalized);
+    if(!opts||opts.emit!==false)emitScheduleChange(input);
+  }
+  function makePortal(className){
+    const el=document.createElement('div');
+    el.className='moyo-quick-picker-menu poll-picker-portal '+className;
+    el.hidden=true;
+    document.body.appendChild(el);
+    return el;
+  }
+  function ensureDateMenu(){
+    if(state.dateMenu&&state.dateMenu.isConnected)return state.dateMenu;
+    state.dateMenu=makePortal('moyo-quick-date-picker-menu');
+    state.dateMenu.addEventListener('click',function(e){
+      e.preventDefault();e.stopPropagation();
+      const b=e.target.closest('button');if(!b)return;
+      if(state.kind==='schedule-date'&&!state.target)return;
+      if(b.dataset.nav){state.dateView.setMonth(state.dateView.getMonth()+Number(b.dataset.nav));renderDateMenu();return}
+      let value=b.dataset.date||'';
+      if(b.dataset.action==='today')value=formatDate(today());
+      if(!value)return;
+      const picked=parseDate(value),min=minDateForCurrentKind();
+      if(!picked||(min&&picked<min))return;
+      if(state.kind==='deadline-date'){
+        const raw=document.getElementById('pollEndDateInput');raw.value=value;emitDeadlineChange(raw);
+      }else if(state.kind==='schedule-date'){
+        setScheduleDate(state.target,value);
+      }
+      closePickers();
+    });
+    return state.dateMenu;
+  }
+  function minDateForCurrentKind(){
+    if(state.kind==='deadline-date')return today();
+    if(state.kind==='schedule-date'){
+      const deadline=getDeadlineDateTime();
+      if(deadline){const d=new Date(deadline);d.setHours(0,0,0,0);return d}
+    }
+    return null;
+  }
+  function selectedDateForCurrentKind(){
+    if(state.kind==='deadline-date')return parseDate(document.getElementById('pollEndDateInput')?.value||'');
+    if(state.kind==='schedule-date')return parseDate(state.target?.dataset.value||'');
+    return null;
+  }
+  function renderDateMenu(){
+    const menu=ensureDateMenu();
+    const selected=selectedDateForCurrentKind();
+    const min=minDateForCurrentKind();
+    const first=new Date(state.dateView.getFullYear(),state.dateView.getMonth(),1);
+    const start=new Date(state.dateView.getFullYear(),state.dateView.getMonth(),1-first.getDay());
+    let days='';
+    for(let i=0;i<42;i++){
+      const d=new Date(start);d.setDate(start.getDate()+i);d.setHours(0,0,0,0);
+      const val=formatDate(d),muted=d.getMonth()!==state.dateView.getMonth(),disabled=!!(min&&d<min),isToday=val===formatDate(today()),isSelected=!!(selected&&val===formatDate(selected));
+      days+='<button type="button" class="moyo-quick-date-picker-day'+(muted?' is-muted':'')+(isToday?' is-today':'')+(isSelected?' is-selected':'')+'" data-date="'+val+'"'+(disabled?' disabled':'')+'>'+d.getDate()+'</button>';
+    }
+    const todayDisabled=!!(min&&today()<min);
+    menu.innerHTML='<div class="moyo-quick-date-picker-head"><div class="moyo-quick-date-picker-title">'+state.dateView.getFullYear()+'\uB144 '+(state.dateView.getMonth()+1)+'\uC6D4</div><div class="moyo-quick-date-picker-nav"><button type="button" data-nav="-1"><span>\u2039</span></button><button type="button" data-nav="1"><span>\u203A</span></button></div></div><div class="moyo-quick-date-picker-weekdays">'+WEEKDAYS.map(x=>'<span>'+x+'</span>').join('')+'</div><div class="moyo-quick-date-picker-days">'+days+'</div><div class="moyo-quick-date-picker-foot"><button type="button" class="moyo-quick-date-picker-today" data-action="today"'+(todayDisabled?' disabled':'')+'>\uC624\uB298</button></div>';
+  }
+  function ensureTimeMenu(){
+    if(state.timeMenu&&state.timeMenu.isConnected)return state.timeMenu;
+    state.timeMenu=makePortal('moyo-quick-time-picker-menu');
+    state.timeMenu.addEventListener('click',function(e){
+      e.preventDefault();e.stopPropagation();
+      const b=e.target.closest('button');if(!b)return;
+      if(state.kind==='schedule-time'&&!state.target)return;
+      const action=b.dataset.action||'';
+      if(action==='now'){
+        const n=roundUpToFive(new Date());
+        state.timeState={meridiem:n.getHours()>=12?'PM':'AM',hour12:n.getHours()%12||12,minute:n.getMinutes()};
+      }
+      if(b.dataset.meridiem)state.timeState.meridiem=b.dataset.meridiem;
+      if(b.dataset.hour)state.timeState.hour12=Number(b.dataset.hour);
+      if(b.dataset.minute)state.timeState.minute=Number(b.dataset.minute);
+      applyCurrentTime();
+      if(action==='now'||b.dataset.minute){closePickers();return}
+      renderTimeMenu();
+    });
+    return state.timeMenu;
+  }
+  function currentTimeValue(){
+    if(state.kind==='deadline-time'){
+      const v=getDeadlineParts();return pad(Number(v.hour||18))+':'+pad(Number(v.minute||0));
+    }
+    return String(state.target?.dataset.value||'09:00');
+  }
+  function applyCurrentTime(){
+    const h=(state.timeState.hour12%12)+(state.timeState.meridiem==='PM'?12:0);
+    const value=pad(h)+':'+pad(state.timeState.minute);
+    if(state.kind==='deadline-time'){
+      ensureSelectOptions();
+      const hour=document.getElementById('pollEndHourInput'),minute=document.getElementById('pollEndMinuteInput');
+      if(hour)hour.value=pad(h);
+      if(minute)minute.value=pad(state.timeState.minute);
+      emitDeadlineChange(minute||hour);
+    }else if(state.kind==='schedule-time'){
+      setScheduleTime(state.target,value);
+    }
+  }
+  function renderTimeMenu(){
+    const menu=ensureTimeMenu();
+    const hours=Array.from({length:12},(_,i)=>i+1).map(h=>'<button type="button" data-hour="'+h+'" class="'+(state.timeState.hour12===h?'is-selected':'')+'">'+pad(h)+'</button>').join('');
+    const mins=MINUTES.map(m=>'<button type="button" data-minute="'+m+'" class="'+(state.timeState.minute===m?'is-selected':'')+'">'+pad(m)+'</button>').join('');
+    menu.innerHTML='<div class="moyo-quick-time-picker-head"><div class="moyo-quick-time-picker-title">\uC2DC\uAC04 \uC120\uD0DD</div><button type="button" class="moyo-quick-time-picker-now" data-action="now">\uD604\uC7AC \uC2DC\uAC04</button></div><div class="moyo-quick-time-picker-ampm"><button type="button" data-meridiem="AM" class="'+(state.timeState.meridiem==='AM'?'is-selected':'')+'">\uC624\uC804</button><button type="button" data-meridiem="PM" class="'+(state.timeState.meridiem==='PM'?'is-selected':'')+'">\uC624\uD6C4</button></div><div class="moyo-quick-time-picker-section"><div class="moyo-quick-time-picker-label">\uC2DC</div><div class="moyo-quick-time-picker-grid">'+hours+'</div></div><div class="moyo-quick-time-picker-section"><div class="moyo-quick-time-picker-label">\uBD84 \u00B7 5\uBD84 \uB2E8\uC704</div><div class="moyo-quick-time-picker-grid">'+mins+'</div></div>';
+  }
+  function position(menu,anchor,w,h){
+    if(!menu||!anchor)return;
+    const r=anchor.getBoundingClientRect();
+    const width=menu.offsetWidth||w,height=menu.offsetHeight||h;
+    const maxLeft=Math.max(10,window.innerWidth-width-10);
+    let left=Math.min(Math.max(10,r.left),maxLeft),top=r.bottom+5;
+    if(top+height>window.innerHeight-10)top=Math.max(10,r.top-height-5);
+    menu.style.left=left+'px';menu.style.top=top+'px';
+  }
+  function closePickers(){
+    if(state.dateMenu)state.dateMenu.hidden=true;
+    if(state.timeMenu)state.timeMenu.hidden=true;
+    state.target=null;state.kind=null;
+  }
+  function openDate(kind,input,anchor){
+    closePickers();
+    state.kind=kind;state.target=input||null;
+    const current=kind==='deadline-date'?parseDate(document.getElementById('pollEndDateInput')?.value||''):parseDate(input?.dataset.value||'');
+    const base=current||minDateForCurrentKind()||today();
+    state.dateView=new Date(base.getFullYear(),base.getMonth(),1);
+    renderDateMenu();
+    const menu=ensureDateMenu();menu.hidden=false;position(menu,anchor||input,248,288);
+  }
+  function openTime(kind,input,anchor){
+    closePickers();
+    state.kind=kind;state.target=input||null;
+    const raw=currentTimeValue(),m=/^(\d{2}):(\d{2})$/.exec(raw),h=m?Number(m[1]):9,min=m?Number(m[2]):0;
+    state.timeState={meridiem:h>=12?'PM':'AM',hour12:h%12||12,minute:MINUTES.includes(min)?min:Math.floor(min/5)*5};
+    renderTimeMenu();
+    const menu=ensureTimeMenu();menu.hidden=false;position(menu,anchor||input,268,276);
+  }
+
+  // ===== common poll form: option editor state + UI =====
+  window.globalOptionType=window.globalOptionType||'TEXT';
+  let returnFocus=null;
+  const escapeFormHtml=value=>String(value==null?'':value).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+
+const SCHEDULE_OPTION_PREFIX='@MOYO_SCHEDULE@|';
+
+function parseScheduleOptionText(value){
+    const text=String(value||'');
+    if(!text.startsWith(SCHEDULE_OPTION_PREFIX))return null;
+    const parts=text.substring(SCHEDULE_OPTION_PREFIX.length).split('|');
+    if(parts.length<3)return null;
+    return {date:parts[0]||'',startTime:parts[1]||'',endTime:parts[2]||''};
+}
+function serializeScheduleOption(date,startTime,endTime){
+    return SCHEDULE_OPTION_PREFIX+date+'|'+startTime+'|'+endTime;
+}
+function formatScheduleDateLabel(value){
+    return window.MoyoPollFormPicker?window.MoyoPollFormPicker.formatDateLabel(value):String(value||'');
+}
+function formatScheduleOptionLabel(value,index){
+    const schedule=parseScheduleOptionText(value);
+    if(!schedule)return String(value||('\uD6C4\uBCF4 '+(index+1)));
+    return formatScheduleDateLabel(schedule.date)+' \u00B7 '+schedule.startTime+' ~ '+schedule.endTime;
+}
+function markScheduleRowEdited(input){
+    const row=input&&input.closest?input.closest('.poll-option-edit-row.schedule-mode'):null;
+    if(row)row.dataset.scheduleUserEdited='true';
+}
+function setScheduleDateValue(input,value,markEdited){
+    if(!input)return;
+    if(markEdited!==false)markScheduleRowEdited(input);
+    if(window.MoyoPollFormPicker)window.MoyoPollFormPicker.setScheduleDate(input,value,{emit:markEdited!==false});
+    else{input.dataset.value=value||'';input.value=value||'';}
+    validateScheduleRow(input.closest('.poll-option-edit-row'));
+}
+function setScheduleTimeValue(input,value,markEdited){
+    if(!input)return;
+    if(markEdited!==false)markScheduleRowEdited(input);
+    if(window.MoyoPollFormPicker)window.MoyoPollFormPicker.setScheduleTime(input,value,{emit:markEdited!==false});
+    else{input.dataset.value=value||'';input.value=value||'';}
+    validateScheduleRow(input.closest('.poll-option-edit-row'));
+}
+function pollDeadlineDateTime(){
+    if(window.MoyoPollFormPicker)return window.MoyoPollFormPicker.getDeadlineDateTime();
+    const date=document.getElementById('pollEndDateInput')?.value||'',hour=document.getElementById('pollEndHourInput')?.value||'',minute=document.getElementById('pollEndMinuteInput')?.value||'';
+    if(!date||hour===''||minute==='')return null;
+    const dt=new Date(date+'T'+hour+':'+minute+':00');
+    return Number.isNaN(dt.getTime())?null:dt;
+}
+function scheduleStartDateTime(row){
+    if(!row)return null;
+    const date=row.querySelector('.poll-schedule-date')?.dataset.value||'';
+    const time=row.querySelector('.poll-schedule-start')?.dataset.value||'';
+    if(!date||!time)return null;
+    const dt=new Date(date+'T'+time+':00');
+    return Number.isNaN(dt.getTime())?null:dt;
+}
+function scheduleDefaultWindow(){
+    const deadline=pollDeadlineDateTime();
+    const base=deadline?new Date(deadline):new Date();
+    if(!deadline){base.setDate(base.getDate()+1);base.setHours(18,0,0,0);}
+
+    let start=new Date(base.getTime()+60*60*1000);
+    start.setSeconds(0,0);
+    const rem=start.getMinutes()%5;
+    if(rem)start.setMinutes(start.getMinutes()+(5-rem));
+
+    // common poll form option UI
+    let end=new Date(start.getTime()+60*60*1000);
+    if(end.getDate()!==start.getDate()||end.getMonth()!==start.getMonth()||end.getFullYear()!==start.getFullYear()){
+        start=new Date(start);
+        start.setDate(start.getDate()+1);
+        start.setHours(9,0,0,0);
+        end=new Date(start.getTime()+60*60*1000);
+    }
+
+    return {
+        date:formatDate(start),
+        startTime:String(start.getHours()).padStart(2,'0')+':'+String(start.getMinutes()).padStart(2,'0'),
+        endTime:String(end.getHours()).padStart(2,'0')+':'+String(end.getMinutes()).padStart(2,'0')
+    };
+}
+function applyScheduleDefaultWindow(row){
+    if(!row)return;
+    const values=scheduleDefaultWindow();
+    row.dataset.scheduleUserEdited='false';
+    setScheduleDateValue(row.querySelector('.poll-schedule-date'),values.date,false);
+    setScheduleTimeValue(row.querySelector('.poll-schedule-start'),values.startTime,false);
+    setScheduleTimeValue(row.querySelector('.poll-schedule-end'),values.endTime,false);
+    row.dataset.scheduleUserEdited='false';
+}
+function refreshUntouchedScheduleDefaults(){
+    document.querySelectorAll('#pollOptionInputs .poll-option-edit-row.schedule-mode').forEach(function(row){
+        if(row.dataset.scheduleUserEdited!=='true')applyScheduleDefaultWindow(row);
+    });
+}
+function handlePollDeadlineChange(){
+    refreshUntouchedScheduleDefaults();
+    validateAllScheduleRows();
+}
+function validateScheduleRow(row){
+    if(!row||!row.classList.contains('schedule-mode'))return true;
+    const start=row.querySelector('.poll-schedule-start')?.dataset.value||'';
+    const end=row.querySelector('.poll-schedule-end')?.dataset.value||'';
+    const error=row.querySelector('.poll-schedule-error');
+    let message='';
+    if(start&&end&&start>=end){
+        message='\uC885\uB8CC \uC2DC\uAC04\uC740 \uC2DC\uC791 \uC2DC\uAC04\uBCF4\uB2E4 \uB2A6\uC5B4\uC57C \uD569\uB2C8\uB2E4.';
+    }else{
+        const deadline=pollDeadlineDateTime();
+        const scheduleStart=scheduleStartDateTime(row);
+        if(deadline&&scheduleStart&&scheduleStart<=deadline){
+            message='\uD6C4\uBCF4 \uC77C\uC815\uC740 \uD22C\uD45C \uB9C8\uAC10 \uC774\uD6C4\uB85C \uC124\uC815\uD574\uC8FC\uC138\uC694.';
+        }
+    }
+    row.classList.toggle('has-schedule-error',!!message);
+    if(error)error.textContent=message;
+    return !message;
+}
+function validateAllScheduleRows(){
+    let valid=true;
+    document.querySelectorAll('#pollOptionInputs .poll-option-edit-row.schedule-mode').forEach(function(row){
+        if(!validateScheduleRow(row))valid=false;
+    });
+    return valid;
+}
+// common poll form option UI
+
+function addPollOptionRow(initialData){
+    const list=document.getElementById('pollOptionInputs');
+    const row=document.createElement('div');
+    const text=initialData?(initialData.text||initialData.TEXT||''):'';
+    const imagePath=initialData?(initialData.imagePath||initialData.IMAGE_PATH||''):'';
+    const storedType=initialData
+        ? String(initialData.optionType||initialData.OPTION_TYPE||'').toUpperCase()
+        : '';
+
+    // common poll form option UI
+    if(initialData && ['SCHEDULE','IMAGE','AUDIO','VIDEO'].includes(storedType)){ window.globalOptionType=storedType; } else if(initialData && imagePath){ window.globalOptionType='IMAGE'; }
+
+    row.className='poll-option-edit-row '+window.globalOptionType.toLowerCase()+'-mode';
+    row.dataset.optionId=initialData?(initialData.optionId||initialData.OPTION_ID||''):'';
+    row.dataset.existingImagePath=imagePath||'';
+    row.innerHTML=
+        '<span class="option-number"></span>'+
+        '<div class="poll-option-edit-main">'+
+            '<input class="poll-input poll-option-text-input" placeholder="\uC120\uD0DD\uC9C0 \uB0B4\uC6A9" value="'+escapeFormHtml(window.globalOptionType==='TEXT'?text:'')+'">'+
+            '<div class="poll-option-schedule-block"><div class="poll-schedule-grid">'+
+              '<div class="poll-schedule-field poll-schedule-date-field"><input type="text" class="poll-input poll-schedule-date" readonly placeholder="\uB0A0\uC9DC \uC120\uD0DD" tabindex="0" aria-label="\uC77C\uC815 \uB0A0\uC9DC"><button type="button" class="poll-schedule-trigger" aria-label="\uB0A0\uC9DC \uC120\uD0DD"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="4" y="5.5" width="16" height="14" rx="3" stroke="currentColor" stroke-width="1.7"/><path d="M8 3.8v3.4M16 3.8v3.4M4 9.2h16" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></button></div>'+
+              '<div class="poll-schedule-field"><input type="text" class="poll-input poll-schedule-start" readonly placeholder="\uC2DC\uC791 \uC2DC\uAC04" tabindex="0" aria-label="\uC2DC\uC791 \uC2DC\uAC04"><button type="button" class="poll-schedule-trigger" aria-label="\uC2DC\uC791 \uC2DC\uAC04 \uC120\uD0DD"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="1.7"/><path d="M12 7.8v4.6l3 1.8" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></button></div>'+
+              '<span class="poll-schedule-sep">~</span>'+
+              '<div class="poll-schedule-field"><input type="text" class="poll-input poll-schedule-end" readonly placeholder="\uC885\uB8CC \uC2DC\uAC04" tabindex="0" aria-label="\uC885\uB8CC \uC2DC\uAC04"><button type="button" class="poll-schedule-trigger" aria-label="\uC885\uB8CC \uC2DC\uAC04 \uC120\uD0DD"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="1.7"/><path d="M12 7.8v4.6l3 1.8" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></button></div>'+
+            '</div><div class="poll-schedule-error" role="status" aria-live="polite"></div></div>'+
+            '<div class="poll-option-image-block'+(window.globalOptionType==='IMAGE'&&imagePath?' has-image':'')+'">'+
+                '<label class="poll-file-label">'+
+                    '<div class="poll-upload-tile-content">'+
+                        '<span class="poll-upload-plus">\uFF0B</span>'+ 
+                        '<strong>\uC774\uBBF8\uC9C0 \uC120\uD0DD</strong>'+ 
+                        '<span class="poll-upload-help">\uD074\uB9AD\uD558\uAC70\uB098 \uC774\uBBF8\uC9C0\uB97C<br>\uB4DC\uB798\uADF8\uD558\uC138\uC694</span>'+ 
+                    '</div>'+ 
+                    '<input type="file" class="poll-option-image-input" accept="image/*" multiple onchange="handlePollOptionImageChange(this)">'+
+                '</label>'+
+                '<div class="poll-option-image-frame'+(window.globalOptionType==='IMAGE'&&imagePath?' visible':'')+'">'+
+                    '<img class="poll-image-preview" '+(window.globalOptionType==='IMAGE'&&imagePath?'src="'+escapeFormHtml(imagePath)+'"':'')+' alt="\uBBF8\uB9AC\uBCF4\uAE30">'+
+                    '<button type="button" class="poll-option-image-remove" onclick="removePollOptionImage(this)" aria-label="\uC774\uBBF8\uC9C0 \uC81C\uAC70">\u00D7</button>'+
+                '</div>'+
+                '<span class="poll-image-name">\uC774\uBBF8\uC9C0 \uC5C6\uC74C</span>'+
+            '</div>'+
+            '<div class="poll-option-audio-block">'+
+              '<label class="poll-media-upload"><span class="poll-audio-upload-text">\uFF0B \uC74C\uC545 \uD30C\uC77C \uC120\uD0DD</span><span class="poll-audio-upload-help">\uD074\uB9AD\uD558\uAC70\uB098 \uD30C\uC77C\uC744 \uB4DC\uB798\uADF8\uD558\uC138\uC694</span><input type="file" class="poll-option-audio-input" accept="audio/*" multiple onchange="handlePollOptionAudioChange(this)"></label>'+
+              '<input class="poll-input poll-media-title" placeholder="\uC74C\uC545 \uC81C\uBAA9" value="">'+
+              '<audio class="poll-audio-preview" controls preload="metadata"></audio>'+
+            '</div>'+
+            '<div class="poll-option-video-block">'+
+              '<input class="poll-input poll-video-url" placeholder="YouTube, Vimeo \uB610\uB294 \uC9C1\uC811 \uC7AC\uC0DD \uAC00\uB2A5\uD55C \uC601\uC0C1 URL" value="">'+
+            '</div>'+
+        '</div>';
+
+    list.appendChild(row);
+    if(window.globalOptionType==='SCHEDULE'){
+        const schedule=parseScheduleOptionText(text);
+        if(schedule){
+            row.dataset.scheduleUserEdited='true';
+            setScheduleDateValue(row.querySelector('.poll-schedule-date'),schedule.date,false);
+            setScheduleTimeValue(row.querySelector('.poll-schedule-start'),schedule.startTime,false);
+            setScheduleTimeValue(row.querySelector('.poll-schedule-end'),schedule.endTime,false);
+            row.dataset.scheduleUserEdited='true';
+        }else{
+            applyScheduleDefaultWindow(row);
+        }
+    }
+    if(window.globalOptionType==='AUDIO' && initialData){
+        const title=row.querySelector('.poll-option-audio-block .poll-media-title'); if(title)title.value=text||'';
+        const audio=row.querySelector('.poll-audio-preview'); if(audio&&imagePath){audio.src=imagePath;audio.style.display='block';}
+        const uploadText=row.querySelector('.poll-audio-upload-text'); if(uploadText&&text)uploadText.textContent=text;
+        const audioBlock=row.querySelector('.poll-option-audio-block'); if(audioBlock)audioBlock.classList.toggle('has-audio',!!imagePath);
+    }
+    if(window.globalOptionType==='VIDEO' && initialData){
+        const url=row.querySelector('.poll-video-url'); if(url)url.value=imagePath||'';
+    }
+    initializeOptionRowDrop(row);
+    initializeAudioOptionRowDrop(row);
+    updateOptionRows();
+}
+
+function updateImageEditorLayout(){
+    const isImage=window.globalOptionType==='IMAGE';
+    const isSchedule=window.globalOptionType==='SCHEDULE';
+    const list=document.getElementById('pollOptionInputs');
+    const dialog=document.querySelector('#pollFormModal .poll-modal-dialog');
+    if(list){
+        list.classList.toggle('image-edit-grid',isImage);
+        list.classList.toggle('schedule-edit-list',isSchedule);
+        if(!isSchedule)list.classList.remove('has-scroll');
+    }
+    if(dialog){
+        dialog.classList.toggle('image-edit-mode',isImage);
+        dialog.classList.toggle('text-edit-mode',!isImage);
+    }
+}
+
+function applyGlobalOptionType(type,clearIncompatibleInputs){
+    window.globalOptionType=['SCHEDULE','IMAGE','AUDIO','VIDEO'].includes(type)?type:'TEXT';
+    updateImageEditorLayout();
+
+    const input=document.querySelector('input[name="pollGlobalOptionType"][value="'+window.globalOptionType+'"]');
+    if(input)input.checked=true;
+
+    document.querySelectorAll('.poll-option-edit-row').forEach(function(row){
+        row.classList.remove('text-mode','schedule-mode','image-mode','audio-mode','video-mode');
+        row.classList.add(window.globalOptionType.toLowerCase()+'-mode');
+        if(window.globalOptionType==='SCHEDULE'){
+            const dateInput=row.querySelector('.poll-schedule-date');
+            const startInput=row.querySelector('.poll-schedule-start');
+            const endInput=row.querySelector('.poll-schedule-end');
+            if(!dateInput?.dataset.value||!startInput?.dataset.value||!endInput?.dataset.value)applyScheduleDefaultWindow(row);
+        }
+
+        if(!clearIncompatibleInputs)return;
+        if(window.globalOptionType==='TEXT'){
+            const fileInput=row.querySelector('.poll-option-image-input');
+            if(fileInput)fileInput.value='';
+            row.dataset.existingImagePath='';
+            removePollOptionImageFromRow(row);
+        }else{
+            const textInput=row.querySelector('.poll-option-text-input');
+            if(textInput)textInput.value='';
+        }
+    });
+}
+
+function switchGlobalPollOptionType(type){
+    applyGlobalOptionType(type,true);
+}
+
+function setGlobalOptionType(type){
+    applyGlobalOptionType(type,false);
+}
+
+function removeLastPollOptionRow(){
+    const rows=document.querySelectorAll('.poll-option-edit-row');
+    if(rows.length<=2){alert('\uC120\uD0DD\uC9C0\uB294 \uCD5C\uC18C 2\uAC1C\uAC00 \uD544\uC694\uD569\uB2C8\uB2E4.');return;}
+    rows[rows.length-1].remove();
+    updateOptionRows();
+}
+
+function updateOptionRows(){
+    const rows=Array.from(document.querySelectorAll('.poll-option-edit-row'));
+    rows.forEach(function(row,index){
+        row.querySelector('.option-number').innerText=index+1;
+        if(window.globalOptionType==='SCHEDULE')validateScheduleRow(row);
+    });
+    const list=document.getElementById('pollOptionInputs');
+    if(list&&window.globalOptionType==='SCHEDULE')list.classList.toggle('has-scroll',rows.length>2);
+    const minus=document.querySelector('.poll-remove-last');
+    if(minus)minus.disabled=rows.length<=2;
+}
+
+
+
+
+function initializeOptionRowDrop(row){
+    const block=row.querySelector('.poll-option-image-block');
+    if(!block)return;
+
+    ['dragenter','dragover'].forEach(function(name){
+        block.addEventListener(name,function(event){
+            if(window.globalOptionType!=='IMAGE')return;
+            event.preventDefault();
+            event.stopPropagation();
+            block.classList.add('row-dragover');
+        });
+    });
+
+    ['dragleave','drop'].forEach(function(name){
+        block.addEventListener(name,function(event){
+            if(window.globalOptionType!=='IMAGE')return;
+            event.preventDefault();
+            event.stopPropagation();
+            block.classList.remove('row-dragover');
+        });
+    });
+
+    block.addEventListener('drop',function(event){
+        if(window.globalOptionType!=='IMAGE')return;
+        const files=Array.from(event.dataTransfer.files||[]).filter(function(item){
+            return item.type&&item.type.startsWith('image/');
+        });
+        if(files.length===0){alert('\uC774\uBBF8\uC9C0 \uD30C\uC77C\uB9CC \uB123\uC744 \uC218 \uC788\uC2B5\uB2C8\uB2E4.');return;}
+        assignImageFilesFromRow(row,files);
+    });
+}
+
+function getLastPollOptionRow(){
+    const rows=document.querySelectorAll('.poll-option-edit-row');
+    return rows.length ? rows[rows.length-1] : null;
+}
+
+function isPollOptionRowEmpty(row){
+    if(!row)return false;
+    const input=row.querySelector('.poll-option-image-input');
+    return !(input&&input.files&&input.files[0]) && !(row.dataset.existingImagePath||'');
+}
+
+function appendEmptyPollOptionRow(){
+    addPollOptionRow();
+    return getLastPollOptionRow();
+}
+
+function assignImageFilesFromRow(startRow,files){
+    const images=files.filter(function(file){return file.type&&file.type.startsWith('image/');});
+    if(images.length===0){alert('\uC774\uBBF8\uC9C0 \uD30C\uC77C\uB9CC \uB123\uC744 \uC218 \uC788\uC2B5\uB2C8\uB2E4.');return;}
+
+    setGlobalOptionType('IMAGE');
+    const allRows=Array.from(document.querySelectorAll('.poll-option-edit-row'));
+    const startIndex=Math.max(0,allRows.indexOf(startRow));
+    const targets=[];
+
+    // common poll form option UI
+    // common poll form option UI
+    targets.push(startRow||allRows[0]||appendEmptyPollOptionRow());
+    allRows.slice(startIndex+1).forEach(function(row){
+        if(isPollOptionRowEmpty(row))targets.push(row);
+    });
+
+    while(targets.length<images.length){
+        targets.push(appendEmptyPollOptionRow());
+    }
+
+    images.forEach(function(file,index){setFileToOptionRow(targets[index],file);});
+    updateOptionRows();
+}
+
+
+function setFileToOptionRow(row,file){
+    if(!row||!file)return;
+    const input=row.querySelector('.poll-option-image-input');
+    if(!input)return;
+
+    const transfer=new DataTransfer();
+    transfer.items.add(file);
+    input.files=transfer.files;
+    handlePollOptionImageChange(input);
+}
+
+function handlePollOptionImageChange(input){
+    const selectedFiles=Array.from(input.files||[]).filter(function(file){
+        return file.type&&file.type.startsWith('image/');
+    });
+    const row=input.closest('.poll-option-edit-row');
+
+    // common poll form option UI
+    if(selectedFiles.length>1){
+        assignImageFilesFromRow(row,selectedFiles);
+        return;
+    }
+
+    const file=selectedFiles[0];
+    const block=row.querySelector('.poll-option-image-block');
+    const frame=row.querySelector('.poll-option-image-frame');
+    const preview=row.querySelector('.poll-image-preview');
+    const name=row.querySelector('.poll-image-name');
+
+    if(preview.dataset.objectUrl){
+        URL.revokeObjectURL(preview.dataset.objectUrl);
+        delete preview.dataset.objectUrl;
+    }
+
+    if(!file){
+        removePollOptionImageFromRow(row);
+        return;
+    }
+
+    const objectUrl=URL.createObjectURL(file);
+    preview.src=objectUrl;
+    preview.dataset.objectUrl=objectUrl;
+    frame.classList.add('visible');
+    block.classList.add('has-image');
+    name.innerText=file.name||'\uC774\uBBF8\uC9C0 \uC120\uD0DD\uB428';
+    row.dataset.existingImagePath='';
+}
+
+function removePollOptionImage(button){
+    const row=button.closest('.poll-option-edit-row');
+    removePollOptionImageFromRow(row);
+}
+
+function removePollOptionImageFromRow(row){
+    const block=row.querySelector('.poll-option-image-block');
+    const frame=row.querySelector('.poll-option-image-frame');
+    const preview=row.querySelector('.poll-image-preview');
+    const fileInput=row.querySelector('.poll-option-image-input');
+    const name=row.querySelector('.poll-image-name');
+
+    if(preview.dataset.objectUrl){
+        URL.revokeObjectURL(preview.dataset.objectUrl);
+        delete preview.dataset.objectUrl;
+    }
+
+    preview.removeAttribute('src');
+    frame.classList.remove('visible');
+    block.classList.remove('has-image');
+    fileInput.value='';
+    name.innerText='\uC774\uBBF8\uC9C0 \uC5C6\uC74C';
+    row.dataset.existingImagePath='';
+}
+
+function audioTitleFromFileName(name){
+    return String(name||'').replace(/\.[^.]+$/,'').trim();
+}
+
+function isAudioOptionRowEmpty(row){
+    if(!row)return false;
+    const input=row.querySelector('.poll-option-audio-input');
+    return !(input&&input.files&&input.files[0]) && !(row.dataset.existingImagePath||'');
+}
+
+function setAudioFileToOptionRow(row,file){
+    if(!row||!file)return;
+    const input=row.querySelector('.poll-option-audio-input');
+    if(!input)return;
+    const transfer=new DataTransfer();
+    transfer.items.add(file);
+    input.files=transfer.files;
+    previewSinglePollAudio(input,file);
+}
+
+function previewSinglePollAudio(input,file){
+    const block=input.closest('.poll-option-audio-block');
+    const audio=block.querySelector('.poll-audio-preview');
+    const title=block.querySelector('.poll-media-title');
+    if(audio.dataset.objectUrl){URL.revokeObjectURL(audio.dataset.objectUrl);delete audio.dataset.objectUrl;}
+    if(!file){audio.removeAttribute('src');audio.style.display='none';return;}
+    const objectUrl=URL.createObjectURL(file);
+    audio.src=objectUrl;
+    audio.dataset.objectUrl=objectUrl;
+    audio.style.display='block';
+    if(title) title.value=audioTitleFromFileName(file.name);
+    const uploadText=block.querySelector('.poll-audio-upload-text');
+    if(uploadText) uploadText.textContent=file.name;
+    block.classList.add('has-audio');
+}
+
+function assignAudioFilesFromRow(startRow,files){
+    const audios=files.filter(function(file){return file.type&&file.type.startsWith('audio/');});
+    if(audios.length===0){alert('\uC74C\uC545 \uD30C\uC77C\uB9CC \uB123\uC744 \uC218 \uC788\uC2B5\uB2C8\uB2E4.');return;}
+    setGlobalOptionType('AUDIO');
+    const allRows=Array.from(document.querySelectorAll('.poll-option-edit-row'));
+    const startIndex=Math.max(0,allRows.indexOf(startRow));
+    const targets=[];
+    targets.push(startRow||allRows[0]||appendEmptyPollOptionRow());
+    allRows.slice(startIndex+1).forEach(function(row){if(isAudioOptionRowEmpty(row))targets.push(row);});
+    while(targets.length<audios.length)targets.push(appendEmptyPollOptionRow());
+    audios.forEach(function(file,index){setAudioFileToOptionRow(targets[index],file);});
+    updateOptionRows();
+}
+
+function handlePollOptionAudioChange(input){
+    const files=Array.from(input.files||[]).filter(function(file){return file.type&&file.type.startsWith('audio/');});
+    const row=input.closest('.poll-option-edit-row');
+    if(files.length>1){assignAudioFilesFromRow(row,files);return;}
+    previewSinglePollAudio(input,files[0]);
+}
+
+function initializeAudioOptionRowDrop(row){
+    const block=row.querySelector('.poll-option-audio-block');
+    if(!block)return;
+    ['dragenter','dragover'].forEach(function(name){
+        block.addEventListener(name,function(event){
+            if(window.globalOptionType!=='AUDIO')return;
+            event.preventDefault();event.stopPropagation();block.classList.add('audio-dragover');
+        });
+    });
+    ['dragleave','drop'].forEach(function(name){
+        block.addEventListener(name,function(event){
+            if(window.globalOptionType!=='AUDIO')return;
+            event.preventDefault();event.stopPropagation();block.classList.remove('audio-dragover');
+        });
+    });
+    block.addEventListener('drop',function(event){
+        if(window.globalOptionType!=='AUDIO')return;
+        const files=Array.from(event.dataTransfer.files||[]).filter(function(file){return file.type&&file.type.startsWith('audio/');});
+        if(files.length===0){alert('\uC74C\uC545 \uD30C\uC77C\uB9CC \uB123\uC744 \uC218 \uC788\uC2B5\uB2C8\uB2E4.');return;}
+        assignAudioFilesFromRow(row,files);
+    });
+}
+
+
+  function resetForm(){
+    const title=document.getElementById('pollFormTitle');
+    const submit=document.getElementById('pollSubmitButton');
+    const question=document.getElementById('pollQuestionInput');
+    const show=document.getElementById('pollShowResultsInput');
+    const list=document.getElementById('pollOptionInputs');
+    if(title)title.textContent='\uD22C\uD45C \uB9CC\uB4E4\uAE30';
+    if(submit)submit.textContent='\uD22C\uD45C \uC0DD\uC131';
+    if(question)question.value='';
+    if(show)show.checked=false;
+    if(list)list.innerHTML='';
+    setGlobalOptionType('TEXT');
+    addPollOptionRow();
+    addPollOptionRow();
+    initializeDeadline(true);
+    closePickers();
+  }
+
+  function openForm(){
+    const root=modal();if(!root)return;
+    initializeFormOnce();
+    returnFocus=document.activeElement instanceof HTMLElement?document.activeElement:null;
+    root.inert=false;
+    root.classList.add('open');
+    root.setAttribute('aria-hidden','false');
+    document.body.classList.add('poll-modal-open');
+    updateImageEditorLayout();
+    syncDeadlineDisplay();
+    window.setTimeout(function(){
+      const first=root.querySelector('#pollQuestionInput, button, input, select');
+      if(first instanceof HTMLElement)first.focus();
+    },0);
+  }
+
+  function closeForm(){
+    const root=modal();if(!root)return;
+    const focusTarget=returnFocus;returnFocus=null;
+    const focused=document.activeElement;
+    if(focused instanceof HTMLElement&&root.contains(focused))focused.blur();
+    closePickers();
+    root.classList.remove('open');
+    root.inert=true;
+    root.setAttribute('aria-hidden','true');
+    document.body.classList.remove('poll-modal-open');
+    window.setTimeout(function(){
+      if(focusTarget instanceof HTMLElement&&document.contains(focusTarget)&&typeof focusTarget.focus==='function')focusTarget.focus();
+    },0);
+  }
+
+  function initializeFormOnce(){
+    const list=document.getElementById('pollOptionInputs');
+    if(list&&!list.children.length){
+      addPollOptionRow();
+      addPollOptionRow();
+    }
+  }
+
+  function bind(){
+    if(state.bound)return;state.bound=true;
+    const root=modal();if(!root)return;
+    initializeDeadline(false);
+    initializeFormOnce();
+    root.addEventListener('click',function(e){
+      const scheduleField=e.target.closest('.poll-schedule-field');
+      if(scheduleField&&root.contains(scheduleField)){
+        const input=scheduleField.querySelector('.poll-schedule-date,.poll-schedule-start,.poll-schedule-end');
+        if(input){
+          e.preventDefault();e.stopPropagation();
+          if(input.classList.contains('poll-schedule-date'))openDate('schedule-date',input,input);
+          else openTime('schedule-time',input,input);
+          return;
+        }
+      }
+      const dateControl=e.target.closest('.poll-date-control');
+      if(dateControl&&root.contains(dateControl)){e.preventDefault();e.stopPropagation();openDate('deadline-date',null,dateControl);return}
+      const timeControl=e.target.closest('.poll-time-control');
+      if(timeControl&&root.contains(timeControl)){e.preventDefault();e.stopPropagation();openTime('deadline-time',null,timeControl);return}
+    });
+    root.addEventListener('keydown',function(e){
+      if(e.key!=='Enter'&&e.key!==' ')return;
+      if(e.target.matches('.poll-schedule-date,.poll-schedule-start,.poll-schedule-end')){
+        e.preventDefault();e.stopPropagation();
+        if(e.target.classList.contains('poll-schedule-date'))openDate('schedule-date',e.target,e.target);else openTime('schedule-time',e.target,e.target);
+      }else if(e.target.id==='pollEndDateDisplay'){
+        e.preventDefault();openDate('deadline-date',null,e.target.closest('.poll-date-control')||e.target);
+      }else if(e.target.id==='pollEndTimeDisplay'){
+        e.preventDefault();openTime('deadline-time',null,e.target.closest('.poll-time-control')||e.target);
+      }
+    });
+    ['pollEndDateInput','pollEndHourInput','pollEndMinuteInput'].forEach(id=>{
+      const el=document.getElementById(id);if(el)el.addEventListener('change',function(){syncDeadlineDisplay();handlePollDeadlineChange();});
+    });
+    root.addEventListener('moyo:poll-schedule-change',function(e){
+      const input=e.target;
+      if(!input||!input.matches||!input.matches('.poll-schedule-date,.poll-schedule-start,.poll-schedule-end'))return;
+      markScheduleRowEdited(input);
+      validateScheduleRow(input.closest('.poll-option-edit-row'));
+    });
+    document.addEventListener('click',function(e){
+      if(!e.target.closest('.poll-picker-portal')&&!e.target.closest('#pollFormModal .poll-date-control')&&!e.target.closest('#pollFormModal .poll-time-control')&&!e.target.closest('#pollFormModal .poll-schedule-field'))closePickers();
+    });
+    document.addEventListener('keydown',function(e){if(e.key==='Escape'&&((state.dateMenu&&!state.dateMenu.hidden)||(state.timeMenu&&!state.timeMenu.hidden))){e.preventDefault();e.stopPropagation();closePickers()}},true);
+    document.addEventListener('keydown',function(e){
+      if(e.key!=='Escape')return;
+      const pickerOpen=(state.dateMenu&&!state.dateMenu.hidden)||(state.timeMenu&&!state.timeMenu.hidden);
+      if(pickerOpen)return;
+      const root=modal();if(root&&root.classList.contains('open'))closeForm();
+    });
+    window.addEventListener('resize',closePickers);
+    document.addEventListener('scroll',function(){
+      if((state.dateMenu&&!state.dateMenu.hidden)||(state.timeMenu&&!state.timeMenu.hidden))closePickers();
+    },true);
+    if(window.MutationObserver)new MutationObserver(function(){
+      if(root.getAttribute('aria-hidden')==='false'&&root.classList.contains('open'))requestAnimationFrame(syncDeadlineDisplay);else closePickers();
+    }).observe(root,{attributes:true,attributeFilter:['aria-hidden','class']});
+  }
+
+
+  // ===== standalone create support for workspace/project main widgets =====
+  let standaloneCreateConfig=null;
+
+  function configureStandaloneCreate(config){
+    config=config||{};
+    standaloneCreateConfig={
+      scope:String(config.scope||'WORKSPACE').toUpperCase()==='PROJECT'?'PROJECT':'WORKSPACE',
+      wsId:String(config.wsId||''),
+      projId:String(config.projId||''),
+      contextPath:String(config.contextPath||'').replace(/\/$/,''),
+      onCreated:typeof config.onCreated==='function'?config.onCreated:null
+    };
+  }
+
+  function apiPath(path){
+    const base=standaloneCreateConfig&&standaloneCreateConfig.contextPath?standaloneCreateConfig.contextPath:'';
+    return base+path;
+  }
+
+  async function uploadStandaloneImage(file){
+    const fd=new FormData();fd.append('image',file);
+    const res=await fetch(apiPath('/api/polls/option-image'),{method:'POST',body:fd});
+    const data=await res.json().catch(function(){return null;});
+    if(!res.ok||!data||data.success===false)throw new Error(data&&data.message?data.message:'image upload failed');
+    return data.imagePath;
+  }
+
+  async function uploadStandaloneAudio(file){
+    const fd=new FormData();fd.append('media',file);
+    const res=await fetch(apiPath('/api/polls/option-media'),{method:'POST',body:fd});
+    const data=await res.json().catch(function(){return null;});
+    if(!res.ok||!data||data.success===false)throw new Error(data&&data.message?data.message:'audio upload failed');
+    return data.mediaPath;
+  }
+
+  async function submitStandaloneCreate(){
+    const cfg=standaloneCreateConfig;
+    if(!cfg){
+      console.error('[MOYO] poll create context is not configured.');
+      return;
+    }
+    const question=(document.getElementById('pollQuestionInput')?.value||'').trim();
+    const deadline=getDeadlineDateTime();
+    if(!question){alert('\uC9C8\uBB38\uC744 \uC785\uB825\uD574\uC8FC\uC138\uC694.');return;}
+    if(!deadline){alert('\uD22C\uD45C \uB9C8\uAC10 \uB0A0\uC9DC\uC640 \uC2DC\uAC04\uC744 \uD655\uC778\uD574\uC8FC\uC138\uC694.');return;}
+    if(deadline.getTime()<=Date.now()){alert('\uD22C\uD45C \uB9C8\uAC10\uC740 \uD604\uC7AC \uC2DC\uAC04 \uC774\uD6C4\uB85C \uC124\uC815\uD574\uC8FC\uC138\uC694.');return;}
+    if(!validateAllScheduleRows()){alert('\uC77C\uC815 \uC120\uD0DD\uC9C0\uC758 \uB0A0\uC9DC\uC640 \uC2DC\uAC04\uC744 \uD655\uC778\uD574\uC8FC\uC138\uC694.');return;}
+
+    const type=window.globalOptionType||'TEXT';
+    const rows=Array.from(document.querySelectorAll('#pollOptionInputs .poll-option-edit-row'));
+    const options=[];
+    try{
+      for(const row of rows){
+        if(type==='SCHEDULE'){
+          const date=row.querySelector('.poll-schedule-date')?.dataset.value||'';
+          const startTime=row.querySelector('.poll-schedule-start')?.dataset.value||'';
+          const endTime=row.querySelector('.poll-schedule-end')?.dataset.value||'';
+          if(!date&&!startTime&&!endTime)continue;
+          if(!date||!startTime||!endTime){alert('\uC77C\uC815 \uC120\uD0DD\uC9C0\uC758 \uB0A0\uC9DC\uC640 \uC2DC\uAC04\uC744 \uBAA8\uB450 \uC120\uD0DD\uD574\uC8FC\uC138\uC694.');return;}
+          if(!validateScheduleRow(row)){alert(row.querySelector('.poll-schedule-error')?.textContent||'\uC77C\uC815 \uC120\uD0DD\uC9C0\uB97C \uD655\uC778\uD574\uC8FC\uC138\uC694.');return;}
+          options.push({optionType:'SCHEDULE',scheduleDate:date,startTime:startTime,endTime:endTime,text:serializeScheduleOption(date,startTime,endTime),imagePath:null});
+        }else if(type==='IMAGE'){
+          const input=row.querySelector('.poll-option-image-input');
+          const file=input&&input.files?input.files[0]:null;
+          let imagePath=row.dataset.existingImagePath||'';
+          if(file)imagePath=await uploadStandaloneImage(file);
+          if(!imagePath)continue;
+          options.push({optionType:'IMAGE',text:file&&file.name?file.name:'\uC774\uBBF8\uC9C0 \uC120\uD0DD\uC9C0',imagePath:imagePath});
+        }else if(type==='AUDIO'){
+          const input=row.querySelector('.poll-option-audio-input');
+          const file=input&&input.files?input.files[0]:null;
+          let mediaPath=row.dataset.existingImagePath||'';
+          if(file)mediaPath=await uploadStandaloneAudio(file);
+          if(!mediaPath)continue;
+          const title=(row.querySelector('.poll-option-audio-block .poll-media-title')?.value||'').trim()||(file?audioTitleFromFileName(file.name):'\uC74C\uC545 \uC120\uD0DD\uC9C0');
+          options.push({optionType:'AUDIO',text:title,imagePath:mediaPath});
+        }else if(type==='VIDEO'){
+          const url=(row.querySelector('.poll-video-url')?.value||'').trim();
+          if(!url)continue;
+          options.push({optionType:'VIDEO',text:'\uC601\uC0C1 '+(options.length+1),imagePath:url});
+        }else{
+          const text=(row.querySelector('.poll-option-text-input')?.value||'').trim();
+          if(!text)continue;
+          options.push({optionType:'TEXT',text:text,imagePath:null});
+        }
+      }
+
+      if(options.length<2){alert('\uC120\uD0DD\uC9C0\uB294 2\uAC1C \uC774\uC0C1 \uC785\uB825\uD574\uC8FC\uC138\uC694.');return;}
+
+      const endDate=document.getElementById('pollEndDateInput')?.value||'';
+      const endHour=document.getElementById('pollEndHourInput')?.value||'';
+      const endMinute=document.getElementById('pollEndMinuteInput')?.value||'';
+      const body={
+        scope:cfg.scope,
+        wsId:cfg.wsId,
+        question:question,
+        endDt:endDate+' '+endHour+':'+endMinute,
+        showResultsYn:document.getElementById('pollShowResultsInput')?.checked?'Y':'N',
+        options:options
+      };
+      if(cfg.scope==='PROJECT')body.projId=cfg.projId;
+
+      const submit=document.getElementById('pollSubmitButton');
+      if(submit)submit.disabled=true;
+      const res=await fetch(apiPath('/api/polls/create'),{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify(body)
+      });
+      const raw=await res.text();
+      let data=null;try{data=raw?JSON.parse(raw):null;}catch(ignore){}
+      if(!res.ok||!data||data.success===false)throw new Error(data&&data.message?data.message:'poll create failed');
+
+      const callback=cfg.onCreated;
+      resetForm();
+      closeForm();
+      standaloneCreateConfig=null;
+      if(callback)callback(data.pollId||null,data);
+      document.dispatchEvent(new CustomEvent('moyo:poll-created',{detail:{pollId:data.pollId||null,scope:cfg.scope,wsId:cfg.wsId,projId:cfg.projId}}));
+    }catch(err){
+      console.error(err);
+      alert('\uD22C\uD45C \uC0DD\uC131 \uC911 \uC624\uB958\uAC00 \uBC1C\uC0DD\uD588\uC2B5\uB2C8\uB2E4.');
+    }finally{
+      const submit=document.getElementById('pollSubmitButton');
+      if(submit)submit.disabled=false;
+    }
+  }
+
+  window.MoyoPollFormPicker={
+    init:initializeDeadline,
+    sync:syncDeadlineDisplay,
+    close:closePickers,
+    getDeadlineDateTime:getDeadlineDateTime,
+    isDeadlineInPast:isDeadlineInPast,
+    formatDate:formatDate,
+    formatDateLabel:formatDateLabel,
+    setScheduleDate:setScheduleDate,
+    setScheduleTime:setScheduleTime
+  };
+  window.MoyoPollForm={
+    open:openForm,
+    close:closeForm,
+    reset:resetForm,
+    configureCreate:configureStandaloneCreate,
+    submitCreate:submitStandaloneCreate,
+    getOptionType:function(){return window.globalOptionType||'TEXT';},
+    setOptionType:setGlobalOptionType,
+    addOption:addPollOptionRow,
+    removeLastOption:removeLastPollOptionRow,
+    validateScheduleRow:validateScheduleRow,
+    validateAllSchedules:validateAllScheduleRows,
+    serializeScheduleOption:serializeScheduleOption,
+    formatScheduleOptionLabel:formatScheduleOptionLabel,
+    getDeadlineDateTime:getDeadlineDateTime
+  };
+  if(typeof window.savePoll!=='function')window.savePoll=submitStandaloneCreate;
+  window.openPollFormModal=openForm;
+  window.closePollFormModal=closeForm;
+  window.initializeDeadlineDefaults=function(){initializeDeadline(true);};
+  window.pollDeadlineDateTime=getDeadlineDateTime;
+  window.parseScheduleOptionText=parseScheduleOptionText;
+  window.serializeScheduleOption=serializeScheduleOption;
+  window.formatScheduleDateLabel=formatScheduleDateLabel;
+  window.formatScheduleOptionLabel=formatScheduleOptionLabel;
+  window.setScheduleDateValue=setScheduleDateValue;
+  window.setScheduleTimeValue=setScheduleTimeValue;
+  window.validateScheduleRow=validateScheduleRow;
+  window.validateAllScheduleRows=validateAllScheduleRows;
+  window.addPollOptionRow=addPollOptionRow;
+  window.switchGlobalPollOptionType=switchGlobalPollOptionType;
+  window.setGlobalOptionType=setGlobalOptionType;
+  window.removeLastPollOptionRow=removeLastPollOptionRow;
+  window.updateOptionRows=updateOptionRows;
+  window.handlePollOptionImageChange=handlePollOptionImageChange;
+  window.removePollOptionImage=removePollOptionImage;
+  window.handlePollOptionAudioChange=handlePollOptionAudioChange;
+  window.audioTitleFromFileName=audioTitleFromFileName;
+  window.syncPollDeadlinePicker=syncDeadlineDisplay;
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bind,{once:true});else bind();
-  window.syncPollDeadlinePicker=function(){syncDateDisplay();syncTimeDisplay()};
 })();
 </script>
 

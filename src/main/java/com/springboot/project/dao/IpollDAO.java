@@ -66,6 +66,9 @@ public interface IpollDAO {
 
     List<Long> selectPollVoterUserIds(@Param("pollId") Long pollId);
 
+    List<Long> selectOptionVoterUserIds(@Param("pollId") Long pollId,
+                                        @Param("optionId") Long optionId);
+
     Long selectCalendarEventIdByPollId(@Param("pollId") Long pollId);
 
     void closePoll(@Param("pollId") Long pollId);

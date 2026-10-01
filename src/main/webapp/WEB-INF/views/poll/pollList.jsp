@@ -253,6 +253,11 @@ button,input,select{font:inherit}.poll-page button{outline:none}
   .poll-result-meta{flex-wrap:wrap}
 }
 
+
+html.poll-embed-create,html.poll-embed-create body{background:transparent!important;overflow:hidden!important}
+body.poll-embed-create > *{visibility:hidden!important}
+body.poll-embed-create #pollFormModal,body.poll-embed-create #pollFormModal *{visibility:visible!important}
+body.poll-embed-create #pollFormModal{display:flex!important}
 </style>
 
 </head>
@@ -326,23 +331,21 @@ const wsId=params.get('wsId');
 const projId=params.get('projId');
 const projectReadOnly=${projectReadOnly eq true ? 'true' : 'false'};
 const requestedPollId=params.get('pollId');
+const embeddedPollCreate=params.get('embedCreate')==='1';
 let allPolls=[];
 let pendingVoteOptionId=null;
 let selectedPollId=null;
 let editingPollId=null;
 let editingCanEditOptions=true;
-let globalOptionType='TEXT';
-let pollModalReturnFocus=null;
 
 document.addEventListener('DOMContentLoaded',function(){
     initializePollPage();
-    initializeDeadlineDefaults();
-    addPollOptionRow();
-    addPollOptionRow();
-    ['pollEndDateInput','pollEndHourInput','pollEndMinuteInput'].forEach(function(id){
-        const el=document.getElementById(id);
-        if(el)el.addEventListener('change',handlePollDeadlineChange);
-    });
+    if(embeddedPollCreate){
+        document.documentElement.classList.add('poll-embed-create');
+        document.body.classList.add('poll-embed-create');
+        window.setTimeout(openPollCreateModal,0);
+        return;
+    }
     loadPollList(requestedPollId);
 });
 
@@ -365,51 +368,6 @@ function openPollCreateModal(){
     openPollFormModal();
 }
 
-function openPollFormModal(){
-    const modal=document.getElementById('pollFormModal');
-    if(!modal)return;
-    pollModalReturnFocus=document.activeElement instanceof HTMLElement?document.activeElement:null;
-    modal.inert=false;
-    modal.classList.add('open');
-    modal.setAttribute('aria-hidden','false');
-    document.body.classList.add('poll-modal-open');
-    updateImageEditorLayout();
-    window.setTimeout(function(){
-        const first=modal.querySelector('#pollQuestionInput, button, input, select');
-        if(first instanceof HTMLElement)first.focus();
-    },0);
-}
-
-function closePollFormModal() {
-    const modal = document.getElementById('pollFormModal');
-    if (!modal) return;
-
-    // null 처리 전에 복귀할 요소를 별도 변수에 보관
-    const returnFocus = pollModalReturnFocus;
-    pollModalReturnFocus = null;
-
-    const focused = document.activeElement;
-    if (focused instanceof HTMLElement && modal.contains(focused)) {
-        focused.blur();
-    }
-
-    modal.classList.remove('open');
-    modal.inert = true;
-    modal.setAttribute('aria-hidden', 'true');
-    document.body.classList.remove('poll-modal-open');
-
-    // 요소가 실제로 존재하고 focus 함수가 있을 때만 복귀
-    window.setTimeout(function () {
-        if (
-            returnFocus instanceof HTMLElement &&
-            document.contains(returnFocus) &&
-            typeof returnFocus.focus === 'function'
-        ) {
-            returnFocus.focus();
-        }
-    }, 0);
-}
-
 document.addEventListener('keydown',function(event){
     if(event.key!=='Escape')return;
     const extendModal=document.getElementById('pollExtendModal');
@@ -417,8 +375,6 @@ document.addEventListener('keydown',function(event){
         closePollExtendModal();
         return;
     }
-    const formModal=document.getElementById('pollFormModal');
-    if(formModal&&formModal.classList.contains('open'))closePollFormModal();
 });
 
 function initializePollPage(){
@@ -430,562 +386,10 @@ function initializePollPage(){
 }
 
 
-function initializeDeadlineDefaults(){
-    const date=new Date();
-    date.setDate(date.getDate()+1);
-    document.getElementById('pollEndDateInput').value=formatDateInput(date);
-
-    const hour=document.getElementById('pollEndHourInput');
-    const minute=document.getElementById('pollEndMinuteInput');
-    if(!hour||!minute)return;
-    hour.innerHTML='';
-    minute.innerHTML='';
-    for(let h=0;h<24;h++){const v=String(h).padStart(2,'0');hour.insertAdjacentHTML('beforeend','<option value="'+v+'" '+(v==='18'?'selected':'')+'>'+v+'</option>');}
-    for(let m=0;m<60;m+=10){const v=String(m).padStart(2,'0');minute.insertAdjacentHTML('beforeend','<option value="'+v+'" '+(v==='00'?'selected':'')+'>'+v+'</option>');}
-    if(typeof window.syncPollDeadlinePicker==='function')window.syncPollDeadlinePicker();
-}
-
 function buildScopeQuery(){
     let q='scope='+encodeURIComponent(scope)+'&wsId='+encodeURIComponent(wsId||'');
     if(scope==='PROJECT')q+='&projId='+encodeURIComponent(projId||'');
     return q;
-}
-
-const SCHEDULE_OPTION_PREFIX='@MOYO_SCHEDULE@|';
-let schedulePickerTarget=null;
-let scheduleDateView=null;
-let scheduleDateMenu=null;
-let scheduleTimeMenu=null;
-let scheduleTimeState={meridiem:'AM',hour12:9,minute:0};
-
-function parseScheduleOptionText(value){
-    const text=String(value||'');
-    if(!text.startsWith(SCHEDULE_OPTION_PREFIX))return null;
-    const parts=text.substring(SCHEDULE_OPTION_PREFIX.length).split('|');
-    if(parts.length<3)return null;
-    return {date:parts[0]||'',startTime:parts[1]||'',endTime:parts[2]||''};
-}
-function serializeScheduleOption(date,startTime,endTime){
-    return SCHEDULE_OPTION_PREFIX+date+'|'+startTime+'|'+endTime;
-}
-function formatScheduleDateLabel(value){
-    const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(String(value||''));
-    if(!m)return String(value||'');
-    const d=new Date(Number(m[1]),Number(m[2])-1,Number(m[3]));
-    if(Number.isNaN(d.getTime()))return value;
-    return value+' ('+['일','월','화','수','목','금','토'][d.getDay()]+')';
-}
-function formatScheduleOptionLabel(value,index){
-    const schedule=parseScheduleOptionText(value);
-    if(!schedule)return String(value||('후보 '+(index+1)));
-    return formatScheduleDateLabel(schedule.date)+' · '+schedule.startTime+' ~ '+schedule.endTime;
-}
-function scheduleDateValue(input){return input?String(input.dataset.value||''):'';}
-function markScheduleRowEdited(input){
-    const row=input&&input.closest?input.closest('.poll-option-edit-row.schedule-mode'):null;
-    if(row)row.dataset.scheduleUserEdited='true';
-}
-function setScheduleDateValue(input,value,markEdited){
-    if(!input)return;
-    if(markEdited!==false)markScheduleRowEdited(input);
-    input.dataset.value=value||'';
-    input.value=value?formatScheduleDateLabel(value):'';
-    validateScheduleRow(input.closest('.poll-option-edit-row'));
-}
-function setScheduleTimeValue(input,value,markEdited){
-    if(!input)return;
-    if(markEdited!==false)markScheduleRowEdited(input);
-    const m=/^(\d{2}):(\d{2})$/.exec(String(value||''));
-    if(!m){input.dataset.value='';input.value='';validateScheduleRow(input.closest('.poll-option-edit-row'));return;}
-    const h=Number(m[1]),min=Number(m[2]);
-    input.dataset.value=String(h).padStart(2,'0')+':'+String(min).padStart(2,'0');
-    input.value=(h>=12?'오후 ':'오전 ')+String(h%12||12).padStart(2,'0')+':'+String(min).padStart(2,'0');
-    validateScheduleRow(input.closest('.poll-option-edit-row'));
-}
-function pollDeadlineDateTime(){
-    const date=document.getElementById('pollEndDateInput')?.value||'';
-    const hour=document.getElementById('pollEndHourInput')?.value||'';
-    const minute=document.getElementById('pollEndMinuteInput')?.value||'';
-    if(!date||hour===''||minute==='')return null;
-    const dt=new Date(date+'T'+hour+':'+minute+':00');
-    return Number.isNaN(dt.getTime())?null:dt;
-}
-function scheduleStartDateTime(row){
-    if(!row)return null;
-    const date=row.querySelector('.poll-schedule-date')?.dataset.value||'';
-    const time=row.querySelector('.poll-schedule-start')?.dataset.value||'';
-    if(!date||!time)return null;
-    const dt=new Date(date+'T'+time+':00');
-    return Number.isNaN(dt.getTime())?null:dt;
-}
-function scheduleDefaultWindow(){
-    const deadline=pollDeadlineDateTime();
-    const base=deadline?new Date(deadline):new Date();
-    if(!deadline){base.setDate(base.getDate()+1);base.setHours(18,0,0,0);}
-    const start=new Date(base.getTime()+60*60*1000);
-    const end=new Date(start.getTime()+60*60*1000);
-    return {date:formatDateInput(start),startTime:String(start.getHours()).padStart(2,'0')+':'+String(start.getMinutes()).padStart(2,'0'),endTime:String(end.getHours()).padStart(2,'0')+':'+String(end.getMinutes()).padStart(2,'0')};
-}
-function applyScheduleDefaultWindow(row){
-    if(!row)return;
-    const values=scheduleDefaultWindow();
-    row.dataset.scheduleUserEdited='false';
-    setScheduleDateValue(row.querySelector('.poll-schedule-date'),values.date,false);
-    setScheduleTimeValue(row.querySelector('.poll-schedule-start'),values.startTime,false);
-    setScheduleTimeValue(row.querySelector('.poll-schedule-end'),values.endTime,false);
-    row.dataset.scheduleUserEdited='false';
-}
-function refreshUntouchedScheduleDefaults(){
-    document.querySelectorAll('#pollOptionInputs .poll-option-edit-row.schedule-mode').forEach(function(row){
-        if(row.dataset.scheduleUserEdited!=='true')applyScheduleDefaultWindow(row);
-    });
-}
-function handlePollDeadlineChange(){
-    refreshUntouchedScheduleDefaults();
-    validateAllScheduleRows();
-}
-function validateScheduleRow(row){
-    if(!row||!row.classList.contains('schedule-mode'))return true;
-    const start=row.querySelector('.poll-schedule-start')?.dataset.value||'';
-    const end=row.querySelector('.poll-schedule-end')?.dataset.value||'';
-    const error=row.querySelector('.poll-schedule-error');
-    let message='';
-    if(start&&end&&start>=end){
-        message='종료 시간은 시작 시간보다 늦어야 합니다.';
-    }else{
-        const deadline=pollDeadlineDateTime();
-        const scheduleStart=scheduleStartDateTime(row);
-        if(deadline&&scheduleStart&&scheduleStart<=deadline){
-            message='후보 일정은 투표 마감 이후로 설정해주세요.';
-        }
-    }
-    row.classList.toggle('has-schedule-error',!!message);
-    if(error)error.textContent=message;
-    return !message;
-}
-function validateAllScheduleRows(){
-    let valid=true;
-    document.querySelectorAll('#pollOptionInputs .poll-option-edit-row.schedule-mode').forEach(function(row){
-        if(!validateScheduleRow(row))valid=false;
-    });
-    return valid;
-}
-function closeSchedulePickers(){if(scheduleDateMenu)scheduleDateMenu.hidden=true;if(scheduleTimeMenu)scheduleTimeMenu.hidden=true;schedulePickerTarget=null;}
-function positionSchedulePicker(menu,input,width,height){
-    const r=input.getBoundingClientRect();
-    let left=Math.min(Math.max(10,r.left),window.innerWidth-width-10),top=r.bottom+5;
-    if(top+height>window.innerHeight-10)top=Math.max(10,r.top-height-5);
-    menu.style.left=left+'px';menu.style.top=top+'px';
-}
-function ensureScheduleDateMenu(){
-    if(scheduleDateMenu)return scheduleDateMenu;
-    scheduleDateMenu=document.createElement('div');
-    scheduleDateMenu.className='moyo-quick-picker-menu moyo-quick-date-picker-menu';scheduleDateMenu.hidden=true;
-    scheduleDateMenu.addEventListener('click',function(e){e.stopPropagation();const b=e.target.closest('button');if(!b||!schedulePickerTarget)return;if(b.dataset.nav){scheduleDateView.setMonth(scheduleDateView.getMonth()+Number(b.dataset.nav));renderScheduleDateMenu();return;}if(b.dataset.date){setScheduleDateValue(schedulePickerTarget,b.dataset.date);closeSchedulePickers();return;}if(b.dataset.action==='today'){const n=new Date();setScheduleDateValue(schedulePickerTarget,formatDateInput(n));closeSchedulePickers();}});
-    document.body.appendChild(scheduleDateMenu);return scheduleDateMenu;
-}
-function renderScheduleDateMenu(){
-    const menu=ensureScheduleDateMenu(),selected=schedulePickerTarget?scheduleDateValue(schedulePickerTarget):'',first=new Date(scheduleDateView.getFullYear(),scheduleDateView.getMonth(),1),start=new Date(scheduleDateView.getFullYear(),scheduleDateView.getMonth(),1-first.getDay()),today=startOfLocalDay(new Date());let days='';
-    for(let i=0;i<42;i++){const d=new Date(start);d.setDate(start.getDate()+i);d.setHours(0,0,0,0);const val=formatDateInput(d),muted=d.getMonth()!==scheduleDateView.getMonth(),isToday=val===formatDateInput(today),isSel=val===selected;days+='<button type="button" class="moyo-quick-date-picker-day'+(muted?' is-muted':'')+(isToday?' is-today':'')+(isSel?' is-selected':'')+'" data-date="'+val+'">'+d.getDate()+'</button>';}
-    menu.innerHTML='<div class="moyo-quick-date-picker-head"><div class="moyo-quick-date-picker-title">'+scheduleDateView.getFullYear()+'년 '+(scheduleDateView.getMonth()+1)+'월</div><div class="moyo-quick-date-picker-nav"><button type="button" data-nav="-1">‹</button><button type="button" data-nav="1">›</button></div></div><div class="moyo-quick-date-picker-weekdays">'+['일','월','화','수','목','금','토'].map(x=>'<span>'+x+'</span>').join('')+'</div><div class="moyo-quick-date-picker-days">'+days+'</div><div class="moyo-quick-date-picker-foot"><button type="button" class="moyo-quick-date-picker-today" data-action="today">오늘</button></div>';
-}
-function openScheduleDatePicker(input){
-    closeSchedulePickers();schedulePickerTarget=input;const current=parsePollDateValue(scheduleDateValue(input));const n=current||new Date();scheduleDateView=new Date(n.getFullYear(),n.getMonth(),1);renderScheduleDateMenu();const menu=ensureScheduleDateMenu();positionSchedulePicker(menu,input,248,288);menu.hidden=false;
-}
-function ensureScheduleTimeMenu(){
-    if(scheduleTimeMenu)return scheduleTimeMenu;
-    scheduleTimeMenu=document.createElement('div');scheduleTimeMenu.className='moyo-quick-picker-menu moyo-quick-time-picker-menu';scheduleTimeMenu.hidden=true;
-    scheduleTimeMenu.addEventListener('click',function(e){e.stopPropagation();const b=e.target.closest('button');if(!b||!schedulePickerTarget)return;if(b.dataset.meridiem)scheduleTimeState.meridiem=b.dataset.meridiem;if(b.dataset.hour)scheduleTimeState.hour12=Number(b.dataset.hour);if(b.dataset.minute)scheduleTimeState.minute=Number(b.dataset.minute);if(b.dataset.action==='now'){const n=new Date();scheduleTimeState={meridiem:n.getHours()>=12?'PM':'AM',hour12:n.getHours()%12||12,minute:Math.floor(n.getMinutes()/5)*5};}applyScheduleTime();renderScheduleTimeMenu();});
-    document.body.appendChild(scheduleTimeMenu);return scheduleTimeMenu;
-}
-function applyScheduleTime(){const h=(scheduleTimeState.hour12%12)+(scheduleTimeState.meridiem==='PM'?12:0);setScheduleTimeValue(schedulePickerTarget,String(h).padStart(2,'0')+':'+String(scheduleTimeState.minute).padStart(2,'0'));}
-function renderScheduleTimeMenu(){
-    const menu=ensureScheduleTimeMenu(),hours=Array.from({length:12},(_,i)=>i+1).map(h=>'<button type="button" data-hour="'+h+'" class="'+(scheduleTimeState.hour12===h?'is-selected':'')+'">'+String(h).padStart(2,'0')+'</button>').join(''),mins=Array.from({length:12},(_,i)=>i*5).map(m=>'<button type="button" data-minute="'+m+'" class="'+(scheduleTimeState.minute===m?'is-selected':'')+'">'+String(m).padStart(2,'0')+'</button>').join('');
-    menu.innerHTML='<div class="moyo-quick-time-picker-head"><div class="moyo-quick-time-picker-title">시간 선택</div><button type="button" class="moyo-quick-time-picker-now" data-action="now">현재 시간</button></div><div class="moyo-quick-time-picker-ampm"><button type="button" data-meridiem="AM" class="'+(scheduleTimeState.meridiem==='AM'?'is-selected':'')+'">오전</button><button type="button" data-meridiem="PM" class="'+(scheduleTimeState.meridiem==='PM'?'is-selected':'')+'">오후</button></div><div class="moyo-quick-time-picker-section"><div class="moyo-quick-time-picker-label">시</div><div class="moyo-quick-time-picker-grid">'+hours+'</div></div><div class="moyo-quick-time-picker-section"><div class="moyo-quick-time-picker-label">분 · 5분 단위</div><div class="moyo-quick-time-picker-grid">'+mins+'</div></div>';
-}
-function openScheduleTimePicker(input){
-    closeSchedulePickers();schedulePickerTarget=input;const raw=String(input.dataset.value||'09:00'),m=/^(\d{2}):(\d{2})$/.exec(raw),h=m?Number(m[1]):9,min=m?Number(m[2]):0;scheduleTimeState={meridiem:h>=12?'PM':'AM',hour12:h%12||12,minute:Math.floor(min/5)*5};renderScheduleTimeMenu();const menu=ensureScheduleTimeMenu();positionSchedulePicker(menu,input,268,276);menu.hidden=false;
-}
-
-document.addEventListener('click',function(e){if(!e.target.closest('.moyo-quick-picker-menu')&&!e.target.closest('.poll-schedule-field'))closeSchedulePickers();});
-
-function addPollOptionRow(initialData){
-    const list=document.getElementById('pollOptionInputs');
-    const row=document.createElement('div');
-    const text=initialData?(initialData.text||initialData.TEXT||''):'';
-    const imagePath=initialData?(initialData.imagePath||initialData.IMAGE_PATH||''):'';
-    const storedType=initialData
-        ? String(initialData.optionType||initialData.OPTION_TYPE||'').toUpperCase()
-        : '';
-
-    // 과거 BOTH 데이터도 이미지 선택지로 취급
-    if(initialData && ['SCHEDULE','IMAGE','AUDIO','VIDEO'].includes(storedType)){ globalOptionType=storedType; } else if(initialData && imagePath){ globalOptionType='IMAGE'; }
-
-    row.className='poll-option-edit-row '+globalOptionType.toLowerCase()+'-mode';
-    row.dataset.optionId=initialData?(initialData.optionId||initialData.OPTION_ID||''):'';
-    row.dataset.existingImagePath=imagePath||'';
-    row.innerHTML=
-        '<span class="option-number"></span>'+
-        '<div class="poll-option-edit-main">'+
-            '<input class="poll-input poll-option-text-input" placeholder="선택지 내용" value="'+escapeHtml(globalOptionType==='TEXT'?text:'')+'">'+
-            '<div class="poll-option-schedule-block"><div class="poll-schedule-grid">'+
-              '<div class="poll-schedule-field poll-schedule-date-field"><input type="text" class="poll-input poll-schedule-date" readonly placeholder="날짜 선택" onclick="openScheduleDatePicker(this)"><button type="button" class="poll-schedule-trigger" onclick="openScheduleDatePicker(this.previousElementSibling)" aria-label="날짜 선택"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="4" y="5.5" width="16" height="14" rx="3" stroke="currentColor" stroke-width="1.7"/><path d="M8 3.8v3.4M16 3.8v3.4M4 9.2h16" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></button></div>'+
-              '<div class="poll-schedule-field"><input type="text" class="poll-input poll-schedule-start" readonly placeholder="시작 시간" onclick="openScheduleTimePicker(this)"><button type="button" class="poll-schedule-trigger" onclick="openScheduleTimePicker(this.previousElementSibling)" aria-label="시작 시간 선택"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="1.7"/><path d="M12 7.8v4.6l3 1.8" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></button></div>'+
-              '<span class="poll-schedule-sep">~</span>'+
-              '<div class="poll-schedule-field"><input type="text" class="poll-input poll-schedule-end" readonly placeholder="종료 시간" onclick="openScheduleTimePicker(this)"><button type="button" class="poll-schedule-trigger" onclick="openScheduleTimePicker(this.previousElementSibling)" aria-label="종료 시간 선택"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="1.7"/><path d="M12 7.8v4.6l3 1.8" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></button></div>'+
-            '</div><div class="poll-schedule-error" role="status" aria-live="polite"></div></div>'+
-            '<div class="poll-option-image-block'+(globalOptionType==='IMAGE'&&imagePath?' has-image':'')+'">'+
-                '<label class="poll-file-label">'+
-                    '<div class="poll-upload-tile-content">'+
-                        '<span class="poll-upload-plus">＋</span>'+ 
-                        '<strong>이미지 선택</strong>'+ 
-                        '<span class="poll-upload-help">클릭하거나 이미지를<br>드래그하세요</span>'+ 
-                    '</div>'+ 
-                    '<input type="file" class="poll-option-image-input" accept="image/*" multiple onchange="handlePollOptionImageChange(this)">'+
-                '</label>'+
-                '<div class="poll-option-image-frame'+(globalOptionType==='IMAGE'&&imagePath?' visible':'')+'">'+
-                    '<img class="poll-image-preview" '+(globalOptionType==='IMAGE'&&imagePath?'src="'+escapeHtml(imagePath)+'"':'')+' alt="미리보기">'+
-                    '<button type="button" class="poll-option-image-remove" onclick="removePollOptionImage(this)" aria-label="이미지 제거">×</button>'+
-                '</div>'+
-                '<span class="poll-image-name">이미지 없음</span>'+
-            '</div>'+
-            '<div class="poll-option-audio-block">'+
-              '<label class="poll-media-upload"><span class="poll-audio-upload-text">＋ 음악 파일 선택</span><span class="poll-audio-upload-help">클릭하거나 파일을 드래그하세요</span><input type="file" class="poll-option-audio-input" accept="audio/*" multiple onchange="handlePollOptionAudioChange(this)"></label>'+
-              '<input class="poll-input poll-media-title" placeholder="음악 제목" value="">'+
-              '<audio class="poll-audio-preview" controls preload="metadata"></audio>'+
-            '</div>'+
-            '<div class="poll-option-video-block">'+
-              '<input class="poll-input poll-video-url" placeholder="YouTube, Vimeo 또는 직접 재생 가능한 영상 URL" value="">'+
-            '</div>'+
-        '</div>';
-
-    list.appendChild(row);
-    if(globalOptionType==='SCHEDULE'){
-        const schedule=parseScheduleOptionText(text);
-        if(schedule){
-            row.dataset.scheduleUserEdited='true';
-            setScheduleDateValue(row.querySelector('.poll-schedule-date'),schedule.date,false);
-            setScheduleTimeValue(row.querySelector('.poll-schedule-start'),schedule.startTime,false);
-            setScheduleTimeValue(row.querySelector('.poll-schedule-end'),schedule.endTime,false);
-            row.dataset.scheduleUserEdited='true';
-        }else{
-            applyScheduleDefaultWindow(row);
-        }
-    }
-    if(globalOptionType==='AUDIO' && initialData){
-        const title=row.querySelector('.poll-option-audio-block .poll-media-title'); if(title)title.value=text||'';
-        const audio=row.querySelector('.poll-audio-preview'); if(audio&&imagePath){audio.src=imagePath;audio.style.display='block';}
-        const uploadText=row.querySelector('.poll-audio-upload-text'); if(uploadText&&text)uploadText.textContent=text;
-        const audioBlock=row.querySelector('.poll-option-audio-block'); if(audioBlock)audioBlock.classList.toggle('has-audio',!!imagePath);
-    }
-    if(globalOptionType==='VIDEO' && initialData){
-        const url=row.querySelector('.poll-video-url'); if(url)url.value=imagePath||'';
-    }
-    initializeOptionRowDrop(row);
-    initializeAudioOptionRowDrop(row);
-    updateOptionRows();
-}
-
-function updateImageEditorLayout(){
-    const isImage=globalOptionType==='IMAGE';
-    const isSchedule=globalOptionType==='SCHEDULE';
-    const list=document.getElementById('pollOptionInputs');
-    const dialog=document.querySelector('#pollFormModal .poll-modal-dialog');
-    if(list){
-        list.classList.toggle('image-edit-grid',isImage);
-        list.classList.toggle('schedule-edit-list',isSchedule);
-        if(!isSchedule)list.classList.remove('has-scroll');
-    }
-    if(dialog){
-        dialog.classList.toggle('image-edit-mode',isImage);
-        dialog.classList.toggle('text-edit-mode',!isImage);
-    }
-}
-
-function applyGlobalOptionType(type,clearIncompatibleInputs){
-    globalOptionType=['SCHEDULE','IMAGE','AUDIO','VIDEO'].includes(type)?type:'TEXT';
-    updateImageEditorLayout();
-
-    const input=document.querySelector('input[name="pollGlobalOptionType"][value="'+globalOptionType+'"]');
-    if(input)input.checked=true;
-
-    document.querySelectorAll('.poll-option-edit-row').forEach(function(row){
-        row.classList.remove('text-mode','schedule-mode','image-mode','audio-mode','video-mode');
-        row.classList.add(globalOptionType.toLowerCase()+'-mode');
-        if(globalOptionType==='SCHEDULE'){
-            const dateInput=row.querySelector('.poll-schedule-date');
-            const startInput=row.querySelector('.poll-schedule-start');
-            const endInput=row.querySelector('.poll-schedule-end');
-            if(!dateInput?.dataset.value||!startInput?.dataset.value||!endInput?.dataset.value)applyScheduleDefaultWindow(row);
-        }
-
-        if(!clearIncompatibleInputs)return;
-        if(globalOptionType==='TEXT'){
-            const fileInput=row.querySelector('.poll-option-image-input');
-            if(fileInput)fileInput.value='';
-            row.dataset.existingImagePath='';
-            removePollOptionImageFromRow(row);
-        }else{
-            const textInput=row.querySelector('.poll-option-text-input');
-            if(textInput)textInput.value='';
-        }
-    });
-}
-
-function switchGlobalPollOptionType(type){
-    applyGlobalOptionType(type,true);
-}
-
-function setGlobalOptionType(type){
-    applyGlobalOptionType(type,false);
-}
-
-function removeLastPollOptionRow(){
-    const rows=document.querySelectorAll('.poll-option-edit-row');
-    if(rows.length<=2){alert('선택지는 최소 2개가 필요합니다.');return;}
-    rows[rows.length-1].remove();
-    updateOptionRows();
-}
-
-function updateOptionRows(){
-    const rows=Array.from(document.querySelectorAll('.poll-option-edit-row'));
-    rows.forEach(function(row,index){
-        row.querySelector('.option-number').innerText=index+1;
-        if(globalOptionType==='SCHEDULE')validateScheduleRow(row);
-    });
-    const list=document.getElementById('pollOptionInputs');
-    if(list&&globalOptionType==='SCHEDULE')list.classList.toggle('has-scroll',rows.length>2);
-    const minus=document.querySelector('.poll-remove-last');
-    if(minus)minus.disabled=rows.length<=2;
-}
-
-
-
-
-function initializeOptionRowDrop(row){
-    const block=row.querySelector('.poll-option-image-block');
-    if(!block)return;
-
-    ['dragenter','dragover'].forEach(function(name){
-        block.addEventListener(name,function(event){
-            if(globalOptionType!=='IMAGE')return;
-            event.preventDefault();
-            event.stopPropagation();
-            block.classList.add('row-dragover');
-        });
-    });
-
-    ['dragleave','drop'].forEach(function(name){
-        block.addEventListener(name,function(event){
-            if(globalOptionType!=='IMAGE')return;
-            event.preventDefault();
-            event.stopPropagation();
-            block.classList.remove('row-dragover');
-        });
-    });
-
-    block.addEventListener('drop',function(event){
-        if(globalOptionType!=='IMAGE')return;
-        const files=Array.from(event.dataTransfer.files||[]).filter(function(item){
-            return item.type&&item.type.startsWith('image/');
-        });
-        if(files.length===0){alert('이미지 파일만 넣을 수 있습니다.');return;}
-        assignImageFilesFromRow(row,files);
-    });
-}
-
-function getLastPollOptionRow(){
-    const rows=document.querySelectorAll('.poll-option-edit-row');
-    return rows.length ? rows[rows.length-1] : null;
-}
-
-function isPollOptionRowEmpty(row){
-    if(!row)return false;
-    const input=row.querySelector('.poll-option-image-input');
-    return !(input&&input.files&&input.files[0]) && !(row.dataset.existingImagePath||'');
-}
-
-function appendEmptyPollOptionRow(){
-    addPollOptionRow();
-    return getLastPollOptionRow();
-}
-
-function assignImageFilesFromRow(startRow,files){
-    const images=files.filter(function(file){return file.type&&file.type.startsWith('image/');});
-    if(images.length===0){alert('이미지 파일만 넣을 수 있습니다.');return;}
-
-    setGlobalOptionType('IMAGE');
-    const allRows=Array.from(document.querySelectorAll('.poll-option-edit-row'));
-    const startIndex=Math.max(0,allRows.indexOf(startRow));
-    const targets=[];
-
-    // 사용자가 놓은 칸에는 첫 이미지를 적용하고,
-    // 나머지는 뒤쪽의 빈 선택지부터 채운 뒤 부족한 만큼 자동 생성한다.
-    targets.push(startRow||allRows[0]||appendEmptyPollOptionRow());
-    allRows.slice(startIndex+1).forEach(function(row){
-        if(isPollOptionRowEmpty(row))targets.push(row);
-    });
-
-    while(targets.length<images.length){
-        targets.push(appendEmptyPollOptionRow());
-    }
-
-    images.forEach(function(file,index){setFileToOptionRow(targets[index],file);});
-    updateOptionRows();
-}
-
-
-function setFileToOptionRow(row,file){
-    if(!row||!file)return;
-    const input=row.querySelector('.poll-option-image-input');
-    if(!input)return;
-
-    const transfer=new DataTransfer();
-    transfer.items.add(file);
-    input.files=transfer.files;
-    handlePollOptionImageChange(input);
-}
-
-function handlePollOptionImageChange(input){
-    const selectedFiles=Array.from(input.files||[]).filter(function(file){
-        return file.type&&file.type.startsWith('image/');
-    });
-    const row=input.closest('.poll-option-edit-row');
-
-    // 개별 선택 칸에서도 여러 장을 고르면 현재 칸부터 순서대로 배정한다.
-    if(selectedFiles.length>1){
-        assignImageFilesFromRow(row,selectedFiles);
-        return;
-    }
-
-    const file=selectedFiles[0];
-    const block=row.querySelector('.poll-option-image-block');
-    const frame=row.querySelector('.poll-option-image-frame');
-    const preview=row.querySelector('.poll-image-preview');
-    const name=row.querySelector('.poll-image-name');
-
-    if(preview.dataset.objectUrl){
-        URL.revokeObjectURL(preview.dataset.objectUrl);
-        delete preview.dataset.objectUrl;
-    }
-
-    if(!file){
-        removePollOptionImageFromRow(row);
-        return;
-    }
-
-    const objectUrl=URL.createObjectURL(file);
-    preview.src=objectUrl;
-    preview.dataset.objectUrl=objectUrl;
-    frame.classList.add('visible');
-    block.classList.add('has-image');
-    name.innerText=file.name||'이미지 선택됨';
-    row.dataset.existingImagePath='';
-}
-
-function removePollOptionImage(button){
-    const row=button.closest('.poll-option-edit-row');
-    removePollOptionImageFromRow(row);
-}
-
-function removePollOptionImageFromRow(row){
-    const block=row.querySelector('.poll-option-image-block');
-    const frame=row.querySelector('.poll-option-image-frame');
-    const preview=row.querySelector('.poll-image-preview');
-    const fileInput=row.querySelector('.poll-option-image-input');
-    const name=row.querySelector('.poll-image-name');
-
-    if(preview.dataset.objectUrl){
-        URL.revokeObjectURL(preview.dataset.objectUrl);
-        delete preview.dataset.objectUrl;
-    }
-
-    preview.removeAttribute('src');
-    frame.classList.remove('visible');
-    block.classList.remove('has-image');
-    fileInput.value='';
-    name.innerText='이미지 없음';
-    row.dataset.existingImagePath='';
-}
-
-function audioTitleFromFileName(name){
-    return String(name||'').replace(/\.[^.]+$/,'').trim();
-}
-
-function isAudioOptionRowEmpty(row){
-    if(!row)return false;
-    const input=row.querySelector('.poll-option-audio-input');
-    return !(input&&input.files&&input.files[0]) && !(row.dataset.existingImagePath||'');
-}
-
-function setAudioFileToOptionRow(row,file){
-    if(!row||!file)return;
-    const input=row.querySelector('.poll-option-audio-input');
-    if(!input)return;
-    const transfer=new DataTransfer();
-    transfer.items.add(file);
-    input.files=transfer.files;
-    previewSinglePollAudio(input,file);
-}
-
-function previewSinglePollAudio(input,file){
-    const block=input.closest('.poll-option-audio-block');
-    const audio=block.querySelector('.poll-audio-preview');
-    const title=block.querySelector('.poll-media-title');
-    if(audio.dataset.objectUrl){URL.revokeObjectURL(audio.dataset.objectUrl);delete audio.dataset.objectUrl;}
-    if(!file){audio.removeAttribute('src');audio.style.display='none';return;}
-    const objectUrl=URL.createObjectURL(file);
-    audio.src=objectUrl;
-    audio.dataset.objectUrl=objectUrl;
-    audio.style.display='block';
-    if(title) title.value=audioTitleFromFileName(file.name);
-    const uploadText=block.querySelector('.poll-audio-upload-text');
-    if(uploadText) uploadText.textContent=file.name;
-    block.classList.add('has-audio');
-}
-
-function assignAudioFilesFromRow(startRow,files){
-    const audios=files.filter(function(file){return file.type&&file.type.startsWith('audio/');});
-    if(audios.length===0){alert('음악 파일만 넣을 수 있습니다.');return;}
-    setGlobalOptionType('AUDIO');
-    const allRows=Array.from(document.querySelectorAll('.poll-option-edit-row'));
-    const startIndex=Math.max(0,allRows.indexOf(startRow));
-    const targets=[];
-    targets.push(startRow||allRows[0]||appendEmptyPollOptionRow());
-    allRows.slice(startIndex+1).forEach(function(row){if(isAudioOptionRowEmpty(row))targets.push(row);});
-    while(targets.length<audios.length)targets.push(appendEmptyPollOptionRow());
-    audios.forEach(function(file,index){setAudioFileToOptionRow(targets[index],file);});
-    updateOptionRows();
-}
-
-function handlePollOptionAudioChange(input){
-    const files=Array.from(input.files||[]).filter(function(file){return file.type&&file.type.startsWith('audio/');});
-    const row=input.closest('.poll-option-edit-row');
-    if(files.length>1){assignAudioFilesFromRow(row,files);return;}
-    previewSinglePollAudio(input,files[0]);
-}
-
-function initializeAudioOptionRowDrop(row){
-    const block=row.querySelector('.poll-option-audio-block');
-    if(!block)return;
-    ['dragenter','dragover'].forEach(function(name){
-        block.addEventListener(name,function(event){
-            if(globalOptionType!=='AUDIO')return;
-            event.preventDefault();event.stopPropagation();block.classList.add('audio-dragover');
-        });
-    });
-    ['dragleave','drop'].forEach(function(name){
-        block.addEventListener(name,function(event){
-            if(globalOptionType!=='AUDIO')return;
-            event.preventDefault();event.stopPropagation();block.classList.remove('audio-dragover');
-        });
-    });
-    block.addEventListener('drop',function(event){
-        if(globalOptionType!=='AUDIO')return;
-        const files=Array.from(event.dataTransfer.files||[]).filter(function(file){return file.type&&file.type.startsWith('audio/');});
-        if(files.length===0){alert('음악 파일만 넣을 수 있습니다.');return;}
-        assignAudioFilesFromRow(row,files);
-    });
 }
 
 async function uploadOptionAudio(file){ const fd=new FormData(); fd.append('media',file); const res=await fetch('/api/polls/option-media',{method:'POST',body:fd}); const result=await res.json(); if(!result||result.success===false) throw new Error(result&&result.message?result.message:'음악 업로드 실패'); return result.mediaPath; }
@@ -1008,13 +412,19 @@ async function savePoll(){
 
     if(!question){alert('질문을 입력해주세요.');return;}
     if(!endDate){alert('투표 마감일을 선택해주세요.');return;}
+    const deadline=pollDeadlineDateTime();
+    if(!deadline){alert('투표 마감 날짜와 시간을 확인해주세요.');return;}
+    if(deadline.getTime()<=Date.now()){
+        alert('투표 마감은 현재 시간 이후로 설정해주세요.');
+        return;
+    }
 
     try{
         const options=[];
 
         if(editingCanEditOptions){
             for(const row of rows){
-                const type=globalOptionType;
+                const type=window.MoyoPollForm?window.MoyoPollForm.getOptionType():'TEXT';
                 if(type==='SCHEDULE'){
                     const date=row.querySelector('.poll-schedule-date').dataset.value||'';
                     const startTime=row.querySelector('.poll-schedule-start').dataset.value||'';
@@ -1092,6 +502,10 @@ async function savePoll(){
 
         const preferredId=editingPollId||result.pollId;
         resetCreateForm();
+        if(embeddedPollCreate && window.parent && window.parent!==window){
+            window.parent.postMessage({type:'moyo:poll-created',pollId:preferredId}, window.location.origin);
+            return;
+        }
         closePollFormModal();
         await loadPollList(preferredId);
     }catch(err){
@@ -1103,15 +517,7 @@ async function savePoll(){
 function resetCreateForm(){
     editingPollId=null;
     editingCanEditOptions=true;
-    document.getElementById('pollFormTitle').innerText='투표 만들기';
-    document.getElementById('pollSubmitButton').innerText='투표 생성';
-    document.getElementById('pollQuestionInput').value='';
-    document.getElementById('pollShowResultsInput').checked=false;
-    document.getElementById('pollOptionInputs').innerHTML='';
-    setGlobalOptionType('TEXT');
-    addPollOptionRow();
-    addPollOptionRow();
-    initializeDeadlineDefaultsReset();
+    if(window.MoyoPollForm)window.MoyoPollForm.reset();
     setOptionInputsDisabled(false);
 }
 
@@ -1151,7 +557,7 @@ async function startPollEdit(pollId){
         if(!Number.isNaN(deadline.getTime())){
             document.getElementById('pollEndDateInput').value=formatDateInput(deadline);
             document.getElementById('pollEndHourInput').value=String(deadline.getHours()).padStart(2,'0');
-            document.getElementById('pollEndMinuteInput').value=String(Math.floor(deadline.getMinutes()/10)*10).padStart(2,'0');
+            document.getElementById('pollEndMinuteInput').value=String(Math.floor(deadline.getMinutes()/5)*5).padStart(2,'0');
             if(typeof window.syncPollDeadlinePicker==='function')window.syncPollDeadlinePicker();
         }
 
@@ -1205,14 +611,6 @@ async function deletePollItem(pollId){
     }
 }
 
-function initializeDeadlineDefaultsReset(){
-    const date=new Date();
-    date.setDate(date.getDate()+1);
-    document.getElementById('pollEndDateInput').value=formatDateInput(date);
-    document.getElementById('pollEndHourInput').value='18';
-    document.getElementById('pollEndMinuteInput').value='00';
-    if(typeof window.syncPollDeadlinePicker==='function')window.syncPollDeadlinePicker();
-}
 
 function switchPollTab(tabName){
     const isActive=tabName==='active';
@@ -1252,14 +650,14 @@ function renderListEmptyState(type){
     '</div>';
 }
 
-async function loadPollList(preferredPollId){
+async function loadPollList(preferredPollId,options){
+    options=options||{};
     try{
         const res=await fetch('/api/polls/list?'+buildScopeQuery());
         allPolls=await res.json();
         if(!Array.isArray(allPolls))allPolls=[];
 
-        renderPollHistory();
-        selectInitialPoll(preferredPollId);
+        selectInitialPoll(preferredPollId,options);
     }catch(err){
         console.error(err);
         document.getElementById('activePollList').innerHTML='<div class="poll-list-empty"><span class="poll-empty-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M12 4.5 20 18H4L12 4.5Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M12 9v4.5M12 16.5v.1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span><p class="poll-empty-title">투표 목록을 불러오지 못했습니다.</p></div>';
@@ -1268,9 +666,11 @@ async function loadPollList(preferredPollId){
     }
 }
 
-function selectInitialPoll(preferredPollId){
+function selectInitialPoll(preferredPollId,options){
+    options=options||{};
     if(allPolls.length===0){
         selectedPollId=null;
+        renderPollHistory();
         const target=document.getElementById('activePollArea');
         renderMainEmptyState();
         updateSelectedPollState(null);
@@ -1289,7 +689,7 @@ function selectInitialPoll(preferredPollId){
     selectedPollId=String(pollId);
     switchPollTab(isPollClosed(selected)?'past':'active');
     updateSelectedPollState(selected);
-    loadPollDetail(pollId);
+    if(!options.skipDetail)loadPollDetail(pollId,{silent:!!options.silentDetail});
     renderPollHistory();
 }
 
@@ -1300,20 +700,21 @@ function updateSelectedPollState(poll){
 let extendingPollId=null;
 function openPollExtendModal(pollId,endDt){ extendingPollId=pollId; const m=document.getElementById('pollExtendModal'); document.getElementById('pollPrevDeadline').innerText=formatDeadline(endDt,true); const d=new Date(); d.setDate(d.getDate()+1); document.getElementById('pollExtendDate').value=formatDateInput(d); const h=document.getElementById('pollExtendHour'),mi=document.getElementById('pollExtendMinute'); if(!h.options.length){for(let i=0;i<24;i++){let v=String(i).padStart(2,'0');h.add(new Option(v,v));} for(let i=0;i<60;i+=10){let v=String(i).padStart(2,'0');mi.add(new Option(v,v));}} h.value='18';mi.value='00'; m.classList.add('open'); m.setAttribute('aria-hidden','false'); }
 function closePollExtendModal(){ const m=document.getElementById('pollExtendModal'); if(m){m.classList.remove('open');m.setAttribute('aria-hidden','true');} extendingPollId=null; }
-async function submitPollExtend(){ const date=document.getElementById('pollExtendDate').value; const endDt=date+' '+document.getElementById('pollExtendHour').value+':'+document.getElementById('pollExtendMinute').value; if(!date){alert('새 마감일을 선택해주세요.');return;} const res=await fetch('/api/polls/extend',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pollId:extendingPollId,endDt:endDt})}); const result=await res.json(); if(!result||result.success===false){alert(result&&result.message?result.message:'연장에 실패했습니다.');return;} const id=extendingPollId; closePollExtendModal(); await loadPollList(id); await loadPollDetail(id); }
+async function submitPollExtend(){ const date=document.getElementById('pollExtendDate').value; const endDt=date+' '+document.getElementById('pollExtendHour').value+':'+document.getElementById('pollExtendMinute').value; if(!date){alert('새 마감일을 선택해주세요.');return;} const res=await fetch('/api/polls/extend',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pollId:extendingPollId,endDt:endDt})}); const result=await res.json(); if(!result||result.success===false){alert(result&&result.message?result.message:'연장에 실패했습니다.');return;} const id=extendingPollId; closePollExtendModal(); await loadPollList(id,{skipDetail:true}); await loadPollDetail(id,{silent:true}); }
 
 async function finalizeScheduleTie(pollId,optionId){
     if(!confirm('이 일정을 최종 일정으로 확정하고 캘린더에 등록할까요?')) return;
     const res=await fetch('/api/polls/schedule/finalize',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pollId:pollId,optionId:optionId})});
     const result=await res.json();
     if(!result||result.success===false){alert(result&&result.message?result.message:'일정 확정에 실패했습니다.');return;}
-    await loadPollList(pollId);
-    await loadPollDetail(pollId);
+    await loadPollList(pollId,{skipDetail:true});
+    await loadPollDetail(pollId,{silent:true});
 }
 
-async function loadPollDetail(pollId){
+async function loadPollDetail(pollId,options){
+    options=options||{};
     const target=document.getElementById('activePollArea');
-    target.className='poll-loading-state';target.innerHTML='<span class="poll-empty-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M5 18.5V14m5 4.5V10m5 8.5V6.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M4 18.5h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span><p class="poll-empty-title">투표를 불러오는 중입니다.</p>';
+    if(!options.silent){target.className='poll-loading-state';target.innerHTML='<span class="poll-empty-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M5 18.5V14m5 4.5V10m5 8.5V6.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M4 18.5h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span><p class="poll-empty-title">투표를 불러오는 중입니다.</p>';}
     try{
         const res=await fetch('/api/polls/detail?pollId='+encodeURIComponent(pollId));
         const data=await res.json();
@@ -1326,9 +727,11 @@ function renderPollDetail(data){
     if(!data||!data.question){renderMainEmptyState();return;}
 
     const options=Array.isArray(data.options)?data.options:[];
-    const showResults=!!data.showResults;
-    const isClosed=!!data.isClosed;
-    const hasVoted=!!data.hasVoted;
+    const isClosed=data.isClosed===true||String(data.isClosed||'').trim().toLowerCase()==='true';
+    // 진행 중 결과 공개 여부는 DB 원본 플래그(SHOW_RESULTS_YN)를 기준으로 판정한다.
+    // 문자열 'false' 같은 값이 truthy로 처리되어 결과가 노출되는 회귀를 막는다.
+    const showResults=isClosed||String(data.showResultsYn||'N').trim().toUpperCase()==='Y';
+    const hasVoted=data.hasVoted===true||String(data.hasVoted||'').trim().toLowerCase()==='true';
     const myOptionId=data.myOptionId;
     const total=showResults?options.reduce(function(sum,opt){return sum+Number(opt.COUNT||opt.count||0);},0):0;
     const maxCount=(isClosed&&showResults&&options.length)?Math.max.apply(null,options.map(function(opt){return Number(opt.COUNT||opt.count||0);})):0;
@@ -1477,15 +880,15 @@ async function votePoll(pollId,optionId){
         const result=await res.json();
         if(!result||result.success===false){
             alert(result&&result.message==='LOGIN_REQUIRED'?'로그인이 필요합니다.':(result&&result.message?result.message:'투표 반영에 실패했습니다.'));
-            await loadPollDetail(pollId);
+            await loadPollDetail(pollId,{silent:true});
             return;
         }
-        await loadPollDetail(pollId);
-        await loadPollList(pollId);
+        await loadPollList(pollId,{skipDetail:true});
+        await loadPollDetail(pollId,{silent:true});
     }catch(err){
         console.error(err);
         alert('투표 반영 중 오류가 발생했습니다.');
-        if(pollId)await loadPollDetail(pollId);
+        if(pollId)await loadPollDetail(pollId,{silent:true});
     }finally{
         voteInFlight=false;
     }

@@ -420,6 +420,14 @@
          ORDER BY USER_ID
     </select>
 
+    <select id="selectOptionVoterUserIds" resultType="long">
+        SELECT DISTINCT USER_ID
+          FROM VOTES
+         WHERE POLL_ID = #{pollId}
+           AND OPTION_ID = #{optionId}
+         ORDER BY USER_ID
+    </select>
+
     <select id="selectCalendarEventIdByPollId" resultType="long">
         SELECT EVENT_ID
           FROM (

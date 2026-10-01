@@ -97,7 +97,7 @@
             emptySubText: '이름이나 직책 · 담당을 다시 확인해주세요.',
             emptySummaryText: '멤버 없음',
             profileList: true,
-            keepOpenOnProfile: true,
+            keepOpenOnProfile: false,
             listPageSize: 20,
             people: people,
             normalizePerson: function (source, helpers) {

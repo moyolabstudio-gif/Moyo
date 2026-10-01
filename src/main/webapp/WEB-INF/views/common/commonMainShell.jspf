@@ -361,3 +361,7 @@
         </div>
     </c:if>
 </div>
+
+<c:if test="${isWorkspaceShell or showProjectGroupWidgets}">
+    <%@ include file="/WEB-INF/views/common/pollFormModal.jspf" %>
+</c:if>

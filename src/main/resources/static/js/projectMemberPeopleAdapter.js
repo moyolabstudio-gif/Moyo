@@ -124,7 +124,7 @@
                 emptySummaryText: '멤버 없음',
                 selectedSummaryText: '선택',
                 confirmText: opts.confirmText || (mode === 'SELECT_MULTIPLE' ? '선택 완료' : '선택'),
-                keepOpenOnProfile: true,
+                keepOpenOnProfile: false,
                 listPageSize: Number(opts.listPageSize || 20),
                 normalizePerson: function (source, helpers) {
                     const person = helpers.normalizePerson(source);

@@ -6,7 +6,9 @@
     <select id="selectNoticeList" resultType="com.springboot.project.dto.noticeDTO">
         SELECT NOTICE_ID, USER_ID, TITLE, CONTENT, VIEW_COUNT, IS_PINNED, REG_DT, UPD_DT
         FROM SYSTEM_NOTICES
-        ORDER BY IS_PINNED DESC, REG_DT DESC
+        ORDER BY CASE WHEN NVL(IS_PINNED, 'N') = 'Y' THEN 0 ELSE 1 END,
+                 REG_DT DESC,
+                 NOTICE_ID DESC
     </select>
 
     <select id="selectNoticeById" parameterType="long" resultType="com.springboot.project.dto.noticeDTO">

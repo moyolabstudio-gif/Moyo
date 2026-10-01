@@ -240,6 +240,44 @@
         }));
     }
 
+
+    var pollCreateConfig = null;
+
+    function closePollCreateModal() {
+        if (window.MoyoPollForm && typeof window.MoyoPollForm.close === 'function') {
+            window.MoyoPollForm.close();
+        } else if (typeof window.closePollFormModal === 'function') {
+            window.closePollFormModal();
+        }
+        pollCreateConfig = null;
+    }
+
+    function openPollCreateModal(input) {
+        var config = normalizeConfig(input);
+        if (config.readOnly) return;
+        if (!window.MoyoPollForm || typeof window.MoyoPollForm.open !== 'function') {
+            console.error('[MOYO] pollFormModal.jspf is not loaded on this page.');
+            return;
+        }
+
+        pollCreateConfig = config;
+        if (typeof window.MoyoPollForm.reset === 'function') {
+            window.MoyoPollForm.reset();
+        }
+        if (typeof window.MoyoPollForm.configureCreate === 'function') {
+            window.MoyoPollForm.configureCreate({
+                scope: config.scope,
+                wsId: config.wsId,
+                projId: config.isProject ? config.projId : '',
+                contextPath: config.contextPath || '',
+                onCreated: function () {
+                    loadPolls(config).catch(function () {});
+                }
+            });
+        }
+        window.MoyoPollForm.open();
+    }
+
     function normalizeBoardPost(raw) {
         raw = raw || {};
         return {
@@ -682,7 +720,7 @@
         if (!active.length) {
             var emptyAction = config.readOnly
                 ? ''
-                : '<a href="' + escapeHtml(pollListUrl(config)) + '">투표 만들기</a>';
+                : '<a href="' + escapeHtml(pollListUrl(config)) + '" data-moyo-poll-create="1">투표 만들기</a>';
             target.innerHTML = '<div class="workspace-poll-summary-body is-empty"><div class="workspace-compact-empty-state workspace-core-state workspace-poll-summary-empty moyo-widget-state is-empty"><strong>등록된 투표가 없습니다.</strong>' +
                 '<span>' + (config.readOnly ? '읽기 전용 프로젝트에서는 투표를 조회만 할 수 있습니다.' : '의견을 모아야 할 때 새 투표를 시작해보세요.') + '</span>' + emptyAction + '</div></div>';
             return;
@@ -957,6 +995,18 @@
         });
     }
 
+    document.addEventListener('click', function (event) {
+        var button = event.target.closest('[data-moyo-poll-create="1"]');
+        if (!button) return;
+        event.preventDefault();
+        var section = button.closest('.moyo-community-widgets');
+        var scope = section ? text(section.getAttribute('data-community-scope')).toUpperCase() : '';
+        var config = scope === 'PROJECT' && typeof window.getProjectCommunityConfig === 'function'
+            ? window.getProjectCommunityConfig(typeof window.getProjectMainProjId === 'function' ? window.getProjectMainProjId() : '')
+            : (typeof window.getWorkspaceCommunityConfig === 'function' ? window.getWorkspaceCommunityConfig() : null);
+        if (config) openPollCreateModal(config);
+    });
+
     window.addEventListener('focus', refreshVisibleCollaborationActivities);
     document.addEventListener('visibilitychange', function () {
         if (!document.hidden) refreshVisibleCollaborationActivities();
@@ -973,6 +1023,8 @@
         renderPolls: renderPolls,
         normalizeBoardPost: normalizeBoardPost,
         normalizePoll: normalizePoll,
-        focusActivity: focusActivity
+        focusActivity: focusActivity,
+        openPollCreateModal: openPollCreateModal,
+        closePollCreateModal: closePollCreateModal
     });
 })(window, document);

@@ -96,7 +96,7 @@
     <script src="${pageContext.request.contextPath}/js/projectMember.js?v=common-member-activity-v5-20260910"></script>
     <script src="${pageContext.request.contextPath}/js/common/commonContentRecordModal.js?v=record-location-readonly-preview-v41-20260920"></script>
     <script src="${pageContext.request.contextPath}/js/projectTask.js?v=task-status-detail-v80-20260920"></script>
-    <script src="${pageContext.request.contextPath}/js/commonCommunityWidgets.js?v=board-widget-renewal-20260930"></script>
+    <script src="${pageContext.request.contextPath}/js/commonCommunityWidgets.js?v=poll-direct-modal-v1-20261001"></script>
     <script src="${pageContext.request.contextPath}/js/projectWidget.js?v=project-widget-data-connect-v1"></script>
     <script src="${pageContext.request.contextPath}/js/commonFolderModal.js?v=20260809-photo-location-common"></script>
     <script src="${pageContext.request.contextPath}/js/commonPhotoPostDetail.js?v=20260809-fit-atomic"></script>
@@ -113,7 +113,7 @@
     <script defer src="${pageContext.request.contextPath}/js/projectMiniCalendarAdapter.js?v=project-scope-calendar-v1"></script>
     <script defer src="${pageContext.request.contextPath}/js/commonPeopleModal.js?v=20260809-photo-full-cleanup"></script>
     <script defer src="${pageContext.request.contextPath}/js/commonMemberDataAdapter.js?v=project-member-avatar-policy-v3"></script>
-    <script defer src="${pageContext.request.contextPath}/js/projectMemberPeopleAdapter.js?v=project-scope-branch-v1-20260910"></script>
+    <script defer src="${pageContext.request.contextPath}/js/projectMemberPeopleAdapter.js?v=profile-layer-fix-v1-20261001"></script>
     <script defer src="${pageContext.request.contextPath}/js/commonMemberWidget.js?v=person-avatar-policy-v4"></script>
     <script defer src="${pageContext.request.contextPath}/js/commonContentCard.js?v=20260906-global-path-fix-65"></script>
 <script defer src="${pageContext.request.contextPath}/js/commonContentWidgets.js?v=common-widget-title-safe-v11-20260917"></script>

@@ -55,11 +55,11 @@
     <script defer src="${pageContext.request.contextPath}/js/common/commonContentRecordModal.js"></script>
     <script defer src="${pageContext.request.contextPath}/js/commonCalendarEventPreview.js?v=calendar-preview-avatar-policy-v12"></script>
     <script defer src="${pageContext.request.contextPath}/js/commonQuickCalendarCreate.js?v=attendee-share-avatar-v29"></script>
-    <script defer src="${pageContext.request.contextPath}/js/commonCommunityWidgets.js?v=board-widget-renewal-20260930"></script>
+    <script defer src="${pageContext.request.contextPath}/js/commonCommunityWidgets.js?v=poll-direct-modal-v1-20261001"></script>
     <script defer src="${pageContext.request.contextPath}/js/commonPeopleModal.js?v=20260809-photo-full-cleanup"></script>
     <script defer src="${pageContext.request.contextPath}/js/commonMemberWidget.js?v=person-avatar-policy-v4"></script>
     <script defer src="${pageContext.request.contextPath}/js/commonMemberDataAdapter.js?v=common-member-activity-v5-20260910"></script>
-    <script defer src="${pageContext.request.contextPath}/js/workspaceMemberPeopleAdapter.js?v=common-member-activity-v5-20260910"></script>
+    <script defer src="${pageContext.request.contextPath}/js/workspaceMemberPeopleAdapter.js?v=profile-layer-fix-v1-20261001"></script>
     <script src="${pageContext.request.contextPath}/js/commonFolderModal.js?v=20260809-photo-location-common"></script>
     <script src="${pageContext.request.contextPath}/js/commonPhotoPostDetail.js?v=20260809-fit-atomic"></script>
     <script src="https://cdn.ckeditor.com/ckeditor5/41.1.0/super-build/ckeditor.js"></script>
