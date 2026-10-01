@@ -343,14 +343,8 @@
             console.error('에디터 초기화 실패:', error);
         });
 
-        document.querySelector('form').addEventListener('submit', async function(e) {
-            if (this.dataset.moyoBoardSubmitting === 'true') return;
-
+        document.querySelector('form').addEventListener('submit', function(e) {
             const form = this;
-            const submitButton = form.querySelector('button[type="submit"], input[type="submit"]');
-            const originalSubmitText = submitButton
-                ? (submitButton.tagName === 'BUTTON' ? submitButton.textContent : submitButton.value)
-                : '';
 
             const isPinnedEl = document.getElementById('isPinned');
             const pinStartEl = document.getElementById('pinStartDt');
@@ -363,43 +357,19 @@
 
             if (!myEditor) return;
 
-            e.preventDefault();
-            if (submitButton) {
-                submitButton.disabled = true;
-                if (submitButton.tagName === 'BUTTON') submitButton.textContent = '이미지 업로드 중...';
-                else submitButton.value = '이미지 업로드 중...';
+            const finalHtml = sanitizeEditorHtml(myEditor.getData());
+            if (!finalHtml.trim() || finalHtml === '<p>&nbsp;</p>') {
+                alert('내용을 입력해 주세요.');
+                e.preventDefault();
+                return false;
             }
 
-            try {
-                if (myEditor._boardUploadCount > 0) {
-                    await myEditor.waitForBoardUploads();
-                }
-                if (typeof myEditor.flushBoardDataImages === 'function') {
-                    await myEditor.flushBoardDataImages();
-                }
-
-                const finalHtml = sanitizeEditorHtml(myEditor.getData());
-                if (/src\s*=\s*["']data:image\//i.test(finalHtml)) {
-                    throw new Error('이미지 업로드가 완료되지 않았습니다. 다시 시도해 주세요.');
-                }
-                if (finalHtml.trim().length === 0) {
-                    throw new Error('내용을 입력해 주세요.');
-                }
-
-                document.querySelector('#editor').value = finalHtml;
-                form.dataset.moyoBoardSubmitting = 'true';
-                if (typeof form.requestSubmit === 'function') form.requestSubmit();
-                else form.submit();
-            } catch (error) {
-                if (submitButton) {
-                    submitButton.disabled = false;
-                    if (submitButton.tagName === 'BUTTON') submitButton.textContent = originalSubmitText;
-                    else submitButton.value = originalSubmitText;
-                }
-                alert(error && error.message ? error.message : '이미지 업로드에 실패했습니다.');
-            }
-            return false;
+            // 이미지 업로드 대기는 commonCkeditor.js의 공통 submit guard가 전담한다.
+            // 수정 화면에서 별도로 waitForBoardUploads/requestSubmit을 반복하면
+            // 같은 폼이 두 번 가드되어 "이미지 업로드 중..." 상태에서 멈출 수 있다.
+            document.querySelector('#editor').value = finalHtml;
         });
+
 
 
         function deleteFile(fileId) {
